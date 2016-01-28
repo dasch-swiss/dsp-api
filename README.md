@@ -10,7 +10,7 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 ## Features
 
 * Stores humanities data as industry-standard [RDF](http://www.w3.org/TR/2014/NOTE-rdf11-primer-20140624/) graphs, plus files for binary data such as digitized primary sources.
-    * Tested with [Ontotext GraphDB](http://ontotext.com/products/graphdb/) and [Apache Jena](https://jena.apache.org/). Should work with any standards-compliant RDF triplestore.
+    * Designed to work with any standards-compliant RDF triplestore. Tested with [Ontotext GraphDB](http://ontotext.com/products/graphdb/) and [Apache Jena](https://jena.apache.org/).
 * Based on [OWL](http://www.w3.org/TR/2012/REC-owl2-primer-20121211/) ontologies that express abstract, cross-disciplinary commonalities in the structure and semantics of research data.
 * Can query, annotate, and link together heterogeneous data in a unified way.
 * Offers a generic HTTP-based API for accessing and updating data, implemented in [Scala](http://www.scala-lang.org/).
