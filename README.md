@@ -57,3 +57,15 @@ See `docs/Readme.md`.
 * Help with testing (please contact us first).
 * Projects currently using the earlier SALSAH server and GUI can convert their data to RDF (contact us about how to do this). Soon they will be able to switch to Knora for better performance, greater reliability, and a storage system that is suitable for long-term accessibility of data.
 * New projects can begin designing OWL ontologies for their data based on Knora's ontologies, in preparation for entering data into Knora.
+
+## Contact information
+
+### Technical
+
+* Benjamin Geer `<benjaminlewis.geer@unibas.ch>`
+* Tobias Schweizer `<t.schweizer@unibas.ch>`
+* Ivan Subotic `<ivan.subotic@unibas.ch>`
+
+### Administrative
+
+Lukas Rosenthaler `<lukas.rosenthaler@unibas.ch>`
