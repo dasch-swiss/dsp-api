@@ -52,6 +52,50 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 See `docs/Readme.md`.
 
+## Try it out
+
+### Run the Knora API server
+
+Start the built-in Fuseki triplestore:
+
+```
+$ cd webapi/_fuseki
+$ ./fuseki-server
+```
+
+Then in another terminal, load some test data into the triplestore:
+
+```
+$ cd webapi/scripts
+$ ./fuseki-load-test-data.sh
+```
+
+Then go back to the project's root directory and use SBT to start the API server:
+
+```
+$ cd ../..
+$ sbt
+> project webapi
+> compile
+> re-start
+```
+
+Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a) in your browser. You should see a response in JSON describing the book _Zeitglöcklein des Lebens und Leidens Christi_.
+
+To shut down the Knora API server:
+
+```
+> re-stop
+```
+
+### Run the automated tests
+
+Make sure you've started Fuseki as shown above. Then at the SBT prompt:
+
+```
+> fuseki:test
+```
+
 ## What you can do
 
 * Help with testing (please contact us first).
