@@ -47,5 +47,5 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 ## What you can do
 
 * Help with testing (please contact us first).
-* Projects currently using the earlier SALSAH server and GUI can convert their data to RDF (contact us about how to do this). Soon they will be able to switch to Knora for higher performance, greater reliability, and a storage system that is suitable for long-term accessibility of data.
+* Projects currently using the earlier SALSAH server and GUI can convert their data to RDF (contact us about how to do this). Soon they will be able to switch to Knora for better performance, greater reliability, and a storage system that is suitable for long-term accessibility of data.
 * New projects can begin designing OWL ontologies for their data based on Knora's ontologies, in preparation for entering data into Knora.
