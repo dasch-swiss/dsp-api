@@ -13,6 +13,8 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
     * Designed to work with any standards-compliant RDF triplestore. Tested with [Ontotext GraphDB](http://ontotext.com/products/graphdb/) and [Apache Jena](https://jena.apache.org/).
 * Based on [OWL](http://www.w3.org/TR/2012/REC-owl2-primer-20121211/) ontologies that express abstract, cross-disciplinary commonalities in the structure and semantics of research data.
 * Offers a generic HTTP-based API, implemented in [Scala](http://www.scala-lang.org/), for querying, annotating, and linking together heterogeneous data in a unified way.
+    * Handles authentication and authorization.
+    * Provides automatic versioning of data.
 * Includes a high-performance media server called Sipi (to be released soon), implemented in C++.
 * Provides a general-purpose, browser-based Virtual Research Environment called SALSAH (to be released soon).
 
