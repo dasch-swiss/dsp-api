@@ -1,7 +1,7 @@
 # Knora
 
 [Knora](http://www.knora.org/) (Knowledge Organization, Representation, and Annotation) is a software
-framework for storing, sharing, and working with humanities data. 
+framework for storing, sharing, and working with primary sources and data in the humanities. 
 
 It is developed by the [Digital Humanities Lab](http://www.dhlab.unibas.ch/) at the [University of Basel](https://www.unibas.ch/en.html), and is supported by the [Swiss Academy of Humanities and Social Sciences](http://www.sagw.ch/en/sagw.html).
 
