@@ -5,7 +5,7 @@ framework for storing, sharing, and working with humanities data.
 
 ## Features
 
-* Stores humanities data as [http://www.w3.org/TR/2014/NOTE-rdf11-primer-20140624/](RDF) graphs.
+* Stores humanities data as [RDF](http://www.w3.org/TR/2014/NOTE-rdf11-primer-20140624/) graphs.
 * Includes OWL_ ontologies that express abstract, cross-disciplinary commonalities in the structure and semantics of research data.
 * Can query, annotate, and link together heterogeneous data in a unified way.
 * Offers a generic HTTP-based API for accessing and updating data.
