@@ -40,11 +40,17 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 ## Requirements
 
+### For developing and testing the API server
+
 * Linux or Mac OS X
 * [Java Development Kit 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 * [SBT](http://www.scala-sbt.org/)
 
 [Apache Jena](https://jena.apache.org/) is included.
+
+### For building the documentation
+
+See `docs/Readme.md`.
 
 ## What you can do
 
