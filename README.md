@@ -20,7 +20,7 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 ## Status
 
-### More or less complete
+### Nearly complete
 
 * The OWL ontologies
 * API operations for querying and updating data
