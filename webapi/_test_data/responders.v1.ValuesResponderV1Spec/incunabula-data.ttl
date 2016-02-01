@@ -83,7 +83,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                  rdfs:label """Zeitglöcklein des Lebens und Leidens Christi""" ;
 
-                                 knora-base:creationDate "0000-00-00T00:00:00"^^xsd:dateTimeStamp .
+                                 knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp .
 
 
 ### ###########################################
@@ -99,7 +99,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                  knora-base:valueHasString """Zeitglöcklein des Lebens und Leidens Christi""" ;
 
-                                                 knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                 knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                  knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -122,7 +122,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                  knora-base:valueHasString """Berthold, der Bruder""" ;
 
-                                                 knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                 knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                  knora-base:hasViewPermission knora-base:UnknownUser ,
                                                                                knora-base:KnownUser ;
@@ -145,7 +145,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                  knora-base:valueHasString """Johann Amerbach""" ;
 
-                                                 knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                 knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                  knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -168,7 +168,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                  knora-base:valueHasString """Basel""" ;
 
-                                                 knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                 knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                  knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -200,7 +200,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                    knora-base:valueHasEndPrecision "YEAR" ;
 
-                                                   knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                   knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                    knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -223,7 +223,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                    knora-base:valueHasString """Universitäts- und Stadtbibliothek Köln, Sign: AD+S167""" ;
 
-                                                   knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                   knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                    knora-base:hasDeletePermission knora-base:Owner ,
                                                                                   knora-base:ProjectMember ;
@@ -245,7 +245,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                        knora-base:valueHasString """http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasViewPermission knora-base:UnknownUser ,
                                                                                      knora-base:KnownUser ;
@@ -267,7 +267,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                    knora-base:valueHasString """Dimension: 8°""" ;
 
-                                                   knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                   knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                    knora-base:hasViewPermission knora-base:UnknownUser ,
                                                                                  knora-base:KnownUser ;
@@ -290,7 +290,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                    knora-base:valueHasString """Schramm Bd. XXI, S. 27""" ;
 
-                                                   knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                   knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                    knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -313,7 +313,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                    knora-base:valueHasString """GW 4168""" ;
 
-                                                   knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                   knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                    knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -336,7 +336,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                    knora-base:valueHasString """ISTC ib00512000""" ;
 
-                                                   knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                   knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                    knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -398,7 +398,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                  knora-base:hasStillImageFileValue <http://data.knora.org/8a0b1e75/reps/bf255339> ,
                                                          <http://data.knora.org/8a0b1e75/reps/7e4ba672> ;
 
-                                 knora-base:creationDate "0000-00-00T00:00:00"^^xsd:dateTimeStamp .
+                                 knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp .
 
 
 ### ###########################################
@@ -711,7 +711,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                    rdfs:label """Orationes""" ;
 
-                                   knora-base:creationDate "0000-00-00T00:00:00"^^xsd:dateTimeStamp .
+                                   knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp .
 
 
 
@@ -728,7 +728,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Orationes""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -751,7 +751,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Sant Brigitten gebettly""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -774,7 +774,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Birgitta, Hl.""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -797,7 +797,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Johann Amerbach""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -820,7 +820,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Basel""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -852,7 +852,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasEndPrecision "YEAR" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasViewPermission knora-base:UnknownUser ,
                                                                                      knora-base:KnownUser ;
@@ -873,7 +873,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Universitäts- und Stadtbibliothek Köln, Sign: AD+S167""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ,
                                                                                       knora-base:ProjectMember ;
@@ -895,7 +895,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                          knora-base:valueHasString """http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1""" ;
 
-                                                         knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                         knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                          knora-base:hasDeletePermission knora-base:Owner ,
                                                                                         knora-base:ProjectMember ;
@@ -917,7 +917,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """[12] Bl. : Ill. ; 8°""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -947,7 +947,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                                                         knora-base:standoffHasEnd "25"^^xsd:integer
                                                                                       ] ;
 
-                                                         knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                         knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                          knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -970,7 +970,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """GW 4386""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -993,7 +993,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """ISTC ib00684000""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -1016,7 +1016,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Schramm, Bd. 21, S. 27.""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -1064,7 +1064,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                    rdfs:label """Lob der Glieder Mariens""" ;
 
-                                   knora-base:creationDate "0000-00-00T00:00:00"^^xsd:dateTimeStamp .
+                                   knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp .
 
 
 ### ###########################################
@@ -1080,7 +1080,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Lob der Glieder Mariens""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:previousValue <http://data.knora.org/21abac2162/values/22222222> ;
 
@@ -1105,7 +1105,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Lob der Glieder Mariens previous 1""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-21T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:previousValue <http://data.knora.org/21abac2162/values/11111111> ;
 
@@ -1127,7 +1127,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Lob der Glieder Mariens previous 2""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-20T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -1149,7 +1149,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasViewPermission knora-base:UnknownUser ,
                                                                                      knora-base:KnownUser ;
@@ -1172,7 +1172,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Johann Amerbach""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -1195,7 +1195,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Basel""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -1217,7 +1217,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Universitäts- und Stadtbibliothek Köln, Sign: AD+S167""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ,
                                                                                       knora-base:ProjectMember ;
@@ -1239,7 +1239,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                          knora-base:valueHasString """http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1""" ;
 
-                                                         knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                         knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                          knora-base:hasDeletePermission knora-base:Owner ,
                                                                                         knora-base:ProjectMember ;
@@ -1261,7 +1261,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """[12] Bl. : Ill. ; 8° """ ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -1284,7 +1284,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                          knora-base:valueHasString """Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach""" ;
 
-                                                         knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                         knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                          knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -1307,7 +1307,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """Schramm, Bd. XXI, S. 27""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -1330,7 +1330,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueHasString """ISTC im00266000""" ;
 
-                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                       knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                        knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -1353,7 +1353,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                          knora-base:valueHasString """GW M18561""" ;
 
-                                                         knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+                                                         knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                                          knora-base:hasDeletePermission knora-base:Owner ;
 
@@ -1384,7 +1384,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                    rdfs:label """Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)""" ;
 
-                                   knora-base:creationDate "0000-00-00T00:00:00"^^xsd:dateTimeStamp ;
+                                   knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
                                    knora-base:isDeleted true .
 
