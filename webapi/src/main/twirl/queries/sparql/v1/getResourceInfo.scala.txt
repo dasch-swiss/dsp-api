@@ -1,0 +1,87 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Gets all the properties of a resource, along with the properties of its file values, but not
+ * including subproperties of knora-base:hasValue.
+ *
+ * @param resourceIri the IRI of the resource to be queried.
+ *@
+@(resourceIri: IRI)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?p ?o ?isFileValue ?objPred ?objObj
+WHERE {
+    BIND(IRI("@resourceIri") AS ?resource)
+
+    ?resource rdf:type ?resourceClass .
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+
+    MINUS {
+        ?resource knora-base:isDeleted true .
+    }
+
+    {
+        @* Query statements about the resource's file values. *@
+
+        ?p rdfs:subPropertyOf* knora-base:hasFileValue .
+        BIND(true AS ?isFileValue)
+
+
+        @* Get the file value's project if it has one, otherwise use the resource's project. *@
+
+        {
+            ?resource ?p ?o .
+            ?o ?objPred ?objObj .
+            FILTER(?objPred != knora-base:attachedToProject)
+        }
+        UNION
+        {
+            ?resource ?p ?o .
+            ?resource knora-base:attachedToProject ?resourceProject .
+
+            OPTIONAL {
+                ?o knora-base:attachedToProject ?valueProject .
+            }
+
+            BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+            BIND(knora-base:attachedToProject AS ?objPred)
+        }
+    }
+    UNION
+    {
+        @* Query other statements about the resource. *@
+
+        ?resource ?p ?o .
+
+        MINUS {
+            ?p rdfs:subPropertyOf+ knora-base:hasValue .
+        }
+    }
+
+    MINUS {
+        ?o knora-base:isDeleted true .
+    }
+}

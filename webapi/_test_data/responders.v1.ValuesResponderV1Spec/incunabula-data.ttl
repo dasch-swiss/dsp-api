@@ -1,0 +1,1481 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmln.com/foaf/0.1/> .
+@prefix dc: <http://www.knora.org/ontology/dc#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@base <http://www.knora.org/ontology/incunabula> .
+
+@prefix incunabula: <http://www.knora.org/ontology/incunabula#> .
+@prefix : <http://www.knora.org/ontology/incunabula#> .
+
+
+### ###########################################
+### <http://data.knora.org/projects/77275339>
+
+<http://data.knora.org/projects/77275339> rdf:type knora-base:knoraProject ;
+
+                                          knora-base:projectBasepath "/path/Incunabula" ;
+
+                                          knora-base:projectLongname "Bilderfolgen Basler Frühdrucke" ;
+
+                                          knora-base:projectShortname "incunabula" ;
+
+                                          knora-base:projectDescription """<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.
+</p>
+<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler). 
+</p>
+<p>
+Das Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.
+</p>
+Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.
+</p>""" ;
+
+                                          knora-base:projectKeyword """Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images""" ;
+
+                                          knora-base:projectLogo "incunabula_logo.png" .
+
+##########################################################
+#
+# RESOURCES
+#
+##########################################################
+
+
+### ###########################################
+### <http://data.knora.org/c5058f3a>
+
+<http://data.knora.org/c5058f3a> rdf:type incunabula:book ;
+
+                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                 knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                 knora-base:hasModifyPermission knora-base:Owner ,
+                                                                 knora-base:ProjectMember ;
+
+                                 knora-base:hasViewPermission knora-base:KnownUser ;
+
+                                 knora-base:hasRestrictedViewPermission knora-base:UnknownUser ;
+
+                                 incunabula:title <http://data.knora.org/c5058f3a/values/c3295339> ;
+
+                                 incunabula:hasAuthor <http://data.knora.org/c5058f3a/values/8653a672> ;
+
+                                 incunabula:publisher <http://data.knora.org/c5058f3a/values/497df9ab> ;
+
+                                 incunabula:publoc <http://data.knora.org/c5058f3a/values/0ca74ce5> ;
+
+                                 incunabula:pubdate <http://data.knora.org/c5058f3a/values/cfd09f1e01> ;
+
+                                 incunabula:location <http://data.knora.org/c5058f3a/values/92faf25701> ;
+
+                                 incunabula:url <http://data.knora.org/c5058f3a/values/10e00c7acc2704> ;
+
+                                 incunabula:physical_desc <http://data.knora.org/c5058f3a/values/5524469101> ;
+
+                                 incunabula:citation <http://data.knora.org/c5058f3a/values/184e99ca01> ,
+                                                     <http://data.knora.org/c5058f3a/values/db77ec0302> ,
+                                                     <http://data.knora.org/c5058f3a/values/9ea13f3d02> ;
+
+                                 rdfs:label """Zeitglöcklein des Lebens und Leidens Christi""" ;
+
+                                 knora-base:creationDate "0000-00-00T00:00:00"^^xsd:dateTimeStamp .
+
+
+### ###########################################
+### <http://data.knora.org/c5058f3a/values/c3295339>
+
+<http://data.knora.org/c5058f3a/values/c3295339> rdf:type knora-base:TextValue ;
+
+                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                 knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                 knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                 knora-base:valueHasString """Zeitglöcklein des Lebens und Leidens Christi""" ;
+
+                                                 knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                 knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                 knora-base:hasModifyPermission knora-base:Owner ;
+
+                                                 knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                               knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/c5058f3a/values/8653a672>
+
+<http://data.knora.org/c5058f3a/values/8653a672> rdf:type knora-base:TextValue ;
+
+                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                 knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                 knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                 knora-base:valueHasString """Berthold, der Bruder""" ;
+
+                                                 knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                 knora-base:hasViewPermission knora-base:UnknownUser ,
+                                                                               knora-base:KnownUser ;
+
+                                                 knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                 knora-base:hasDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/c5058f3a/values/497df9ab>
+
+<http://data.knora.org/c5058f3a/values/497df9ab> rdf:type knora-base:TextValue ;
+
+                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                 knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                 knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                 knora-base:valueHasString """Johann Amerbach""" ;
+
+                                                 knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                 knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                 knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                 knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                               knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/c5058f3a/values/0ca74ce5>
+
+<http://data.knora.org/c5058f3a/values/0ca74ce5> rdf:type knora-base:TextValue ;
+
+                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                 knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                 knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                 knora-base:valueHasString """Basel""" ;
+
+                                                 knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                 knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                 knora-base:hasViewPermission knora-base:ProjectMember ,
+                                                                               knora-base:KnownUser ,
+                                                                               knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/c5058f3a/values/cfd09f1e01>
+
+<http://data.knora.org/c5058f3a/values/cfd09f1e01> rdf:type knora-base:DateValue ;
+
+                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                   knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                   knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                   knora-base:valueHasString """1492-01-01 - 1492-12-31""" ;
+
+                                                   knora-base:valueHasCalendar "JULIAN" ;
+
+                                                   knora-base:valueHasStartJDC "2266011"^^xsd:integer ;
+
+                                                   knora-base:valueHasStartPrecision "YEAR" ;
+
+                                                   knora-base:valueHasEndJDC "2266376"^^xsd:integer ;
+
+                                                   knora-base:valueHasEndPrecision "YEAR" ;
+
+                                                   knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                   knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                   knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                   knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                 knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/c5058f3a/values/92faf25701>
+
+<http://data.knora.org/c5058f3a/values/92faf25701> rdf:type knora-base:TextValue ;
+
+                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                   knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                   knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                   knora-base:valueHasString """Universitäts- und Stadtbibliothek Köln, Sign: AD+S167""" ;
+
+                                                   knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                   knora-base:hasDeletePermission knora-base:Owner ,
+                                                                                  knora-base:ProjectMember ;
+
+                                                   knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                 knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/c5058f3a/values/10e00c7acc2704>
+
+<http://data.knora.org/c5058f3a/values/10e00c7acc2704> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasViewPermission knora-base:UnknownUser ,
+                                                                                     knora-base:KnownUser ;
+
+                                                       knora-base:hasDeletePermission knora-base:ProjectMember ,
+                                                                                      knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/c5058f3a/values/5524469101>
+
+<http://data.knora.org/c5058f3a/values/5524469101> rdf:type knora-base:TextValue ;
+
+                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                   knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                   knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                   knora-base:valueHasString """Dimension: 8°""" ;
+
+                                                   knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                   knora-base:hasViewPermission knora-base:UnknownUser ,
+                                                                                 knora-base:KnownUser ;
+
+                                                   knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                   knora-base:hasDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/c5058f3a/values/184e99ca01>
+
+<http://data.knora.org/c5058f3a/values/184e99ca01> rdf:type knora-base:TextValue ;
+
+                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                   knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                   knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                   knora-base:valueHasString """Schramm Bd. XXI, S. 27""" ;
+
+                                                   knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                   knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                   knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                   knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                 knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/c5058f3a/values/db77ec0302>
+
+<http://data.knora.org/c5058f3a/values/db77ec0302> rdf:type knora-base:TextValue ;
+
+                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                   knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                   knora-base:valueHasOrder "1"^^xsd:integer ;
+
+                                                   knora-base:valueHasString """GW 4168""" ;
+
+                                                   knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                   knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                   knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                   knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                 knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/c5058f3a/values/9ea13f3d02>
+
+<http://data.knora.org/c5058f3a/values/9ea13f3d02> rdf:type knora-base:TextValue ;
+
+                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                   knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                   knora-base:valueHasOrder "2"^^xsd:integer ;
+
+                                                   knora-base:valueHasString """ISTC ib00512000""" ;
+
+                                                   knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                   knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                   knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                   knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                 knora-base:UnknownUser .
+
+### ###########################################
+### <http://data.knora.org/cb1a74e3e2f6>
+
+<http://data.knora.org/cb1a74e3e2f6> rdf:type knora-base:LinkObj ;
+
+                                     knora-base:attachedToUser <http://data.knora.org/users/5d741e8e0e> ;
+
+                                     knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                     knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                  knora-base:UnknownUser ;
+
+                                     knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                     knora-base:hasChangeRightsPermisson knora-base:Owner ;
+
+                                     rdfs:label """Diese drei Texte sind in einem Band zusammengebunden.""" ;
+
+                                     knora-base:creationDate "Z"^^xsd:dateTimeStamp .
+
+### ###########################################
+### <http://data.knora.org/8a0b1e75>
+
+<http://data.knora.org/8a0b1e75> rdf:type incunabula:page ;
+
+                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                 knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                 knora-base:hasRestrictedViewPermission knora-base:UnknownUser ;
+
+                                 knora-base:hasViewPermission knora-base:KnownUser ;
+
+                                 knora-base:hasModifyPermission knora-base:ProjectMember ,
+                                                                knora-base:Owner ;
+
+                                 incunabula:pagenum <http://data.knora.org/8a0b1e75/values/61cb927602> ;
+
+                                 incunabula:partOf <http://data.knora.org/c5058f3a> ;
+
+                                 incunabula:partOfValue <http://data.knora.org/8a0b1e75/values/3a7b5130-22c2-4400-a794-062b7a3e3436> ;
+
+                                 incunabula:description <http://data.knora.org/8a0b1e75/values/3e3d4dc0e922> ;
+
+                                 incunabula:page_comment <http://data.knora.org/8a0b1e75/values/e80b2d895f23> ;
+
+                                 incunabula:origname <http://data.knora.org/8a0b1e75/values/aa488c2203> ;
+
+                                 rdfs:label """a1r, Titelblatt""" ;
+
+                                 knora-base:hasStillImageFileValue <http://data.knora.org/8a0b1e75/reps/bf255339> ,
+                                                         <http://data.knora.org/8a0b1e75/reps/7e4ba672> ;
+
+                                 knora-base:creationDate "0000-00-00T00:00:00"^^xsd:dateTimeStamp .
+
+
+### ###########################################
+### <http://data.knora.org/8a0b1e75/values/61cb927602>
+
+<http://data.knora.org/8a0b1e75/values/61cb927602> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                   knora-base:valueHasString """a1r, Titelblatt""" ;
+
+                                                   knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                   rdf:type knora-base:TextValue ;
+
+                                                   knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
+
+                                                   knora-base:hasViewPermission knora-base:UnknownUser ,
+                                                                                knora-base:KnownUser ;
+
+                                                   knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                   knora-base:hasDeletePermission knora-base:Owner .
+
+
+
+
+### ###########################################
+### <http://data.knora.org/8a0b1e75/values/3e3d4dc0e922>
+
+<http://data.knora.org/8a0b1e75/values/3e3d4dc0e922> knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+
+                                                     knora-base:valueHasString """Titel: \"Das andechtig zitglo(e)gglyn | des lebens vnd lide(n)s christi nach | den xxiiij stunden vßgeteilt.\"
+Holzschnitt: Schlaguhr mit Zifferblatt für 24 Stunden, auf deren oberem Rand zu beiden Seiten einer Glocke die Verkündigungsszene mit Maria (links) und dem Engel (rechts) zu sehen ist.
+Bordüre: Ranken mit Fabelwesen, Holzschnitt.
+Kolorierung: Rot, Blau, Grün, Gelb, Braun.
+Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
+
+                                                     knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                     rdf:type knora-base:TextValue ;
+
+                                                     knora-base:valueCreationDate "2012-01-22T12:05:57"^^xsd:dateTimeStamp ;
+
+                                                     knora-base:hasViewPermission knora-base:UnknownUser ,
+                                                                                  knora-base:KnownUser ;
+
+                                                     knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                     knora-base:hasDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/8a0b1e75/values/e80b2d895f23>
+
+<http://data.knora.org/8a0b1e75/values/e80b2d895f23> knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+
+                                                     knora-base:valueHasString """Schramm, Bd. 21, Abb. 601.""" ;
+
+                                                     knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                     rdf:type knora-base:TextValue ;
+
+                                                     knora-base:valueCreationDate "2012-01-24T18:07:40"^^xsd:dateTimeStamp ;
+
+                                                     knora-base:hasViewPermission knora-base:UnknownUser ,
+                                                                                  knora-base:KnownUser ;
+
+                                                     knora-base:hasDeletePermission knora-base:ProjectMember ,
+                                                                                    knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/8a0b1e75/values/aa488c2203>
+
+<http://data.knora.org/8a0b1e75/values/aa488c2203> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                   knora-base:valueHasString """ad+s167_druck1=0001.tif""" ;
+
+                                                   knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                   rdf:type knora-base:TextValue ;
+
+                                                   knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
+
+                                                   knora-base:hasViewPermission knora-base:UnknownUser ,
+                                                                                knora-base:KnownUser ,
+                                                                                knora-base:ProjectMember ,
+                                                                                knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/8a0b1e75/reps/bf255339>
+
+<http://data.knora.org/8a0b1e75/reps/bf255339> knora-base:valueHasString "ad+s167_druck1=0001.tif" ;
+
+                                               knora-base:originalFilename "ad+s167_druck1=0001.tif" ;
+
+                                               knora-base:originalMimeType "image/tiff" ;
+
+                                               knora-base:internalFilename "incunabula_0000000002.jpg" ;
+
+                                               knora-base:internalMimeType "image/jpeg" ;
+
+                                               knora-base:valueCreationDate "2012-11-21T16:49:35Z"^^xsd:dateTimeStamp ;
+
+                                               knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                               rdf:type knora-base:StillImageFileValue ;
+
+                                               knora-base:dimX "95"^^xsd:integer ;
+
+                                               knora-base:dimY "128"^^xsd:integer ;
+
+                                               knora-base:qualityLevel "10"^^xsd:integer ;
+
+                                               knora-base:isPreview "true"^^xsd:boolean ;
+
+                                               knora-base:hasRestrictedViewPermission knora-base:UnknownUser ;
+
+                                               knora-base:hasViewPermission knora-base:KnownUser ;
+
+                                               knora-base:hasModifyPermission knora-base:ProjectMember ,
+                                                                              knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/8a0b1e75/reps/7e4ba672>
+
+<http://data.knora.org/8a0b1e75/reps/7e4ba672> knora-base:valueHasString "ad+s167_druck1=0001.tif" ;
+
+                                               knora-base:originalFilename "ad+s167_druck1=0001.tif" ;
+
+                                               knora-base:originalMimeType "image/tiff" ;
+
+                                               knora-base:internalFilename "incunabula_0000000002.jp2" ;
+
+                                               knora-base:internalMimeType "image/jp2" ;
+
+                                               knora-base:valueCreationDate "2012-11-21T16:49:36Z"^^xsd:dateTimeStamp ;
+
+                                               knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                               rdf:type knora-base:StillImageFileValue ;
+
+                                               knora-base:dimX "2613"^^xsd:integer ;
+
+                                               knora-base:dimY "3505"^^xsd:integer ;
+
+                                               knora-base:qualityLevel "100"^^xsd:integer ;
+
+                                               knora-base:hasRestrictedViewPermission knora-base:UnknownUser ;
+
+                                               knora-base:hasViewPermission knora-base:KnownUser ;
+
+                                               knora-base:hasModifyPermission knora-base:ProjectMember ,
+                                                                              knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/8a0b1e75/values/3a7b5130-22c2-4400-a794-062b7a3e3436>
+
+<http://data.knora.org/8a0b1e75/values/3a7b5130-22c2-4400-a794-062b7a3e3436> rdf:type knora-base:LinkValue ;
+
+                                                                             rdf:subject <http://data.knora.org/8a0b1e75> ;
+
+                                                                             rdf:predicate incunabula:partOf ;
+
+                                                                             rdf:object <http://data.knora.org/c5058f3a> ;
+
+                                                                             knora-base:valueHasRefCount "1"^^xsd:integer ;
+
+                                                                             knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
+
+                                                                             knora-base:hasViewPermission knora-base:UnknownUser ,
+                                                                                                          knora-base:KnownUser ,
+                                                                                                          knora-base:ProjectMember ;
+
+                                                                             knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                                             knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                                             knora-base:valueHasString """1""" .
+
+
+### ###########################################
+### <http://data.knora.org/5e51519c4407>
+
+<http://data.knora.org/5e51519c4407> rdf:type knora-base:Region ;
+
+                                     knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+
+                                     knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                     knora-base:hasViewPermission knora-base:UnknownUser ,
+                                                                  knora-base:KnownUser ;
+
+                                     knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                     knora-base:hasChangeRightsPermisson knora-base:Owner ;
+
+                                     knora-base:hasComment <http://data.knora.org/5e51519c4407/values/d35ca8aeec2a> ;
+
+                                     #knora-base:hasGeometry <http://data.knora.org/5e51519c4407/values/9686fbe7ec2a> ;
+
+                                     rdfs:label """Defekter Druckstock""" ;
+
+                                     knora-base:creationDate "Z"^^xsd:dateTimeStamp .
+
+
+
+### ###########################################
+### <http://data.knora.org/5e51519c4407/values/d35ca8aeec2a>
+
+<http://data.knora.org/5e51519c4407/values/d35ca8aeec2a> knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+
+                                                         knora-base:valueHasString """Defekter Druckstock""" ;
+
+                                                         knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                         rdf:type knora-base:TextValue ;
+
+                                                         knora-base:valueCreationDate "Z"^^xsd:dateTimeStamp ;
+
+                                                         knora-base:hasViewPermission knora-base:UnknownUser ,
+                                                                                      knora-base:KnownUser ;
+
+                                                         knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                         knora-base:hasDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/5e51519c4407/values/9686fbe7ec2a>
+
+#<http://data.knora.org/5e51519c4407/values/9686fbe7ec2a> knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+
+#                                                         knora-base:valueHasString """{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}""" ;
+
+#                                                         knora-base:valueHasOrder "0"^^xsd:integer ;
+
+#                                                         rdf:type knora-base:GeomValue ;
+
+#                                                         knora-base:valueHasGeometry "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}" ;
+
+#                                                         knora-base:valueCreationDate "Z"^^xsd:dateTimeStamp ;
+
+#                                                         knora-base:hasViewPermission knora-base:UnknownUser ,
+#                                                                                      knora-base:KnownUser ;
+
+#                                                         knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+#                                                         knora-base:hasDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/4f11adaf>
+
+<http://data.knora.org/4f11adaf> rdf:type incunabula:page ;
+
+                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                 knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                 knora-base:hasRestrictedViewPermission knora-base:UnknownUser ;
+
+                                 knora-base:hasViewPermission knora-base:KnownUser ;
+
+                                 knora-base:hasModifyPermission knora-base:ProjectMember ,
+                                                                knora-base:Owner ;
+
+                                 rdfs:label """a1v, Titelblatt, Rückseite""" .
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c>
+
+<http://data.knora.org/e41ab5695c> rdf:type incunabula:book ;
+
+                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                   knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                   knora-base:hasModifyPermission knora-base:Owner ;
+
+                                   knora-base:hasViewPermission knora-base:KnownUser ;
+
+                                   knora-base:hasRestrictedViewPermission knora-base:UnknownUser ;
+
+                                   incunabula:title <http://data.knora.org/e41ab5695c/values/391cf1886a01> ,
+                                                    <http://data.knora.org/e41ab5695c/values/fc4544c26a01> ;
+
+                                   incunabula:hasAuthor <http://data.knora.org/e41ab5695c/values/bf6f97fb6a01> ;
+
+                                   incunabula:publisher <http://data.knora.org/e41ab5695c/values/8299ea346b01> ;
+
+                                   incunabula:publoc <http://data.knora.org/e41ab5695c/values/45c33d6e6b01> ;
+
+                                   incunabula:pubdate <http://data.knora.org/e41ab5695c/values/08ed90a76b01> ;
+
+                                   incunabula:location <http://data.knora.org/e41ab5695c/values/cb16e4e06b01> ;
+
+                                   incunabula:url <http://data.knora.org/e41ab5695c/values/10102f00089e04> ;
+
+                                   incunabula:physical_desc <http://data.knora.org/e41ab5695c/values/8e40371a6c01> ;
+
+                                   incunabula:note <http://data.knora.org/e41ab5695c/values/d3398239089e04> ;
+
+                                   incunabula:citation <http://data.knora.org/e41ab5695c/values/516a8a536c01> ,
+                                                       <http://data.knora.org/e41ab5695c/values/1494dd8c6c01> ,
+                                                       <http://data.knora.org/e41ab5695c/values/82db62ef0123> ;
+
+                                   rdfs:label """Orationes""" ;
+
+                                   knora-base:creationDate "0000-00-00T00:00:00"^^xsd:dateTimeStamp .
+
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c/values/391cf1886a01>
+
+<http://data.knora.org/e41ab5695c/values/391cf1886a01> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """Orationes""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c/values/fc4544c26a01>
+
+<http://data.knora.org/e41ab5695c/values/fc4544c26a01> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """Sant Brigitten gebettly""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c/values/bf6f97fb6a01>
+
+<http://data.knora.org/e41ab5695c/values/bf6f97fb6a01> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """Birgitta, Hl.""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c/values/8299ea346b01>
+
+<http://data.knora.org/e41ab5695c/values/8299ea346b01> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """Johann Amerbach""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c/values/45c33d6e6b01>
+
+<http://data.knora.org/e41ab5695c/values/45c33d6e6b01> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """Basel""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasViewPermission knora-base:ProjectMember ,
+                                                                                     knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c/values/08ed90a76b01>
+
+<http://data.knora.org/e41ab5695c/values/08ed90a76b01> rdf:type knora-base:DateValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """1492-01-01 - 1492-12-31""" ;
+
+                                                       knora-base:valueHasCalendar "JULIAN" ;
+
+                                                       knora-base:valueHasStartJDC "2266011"^^xsd:integer ;
+
+                                                       knora-base:valueHasStartPrecision "YEAR" ;
+
+                                                       knora-base:valueHasEndJDC "2266376"^^xsd:integer ;
+
+                                                       knora-base:valueHasEndPrecision "YEAR" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasViewPermission knora-base:UnknownUser ,
+                                                                                     knora-base:KnownUser ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c/values/cb16e4e06b01>
+
+<http://data.knora.org/e41ab5695c/values/cb16e4e06b01> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasString """Universitäts- und Stadtbibliothek Köln, Sign: AD+S167""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ,
+                                                                                      knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c/values/10102f00089e04>
+
+<http://data.knora.org/e41ab5695c/values/10102f00089e04> rdf:type knora-base:TextValue ;
+
+                                                         knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                         knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                         knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                         knora-base:valueHasString """http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1""" ;
+
+                                                         knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                         knora-base:hasDeletePermission knora-base:Owner ,
+                                                                                        knora-base:ProjectMember ;
+
+                                                         knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                       knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c/values/8e40371a6c01>
+
+<http://data.knora.org/e41ab5695c/values/8e40371a6c01> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """[12] Bl. : Ill. ; 8°""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c/values/d3398239089e04>
+
+<http://data.knora.org/e41ab5695c/values/d3398239089e04> rdf:type knora-base:TextValue ;
+
+                                                         knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                         knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                         knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                         knora-base:valueHasString """Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach\n""" ;
+
+                                                         knora-base:valueHasStandoff [
+                                                                                        rdf:type knora-base:Standoff ;
+                                                                                        knora-base:standoffHasAttribute "bold" ;
+                                                                                        knora-base:standoffHasStart "21"^^xsd:integer ;
+                                                                                        knora-base:standoffHasEnd "25"^^xsd:integer
+                                                                                      ] ;
+
+                                                         knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                         knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                         knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                         knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                       knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c/values/516a8a536c01>
+
+<http://data.knora.org/e41ab5695c/values/516a8a536c01> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """GW 4386""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c/values/1494dd8c6c01>
+
+<http://data.knora.org/e41ab5695c/values/1494dd8c6c01> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "1"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """ISTC ib00684000""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/e41ab5695c/values/82db62ef0123>
+
+<http://data.knora.org/e41ab5695c/values/82db62ef0123> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "2"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """Schramm, Bd. 21, S. 27.""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/21abac2162>
+
+<http://data.knora.org/21abac2162> rdf:type incunabula:book ;
+
+                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                   knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                   knora-base:hasModifyPermission knora-base:Owner ,
+                                                                   knora-base:ProjectMember ;
+
+                                   knora-base:hasViewPermission knora-base:KnownUser ;
+
+                                   knora-base:hasRestrictedViewPermission knora-base:UnknownUser ;
+
+                                   incunabula:title <http://data.knora.org/21abac2162/values/f76660458201> ;
+
+                                   incunabula:hasAuthor <http://data.knora.org/21abac2162/values/ba90b37e8201> ;
+
+                                   incunabula:publisher <http://data.knora.org/21abac2162/values/7dba06b88201> ;
+
+                                   incunabula:publoc <http://data.knora.org/21abac2162/values/40e459f18201> ;
+
+                                   incunabula:location <http://data.knora.org/21abac2162/values/c63700648301> ;
+
+                                   incunabula:url <http://data.knora.org/21abac2162/values/8abc888d079e04> ;
+
+                                   incunabula:physical_desc <http://data.knora.org/21abac2162/values/8961539d8301> ;
+
+                                   incunabula:note <http://data.knora.org/21abac2162/values/4de6dbc6079e04> ;
+
+                                   incunabula:citation <http://data.knora.org/21abac2162/values/4c8ba6d68301> ,
+                                                       <http://data.knora.org/21abac2162/values/0fb5f90f8401> ,
+                                                       <http://data.knora.org/21abac2162/values/c7923554079e04> ;
+
+                                   rdfs:label """Lob der Glieder Mariens""" ;
+
+                                   knora-base:creationDate "0000-00-00T00:00:00"^^xsd:dateTimeStamp .
+
+
+### ###########################################
+### <http://data.knora.org/21abac2162/values/f76660458201>
+
+<http://data.knora.org/21abac2162/values/f76660458201> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """Lob der Glieder Mariens""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:previousValue <http://data.knora.org/21abac2162/values/22222222> ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/21abac2162/values/22222222>
+
+<http://data.knora.org/21abac2162/values/22222222> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """Lob der Glieder Mariens previous 1""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:previousValue <http://data.knora.org/21abac2162/values/11111111> ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasViewPermission knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/21abac2162/values/11111111>
+
+<http://data.knora.org/21abac2162/values/11111111> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """Lob der Glieder Mariens previous 2""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+### ###########################################
+### <http://data.knora.org/21abac2162/values/ba90b37e8201>
+
+<http://data.knora.org/21abac2162/values/ba90b37e8201> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasViewPermission knora-base:UnknownUser ,
+                                                                                     knora-base:KnownUser ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/21abac2162/values/7dba06b88201>
+
+<http://data.knora.org/21abac2162/values/7dba06b88201> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """Johann Amerbach""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/21abac2162/values/40e459f18201>
+
+<http://data.knora.org/21abac2162/values/40e459f18201> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """Basel""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasViewPermission knora-base:ProjectMember ,
+                                                                                     knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/21abac2162/values/c63700648301>
+
+<http://data.knora.org/21abac2162/values/c63700648301> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """Universitäts- und Stadtbibliothek Köln, Sign: AD+S167""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ,
+                                                                                      knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/21abac2162/values/8abc888d079e04>
+
+<http://data.knora.org/21abac2162/values/8abc888d079e04> rdf:type knora-base:TextValue ;
+
+                                                         knora-base:attachedToUser <http://data.knora.org/users/5d741e8e0e> ;
+
+                                                         knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                         knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                         knora-base:valueHasString """http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1""" ;
+
+                                                         knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                         knora-base:hasDeletePermission knora-base:Owner ,
+                                                                                        knora-base:ProjectMember ;
+
+                                                         knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                       knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/21abac2162/values/8961539d8301>
+
+<http://data.knora.org/21abac2162/values/8961539d8301> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """[12] Bl. : Ill. ; 8° """ ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/21abac2162/values/4de6dbc6079e04>
+
+<http://data.knora.org/21abac2162/values/4de6dbc6079e04> rdf:type knora-base:TextValue ;
+
+                                                         knora-base:attachedToUser <http://data.knora.org/users/5d741e8e0e> ;
+
+                                                         knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                         knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                         knora-base:valueHasString """Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach""" ;
+
+                                                         knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                         knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                         knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                         knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                       knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/21abac2162/values/4c8ba6d68301>
+
+<http://data.knora.org/21abac2162/values/4c8ba6d68301> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """Schramm, Bd. XXI, S. 27""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/21abac2162/values/0fb5f90f8401>
+
+<http://data.knora.org/21abac2162/values/0fb5f90f8401> rdf:type knora-base:TextValue ;
+
+                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                       knora-base:valueHasOrder "1"^^xsd:integer ;
+
+                                                       knora-base:valueHasString """ISTC im00266000""" ;
+
+                                                       knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                     knora-base:UnknownUser .
+
+
+### ###########################################
+### <http://data.knora.org/21abac2162/values/c7923554079e04>
+
+<http://data.knora.org/21abac2162/values/c7923554079e04> rdf:type knora-base:TextValue ;
+
+                                                         knora-base:attachedToUser <http://data.knora.org/users/5d741e8e0e> ;
+
+                                                         knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                                         knora-base:valueHasOrder "2"^^xsd:integer ;
+
+                                                         knora-base:valueHasString """GW M18561""" ;
+
+                                                         knora-base:valueCreationDate ""^^xsd:dateTimeStamp ;
+
+                                                         knora-base:hasDeletePermission knora-base:Owner ;
+
+                                                         knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                         knora-base:hasViewPermission knora-base:KnownUser ,
+                                                                                       knora-base:UnknownUser .
+
+
+
+### ###########################################
+### <http://data.knora.org/9935159f67>
+
+<http://data.knora.org/9935159f67> rdf:type incunabula:book ;
+
+                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                   knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                   knora-base:hasRestrictedViewPermission knora-base:UnknownUser ;
+
+                                   knora-base:hasViewPermission knora-base:KnownUser ;
+
+                                   knora-base:hasModifyPermission knora-base:ProjectMember ,
+                                                                  knora-base:Owner ;
+
+                                   incunabula:title <http://data.knora.org/9935159f67/values/e6e02fe39801> ;
+
+                                   rdfs:label """Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)""" ;
+
+                                   knora-base:creationDate "0000-00-00T00:00:00"^^xsd:dateTimeStamp ;
+
+                                   knora-base:isDeleted true .
+
+
+### ###########################################
+### <http://data.knora.org/9935159f67/values/e6e02fe39801>
+
+<http://data.knora.org/9935159f67/values/e6e02fe39801> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                                       knora-base:valueHasString """Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)""" ;
+
+                                                       knora-base:valueHasOrder "0"^^xsd:integer ;
+
+                                                       rdf:type knora-base:TextValue ;
+
+                                                       knora-base:valueCreationDate "2011-04-14T11:19:23"^^xsd:dateTimeStamp ;
+
+                                                       knora-base:hasViewPermission knora-base:UnknownUser ,
+                                                                                    knora-base:KnownUser ;
+
+                                                       knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+                                                       knora-base:hasDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### <http://data.knora.org/c3f913666f>
+
+<http://data.knora.org/c3f913666f> rdf:type incunabula:book ;
+
+                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                   knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                   knora-base:hasViewPermission knora-base:KnownUser ;
+
+                                   knora-base:hasRestrictedViewPermission knora-base:UnknownUser ;
+
+                                   knora-base:hasModifyPermission knora-base:ProjectMember ,
+                                                                  knora-base:Owner ;
+
+                                   rdfs:label """De generatione Christi""" ;
+
+                                   knora-base:creationDate "Z"^^xsd:dateTimeStamp .
+
+
+##########################################################
+#
+# PERSONS
+#
+##########################################################
+
+
+
+### ###########################################
+### <http://data.knora.org/users/91e19f1e01>
+
+<http://data.knora.org/users/91e19f1e01> rdf:type knora-base:User ;
+
+                                         knora-base:userid "root" ;
+
+                                         foaf:lastName "Admin" ;
+
+                                         foaf:firstName "Administrator" ;
+
+                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+
+                                         knora-base:email "test@test.ch" ;
+
+                                         knora-base:phone "123456" ;
+
+                                         knora-base:preferredLanguage "de" ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/77275339> .
+
+
+### ###########################################
+### <http://data.knora.org/users/b83acc5f05>
+
+<http://data.knora.org/users/b83acc5f05> rdf:type knora-base:User ;
+
+                                         knora-base:userid "testuer" ;
+
+                                         foaf:lastName "Test" ;
+
+                                         foaf:firstName "User" ;
+
+                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+
+                                         knora-base:email "test@test.ch" ;
+
+                                         knora-base:preferredLanguage "de" ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/77275339> .

@@ -1,0 +1,56 @@
+#
+# Sesame configuration template for an OWLIM-SE Monitor repository
+#
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rep: <http://www.openrdf.org/config/repository#>.
+@prefix sr: <http://www.openrdf.org/config/repository/sail#>.
+@prefix sail: <http://www.openrdf.org/config/sail#>.
+@prefix owlim: <http://www.ontotext.com/trree/owlim#>.
+
+[] a rep:Repository ;
+    rep:repositoryID "{%Repository ID|owlim-se-mo-test%}" ;
+    rdfs:label "{%Repository title|OWLIM-SE monitor repository%}" ;
+    rep:repositoryImpl [
+        rep:repositoryType "owlim:MonitorRepository" ;
+        sr:sailImpl [
+            sail:sailType "owlim:Sail" ;
+            
+            owlim:owlim-license "{%License file (leave blank for evaluation)%}" ;
+       
+            owlim:base-URL "{%Base URL|http://example.org/owlim#%}" ;
+            owlim:defaultNS "{%Default namespaces for imports(';' delimited)%}" ;
+            owlim:entity-index-size "{%Entity index size|200000%}" ;
+            owlim:entity-id-size  "{%Entity ID bit-size|32%}" ;
+            owlim:imports "{%Imported RDF files(';' delimited)%}" ;
+        	owlim:repository-type "{%Repository type|file-repository%}" ;
+            owlim:ruleset "{%Rule-set|owl-horst-optimized%}" ;
+            owlim:storage-folder "{%Storage folder|storage%}" ;
+ 
+            owlim:enable-context-index "{%Use context index|false%}" ;
+            owlim:cache-memory "{%Total cache memory|80m%}" ;
+            owlim:tuple-index-memory "{%Tuple index memory|80m%}" ;
+
+            owlim:enablePredicateList "{%Use predicate indices|false%}" ;
+            owlim:predicate-memory "{%Predicate index memory|0%}" ;
+
+            owlim:fts-memory "{%Full-text search memory|0%}" ;
+            owlim:ftsIndexPolicy "{%Full-text search indexing policy|never%}" ;
+            owlim:ftsLiteralsOnly "{%Full-text search literals only|true%}" ;
+#            owlim:tokenization-regex  "{%Full-text search tokenisation regex|[\\p{L}\\d_]+%}" ;
+
+            owlim:in-memory-literal-properties "{%Cache literal language tags|false%}" ;
+            owlim:enable-literal-index "{%Enable literal index|true%}" ;
+            owlim:index-compression-ratio "{%Index compression ratio|-1%}" ;
+            
+            owlim:check-for-inconsistencies "{%Check for inconsistencies|false%}" ;
+            owlim:disable-sameAs  "{%Disable OWL sameAs optimisation|false%}" ;
+            owlim:enable-optimization  "{%Enable query optimisation|true%}" ;
+            owlim:transaction-mode "{%Transaction mode|safe%}" ;
+            owlim:transaction-isolation "{%Transaction isolation|true%}" ;
+            owlim:query-timeout  "{%Query time-out (seconds)|0%}" ;
+            owlim:query-limit-results  "{%Limit query results|0%}" ;
+            owlim:throw-QueryEvaluationException-on-timeout "{%Throw exception on query time-out|false%}" ;
+            owlim:useShutdownHooks  "{%Enable shutdown hooks|true%}" ;
+            owlim:read-only "{%Read-only|false%}" ;
+        ]
+    ].

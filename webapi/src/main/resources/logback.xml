@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- For assistance related to logback-translator or configuration  -->
+<!-- files in general, please contact the logback user mailing list -->
+<!-- at http://www.qos.ch/mailman/listinfo/logback-user             -->
+<!--                                                                -->
+<!-- For professional support please see                            -->
+<!--    http://www.qos.ch/shop/products/professionalSupport         -->
+<!--                                                                -->
+<configuration scan="false" debug="false">
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date{ISO8601} - %-5level - %logger - %X{sourceThread} - %X{akkaSource} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>logs/console.log</File>
+        <encoder>
+            <pattern>%date{ISO8601} - %-5level - %logger - %X{sourceThread} - %X{akkaSource} - %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/console.log.%d{yyyy-MM-dd-HH}</fileNamePattern>
+        </rollingPolicy>
+    </appender>
+
+    <logger name="org.apache.jena.riot" level="ERROR"/>
+    <logger name="org.apache.jena.tdb" level="ERROR"/>
+
+    <logger name="akka" level="INFO"/>
+    <logger name="akka.event.slf4j.Slf4jLogger" level="ERROR"/>
+
+    <logger name="net.sf.ehcache.config" level="ERROR"/>
+
+    <logger name="spray.can.server.HttpListener" level="ERROR"/>
+
+    <logger name="org.knora" level="DEBUG"/>
+    <logger name="org.knora.webapi" level="DEBUG"/>
+    <logger name="org.knora.webapi.util.authentication" level="INFO"/>
+    <logger name="org.knora.webapi.util.cache" level="INFO"/>
+    <logger name="org.knora.webapi.store.StoreManager" level="INFO"/>
+    <logger name="org.knora.webapi.store.triplestore" level="INFO"/>
+    <logger name="org.knora.webapi.responders.v1.CkanResponderV1" level="INFO"/>
+    <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
+
+    <root level="INFO">
+        <appender-ref ref="stdout"/>
+        <appender-ref ref="R"/>
+    </root>
+</configuration>

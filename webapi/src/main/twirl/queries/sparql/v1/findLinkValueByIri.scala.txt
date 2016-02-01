@@ -1,0 +1,100 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Looks for a `knora-base:LinkValue` given its IRI, returns all information about it, and checks whether the
+ * corresponding direct link also exists.
+ *
+ * @param subjectIri the IRI of the resource that is the source of the link.
+ * @param predicateIri the IRI of the property that links the two resources.
+ * @param maybeObjectIRI if provided, the IRI of the target resource.
+ * @param linkValueIri the IRI of the `LinkValue`.
+ *@
+@(subjectIri: IRI,
+  predicateIri: IRI,
+  maybeObjectIri: Option[IRI],
+  linkValueIri: IRI)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?linkValue ?directLinkExists ?targetResourceClass ?objPred ?objObj
+WHERE {
+    BIND(IRI("@subjectIri") AS ?subject)
+    BIND(IRI("@predicateIri") AS ?predicate)
+    BIND(IRI("@{predicateIri}Value") AS ?predicateForLinkValue)
+
+    @maybeObjectIri match {
+        case Some(objectIri) => {
+
+            BIND(IRI("@objectIri") AS ?object)
+
+        }
+
+        case None => {}
+    }
+
+    BIND(IRI("@linkValueIri") AS ?linkValue)
+
+    ?subject ?predicateForLinkValue ?linkValue .
+    ?linkValue rdf:type knora-base:LinkValue ;
+               rdf:subject ?subject ;
+               rdf:predicate ?predicate ;
+               rdf:object ?object .
+
+    OPTIONAL {
+        ?subject ?predicate ?object .
+        ?object rdf:type ?targetResourceClass .
+        BIND(true AS ?directLinkExists)
+    }
+
+    {
+        ?linkValue ?objPred ?objObj .
+
+        FILTER(?objPred != knora-base:attachedToProject)
+    }
+    UNION
+    {
+        @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
+
+        ?subject ?predicateForLinkValue ?linkValue . @* TODO: Why do we need this here? (Issue 235) *@
+        ?subject knora-base:attachedToProject ?resourceProject .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?valueProject .
+        }
+
+        BIND(knora-base:attachedToProject AS ?objPred)
+        BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+    }
+
+    @*
+
+    Once a LinkValue is deleted, it cannot be used again, and no new versions of it can be made.
+
+    *@
+
+    MINUS {
+        ?linkValue knora-base:isDeleted true .
+    }
+}

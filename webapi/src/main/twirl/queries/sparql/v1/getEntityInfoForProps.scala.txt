@@ -1,0 +1,57 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Gets information about OWL entities.
+ *
+ * @param entityIris a list of IRIs of OWL entities to get information about.
+ *@
+@(entityIris: Seq[IRI])
+
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?s ?isLinkProp ?p ?o ?lang
+
+WHERE {
+    @for((entityIri, index) <- entityIris.zipWithIndex) {
+        @if(index > 0) {
+            UNION
+        }
+
+        {
+            BIND(IRI("@entityIri") as ?s)
+
+            ?s ?p ?o .
+
+            BIND(lang(?o) as ?lang)
+
+            OPTIONAL {
+                ?s rdfs:subPropertyOf* knora-base:hasLinkTo .
+                BIND(true AS ?isLinkProp)
+            }
+        }
+    }
+}

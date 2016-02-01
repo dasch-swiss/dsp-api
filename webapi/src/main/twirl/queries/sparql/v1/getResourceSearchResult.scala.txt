@@ -1,0 +1,136 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.SparqlGenerationException
+
+@*
+ * Performs a search for resources matching the given criteria.
+ *
+ * @param phrase the search phrase (e.g. "Reise ins").
+ * @param lastTerm the last search term (e.g. "Heili").
+ * @param resourceTypeIri if set, restrict search to this resource type.
+ * @param numberOfProps the amount of describing properties to be returned for each found resource (e.g if set to two, for an incunabula book its title and creator would be returned).
+ * @param limitOfResults limits number of resources to be returned.
+ * @param triplestore the name of the triplestore being used. The template uses this value to generate the correct
+ *                    full-text search query syntax.
+ * @param separator The separater to be used when concatenating the value strings.
+ *
+ *@
+@(phrase: Option[String],
+  lastTerm: String,
+  resourceTypeIri: Option[IRI],
+  numberOfProps: Int,
+  limitOfResults: Int,
+  triplestore: String,
+  separator: Char)
+
+
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT ?resourceIri ?firstProp ?attachedToUser ?attachedToProject (GROUP_CONCAT(?permissionAssertion; separator=";") AS ?permissionAssertions)
+@if(numberOfProps > 1) {
+    (GROUP_CONCAT(?valueString; separator="@separator") AS ?values) (GROUP_CONCAT(?guiOrder; separator=";") AS ?guiOrders) (GROUP_CONCAT(?valueOrder; separator=";") AS ?valueOrders)
+}
+WHERE {
+
+    @triplestore match {
+
+        case "graphdb" | "graphdb-free" => {
+
+            @*
+
+            Use Query Parser Syntax: https://lucene.apache.org/core/3_6_2/queryparsersyntax.html
+
+            Combine the phrase (to be enclosed by double quotes) with the last term with a wildcard at the end.
+            This finds allthe strings that contain the exact phrase and the term with the wildcard.
+            Example: "Reise ins" "Heili" -> "Reise ins" AND Heili*
+
+            Apply filter statement containing a regex to make sure that lastTerm directly follows the phrase
+            (only necessary if we have several terms to search for).
+
+            *@
+
+            ?resourceIri rdfs:label ?firstProp .
+            ?firstProp <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@if(phrase.nonEmpty){"@phrase" AND }@lastTerm*' .
+            @if(phrase.nonEmpty){FILTER regex(?firstProp, "@phrase @lastTerm*", "i") .}
+
+
+
+        }
+
+        case "embedded-jena-tdb" | "fuseki" => {
+
+            ?resourceIri <http://jena.apache.org/text#query> '@if(phrase.nonEmpty){"@phrase" AND }@lastTerm*' .
+            ?resourceIri rdfs:label ?firstProp .
+            @if(phrase.nonEmpty){FILTER regex(?firstProp, "@phrase @lastTerm*", "i") .}
+
+        }
+
+        case other => {
+            @{throw SparqlGenerationException(s"Triplestore type $other is not supported in this SPARQL template"); ()}
+        }
+    }
+
+
+    ?resourceIri a ?resourceClass .
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+    @if(resourceTypeIri.nonEmpty) {
+        FILTER(?resourceClass = <@resourceTypeIri>)
+    }
+
+    OPTIONAL {
+        ?permission rdfs:subPropertyOf+ knora-base:hasPermission .
+        ?resourceIri ?permission ?group .
+        BIND(CONCAT(STR(?permission), ",", STR(?group)) as ?permissionAssertion)
+    }
+
+    @if(numberOfProps > 1) {
+        ?resourceIri ?property ?valueObjectIri .
+        ?property rdfs:range knora-base:TextValue .
+        ?valueObjectIri knora-base:valueHasString ?valueString .
+        ?valueObjectIri knora-base:valueHasOrder ?valueOrder .
+        ?property salsah-gui:guiOrder ?guiOrder .
+
+        MINUS {
+                 ?valueObjectIri knora-base:isDeleted true .
+             }
+    }
+
+    MINUS {
+        ?resourceIri knora-base:isDeleted true .
+    }
+
+    OPTIONAL {
+        ?resourceIri knora-base:attachedToUser ?attachedToUser .
+    }
+
+    OPTIONAL {
+        ?resourceIri knora-base:attachedToProject ?attachedToProject .
+    }
+
+}
+
+GROUP BY ?resourceIri ?firstProp ?attachedToUser ?attachedToProject
+
+
+LIMIT @limitOfResults

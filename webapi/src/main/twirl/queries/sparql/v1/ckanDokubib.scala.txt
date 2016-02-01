@@ -1,0 +1,54 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Gets all images that are part of the Dokubib project.
+ *
+ * @param projectIri the IRI of the Dokubib project.
+ * @param limitOption the maximum number of rows to return.
+ *@
+@(projectIri: IRI,
+  limitOption: Option[Int])
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix dokubib: <http://www.knora.org/ontology/dokubib#>
+
+SELECT ?bild
+WHERE {
+    BIND(IRI("@projectIri") as ?projectIri)
+
+    ?bild knora-base:attachedToProject ?projectIri .
+    ?bild rdf:type dokubib:bild .
+
+    MINUS {
+        ?bild knora-base:isDeleted true .
+    }
+}
+@limitOption match {
+    case Some(limit) => {
+        LIMIT @limit
+    }
+
+    case None => {}
+}

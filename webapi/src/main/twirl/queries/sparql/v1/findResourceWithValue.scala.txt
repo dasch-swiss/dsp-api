@@ -1,0 +1,53 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Searches for a resource that has a given value.
+ *
+ * @param searchValueIri the IRI of the value to look for.
+ *@
+@(searchValueIri: IRI)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?resource ?project ?property
+WHERE {
+    BIND(IRI("@searchValueIri") as ?searchValue)
+
+    @* Find something that links to searchValue, and make sure it's a Resource. *@
+
+    ?resource ?property ?searchValue .
+    ?resource rdf:type ?resourceClass .
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?property rdfs:subPropertyOf+ knora-base:hasValue .
+    ?resource knora-base:attachedToProject ?project .
+
+    MINUS {
+        ?resource knora-base:isDeleted true .
+    }
+
+    MINUS {
+        ?searchValue knora-base:isDeleted true .
+    }
+}

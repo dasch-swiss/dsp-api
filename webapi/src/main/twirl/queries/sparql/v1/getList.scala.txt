@@ -1,0 +1,77 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Given the root node of a hierarchical list, returns that node and all its children.
+ *
+ * @param rootNodeIri the IRI of the root node of the list.
+ * @param preferredLanguage the language code of the user's preferred language.
+ * @param fallbackLanguage the language code of the application's default language.
+ *@
+@(rootNodeIri: IRI, preferredLanguage: String, fallbackLanguage: String)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT DISTINCT ?node ?isRoot ?position ?nodeName ?label ?child
+WHERE {
+    BIND(IRI("@rootNodeIri") as ?rootNode)
+    BIND(str("@preferredLanguage") as ?preferredLanguage)
+    BIND(str("@fallbackLanguage") as ?fallbackLanguage)
+
+    ?rootNode knora-base:hasSubListNode* ?node .
+
+    OPTIONAL {
+        ?node knora-base:hasSubListNode ?child
+    }
+
+    OPTIONAL {
+        ?node knora-base:listNodePosition ?position
+    }
+
+    OPTIONAL {
+        ?node knora-base:isRootNode ?isRoot
+    }
+
+    OPTIONAL {
+        ?node knora-base:listNodeName ?nodeName .
+    }
+
+    OPTIONAL {
+        ?node rdfs:label ?preferredLanguageLabel .
+        FILTER (LANG(?preferredLanguageLabel) = ?preferredLanguage) .
+    }
+
+    OPTIONAL {
+        ?node rdfs:label ?fallbackLanguageLabel .
+        FILTER (LANG(?fallbackLanguageLabel) = ?fallbackLanguage) .
+    }
+
+    OPTIONAL {
+        ?node rdfs:label ?anyLanguageLabel .
+    }
+
+    BIND(COALESCE(str(?preferredLanguageLabel), str(?fallbackLanguageLabel), str(?anyLanguageLabel)) AS ?label)
+}
+
+ORDER BY DESC (?isRoot) ASC (?position)

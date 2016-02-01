@@ -1,0 +1,50 @@
+@prefix :           <http://base/#> .
+@prefix tdb:        <http://jena.hpl.hp.com/2008/tdb#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix ja:         <http://jena.hpl.hp.com/2005/11/Assembler#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix fuseki:     <http://jena.apache.org/fuseki#> .
+@prefix text:       <http://jena.apache.org/text#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+:service_tdb_all        a                                   fuseki:Service ;
+                        rdfs:label                          "TDB knora-test" ;
+                        fuseki:dataset                      :text_dataset ;
+                        fuseki:name                         "knora-test" ;
+                        fuseki:serviceQuery                 "query" , "sparql" ;
+                        fuseki:serviceReadGraphStore        "get" ;
+                        fuseki:serviceReadWriteGraphStore   "data" ;
+                        fuseki:serviceUpdate                "update" ;
+                        fuseki:serviceUpload                "upload" .
+
+## ---------------------------------------------------------------
+## This URI must be fixed - it's used to assemble the text dataset.
+
+:text_dataset           rdf:type                            text:TextDataset ;
+                        text:dataset                        :tdb_dataset_readwrite ;
+                        text:index                          :indexLucene .
+
+# A TDB datset used for RDF storage
+:tdb_dataset_readwrite  a                                   tdb:DatasetTDB ;
+                        tdb:unionDefaultGraph               true ;
+                        tdb:location                        "./run/databases/knora-test" .
+
+# Text index description
+:indexLucene            a                                   text:TextIndexLucene ;
+                        text:directory                      "./run/lucene/knora-test" ;
+                        ##text:directory                    "mem" ;
+                        text:entityMap                      :entMap .
+
+# Mapping in the index
+# URI stored in field "uri"
+# knora-base:valueHasString is mapped to field "text"
+:entMap                 a                                   text:EntityMap ;
+                        text:entityField                    "uri" ;
+                        text:defaultField                   "text" ;
+                        text:uidField                       "uid" ;
+                        text:map                            (
+                                                                [ text:field  "text" ;  text:predicate  rdfs:label ]
+                                                                [ text:field  "text" ;  text:predicate  knora-base:valueHasString ]
+                                                                [ text:field  "text" ;  text:predicate  knora-base:valueHasComment ]
+
+                                                            ) .

@@ -1,0 +1,263 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.SparqlGenerationException
+
+@*
+ * Performs a simple full-text search.
+ *
+ * @param countResults if true, just returns a count of the number of results.
+ * @param searchValue the value to be searched for.
+ * @param triplestore the name of the triplestore being used. The template uses this value to generate the correct
+ *                    full-text search query syntax.
+ * @param preferredLanguage the language code of the user's preferred language.
+ * @param fallbackLanguage the language code of the application's default language.
+ * @param projectIri if filtering by project is desired, the IRI of the project to search.
+ * @param restypeIri if filtering by resource type is desired, the IRI of the resource type to search for.
+ * @param offset the offset at which to start returning search results.
+ * @param limit the maximum number of search results to return.
+ *@
+@(countResults: Boolean,
+  searchTerms: Seq[String],
+  triplestore: String,
+  preferredLanguage: String,
+  fallbackLanguage: String,
+  projectIriOption: Option[IRI],
+  restypeIriOption: Option[IRI],
+  offsetOption: Option[Int],
+  limitOption: Option[Int],
+  separator: Char)
+
+@*
+
+In order for OFFSET and LIMIT to work, search queries must return only one row per matching resource. Therefore:
+
+1. If a single resource could match multiple times (e.g. because it is a book with two titles that both
+   match the search criteria), we have to collapse it to a single row. Since the v1 API can only return one
+   literal value per matching property anyway, we do this by selecting one arbitrarily, the SAMPLE
+   function.
+
+2. To get the permissions declared on each matching resource (so we can decide whether the user is authorised to
+   see it in the search results), we use the GROUP_CONCAT function.
+
+*@
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+@if(countResults) {
+SELECT (COUNT(DISTINCT ?resourceIri) as ?count)
+} else {
+SELECT DISTINCT
+    ?resourceIri
+    ?resourceClassIcon
+    ?resourceClassLabel
+    ?firstProperty
+    ?previewPath
+    ?previewDimX
+    ?previewDimY
+    ?attachedToUser
+    ?attachedToProject
+    (SAMPLE(?anyMatch) AS ?match)
+    (GROUP_CONCAT(DISTINCT(?permissionAssertion); separator=";") AS ?permissionAssertions)
+}
+WHERE {
+    BIND(STR("@preferredLanguage") AS ?preferredLanguage)
+    BIND(STR("@fallbackLanguage") AS ?fallbackLanguage)
+
+    @*
+
+    Lucene Search Syntax: Combine single terms with Boolean operator AND.
+    By default, Lucene would make an OR.
+
+    Loop over the search terms and prepend an AND when processing the second or any latter search term:
+
+    '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}'
+
+    *@
+
+    @triplestore match {
+        case "graphdb" | "graphdb-free" => {
+
+            ?s ?p ?literal .
+            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}' .
+
+        }
+
+        case "embedded-jena-tdb" | "fuseki" => {
+
+            ?s <http://jena.apache.org/text#query> '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}' .
+
+        }
+
+        case other => {
+            @{throw SparqlGenerationException(s"Triplestore type $other is not supported in this SPARQL template"); ()}
+        }
+    }
+
+    MINUS {
+        ?s knora-base:isDeleted true .
+    }
+
+    # ?s could be a resource (rdfs:label) or a value object
+
+    OPTIONAL {
+        # if this clause is executed, it is a value object
+
+        ?s a ?valueObjectType .
+        ?valueObjectType rdfs:subClassOf+ knora-base:Value .
+        ?resIri ?resourceProperty ?s .
+
+        @if(triplestore == "embedded-jena-tdb" || triplestore == "fuseki") {
+            ?s knora-base:valueHasString ?literal .
+            #?s ?p ?literal .
+            #FILTER(?p = knora-base:valueHasString || ?p = rdfs:label)
+        }
+
+        OPTIONAL {
+            ?resourceProperty rdfs:label ?preferredLanguageResourcePropertyLabel .
+            FILTER (LANG(?preferredLanguageResourcePropertyLabel) = ?preferredLanguage) .
+        }
+
+        OPTIONAL {
+            ?resourceProperty rdfs:label ?fallbackLanguageResourcePropertyLabel .
+            FILTER (LANG(?fallbackLanguageResourcePropertyLabel) = ?fallbackLanguage) .
+        }
+
+        OPTIONAL {
+            ?resourceProperty rdfs:label ?anyLanguageResourcePropertyLabel .
+        }
+
+        BIND(COALESCE(str(?preferredLanguageResourcePropertyLabel), str(?fallbackLanguageResourcePropertyLabel), str(?anyLanguageResourcePropertyLabel)) AS ?propertyLabel)
+
+        # Concatenate each tuple of ?valueObjectType, ?propertyLabel, and ?literal into a string (using
+        # a non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data),
+        # so the tuple can be treated as a unit in the SAMPLE function above.
+        BIND(CONCAT(STR(?valueObjectType), "@separator", STR(?propertyLabel), "@separator", STR(?literal)) AS ?anyMatch)
+
+        MINUS {
+            ?resIri knora-base:isDeleted true .
+        }
+    }
+
+    BIND(COALESCE(?resIri, ?s) AS ?resourceIri)
+
+    ?resourceIri a ?resourceClass .
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?resourceClass knora-base:resourceIcon ?resourceClassIcon .
+
+    ?resourceIri rdfs:label ?firstProperty .
+
+    @projectIriOption match {
+        case Some(projectIri) => {
+
+            # filter by projectIri
+            ?resourceIri knora-base:attachedToProject <@projectIri> .
+
+        }
+
+        case None => {}
+    }
+
+    @restypeIriOption match {
+        case Some(restypeIri) => {
+
+            # filter by restypeIri
+            ?resourceIri a <@restypeIri> .
+        }
+
+        case None => {}
+    }
+
+    OPTIONAL {
+        ?resourceClass rdfs:label ?preferredLanguageResourceClassLabel .
+        FILTER (LANG(?preferredLanguageResourceClassLabel) = ?preferredLanguage) .
+    }
+
+    OPTIONAL {
+        ?resourceClass rdfs:label ?fallbackLanguageResourceClassLabel .
+        FILTER (LANG(?fallbackLanguageResourceClassLabel) = ?fallbackLanguage) .
+    }
+
+    OPTIONAL {
+        ?resourceClass rdfs:label ?anyLanguageResourceClassLabel .
+    }
+
+    BIND(COALESCE(str(?preferredLanguageResourceClassLabel), str(?fallbackLanguageResourceClassLabel), str(?anyLanguageResourceClassLabel)) AS ?resourceClassLabel)
+
+    OPTIONAL {
+        ?fileValueProp rdfs:subPropertyOf* knora-base:hasFileValue .
+        ?resourceIri ?fileValueProp ?fileValue .
+        ?fileValue a knora-base:StillImageFileValue .
+        ?fileValue knora-base:valueIsPreview true .
+        ?fileValue knora-base:internalFilename ?previewPath .
+
+        OPTIONAL {
+            ?fileValue knora-base:dimX ?previewDimX .
+            ?fileValue knora-base:dimY ?previewDimY .
+        }
+    }
+
+    OPTIONAL {
+        ?permission rdfs:subPropertyOf+ knora-base:hasPermission .
+        ?resourceIri ?permission ?group .
+        BIND(CONCAT(STR(?permission), ",", STR(?group)) as ?permissionAssertion)
+    }
+
+    OPTIONAL {
+        ?resourceIri knora-base:attachedToUser ?attachedToUser .
+    }
+
+    OPTIONAL {
+        ?resourceIri knora-base:attachedToProject ?attachedToProject .
+    }
+}
+@if(!countResults) {
+GROUP BY
+    ?resourceIri
+    ?resourceClassIcon
+    ?resourceClassLabel
+    ?firstProperty
+    ?previewPath
+    ?previewDimX
+    ?previewDimY
+    ?attachedToUser
+    ?attachedToProject
+
+ORDER BY ?resourceIri
+}
+
+@offsetOption match {
+    case Some(offset) => {
+        OFFSET @offset
+    }
+
+    case None => {}
+}
+
+@limitOption match {
+    case Some(limit) => {
+        LIMIT @limit
+    }
+
+    case None => {}
+}

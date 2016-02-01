@@ -1,0 +1,1250 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmln.com/foaf/0.1/> .
+@prefix dc: <http://www.knora.org/ontology/dc#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@base <http://www.knora.org/ontology/dokubib> .
+
+@prefix dokubib: <http://www.knora.org/ontology/dokubib#> .
+@prefix : <http://www.knora.org/ontology/dokubib#> .
+
+<http://www.knora.org/ontology/dokubib> rdf:type owl:Ontology ;
+                                        owl:imports <http://www.knora.org/ontology/knora-base> .
+
+##########################################################
+#
+# PROPERTIES
+#
+##########################################################
+
+
+### ###########################################
+### dokubib:lastname
+
+:lastname rdf:type owl:ObjectProperty ;
+
+          rdfs:subPropertyOf foaf:lastName ;
+
+          rdfs:label "Name"@de ;
+
+          rdfs:comment """Nachname einer Person"""@de ,
+                       """Last name of a person"""@en ;
+
+          rdfs:domain :person ;
+
+          rdfs:range knora-base:TextValue ;
+
+          salsah-gui:guiOrder "1"^^xsd:integer ;
+
+          salsah-gui:guiElement salsah-gui:SimpleText ;
+
+          salsah-gui:guiAttribute "size=32" ,
+                                  "maxlength=32" ;
+
+          knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                knora-base:Owner ;
+
+          knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                              knora-base:UnknownUser .
+
+
+### ###########################################
+### dokubib:firstname
+
+:firstname rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf foaf:firstName ;
+
+           rdfs:label "Vorname"@de ,
+                      "First name"@en ;
+
+           rdfs:comment """Vorname einer Person"""@de ,
+                        """First name of a person"""@en ;
+
+           rdfs:domain :person ;
+
+           rdfs:range knora-base:TextValue ;
+
+           salsah-gui:guiOrder "2"^^xsd:integer ;
+
+           salsah-gui:guiElement salsah-gui:SimpleText ;
+
+           salsah-gui:guiAttribute "size=32" ,
+                                   "maxlength=32" ;
+
+           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                               knora-base:UnknownUser ;
+
+           knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                 knora-base:Owner .
+
+
+### ###########################################
+### dokubib:institution
+
+:institution rdf:type owl:ObjectProperty ;
+
+             rdfs:subPropertyOf knora-base:hasValue ;
+
+             rdfs:label "Institution"@de ,
+                        "Institution"@en ;
+
+             rdfs:comment """Institution"""@de ;
+
+             rdfs:domain :person ;
+
+             rdfs:range knora-base:TextValue ;
+
+             salsah-gui:guiOrder "3"^^xsd:integer ;
+
+             salsah-gui:guiElement salsah-gui:SimpleText ;
+
+             salsah-gui:guiAttribute "size=64" ,
+                                     "maxlength=64" ;
+
+             knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                                 knora-base:UnknownUser ;
+
+             knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                   knora-base:Owner .
+
+
+### ###########################################
+### dokubib:address
+
+:address rdf:type owl:ObjectProperty ;
+
+         rdfs:subPropertyOf knora-base:hasValue ;
+
+         rdfs:label "Adresse"@de ,
+                    "Address"@en ;
+
+         rdfs:comment """Adresse (Strassenname, Nummer etc.)"""@de ;
+
+         rdfs:domain :person ;
+
+         rdfs:range knora-base:TextValue ;
+
+         salsah-gui:guiOrder "4"^^xsd:integer ;
+
+         salsah-gui:guiElement salsah-gui:SimpleText ;
+
+         salsah-gui:guiAttribute "size=64" ,
+                                 "maxlength=64" ;
+
+         knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                               knora-base:Owner .
+
+
+### ###########################################
+### dokubib:city
+
+:city rdf:type owl:ObjectProperty ;
+
+      rdfs:subPropertyOf knora-base:hasValue ;
+
+      rdfs:label "Ort"@de ,
+                 "City"@en ;
+
+      rdfs:domain :person ;
+
+      rdfs:range knora-base:TextValue ;
+
+      salsah-gui:guiOrder "5"^^xsd:integer ;
+
+      salsah-gui:guiElement salsah-gui:SimpleText ;
+
+      salsah-gui:guiAttribute "size=64" ,
+                              "maxlength=64" ;
+
+      knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                          knora-base:UnknownUser ;
+
+      knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                            knora-base:Owner .
+
+
+### ###########################################
+### dokubib:zipcode
+
+:zipcode rdf:type owl:ObjectProperty ;
+
+         rdfs:subPropertyOf knora-base:hasValue ;
+
+         rdfs:label "Postleitzahl"@de ,
+                    "ZIP-Code"@en ;
+
+         rdfs:comment """Postleitzajl"""@de ;
+
+         rdfs:domain :person ;
+
+         rdfs:range knora-base:TextValue ;
+
+         salsah-gui:guiOrder "6"^^xsd:integer ;
+
+         salsah-gui:guiElement salsah-gui:SimpleText ;
+
+         salsah-gui:guiAttribute "size=16" ,
+                                 "maxlength=16" ;
+
+         knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                             knora-base:UnknownUser ;
+
+         knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                               knora-base:Owner .
+
+
+### ###########################################
+### dokubib:phone
+
+:phone rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf foaf:phone ;
+
+       rdfs:label "Telefon"@de ;
+
+       rdfs:domain :person ;
+
+       rdfs:range knora-base:TextValue ;
+
+       salsah-gui:guiOrder "7"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=32" ,
+                               "maxlength=32" ;
+
+       knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                             knora-base:Owner .
+
+
+### ###########################################
+### dokubib:fax
+
+:fax rdf:type owl:ObjectProperty ;
+
+     rdfs:subPropertyOf knora-base:hasValue ;
+
+     rdfs:label "Fax"@de ;
+
+     rdfs:comment """FAx"""@de ;
+
+     rdfs:domain :person ;
+
+     rdfs:range knora-base:TextValue ;
+
+     salsah-gui:guiOrder "8"^^xsd:integer ;
+
+     salsah-gui:guiElement salsah-gui:SimpleText ;
+
+     salsah-gui:guiAttribute "size=32" ,
+                             "maxlength=32" ;
+
+     knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                           knora-base:Owner .
+
+
+### ###########################################
+### dokubib:email
+
+:email rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Email"@de ,
+                  "Email"@en ;
+
+       rdfs:domain :person ;
+
+       rdfs:range knora-base:TextValue ;
+
+       salsah-gui:guiOrder "9"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=128" ,
+                               "maxlength=128" ;
+
+       knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                             knora-base:Owner .
+
+
+### ###########################################
+### dokubib:bildart
+
+:bildart rdf:type owl:ObjectProperty ;
+
+         rdfs:subPropertyOf knora-base:hasValue ;
+
+         rdfs:label "Bildart"@de ,
+                    "Type d'image"@fr ,
+                    "tipo di immagine"@it ,
+                    "Image type"@en ;
+
+         rdfs:domain :bildformat ;
+
+         rdfs:range knora-base:ListValue ;
+
+         salsah-gui:guiOrder "1"^^xsd:integer ;
+
+         salsah-gui:guiElement salsah-gui:Pulldown ;
+
+         salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/6cce4ce5>" ;
+
+         knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                             knora-base:UnknownUser ;
+
+         knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                               knora-base:Owner .
+
+
+### ###########################################
+### dokubib:erwerbsdatum
+
+:erwerbsdatum rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf dc:date ;
+
+              rdfs:label "Erwerbsdatum"@de ,
+                         "Date d'acquisition"@fr ,
+                         "Data di acquisizione"@it ,
+                         "Date of acquisition"@en ;
+
+              rdfs:domain :bildformat ;
+
+              rdfs:range knora-base:DateValue ;
+
+              salsah-gui:guiOrder "2"^^xsd:integer ;
+
+              salsah-gui:guiElement salsah-gui:Date ;
+
+              knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                    knora-base:Owner .
+
+
+### ###########################################
+### dokubib:format
+
+:format rdf:type owl:ObjectProperty ;
+
+        rdfs:subPropertyOf knora-base:hasValue ;
+
+        rdfs:label "Format"@de ,
+                   "Format"@fr ,
+                   "Formato"@it ,
+                   "Format"@en ;
+
+        rdfs:domain :bildformat ;
+
+        rdfs:range knora-base:TextValue ;
+
+        salsah-gui:guiOrder "3"^^xsd:integer ;
+
+        salsah-gui:guiElement salsah-gui:SimpleText ;
+
+        salsah-gui:guiAttribute "size=32" ,
+                                "maxlength=32" ;
+
+        knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                            knora-base:UnknownUser ;
+
+        knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                              knora-base:Owner .
+
+
+### ###########################################
+### dokubib:lieferantValue
+
+:lieferantValue rdf:type owl:ObjectProperty ;
+
+                rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                rdfs:range knora-base:LinkValue ;
+
+                rdfs:label "Lieferant"@de ,
+                           "Fournisseur"@fr ,
+                           "Fornitore"@it ,
+                           "Supplier"@en ;
+
+                rdfs:domain :bildformat ;
+
+                salsah-gui:guiOrder "4"^^xsd:integer ;
+
+                salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                salsah-gui:guiAttribute "restypeid=32" ,
+                                        "numprops=2" .
+
+
+### ###########################################
+### dokubib:lieferant
+
+:lieferant rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+           rdfs:label "Lieferant"@de ,
+                      "Fournisseur"@fr ,
+                      "Fornitore"@it ,
+                      "Supplier"@en ;
+
+           rdfs:domain :bildformat ;
+
+           rdfs:range :person ;
+
+           salsah-gui:guiOrder "4"^^xsd:integer ;
+
+           salsah-gui:guiElement salsah-gui:Searchbox ;
+
+           salsah-gui:guiAttribute "restypeid=32" ,
+                                   "numprops=2" ;
+
+           knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                 knora-base:Owner .
+
+
+### ###########################################
+### dokubib:stueckzahl
+
+:stueckzahl rdf:type owl:ObjectProperty ;
+
+            rdfs:subPropertyOf knora-base:hasValue ;
+
+            rdfs:label "Stückzahl"@de ,
+                       "Nombre d'élements"@fr ,
+                       "Numero d'immagini"@it ,
+                       "No. of items"@en ;
+
+            rdfs:domain :bildformat ;
+
+            rdfs:range knora-base:IntValue ;
+
+            salsah-gui:guiOrder "5"^^xsd:integer ;
+
+            salsah-gui:guiElement salsah-gui:Spinbox ;
+
+            salsah-gui:guiAttribute "min=0" ,
+                                    "max=99" ;
+
+            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                  knora-base:Owner .
+
+
+### ###########################################
+### dokubib:zugangsart
+
+:zugangsart rdf:type owl:ObjectProperty ;
+
+            rdfs:subPropertyOf knora-base:hasValue ;
+
+            rdfs:label "Zugangsart"@de ,
+                       "Type d'acquisition"@fr ,
+                       "Tipo d'acquisizione"@it ,
+                       "Type of acquisition"@en ;
+
+            rdfs:comment """Die Art und Wiese, wie ein Objekt in den Besitz der Dokumentationsbibliothek gelangt ist."""@de ;
+
+            rdfs:domain :bildformat ;
+
+            rdfs:range knora-base:ListValue ;
+
+            salsah-gui:guiOrder "6"^^xsd:integer ;
+
+            salsah-gui:guiElement salsah-gui:Radio ;
+
+            salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/0702a01e01>" ;
+
+            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                  knora-base:Owner .
+
+
+### ###########################################
+### dokubib:preis
+
+:preis rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Preis"@de ,
+                  "Prix"@fr ,
+                  "Prezzo"@it ,
+                  "Price"@en ;
+
+       rdfs:domain :bildformat ;
+
+       rdfs:range knora-base:TextValue ;
+
+       salsah-gui:guiOrder "7"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=16" ,
+                               "maxlength=16" ;
+
+       knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                             knora-base:Owner .
+
+
+### ###########################################
+### dokubib:eingangsdatum
+
+:eingangsdatum rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf dc:date ;
+
+               rdfs:label "Eingangsdatum"@de ,
+                          "Date de réception"@fr ,
+                          "Data di ricevimento"@it ,
+                          "Date of receipt"@en ;
+
+               rdfs:domain :bildformat ;
+
+               rdfs:range knora-base:DateValue ;
+
+               salsah-gui:guiOrder "8"^^xsd:integer ;
+
+               salsah-gui:guiElement salsah-gui:Date ;
+
+               knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
+                                                   knora-base:KnownUser ;
+
+               knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                     knora-base:Owner .
+
+
+### ###########################################
+### dokubib:comment
+
+:comment rdf:type owl:ObjectProperty ;
+
+         rdfs:subPropertyOf knora-base:hasValue ;
+
+         rdfs:label "Kommentar"@de ,
+                    "Commentaire"@fr ,
+                    "Commento"@it ,
+                    "Comment"@en ;
+
+         rdfs:comment """Unstrukturierte Bemerkungen zu einem Objekt"""@de ;
+
+         rdfs:domain :bildformat ;
+
+         rdfs:range knora-base:TextValue ;
+
+         salsah-gui:guiOrder "9"^^xsd:integer ;
+
+         salsah-gui:guiElement salsah-gui:Textarea ;
+
+         salsah-gui:guiAttribute "width=95%" ,
+                                 "rows=7" ,
+                                 "wrap=soft" ;
+
+         knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                               knora-base:Owner .
+
+
+### ###########################################
+### dokubib:titel
+
+:titel rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Titel"@de ,
+                  "Titre"@fr ,
+                  "Titolo"@it ,
+                  "Title"@en ;
+
+       rdfs:domain :bild ;
+
+       rdfs:range knora-base:ListValue ;
+
+       salsah-gui:guiOrder "1"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:List ;
+
+       salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/73d0ec0302>" ;
+
+       knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                           knora-base:UnknownUser ;
+
+       knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                             knora-base:Owner .
+
+
+### ###########################################
+### dokubib:signatur
+
+:signatur rdf:type owl:ObjectProperty ;
+
+          rdfs:subPropertyOf knora-base:hasValue ;
+
+          rdfs:label "Signatur"@de ,
+                     "Signature"@fr ,
+                     "Firma"@it ,
+                     "Signature"@en ;
+
+          rdfs:comment """Die spezielle Signatur für die Dokumentationsbibliothek St. Moritz"""@de ;
+
+          rdfs:domain :bild ;
+
+          rdfs:range knora-base:TextValue ;
+
+          salsah-gui:guiOrder "2"^^xsd:integer ;
+
+          salsah-gui:guiElement salsah-gui:SimpleText ;
+
+          salsah-gui:guiAttribute "size=16" ,
+                                  "maxlength=16" ;
+
+          knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+          knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                knora-base:Owner .
+
+
+### ###########################################
+### dokubib:bildnr
+
+:bildnr rdf:type owl:ObjectProperty ;
+
+        rdfs:subPropertyOf knora-base:hasValue ;
+
+        rdfs:label "Bildnummer"@de ,
+                   "Image ID"@fr ,
+                   "Immagine ID"@it ,
+                   "Picture ID"@en ;
+
+        rdfs:domain :bild ;
+
+        rdfs:range knora-base:TextValue ;
+
+        salsah-gui:guiOrder "3"^^xsd:integer ;
+
+        salsah-gui:guiElement salsah-gui:SimpleText ;
+
+        salsah-gui:guiAttribute "size=6" ,
+                                "maxlength=6" ;
+
+        knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                            knora-base:UnknownUser ;
+
+        knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                              knora-base:Owner .
+
+
+### ###########################################
+### dokubib:description
+
+:description rdf:type owl:ObjectProperty ;
+
+             rdfs:subPropertyOf dc:description ;
+
+             rdfs:label "Beschreibung"@de ,
+                        "Description"@fr ,
+                        "Descrizione"@it ,
+                        "Description"@en ;
+
+             rdfs:domain :bild ;
+
+             rdfs:range knora-base:TextValue ;
+
+             salsah-gui:guiOrder "4"^^xsd:integer ;
+
+             salsah-gui:guiElement salsah-gui:Textarea ;
+
+             salsah-gui:guiAttribute "width=95%" ,
+                                     "rows=10" ,
+                                     "wrap=soft" ;
+
+             knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                                 knora-base:UnknownUser ;
+
+             knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                   knora-base:Owner .
+
+
+### ###########################################
+### dokubib:jahreszeit
+
+:jahreszeit rdf:type owl:ObjectProperty ;
+
+            rdfs:subPropertyOf knora-base:hasValue ;
+
+            rdfs:label "Jahreszeit"@de ,
+                       "Saison"@fr ,
+                       "Stagione"@it ,
+                       "Season"@en ;
+
+            rdfs:domain :bild ;
+
+            rdfs:range knora-base:ListValue ;
+
+            salsah-gui:guiOrder "5"^^xsd:integer ;
+
+            salsah-gui:guiElement salsah-gui:Radio ;
+
+            salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/d19af9ab>" ;
+
+            knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                                knora-base:UnknownUser ;
+
+            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                  knora-base:Owner .
+
+
+### ###########################################
+### dokubib:jahrzehnt
+
+:jahrzehnt rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf knora-base:hasValue ;
+
+           rdfs:label "Jahrzehnt"@de ,
+                      "Décennie"@fr ,
+                      "Decennio"@it ,
+                      "Decade"@en ;
+
+           rdfs:domain :bild ;
+
+           rdfs:range knora-base:DateValue ;
+
+           salsah-gui:guiOrder "6"^^xsd:integer ;
+
+           salsah-gui:guiElement salsah-gui:Date ;
+
+           knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+           knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                 knora-base:Owner .
+
+
+### ###########################################
+### dokubib:jahr_exakt
+
+:jahr_exakt rdf:type owl:ObjectProperty ;
+
+            rdfs:subPropertyOf knora-base:hasValue ;
+
+            rdfs:label "Jahr"@de ,
+                       "Année"@fr ,
+                       "Anno"@it ,
+                       "Year"@en ;
+
+            rdfs:domain :bild ;
+
+            rdfs:range knora-base:TextValue ;
+
+            salsah-gui:guiOrder "7"^^xsd:integer ;
+
+            salsah-gui:guiElement salsah-gui:SimpleText ;
+
+            salsah-gui:guiAttribute "size=8" ,
+                                    "maxlength=8" ;
+
+            knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                                knora-base:UnknownUser ;
+
+            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                  knora-base:Owner .
+
+
+### ###########################################
+### dokubib:bildformatValue
+
+:bildformatValue rdf:type owl:ObjectProperty ;
+
+                 rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                 rdfs:range knora-base:LinkValue ;
+
+                 rdfs:label "Bildformat"@de ;
+
+                 rdfs:comment """Bildfromat"""@de ,
+                              """Format Image"""@fr ,
+                              """Formato immagine"""@it ,
+                              """Image format"""@en ;
+
+                 rdfs:domain :bild ;
+
+                 salsah-gui:guiOrder "8"^^xsd:integer ;
+
+                 salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                 salsah-gui:guiAttribute "restypeid=33" ,
+                                         "numprops=1" .
+
+
+### ###########################################
+### dokubib:bildformat
+
+:bildformat rdf:type owl:ObjectProperty ;
+
+            rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+            rdfs:label "Bildformat"@de ;
+
+            rdfs:comment """Bildfromat"""@de ,
+                         """Format Image"""@fr ,
+                         """Formato immagine"""@it ,
+                         """Image format"""@en ;
+
+            rdfs:domain :bild ;
+
+            rdfs:range :bildformat ;
+
+            salsah-gui:guiOrder "8"^^xsd:integer ;
+
+            salsah-gui:guiElement salsah-gui:Searchbox ;
+
+            salsah-gui:guiAttribute "restypeid=33" ,
+                                    "numprops=1" ;
+
+            knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                  knora-base:Owner .
+
+
+### ###########################################
+### dokubib:erfassungsdatum
+
+:erfassungsdatum rdf:type owl:ObjectProperty ;
+
+                 rdfs:subPropertyOf dc:date ;
+
+                 rdfs:label "Erfassungsdatum"@de ,
+                            "Date d'acquisition"@fr ,
+                            "Data di acquisizione"@it ,
+                            "Date of acquisition"@en ;
+
+                 rdfs:domain :bild ;
+
+                 rdfs:range knora-base:DateValue ;
+
+                 salsah-gui:guiOrder "9"^^xsd:integer ;
+
+                 salsah-gui:guiElement salsah-gui:Date ;
+
+                 knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+                 knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                       knora-base:Owner .
+
+
+### ###########################################
+### dokubib:mutationsdatum
+
+:mutationsdatum rdf:type owl:ObjectProperty ;
+
+                rdfs:subPropertyOf dc:date ;
+
+                rdfs:label "Mutationsdatum"@de ,
+                           "Date de mutation"@fr ,
+                           "Mutazione data"@it ,
+                           "Mutation date"@en ;
+
+                rdfs:domain :bild ;
+
+                rdfs:range knora-base:DateValue ;
+
+                salsah-gui:guiOrder "10"^^xsd:integer ;
+
+                salsah-gui:guiElement salsah-gui:Date ;
+
+                knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                      knora-base:Owner .
+
+
+### ###########################################
+### dokubib:bearbeiter
+
+:bearbeiter rdf:type owl:ObjectProperty ;
+
+            rdfs:subPropertyOf knora-base:hasValue ;
+
+            rdfs:label "Bearbeiter"@de ,
+                       "Editeur"@fr ,
+                       "Editore"@it ,
+                       "Editor"@en ;
+
+            rdfs:domain :bild ;
+
+            rdfs:range knora-base:TextValue ;
+
+            salsah-gui:guiOrder "11"^^xsd:integer ;
+
+            salsah-gui:guiElement salsah-gui:SimpleText ;
+
+            salsah-gui:guiAttribute "size=32" ,
+                                    "maxlength=32" ;
+
+            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                  knora-base:Owner .
+
+
+### ###########################################
+### dokubib:negativnummer
+
+:negativnummer rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:hasValue ;
+
+               rdfs:label "Negativnummer"@de ,
+                          "Nombre du négative"@fr ,
+                          "Numero del negativo"@it ,
+                          "Number of negative"@en ;
+
+               rdfs:domain :bild ;
+
+               rdfs:range knora-base:TextValue ;
+
+               salsah-gui:guiOrder "12"^^xsd:integer ;
+
+               salsah-gui:guiElement salsah-gui:SimpleText ;
+
+               salsah-gui:guiAttribute "size=32" ,
+                                       "maxlength=32" ;
+
+               knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+               knora-base:hasDefaultDeletePermission knora-base:Owner ,
+                                                     knora-base:ProjectMember .
+
+
+### ###########################################
+### dokubib:urheberValue
+
+:urheberValue rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+              rdfs:range knora-base:LinkValue ;
+
+              rdfs:label "Urheber"@de ,
+                         "Auteur"@fr ,
+                         "Autore"@it ,
+                         "Creator"@en ;
+
+              rdfs:comment """An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity."""@de ;
+
+              rdfs:domain :bild ;
+
+              salsah-gui:guiOrder "13"^^xsd:integer ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox ;
+
+              salsah-gui:guiAttribute "restypeid=32" ,
+                                      "numprops=2" .
+
+
+### ###########################################
+### dokubib:urheber
+
+:urheber rdf:type owl:ObjectProperty ;
+
+         rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+         rdfs:label "Urheber"@de ,
+                    "Auteur"@fr ,
+                    "Autore"@it ,
+                    "Creator"@en ;
+
+         rdfs:comment """An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity."""@de ;
+
+         rdfs:domain :bild ;
+
+         rdfs:range :person ;
+
+         salsah-gui:guiOrder "13"^^xsd:integer ;
+
+         salsah-gui:guiElement salsah-gui:Searchbox ;
+
+         salsah-gui:guiAttribute "restypeid=32" ,
+                                 "numprops=2" ;
+
+         knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                             knora-base:UnknownUser ;
+
+         knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                               knora-base:Owner .
+
+
+### ###########################################
+### dokubib:copyrightValue
+
+:copyrightValue rdf:type owl:ObjectProperty ;
+
+                rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                rdfs:range knora-base:LinkValue ;
+
+                rdfs:label "Copyright"@de ;
+
+                rdfs:comment """Copyright"""@de ,
+                             """Droit d'auteur"""@fr ,
+                             """Copyright"""@it ,
+                             """Copyright"""@en ;
+
+                rdfs:domain :bild ;
+
+                salsah-gui:guiOrder "14"^^xsd:integer ;
+
+                salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                salsah-gui:guiAttribute "restypeid=32" ,
+                                        "numprops=2" .
+
+
+### ###########################################
+### dokubib:copyright
+
+:copyright rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+           rdfs:label "Copyright"@de ;
+
+           rdfs:comment """Copyright"""@de ,
+                        """Droit d'auteur"""@fr ,
+                        """Copyright"""@it ,
+                        """Copyright"""@en ;
+
+           rdfs:domain :bild ;
+
+           rdfs:range :person ;
+
+           salsah-gui:guiOrder "14"^^xsd:integer ;
+
+           salsah-gui:guiElement salsah-gui:Searchbox ;
+
+           salsah-gui:guiAttribute "restypeid=32" ,
+                                   "numprops=2" ;
+
+           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                               knora-base:UnknownUser ;
+
+           knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                 knora-base:Owner .
+
+##########################################################
+#
+# RESOURCES
+#
+##########################################################
+
+
+### ###########################################
+### dokubib:person
+
+:person rdf:type owl:Class ;
+
+        rdfs:subClassOf knora-base:Resource ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty :lastname ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty :firstname ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty :institution ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty :address ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty :city ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty :zipcode ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty :phone ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty :fax ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty :email ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ;
+
+        knora-base:resourceIcon "person.png" ;
+
+        rdfs:label "Person"@de ,
+                   "Personne"@fr ,
+                   "Persona"@it ,
+                   "Person"@en ;
+
+        rdfs:comment """Person"""@de ;
+
+        knora-base:hasDefaultChangeRightsPermission knora-base:Owner ,
+                                                    knora-base:ProjectMember ;
+
+        knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                            knora-base:UnknownUser .
+
+
+### ###########################################
+### dokubib:bildformat
+
+:bildformat rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:Resource ,
+                            [
+                               rdf:type owl:Restriction ;
+                               owl:onProperty :bildart ;
+                               owl:maxCardinality "1"^^xsd:nonNegativeInteger                            ] ,
+                            [
+                               rdf:type owl:Restriction ;
+                               owl:onProperty :erwerbsdatum ;
+                               owl:maxCardinality "1"^^xsd:nonNegativeInteger                            ] ,
+                            [
+                               rdf:type owl:Restriction ;
+                               owl:onProperty :format ;
+                               owl:maxCardinality "1"^^xsd:nonNegativeInteger                            ] ,
+                            [
+                               rdf:type owl:Restriction ;
+                               owl:onProperty :lieferantValue ;
+                               owl:maxCardinality "1"^^xsd:nonNegativeInteger                            ] ,
+                            [
+                               rdf:type owl:Restriction ;
+                               owl:onProperty :lieferant ;
+                               owl:maxCardinality "1"^^xsd:nonNegativeInteger                            ] ,
+                            [
+                               rdf:type owl:Restriction ;
+                               owl:onProperty :stueckzahl ;
+                               owl:maxCardinality "1"^^xsd:nonNegativeInteger                            ] ,
+                            [
+                               rdf:type owl:Restriction ;
+                               owl:onProperty :zugangsart ;
+                               owl:maxCardinality "1"^^xsd:nonNegativeInteger                            ] ,
+                            [
+                               rdf:type owl:Restriction ;
+                               owl:onProperty :preis ;
+                               owl:maxCardinality "1"^^xsd:nonNegativeInteger                            ] ,
+                            [
+                               rdf:type owl:Restriction ;
+                               owl:onProperty :eingangsdatum ;
+                               owl:maxCardinality "1"^^xsd:nonNegativeInteger                            ] ,
+                            [
+                               rdf:type owl:Restriction ;
+                               owl:onProperty :comment ;
+                               owl:minCardinality "0"^^xsd:nonNegativeInteger                            ] ;
+
+            knora-base:resourceIcon "bildformat.png" ;
+
+            rdfs:label "Bildformat"@de ,
+                       "Format d'image"@fr ,
+                       "Formato d'immagine"@it ,
+                       "Image format"@en ;
+
+            knora-base:hasDefaultChangeRightsPermission knora-base:Owner ,
+                                                        knora-base:ProjectMember ;
+
+            knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                                knora-base:UnknownUser .
+
+
+### ###########################################
+### dokubib:bild
+
+:bild rdf:type owl:Class ;
+
+      rdfs:subClassOf knora-base:StillImageRepresentation ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :titel ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :signatur ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :bildnr ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :description ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :jahreszeit ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :jahrzehnt ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :jahr_exakt ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :bildformatValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :bildformat ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :erfassungsdatum ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :mutationsdatum ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :bearbeiter ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :negativnummer ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :urheberValue ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :urheber ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :copyrightValue ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :copyright ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ;
+
+      knora-base:resourceIcon "bild.png" ;
+
+      rdfs:label "Bild"@de ,
+                 "Image"@fr ,
+                 "Immagine"@it ,
+                 "Image"@en ;
+
+      rdfs:comment """Ein Bild/Fotografie et. der Dokumentationsbibliothek St. Moritz"""@de ;
+
+      knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+      knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
+
+      knora-base:hasDefaultChangeRightsPermission knora-base:ProjectMember ,
+                                                  knora-base:Owner .
+

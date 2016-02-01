@@ -1,0 +1,72 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.messages.v1respondermessages.valuemessages._
+
+@*
+ * Creates a new resource of the given type.
+ *
+ * @param dataNamedGraph the named graph in which the project stores its data.
+ * @param resourceIri the Iri of the new resource
+ * @param resourceClassIri the IRI of the OWL class that the new resource should belong to.
+ * @param projectIri the project the new resource should belong to.
+ * @param ownerIri the owner of the new resource.
+ * @param permissions the permissions (tuples containing permission predicate and group) that the new resource should grant.
+ *
+ *@
+@(dataNamedGraph: IRI,
+  resourceIri: IRI,
+  resourceClassIri: IRI,
+  label: String,
+  projectIri: IRI,
+  ownerIri: IRI,
+  permissions: Seq[(IRI, IRI)])
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+INSERT {
+    GRAPH ?dataNamedGraph {
+
+        ?resourceIri rdf:type ?resourceClassIri ;
+            knora-base:attachedToUser ?ownerIri ;
+            knora-base:attachedToProject ?projectIri ;
+            rdfs:label ?label ;
+
+            @* Insert permissions. *@
+            @for(permission <- permissions) {
+                <@permission._1> <@permission._2> ;
+            }
+
+            knora-base:creationDate ?currentTime .
+
+    }
+} WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
+    BIND(IRI("@resourceIri") AS ?resourceIri)
+    BIND(IRI("@resourceClassIri") AS ?resourceClassIri)
+    BIND(IRI("@ownerIri") AS ?ownerIri)
+    BIND(IRI("@projectIri") AS ?projectIri)
+    BIND(str("@label") AS ?label)
+    BIND(NOW() AS ?currentTime)
+}

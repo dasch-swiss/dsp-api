@@ -1,0 +1,8 @@
+@prefix luc: <http://www.ontotext.com/owlim/lucene#> .
+
+luc:include luc:setParam "literal" .
+luc:index luc:setParam "literal" .
+luc:languages luc:setParam "" .
+luc:moleculeSize luc:setParam "0" .
+luc:useRDFRank luc:setParam "no" .
+luc:fullTextSearchIndex luc:createIndex "true" .

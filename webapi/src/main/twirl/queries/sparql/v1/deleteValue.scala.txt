@@ -1,0 +1,83 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Creates a new, deleted version of a value. Except for being marked as deleted, the new version will be a copy
+ * of the previous version.
+ *
+ * @param dataNamedGraph the named graph to update.
+ * @param resourceIri the IRI of the resource containing the value.
+ * @param propertyIri the IRI of the property that points from the resource to the value.
+ * @param currentValueIri the IRI of the current version of the value.
+ * @param newValueIri the IRI of the new, deleted version of the value.
+ * @param maybeComment an optional comment explaining why the value is being deleted.
+ *@
+@(dataNamedGraph: IRI,
+  resourceIri: IRI,
+  propertyIri: IRI,
+  currentValueIri: IRI,
+  newValueIri: IRI,
+  maybeComment: Option[String])
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+WITH <@dataNamedGraph>
+DELETE {
+    ?resource ?property ?currentValue .
+} INSERT {
+    ?newValue ?valuePred ?valueObj .
+    ?newValue knora-base:isDeleted true ;
+        @maybeComment match {
+            case Some(comment) => {
+                knora-base:valueHasComment """@comment""" ;
+            }
+
+            case None => {}
+        }
+        knora-base:previousValue ?currentValue ;
+        knora-base:valueCreationDate ?currentTime .
+    ?resource ?property ?newValue .
+} WHERE {
+    BIND(IRI("@resourceIri") AS ?resource)
+    BIND(IRI("@propertyIri") AS ?property)
+    BIND(IRI("@currentValueIri") AS ?currentValue)
+    BIND(IRI("@newValueIri") AS ?newValue)
+    BIND(NOW() AS ?currentTime)
+
+    ?resource ?property ?currentValue .
+    ?currentValue ?valuePred ?valueObj .
+
+    MINUS {
+        ?currentValue knora-base:isDeleted true .
+    }
+
+    @* Copy all the predicates and objects from the current version of the value, except the ones we need to update. *@
+
+    FILTER(!(
+        ?valuePred = knora-base:previousValue
+        || ?valuePred = knora-base:valueCreationDate
+        || ?valuePred = knora-base:isDeleted
+        || ?valuePred = knora-base:valueHasComment
+    ))
+}

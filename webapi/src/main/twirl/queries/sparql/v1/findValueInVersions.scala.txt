@@ -1,0 +1,80 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Searches for a value in the version history of the values of a resource property. If the value is found, returns
+ * all assertions about it. If the value is not found, returns no rows.
+ *
+ * @param resourceIri the resource to search.
+ * @param propertyIri the property to search.
+ * @param searchValueIri the IRI of the value to look for.
+ *@
+@(resourceIri: IRI,
+  propertyIri: IRI,
+  searchValueIri: IRI)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?objPred ?objObj ?predStandoff ?objStandoff
+WHERE {
+    BIND(IRI("@resourceIri") as ?resource)
+    BIND(IRI("@propertyIri") as ?property)
+    BIND(IRI("@searchValueIri") as ?searchValue)
+
+    {
+        ?resource ?property ?currentValue .
+        ?currentValue knora-base:previousValue* ?searchValue .
+        ?searchValue ?objPred ?objObj .
+
+        FILTER(?objPred != knora-base:attachedToProject)
+
+        OPTIONAL {
+            ?objPred rdfs:subPropertyOf* knora-base:valueHasStandoff .
+            ?objObj ?predStandoff ?objStandoff .
+        }
+    }
+    UNION
+    {
+        ?resource ?property ?currentValue .
+        ?currentValue knora-base:previousValue* ?searchValue .
+        ?resource knora-base:attachedToProject ?resourceProject .
+
+        @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
+
+        OPTIONAL {
+            ?currentValue knora-base:attachedToProject ?valueProject .
+        }
+
+        BIND(knora-base:attachedToProject AS ?objPred)
+        BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+    }
+
+    MINUS {
+        ?resource knora-base:isDeleted true .
+    }
+
+    MINUS {
+        ?currentValue knora-base:isDeleted true .
+    }
+}

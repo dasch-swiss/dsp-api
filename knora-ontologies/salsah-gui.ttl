@@ -1,0 +1,220 @@
+@prefix : <http://www.knora.org/ontology/salsah-gui#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@base <http://www.knora.org/ontology/salsah-gui> .
+
+<http://www.knora.org/ontology/salsah-gui> rdf:type owl:Ontology .
+
+
+#################################################################
+#
+#    Annotation properties
+#
+#################################################################
+
+
+###  http://www.knora.org/ontology/salsah-gui#guiAttribute
+
+:guiAttribute rdf:type owl:AnnotationProperty .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#guiElement
+
+:guiElement rdf:type owl:AnnotationProperty .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#guiOrder
+
+:guiOrder rdf:type owl:AnnotationProperty ;
+          
+          rdfs:range xsd:integer .
+
+
+
+
+
+#################################################################
+#
+#    Data properties
+#
+#################################################################
+
+
+###  http://www.knora.org/ontology/salsah-gui#guiAttributeDefinition
+
+:guiAttributeDefinition rdf:type owl:DatatypeProperty ;
+                        
+                        rdfs:domain :Guielement ;
+                        
+                        rdfs:range xsd:string .
+
+
+
+
+
+#################################################################
+#
+#    Classes
+#
+#################################################################
+
+
+###  http://www.knora.org/ontology/salsah-gui#Guielement
+
+:Guielement rdf:type owl:Class .
+
+
+
+
+
+#################################################################
+#
+#    Individuals
+#
+#################################################################
+
+
+###  http://www.knora.org/ontology/salsah-gui#Colorpicker
+
+:Colorpicker rdf:type :Guielement ,
+                      owl:NamedIndividual ;
+             
+             :guiAttributeDefinition "ncolors=numeric" .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Date
+
+:Date rdf:type :Guielement ,
+               owl:NamedIndividual .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Geometry
+
+:Geometry rdf:type :Guielement ,
+                   owl:NamedIndividual .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Geonames
+
+:Geonames rdf:type :Guielement ,
+                   owl:NamedIndividual .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Iconclass
+
+:Iconclass rdf:type :Guielement ,
+                    owl:NamedIndividual .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Interval
+
+:Interval rdf:type :Guielement ,
+                   owl:NamedIndividual .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#List
+
+:List rdf:type :Guielement ,
+               owl:NamedIndividual .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Pulldown
+
+:Pulldown rdf:type :Guielement ,
+                   owl:NamedIndividual ;
+          
+          :guiAttributeDefinition "selection=api:lists" .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Radio
+
+:Radio rdf:type :Guielement ,
+                owl:NamedIndividual ;
+       
+       :guiElement "selection=api:list" .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Richtext
+
+:Richtext rdf:type :Guielement ,
+                   owl:NamedIndividual .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Searchbox
+
+:Searchbox rdf:type :Guielement ,
+                    owl:NamedIndividual ;
+           
+           :guiAttributeDefinition "numprops=numeric" ,
+                                   "resource=api:resources" .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#SimpleText
+
+:SimpleText rdf:type :Guielement ,
+                     owl:NamedIndividual ;
+            
+            :guiAttributeDefinition "size=numeric" ,
+                                    "maxlength=numeric" .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Slider
+
+:Slider rdf:type :Guielement ,
+                 owl:NamedIndividual ;
+        
+        :guiAttributeDefinition "stepsize=numeric" ,
+                                "max=numeric" ,
+                                "min=numeric" .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Spinbox
+
+:Spinbox rdf:type :Guielement ,
+                  owl:NamedIndividual ;
+         
+         :guiAttributeDefinition "stepsize=numeric" ,
+                                 "max=numeric" ,
+                                 "min=numeric" .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Textarea
+
+:Textarea rdf:type :Guielement ,
+                   owl:NamedIndividual ;
+          
+          :guiAttributeDefinition "width=numeric|percent" ,
+                                  "rows=numeric" .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Time
+
+:Time rdf:type :Guielement ,
+               owl:NamedIndividual .
+
+
+
+
+###  Generated by the OWL API (version 3.4.2) http://owlapi.sourceforge.net
+

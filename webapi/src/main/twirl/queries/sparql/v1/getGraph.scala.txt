@@ -1,0 +1,117 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Given the IRI of a resource, gets the graph from which a graph visualization can be generated.
+ * This is hardcoded for 2 nested levels at the moment.
+ *
+ * @param resourceIri the IRI of the resource.
+ *@
+@(resourceIri: IRI)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?resource ?outgoingProp1 ?incomingProp1 ?resource1 ?outgoingProp2 ?incomingProp2 ?resource2
+WHERE {
+    BIND(IRI("@resourceIri") as ?resource)
+
+    MINUS {
+        ?resource knora-base:isDeleted true .
+    }
+
+    {
+        ?outgoingProp1 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+        MINUS {
+            ?outgoingProp1 rdfs:subPropertyOf+ knora-base:isPartOf .
+        }
+
+        ?resource ?outgoingProp1 ?resource1 .
+
+        OPTIONAL {
+            {
+                ?outgoingProp2 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                MINUS {
+                    ?outgoingProp2 rdfs:subPropertyOf+ knora-base:isPartOf .
+                }
+
+                ?resource1 ?outgoingProp2 ?resource2 .
+            }
+            UNION
+            {
+                ?incomingProp2 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                MINUS {
+                    ?incomingProp2 rdfs:subPropertyOf+ knora-base:isPartOf .
+                }
+
+                ?resource2 ?incomingProp2 ?resource1 .
+                FILTER(!(?resource2 = ?resource))
+            }
+        }
+    }
+    UNION
+    {
+        ?incomingProp1 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+        MINUS {
+            ?incomingProp1 rdfs:subPropertyOf+ knora-base:isPartOf .
+        }
+
+        ?resource1 ?incomingProp1 ?resource .
+
+        OPTIONAL {
+            {
+                ?outgoingProp2 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                MINUS {
+                    ?outgoingProp2 rdfs:subPropertyOf+ knora-base:isPartOf .
+                }
+
+                ?resource1 ?outgoingProp2 ?resource2 .
+            }
+            UNION
+            {
+                ?incomingProp2 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                MINUS {
+                    ?incomingProp2 rdfs:subPropertyOf+ knora-base:isPartOf .
+                }
+
+                ?resource2 ?incomingProp2 ?resource1 .
+            }
+
+            FILTER(!(?resource2 = ?resource))
+        }
+    }
+
+    MINUS {
+        ?resource1 knora-base:isDeleted true .
+    }
+
+    MINUS {
+        ?resource2 knora-base:isDeleted true .
+    }
+}

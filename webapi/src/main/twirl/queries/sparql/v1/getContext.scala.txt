@@ -1,0 +1,81 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Given the IRI of a resource, gets information about the resources that are part of that resource.
+ *
+ * @param resourceIri the IRI of the resource.
+ *@
+@(resourceIri: IRI)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?seqnum ?sourceObject ?firstprop ?preview ?internalFilename ?internalMimeType ?originalFilename ?dimX ?dimY ?qualityLevel
+WHERE {
+    BIND(IRI("@resourceIri") as ?resource)
+
+    ?resource rdf:type ?resourceClass .
+
+    MINUS {
+        ?resource knora-base:isDeleted true .
+    }
+
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+
+    # Find something that relates to this resource via partOf.
+
+    ?linkingProp rdfs:subPropertyOf+ knora-base:isPartOf .
+    ?seqProp rdfs:subPropertyOf+ knora-base:seqnum .
+
+    ?sourceObject ?linkingProp ?resource .
+
+    ?sourceObject ?seqProp ?seqnumVal .
+    ?seqnumVal knora-base:valueHasInteger ?seqnum .
+    ?sourceObject rdfs:label ?firstprop .
+
+    OPTIONAL {
+        ?fileValueProp rdfs:subPropertyOf* knora-base:hasFileValue .
+        ?sourceObject ?fileValueProp ?preview .
+
+        ?preview a knora-base:StillImageFileValue .
+        ?preview knora-base:isPreview true .
+
+        MINUS {
+            ?preview knora-base:isDeleted true .
+        }
+
+        ?preview knora-base:internalMimeType ?internalMimeType ;
+                 knora-base:originalFilename ?originalFilename ;
+                 knora-base:internalFilename ?internalFilename ;
+                 knora-base:dimX ?dimX ;
+                 knora-base:dimY ?dimY ;
+                 knora-base:qualityLevel ?qualityLevel .
+    }
+
+    MINUS {
+        ?sourceObject knora-base:isDeleted true .
+    }
+}
+ORDER BY ?seqnum ?sourceObject
