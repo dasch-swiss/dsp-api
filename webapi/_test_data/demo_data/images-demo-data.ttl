@@ -52652,4 +52652,4 @@
                                          knora-base:preferredLanguage "de" ;
 
                                          knora-base:isInProject <http://data.knora.org/projects/images> ,
-                                                                <http://data.knora.org/projects/77275339>
+                                                                <http://data.knora.org/projects/77275339> .

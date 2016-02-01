@@ -72,34 +72,20 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
     "The Resources Endpoint" should {
         "provide a HTML representation of the resource properties " in {
-            /* Dokubib resource */
-            /* Dokubib data is commented out for now because it takes too long to load.
-                       Get("/v1/resources.html/http%3A%2F%2Fdata.knora.org%2F0871f7678dbf?noresedit=true&reqtype=properties") ~> resourcesPath ~> check {
-                           //log.debug("==>> " + responseAs[String])
-                           assert(status === StatusCodes.OK)
-                           assert(responseAs[String] contains("preview"))
-                           assert(responseAs[String] contains("Title"))
-                           assert(responseAs[String] contains("Season"))
-                           assert(responseAs[String] contains("Picture"))
-                           assert(responseAs[String] contains("Description"))
-                       } */
-
             /* Incunabula resource*/
             Get("/v1/resources.html/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?noresedit=true&reqtype=properties") ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
-                assert(responseAs[String] contains ("preview"))
-                assert(responseAs[String] contains ("Phyiscal description"))
-                assert(responseAs[String] contains ("Location"))
-                assert(responseAs[String] contains ("Publication location"))
-                assert(responseAs[String] contains ("URI"))
-                assert(responseAs[String] contains ("Title"))
-                assert(responseAs[String] contains ("Datum der Herausgabe"))
-                assert(responseAs[String] contains ("Citation/reference"))
-                assert(responseAs[String] contains ("Publisher"))
+                assert(responseAs[String] contains "preview")
+                assert(responseAs[String] contains "Phyiscal description")
+                assert(responseAs[String] contains "Location")
+                assert(responseAs[String] contains "Publication location")
+                assert(responseAs[String] contains "URI")
+                assert(responseAs[String] contains "Title")
+                assert(responseAs[String] contains "Datum der Herausgabe")
+                assert(responseAs[String] contains "Citation/reference")
+                assert(responseAs[String] contains "Publisher")
             }
         }
-
     }
-
 }
