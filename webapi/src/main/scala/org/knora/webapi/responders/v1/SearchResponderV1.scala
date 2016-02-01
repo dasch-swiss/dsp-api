@@ -155,40 +155,38 @@ class SearchResponderV1 extends ResponderV1 {
 
             subjects = searchResponse.results.bindings.map {
                 row =>
-                    val resourceIri = row.rowMap("resourceIri")
+                    val resourceIri = row.rowMap("resource")
                     val attachedToUser = row.rowMap("attachedToUser")
                     val attachedToProject = row.rowMap("attachedToProject")
                     val permissionAssertions = row.rowMap("permissionAssertions")
                     val assertions = PermissionUtilV1.parsePermissions(permissionAssertions, attachedToUser, attachedToProject)
                     val permission = PermissionUtilV1.getUserPermissionV1(row.rowMap("resourceIri"), assertions, searchGetRequest.userProfile)
 
-                    // The 'match' column contains the matching literal's value type, property label, and value, delimited
+                    // The 'match' column contains the matching literal's value type and value, delimited
                     // by a non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
                     // This only exists in case the matching literal was not an `rdfs:label`.
-                    val (matchValueTypeID: Option[String], matchValueLabel: Option[String], matchValue: Option[String]) = row.rowMap.get("match") match {
+                    // TODO (issue 11): Get the property label from the ontology
+                    val (matchValueTypeID: Option[String], resourceProperty: Option[IRI], matchValue: Option[String]) = row.rowMap.get("match") match {
                         case Some(matchingValues: String) =>
-                            val Array(valType, valLabel, matchVal) = matchingValues.split(FormatConstants.INFORMATION_SEPARATOR_ONE)
-                            (Some(valType), Some(valLabel), Some(matchVal))
+                            val Array(valType, resProp, matchVal) = matchingValues.split(FormatConstants.INFORMATION_SEPARATOR_ONE)
+                            (Some(valType), Some(resProp), Some(matchVal))
                         case None => (None, None, None)
                     }
 
                     SearchResultRowV1(
                         obj_id = resourceIri,
-                        preview_path = row.rowMap.getOrElse("previewPath", row.rowMap("resourceClassIcon")), // TODO: get real path here, using ValueUtilV1.makeSipiFileGetUrl.
-                        iconsrc = Some(settings.imageServerUrl + row.rowMap("resourceClassIcon")), // TODO: get real path here, using ValueUtilV1.makeSipiFileGetUrl.
-                        iconlabel = Some(row.rowMap("resourceClassLabel")),
-                        icontitle = Some(row.rowMap("resourceClassLabel")),
+                        preview_path = row.rowMap.get("previewPath"), // TODO (issue 11): If there is no preview, use the resource class icon from teh ontology. Also, make a real Sipi path using ValueUtilV1.makeSipiFileGetUrl.
+                        iconsrc = None, // TODO (issue 11): Get the resource class icon from the ontology. Also, make a real path here, using ValueUtilV1.makeSipiFileGetUrl.
+                        iconlabel = None, // TODO (issue 11): Get the resource class icon from the ontology
+                        icontitle = None, // TODO (issue 11): Get the resource class icon from the ontology
                         valuetype_id = matchValueTypeID match {
                             case Some(valType) => Vector(OntologyConstants.Rdfs.Label, valType)
                             case None => Vector(OntologyConstants.Rdfs.Label)
                         },
-                        valuelabel = matchValueLabel match {
-                            case Some(valLabel) => Vector("Label", valLabel)
-                            case None => Vector("Label")
-                        },
+                        valuelabel = Vector("Label"), // TODO (issue 11): if there's a matching value object, get its property label from the ontology, and add the label to this vector
                         value = matchValue match {
-                            case Some(matchVal) => Vector(row.rowMap("firstProperty"), matchVal)
-                            case None => Vector(row.rowMap("firstProperty"))
+                            case Some(matchVal) => Vector(row.rowMap("resourceLabel"), matchVal)
+                            case None => Vector(row.rowMap("resourceLabel"))
                         },
                         preview_nx = row.rowMap.get("previewDimX") match {
                             case Some(previewDimX) => previewDimX.toInt
