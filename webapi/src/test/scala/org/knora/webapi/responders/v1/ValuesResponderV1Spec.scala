@@ -63,12 +63,12 @@ object ValuesResponderV1Spec {
         valueVersions = Vector(
             ValueVersionV1(
                 previousValue = Some("http://data.knora.org/21abac2162/values/22222222"),
-                valueCreationDate = None,
+                valueCreationDate = Some("2016-01-22T11:31:24Z"),
                 valueObjectIri = "http://data.knora.org/21abac2162/values/f76660458201"
             ),
             ValueVersionV1(
                 previousValue = None,
-                valueCreationDate = None,
+                valueCreationDate = Some("2016-01-20T11:31:24Z"),
                 valueObjectIri = "http://data.knora.org/21abac2162/values/11111111"
             )
         )
