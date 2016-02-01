@@ -160,7 +160,7 @@ class SearchResponderV1 extends ResponderV1 {
                     val attachedToProject = row.rowMap("attachedToProject")
                     val permissionAssertions = row.rowMap("permissionAssertions")
                     val assertions = PermissionUtilV1.parsePermissions(permissionAssertions, attachedToUser, attachedToProject)
-                    val permission = PermissionUtilV1.getUserPermissionV1(row.rowMap("resourceIri"), assertions, searchGetRequest.userProfile)
+                    val permission = PermissionUtilV1.getUserPermissionV1(resourceIri, assertions, searchGetRequest.userProfile)
 
                     // The 'match' column contains the matching literal's value type and value, delimited
                     // by a non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
@@ -175,7 +175,7 @@ class SearchResponderV1 extends ResponderV1 {
 
                     SearchResultRowV1(
                         obj_id = resourceIri,
-                        preview_path = row.rowMap.get("previewPath"), // TODO (issue 11): If there is no preview, use the resource class icon from teh ontology. Also, make a real Sipi path using ValueUtilV1.makeSipiFileGetUrl.
+                        preview_path = row.rowMap.get("previewPath"), // TODO (issue 11): If there is no preview, use the resource class icon from the ontology. Also, make a real Sipi path using ValueUtilV1.makeSipiFileGetUrl.
                         iconsrc = None, // TODO (issue 11): Get the resource class icon from the ontology. Also, make a real path here, using ValueUtilV1.makeSipiFileGetUrl.
                         iconlabel = None, // TODO (issue 11): Get the resource class icon from the ontology
                         icontitle = None, // TODO (issue 11): Get the resource class icon from the ontology
@@ -404,12 +404,12 @@ class SearchResponderV1 extends ResponderV1 {
 
             subjects = searchResponse.results.bindings.map {
                 row =>
-                    val resourceIri = row.rowMap("resourceIri")
+                    val resourceIri = row.rowMap("resource")
                     val attachedToUser = row.rowMap("attachedToUser")
                     val attachedToProject = row.rowMap("attachedToProject")
                     val permissionAssertions = row.rowMap("permissionAssertions")
                     val assertions = PermissionUtilV1.parsePermissions(permissionAssertions, attachedToUser, attachedToProject)
-                    val permission = PermissionUtilV1.getUserPermissionV1(row.rowMap("resourceIri"), assertions, searchGetRequest.userProfile)
+                    val permission = PermissionUtilV1.getUserPermissionV1(resourceIri, assertions, searchGetRequest.userProfile)
                     val literals = searchCriteria.indices.map(paramNum => row.rowMap(s"literal$paramNum"))
                     val valueTypeIDs = searchCriteria.map(_.valueType)
                     val valueLabels = searchCriteria.map {
@@ -423,13 +423,13 @@ class SearchResponderV1 extends ResponderV1 {
 
                     SearchResultRowV1(
                         obj_id = resourceIri,
-                        preview_path = row.rowMap.getOrElse("previewPath", row.rowMap("resourceClassIcon")), // TODO: get real path here
-                        iconsrc = Some(row.rowMap("resourceClassIcon")),
-                        iconlabel = Some(row.rowMap("resourceClassLabel")),
-                        icontitle = Some(row.rowMap("resourceClassLabel")),
+                        preview_path = row.rowMap.get("previewPath"), // TODO (issue 11): If there is no preview, use the resource class icon from the ontology. Also, make a real Sipi path using ValueUtilV1.makeSipiFileGetUrl.
+                        iconsrc = None, // TODO (issue 11): Get the resource class icon from the ontology. Also, make a real path here, using ValueUtilV1.makeSipiFileGetUrl.
+                        iconlabel = None, // TODO (issue 11): Get the resource class icon from the ontology
+                        icontitle = None, // TODO (issue 11): Get the resource class icon from the ontology
                         valuetype_id = OntologyConstants.Rdfs.Label +: valueTypeIDs,
                         valuelabel = "Label" +: valueLabels,
-                        value = row.rowMap("firstProperty") +: literals,
+                        value = row.rowMap("resourceLabel") +: literals,
                         preview_nx = row.rowMap.get("previewDimX") match {
                             case Some(previewDimX) => previewDimX.toInt
                             case None => settings.defaultIconSizeDimX
