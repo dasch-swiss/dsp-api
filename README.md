@@ -106,9 +106,7 @@ Make sure you've started Fuseki as shown above. Then at the SBT prompt:
 
 ### Technical
 
-* Benjamin Geer `<benjaminlewis.geer@unibas.ch>`
-* Tobias Schweizer `<t.schweizer@unibas.ch>`
-* Ivan Subotic `<ivan.subotic@unibas.ch>`
+Please use the [knora-user](https://www.maillist.unibas.ch/mailman/listinfo/knora-user) mailing list for technical questions.
 
 ### Administrative
 
