@@ -65,7 +65,7 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 @if(countResults) {
-SELECT (COUNT(DISTINCT ?resourceIri) as ?count)
+SELECT (COUNT(DISTINCT ?resource) as ?count)
 } else {
 SELECT DISTINCT
     ?resource

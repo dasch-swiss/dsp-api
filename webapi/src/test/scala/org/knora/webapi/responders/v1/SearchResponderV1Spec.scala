@@ -110,7 +110,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 iconlabel = Some("Buch"),
                 icontitle = Some("Buch"),
                 iconsrc = Some("book.gif"),
-                preview_path = "book.gif",
+                preview_path = Some("book.gif"),
                 obj_id = "http://data.knora.org/c5058f3a"
             ),
             SearchResultRowV1(
@@ -132,7 +132,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 iconlabel = Some("Buch"),
                 icontitle = Some("Buch"),
                 iconsrc = Some("book.gif"),
-                preview_path = "book.gif",
+                preview_path = Some("book.gif"),
                 obj_id = "http://data.knora.org/ff17e5ef9601"
             )
         ),
@@ -144,8 +144,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         subjects = Vector(
             SearchResultRowV1(
                 obj_id = "http://data.knora.org/c5058f3a",
-                preview_path = "book.gif",
-                iconsrc = Some("http://localhost:3333/v1/assets/book.gif"),
+                preview_path = Some("book.gif"),
+                iconsrc = Some("book.gif"),
                 icontitle = Some("Buch"),
                 iconlabel = Some("Buch"),
                 valuetype_id = Vector("http://www.w3.org/2000/01/rdf-schema#label", "http://www.knora.org/ontology/knora-base#TextValue"),
@@ -157,8 +157,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             ),
             SearchResultRowV1(
                 obj_id = "http://data.knora.org/ff17e5ef9601",
-                preview_path = "book.gif",
-                iconsrc = Some("http://localhost:3333/v1/assets/book.gif"),
+                preview_path = Some("book.gif"),
+                iconsrc = Some("book.gif"),
                 icontitle = Some("Buch"),
                 iconlabel = Some("Buch"),
                 valuetype_id = Vector("http://www.w3.org/2000/01/rdf-schema#label", "http://www.knora.org/ontology/knora-base#TextValue"),
