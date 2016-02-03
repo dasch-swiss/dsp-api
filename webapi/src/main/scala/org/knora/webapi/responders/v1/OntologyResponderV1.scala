@@ -59,53 +59,58 @@ class OntologyResponderV1 extends ResponderV1 {
       * Keys for the ontology cache.
       */
     private object OntologyCacheKeys {
+        import scala.math.Ordered.orderingToOrdered
 
         /**
           * The type of ontology cache keys for instances of [[ResourceEntityInfoV1]].
           *
           * @param resourceClassIri the IRI of the resource class described.
+          * @param preferredLanguage the user's preferred language, which the key's value will use if it was available.
           */
-        class ResourceEntityInfoKey(val resourceClassIri: IRI) extends Ordered[ResourceEntityInfoKey] {
+        class ResourceEntityInfoKey(val resourceClassIri: IRI, val preferredLanguage: String) extends Ordered[ResourceEntityInfoKey] {
             def compare(that: ResourceEntityInfoKey): Int = {
-                this.resourceClassIri.compare(that.resourceClassIri)
+                (this.resourceClassIri, this.preferredLanguage) compare (that.resourceClassIri, that.preferredLanguage)
             }
 
             override def equals(that: Any): Boolean = {
                 that match {
-                    case otherEntityInfoKey: ResourceEntityInfoKey => resourceClassIri == otherEntityInfoKey.resourceClassIri
+                    case otherEntityInfoKey: ResourceEntityInfoKey =>
+                        this.resourceClassIri == otherEntityInfoKey.resourceClassIri && this.preferredLanguage == otherEntityInfoKey.preferredLanguage
                     case _ => false
                 }
             }
 
             override def hashCode(): Int = {
-                new HashCodeBuilder(17, 37).append(resourceClassIri).toHashCode
+                new HashCodeBuilder(17, 37).append(resourceClassIri).append(preferredLanguage).toHashCode
             }
 
-            override def toString: String = s"ResourceEntityInfoKey($resourceClassIri)"
+            override def toString: String = s"ResourceEntityInfoKey($resourceClassIri, $preferredLanguage)"
         }
 
         /**
           * The type of ontology cache keys for instances of [[PropertyEntityInfoV1]].
           *
           * @param propertyIri the IRI of the property described.
+          * @param preferredLanguage the user's preferred language, which the key's value will use if it was available.
           */
-        class PropertyEntityInfoKey(val propertyIri: IRI) extends Ordered[PropertyEntityInfoKey] {
+        class PropertyEntityInfoKey(val propertyIri: IRI, val preferredLanguage: String) extends Ordered[PropertyEntityInfoKey] {
             def compare(that: PropertyEntityInfoKey): Int = {
-                this.propertyIri.compare(that.propertyIri)
+                (this.propertyIri, this.preferredLanguage) compare (that.propertyIri, that.preferredLanguage)
             }
 
             override def equals(that: Any): Boolean = {
                 that match {
-                    case otherEntityInfoKey: PropertyEntityInfoKey => propertyIri == otherEntityInfoKey.propertyIri
+                    case otherEntityInfoKey: PropertyEntityInfoKey =>
+                        this.propertyIri == otherEntityInfoKey.propertyIri && this.preferredLanguage == otherEntityInfoKey.preferredLanguage
                     case _ => false
                 }
             }
 
             override def hashCode(): Int = {
-                new HashCodeBuilder(19, 39).append(propertyIri).toHashCode
+                new HashCodeBuilder(19, 39).append(propertyIri).append(preferredLanguage).toHashCode
             }
 
-            override def toString: String = s"PropertyEntityInfoKey($propertyIri)"
+            override def toString: String = s"PropertyEntityInfoKey($propertyIri, $preferredLanguage)"
         }
     }
 
@@ -246,7 +251,7 @@ class OntologyResponderV1 extends ResponderV1 {
                                 )
                         }
 
-                        new OntologyCacheKeys.ResourceEntityInfoKey(resourceType) -> ResourceEntityInfoV1(
+                        new OntologyCacheKeys.ResourceEntityInfoKey(resourceType, userProfile.userData.lang) -> ResourceEntityInfoV1(
                             resourceIri = resourceType,
                             predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for ontology entity $resourceType" }),
                             cardinalities = owlCardinalities.map {
@@ -312,7 +317,7 @@ class OntologyResponderV1 extends ResponderV1 {
                                 )
                         }
 
-                        new OntologyCacheKeys.PropertyEntityInfoKey(propertyIri) -> PropertyEntityInfoV1(
+                        new OntologyCacheKeys.PropertyEntityInfoKey(propertyIri, userProfile.userData.lang) -> PropertyEntityInfoV1(
                             propertyIri = propertyIri,
                             isLinkProp = isLinkProp,
                             predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for ontology entity $propertyIri" })
@@ -332,7 +337,7 @@ class OntologyResponderV1 extends ResponderV1 {
                 // Get the resource entity info from the cache, or query the triplestore and add the resource entity info to the cache.
                     resourceCacheResultMap <- CacheUtil.getOrCacheItems(
                         cacheName = OntologyCacheName,
-                        cacheKeys = resourceIris.map(iri => new OntologyCacheKeys.ResourceEntityInfoKey(iri)),
+                        cacheKeys = resourceIris.map(iri => new OntologyCacheKeys.ResourceEntityInfoKey(iri, userProfile.userData.lang)),
                         queryFun = queryResourceEntityInfoResponse
                     )
 
@@ -353,7 +358,7 @@ class OntologyResponderV1 extends ResponderV1 {
                 // Get the property entity info from the cache, or query the triplestore and add the property entity info to the cache.
                     propertyCacheResultMap: Map[OntologyCacheKeys.PropertyEntityInfoKey, PropertyEntityInfoV1] <- CacheUtil.getOrCacheItems(
                         cacheName = OntologyCacheName,
-                        cacheKeys = propertyIris.map(iri => new OntologyCacheKeys.PropertyEntityInfoKey(iri)),
+                        cacheKeys = propertyIris.map(iri => new OntologyCacheKeys.PropertyEntityInfoKey(iri, userProfile.userData.lang)),
                         queryFun = queryPropertyEntityInfoResponse
                     )
 

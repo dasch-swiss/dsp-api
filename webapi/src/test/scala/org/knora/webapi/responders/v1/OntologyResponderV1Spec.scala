@@ -39,23 +39,23 @@ import scala.concurrent.duration._
   */
 object OntologyResponderV1Spec {
 
-    // A test UserDataV1.
-    private val userData = UserDataV1(
-        email = Some("test@test.ch"),
-        lastname = Some("Test"),
-        firstname = Some("User"),
-        username = Some("testuser"),
-        token = None,
-        user_id = Some("http://data.knora.org/users/b83acc5f05"),
-        lang = "de"
-    )
-
-    // A test UserProfileV1.
-    private val userProfile = UserProfileV1(
+    // A test user that prefers responses in German.
+    private val userProfileWithGerman = UserProfileV1(
         projects = Vector("http://data.knora.org/projects/77275339"),
         groups = Nil,
-        userData = userData
+        userData = UserDataV1(
+            email = Some("test@test.ch"),
+            lastname = Some("Test"),
+            firstname = Some("User"),
+            username = Some("testuser"),
+            token = None,
+            user_id = Some("http://data.knora.org/users/b83acc5f05"),
+            lang = "de"
+        )
     )
+
+    // A test user that prefers responses in French.
+    private val userProfileWithFrench = userProfileWithGerman.copy(userData = userProfileWithGerman.userData.copy(lang = "fr"))
 }
 
 
@@ -235,7 +235,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val book = ResourceTypeResponseV1(
-        userdata = OntologyResponderV1Spec.userData,
+        userdata = OntologyResponderV1Spec.userProfileWithGerman.userData,
         restype_info = ResTypeInfoV1(
             properties = Set(
                 PropertyDefinitionV1(
@@ -402,7 +402,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val region = ResourceTypeResponseV1(
-        userdata = OntologyResponderV1Spec.userData,
+        userdata = OntologyResponderV1Spec.userProfileWithGerman.userData,
         restype_info = ResTypeInfoV1(
             properties = Set(
                 PropertyDefinitionV1(
@@ -583,11 +583,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         expectMsg(300.seconds, ResetTriplestoreContentACK())
     }
 
-    "The resourcetype responder" should {
+    "The ontology responder" should {
         "return the ontology information for a incunabula:page" in {
             // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page
             actorUnderTest ! ResourceTypeGetRequestV1(
-                userProfile = OntologyResponderV1Spec.userProfile,
+                userProfile = OntologyResponderV1Spec.userProfileWithGerman,
                 resourceTypeIri = "http://www.knora.org/ontology/incunabula#page"
             )
 
@@ -599,7 +599,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return the ontology information for a incunabula:book" in {
             // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
             actorUnderTest ! ResourceTypeGetRequestV1(
-                userProfile = OntologyResponderV1Spec.userProfile,
+                userProfile = OntologyResponderV1Spec.userProfileWithGerman,
                 resourceTypeIri = "http://www.knora.org/ontology/incunabula#book"
             )
 
@@ -611,7 +611,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return the ontology information for a knora-base:Region" in {
             // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fknora-base%23Region
             actorUnderTest ! ResourceTypeGetRequestV1(
-                userProfile = OntologyResponderV1Spec.userProfile,
+                userProfile = OntologyResponderV1Spec.userProfileWithGerman,
                 resourceTypeIri = "http://www.knora.org/ontology/knora-base#Region"
             )
 
@@ -623,12 +623,34 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return the ontology information for a knora-base:LinkObj" in {
             // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fknora-base%23LinkObj
             actorUnderTest ! ResourceTypeGetRequestV1(
-                userProfile = OntologyResponderV1Spec.userProfile,
+                userProfile = OntologyResponderV1Spec.userProfileWithGerman,
                 resourceTypeIri = "http://www.knora.org/ontology/knora-base#LinkObj"
             )
 
             expectMsgPF(timeout) {
                 case msg: ResourceTypeResponseV1 if checkResourceTypeResponseV1(linkObject, msg) => ()
+            }
+        }
+
+        "return labels in the user's preferred language" in {
+            actorUnderTest ! EntityInfoGetRequestV1(
+                propertyIris = Set("http://www.knora.org/ontology/incunabula#title"),
+                userProfile = OntologyResponderV1Spec.userProfileWithGerman
+            )
+
+            expectMsgPF(timeout) {
+                case msg: EntityInfoGetResponseV1 =>
+                    msg.propertyEntityInfoMap("http://www.knora.org/ontology/incunabula#title").getPredicateObject(OntologyConstants.Rdfs.Label) should ===(Some("Titel"))
+            }
+
+            actorUnderTest ! EntityInfoGetRequestV1(
+                propertyIris = Set("http://www.knora.org/ontology/incunabula#title"),
+                userProfile = OntologyResponderV1Spec.userProfileWithFrench
+            )
+
+            expectMsgPF(timeout) {
+                case msg: EntityInfoGetResponseV1 =>
+                    msg.propertyEntityInfoMap("http://www.knora.org/ontology/incunabula#title").getPredicateObject(OntologyConstants.Rdfs.Label) should ===(Some("Titre"))
             }
         }
     }
