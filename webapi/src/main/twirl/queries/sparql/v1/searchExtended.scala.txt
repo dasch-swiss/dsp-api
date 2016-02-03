@@ -104,10 +104,6 @@ WHERE {
 
         @if(searchCriterion.valueType != "http://www.knora.org/ontology/knora-base#Resource") {
             ?resource <@{searchCriterion.propertyIri}> ?valueObjectIri@index .
-
-            MINUS {
-                ?resource knora-base:isDeleted true .
-            }
         }
 
         # Search criterion @index: operator @searchCriterion.comparisonOperator
@@ -193,10 +189,6 @@ WHERE {
 
                         ?resource <@{searchCriterion.propertyIri}> ?targetResource@index .
 
-                        MINUS {
-                            ?resource knora-base:isDeleted true .
-                        }
-
                         ?targetResource@index rdfs:label ?anyLiteral@index .
 
                         MINUS {
@@ -273,10 +265,6 @@ WHERE {
                     case "http://www.knora.org/ontology/knora-base#Resource" => {
 
                         ?resource <@searchCriterion.propertyIri> <@searchCriterion.searchValue> .
-
-                        MINUS {
-                            ?resource knora-base:isDeleted true .
-                        }
 
                         <@searchCriterion.searchValue> rdfs:label ?anyLiteral@index .
 
@@ -607,6 +595,10 @@ WHERE {
                 @{throw SparqlGenerationException(s"Comparison operator $other is not supported in this SPARQL template"); ()}
             }
         }
+    }
+
+    MINUS {
+        ?resource knora-base:isDeleted true .
     }
 
     ?resource rdfs:label ?resourceLabel .
