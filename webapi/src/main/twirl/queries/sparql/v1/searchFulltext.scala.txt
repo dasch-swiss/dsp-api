@@ -65,13 +65,12 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 @if(countResults) {
-SELECT (COUNT(DISTINCT ?resourceIri) as ?count)
+SELECT (COUNT(DISTINCT ?resource) as ?count)
 } else {
 SELECT DISTINCT
-    ?resourceIri
-    ?resourceClassIcon
-    ?resourceClassLabel
-    ?firstProperty
+    ?resource
+    ?resourceLabel @* The label of a matching resource. This is called "firstprop" in the v1 API. *@
+    ?resourceClass
     ?previewPath
     ?previewDimX
     ?previewDimY
@@ -98,14 +97,14 @@ WHERE {
     @triplestore match {
         case "graphdb" | "graphdb-free" => {
 
-            ?s ?p ?literal .
+            ?matchingSubject ?matchingProperty ?literal .
             ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}' .
 
         }
 
         case "embedded-jena-tdb" | "fuseki" => {
 
-            ?s <http://jena.apache.org/text#query> '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}' .
+            ?matchingSubject <http://jena.apache.org/text#query> '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}' .
 
         }
 
@@ -115,63 +114,47 @@ WHERE {
     }
 
     MINUS {
-        ?s knora-base:isDeleted true .
+        ?matchingSubject knora-base:isDeleted true .
     }
 
-    # ?s could be a resource (rdfs:label) or a value object
+    # ?matchingSubject could be a resource (rdfs:label) or a value object
 
     OPTIONAL {
         # if this clause is executed, it is a value object
 
-        ?s a ?valueObjectType .
+        ?matchingSubject a ?valueObjectType .
         ?valueObjectType rdfs:subClassOf+ knora-base:Value .
-        ?resIri ?resourceProperty ?s .
+        ?containingResource ?resourceProperty ?matchingSubject . @* ?containingResource is the resource that contains the matching value object *@
+        ?resourceProperty rdfs:subPropertyOf+ knora-base:hasValue .
 
         @if(triplestore == "embedded-jena-tdb" || triplestore == "fuseki") {
-            ?s knora-base:valueHasString ?literal .
-            #?s ?p ?literal .
-            #FILTER(?p = knora-base:valueHasString || ?p = rdfs:label)
+            ?matchingSubject knora-base:valueHasString ?literal .
+            #?matchingSubject ?p ?literal .
+            #FILTER(?p = knora-base:valueHasString || ?matchingProperty = rdfs:label)
         }
 
-        OPTIONAL {
-            ?resourceProperty rdfs:label ?preferredLanguageResourcePropertyLabel .
-            FILTER (LANG(?preferredLanguageResourcePropertyLabel) = ?preferredLanguage) .
-        }
-
-        OPTIONAL {
-            ?resourceProperty rdfs:label ?fallbackLanguageResourcePropertyLabel .
-            FILTER (LANG(?fallbackLanguageResourcePropertyLabel) = ?fallbackLanguage) .
-        }
-
-        OPTIONAL {
-            ?resourceProperty rdfs:label ?anyLanguageResourcePropertyLabel .
-        }
-
-        BIND(COALESCE(str(?preferredLanguageResourcePropertyLabel), str(?fallbackLanguageResourcePropertyLabel), str(?anyLanguageResourcePropertyLabel)) AS ?propertyLabel)
-
-        # Concatenate each tuple of ?valueObjectType, ?propertyLabel, and ?literal into a string (using
+        # Concatenate each tuple of ?valueObjectType, ?resourceProperty, and ?literal into a string (using
         # a non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data),
         # so the tuple can be treated as a unit in the SAMPLE function above.
-        BIND(CONCAT(STR(?valueObjectType), "@separator", STR(?propertyLabel), "@separator", STR(?literal)) AS ?anyMatch)
+        BIND(CONCAT(STR(?valueObjectType), "@separator", STR(?resourceProperty), "@separator", STR(?literal)) AS ?anyMatch)
 
         MINUS {
-            ?resIri knora-base:isDeleted true .
+            ?containingResource knora-base:isDeleted true .
         }
     }
 
-    BIND(COALESCE(?resIri, ?s) AS ?resourceIri)
+    BIND(COALESCE(?containingResource, ?matchingSubject) AS ?resource)
 
-    ?resourceIri a ?resourceClass .
+    ?resource a ?resourceClass .
     ?resourceClass rdfs:subClassOf+ knora-base:Resource .
-    ?resourceClass knora-base:resourceIcon ?resourceClassIcon .
 
-    ?resourceIri rdfs:label ?firstProperty .
+    ?resource rdfs:label ?resourceLabel .
 
     @projectIriOption match {
         case Some(projectIri) => {
 
             # filter by projectIri
-            ?resourceIri knora-base:attachedToProject <@projectIri> .
+            ?resource knora-base:attachedToProject <@projectIri> .
 
         }
 
@@ -182,31 +165,15 @@ WHERE {
         case Some(restypeIri) => {
 
             # filter by restypeIri
-            ?resourceIri a <@restypeIri> .
+            ?resource a <@restypeIri> .
         }
 
         case None => {}
     }
 
     OPTIONAL {
-        ?resourceClass rdfs:label ?preferredLanguageResourceClassLabel .
-        FILTER (LANG(?preferredLanguageResourceClassLabel) = ?preferredLanguage) .
-    }
-
-    OPTIONAL {
-        ?resourceClass rdfs:label ?fallbackLanguageResourceClassLabel .
-        FILTER (LANG(?fallbackLanguageResourceClassLabel) = ?fallbackLanguage) .
-    }
-
-    OPTIONAL {
-        ?resourceClass rdfs:label ?anyLanguageResourceClassLabel .
-    }
-
-    BIND(COALESCE(str(?preferredLanguageResourceClassLabel), str(?fallbackLanguageResourceClassLabel), str(?anyLanguageResourceClassLabel)) AS ?resourceClassLabel)
-
-    OPTIONAL {
         ?fileValueProp rdfs:subPropertyOf* knora-base:hasFileValue .
-        ?resourceIri ?fileValueProp ?fileValue .
+        ?resource ?fileValueProp ?fileValue .
         ?fileValue a knora-base:StillImageFileValue .
         ?fileValue knora-base:valueIsPreview true .
         ?fileValue knora-base:internalFilename ?previewPath .
@@ -219,31 +186,30 @@ WHERE {
 
     OPTIONAL {
         ?permission rdfs:subPropertyOf+ knora-base:hasPermission .
-        ?resourceIri ?permission ?group .
+        ?resource ?permission ?group .
         BIND(CONCAT(STR(?permission), ",", STR(?group)) as ?permissionAssertion)
     }
 
     OPTIONAL {
-        ?resourceIri knora-base:attachedToUser ?attachedToUser .
+        ?resource knora-base:attachedToUser ?attachedToUser .
     }
 
     OPTIONAL {
-        ?resourceIri knora-base:attachedToProject ?attachedToProject .
+        ?resource knora-base:attachedToProject ?attachedToProject .
     }
 }
 @if(!countResults) {
 GROUP BY
-    ?resourceIri
-    ?resourceClassIcon
-    ?resourceClassLabel
-    ?firstProperty
+    ?resource
+    ?resourceLabel
+    ?resourceClass
     ?previewPath
     ?previewDimX
     ?previewDimY
     ?attachedToUser
     ?attachedToProject
 
-ORDER BY ?resourceIri
+ORDER BY ?resource
 }
 
 @offsetOption match {

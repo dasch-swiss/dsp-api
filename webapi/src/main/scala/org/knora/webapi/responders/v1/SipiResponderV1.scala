@@ -76,7 +76,7 @@ class SipiResponderV1 extends ResponderV1 {
             valueProps = valueUtilV1.createValueProps(fileValueIri, rows)
             valueV1 = valueUtilV1.makeValueV1(valueProps)
             path = valueV1 match {
-                case fileValueV1: FileValueV1 => valueUtilV1.makeSipiFileGetUrl(fileValueV1)
+                case fileValueV1: FileValueV1 => valueUtilV1.makeSipiFileGetUrlFromFileValueV1(fileValueV1)
                 case otherValue => throw InconsistentTriplestoreDataException(s"Value $fileValueIri is not a FileValue, it is an instance of ${otherValue.valueTypeIri}")
             }
             permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(fileValueIri, valueProps, userProfile)

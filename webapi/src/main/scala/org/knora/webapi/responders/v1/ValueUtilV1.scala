@@ -123,8 +123,17 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param fileValueV1 the file value that the URL will point to.
       * @return a Sipi URL.
       */
-    def makeSipiFileGetUrl(fileValueV1: FileValueV1): String = {
-        s"${settings.sipiURL}:${settings.sipiPort}/${fileValueV1.internalFilename}"
+    def makeSipiFileGetUrlFromFileValueV1(fileValueV1: FileValueV1): String = {
+        makeSipiFileGetUrlFromFilename(fileValueV1.internalFilename)
+    }
+
+    /**
+      * Creates a URL for accessing a file via Sipi. // TODO: implement this correctly.
+      * @param filename the name of the file that the URL will point to.
+      * @return a Sipi URL.
+      */
+    def makeSipiFileGetUrlFromFilename(filename: String): String = {
+        s"${settings.sipiURL}:${settings.sipiPort}/$filename"
     }
 
     // A Map of MIME types to Knora API v1 binary format name.
@@ -164,7 +173,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                     origname = stillImageFileValueV1.originalFilename,
                     nx = Some(stillImageFileValueV1.dimX),
                     ny = Some(stillImageFileValueV1.dimY),
-                    path = makeSipiFileGetUrl(fileValueV1)
+                    path = makeSipiFileGetUrlFromFileValueV1(fileValueV1)
                 )
         }
     }
