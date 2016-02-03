@@ -1,0 +1,346 @@
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta name="creator" content="Lukas Rosenthaler" />
+	<title>System for Annotation and Linkage of Sources in Arts and Humanities</title>
+	<script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+	<script src="vendor/jQuery/jquery-ui.min.js"></script>
+	<script src="vendor/jQuery/jquery.sortElements.js"></script>
+	<script src="vendor/jQuery/jquery.mousewheel.min.js"></script>
+	<script src="vendor/jQuery/jquery.fixedheadertable.min.js"></script>
+	<script src="vendor/jQuery/jquery.zoom.min.js"></script>
+	<script src="vendor/jQuery/bootstrap.min.js"></script>
+	<script src="vendor/ckeditor/ckeditor.js" charset="utf-8"></script>
+	<script src="vendor/arbor/arbor.js" charset="utf-8"></script>
+	
+	<script src="js/00_init_javascript.js"></script>
+	<script src="js/01_salsah_api.js"></script>
+
+	<script src="js/02_searchlist.js" charset="utf-8"></script>
+	<script src="js/03_showval.js" charset="utf-8"></script>
+	<script src="js/datehelpers.js" charset="utf-8"></script>
+	<script src="js/imagebase.js" charset="utf-8"></script>
+	<script src="js/infowin.js" charset="utf-8"></script>
+	<script src="js/innerdim.js" charset="utf-8"></script>
+	<script src="js/jquery.avplayer.js" charset="utf-8"></script>
+	<script src="js/jquery.avtranscript.js" charset="utf-8"></script>
+	<script src="js/jquery.center.js" charset="utf-8"></script>
+	<script src="js/jquery.colorpicker.js" charset="utf-8"></script>
+	<script src="js/jquery.dateobj.js" charset="utf-8"></script>
+	<script src="js/jquery.dialog.js" charset="utf-8"></script>
+	<script src="js/jquery.dialogbox.js" charset="utf-8"></script>
+	<script src="js/jquery.dragndrop.js" charset="utf-8"></script>
+	<script src="js/jquery.editvalue.js" charset="utf-8"></script>
+	<script src="js/jquery.elestack.js" charset="utf-8"></script>
+	<script src="js/jquery.extsearch.js" charset="utf-8"></script>
+	<script src="js/jquery.flipbook.js" charset="utf-8"></script>
+	<script src="js/jquery.geonameobj.js" charset="utf-8"></script>
+	<script src="js/jquery.geonames.js" charset="utf-8"></script>
+	<script src="js/jquery.hlist.js" charset="utf-8"></script>
+	<script src="js/jquery.htmleditor.js" charset="utf-8"></script>
+	<script src="js/jquery.iconclass.js" charset="utf-8"></script>
+	<script src="js/jquery.imageslider.js" charset="utf-8"></script>
+	<script src="js/jquery.imagezoom.js" charset="utf-8"></script>
+	<script src="js/jquery.location.js" charset="utf-8"></script>
+	<script src="js/jquery.modaliframe.js" charset="utf-8"></script>
+	<script src="js/jquery.numberrange.js" charset="utf-8"></script>
+	<script src="js/jquery.pgbar.js" charset="utf-8"></script>
+	<script src="js/jquery.regions.js" charset="utf-8"></script>
+	<script src="js/jquery.searchext.js" charset="utf-8"></script>
+	<script src="js/jquery.selection.js" charset="utf-8"></script>
+	<script src="js/jquery.selradio.js" charset="utf-8"></script>
+	<script src="js/jquery.simpledialog.js" charset="utf-8"></script>
+	<script src="js/jquery.simpsearch.js" charset="utf-8"></script>
+	<script src="js/jquery.slider.js" charset="utf-8"></script>
+	<script src="js/jquery.spinbox.js" charset="utf-8"></script>
+	<script src="js/jquery.table2csv.js" charset="utf-8"></script>
+	<script src="js/jquery.tableedit.js" charset="utf-8"></script>
+	<script src="js/jquery.tabs.js" charset="utf-8"></script>
+	<script src="js/jquery.timeobj.js" charset="utf-8"></script>
+	<script src="js/jquery.transcr.js" charset="utf-8"></script>
+	<script src="js/jquery.win.js" charset="utf-8"></script>
+	<script src="js/login.js" charset="utf-8"></script>
+	<script src="js/tablelist.js" charset="utf-8"></script>
+	<script src="js/metadata_event.js" charset="utf-8"></script>
+	<script src="js/jquery.valcomment.js" charset="utf-8"></script>
+	<script src="js/jquery.propedit.js" charset="utf-8"></script>
+	<script src="js/jquery.resadd.js" charset="utf-8"></script>
+	<script src="js/jquery.searchbox.js" charset="utf-8"></script>
+	<script src="js/load_infowin.js" charset="utf-8"></script>
+	<script src="js/jquery.graph.js" charset="utf-8"></script>
+	<script src="js/workwin.js" charset="utf-8"></script>
+	<script charset="utf-8">
+	/*
+	 * language selection
+	*/
+	$(function() {
+		var lc = $('#langctrl');
+
+		var build_lang_ctrl = function() {
+			if (SALSAH.userdata.lang === undefined) SALSAH.userdata.lang = 'de';
+			for (var l in langs) {
+				if (l == SALSAH.userdata.lang) {
+					lc.append(' ' + l)
+				}
+				else {
+					lc.append(' ').append($('<a>').attr({href: '#'}).data({lang: l, language_id: SALSAH.userdata.lang[l]}).on('click', function(data) {
+						if (confirm(s_('_langchangeq'))) {
+							SALSAH.ApiPost('userdata', {lang: $(this).data('lang')}, function(data) {
+								location.reload();
+							});
+						}
+						return false;
+					}).append(l))
+				}
+			}
+		}
+
+		build_lang_ctrl();
+
+	});
+
+	SALSAH.reset_project_selection = function() {
+		$('#projectctrl').text(s_('_project') + ' : ');
+		if (SALSAH.userdata === null) {
+		}
+		else if (SALSAH.userdata.projects_info === undefined) {
+			$('#projectctrl').text('-');
+		}
+		else {
+			if (SALSAH.userdata.projects_info.length > 1) {
+				var psel = $('<select>').appendTo('#projectctrl').on('change', function(event){
+					SALSAH.userdata.active_project = $(this).val();
+					SALSAH.ApiPost('userdata', {project: $(this).val()}, function(data) {
+						if (data.status == ApiErrors.OK) {
+							SALSAH.reload_css();
+						}
+						else {
+							alert(data.errormsg);
+						}
+					});
+				});
+				for(var i in SALSAH.userdata.projects_info) {
+					if (SALSAH.userdata.projects_info[i].id == SALSAH.userdata.active_project) {
+						psel.append($('<option>').attr({selected: true}).val(SALSAH.userdata.projects_info[i].id).text(SALSAH.userdata.projects_info[i].shortname));
+					}
+					else {
+						psel.append($('<option>').val(SALSAH.userdata.projects_info[i].id).text(SALSAH.userdata.projects_info[i].shortname));
+					}
+				}
+			}
+			else if (SALSAH.userdata.projects_info.length == 1) {
+				$('#projectctrl').append(SALSAH.userdata.projects_info[0].shortname);
+			}
+			else {
+				$('#projectctrl').append('-');
+			}
+		}
+	};
+	
+	$(function() {
+		SALSAH.reset_project_selection();
+	});
+	
+	$(function(){
+		$('#login_title').text(s_('_login'));
+		$('#logout_title').text(s_('_logout'));
+		$('#username_label').text(s_('_username'));
+		$('#password_label').text(s_('_password'));
+		$('#login_button').attr({src: 'app/icons/32x32/accept.png'});
+		$('#cancel_login').attr({src: 'app/icons/32x32/delete.png', title: s_('_cancel')}).on('click', function(event){
+			$('#dologin').simpledialog('loginbox', 'close');
+		});
+		$('#logout_button').attr({src: 'app/icons/32x32/shut_down.png'})
+		$('#cancel_logout').attr({src: 'app/icons/32x32/green_arrow_up.png', title: s_('_cancel')}).on('click', function(event){
+			$('#dologout').simpledialog('logoutbox', 'close');
+		});
+
+
+		$('#user_id').on('keydown', function(event) {
+			if (event.keyCode == 27) $('#cancel_login').click();	// esc
+		});
+		$('#password').on('keydown', function(event) {
+			if (event.keyCode == 13) $('#login_button').click();	// enter
+			if (event.keyCode == 27) $('#cancel_login').click();	// esc
+		});
+
+		//$('#dologin').simpledialog('loginbox', {'class': 'loginbox', width: 400, positioning: 'upper', focus: '#user_id'});
+		//$('#dologout').simpledialog('logoutbox', {'class': 'loginbox', width: 400, positioning: 'upper'});
+		$('#userctrl').append($('<img>').attr({id: 'dologin', src: 'app/icons/24x24/user.png', title: s_('_login')})
+		.simpledialog('loginbox', {'class': 'loginbox', width: 400, positioning: 'upper', focus: '#user_id'}));
+
+		$('#login_button').on('click', function(){
+			var authorization = {
+				salsah_username: $('#user_id').val(),
+				salsah_password: $('#password').val()
+			};
+			authorization = {};
+
+            SALSAH.ApiPost('session', {username: $('#user_id').val(), password: $('#password').val()}, authorization, function(data) {
+				if (data.status == ApiErrors.OK) {
+					$('#dologin').simpledialog('loginbox', 'close');
+					SALSAH.reload_css();
+					$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userdata.username)
+						.append($('<img>').attr({id: 'dologout', src: 'app/icons/24x24/delete_user.png', title: s_('_logout')})
+						.simpledialog('logoutbox', {'class': 'loginbox', width: 400, positioning: 'upper'})
+					);
+					if (SALSAH.reset_project_selection !== undefined) SALSAH.reset_project_selection();
+				}
+				else {
+					alert(data.errormsg);
+					$('#dologin').simpledialog('loginbox', 'close');
+				}
+			});
+		});
+
+		$('#logout_button').on('click', function() {
+            SALSAH.ApiDelete('session', function(data) {
+				if (data.status == ApiErrors.OK) {
+					$('#dologut').simpledialog('logoutbox', 'close');
+					SALSAH.reload_css();
+					$('#userctrl').empty().append($('<img>').attr({id: 'dologin', src: 'app/icons/24x24/user.png', title: s_('_login')})
+						.simpledialog('loginbox', {'class': 'loginbox', width: 400, positioning: 'upper', focus: '#user_id'})
+					);
+					if (SALSAH.reset_project_selection !== undefined) SALSAH.reset_project_selection();
+				}
+				else {
+					alert(data.errormsg);
+					$('#dolout').simpledialog('logoutbox', 'close');
+				}
+			})
+		});
+
+		if (SALSAH.userdata.user_id !== undefined) {
+			$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userdata.username)
+				.append($('<img>').attr({id: 'dologout', src: 'app/icons/24x24/delete_user.png', title: s_('_logout')})
+				.simpledialog('logoutbox', {'class': 'loginbox', width: 400, positioning: 'upper'})
+			);
+		}
+
+		$('#addresctrl')
+			.append($('<img>').attr({title: s_('_addresource'), src: 'app/icons/24x24/add.png'}).addClass('link').css({cursor: 'pointer'}).on('click', function(event) {
+				RESVIEW.AddResourceWindow(RESVIEW.winclass);
+			})
+		);
+	
+		$('#addlinkctrl')
+			.append($('<img>').attr({title: s_('_addlink'), src: 'app/icons/24x24/add_link.png'}).addClass('link').css({cursor: 'pointer'}).on('click', function(event) {
+				RESVIEW.LinkageWindow(RESVIEW.winclass);
+			})
+		);
+	});
+	
+	//
+	// search
+	//
+	$(function(){
+		if (SALSAH.userdata.projects_info) {
+			var active_project = SALSAH.userdata.active_project;
+			var selele;
+			$('#searchctrl').append(strings['_limitsearch']);
+			$('#searchctrl').append(selele = $('<select>').attr({id: 'limitproject', title: 'limit search to project'}));
+			selele.append($('<option>').attr({title: 'ALl'}).val(-1).text('-'));
+			for (var p in SALSAH.userdata.projects_info) {
+				selele.append($('<option>').attr({title: SALSAH.userdata.projects_info[p].longname}).val(SALSAH.userdata.projects_info[p].id).text(SALSAH.userdata.projects_info[p].shortname));
+			}
+		}
+
+		$('#searchctrl').append($('<input>').attr({
+			type: 'text',
+			id: 'simplesearch',
+			name: 'simplesearch'
+		}).addClass('workwin_simplesearch in_header').val(strings['_search'])
+		.on('keydown', function(event){
+			if(event.keyCode == 13) searchresult_window($('#simplesearch').val(), $('#limitproject').val());
+		})
+		.on('focus', function(event){
+			if ($(this).val() == strings['_search']) $(this).val('').css('color', '#000');
+		})
+		.on('blur', function(event){
+			if ($(this).val() == '') $(this).val(strings['_search']).css('color', '#999');
+		}))
+		.append(
+			$('<img>').attr({
+				title: strings['_search'],
+				src: SITE_URL + '/app/icons/24x24/search.png'
+			}).addClass('link').css({cursor: 'pointer'}).on('click', function(event) {
+				searchresult_window($('#simplesearch').val(), $('#limitproject').val());
+			})
+		)
+		.append(' ')
+		.append(
+			$('<img>').attr({
+				title: strings['_extsearch'],
+				src: SITE_URL + '/app/icons/24x24/search-extended.png'
+			}).addClass('link').css({cursor: 'pointer'}).on('click', function(event) {
+				extended_search();
+			})
+		);
+		
+	});
+	</script>
+	<link id="loadcss" rel="stylesheet" type="text/css" href="default.css" />
+</head>
+<body>
+	<div class="workwin_header">
+		<div class="workwin_logo"></div>
+		
+		<div id="langctrl" class="workwin_header_element">
+		</div>
+		
+		<div id="projectctrl" class="workwin_header_element">
+		</div>
+		
+		<div id="userctrl" class="workwin_header_element">
+		</div>
+		
+		
+
+		<div id="loginbox" class="loginbox" style="display: none;">
+			<p id="login_title" class="center"></p>
+			<table class="center">
+				<tr><td id="username_label"></td><td>:</td><td><input type="text" name="user_id" id="user_id"/></td></tr>
+				<tr><td id="password_label"></td><td>:</td><td><input type="password" name="password" id="password" onKeyDown="if (event.keyCode == 13) $('#login_button').click();" /></td></tr>
+			</table>
+			<p style="text-align: center"><input type="checkbox" name="load_session">&nbsp; Use saved session if available?</p>
+			<div style="height: 15px">&nbsp;</div>
+			<div class="center" style="width: 68px">
+				<input id="login_settings" type="hidden" name="settings">
+				<img id="login_button" src="#" style="cursor: pointer;" title="Send data">
+				<img id="cancel_login" src="#" style="cursor: pointer;">
+			</div>
+		</div>
+
+
+		<div id="logoutbox" class="loginbox" style="display: none;">
+			<p id="logout_title" class="center" style="text-align: center"></p>
+			<p class="center" style="text-align: center">
+				<input type="checkbox" name="save_session">&nbsp; Save the session date for next login?<br/>
+				<img id="logout_button" src="#" style="cursor: pointer;" title="Send data" />
+				<img id="cancel_logout" src="#" style="cursor: pointer;" />
+			</p>
+			<input id="logout_settings" type="hidden" name="settings">
+		</div>
+		
+		<div id="addresctrl" class="workwin_header_element">
+		</div>
+		
+		<div id="addlinkctrl" class="workwin_header_element">
+		</div>
+
+		<div id="searchctrl" class="workwin_header_element">
+		</div>
+		
+		
+	</div>
+	
+	<div class="workwin_content">
+		
+	</div>
+	
+	<div id="ecatcher" class="workwin_eventcatcher event_catcher"></div>
+	
+	<div class="workwin_footer"><span>SALSAH V1.1 (Beta) © Digital Humanities Lab | Kunsthistorisches Seminar | Universitätsbibliothek || Universität Basel || Université de Lausanne</span></div>
+</body>
+</html>
