@@ -75,7 +75,7 @@ SELECT (COUNT(DISTINCT ?resource) as ?count)
 } else {
 SELECT DISTINCT
     ?resource
-    ?resourceLabel
+    ?resourceLabel @* The label of a matching resource. This is called "firstprop" in the v1 API. *@
     ?resourceClass
     ?previewPath
     ?previewDimX

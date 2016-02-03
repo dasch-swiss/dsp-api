@@ -69,7 +69,7 @@ SELECT (COUNT(DISTINCT ?resource) as ?count)
 } else {
 SELECT DISTINCT
     ?resource
-    ?resourceLabel
+    ?resourceLabel @* The label of a matching resource. This is called "firstprop" in the v1 API. *@
     ?resourceClass
     ?previewPath
     ?previewDimX
@@ -124,7 +124,7 @@ WHERE {
 
         ?matchingSubject a ?valueObjectType .
         ?valueObjectType rdfs:subClassOf+ knora-base:Value .
-        ?valueObjectResource ?resourceProperty ?matchingSubject .
+        ?containingResource ?resourceProperty ?matchingSubject . @* ?containingResource is the resource that contains the matching value object *@
         ?resourceProperty rdfs:subPropertyOf+ knora-base:hasValue .
 
         @if(triplestore == "embedded-jena-tdb" || triplestore == "fuseki") {
@@ -139,11 +139,11 @@ WHERE {
         BIND(CONCAT(STR(?valueObjectType), "@separator", STR(?resourceProperty), "@separator", STR(?literal)) AS ?anyMatch)
 
         MINUS {
-            ?valueObjectResource knora-base:isDeleted true .
+            ?containingResource knora-base:isDeleted true .
         }
     }
 
-    BIND(COALESCE(?valueObjectResource, ?matchingSubject) AS ?resource)
+    BIND(COALESCE(?containingResource, ?matchingSubject) AS ?resource)
 
     ?resource a ?resourceClass .
     ?resourceClass rdfs:subClassOf+ knora-base:Resource .
