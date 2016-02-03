@@ -1,0 +1,215 @@
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * This file is part of Knora.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+@import "project_default/_win";
+
+/* GENERAL DEFINITIONS */
+
+[draggable=true] {
+  -khtml-user-drag: element;
+  -webkit-user-drag: element;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+}
+
+.links div {
+	cursor: pointer;
+}
+
+/*Dragging Function*/
+.inactive {
+	filter:alpha(opacity=30);
+	-moz-opacity:0.3;
+	-khtml-opacity: 0.3;
+	-webkit-opacity: 0.3;
+	opacity: 0.3;
+}
+
+
+.win {
+/*	overflow: hidden; SAFARI BUG */
+	background-color: @WIN_BACKGROUND_COLOR;
+	border-style: solid;
+	border-width: @WIN_BORDER_SIZE;
+	border-color: @WIN_BORDER_COLOR;
+	
+	-moz-border-radius: @WIN_CORNER_RADIUS;
+	-webkit-border-radius: @WIN_CORNER_RADIUS;
+	-khtml-border-radius: @WIN_CORNER_RADIUS;
+	border-radius: @WIN_CORNER_RADIUS;
+/*	border-bottom-right-radius: 0; */
+	
+	-moz-box-shadow: @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_COLOR;
+	-webkit-box-shadow: @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_COLOR;
+	-khtml-box-shadow: @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_COLOR;
+	box-shadow: @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_COLOR;
+
+}
+
+.win .titlebar {
+/*	font-family: Fraktur; */
+	color: @TITLEBAR_COLOR;
+	background: @IMG_TITLEBAR_BG  repeat-x 0 0;
+	background-color: @TITLEBAR_BG_COLOR;
+	border-bottom: @TITLEBAR_BORDER_WIDTH solid @TITLEBAR_BORDER_COLOR;
+	padding: TITLEBAR_PADDING;
+	height: @IMG_TITLEBAR_BG_Height - 2*@TITLEBAR_PADDING;
+
+	-moz-border-radius-topleft: @WIN_CORNER_RADIUS;
+	-moz-border-radius-topright: @WIN_CORNER_RADIUS;
+	-webkit-border-top-left-radius: @WIN_CORNER_RADIUS;
+	-webkit-border-top-right-radius: @WIN_CORNER_RADIUS;
+	-khtml-border-radius-topleft: @WIN_CORNER_RADIUS;
+	-khtml-border-radius-topright: @WIN_CORNER_RADIUS;
+	border-top-left-radius: @WIN_CORNER_RADIUS;
+	border-top-right-radius: @WIN_CORNER_RADIUS;
+}
+
+.win .title {
+}
+
+/* definition of the div containing the window control elements */
+.win .controls {
+}
+/* distance between the control elements*/
+.win .controls div {
+	margin-left: 2px;
+}
+
+/* definition of the close bg */ 
+.win .controls .close {
+	background: @IMG_WINDOW_CLOSE_UP no-repeat 0 0;
+	height: 16px;
+	width: 16px;
+}
+.win .controls .close:hover {
+	background: @IMG_WINDOW_CLOSE_DOWN no-repeat 0 0;
+}
+
+/* definition of the toggle bg */	
+.win .controls .toggle {
+	background: @IMG_WINDOW_MINIMIZE_UP no-repeat 0 0;
+	height: 16px;
+	width: 16px;
+}
+.win .controls .toggle:hover {
+	background: @IMG_WINDOW_MINIMIZE_DOWN no-repeat 0 0;
+}
+
+/* definition of the maximize bg */
+.win .controls .maximize {
+	background: @IMG_WINDOW_MAXIMIZE_UP no-repeat 0 0;
+	height: 16px;
+	width: 16px;
+}
+.win .controls .maximize:hover {
+	background: @IMG_WINDOW_MAXIMIZE_DOWN no-repeat 0 0;
+}
+
+.win .taskbar {
+	top: @IMG_TITLEBAR_BG_Height + @TITLEBAR_BORDER_WIDTH;
+	height: @TASKBAR_HEIGHT;
+	background-color: @TASKBAR_BACKGROUND_COLOR;
+	border-bottom: @TASKBAR_BORDER_WIDTH solid @TASKBAR_BORDER_COLOR;
+	padding: @TASKBAR_PADDING;
+}
+
+.focus .taskbar {
+	background-color: @TASKBAR_BACKGROUND_COLOR_FOCUS;
+}
+
+.win .content {
+	top: @IMG_TITLEBAR_BG_Height + @TITLEBAR_BORDER_WIDTH;	
+	-moz-border-radius-bottomleft: @WIN_CORNER_RADIUS;
+	-moz-border-radius-bottomright: @WIN_CORNER_RADIUS;
+	-webkit-border-bottom-left-radius: @WIN_CORNER_RADIUS;
+	-webkit-border-bottom-right-radius: @WIN_CORNER_RADIUS;
+	-khtml-border-radius-bottomleft: @WIN_CORNER_RADIUS;
+	-khtml-border-radius-bottomright: @WIN_CORNER_RADIUS;
+	border-bottom-left-radius: @WIN_CORNER_RADIUS;
+	border-bottom-right-radius: @WIN_CORNER_RADIUS;
+}
+
+.win .overlay {
+	top: @IMG_TITLEBAR_BG_Height + @TITLEBAR_BORDER_WIDTH;	
+	-moz-border-radius-bottomleft: @WIN_CORNER_RADIUS;
+	-moz-border-radius-bottomright: @WIN_CORNER_RADIUS;
+	-webkit-border-bottom-left-radius: @WIN_CORNER_RADIUS;
+	-webkit-border-bottom-right-radius: @WIN_CORNER_RADIUS;
+	-khtml-border-radius-bottomleft: @WIN_CORNER_RADIUS;
+	-khtml-border-radius-bottomright: @WIN_CORNER_RADIUS;
+	border-bottom-left-radius: @WIN_CORNER_RADIUS;
+	border-bottom-right-radius: @WIN_CORNER_RADIUS;
+}
+
+.win .contentWithTaskbar {
+	top: @IMG_TITLEBAR_BG_Height + @TITLEBAR_BORDER_WIDTH + @TASKBAR_HEIGHT + @TASKBAR_BORDER_WIDTH + 2*@TASKBAR_PADDING;		
+}
+
+.win .resize {
+	width: 10px;
+	height: 10px;
+	background-color: #777;
+	-moz-border-radius-bottomright: @WIN_CORNER_RADIUS;
+	-webkit-border-bottom-right-radius: @WIN_CORNER_RADIUS;
+	-khtml-border-radius-bottomright: @WIN_CORNER_RADIUS;
+	border-bottom-right-radius: @WIN_CORNER_RADIUS;
+	opacity: 0.5;
+	filter: alpha(opacity=50); /*for Internet Explorer 6/7*/
+}
+
+/* in case resize is deactivated */
+.win .inactive {
+	display: none;
+}
+
+/* //////////////////////////////////////////////////////////////////////////*/
+
+.focus .titlebar {
+	color: @TITLEBAR_COLOR_FOCUS;
+	background: @IMG_TITLEBAR_BG_FOCUS  repeat-x 0 0;
+	background-color: @TITLEBAR_BG_COLOR_FOCUS;
+}
+
+.win.focus {
+	-moz-box-shadow: @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_COLOR_FOCUS;
+	-webkit-box-shadow: @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_COLOR_FOCUS;
+	-khtml-box-shadow: @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_COLOR_FOCUS;
+	box-shadow: @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_SIZE @WIN_SHADOW_COLOR_FOCUS;
+}
+
+.win .tabContainer {
+	border: 1px solid @WIN_TABCONTAINER_BORDER_COLOR;
+	background-color: @WIN_TABCONTAINER_BG_COLOR;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+/* OTHER ELEMENTS */
+
+.searchbox {
+    position: absolute;
+    -moz-box-shadow: 5px 5px 5px #222;
+    -webkit-box-shadow: 5px 5px 5px #222;
+    -khtml-box-shadow: 5px 5px 5px #222;
+    box-shadow: 5px 5px 5px #222;
+}
+
+.searchboxItem {
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+}
+
