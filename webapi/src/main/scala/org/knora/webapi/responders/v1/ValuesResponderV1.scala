@@ -737,12 +737,18 @@ class ValuesResponderV1 extends ResponderV1 {
                     valuePermissions.nonEmpty
             }
 
+            // Make a set of the IRIs of the versions that the user has permission to see.
+            visibleVersionIris = filteredVersionRowsVector.map(_("value")).toSet
+
             versionV1Vector = filteredVersionRowsVector.map {
                 rowMap =>
                     ValueVersionV1(
                         valueObjectIri = rowMap("value"),
                         valueCreationDate = rowMap.get("valueCreationDate"),
-                        previousValue = rowMap.get("previousValue")
+                        previousValue = rowMap.get("previousValue") match { // Don't refer to a previous value that the user doesn't have permission to see.
+                            case Some(previousValueIri) if visibleVersionIris.contains(previousValueIri) => Some(previousValueIri)
+                            case _ => None
+                        }
                     )
             }
         } yield ValueVersionHistoryGetResponseV1(
