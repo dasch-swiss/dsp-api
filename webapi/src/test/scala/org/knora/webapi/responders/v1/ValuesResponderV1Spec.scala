@@ -62,7 +62,7 @@ object ValuesResponderV1Spec {
         userdata = userData,
         valueVersions = Vector(
             ValueVersionV1(
-                previousValue = Some("http://data.knora.org/21abac2162/values/22222222"),
+                previousValue = None, // The user doesn't have permission to see the previous value.
                 valueCreationDate = Some("2016-01-22T11:31:24Z"),
                 valueObjectIri = "http://data.knora.org/21abac2162/values/f76660458201"
             ),
