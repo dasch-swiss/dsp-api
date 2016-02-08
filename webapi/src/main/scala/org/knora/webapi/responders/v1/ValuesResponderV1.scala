@@ -972,7 +972,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 ).toString()
             }
 
-            _ = println(sparqlQuery)
+            // _ = println(sparqlQuery)
 
             updateVerificationResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = updateVerificationResponse.results.bindings
@@ -1483,9 +1483,11 @@ class ValuesResponderV1 extends ResponderV1 {
                 linkUpdates = standoffLinkUpdates
             ).toString()
 
+            /*
             _ = println("================ Update value ================")
             _ = println(sparqlUpdate)
             _ = println("==============================================")
+            */
 
             // Do the update.
             sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]

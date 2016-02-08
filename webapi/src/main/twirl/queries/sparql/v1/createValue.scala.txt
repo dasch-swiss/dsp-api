@@ -60,6 +60,8 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?dataNamedGraph {
+        @* Delete the resource's last modification date so we can update it. *@
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
 
         @* If any LinkValues need to be updated, detach them from the resource. *@
         @if(linkUpdates.exists(_.linkValueExists)) {
@@ -403,3 +405,4 @@ DELETE {
         }
     }
 }
+
