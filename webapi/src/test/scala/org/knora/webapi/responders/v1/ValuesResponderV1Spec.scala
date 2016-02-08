@@ -561,7 +561,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 case msg: ChangeValueResponseV1 => checkComment1bResponse(msg, utf8str, sampleTextattr)
             }
         }
-
+/*
         "add a new text value containing a Standoff resource reference, and create a hasStandoffLinkTo direct link and a corresponding LinkValue" in {
             val textValueWithResourceRef = TextValueV1(
                 utf8str = "This comment refers to another resource",
@@ -1431,6 +1431,6 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     msg.value should ===(TextValueV1(utf8str = "Berthold, der Bruder"))
                     msg.comment should ===(Some(comment))
             }
-        }
+        } */
     }
 }

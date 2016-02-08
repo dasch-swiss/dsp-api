@@ -43,13 +43,21 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 WITH <@dataNamedGraph>
 DELETE {
+    @* Detach the current version of the value from the resource. *@
     ?resource ?property ?currentValue .
+
+    @* Delete the resource's last modification date so we can update it. *@
+    ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
 } INSERT {
+    @* Copy the contents of the current version of the value into the new version, along with the new comment. *@
     ?newValue ?valuePred ?valueObj .
     ?newValue knora-base:valueHasComment """@comment""" ;
         knora-base:previousValue ?currentValue ;
         knora-base:valueCreationDate ?currentTime .
     ?resource ?property ?newValue .
+
+    @* Update the resource's last modification date. *@
+    ?resource knora-base:lastModificationDate ?currentTime .
 } WHERE {
     BIND(IRI("@resourceIri") AS ?resource)
     BIND(IRI("@propertyIri") AS ?property)
@@ -65,4 +73,10 @@ DELETE {
     }
 
     FILTER(!(?valuePred = knora-base:previousValue || ?valuePred = knora-base:valueCreationDate || ?valuePred = knora-base:valueHasComment))
+
+    @* Get the resource's last modification date, if it has one, so we can update it. *@
+
+    OPTIONAL {
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+    }
 }

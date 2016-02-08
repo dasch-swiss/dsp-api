@@ -58,10 +58,11 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix owl: <http://www.w3.org/2002/07/owl#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-@* If any LinkValues need to be updated, detach them from the resource. *@
-@if(linkUpdates.exists(_.linkValueExists)) {
-    DELETE {
-        GRAPH ?dataNamedGraph {
+DELETE {
+    GRAPH ?dataNamedGraph {
+
+        @* If any LinkValues need to be updated, detach them from the resource. *@
+        @if(linkUpdates.exists(_.linkValueExists)) {
             @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
                 @if(linkUpdate.linkValueExists) {
                     ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
@@ -69,8 +70,7 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
             }
         }
     }
-}
-INSERT {
+} INSERT {
     GRAPH ?dataNamedGraph {
         @* Construct the value. *@
         ?newValue rdf:type ?valueType .
@@ -227,6 +227,9 @@ INSERT {
 
         @* Attach the value to the resource. *@
         ?resource ?property ?newValue .
+
+        @* Update the resource's last modification date. *@
+        ?resource knora-base:lastModificationDate ?currentTime .
     }
 } WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
@@ -369,6 +372,12 @@ INSERT {
                 }
             }
         }
+    }
+
+    @* Get the resource's last modification date, if it has one, so we can update it. *@
+
+    OPTIONAL {
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
     }
 
     @*
