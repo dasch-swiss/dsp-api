@@ -44,6 +44,9 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?dataNamedGraph {
+        @* Delete the link source's last modification date so we can update it. *@
+        ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
+
         @* Delete the direct link. *@
         @if(linkUpdate.deleteDirectLink) {
             ?linkSource ?linkProperty ?linkTarget .
@@ -88,6 +91,9 @@ INSERT {
 
         @* Attach the new LinkValue to its containing resource. *@
         ?linkSource ?linkValueProperty ?newLinkValue .
+
+        @* Update the link source's last modification date. *@
+        ?linkSource knora-base:lastModificationDate ?currentTime .
     }
 } WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
@@ -136,5 +142,11 @@ INSERT {
         }
     } else {
         @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be true in this SPARQL template"); ()}
+    }
+
+    @* Get the link source's last modification date, if it has one, so we can update it. *@
+
+    OPTIONAL {
+        ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
     }
 }

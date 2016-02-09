@@ -44,24 +44,26 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix owl: <http://www.w3.org/2002/07/owl#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-@* If an existing LinkValue needs to be updated, detach it from the resource. *@
-@if(linkUpdate.linkValueExists) {
-    DELETE {
-        GRAPH ?dataNamedGraph {
+DELETE {
+    GRAPH ?dataNamedGraph {
+        @* Delete the link source's last modification date so we can update it. *@
+        ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
+
+        @* If an existing LinkValue needs to be updated, detach it from the link source. *@
+        @if(linkUpdate.linkValueExists) {
             ?linkSource ?linkValueProperty ?existingLinkValue .
         }
     }
-}
-INSERT {
+} INSERT {
     GRAPH ?dataNamedGraph {
-        @* Insert a direct link for the resource reference. *@
+        @* Insert a direct link between the source and target resources. *@
         @if(linkUpdate.insertDirectLink) {
             ?linkSource ?linkProperty ?linkTarget .
         } else {
             @{throw SparqlGenerationException(s"LinkUpdate.insertDirectLink must be true in this SPARQL template"); ()}
         }
 
-        @* Insert a LinkValue for the resource reference. *@
+        @* Insert a LinkValue describing the link. *@
         ?newLinkValue rdf:type knora-base:LinkValue ;
             rdf:subject ?linkSource ;
             rdf:predicate ?linkProperty ;
@@ -83,6 +85,9 @@ INSERT {
 
         @* Attach the new LinkValue to its containing resource. *@
         ?linkSource ?linkValueProperty ?newLinkValue .
+
+        @* Update the link source's last modification date. *@
+        ?linkSource knora-base:lastModificationDate ?currentTime .
     }
 } WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
@@ -106,6 +111,16 @@ INSERT {
     ?linkProperty rdfs:range ?expectedTargetClass .
     ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
 
+    @* Do nothing if the source or target resource doesn't exist or is marked as deleted. *@
+
+    MINUS {
+        ?linkSource knora-base:isDeleted true .
+    }
+
+    MINUS {
+        ?linkTarget knora-base:isDeleted true .
+    }
+
     @if(!overrideCardinality) {
 
         @* Do nothing if the source resource's OWL class has no cardinality for the link property. *@
@@ -117,7 +132,7 @@ INSERT {
         @*
 
         Do nothing if the source resource's OWL class is allowed to have at most one target resource for this
-        property, and it already has one, unless the other target resource is marked as deleted.
+        property, and it already has one, unless the other target resource is marked as deleted. TODO: This is commented out because it's slow on Jena/Fuseki.
 
 
         MINUS {
@@ -190,14 +205,9 @@ INSERT {
         }
     }
 
-    @* Do nothing if the source or target resource doesn't exist or is marked as deleted. *@
+    @* Get the link source's last modification date, if it has one, so we can update it. *@
 
-    MINUS {
-        ?linkSource knora-base:isDeleted true .
+    OPTIONAL {
+        ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
     }
-
-    MINUS {
-        ?linkTarget knora-base:isDeleted true .
-    }
-
 }
