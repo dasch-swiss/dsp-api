@@ -46,6 +46,9 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?dataNamedGraph {
+        @* Delete the link source's last modification date so we can update it. *@
+        ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
+
         @* Delete the current direct link. *@
         @if(linkUpdateForCurrentLink.deleteDirectLink) {
             ?linkSource ?linkProperty ?linkTargetForCurrentLink .
@@ -109,6 +112,9 @@ INSERT {
 
         @* Attach the new LinkValue to its containing resource. *@
         ?linkSource ?linkValueProperty ?newLinkValueForNewLink .
+
+        @* Update the link source's last modification date. *@
+        ?linkSource knora-base:lastModificationDate ?currentTime .
     }
 } WHERE {
     @if(linkUpdateForCurrentLink.linkPropertyIri != linkUpdateForNewLink.linkPropertyIri) {
@@ -129,6 +135,12 @@ INSERT {
 
     ?linkSource rdf:type ?linkSourceClass .
     ?linkSourceClass rdfs:subClassOf+ knora-base:Resource .
+
+    @* Do nothing if the link source is marked as deleted. *@
+
+    MINUS {
+        ?linkSource knora-base:isDeleted true .
+    }
 
     @* Make sure the current direct link exists between the two resources. *@
 
@@ -213,9 +225,9 @@ INSERT {
         @{throw SparqlGenerationException(s"linkUpdateForNewLink.insertDirectLink must be true in this SPARQL template"); ()}
     }
 
-    @* Do nothing if the link source is marked as deleted. *@
+    @* Get the link source's last modification date, if it has one, so we can update it. *@
 
-    MINUS {
-        ?linkSource knora-base:isDeleted true .
+    OPTIONAL {
+        ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
     }
 }

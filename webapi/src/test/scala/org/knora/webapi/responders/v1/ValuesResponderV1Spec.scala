@@ -39,6 +39,9 @@ import scala.concurrent.duration._
   * Static data for testing [[ValuesResponderV1]].
   */
 object ValuesResponderV1Spec {
+    private val projectIri = "http://data.knora.org/projects/77275339"
+
+    private val zeitglöckleinIri = "http://data.knora.org/c5058f3a"
 
     // A test UserDataV1.
     private val userData = UserDataV1(
@@ -184,6 +187,26 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
     }
 
+    private def getLastModificationDate(resourceIri: IRI): Option[String] = {
+        val lastModSparqlQuery = queries.sparql.v1.txt.getLastModificationDate(
+            resourceIri = resourceIri
+        ).toString()
+
+        storeManager ! SparqlSelectRequest(lastModSparqlQuery)
+
+        expectMsgPF(timeout) {
+            case response: SparqlSelectResponse =>
+                val rows = response.results.bindings
+                (rows.size <= 1) should ===(true)
+
+                if (rows.size == 1) {
+                    Some(rows.head.rowMap("lastModificationDate"))
+                } else {
+                    None
+                }
+        }
+    }
+
     // a sample set of text attributes
     private val sampleTextattr = Map(
         "bold" -> Vector(StandoffPositionV1(
@@ -203,12 +226,13 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     "The values responder" should {
         "add a new text value without Standoff" in {
+            val lastModBeforeUpdate = getLastModificationDate(ValuesResponderV1Spec.zeitglöckleinIri)
 
             val utf8str = "Comment 1a\r"
 
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
-                resourceIri = "http://data.knora.org/c5058f3a",
+                projectIri = ValuesResponderV1Spec.projectIri,
+                resourceIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueV1(utf8str = utf8str),
                 userProfile = ValuesResponderV1Spec.userProfile,
@@ -218,6 +242,10 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: CreateValueResponseV1 => checkComment1aResponse(msg, utf8str)
             }
+
+            // Check that the resource's last modification date got updated.
+            val lastModAfterUpdate = getLastModificationDate(ValuesResponderV1Spec.zeitglöckleinIri)
+            lastModBeforeUpdate != lastModAfterUpdate should ===(true)
         }
 
         "query a text value without Standoff" in {
@@ -247,7 +275,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! LinkValueGetRequestV1(
                 subjectIri = "http://data.knora.org/8a0b1e75",
                 predicateIri = "http://www.knora.org/ontology/incunabula#partOf",
-                objectIri = "http://data.knora.org/c5058f3a",
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 userProfile = ValuesResponderV1Spec.userProfile
             )
 
@@ -258,7 +286,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     value = LinkValueV1(
                         subjectIri = "http://data.knora.org/8a0b1e75",
                         predicateIri = "http://www.knora.org/ontology/incunabula#partOf",
-                        objectIri = "http://data.knora.org/c5058f3a",
+                        objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                         referenceCount = 1
                     ),
                     rights = 2,
@@ -268,6 +296,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "add a new version of a text value without Standoff" in {
+            val lastModBeforeUpdate = getLastModificationDate(ValuesResponderV1Spec.zeitglöckleinIri)
 
             val utf8str = "Comment 1b"
 
@@ -281,6 +310,10 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: ChangeValueResponseV1 => checkComment1bResponse(msg, utf8str)
             }
+
+            // Check that the resource's last modification date got updated.
+            val lastModAfterUpdate = getLastModificationDate(ValuesResponderV1Spec.zeitglöckleinIri)
+            lastModBeforeUpdate != lastModAfterUpdate should ===(true)
         }
 
         "not add a new version of a value that's exactly the same as the current version" in {
@@ -303,7 +336,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! CreateValueRequestV1(
                 projectIri = "http://data.knora.org/projects/77275339",
-                resourceIri = "http://data.knora.org/c5058f3a",
+                resourceIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueV1(utf8str = utf8str),
                 userProfile = ValuesResponderV1Spec.userProfile,
@@ -333,7 +366,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         "insert valueHasOrder correctly for each value" in {
             actorUnderTest ! CreateValueRequestV1(
                 projectIri = "http://data.knora.org/projects/77275339",
-                resourceIri = "http://data.knora.org/c5058f3a",
+                resourceIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueV1("Comment 2"),
                 userProfile = ValuesResponderV1Spec.userProfile,
@@ -345,7 +378,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
             responderManager ! ResourceFullGetRequestV1(
-                iri = "http://data.knora.org/c5058f3a",
+                iri = ValuesResponderV1Spec.zeitglöckleinIri,
                 userProfile = ValuesResponderV1Spec.userProfile
             )
 
@@ -356,7 +389,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "return the version history of a value" in {
             actorUnderTest ! ValueVersionHistoryGetRequestV1(
-                resourceIri = "http://data.knora.org/c5058f3a",
+                resourceIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 currentValueIri = commentIri,
                 userProfile = ValuesResponderV1Spec.userProfile
@@ -368,6 +401,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "mark a value as deleted" in {
+            val lastModBeforeUpdate = getLastModificationDate(ValuesResponderV1Spec.zeitglöckleinIri)
+
             actorUnderTest ! DeleteValueRequestV1(
                 valueIri = commentIri,
                 userProfile = ValuesResponderV1Spec.userProfile,
@@ -386,6 +421,10 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
             }
+
+            // Check that the resource's last modification date got updated.
+            val lastModAfterUpdate = getLastModificationDate(ValuesResponderV1Spec.zeitglöckleinIri)
+            lastModBeforeUpdate != lastModAfterUpdate should ===(true)
         }
 
         "not add a new value to a nonexistent resource" in {
@@ -491,7 +530,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // The cardinality of incunabula:title is 1, and this book already has a title.
             actorUnderTest ! CreateValueRequestV1(
                 projectIri = "http://data.knora.org/projects/77275339",
-                resourceIri = "http://data.knora.org/c5058f3a",
+                resourceIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#title",
                 value = TextValueV1("New title"),
                 userProfile = ValuesResponderV1Spec.userProfile,
@@ -505,7 +544,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // The cardinality of incunabula:publisher is 0-1, and this book already has a publisher.
             actorUnderTest ! CreateValueRequestV1(
                 projectIri = "http://data.knora.org/projects/77275339",
-                resourceIri = "http://data.knora.org/c5058f3a",
+                resourceIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#publisher",
                 value = TextValueV1("New publisher"),
                 userProfile = ValuesResponderV1Spec.userProfile,
@@ -534,7 +573,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! CreateValueRequestV1(
                 projectIri = "http://data.knora.org/projects/77275339",
-                resourceIri = "http://data.knora.org/c5058f3a",
+                resourceIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueV1(utf8str = utf8str, textattr = sampleTextattr),
                 userProfile = ValuesResponderV1Spec.userProfile,
@@ -569,10 +608,10 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     StandoffConstantsV1.LINK_ATTR -> Vector(StandoffPositionV1(
                         start = 31,
                         end = 39,
-                        resid = Some("http://data.knora.org/c5058f3a")
+                        resid = Some(ValuesResponderV1Spec.zeitglöckleinIri)
                     ))
                 ),
-                resource_reference = Vector("http://data.knora.org/c5058f3a")
+                resource_reference = Vector(ValuesResponderV1Spec.zeitglöckleinIri)
             )
 
             actorUnderTest ! CreateValueRequestV1(
@@ -593,7 +632,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! LinkValueGetRequestV1(
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a",
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 userProfile = ValuesResponderV1Spec.userProfile
             )
 
@@ -607,7 +646,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     value = LinkValueV1(
                         subjectIri = "http://data.knora.org/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                        objectIri = "http://data.knora.org/c5058f3a",
+                        objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                         referenceCount = 1
                     ),
                     rights = 8,
@@ -618,7 +657,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a"
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri
             ).toString()
 
             storeManager ! SparqlSelectRequest(sparqlQuery)
@@ -644,16 +683,16 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         StandoffPositionV1(
                             start = 39,
                             end = 47,
-                            resid = Some("http://data.knora.org/c5058f3a")
+                            resid = Some(ValuesResponderV1Spec.zeitglöckleinIri)
                         ),
                         StandoffPositionV1(
                             start = 0,
                             end = 4,
-                            resid = Some("http://data.knora.org/c5058f3a")
+                            resid = Some(ValuesResponderV1Spec.zeitglöckleinIri)
                         )
                     )
                 ),
-                resource_reference = Vector("http://data.knora.org/c5058f3a")
+                resource_reference = Vector(ValuesResponderV1Spec.zeitglöckleinIri)
             )
 
             actorUnderTest ! ChangeValueRequestV1(
@@ -672,7 +711,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! LinkValueGetRequestV1(
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a",
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 userProfile = ValuesResponderV1Spec.userProfile
             )
 
@@ -686,7 +725,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     value = LinkValueV1(
                         subjectIri = "http://data.knora.org/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                        objectIri = "http://data.knora.org/c5058f3a",
+                        objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                         referenceCount = 1
                     ),
                     rights = 8,
@@ -697,7 +736,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a"
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri
             ).toString()
 
             storeManager ! SparqlSelectRequest(sparqlQuery)
@@ -720,10 +759,10 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     StandoffConstantsV1.LINK_ATTR -> Vector(StandoffPositionV1(
                         start = 30,
                         end = 38,
-                        resid = Some("http://data.knora.org/c5058f3a")
+                        resid = Some(ValuesResponderV1Spec.zeitglöckleinIri)
                     ))
                 ),
-                resource_reference = Vector("http://data.knora.org/c5058f3a")
+                resource_reference = Vector(ValuesResponderV1Spec.zeitglöckleinIri)
             )
 
             actorUnderTest ! CreateValueRequestV1(
@@ -744,7 +783,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! LinkValueGetRequestV1(
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a",
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 userProfile = ValuesResponderV1Spec.userProfile
             )
 
@@ -758,7 +797,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     value = LinkValueV1(
                         subjectIri = "http://data.knora.org/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                        objectIri = "http://data.knora.org/c5058f3a",
+                        objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                         referenceCount = 2
                     ),
                     rights = 8,
@@ -769,7 +808,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a"
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri
             ).toString()
 
             storeManager ! SparqlSelectRequest(sparqlQuery)
@@ -805,7 +844,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! LinkValueGetRequestV1(
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a",
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 userProfile = ValuesResponderV1Spec.userProfile
             )
 
@@ -818,7 +857,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     value = LinkValueV1(
                         subjectIri = "http://data.knora.org/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                        objectIri = "http://data.knora.org/c5058f3a",
+                        objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                         referenceCount = 1
                     ),
                     rights = 8,
@@ -829,7 +868,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a"
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri
             ).toString()
 
             storeManager ! SparqlSelectRequest(sparqlQuery)
@@ -880,7 +919,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! LinkValueGetRequestV1(
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a",
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 userProfile = ValuesResponderV1Spec.userProfile
             )
 
@@ -891,7 +930,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a",
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 includeDeleted = true
             ).toString()
 
@@ -918,11 +957,11 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         StandoffPositionV1(
                             start = 45,
                             end = 53,
-                            resid = Some("http://data.knora.org/c5058f3a")
+                            resid = Some(ValuesResponderV1Spec.zeitglöckleinIri)
                         )
                     )
                 ),
-                resource_reference = Vector("http://data.knora.org/c5058f3a")
+                resource_reference = Vector(ValuesResponderV1Spec.zeitglöckleinIri)
             )
 
             actorUnderTest ! ChangeValueRequestV1(
@@ -941,7 +980,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! LinkValueGetRequestV1(
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a",
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 userProfile = ValuesResponderV1Spec.userProfile
             )
 
@@ -955,7 +994,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     value = LinkValueV1(
                         subjectIri = "http://data.knora.org/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                        objectIri = "http://data.knora.org/c5058f3a",
+                        objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                         referenceCount = 1
                     ),
                     rights = 8,
@@ -966,7 +1005,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a"
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri
             ).toString()
 
             storeManager ! SparqlSelectRequest(sparqlQuery)
@@ -1144,12 +1183,16 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "create a link between two resources" in {
+            val linkSourceIri = "http://data.knora.org/5e51519c4407"
+            val linkTargetIri = "http://data.knora.org/8a0b1e75"
+            val lastModBeforeUpdate = getLastModificationDate(linkSourceIri)
+
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
-                resourceIri = "http://data.knora.org/5e51519c4407",
+                projectIri = ValuesResponderV1Spec.projectIri,
+                resourceIri = linkSourceIri,
                 propertyIri = OntologyConstants.KnoraBase.IsRegionOf,
                 value = LinkUpdateV1(
-                    targetResourceIri = "http://data.knora.org/8a0b1e75"
+                    targetResourceIri = linkTargetIri
                 ),
                 userProfile = ValuesResponderV1Spec.userProfile,
                 apiRequestID = UUID.randomUUID
@@ -1179,9 +1222,17 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
                     rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
             }
+
+            // Check that the link source's last modification date got updated.
+            val lastModAfterUpdate = getLastModificationDate(linkSourceIri)
+            lastModBeforeUpdate != lastModAfterUpdate should ===(true)
         }
 
         "delete a link between two resources" in {
+            val linkSourceIri = "http://data.knora.org/5e51519c4407"
+            val linkTargetIri = "http://data.knora.org/8a0b1e75"
+            val lastModBeforeUpdate = getLastModificationDate(linkSourceIri)
+
             val comment = "This link is no longer needed"
 
             actorUnderTest ! DeleteValueRequestV1(
@@ -1196,9 +1247,9 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
             val deletedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
-                subjectIri = "http://data.knora.org/5e51519c4407",
+                subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.IsRegionOf,
-                objectIri = "http://data.knora.org/8a0b1e75",
+                objectIri = linkTargetIri,
                 includeDeleted = true
             ).toString()
 
@@ -1213,6 +1264,10 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
                     rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.ValueHasComment && row.rowMap("objObj") == comment) should ===(true)
             }
+
+            // Check that the link source's last modification date got updated.
+            val lastModAfterUpdate = getLastModificationDate(linkSourceIri)
+            lastModBeforeUpdate != lastModAfterUpdate should ===(true)
         }
 
         "not create a link that points to the wrong type of resource" in {
@@ -1238,7 +1293,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 resourceIri = "http://data.knora.org/cb1a74e3e2f6",
                 propertyIri = OntologyConstants.KnoraBase.HasLinkTo,
                 value = LinkUpdateV1(
-                    targetResourceIri = "http://data.knora.org/c5058f3a"
+                    targetResourceIri = ValuesResponderV1Spec.zeitglöckleinIri
                 ),
                 userProfile = ValuesResponderV1Spec.userProfile,
                 apiRequestID = UUID.randomUUID
@@ -1249,7 +1304,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case CreateValueResponseV1(regionLinkValue: LinkV1, _, newLinkValueIri: IRI, _, _) =>
                     linkObjLinkValueIri = newLinkValueIri
-                    regionLinkValue.targetResourceIri should ===("http://data.knora.org/c5058f3a")
+                    regionLinkValue.targetResourceIri should ===(ValuesResponderV1Spec.zeitglöckleinIri)
                     regionLinkValue.valueResourceClass should ===(Some("http://www.knora.org/ontology/incunabula#book"))
             }
 
@@ -1258,7 +1313,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 subjectIri = "http://data.knora.org/cb1a74e3e2f6",
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a"
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri
             ).toString()
 
             storeManager ! SparqlSelectRequest(sparqlQuery)
@@ -1279,6 +1334,9 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "change a link" in {
+            val linkSourceIri = "http://data.knora.org/cb1a74e3e2f6"
+            val lastModBeforeUpdate = getLastModificationDate(linkSourceIri)
+
             // Try to change the link that was created in the "not create a duplicate link" test above.
             val changeValueRequest = ChangeValueRequestV1(
                 value = LinkUpdateV1(
@@ -1300,9 +1358,9 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // The old LinkValue should be deleted now, and the old direct link should have been removed.
 
             val oldLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
-                subjectIri = "http://data.knora.org/cb1a74e3e2f6",
+                subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
-                objectIri = "http://data.knora.org/c5058f3a",
+                objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 includeDeleted = true
             ).toString()
 
@@ -1320,7 +1378,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // The new LinkValue should have no previous version, and there should be a direct link between the resources.
 
             val newLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
-                subjectIri = "http://data.knora.org/cb1a74e3e2f6",
+                subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
                 objectIri = "http://data.knora.org/21abac2162"
             ).toString()
@@ -1334,6 +1392,10 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
                     rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
             }
+
+            // Check that the link source's last modification date got updated.
+            val lastModAfterUpdate = getLastModificationDate(linkSourceIri)
+            lastModBeforeUpdate != lastModAfterUpdate should ===(true)
         }
 
         "create multiple values in an empty resource" in {
@@ -1399,7 +1461,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! CreateValueRequestV1(
                 projectIri = "http://data.knora.org/projects/77275339",
-                resourceIri = "http://data.knora.org/c5058f3a",
+                resourceIri = ValuesResponderV1Spec.zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueV1(utf8str = comment),
                 comment = Some(metaComment),
@@ -1415,6 +1477,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "add a comment to a value" in {
+            val lastModBeforeUpdate = getLastModificationDate(ValuesResponderV1Spec.zeitglöckleinIri)
+
             val comment = "This is wrong. I am the author!"
 
             val changeCommentRequest = ChangeCommentRequestV1(
@@ -1431,6 +1495,10 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     msg.value should ===(TextValueV1(utf8str = "Berthold, der Bruder"))
                     msg.comment should ===(Some(comment))
             }
+
+            // Check that the resource's last modification date got updated.
+            val lastModAfterUpdate = getLastModificationDate(ValuesResponderV1Spec.zeitglöckleinIri)
+            lastModBeforeUpdate != lastModAfterUpdate should ===(true)
         }
     }
 }

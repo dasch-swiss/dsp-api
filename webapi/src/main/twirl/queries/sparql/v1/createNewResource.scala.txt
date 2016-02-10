@@ -47,7 +47,6 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 INSERT {
     GRAPH ?dataNamedGraph {
-
         ?resourceIri rdf:type ?resourceClassIri ;
             knora-base:attachedToUser ?ownerIri ;
             knora-base:attachedToProject ?projectIri ;
@@ -59,7 +58,6 @@ INSERT {
             }
 
             knora-base:creationDate ?currentTime .
-
     }
 } WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
