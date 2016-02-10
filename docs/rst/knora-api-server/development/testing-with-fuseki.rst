@@ -60,10 +60,8 @@ How to Write Your Test
 Important
 ---------
 
-TODO: Update this section.
-
-For now, the reloading of the test data should be always done at the
+The reloading of the test data should be always done at the
 beginning of the test, because when using Fuseki in combination with
 ``reload-on-start``, the data is not loaded in time (when the actor
 starts), so that the tests already run without all the data inside the
-triple store. This will be fixed in the future.
+triple store.

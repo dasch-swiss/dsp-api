@@ -26,14 +26,14 @@ Scope
 Authentication is the process of making sure that if someone is
 accessing something that then this someone is actually also the someone
 he pretends to be. The process of making sure that someone is
-authorized, i.e. has the permission to access something, is handled is
+authorized, i.e. has the permission to access something, is handled as
 described in the section on authorization in the Knora base ontology
 document. TODO: add a link to this.
 
 Implementation
 ==============
 
-The authentication in Rapier is based on Basic Auth
+The authentication in Knora is based on Basic Auth
 `HTTP basic authentication`_, URL parameters, and cookies. This means that
 on every request (to any of the routes), an authentication header, URL
 parameters or cookie need to be sent.
@@ -128,9 +128,9 @@ using cookies for authentication.
 Skipping Authentication
 -----------------------
 
-There is the possibility to turn skip authentication and use a hardcoded
-user (Lothar Schmidt). In **application.conf** set the
-``skip-authentication = true`` and Lothar Schmidt will be always
+There is the possibility to turn skipping authentication on and use a hardcoded
+user (Test User). In **application.conf** set the
+``skip-authentication = true`` and Test User will be always
 assumed.
 
 Sipi (Media Server)

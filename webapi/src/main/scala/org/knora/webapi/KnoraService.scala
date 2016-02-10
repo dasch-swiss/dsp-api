@@ -34,7 +34,10 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
-  * Provides methods for starting and stopping Knora from within another application.
+  * Provides methods for starting and stopping Knora from within another application. This is where the cake pattern
+  * is used to gather all dependencies needed for starting the server. The trait [[CoreBooted]] provides
+  * us with an actor system and the trait [[CoreManagerActors]] with the three main manager actors which are started
+  * inside the actor system provided by [[CoreBooted]].
   */
 object KnoraService extends CoreBooted with CoreManagerActors {
 

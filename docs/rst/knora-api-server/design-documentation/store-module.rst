@@ -39,11 +39,9 @@ which is started when rapier starts. The ``StoreManager`` then starts
 the ``TripleStoreManagerActor`` which in turn starts the correct actor
 implementation (e.g., GraphDB, Fuseki, embedded Jena, etc.).
 
-Triplestore Support
-===================
 
 HTTP-based Triplestores
------------------------
+=======================
 
 HTTP-based triplestore support is implemented in the ``org.knora.webapi.triplestore.http`` package.
 
@@ -56,27 +54,31 @@ the following triplestores:
 
 
 GraphDB
-^^^^^^^
+---------
 
-Fuseki
-^^^^^^
+Fuseki 2
+---------
 
 Embedded Triplestores
----------------------
+======================
 
-Embedded triplestores are supported by the ``org.knora.webapi.triplestore.embedded`` package.
+Embedded triplestores is implemented in the ``org.knora.webapi.triplestore.embedded`` package.
 
 An embedded triplestore is one that runs in the same JVM as the Knora API server.
 
 
-Apache Jena
-^^^^^^^^^^^
+Apache Jena TDB
+----------------
+
+.. note::
+   The support for embedded Jena TDB is currently dropped.
+   The documentation and the code will remain in the repository. You can use it at your own risk.
 
 The support for the embedded Jena-TDB triplestore is implemented in ``org.knora.webapi.triplestore.embedded.JenaTDBActor``.
 
 The relevant Jena libraries that are used are the following:
 
- * Jena API - The library used to work pragmatically with RDF data
+ * Jena API - The library used to work programmatically with RDF data
 
  * Jena TDB - Their implementation of a triple store
 
@@ -124,60 +126,52 @@ running at the same time.
 Configuration
 ~~~~~~~~~~~~~
 
-TODO: update this section.
-
 In ``application.conf`` set to use the embedded triplestore:
 
 ::
 
     triplestore {
         dbtype = "embedded-jena-tdb"
-        ...
+
         embedded-jena-tdb {
-          persisted = true // "false" -> memory, "true" -> disk
-          storage-path = "_TMP" // ignored if "memory"
+            persisted = true // "false" -> memory, "true" -> disk
+            loadExistingData = false // "false" -> use data if exists, "false" -> create a fresh store
+            storage-path = "_TMP" // ignored if "memory"
         }
 
         reload-on-start = false // ignored if "memory" as it will always reload
 
         rdf-data = [
-        {
-          path = "_test_data/ontologies/knora-base.ttl"
-          name = "http://www.knora.org/ontology/knora-base"
-        }
-        {
-          path = "_test_data/ontologies/knora-dc.ttl"
-          name = "http://www.knora.org/ontology/dc"
-        }
-        {
-          path = "_test_data/ontologies/salsah-gui.ttl"
-          name = "http://www.knora.org/ontology/salsah-gui"
-        }
-        {
-          path = "_test_data/ontologies/incunabula-onto.ttl"
-          name = "http://www.knora.org/ontology/incunabula"
-        }
-        {
-          path = "_test_data/all_data/incunabula-data.ttl"
-          name = "http://www.knora.org/data/incunabula"
-        }
-        {
-          path = "_test_data/ontologies/dokubib-onto.ttl"
-          name = "http://www.knora.org/ontology/dokubib"
-        }
-        {
-          path = "_test_data/all_data/dokubib-data.ttl"
-          name = "http://www.knora.org/data/dokubib"
-        }
+            {
+                path = "../knora-ontologies/knora-base.ttl"
+                name = "http://www.knora.org/ontology/knora-base"
+            }
+            {
+                path = "../knora-ontologies/knora-dc.ttl"
+                name = "http://www.knora.org/ontology/dc"
+            }
+            {
+                path = "../knora-ontologies/salsah-gui.ttl"
+                name = "http://www.knora.org/ontology/salsah-gui"
+            }
+            {
+                path = "_test_data/ontologies/incunabula-onto.ttl"
+                name = "http://www.knora.org/ontology/incunabula"
+            }
+            {
+                path = "_test_data/demo_data/incunabula-demo-data.ttl"
+                name = "http://www.knora.org/data/incunabula"
+            }
+            {
+                path = "_test_data/ontologies/images-demo-onto.ttl"
+                name = "http://www.knora.org/ontology/dokubib"
+            }
+            {
+                path = "_test_data/demo_data/images-demo-data.ttl"
+                name = "http://www.knora.org/data/dokubib"
+            }
         ]
     }
-
-Additional configuration for ``embedded-jena-tdb`` is included, allowing
-to reference different sets of data. These configuration files are
-stored under ``src/main/resources/test_data_configs``, and here the
-included file is called ``1\_export.conf`` with the following additional
-configuration:
-
 
 Here the storage is set to ``persistent``, meaning that a Jena TDB store
 will be created under the defined ``tdb-storage-path``. The
@@ -187,14 +181,11 @@ with the data referenced in ``rdf-data``.
 TDB Disk Persisted Store
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO: update this section.
-
 .. note::
+   Make sure to set ``reload-on-start`` to ``true`` if run for
+   the first time. This will create a TDB store and load the data.
 
-  Make sure to set ``reload-on-start`` to ``true`` if run for
-  the first time. This will create a TDB store and load the data.
-
-If only *read access* is performed, then Rapier can be run once with
+If only *read access* is performed, then Knora can be run once with
 reloading enabled. After that, reloading can be turned off, and the
 persisted TDB store can be reused, as any data found under the
 ``tdb-storage-path`` will be reused.
@@ -202,18 +193,9 @@ persisted TDB store can be reused, as any data found under the
 If the TDB storage files get corrupted, then just delete the folder and
 reload the data anew.
 
-Data
-~~~~
-
-TODO: Update this section.
-
-The data under the ``_test_data/1_export`` path is manually copied
-over from the *Ontologies* repository.
 
 Actor Messages
 ~~~~~~~~~~~~~~
-
-TODO: update this section.
 
  *  ``ResetTripleStoreContent(rdfDataObjects: List[RdfDataObject])``
 
@@ -223,3 +205,26 @@ The embedded Jena TDB can receive reset messages, and will ACK when
 reloading of the data is finished. ``RdfDataObject`` is a simple case
 class, containing the path and name (the same as ``rdf-data`` in the
 config file)
+
+As an example, to use it inside a test you could write something like:
+
+::
+
+    val rdfDataObjects = List (
+           RdfDataObject(path = "../knora-ontologies/knora-base.ttl",
+                         name = "http://www.knora.org/ontology/knora-base"),
+           RdfDataObject(path = "../knora-ontologies/knora-dc.ttl",
+                         name = "http://www.knora.org/ontology/dc"),
+           RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl",
+                         name = "http://www.knora.org/ontology/salsah-gui"),
+           RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl",
+                         name = "http://www.knora.org/ontology/incunabula"),
+           RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl",
+                         name = "http://www.knora.org/data/incunabula")
+    )
+
+    "Reload data " in {
+        storeManager ! ResetTripleStoreContent(rdfDataObjects)
+        expectMsg(300.seconds, ResetTripleStoreContentACK())
+    }
+

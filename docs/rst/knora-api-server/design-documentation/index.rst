@@ -28,7 +28,6 @@ Knora API Server Design Documentation
    http-module
    responders-module
    store-module
-   embedded-triplestore
    shared-packages
    how-to-add-a-route
    triplestore-updates
