@@ -26,12 +26,13 @@ import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1respondermessages.resourcemessages._
+import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
 import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1respondermessages.valuemessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
-import org.knora.webapi.util.{DateUtilV1, FormatConstants, MessageUtil}
+import org.knora.webapi.util.{ScalaPrettyPrinter, DateUtilV1, FormatConstants, MessageUtil}
 
 import scala.concurrent.duration._
 
@@ -519,13 +520,26 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        // TODO: use a SIPI fake responder here (do not actually call Sipi) -> see https://github.com/dhlab-basel/Knora/issues/38
         /*"create an incunabula:page with a resource pointer" in {
             val recto = TextValueV1("recto")
             val origname = TextValueV1("Blatt")
             val seqnum = IntegerValueV1(1)
 
-            val fileValue = StillImageFileValueV1(
+            val fileValueFull = StillImageFileValueV1(
                 internalMimeType = "image/jp2",
+                internalFilename = "gaga.jpg",
+                originalFilename = "test.jpg",
+                originalMimeType = Some("image/jpg"),
+                dimX = 1000,
+                dimY = 1000,
+                qualityLevel = 100,
+                qualityName = Some("full"),
+                isPreview = false
+            )
+
+            val fileValueThumb = StillImageFileValueV1(
+                internalMimeType = "image/jpeg",
                 internalFilename = "gaga.jpg",
                 originalFilename = "test.jpg",
                 originalMimeType = Some("image/jpg"),
@@ -544,8 +558,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 "http://www.knora.org/ontology/incunabula#pagenum" -> Vector(CreateValueV1WithComment(recto)),
                 "http://www.knora.org/ontology/incunabula#partOf" -> Vector(CreateValueV1WithComment(LinkUpdateV1(book))),
                 "http://www.knora.org/ontology/incunabula#origname" -> Vector(CreateValueV1WithComment(origname)),
-                "http://www.knora.org/ontology/incunabula#seqnum" -> Vector(CreateValueV1WithComment(seqnum)),
-                OntologyConstants.KnoraBase.HasStillImageFileValue -> Vector(CreateValueV1WithComment(fileValue))
+                "http://www.knora.org/ontology/incunabula#seqnum" -> Vector(CreateValueV1WithComment(seqnum))
             )
 
             val expected = Map(
@@ -554,7 +567,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 "http://www.knora.org/ontology/incunabula#partOf" -> Vector(LinkV1(book)),
                 "http://www.knora.org/ontology/incunabula#origname" -> Vector(origname),
                 "http://www.knora.org/ontology/incunabula#seqnum" -> Vector(seqnum),
-                OntologyConstants.KnoraBase.HasStillImageFileValue -> Vector(fileValue)
+                OntologyConstants.KnoraBase.HasStillImageFileValue -> Vector(fileValueFull, fileValueThumb)
             )
 
             actorUnderTest ! ResourceCreateRequestV1(
@@ -562,6 +575,12 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 label = "Test-Page",
                 projectIri = "http://data.knora.org/projects/77275339",
                 values = valuesToBeCreated,
+                file = Some(SipiResponderConversionFileRequestV1(
+                    originalFilename = "test.jpg",
+                    originalMimeType = "image/jpeg",
+                    filename = "./test_server/images/Chlaus.jpg",
+                    userProfile = ResourcesResponderV1Spec.userProfile
+                )),
                 userProfile = ResourcesResponderV1Spec.userProfile,
                 apiRequestID = UUID.randomUUID
             )
