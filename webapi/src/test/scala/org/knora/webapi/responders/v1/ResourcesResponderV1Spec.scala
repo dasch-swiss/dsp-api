@@ -293,6 +293,26 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     }
 
+    private def getLastModificationDate(resourceIri: IRI): Option[String] = {
+        val lastModSparqlQuery = queries.sparql.v1.txt.getLastModificationDate(
+            resourceIri = resourceIri
+        ).toString()
+
+        storeManager ! SparqlSelectRequest(lastModSparqlQuery)
+
+        expectMsgPF(timeout) {
+            case response: SparqlSelectResponse =>
+                val rows = response.results.bindings
+                (rows.size <= 1) should ===(true)
+
+                if (rows.size == 1) {
+                    Some(rows.head.rowMap("lastModificationDate"))
+                } else {
+                    None
+                }
+        }
+    }
+
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
@@ -490,6 +510,8 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         "query resource that has been created" in {
             newResourceIri.nonEmpty should ===(true)
 
+            getLastModificationDate(newResourceIri)
+
             actorUnderTest ! ResourceFullGetRequestV1(iri = newResourceIri, userProfile = ResourcesResponderV1Spec.userProfile)
 
             expectMsgPF(timeout) {
@@ -497,7 +519,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "create an incunabula:page with a resource pointer" in {
+        /*"create an incunabula:page with a resource pointer" in {
             val recto = TextValueV1("recto")
             val origname = TextValueV1("Blatt")
             val seqnum = IntegerValueV1(1)
@@ -549,6 +571,6 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     newResourceIri = response.res_id
                     checkResourceCreation(expected, response)
             }
-        }
+        }*/
     }
 }
