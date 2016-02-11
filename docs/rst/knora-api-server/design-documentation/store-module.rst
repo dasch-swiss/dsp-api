@@ -18,13 +18,13 @@
 
 .. _store-module:
 
-############
+
 Store Module
-############
+=============
 
 
 Overview
-========
+---------
 
 The store module houses the different types of data stores supported by
 rapier. At the moment, only triplestores are supported. The triplestore
@@ -32,7 +32,7 @@ support is implemented in the ``org.knora.webapi.store.triplestore``
 package.
 
 Lifecycle
-=========
+----------
 
 At the top level, the store package houses  the ``StoreManager``-Actor
 which is started when rapier starts. The ``StoreManager`` then starts
@@ -41,7 +41,7 @@ implementation (e.g., GraphDB, Fuseki, embedded Jena, etc.).
 
 
 HTTP-based Triplestores
-=======================
+------------------------
 
 HTTP-based triplestore support is implemented in the ``org.knora.webapi.triplestore.http`` package.
 
@@ -54,13 +54,13 @@ the following triplestores:
 
 
 GraphDB
----------
+^^^^^^^^^
 
 Fuseki 2
----------
+^^^^^^^^^^
 
 Embedded Triplestores
-======================
+-----------------------
 
 Embedded triplestores is implemented in the ``org.knora.webapi.triplestore.embedded`` package.
 
@@ -68,7 +68,7 @@ An embedded triplestore is one that runs in the same JVM as the Knora API server
 
 
 Apache Jena TDB
-----------------
+^^^^^^^^^^^^^^^^^
 
 .. note::
    The support for embedded Jena TDB is currently dropped.
@@ -84,7 +84,7 @@ The relevant Jena libraries that are used are the following:
 
 
 Concurrency
-~~~~~~~~~~~
+~~~~~~~~~~~~
 
 Jena provides concurrency on different levels.
 
@@ -101,7 +101,7 @@ Reader Single Writer) access is allowed.
  *  https://jena.apache.org/documentation/notes/concurrency-howto.html
 
 Implementation
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 We employ transactions on the ``Dataset`` level. This means that every
 thread that accesses the triplestore, starts a read or write enabled
@@ -124,7 +124,7 @@ read transactions seeing the state of the database after the updates
 running at the same time.
 
 Configuration
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 In ``application.conf`` set to use the embedded triplestore:
 
@@ -227,4 +227,3 @@ As an example, to use it inside a test you could write something like:
         storeManager ! ResetTripleStoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTripleStoreContentACK())
     }
-

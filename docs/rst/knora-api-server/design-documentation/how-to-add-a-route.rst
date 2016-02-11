@@ -18,17 +18,16 @@
 
 .. _how-to-add-a-route:
 
-#######################
 How to Add an API Route
-#######################
+=======================
 
 Write SPARQL templates
-======================
+-----------------------
 
 Add any SPARQL templates you need to ``src/main/twirl/queries/sparql/v1``, using the `Twirl`_ template engine.
 
 Write Responder Request and Response Messages
-=============================================
+----------------------------------------------
 
 Add a file to the ``org.knora.webapi.messages.v1respondermessages``
 package, containing case classes for your responder's request and
@@ -41,7 +40,7 @@ method that converts the response message to a JSON AST using
 `spray-json <https://github.com/spray/spray-json>`__.
 
 Write a Responder
-=================
+-----------------
 
 Write an Akka actor class that extends ``ResponderV1``, and add it to
 the ``org.knora.webapi.responders.v1`` package.
@@ -63,7 +62,7 @@ match messages that extend your request message trait, and forward them
 to that pool.
 
 Write a Route
-=============
+--------------
 
 Add an object to the ``org.knora.webapi.routing.v1`` package for your
 route. Your object should look something like this:

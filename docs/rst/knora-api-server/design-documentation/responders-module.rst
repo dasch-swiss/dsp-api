@@ -18,47 +18,47 @@
 
 .. _responders_module:
 
-#################
+
 Responders Module
-#################
+==================
 
 Version 1.0 Responders
-======================
+----------------------
 
 TDOO
 
 ResponderManagerV1
-------------------
+^^^^^^^^^^^^^^^^^^^
 
 CkanResponderV1
----------------
+^^^^^^^^^^^^^^^^^
 
 HierarchicalListsResponderV1
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 OntologyResponderV1
--------------------
+^^^^^^^^^^^^^^^^^^^^
 
 ProjectsResponderV1
--------------------
+^^^^^^^^^^^^^^^^^^^^
 
 RepresentationsResponderV1
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ResourcesResponderV1
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 SearchResponderV1
------------------
+^^^^^^^^^^^^^^^^^^^^
 
 UsersResponderV1
-----------------
+^^^^^^^^^^^^^^^^^^^^
 
 ValuesResponderV1
------------------
+^^^^^^^^^^^^^^^^^^^^
 
 Shared
-------
+^^^^^^^^^^^^^^^^^^^^
 
   * ResponderV1
   * ValueUtilV1

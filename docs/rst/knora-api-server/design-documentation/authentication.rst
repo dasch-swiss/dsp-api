@@ -16,12 +16,12 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-######################################
+
 Authentication in the Knora API Server
-######################################
+======================================
 
 Scope
-=====
+------
 
 Authentication is the process of making sure that if someone is
 accessing something that then this someone is actually also the someone
@@ -31,7 +31,7 @@ described in the section on authorization in the Knora base ontology
 document. TODO: add a link to this.
 
 Implementation
-==============
+---------------
 
 The authentication in Knora is based on Basic Auth
 `HTTP basic authentication`_, URL parameters, and cookies. This means that
@@ -46,10 +46,10 @@ containing an expired session id. In this case, the default user is
 assumed.
 
 Usage
-=====
+------
 
 Checking Credentials
---------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 To check the credentials and create a 'session', e.g., by a login window
 in the client, there is a special route called **/v1/authentication**,
@@ -99,7 +99,7 @@ user is deemed authenticated.
     }
 
 Web client (Login/Logout)
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When a web client accesses the **/v1/authentication** route
 successfully, it gets back a cookie. To **logout** the client can call
@@ -108,7 +108,7 @@ the same route and provide the logout parameter
 the session id from the cookie on the client.
 
 Workflow
---------
+^^^^^^^^^^
 
 1. The login form on the client can use */v1/authentication* to check if
    the username/password combination provide by the user is correct. The
@@ -126,7 +126,7 @@ credentials is not needed. Naturally, this won't work for a web client
 using cookies for authentication.
 
 Skipping Authentication
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There is the possibility to turn skipping authentication on and use a hardcoded
 user (Test User). In **application.conf** set the
@@ -134,7 +134,7 @@ user (Test User). In **application.conf** set the
 assumed.
 
 Sipi (Media Server)
--------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 For authentication to work with the media server, we need to add support
 for cookies. At the moment the SALSAH-App would set BasicAuth heathers,
@@ -149,7 +149,7 @@ RepresentationResponderV1 should have all the information it needs to
 filter the result based on the users permissions.
 
 Improving Security
-------------------
+^^^^^^^^^^^^^^^^^^^^
 
 In the first iteration, the username/password would be sent in clear
 text. Since we will use HTTPS this shouldn't be a problem. The second

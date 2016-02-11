@@ -18,9 +18,9 @@
 
 .. _development-tools:
 
-#################
+*****************
 Development Tools
-#################
+*****************
 
 TODO: complete this file.
 

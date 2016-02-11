@@ -16,9 +16,9 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-#####################
+**********************
 Testing with Fuseki 2
-#####################
+**********************
 
 Inside the Knora API server git repository, there is a folder called
 ``_fuseki`` containing a script named ``fuseki-server``. All needed

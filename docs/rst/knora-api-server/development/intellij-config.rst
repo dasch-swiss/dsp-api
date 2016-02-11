@@ -18,9 +18,9 @@
 
 .. _intellij-config:
 
-######################
+***********************
 Intellij Configuration
-######################
+***********************
 
 Setup IntelliJ for development of Knora
 =======================================

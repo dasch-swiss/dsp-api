@@ -18,9 +18,9 @@
 
 .. _knora-api-server:
 
-====================
+####################
 The Knora API Server
-====================
+####################
 
 The Knora API server implements Knora's HTTP-based API, and manages data
 stored in an RDF triplestore and in files. It is designed to work with any
