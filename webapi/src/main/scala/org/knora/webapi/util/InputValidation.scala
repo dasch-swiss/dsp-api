@@ -242,10 +242,20 @@ object InputValidation {
 
         val sourcePath: File = File.createTempFile("tmp_", ".bin", new File(settings.tmpDataDir))
 
+        // TODO: error handling: do we need a try catch block here? (e.g. in case Knora does not have sufficient permissions)
+
         // write given file to disk
         Files.write(sourcePath.toPath, binaryData)
 
         sourcePath.toString
+    }
+
+    def deleteFileFromTmpLocation(path: String): Boolean = {
+
+        // TODO: error handling: do we need a try catch block here? (e.g. in case Knora does not have sufficient permissions)
+
+            Files.deleteIfExists(Paths.get(path))
+
     }
 
 }

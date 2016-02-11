@@ -23,6 +23,7 @@ package org.knora.webapi.messages.v1respondermessages.resourcemessages
 import java.util.UUID
 
 import org.knora.webapi._
+import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1respondermessages.valuemessages._
 import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
@@ -41,9 +42,10 @@ import scala.collection.breakOut
   * @param restype_id the resource type of the resource to be created.
   * @param label the rdfs:label of the resource.
   * @param properties the properties to be created as a Map of property types to property value(s).
+  * @param file a file to be attached to the resource.
   * @param project_id the IRI of the project the resources is added to.
   */
-case class CreateResourceApiRequestV1(restype_id: IRI, label: String, properties: Map[IRI, Seq[CreateResourceValueV1]], project_id: IRI)
+case class CreateResourceApiRequestV1(restype_id: IRI, label: String, properties: Map[IRI, Seq[CreateResourceValueV1]], file: Option[CreateFileV1] = None, project_id: IRI)
 
 /**
   * Represents a property value to be created.
@@ -58,7 +60,6 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
                                  date_value: Option[String] = None,
                                  color_value: Option[String] = None,
                                  geom_value: Option[String] = None,
-                                 file_value: Option[CreateFileV1] = None,
                                  comment: Option[String] = None)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +126,7 @@ case class ResourceSearchGetRequestV1(searchString: String, resourceTypeIri: Opt
   * @param userProfile the profile of the user making the request.
   * @param apiRequestID the ID of the API request.
   */
-case class ResourceCreateRequestV1(resourceTypeIri: IRI, label: String, values: Map[IRI, Seq[CreateValueV1WithComment]], projectIri: IRI, userProfile: UserProfileV1, apiRequestID: UUID) extends ResourcesResponderRequestV1
+case class ResourceCreateRequestV1(resourceTypeIri: IRI, label: String, values: Map[IRI, Seq[CreateValueV1WithComment]], file: Option[SipiResponderConversionRequestV1] = None, projectIri: IRI, userProfile: UserProfileV1, apiRequestID: UUID) extends ResourcesResponderRequestV1
 
 /**
   * Checks whether a resource belongs to a certain OWL class or to a subclass of that class. This message is used
@@ -706,8 +707,8 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
         }
     }
 
-    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat9(CreateResourceValueV1)
-    implicit val createResourceApiRequestV1Format: RootJsonFormat[CreateResourceApiRequestV1] = jsonFormat4(CreateResourceApiRequestV1)
+    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat8(CreateResourceValueV1)
+    implicit val createResourceApiRequestV1Format: RootJsonFormat[CreateResourceApiRequestV1] = jsonFormat5(CreateResourceApiRequestV1)
     implicit val resourceInfoResponseV1Format: RootJsonFormat[ResourceInfoResponseV1] = jsonFormat3(ResourceInfoResponseV1)
     implicit val resourceDataV1Format: JsonFormat[ResourceDataV1] = jsonFormat5(ResourceDataV1)
     implicit val externalResourceIDV1Format: JsonFormat[ExternalResourceIDV1] = jsonFormat2(ExternalResourceIDV1)

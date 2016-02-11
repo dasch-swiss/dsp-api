@@ -20,8 +20,6 @@
 
 package org.knora.webapi.responders.v1
 
-import java.io.File
-
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
@@ -31,7 +29,7 @@ import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{Sparql
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1respondermessages.valuemessages.{FileValueV1, StillImageFileValueV1}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{ErrorHandlingMap, InputValidation}
+import org.knora.webapi.util.InputValidation
 import spray.client.pipelining._
 import spray.http._
 import spray.httpx.SprayJsonSupport._
@@ -54,8 +52,10 @@ class SipiResponderV1 extends ResponderV1 {
       */
     def receive = {
         case SipiFileInfoGetRequestV1(fileValueIri, userProfile) => future2Message(sender(), getFileInfoForSipiV1(fileValueIri, userProfile), log)
-        case SipiBinaryFileRequestV1(originalFilename, originalMimeType, sourceTmpFilename, userProfile)
-        => future2Message(sender(), createFileValueV1(originalFilename, originalMimeType, sourceTmpFilename, userProfile), log)
+        case convertPathRequest: SipiResponderConversionPathRequestV1
+        => future2Message(sender(), convertPathV1(convertPathRequest), log)
+        case convertFileRequest: SipiResponderConversionFileRequestV1
+        => future2Message(sender(), convertFileV1(convertFileRequest), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -86,88 +86,80 @@ class SipiResponderV1 extends ResponderV1 {
         )
     }
 
-    private def createFileValueV1(originalFilename: String, originalMimeType: String, sourceTmpFilename: String, userProfile: UserProfileV1): Future[SipiBinaryFileResponseV1] = {
+    private def callSipiConvertRoute(url: String, conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
+        //http://spray.io/documentation/1.2.2/spray-client/
+        val pipeline: HttpRequest => Future[SipiConversionResponse] = (
+            addHeader("Accept", "application/json")
+                //~> logRequest
+                ~> sendReceive
+                //~> logResponse
+                ~> unmarshal[SipiConversionResponse]
+            )
 
-        def handleImageMimeType(originalFilename: String, originalMimeType: String, sourceTmpFilename: String): Future[Vector[FileValueV1]] = {
-
-            //http://spray.io/documentation/1.2.2/spray-client/
-            val pipeline: HttpRequest => Future[SipiImageConversionResponse] = (
-                addHeader("Accept", "application/json")
-                    //~> logRequest
-                    ~> sendReceive
-                    //~> logResponse
-                    ~> unmarshal[SipiImageConversionResponse]
-                )
-
-            val url = settings.sipiURL + ":" + settings.sipiPort + "/" + settings.sipiConversionRoute
-
-            val targetThumb = File.createTempFile("tmp_", ".jpg", new File(settings.tmpDataDir))
-            val targetFull = File.createTempFile("tmp_", ".jpx", new File(settings.tmpDataDir))
-
-            for {
-
-            // send a conversion request to SIPI and parse the response as a [[SipiConversionResponse]]
-                conversionFull: SipiImageConversionResponse <-
-                pipeline(Post(url, FormData(Map(
-                    "source" -> sourceTmpFilename,
-                    "target" -> targetFull.toString,
-                    "format" -> "jpx"
-                ))))
-
-                // also send dimensions for thumbnail
-                conversionThumb: SipiImageConversionResponse <-
-                pipeline(Post(url, FormData(Map(
-                    "source" -> sourceTmpFilename,
-                    "target" -> targetThumb.toString,
-                    "format" -> "jpg",
-                    "size" -> "!128,128"
-                ))))
-
-                // check if conversion was successful
-                _ = if (!(conversionFull.status == 0 && conversionThumb.status == 0)) {
-                    throw BadRequestException(s"Provided image file ${originalFilename} could not be converted by SIPI")
-                }
-
-            // TODO: move converted files to final location
-            // TODO: delete source file from disk (tmp)
-
-            } yield Vector(StillImageFileValueV1(
-                internalMimeType = InputValidation.toSparqlEncodedString(conversionFull.mimetype),
-                originalFilename = originalFilename,
-                originalMimeType = Some(originalMimeType),
-                dimX = conversionFull.nx,
-                dimY = conversionFull.ny,
-                internalFilename = "file.jp2",
-                qualityLevel = 100,
-                qualityName = Some("full")
-            ),
-                StillImageFileValueV1(
-                    internalMimeType = InputValidation.toSparqlEncodedString(conversionThumb.mimetype),
-                    originalFilename = originalFilename,
-                    originalMimeType = Some(originalMimeType),
-                    dimX = conversionThumb.nx,
-                    dimY = conversionThumb.ny,
-                    internalFilename = "file.jpg",
-                    qualityLevel = 10,
-                    qualityName = Some("thumbnail"),
-                    isPreview = true
-                ))
-
-        }
-
-        // Create a Vector of Tuples of handlers and a Vector of appropriate mime types.
-        val handlers = Vector(
-            (handleImageMimeType: (String, String, String) => Future[Vector[FileValueV1]], settings.imageMimeTypes)
-        )
-
-        // Turn the `handlers` into a Map of mime type (key) -> handler (value)
-        val mimeTypes2Handlers: ErrorHandlingMap[String, (String, String, String) => Future[Vector[FileValueV1]]] = new ErrorHandlingMap(handlers.flatMap {
-            case (handler, mimeTypes) => mimeTypes.map(mimeType => mimeType -> handler)
-        }.toMap, { key: IRI => s"Unknown value type: $key" }, { errorMessage: String => throw BadRequestException(errorMessage) })
+            //println(ScalaPrettyPrinter.prettyPrint(FormData(conversionRequest.toFormData())))
 
         for {
-            handler <- Future(mimeTypes2Handlers(originalMimeType))
-            fileValuesV1 <- handler(originalFilename, originalMimeType, sourceTmpFilename)
-        } yield SipiBinaryFileResponseV1(fileValuesV1)
+
+            // send a conversion request to SIPI and parse the response as a [[SipiConversionResponse]]
+            conversionResult: SipiConversionResponse <-
+            pipeline(Post(url, FormData(conversionRequest.toFormData())))
+
+            // TODO: if anything goes wrong with the HTTP request (status code != 200), an uncaught error is thrown and the temporary file is never deleted
+
+            _ = conversionRequest match {
+                case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
+                    // a tmp file has been created by the resources route, delete it
+                    InputValidation.deleteFileFromTmpLocation(conversionPathRequest.source)
+                case _ => ()
+            }
+
+            _ = if (conversionResult.status != 0) throw BadRequestException("Sipi error when trying to convert the file")
+
+            fileType: String = conversionResult.file_type.getOrElse(throw BadRequestException("sipi did not return file type"))
+
+            fileValuesV1: Vector[FileValueV1] = fileType match {
+                case FileType.image =>
+                    // create two StillImageFileValueV1s
+                    Vector(StillImageFileValueV1( // full representation
+                        internalMimeType = InputValidation.toSparqlEncodedString(conversionResult.mimetype_full.getOrElse(throw BadRequestException("sipi did not return mimtype for full image"))),
+                        originalFilename = InputValidation.toSparqlEncodedString(conversionResult.original_filename.getOrElse(throw BadRequestException("sipi did not return original filename"))),
+                        originalMimeType = Some(InputValidation.toSparqlEncodedString(conversionResult.original_mimetype.getOrElse(throw BadRequestException("sipi did not return original mimetype")))),
+                        dimX = conversionResult.nx_full.getOrElse(throw BadRequestException("sipi did not return x dim for full image")),
+                        dimY = conversionResult.ny_full.getOrElse(throw BadRequestException("sipi did not return y dim for full image")),
+                        internalFilename = InputValidation.toSparqlEncodedString(conversionResult.filename_full.getOrElse(throw BadRequestException("sipi did not return filename for full image"))),
+                        qualityLevel = 100,
+                        qualityName = Some("full")
+                    ),
+                        StillImageFileValueV1( // full representation
+                            internalMimeType = InputValidation.toSparqlEncodedString(conversionResult.mimetype_thumb.getOrElse(throw BadRequestException("sipi did not return mimtype for thumbnail"))),
+                            originalFilename = InputValidation.toSparqlEncodedString(conversionResult.original_filename.getOrElse(throw BadRequestException("sipi did not return original filename"))),
+                            originalMimeType = Some(InputValidation.toSparqlEncodedString(conversionResult.original_mimetype.getOrElse(throw BadRequestException("sipi did not return original mimetype")))),
+                            dimX = conversionResult.nx_thumb.getOrElse(throw BadRequestException("sipi did not return x dim for thumbnail")),
+                            dimY = conversionResult.ny_thumb.getOrElse(throw BadRequestException("sipi did not return y dim for thumbnail")),
+                            internalFilename = InputValidation.toSparqlEncodedString(conversionResult.filename_thumb.getOrElse(throw BadRequestException("sipi did not return filename for full image"))),
+                            qualityLevel = 10,
+                            qualityName = Some("thumbnail"),
+                            isPreview = true
+                        ))
+
+                case unknownType => throw BadRequestException (s"Could not handle file type $unknownType")
+            }
+
+        } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = FileType.image)
     }
+
+    private def convertPathV1(conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
+
+        val url = settings.sipiURL + ":" + settings.sipiPort + "/" + settings.sipiPathConversionRoute
+
+        callSipiConvertRoute(url, conversionRequest)
+
+    }
+
+    private def convertFileV1(conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
+        val url = settings.sipiURL + ":" + settings.sipiPort + "/" + settings.sipiFileConversionRoute
+
+        callSipiConvertRoute(url, conversionRequest)
+    }
+
 }

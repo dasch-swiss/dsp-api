@@ -29,6 +29,7 @@ import org.knora.webapi.messages.v1respondermessages.graphdatamessages._
 import org.knora.webapi.messages.v1respondermessages.ontologymessages._
 import org.knora.webapi.messages.v1respondermessages.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType}
 import org.knora.webapi.messages.v1respondermessages.resourcemessages._
+import org.knora.webapi.messages.v1respondermessages.sipimessages._
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
 import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1respondermessages.valuemessages._
@@ -62,7 +63,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         case ResourceRightsGetRequestV1(resourceIri, userProfile) => future2Message(sender(), getRightsResponseV1(resourceIri, userProfile), log)
         case GraphDataGetRequestV1(iri: IRI, userProfile: UserProfileV1, level: Int) => future2Message(sender(), getGraphDataResponseV1(iri, userProfile, level), log)
         case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserProfileV1) => future2Message(sender(), getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile), log)
-        case ResourceCreateRequestV1(resourceTypeIri, label, values, projectIri, userProfile, apiRequestID) => future2Message(sender(), createNewResource(resourceTypeIri, label, values, projectIri, userProfile, apiRequestID), log)
+        case ResourceCreateRequestV1(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID) => future2Message(sender(), createNewResource(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID), log)
         case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1) => future2Message(sender(), checkResourceClass(resourceIri, owlClass, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
@@ -877,7 +878,7 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @param apiRequestID the ID of this API request.
       * @return a [[ResourceCreateResponseV1]] informing the client about the new resource.
       */
-    private def createNewResource(resourceClassIri: IRI, label: String, values: Map[IRI, Seq[CreateValueV1WithComment]], projectIri: IRI, userProfile: UserProfileV1, apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
+    private def createNewResource(resourceClassIri: IRI, label: String, values: Map[IRI, Seq[CreateValueV1WithComment]], sipiConversionRequest: Option[SipiResponderConversionRequestV1] = None, projectIri: IRI, userProfile: UserProfileV1, apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
         /**
           * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `rdfs:range` of
           * the property that is supposed to point to it.
@@ -930,6 +931,7 @@ class ResourcesResponderV1 extends ResponderV1 {
           */
         def createResourceAndCheck(resourceIri: IRI,
                                    values: Map[IRI, Seq[CreateValueV1WithComment]],
+                                   sipiConversionRequest: Option[SipiResponderConversionRequestV1],
                                    permissions: Seq[(IRI, IRI)],
                                    ownerIri: IRI,
                                    namedGraph: IRI,
@@ -980,15 +982,48 @@ class ResourcesResponderV1 extends ResponderV1 {
                         }
                 }
 
-                // Check that no required values are missing.
+                // maximally one file value can be handled here
+                _ = if (resourceClassInfo.fileValueProperties.size > 1) throw BadRequestException(s"The given resource type $resourceClassIri requires more than on file value.")
 
+                // Check that no required values are missing.
                 requiredProps: Set[IRI] = resourceClassInfo.cardinalities.filter {
                     case (propIri, cardinality) => cardinality == Cardinality.MustHaveOne || cardinality == Cardinality.MustHaveSome
-                }.keySet -- resourceClassInfo.linkValueProperties
+                }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties
 
                 _ = if (!requiredProps.subsetOf(propertyIris)) {
                     val missingProps = (requiredProps -- propertyIris).mkString(", ")
                     throw OntologyConstraintException(s"Values were not submitted for the following property or properties, which are required by resource class $resourceClassIri: $missingProps")
+                }
+
+                // check if a file values is required
+                fileValuesV1: Option[(IRI, Vector[CreateValueV1WithComment])] <- if (resourceClassInfo.fileValueProperties.size > 0) {
+                    // call sipi responder
+                    for {
+                        sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? sipiConversionRequest.getOrElse(throw OntologyConstraintException(s"No file (required) given for resource type $resourceClassIri"))).mapTo[SipiResponderConversionResponseV1]
+
+                        // check if the file type returned by Sipi corresponds to the expected fileValue property in resourceClassInfo.fileValueProperties.head
+                        _ = if (Sipi.fileType2FileValueProperty(sipiResponse.file_type) != resourceClassInfo.fileValueProperties.head) {
+                            throw BadRequestException(s"Type of submitted file (${sipiResponse.file_type}) does not correspond to expected property type ${resourceClassInfo.fileValueProperties.head}")
+                        }
+
+                        // in case we deal with a SipiResponderConversionPathRequestV1, the tmp file created by resources route
+                        // has already been deleted by the SipiResponder
+
+
+                    } yield Some(resourceClassInfo.fileValueProperties.head -> sipiResponse.fileValuesV1.map(fileValue => CreateValueV1WithComment(fileValue)))
+                } else {
+                    // check if there was no file sent
+                    sipiConversionRequest match {
+                        case None => Future(None)
+                        case Some(sipiConversionFileRequest: SipiResponderConversionFileRequestV1) =>
+                            throw BadRequestException(s"File params are given but resource class $resourceClassIri does not allow any representation")
+                        case Some(sipiConversionPathRequest: SipiResponderConversionPathRequestV1) =>
+                            // a tmp file has been created by the resources route, delete it (SipiResponder was not called, so do it here)
+                            InputValidation.deleteFileFromTmpLocation(sipiConversionPathRequest.source)
+                            throw BadRequestException(s"A binary file was provided but resource class $resourceClassIri does not have any representation")
+                    }
+
+
                 }
 
                 // Everything looks OK, so create an empty resource.
@@ -1018,7 +1053,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     projectIri = projectIri,
                     resourceIri = resourceIri,
                     resourceClassIri = resourceClassIri,
-                    values = values,
+                    values = values ++ fileValuesV1,
                     userProfile = userProfile,
                     apiRequestID = apiRequestID
                 )
@@ -1089,6 +1124,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 () => createResourceAndCheck(
                     resourceIri = resourceIri,
                     values = values,
+                    sipiConversionRequest = sipiConversionRequest,
                     permissions = permissions,
                     namedGraph = namedGraph,
                     ownerIri = userIri,

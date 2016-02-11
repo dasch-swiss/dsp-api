@@ -49,7 +49,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param file the file value to be created.
       * @return a [[FileValueV1]]
       */
-    def makeFileValueV1FromCreateFileV1(file: CreateFileV1): Vector[FileValueV1] = {
+    /*def makeFileValueV1FromCreateFileV1(file: CreateFileV1): Vector[FileValueV1] = {
 
         /**
           * Handle image file value types.
@@ -103,7 +103,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
         mimeTypes2Handlers(file.originalMimeType)(file)
 
-    }
+    }*/
 
     /**
       * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
@@ -123,6 +123,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param fileValueV1 the file value that the URL will point to.
       * @return a Sipi URL.
       */
+    // TODO: if this is a StillImageFileValue, create a IIIF URL
     def makeSipiFileGetUrlFromFileValueV1(fileValueV1: FileValueV1): String = {
         makeSipiFileGetUrlFromFilename(fileValueV1.internalFilename)
     }

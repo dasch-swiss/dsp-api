@@ -76,13 +76,11 @@ case class CreateRichtextV1(utf8str: String,
   *
   * @param originalFilename the original name of the file.
   * @param originalMimeType the original mime type of the file.
-  * @param full the full quality representation of the file.
-  * @param preview a low quality representation of the file, if possible (e.g. an image thumbnail).
+  * @param filename the name of the file to be attached to a Knora-resource (file is temporarily stored by SIPI).
   */
 case class CreateFileV1(originalFilename: String,
                         originalMimeType: String,
-                        full: CreateFileQualityLevelV1,
-                        preview: Option[CreateFileQualityLevelV1] = None) {
+                        filename: String) {
 
     def toJsValue = ApiValueV1JsonProtocol.createFileV1Format.write(this)
 
@@ -942,7 +940,7 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     }
 
     implicit val createFileQualityLevelFormat: RootJsonFormat[CreateFileQualityLevelV1] = jsonFormat4(CreateFileQualityLevelV1)
-    implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat4(CreateFileV1)
+    implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat3(CreateFileV1)
     implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat4(ValueGetResponseV1)
     implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat3(DateValueV1)
     implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat9(StillImageFileValueV1)
