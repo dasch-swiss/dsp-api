@@ -16,15 +16,14 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-###################
 Triplestore Updates
-###################
+====================
 
 Requirements
-============
+-------------
 
 General
--------
+^^^^^^^^^^
 
 The supported update operations are:
 
@@ -60,7 +59,7 @@ does not provide a way to do this, and currently it can be done only by embeddin
 in the application and using a vendor-specific API, but we cannot require this in Knora.)
 
 Permissions
------------
+^^^^^^^^^^^^^
 
 To create a new value (as opposed to a new version of an existing value), the user must have
 ``knora-base:hasModifyPermission`` on the containing resource.
@@ -78,7 +77,7 @@ the corresponding subproperties of ``knora-base:hasPermission``. Similarly, when
 created, it is given the default permissions specified in the definition of its OWL class.
 
 Ontology Constraints
---------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 Knora must not allow an update that would violate an ontology constraint.
 
@@ -94,7 +93,7 @@ Knora must ensure that the target resource belongs to the OWL class specified in
 When creating the set of new values in a new, empty resource,
 
 Duplicate and Redundant Values
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When creating a new value, or changing an existing value, Knora checks whether the submitted
 value would duplicate an existing value for the same property in the resource. The definition of
@@ -112,7 +111,7 @@ type of value, but in practice, it means that the values are strictly equal: any
 trivial, is allowed.
 
 Versioning
-----------
+^^^^^^^^^^^^
 
 Each Knora value (i.e. something belonging to an OWL class derived from ``knora-base:Value``) is versioned.
 This means that once created, a value is never modified. Instead, 'changing' a value means creating a new
@@ -139,7 +138,7 @@ resource.
 .. _triplestore-linking-reqs:
 
 Linking
--------
+^^^^^^^^^
 
 Knora API v1 treats a link between two resources as a value, but in RDF, links must be treated
 differently to other types of values. Knora needs to maintain information about the link,
@@ -188,10 +187,10 @@ When a ``LinkValue`` is created for a standoff resource reference, it is given t
 as the text value containing the reference.
 
 Design
-======
+------
 
 Transactions and Locking
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The 'read committed' isolation level cannot prevent a scenario where two users
 want to add the same data at the same time. It is possible that both requests
@@ -213,7 +212,7 @@ will not be performed. Redundant database integrity checks are a good thing. The
 the SPARQL update itself checks that the update will respect ontology constraints.
 
 Responsibilities of Responders
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``ResourcesResponderV1`` has sole responsibility for creating and updating resources, and
 ``ValuesResponderV1`` has sole responsibility for creating and updating values. When a new resource is
@@ -223,7 +222,7 @@ holding a write lock on the resource, it sends a ``CreateMultipleValuesRequestV1
 ``ValuesResponderV1``, it releases the lock.
 
 SPARQL Update Design
---------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 The `SPARQL 1.1 Update`_ standard allows for a number of ways to design updates. In our SPARQL update code,
 each update contains a ``WHERE`` clause, possibly a ``DELETE`` clause, and an ``INSERT`` clause. The
@@ -251,7 +250,7 @@ implemented in SPARQL. For this reason, Knora's check for duplicate values
 cannot be done in SPARQL update code, because it relies on permission checks.
 
 SPARQL Update Examples
-======================
+-----------------------
 
 The following sample SPARQL update code is simpler than what Knora actually does. It is included here to
 illustrate the way Knora's SPARQL updates are structured and how concurrent updates are handled.
@@ -259,7 +258,7 @@ illustrate the way Knora's SPARQL updates are structured and how concurrent upda
 .. _find-value-in-version-history:
 
 Finding a value IRI in a value's version history
-------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We will need this query below. If a value is present in a resource
 property's version history, the query returns everything known about the
@@ -283,7 +282,7 @@ value, or nothing otherwise:
     }
 
 Creating the first value of a property
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -351,7 +350,7 @@ query in :ref:`find-value-in-version-history` to look for the new IRI in the
 property's version history.
 
 Adding a new version of a value
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -409,7 +408,7 @@ there are two possibilities:
    in the value's version history.
 
 Getting all versions of a value
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 

@@ -276,6 +276,10 @@ class JenaTDBActor extends Actor with ActorLogging {
         resetTriplestoreResult
     }
 
+    /**
+      * Drops all content from the triplestore.
+      * @return a [[DropAllTriplestoreContentACK]]
+      */
     private def dropAllTriplestoreContent(): DropAllTriplestoreContentACK = {
 
         // log.debug("ResetTripleStoreContent ...")
@@ -312,6 +316,11 @@ class JenaTDBActor extends Actor with ActorLogging {
 
     }
 
+    /**
+      * Inserts the data referenced in each [[RdfDataObject]]
+      * @param rdfDataObjects a sequence holding [[RdfDataObject]]
+      * @return a [[InsertTriplestoreContentACK]]
+      */
     private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject]): InsertTriplestoreContentACK = {
 
         // log.debug("ResetTripleStoreContent ...")
@@ -354,6 +363,10 @@ class JenaTDBActor extends Actor with ActorLogging {
 
     }
 
+    /**
+      * Used to manually refresh the Lucene index after changing data in the triplestore.
+      * @return a [[Boolean]] denoting if the update was successful
+      */
     private def updateIndex: Boolean = {
 
         this.dataset.begin(ReadWrite.WRITE)
@@ -394,6 +407,11 @@ class JenaTDBActor extends Actor with ActorLogging {
         }
     }
 
+    /**
+      * Creates the dataset with a Lucene index attached. The triplestore dataset is either disk-backed or in-memory,
+      * depending on the settings. The Lucene index is always in-memory.
+      * @return a [[Dataset]]
+      */
     private def getDataset: Dataset = {
 
         // Define which fields should be indexed by lucene

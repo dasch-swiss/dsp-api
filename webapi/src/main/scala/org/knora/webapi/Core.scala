@@ -23,7 +23,8 @@ package org.knora.webapi
 import akka.actor.ActorSystem
 
 /**
-  * TODO: document this.
+  * This trait is part of the cake pattern, and only defines an actor system. It is used by [[CoreBooted]] for
+  * creating an actual actor system.
   */
 trait Core {
     implicit def system: ActorSystem

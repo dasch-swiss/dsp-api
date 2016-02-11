@@ -16,12 +16,11 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-################################
 Knora API Server Design Overview
-################################
+=================================
 
 Introduction
-============
+-------------
 
 The Knora API server implements Knora's web-based Application Programming Interface (API). It is responsible
 for receiving HTTP requests from clients (which may be web browsers or other software), performing
@@ -32,7 +31,7 @@ for web APIs. It is designed to work with any standards-compliant triplestore. I
 triplestores either via the `SPARQL 1.1 Protocol`_ or by embedding the triplestore in the API server as a library.
 
 Design Diagram
-==============
+---------------
 
 .. figure:: figures/design-diagram.png
    :scale: 50%
@@ -41,33 +40,33 @@ Design Diagram
    A high-level diagram of the Knora API server.
 
 Modules
-=======
+--------
 
 HTTP Module
------------
+^^^^^^^^^^^^^
 
 -  org.knora.webapi.http
 -  org.knora.webapi.routes
 
 Responders Module
------------------
+^^^^^^^^^^^^^^^^^^^
 
 -  org.knora.webapi.responders
 
 Store Module
-------------
+^^^^^^^^^^^^^^
 
 -  org.knora.store
 
 Shared Between Modules
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 -  org.knora.webapi
 -  org.knora.webapi.util
 -  org.knora.webapi.messages
 
 Actor Supervision and Creation
-==============================
+-------------------------------
 
 At system start, the supervisor actors are created in
 ``CoreManagerActors.scala``:
@@ -121,7 +120,7 @@ are configured in ``application.conf``:
     }
 
 Concurrency
-===========
+------------
 
 Except for a bit of caching, the Knora API server is written in a purely
 functional style and has no mutable state, shared or otherwise, not even within actors.
@@ -150,7 +149,7 @@ To manage asynchronous communication between actors, the Knora API server uses S
 We use Akka's asynchronous logging interface (see `Akka Logging`_).
 
 What the Responders Do
-======================
+------------------------
 
 In the Knora API server, a 'responder' is an actor that receives a request message (a
 Scala case class) in the ``ask`` pattern, gets data from the
@@ -166,7 +165,7 @@ All messages to responders go through the responder supervisor actor
 (``ResponderManagerV1``).
 
 Store Module (org.knora.webapi.store package)
-=============================================
+----------------------------------------------
 
 The Store module is used for accessing the triplestore and other
 external storage providers.
@@ -186,7 +185,7 @@ See :ref:`store-module` for a deeper discussion.
 .. _triplestore-access:
 
 Triplestore Access
-==================
+--------------------
 
 SPARQL queries are generated from templates, using the Twirl_ template engine.
 For example, if we're querying a resource, the template will contain a
@@ -218,7 +217,7 @@ actor, like this:
 .. _error-handling:
 
 Error Handling
-==============
+----------------
 
 The error-handling design has these aims:
 
@@ -288,7 +287,7 @@ See also :ref:`futures-with-akka`.
 .. _api-routing:
 
 API Routing
-===========
+---------------
 
 The API routes in the ``routing`` package are defined using the DSL
 provided by the `spray-routing`_ library. A routing function has to do the following:
@@ -320,7 +319,7 @@ as well as handling errors.
 See :ref:`how-to-add-a-route` for an example.
 
 JSON
-====
+-------
 
 The Knora API server parses and generate JSON using the `spray-json`_ library.
 

@@ -16,9 +16,9 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-#####################################
+**************************************
 Knora API Server Design Documentation
-#####################################
+**************************************
 
 .. toctree::
    :maxdepth: 2
@@ -28,7 +28,6 @@ Knora API Server Design Documentation
    http-module
    responders-module
    store-module
-   embedded-triplestore
    shared-packages
    how-to-add-a-route
    triplestore-updates

@@ -42,8 +42,11 @@ import scala.util.{Failure, Success, Try}
 // needs Java 1.8 !!!
 import java.util.Base64
 
-//TODO: OAuth2
-
+/**
+  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
+  * to extract credentials, authenticate provided credentials, and look up cached credentials through thte use of the
+  * session id.
+  */
 trait Authenticator {
 
     val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
@@ -64,9 +67,10 @@ trait Authenticator {
     /**
       * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message and cookie header
       * with the generated session id for the client to save.
-      * @param requestContext
-      * @param system
-      * @return
+      * @param requestContext a [[RequestContext]] containing the http request
+      * @param system the current [[ActorSystem]]
+      * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
+      *         the generated session id.
       */
     def doLogin(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
         extractCredentialsAndAuthenticate(requestContext, true) match {
@@ -101,6 +105,12 @@ trait Authenticator {
     // Session Authentication ENTRY POINT
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+      * Checks if the provided session id is valid, i.e. if a [[UserProfileV1]] can be retrieved from the cache for the
+      * supplied session id.
+      * @param requestContext a [[RequestContext]] containing the http request
+      * @return a [[HttpRequest]]
+      */
     def doSessionAuthentication(requestContext: RequestContext): HttpResponse = {
         getUserProfileV1FromSessionId(requestContext) match {
             case Some(userProfile) =>
@@ -135,9 +145,9 @@ trait Authenticator {
     /**
       * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message. No session is
       * generated.
-      * @param requestContext
-      * @param system
-      * @return
+      * @param requestContext a [[RequestContext]] containing the http request
+      * @param system the current [[ActorSystem]]
+      * @return a [[RequestContext]]
       */
     def doAuthenticate(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
 
@@ -170,9 +180,11 @@ trait Authenticator {
     }
 
     /**
-      * Tries to extract and then authenticate the credentials, while returning
-      * @param requestContext
-      * @return [[ Try[String] ]] contains the session id if successful, which means that the credentials could be
+      * Tries to extract and then authenticate the credentials.
+      * @param requestContext a [[RequestContext]] containing the http request
+      * @param session a flag if set true then the creation of the session id and caching of the user profile will be skipped
+      * @param system the current [[ActorSystem]]
+      * @return [[ Try[String] ]] containing the session id if successful, which means that the credentials could be
       *         extracted and authenticated. In the case where the credentials could not be extracted or could be
       *         extracted but not authenticated, a corresponding exception is thrown.
       */
@@ -192,9 +204,11 @@ trait Authenticator {
       * Tries to authenticate the credentials by getting the [[UserProfileV1]] from the triple store and checking if the
       * password matches. Caches the user profile after successful authentication under a generated session id if 'session=true', and
       * returns that said session id (or 0 if no session is needed).
-      * @param username The username
-      * @param password The password
-      * @return [[Try[String]] the session id under which the profile is stored if authentication is successful.
+      * @param username the username of the user
+      * @param password the password of th user
+      * @param session a [[Boolean]] if set true then a session id will be created and the user profile cached
+      * @param system the current [[ActorSystem]]
+      * @return a [[Try[String]] which is the session id under which the profile is stored if authentication was successful.
       */
     private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem): Try[String] = {
         Try {
@@ -226,6 +240,13 @@ trait Authenticator {
     // LOGOUT ENTRY POINT
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+      * Used to logout the user, i.e. returns a header deleting the cookie and removes the [[UserProfileV1]] from the
+      * cache.
+      * @param requestContext a [[RequestContext]] containing the http request
+      * @param system the current [[ActorSystem]]
+      * @return a [[HttpResponse]]
+      */
     def doLogout(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
 
         val cookies: Seq[HttpCookie] = requestContext.request.cookies
@@ -255,10 +276,11 @@ trait Authenticator {
     /**
       * Returns a [[UserProfileV1]] matching the credentials found in the [[RequestContext]].
       * The credentials can be username/password as parameters, auth headers, or username in a cookie if the profile is
-      * found in the cache.
-      * @param requestContext
-      * @param system
-      * @return [[UserProfileV1]]
+      * found in the cache. If no credentials are found, then a default [[UserProfileV1]] is returned. If the credentials
+      * not correct, then the corresponding error is returned.
+      * @param requestContext a [[RequestContext]] containing the http request
+      * @param system the current [[ActorSystem]]
+      * @return a [[UserProfileV1]]
       */
     def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem): UserProfileV1 = {
         val settings = Settings(system)
@@ -292,8 +314,8 @@ trait Authenticator {
 
     /**
       * Try to get the session id from the cookie and return a [[UserProfileV1]] if still in the cache.
-      * @param requestContext
-      * @return [[ Option[UserProfileV1] ]]
+      * @param requestContext a [[RequestContext]] containing the http request
+      * @return a [[ Option[UserProfileV1] ]]
       */
     private def getUserProfileV1FromSessionId(requestContext: RequestContext): Option[UserProfileV1] = {
         val cookies: Seq[HttpCookie] = requestContext.request.cookies
@@ -314,8 +336,8 @@ trait Authenticator {
 
     /**
       * Tries to extract the credentials from the requestContext (parameters, auth headers)
-      * @param requestContext
-      * @return [[Option[(String, String)]] Either a [[Some]] containing a tuple with the username and password, or a [[None]]
+      * @param requestContext a [[RequestContext]] containing the http request
+      * @return a [[Option[(String, String)]] either a [[Some]] containing a tuple with the username and password, or a [[None]]
       *         if no credentials could be found.
       */
     private def extractCredentials(requestContext: RequestContext): Option[(String, String)] = {
@@ -389,11 +411,11 @@ trait Authenticator {
 
     /**
       * Get a user profile with the specific IRI from the triple store
-      * @param iri
-      * @param system
-      * @param timeout
-      * @param executionContext
-      * @return
+      * @param iri the IRI of the user to be queried
+      * @param system the current akka actor system
+      * @param timeout the timeout of the query
+      * @param executionContext the current execution context
+      * @return a [[Option(UserProfileV1)]]
       */
     private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Option[UserProfileV1] = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
@@ -412,11 +434,11 @@ trait Authenticator {
 
     /**
       * Tries to get a [[UserProfileV1]] from the cache or from the triple store matching the username.
-      * @param username
-      * @param system
-      * @param timeout
-      * @param executionContext
-      * @return A [[Success(UserProfileV1)]] if a user profile matching the username is found.
+      * @param username the username of the user to be queried
+      * @param system the current akka actor system
+      * @param timeout the timeout of the query
+      * @param executionContext the current execution context
+      * @return a [[Success(UserProfileV1)]]
       */
     private def getUserProfileByUsername(username: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Try[UserProfileV1] = {
         Try {

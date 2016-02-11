@@ -27,7 +27,8 @@ import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.store.{StoreManager, _}
 
 /**
-  * TODO: document this.
+  * This trait is part of the cake pattern used for starting up the server. Here we start up the three manager actors.
+  * The forward declaration of [[Core]] makes sure that already have an actor system in place.
   */
 trait CoreManagerActors {
     this: Core =>

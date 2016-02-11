@@ -16,33 +16,32 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-######################
 Plans for Knora API v2
-######################
+=======================
 
 Naming
-======
+-------
 
 In API v1, the same data types are named inconsistently (``resinfo``,
 ``res_info``) or unclearly (``value_restype`` is actually a label).
 Version 2 should adopt a clear, consistent naming convention.
 
 Structure
-=========
+----------
 
 API v1 sometimes uses parallel array structures to represent multiple
 complex objects, e.g. the values of resource properties or the items in
 a resource's context. Version 2 should use nested structures instead.
 
 Redundancy
-==========
+-----------
 
 Some information in API v1 is presented redundantly, e.g. ``resinfo``
 and ``resdata``, and the ``__location__`` property. This should be
 cleaned up.
 
 Efficiency
-==========
+------------
 
 Some queries, like the resource context query, produce so much data that
 they cannot be made efficient. We should consider breaking up these API
@@ -56,7 +55,7 @@ clients to request only the information they actually need, improving
 performance and reducing server load.
 
 Suitability for non-GUI applications
-====================================
+-------------------------------------
 
 When returning the 'full' information about a resource, the API currently
 includes valueless properties to reflect the possible properties in the
@@ -76,7 +75,7 @@ separate *displaying* a resource from indicating which properties a
 particular user can add.
 
 Working with multiple projects
-==============================
+-------------------------------
 
 The user will be able to choose which project to use for an update.
 
@@ -93,20 +92,20 @@ user can choose to see just what's defined in their own project or to
 include definitions from elsewhere.
 
 Annotating values
-=================
+------------------
 
 In API v1, only resources can be annotated. In v2, it will also be
 possible to annotate values.
 
 Typing
-======
+--------
 
 Each data item should have a consistent data type. In an JSON object,
 the same name should always contain a value of the same type. Numbers
 should be represented as numbers rather than as strings.
 
 JSON-LD
-=======
+--------
 
 Consider using `JSON-LD`_ to specify data types
 and semantics within API responses, instead of providing separate JSON

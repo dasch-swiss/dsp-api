@@ -20,9 +20,9 @@
 
 .. _documentation:
 
-########################
+*************************
 Documentation Guidelines
-########################
+*************************
 
 The Knora documentation uses `reStructuredText`_ as its markup language and is
 built using `Sphinx`_.
@@ -41,9 +41,10 @@ Sections
 --------
 
 Section headings are very flexible in reST. We use the following convention in
-the Akka documentation:
+the Knora documentation based on the `Python Documentation Convention https://docs.python.org/devguide/documenting.html`_:
 
-* ``#`` (over and under) for module headings
+* ``#`` (over and under) for parts
+* ``*`` (over and under) for chapters
 * ``=`` for sections
 * ``-`` for subsections
 * ``^`` for subsubsections
@@ -60,24 +61,30 @@ unique references across the entire documentation.
 
 For example::
 
-  .. _akka-module:
+  .. _knora_part::
 
-  #############
-   Akka Module
-  #############
+  #################
+  Knora Part
+  #################
 
-  This is the module documentation.
+  .. _knora-chapter:
 
-  .. _akka-section:
+  ***************
+   Knora Chapter
+  ***************
 
-  Akka Section
+  This is the chapter documentation.
+
+  .. _knora-section:
+
+  Knora Section
   ============
 
-  Akka Subsection
+  Knora Subsection
   ---------------
 
-  Here is a reference to "akka section": :ref:`akka-section` which will have the
-  name "Akka Section".
+  Here is a reference to "knora section": :ref:`knora-section` which will have the
+  name "Knora Section".
 
 Build the documentation
 =======================
@@ -153,3 +160,4 @@ If you get the error ``unknown locale: UTF-8`` when generating the documentation
 
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
 .. _sphinx: http://sphinx.pocoo.org
+.. _pythonDocumentationConventions: https://docs.python.org/devguide/documenting.html

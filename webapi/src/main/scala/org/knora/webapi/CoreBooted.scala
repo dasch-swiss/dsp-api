@@ -23,11 +23,12 @@ package org.knora.webapi
 import akka.actor.ActorSystem
 
 /**
-  * TODO: document this.
+  * This trait is part of the cake pattern and represents an actual realization of the [[Core]] trait which starts
+  * an akka actor system.
   */
 trait CoreBooted extends Core {
     /**
       * Knora's Akka [[ActorSystem]].
       */
-    implicit lazy val system = ActorSystem("webapi")
+    implicit def system = ActorSystem("webapi")
 }
