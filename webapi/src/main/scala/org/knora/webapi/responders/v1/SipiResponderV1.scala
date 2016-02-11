@@ -118,7 +118,7 @@ class SipiResponderV1 extends ResponderV1 {
             fileType: String = conversionResult.file_type.getOrElse(throw BadRequestException("sipi did not return file type"))
 
             fileValuesV1: Vector[FileValueV1] = fileType match {
-                case FileType.image =>
+                case Sipi.FileType.image =>
                     // create two StillImageFileValueV1s
                     Vector(StillImageFileValueV1( // full representation
                         internalMimeType = InputValidation.toSparqlEncodedString(conversionResult.mimetype_full.getOrElse(throw BadRequestException("sipi did not return mimtype for full image"))),
@@ -145,7 +145,7 @@ class SipiResponderV1 extends ResponderV1 {
                 case unknownType => throw BadRequestException (s"Could not handle file type $unknownType")
             }
 
-        } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = FileType.image)
+        } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = Sipi.FileType.image)
     }
 
     private def convertPathV1(conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {

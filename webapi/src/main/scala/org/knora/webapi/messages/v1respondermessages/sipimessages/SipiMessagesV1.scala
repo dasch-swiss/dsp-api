@@ -108,6 +108,7 @@ case class SipiResponderConversionFileRequestV1(originalFilename: String,
   * @param original_filename name of the original file.
   * @param file_type type of file that has been converted (image, audio, video etc.)
   */
+// TODO: This response format is generic for each possible file type.
 case class SipiConversionResponse(status: Int,
                                   nx_full: Option[Int],
                                   ny_full: Option[Int],
@@ -119,17 +120,10 @@ case class SipiConversionResponse(status: Int,
                                   filename_thumb: Option[String],
                                   original_mimetype: Option[String],
                                   original_filename: Option[String],
-                                  file_type: Option[String])
+                                  file_type: Option[String]) // TODO: could be an enum
 
 
-// TODO: Would it be better to make this an Enumeration? However, I had problems to use it in match case statement
-// (http://stackoverflow.com/questions/24087550/scala-pattern-match-against-a-java-enum-type).
-object FileType  {
-    val image = "image"
-    val movie = "movie"
-    val audio = "audio"
-    val binary = "binary"
-}
+
 
 object Sipi {
     // TODO: Shall we better use an ErrorHandlingMap here?
@@ -140,6 +134,15 @@ object Sipi {
         FileType.binary -> OntologyConstants.KnoraBase.HasDocumentFileValue
 
     )
+    // TODO: Would it be better to make this an Enumeration? However, I had problems to use it in match case statement
+
+    // (http://stackoverflow.com/questions/24087550/scala-pattern-match-against-a-java-enum-type).
+    object FileType  {
+        val image = "image"
+        val movie = "movie"
+        val audio = "audio"
+        val binary = "binary"
+    }
 }
 
 /**
