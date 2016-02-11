@@ -29,7 +29,6 @@ import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDat
 import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
-import org.knora.webapi.testing.tags.DbTest
 import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.duration._
@@ -62,7 +61,6 @@ object OntologyResponderV1Spec {
 /**
   * Tests [[OntologyResponderV1]].
   */
-@DbTest
 class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     // Construct the actors needed for this test.
