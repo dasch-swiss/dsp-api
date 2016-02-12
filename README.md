@@ -112,7 +112,7 @@ Please use the [knora-user](https://www.maillist.unibas.ch/mailman/listinfo/knor
 
 Lukas Rosenthaler `<lukas.rosenthaler@unibas.ch>`
 
-### Commit Message Schema ###
+## Commit Message Schema
 
 When writing commit messages, we stick to this schema:
 
