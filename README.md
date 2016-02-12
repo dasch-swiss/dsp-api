@@ -111,3 +111,27 @@ Please use the [knora-user](https://www.maillist.unibas.ch/mailman/listinfo/knor
 ### Administrative
 
 Lukas Rosenthaler `<lukas.rosenthaler@unibas.ch>`
+
+### Commit Message Schema ###
+
+When writing commit messages, we stick to this schema: type (title): subject body
+
+Types:
+
+- feature (new feature for the user)
+- fix (bug fix for the user)
+- docs (changes to the documentation)
+- style (formatting, etc; no production code change)
+- refactor (refactoring production code, eg. renaming a variable)
+- test (adding missing tests, refactoring tests; no production code change)
+- build (changes to sbt tasks, CI tasks, deployment tasks, etc.; no production code changes)
+- enhancement (residual category)
+
+Example:
+
+```
+feature (resources route): add route for resource creation
+- add path for multipart request
+- adapt handling of resources responder
+
+```
