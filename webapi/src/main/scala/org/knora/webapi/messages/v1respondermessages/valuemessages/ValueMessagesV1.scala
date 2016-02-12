@@ -99,7 +99,7 @@ case class CreateFileV1(originalFilename: String,
 case class CreateFileQualityLevelV1(path: String,
                                     mimeType: String,
                                     dimX: Option[Int] = None,
-                                    dimY: Option[Int]= None) {
+                                    dimY: Option[Int] = None) {
 
     def toJsValue = ApiValueV1JsonProtocol.createFileQualityLevelFormat.write(this)
 }
@@ -242,7 +242,7 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * checks must already have been performed before this message is sent. Specifically, the sender must ensure that:
   *
   * - The requesting user has permission to add values to the resource.
-  * - Each submitted value is consistent with the `rdfs:range` of the property that is supposed to point to it.
+  * - Each submitted value is consistent with the `knora-base:objectClassConstraint` of the property that is supposed to point to it.
   * - The resource class has a suitable cardinality for each submitted value.
   * - All required values are provided.
   *

@@ -36,7 +36,6 @@ import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
 import scala.concurrent.{ExecutionContext, Future}
 
 
-
 /**
   * Converts data from SPARQL query results into [[ApiValueV1]] objects.
   */
@@ -232,30 +231,30 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     /**
-      * Checks that a value type is valid for the `rdfs:range` of a property.
+      * Checks that a value type is valid for the `knora-base:objectClassConstraint` of a property.
       *
       * @param propertyIri the IRI of the property.
       * @param valueType the IRI of the value type.
-      * @param propertyRange the IRI of the property range.
+      * @param propertyObjectClassConstraint the IRI of the property's `knora-base:objectClassConstraint`.
       * @param responderManager a reference to the Knora API Server responder manager.
       * @return A future containing Unit on success, or a failed future if the value type is not valid for the property's range.
       */
-    def checkValueTypeForPropertyRange(propertyIri: IRI,
-                                       valueType: IRI,
-                                       propertyRange: IRI,
-                                       responderManager: ActorSelection)
-                                      (implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] = {
-        if (propertyRange == valueType) {
+    def checkValueTypeForPropertyObjectClassConstraint(propertyIri: IRI,
+                                                       valueType: IRI,
+                                                       propertyObjectClassConstraint: IRI,
+                                                       responderManager: ActorSelection)
+                                                      (implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] = {
+        if (propertyObjectClassConstraint == valueType) {
             Future.successful(())
         } else {
             for {
                 checkSubClassResponse <- (responderManager ? CheckSubClassRequestV1(
                     subClassIri = valueType,
-                    superClassIri = propertyRange
+                    superClassIri = propertyObjectClassConstraint
                 )).mapTo[CheckSubClassResponseV1]
 
                 _ = if (!checkSubClassResponse.isSubClass) {
-                    throw OntologyConstraintException(s"Property $propertyIri requires a value of type $propertyRange")
+                    throw OntologyConstraintException(s"Property $propertyIri requires a value of type $propertyObjectClassConstraint")
                 }
             } yield ()
         }

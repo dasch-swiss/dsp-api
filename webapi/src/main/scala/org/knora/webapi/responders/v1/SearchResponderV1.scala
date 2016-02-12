@@ -292,15 +292,15 @@ class SearchResponderV1 extends ResponderV1 {
                 (prop, compop, searchval) => {
                     val propertyEntityInfo = propertyInfo.propertyEntityInfoMap(prop)
 
-                    // If the property is a linking property, we pretend its rdfs:range is knora-base:Resource, so validTypeCompopCombos will work.
-                    val propertyRange: IRI = if (propertyEntityInfo.isLinkProp) {
+                    // If the property is a linking property, we pretend its knora-base:objectClassConstraint is knora-base:Resource, so validTypeCompopCombos will work.
+                    val propertyObjectClassConstraint: IRI = if (propertyEntityInfo.isLinkProp) {
                         OntologyConstants.KnoraBase.Resource
                     } else {
-                        propertyEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Range).getOrElse(throw InconsistentTriplestoreDataException(s"Property $prop has no rdfs:range"))
+                        propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $prop has no knora-base:objectClassConstraint"))
                     }
 
                     // check if the valuetype of the given propertyIri conforms to the given compop
-                    if (!validTypeCompopCombos(propertyRange).contains(compop)) {
+                    if (!validTypeCompopCombos(propertyObjectClassConstraint).contains(compop)) {
                         // the given combination of propertyIri valtype and compop is not allowed
                         throw new BadRequestException(s"The combination of propertyIri and compop is invalid")
                     }
@@ -308,7 +308,7 @@ class SearchResponderV1 extends ResponderV1 {
                     val searchParamWithoutValue = SearchCriterion(
                         propertyIri = prop,
                         comparisonOperator = compop,
-                        valueType = propertyRange
+                        valueType = propertyObjectClassConstraint
                     )
 
                     // check and convert the searchval if necessary (e.g. check if a given string is numeric or convert a date string to a date)
@@ -317,7 +317,7 @@ class SearchResponderV1 extends ResponderV1 {
                         // EXISTS doesn't need the searchval at all.
                         searchParamWithoutValue
                     } else {
-                        propertyRange match {
+                        propertyObjectClassConstraint match {
                             case OntologyConstants.KnoraBase.DateValue =>
 
                                 //

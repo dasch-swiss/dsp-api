@@ -506,7 +506,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                     PropertyV1(
                         pid = propertyIri,
-                        valuetype_id = propertyEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Range),
+                        valuetype_id = propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint),
                         guiorder = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt),
                         guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
                         label = propertyEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
@@ -879,16 +879,16 @@ class ResourcesResponderV1 extends ResponderV1 {
       */
     private def createNewResource(resourceClassIri: IRI, label: String, values: Map[IRI, Seq[CreateValueV1WithComment]], projectIri: IRI, userProfile: UserProfileV1, apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
         /**
-          * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `rdfs:range` of
+          * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `knora-base:objectClassConstraint` of
           * the property that is supposed to point to it.
           *
           * @param propertyIri the IRI of the property.
-          * @param propertyRange the IRI of the `rdfs:range` of the property.
+          * @param propertyObjectClassConstraint the IRI of the `knora-base:objectClassConstraint` of the property.
           * @param updateValueV1 the value to be updated.
           * @param userProfile the profile of the user making the request.
           * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
           */
-        def checkPropertyRangeForValue(propertyIri: IRI, propertyRange: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {
+        def checkPropertyObjectClassConstraintForValue(propertyIri: IRI, propertyObjectClassConstraint: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {
             for {
                 result <- updateValueV1 match {
                     case linkUpdate: LinkUpdateV1 =>
@@ -896,20 +896,20 @@ class ResourcesResponderV1 extends ResponderV1 {
                         for {
                             checkTargetClassResponse <- checkResourceClass(
                                 resourceIri = linkUpdate.targetResourceIri,
-                                owlClass = propertyRange,
+                                owlClass = propertyObjectClassConstraint,
                                 userProfile = userProfile
                             ).mapTo[ResourceCheckClassResponseV1]
 
                             _ = if (!checkTargetClassResponse.isInClass) {
-                                throw OntologyConstraintException(s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyRange")
+                                throw OntologyConstraintException(s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint")
                             }
                         } yield ()
 
                     case otherValue =>
-                        // We're creating an ordinary value. Check that its type is valid for the property's rdfs:range.
-                        valueUtilV1.checkValueTypeForPropertyRange(
+                        // We're creating an ordinary value. Check that its type is valid for the property's knora-base:objectClassConstraint.
+                        valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
                             propertyIri = propertyIri,
-                            propertyRange = propertyRange,
+                            propertyObjectClassConstraint = propertyObjectClassConstraint,
                             valueType = otherValue.valueTypeIri,
                             responderManager = responderManager)
                 }
@@ -937,7 +937,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             val propertyIris = values.keySet
 
             for {
-            // Get ontology information about the resource class's cardinalities and about each property's rdfs:range.
+            // Get ontology information about the resource class's cardinalities and about each property's knora-base:objectClassConstraint.
 
                 entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                     resourceClassIris = Set(resourceClassIri),
@@ -945,21 +945,21 @@ class ResourcesResponderV1 extends ResponderV1 {
                     userProfile = userProfile
                 )).mapTo[EntityInfoGetResponseV1]
 
-                // Check that each submitted value is consistent with the rdfs:range of the property that is supposed to
+                // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
                 // point to it.
 
-                propertyRangeChecks: Seq[Unit] <- Future.sequence {
+                propertyObjectClassConstraintChecks: Seq[Unit] <- Future.sequence {
                     values.foldLeft(Vector.empty[Future[Unit]]) {
                         case (acc, (propertyIri, valuesWithComments)) =>
                             val propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
-                            val propertyRange = propertyInfo.getPredicateObject(OntologyConstants.Rdfs.Range).getOrElse {
-                                throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:range")
+                            val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
+                                throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                             }
 
                             acc ++ valuesWithComments.map {
-                                valueV1WithComment: CreateValueV1WithComment => checkPropertyRangeForValue(
+                                valueV1WithComment: CreateValueV1WithComment => checkPropertyObjectClassConstraintForValue(
                                     propertyIri = propertyIri,
-                                    propertyRange = propertyRange,
+                                    propertyObjectClassConstraint = propertyObjectClassConstraint,
                                     updateValueV1 = valueV1WithComment.updateValueV1,
                                     userProfile = userProfile
                                 )
@@ -1348,7 +1348,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         def makePropertyV1(propertyIri: IRI, propertyCardinality: Option[Cardinality.Value], propertyEntityInfo: Option[PropertyEntityInfoV1], valueObjects: Seq[ValueObjectV1]): PropertyV1 = {
             PropertyV1(
                 pid = propertyIri,
-                valuetype_id = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.Rdfs.Range)),
+                valuetype_id = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)),
                 guiorder = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)),
                 guielement = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri))),
                 label = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.Rdfs.Label)),
