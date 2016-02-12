@@ -96,8 +96,6 @@ class SipiResponderV1 extends ResponderV1 {
                 ~> unmarshal[SipiConversionResponse]
             )
 
-            //println(ScalaPrettyPrinter.prettyPrint(FormData(conversionRequest.toFormData())))
-
         for {
 
             // send a conversion request to SIPI and parse the response as a [[SipiConversionResponse]]
@@ -108,35 +106,39 @@ class SipiResponderV1 extends ResponderV1 {
 
             _ = conversionRequest match {
                 case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
-                    // a tmp file has been created by the resources route, delete it
+                    // a tmp file has been created by the resources route (non GUI-case), delete it
                     InputValidation.deleteFileFromTmpLocation(conversionPathRequest.source)
                 case _ => ()
             }
 
+            // TODO: At the moment, this cannot happen because in case of a Sipi error, Sipi sends a non successful HTTP status code
+            // TODO: the reason why I made all the members optional in SipiConversionResponse, is because Sipi could just send a Sipi status error code
             _ = if (conversionResult.status != 0) throw BadRequestException("Sipi error when trying to convert the file")
 
-            fileType: String = conversionResult.file_type.getOrElse(throw BadRequestException("sipi did not return file type"))
+            fileType: String = conversionResult.file_type.getOrElse(throw BadRequestException("Sipi did not return file type"))
 
+            // create the apt case class depending on the file type returned by Sipi
+            // TODO: Would it make sense to move that logic in SipiMessages (object Sipi)?
             fileValuesV1: Vector[FileValueV1] = fileType match {
                 case Sipi.FileType.image =>
                     // create two StillImageFileValueV1s
                     Vector(StillImageFileValueV1( // full representation
-                        internalMimeType = InputValidation.toSparqlEncodedString(conversionResult.mimetype_full.getOrElse(throw BadRequestException("sipi did not return mimtype for full image"))),
-                        originalFilename = InputValidation.toSparqlEncodedString(conversionResult.original_filename.getOrElse(throw BadRequestException("sipi did not return original filename"))),
-                        originalMimeType = Some(InputValidation.toSparqlEncodedString(conversionResult.original_mimetype.getOrElse(throw BadRequestException("sipi did not return original mimetype")))),
-                        dimX = conversionResult.nx_full.getOrElse(throw BadRequestException("sipi did not return x dim for full image")),
-                        dimY = conversionResult.ny_full.getOrElse(throw BadRequestException("sipi did not return y dim for full image")),
-                        internalFilename = InputValidation.toSparqlEncodedString(conversionResult.filename_full.getOrElse(throw BadRequestException("sipi did not return filename for full image"))),
+                        internalMimeType = InputValidation.toSparqlEncodedString(conversionResult.mimetype_full.getOrElse(throw BadRequestException("Sipi did not return mimtype for full image"))),
+                        originalFilename = InputValidation.toSparqlEncodedString(conversionResult.original_filename.getOrElse(throw BadRequestException("Sipi did not return original filename"))),
+                        originalMimeType = Some(InputValidation.toSparqlEncodedString(conversionResult.original_mimetype.getOrElse(throw BadRequestException("Sipi did not return original mimetype")))),
+                        dimX = conversionResult.nx_full.getOrElse(throw BadRequestException("Sipi did not return x dim for full image")),
+                        dimY = conversionResult.ny_full.getOrElse(throw BadRequestException("Sipi did not return y dim for full image")),
+                        internalFilename = InputValidation.toSparqlEncodedString(conversionResult.filename_full.getOrElse(throw BadRequestException("Sipi did not return filename for full image"))),
                         qualityLevel = 100,
                         qualityName = Some("full")
                     ),
-                        StillImageFileValueV1( // full representation
-                            internalMimeType = InputValidation.toSparqlEncodedString(conversionResult.mimetype_thumb.getOrElse(throw BadRequestException("sipi did not return mimtype for thumbnail"))),
-                            originalFilename = InputValidation.toSparqlEncodedString(conversionResult.original_filename.getOrElse(throw BadRequestException("sipi did not return original filename"))),
-                            originalMimeType = Some(InputValidation.toSparqlEncodedString(conversionResult.original_mimetype.getOrElse(throw BadRequestException("sipi did not return original mimetype")))),
-                            dimX = conversionResult.nx_thumb.getOrElse(throw BadRequestException("sipi did not return x dim for thumbnail")),
-                            dimY = conversionResult.ny_thumb.getOrElse(throw BadRequestException("sipi did not return y dim for thumbnail")),
-                            internalFilename = InputValidation.toSparqlEncodedString(conversionResult.filename_thumb.getOrElse(throw BadRequestException("sipi did not return filename for full image"))),
+                        StillImageFileValueV1( // thumbnail representation
+                            internalMimeType = InputValidation.toSparqlEncodedString(conversionResult.mimetype_thumb.getOrElse(throw BadRequestException("Sipi did not return mimtype for thumbnail"))),
+                            originalFilename = InputValidation.toSparqlEncodedString(conversionResult.original_filename.getOrElse(throw BadRequestException("Sipi did not return original filename"))),
+                            originalMimeType = Some(InputValidation.toSparqlEncodedString(conversionResult.original_mimetype.getOrElse(throw BadRequestException("Sipi did not return original mimetype")))),
+                            dimX = conversionResult.nx_thumb.getOrElse(throw BadRequestException("Sipi did not return x dim for thumbnail")),
+                            dimY = conversionResult.ny_thumb.getOrElse(throw BadRequestException("Sipi did not return y dim for thumbnail")),
+                            internalFilename = InputValidation.toSparqlEncodedString(conversionResult.filename_thumb.getOrElse(throw BadRequestException("Sipi did not return filename for full image"))),
                             qualityLevel = 10,
                             qualityName = Some("thumbnail"),
                             isPreview = true
@@ -145,7 +147,7 @@ class SipiResponderV1 extends ResponderV1 {
                 case unknownType => throw BadRequestException (s"Could not handle file type $unknownType")
             }
 
-        } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = Sipi.FileType.image)
+        } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = Sipi.FileType.image) // TODO: use an enum for file types (see SipiMessages, object Sipi)
     }
 
     private def convertPathV1(conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {

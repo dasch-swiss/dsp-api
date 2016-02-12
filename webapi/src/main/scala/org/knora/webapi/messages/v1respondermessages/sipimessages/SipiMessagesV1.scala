@@ -108,7 +108,7 @@ case class SipiResponderConversionFileRequestV1(originalFilename: String,
   * @param original_filename name of the original file.
   * @param file_type type of file that has been converted (image, audio, video etc.)
   */
-// TODO: This response format is generic for each possible file type.
+// TODO: This response format must be made generic for each possible file type converted by Sipi. We have to use one case class only because we do not know what to expect from Sipi
 case class SipiConversionResponse(status: Int,
                                   nx_full: Option[Int],
                                   ny_full: Option[Int],
@@ -127,6 +127,7 @@ case class SipiConversionResponse(status: Int,
 
 object Sipi {
     // TODO: Shall we better use an ErrorHandlingMap here?
+    // map file types converted by Sipi to file value properties in Knora
     val fileType2FileValueProperty = Map(
         FileType.image -> OntologyConstants.KnoraBase.HasStillImageFileValue,
         FileType.movie -> OntologyConstants.KnoraBase.HasMovingImageFileValue,
@@ -135,7 +136,6 @@ object Sipi {
 
     )
     // TODO: Would it be better to make this an Enumeration? However, I had problems to use it in match case statement
-
     // (http://stackoverflow.com/questions/24087550/scala-pattern-match-against-a-java-enum-type).
     object FileType  {
         val image = "image"

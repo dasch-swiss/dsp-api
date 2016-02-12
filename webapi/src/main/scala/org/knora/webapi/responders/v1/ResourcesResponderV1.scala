@@ -873,6 +873,7 @@ class ResourcesResponderV1 extends ResponderV1 {
       *
       * @param resourceClassIri the resource type of the resource to be created.
       * @param values the values to be attached to the resource.
+     *  @param sipiConversionRequest a file (binary representation) to be attached to the resource (GUI and non GUI-case)
       * @param projectIri the project the resource belongs to.
       * @param userProfile the user that is creating the resource
       * @param apiRequestID the ID of this API request.
@@ -970,7 +971,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                 }
 
                 // Check that the resource class has a suitable cardinality for each submitted value.
-
                 resourceClassInfo = entityInfoResponse.resourceEntityInfoMap(resourceClassIri)
 
                 _ = values.foreach {
@@ -983,20 +983,20 @@ class ResourcesResponderV1 extends ResponderV1 {
                 }
 
                 // maximally one file value can be handled here
-                _ = if (resourceClassInfo.fileValueProperties.size > 1) throw BadRequestException(s"The given resource type $resourceClassIri requires more than on file value.")
+                _ = if (resourceClassInfo.fileValueProperties.size > 1) throw BadRequestException(s"The given resource type $resourceClassIri requires more than on file value. This is not supported for API V1")
 
                 // Check that no required values are missing.
                 requiredProps: Set[IRI] = resourceClassInfo.cardinalities.filter {
                     case (propIri, cardinality) => cardinality == Cardinality.MustHaveOne || cardinality == Cardinality.MustHaveSome
-                }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties
+                }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties // exclude link value and file value properties from checking
 
                 _ = if (!requiredProps.subsetOf(propertyIris)) {
                     val missingProps = (requiredProps -- propertyIris).mkString(", ")
                     throw OntologyConstraintException(s"Values were not submitted for the following property or properties, which are required by resource class $resourceClassIri: $missingProps")
                 }
 
-                // check if a file values is required
-                fileValuesV1: Option[(IRI, Vector[CreateValueV1WithComment])] <- if (resourceClassInfo.fileValueProperties.size > 0) {
+                // check if a file value is required by the ontology
+                fileValuesV1: Option[(IRI, Vector[CreateValueV1WithComment])] <- if (resourceClassInfo.fileValueProperties.nonEmpty) {
                     // call sipi responder
                     for {
                         sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? sipiConversionRequest.getOrElse(throw OntologyConstraintException(s"No file (required) given for resource type $resourceClassIri"))).mapTo[SipiResponderConversionResponseV1]
@@ -1006,23 +1006,22 @@ class ResourcesResponderV1 extends ResponderV1 {
                             throw BadRequestException(s"Type of submitted file (${sipiResponse.file_type}) does not correspond to expected property type ${resourceClassInfo.fileValueProperties.head}")
                         }
 
-                        // in case we deal with a SipiResponderConversionPathRequestV1, the tmp file created by resources route
+                        // in case we deal with a SipiResponderConversionPathRequestV1 (non GUI-case), the tmp file created by resources route
                         // has already been deleted by the SipiResponder
-
 
                     } yield Some(resourceClassInfo.fileValueProperties.head -> sipiResponse.fileValuesV1.map(fileValue => CreateValueV1WithComment(fileValue)))
                 } else {
+                    // resource class requires no binary representation
                     // check if there was no file sent
                     sipiConversionRequest match {
-                        case None => Future(None)
+                        case None => Future(None) // expected behaviour
                         case Some(sipiConversionFileRequest: SipiResponderConversionFileRequestV1) =>
-                            throw BadRequestException(s"File params are given but resource class $resourceClassIri does not allow any representation")
+                            throw BadRequestException(s"File params (GUI-case) are given but resource class $resourceClassIri does not allow any representation")
                         case Some(sipiConversionPathRequest: SipiResponderConversionPathRequestV1) =>
                             // a tmp file has been created by the resources route, delete it (SipiResponder was not called, so do it here)
                             InputValidation.deleteFileFromTmpLocation(sipiConversionPathRequest.source)
-                            throw BadRequestException(s"A binary file was provided but resource class $resourceClassIri does not have any representation")
+                            throw BadRequestException(s"A binary file was provided (non GUI-case) but resource class $resourceClassIri does not have any binary representation")
                     }
-
 
                 }
 

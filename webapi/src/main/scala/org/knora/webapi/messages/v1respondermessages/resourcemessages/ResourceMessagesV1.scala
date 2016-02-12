@@ -42,7 +42,7 @@ import scala.collection.breakOut
   * @param restype_id the resource type of the resource to be created.
   * @param label the rdfs:label of the resource.
   * @param properties the properties to be created as a Map of property types to property value(s).
-  * @param file a file to be attached to the resource.
+  * @param file a file to be attached to the resource (GUI-case).
   * @param project_id the IRI of the project the resources is added to.
   */
 case class CreateResourceApiRequestV1(restype_id: IRI, label: String, properties: Map[IRI, Seq[CreateResourceValueV1]], file: Option[CreateFileV1] = None, project_id: IRI)

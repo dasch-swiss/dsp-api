@@ -45,8 +45,8 @@ import scala.concurrent.Future
 import scala.util.Try
 
 /**
-  * Provides a spray-routing function for API routes that deal with resources.
-  */
+ * Provides a spray-routing function for API routes that deal with resources.
+ */
 object ResourcesRouteV1 extends Authenticator {
 
     def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
@@ -84,6 +84,10 @@ object ResourcesRouteV1 extends Authenticator {
             val projectIri = InputValidation.toIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI ${apiRequest.project_id}"))
             val resourceTypeIri = InputValidation.toIri(apiRequest.restype_id, () => throw BadRequestException(s"Invalid resource IRI ${apiRequest.restype_id}"))
             val label = InputValidation.toSparqlEncodedString(apiRequest.label)
+
+            // for GUI-case:
+            // file has already been stored by Sipi.
+            // TODO: in the old SALSAH, the file params were sent as a property salsah:__location__ -> the GUI has to be adapated
             val paramConversionRequest: Option[SipiResponderConversionFileRequestV1] = apiRequest.file match {
                 case Some(createFile: CreateFileV1) => Some(SipiResponderConversionFileRequestV1(
                     originalFilename = InputValidation.toSparqlEncodedString(createFile.originalFilename),
@@ -95,34 +99,34 @@ object ResourcesRouteV1 extends Authenticator {
             }
 
             val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = apiRequest.properties.map {
-                case (propIri: IRI, values: Seq[CreateResourceValueV1]) => // TODO: get rid of fold left, a simple map can do the job
-                    (InputValidation.toIri(propIri, () => throw BadRequestException(s"Invalid property IRI $propIri")), values.foldLeft(Vector.empty[CreateValueV1WithComment]) {
-                        case (acc: Vector[CreateValueV1WithComment], givenValue: CreateResourceValueV1) =>
+                case (propIri: IRI, values: Seq[CreateResourceValueV1]) =>
+                    (InputValidation.toIri(propIri, () => throw BadRequestException(s"Invalid property IRI $propIri")), values.map {
+                        case (givenValue: CreateResourceValueV1) =>
                             givenValue match {
                                 // create corresponding UpdateValueV1
-                                case CreateResourceValueV1(_, _, Some(intValue: Int), _, _, _, _, comment) => acc :+ CreateValueV1WithComment(IntegerValueV1(intValue), comment)
+                                case CreateResourceValueV1(_, _, Some(intValue: Int), _, _, _, _, comment) => CreateValueV1WithComment(IntegerValueV1(intValue), comment)
                                 case CreateResourceValueV1(Some(richtext: CreateRichtextV1), _, _, _, _, _, _, comment) =>
                                     val textattr: Map[String, Seq[StandoffPositionV1]] = InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]])
                                     val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
 
-                                    acc :+ CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
+                                    CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
 
                                 case CreateResourceValueV1(_, Some(linkValue: IRI), _, _, _, _, _, comment) =>
                                     val linkVal = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Invalid Knora resource Iri $linkValue"))
-                                    acc :+ CreateValueV1WithComment(LinkUpdateV1(linkVal), comment)
+                                    CreateValueV1WithComment(LinkUpdateV1(linkVal), comment)
 
-                                case CreateResourceValueV1(_, _, _, Some(floatValue: Float), _, _, _, comment) => acc :+ CreateValueV1WithComment(FloatValueV1(floatValue), comment)
+                                case CreateResourceValueV1(_, _, _, Some(floatValue: Float), _, _, _, comment) => CreateValueV1WithComment(FloatValueV1(floatValue), comment)
 
                                 case CreateResourceValueV1(_, _, _, _, Some(dateStr: String), _, _, comment) =>
-                                    acc :+ CreateValueV1WithComment(DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)
+                                    CreateValueV1WithComment(DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)
 
                                 case CreateResourceValueV1(_, _, _, _, _, Some(colorStr: String), _, comment) =>
                                     val colorValue = InputValidation.toColor(colorStr, () => throw BadRequestException(s"Invalid color value $colorStr"))
-                                    acc :+ CreateValueV1WithComment(ColorValueV1(colorValue), comment)
+                                    CreateValueV1WithComment(ColorValueV1(colorValue), comment)
 
                                 case CreateResourceValueV1(_, _, _, _, _, _, Some(geomStr: String), comment) =>
                                     val geometryValue = InputValidation.toGeometryString(geomStr, () => throw BadRequestException(s"Invalid geometry value geomStr"))
-                                    acc :+ CreateValueV1WithComment(GeomValueV1(geometryValue), comment)
+                                    CreateValueV1WithComment(GeomValueV1(geometryValue), comment)
 
                                 case _ => throw BadRequestException(s"No value submitted")
 
@@ -139,8 +143,12 @@ object ResourcesRouteV1 extends Authenticator {
                 resourceTypeIri = resourceTypeIri,
                 label = label,
                 projectIri = projectIri,
-                values = valuesToBeCreated, //++ fileValues
-                file = if (multipartConversionRequest.nonEmpty) multipartConversionRequest else if (paramConversionRequest.nonEmpty) paramConversionRequest else None,
+                values = valuesToBeCreated,
+                file = if (multipartConversionRequest.nonEmpty) // either multipartConversionRequest or paramConversionRequest might be given, but never both
+                    multipartConversionRequest // Non GUI-case
+                else if (paramConversionRequest.nonEmpty)
+                    paramConversionRequest // GUI-case
+                else None, // no file given
                 userProfile = userProfile,
                 apiRequestID = UUID.randomUUID
             )
@@ -229,26 +237,26 @@ object ResourcesRouteV1 extends Authenticator {
                 // create a new resource with the given type, properties, and binary data (file)
                 entity(as[MultipartFormData]) { data => requestContext =>
 
-                    // get all the parts from multipart
-                    val fields: Seq[BodyPart] = data.fields
+                    val requestMessageTry = Try {
 
-                    //
-                    // turn Sequence of BodyParts into a Map(name -> BodyPart),
-                    // according to the given keys in the HTTP request
-                    // e.g. 'json' -> BodyPart or 'file' -> BodyPart
-                    //
-                    val namedParts: Map[String, BodyPart] = fields.map {
-                        // assumes that only one file is given
-                        case (bodyPart: BodyPart) =>
-                            (bodyPart.dispositionParameterValue("name").getOrElse(throw BadRequestException("part of HTTP multipart request has no name")), bodyPart)
-                    }.toMap
+                        // get all the body parts from multipart request
+                        val fields: Seq[BodyPart] = data.fields
 
-                    // TODO: get rid of for construct, we do not need it anymore
-                    val requestMessageFuture = for {
-                        userProfile <- Future(getUserProfileV1(requestContext))
+                        //
+                        // turn Sequence of BodyParts into a Map(name -> BodyPart),
+                        // according to the given keys in the HTTP request
+                        // e.g. 'json' -> BodyPart or 'file' -> BodyPart
+                        //
+                        val namedParts: Map[String, BodyPart] = fields.map {
+                            // assumes that only one file is given (this may change for API V2)
+                            case (bodyPart: BodyPart) =>
+                                (bodyPart.dispositionParameterValue("name").getOrElse(throw BadRequestException("part of HTTP multipart request has no name")), bodyPart)
+                        }.toMap
+
+                        val userProfile = getUserProfileV1(requestContext)
 
                         // get the json params (access first member of the tuple) and turn them into a case class
-                        apiRequest: CreateResourceApiRequestV1 = try {
+                        val apiRequest: CreateResourceApiRequestV1 = try {
                             namedParts.getOrElse("json", throw BadRequestException("Required param 'json' was not submitted"))
                                 .entity.asString.parseJson.convertTo[CreateResourceApiRequestV1]
                         } catch {
@@ -256,42 +264,43 @@ object ResourcesRouteV1 extends Authenticator {
                         }
 
                         // check if the API request contains file information: this is illegal for this route
-                        _ = if (apiRequest.file.nonEmpty) throw BadRequestException("param 'file' is set for a post multipart request. This is not allowed.")
+                        if (apiRequest.file.nonEmpty) throw BadRequestException("param 'file' is set for a post multipart request. This is not allowed.")
 
                         // get binary data from bodyPart 'file'
-                        bodyPart: BodyPart = namedParts.getOrElse("file", throw BadRequestException("MultiPart Post request was sent but no files"))
+                        val bodyPartFile: BodyPart = namedParts.getOrElse("file", throw BadRequestException("MultiPart Post request was sent but no files"))
 
-                        nonEmpty: NonEmpty = bodyPart.entity
-                            .toOption.getOrElse(throw BadRequestException("No binary data for MuliPart"))
+                        // TODO: how to check if the user has sent multiple files?
+                        val nonEmpty: NonEmpty = bodyPartFile.entity
+                            .toOption.getOrElse(throw BadRequestException("no binary data submitted in multipart request"))
 
                         // save file to temporary location
-                        sourcePath = InputValidation.saveFileToTmpLocation(settings, nonEmpty.data.toByteArray)
+                        // this file will be deleted by Knora once it is not needed anymore
+                        // TODO: add a script that cleans files in the tmp location that have a certain age
+                        // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
+                        val sourcePath = InputValidation.saveFileToTmpLocation(settings, nonEmpty.data.toByteArray)
 
-                        sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
-                            originalFilename = InputValidation.toSparqlEncodedString(bodyPart.filename.getOrElse(throw BadRequestException(s"Filename is not given"))),
+                        val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
+                            originalFilename = InputValidation.toSparqlEncodedString(bodyPartFile.filename.getOrElse(throw BadRequestException(s"Filename is not given"))),
                             originalMimeType = InputValidation.toSparqlEncodedString(nonEmpty.contentType.toString),
                             source = sourcePath,
                             userProfile = userProfile
                         )
 
-                        requestMessage = makeCreateResourceRequestMessage(
+                        makeCreateResourceRequestMessage(
                             apiRequest = apiRequest,
                             multipartConversionRequest = Some(sipiConvertPathRequest),
                             userProfile = userProfile
                         )
-                    } yield requestMessage
-
-                    requestMessageFuture.onComplete {
-                        (requestMessageTry: Try[ResourceCreateRequestV1]) =>
-
-                            RouteUtilV1.runJsonRoute(
-                                requestMessageTry,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log
-                            )
                     }
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+
                 }
             }
         } ~ path("v1" / "resources.html" / Segment) { iri =>

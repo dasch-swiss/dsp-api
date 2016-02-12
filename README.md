@@ -135,7 +135,7 @@ Types:
 Example:
 
 ```
-feature (resources route): add route for esource creation
+feature (resources route): add route for resource creation
 - add path for multipart request
 - adapt handling of resources responder
 
