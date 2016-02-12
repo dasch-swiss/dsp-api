@@ -186,6 +186,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 value = createValueRequest.value,
                 comment = createValueRequest.comment,
                 permissionRelevantAssertions = permissionRelevantAssertionsForNewValue,
+                updateResourceLastModificationDate = true,
                 userProfile = createValueRequest.userProfile
             )
         } yield apiResponse
@@ -251,6 +252,11 @@ class ValuesResponderV1 extends ResponderV1 {
                         val permissionsFromDefaults: Seq[(IRI, IRI)] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
                         val permissionRelevantAssertionsForNewValue: Seq[(IRI, IRI)] = ownerTuple +: projectTuple +: permissionsFromDefaults
 
+                        // For each value submitted for the property, make a Future that creates the value. Don't update
+                        // the resource's lastModificationDate in these Futures, because it is not safe to update
+                        // a resource in multiple concurrent transactions. (Multiple transactions could simultaneously
+                        // find that the resource has no lastModificationDate, and they could all add it, giving
+                        // the resource multiple lastModificationDate triples.)
                         val valueCreationResponsesForProperty: Seq[Future[CreateValueResponseV1]] = valuesWithComments.map {
                             valueV1WithComment: CreateValueV1WithComment => createValueV1AfterChecks(
                                 projectIri = createMultipleValuesRequest.projectIri,
@@ -259,6 +265,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 value = valueV1WithComment.updateValueV1,
                                 comment = valueV1WithComment.comment,
                                 permissionRelevantAssertions = permissionRelevantAssertionsForNewValue,
+                                updateResourceLastModificationDate = false,
                                 userProfile = createMultipleValuesRequest.userProfile
                             )
                         }
@@ -1126,6 +1133,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param value the value to create.
       * @param permissionRelevantAssertions the permission-relevant assertions to assign to the value, i.e. its owner
       *                                     and project plus its permissions.
+      * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
       * @param userProfile the profile of the user making the request.
       * @return a [[CreateValueResponseV1]].
       */
@@ -1135,6 +1143,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                          value: UpdateValueV1,
                                          comment: Option[String],
                                          permissionRelevantAssertions: Seq[(IRI, IRI)],
+                                         updateResourceLastModificationDate: Boolean,
                                          userProfile: UserProfileV1): Future[CreateValueResponseV1] = {
         value match {
             case linkUpdateV1: LinkUpdateV1 =>
@@ -1146,6 +1155,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     linkUpdateV1 = linkUpdateV1,
                     comment = comment,
                     permissionRelevantAssertions = permissionRelevantAssertions,
+                    updateResourceLastModificationDate = updateResourceLastModificationDate,
                     userProfile = userProfile
                 )
 
@@ -1161,6 +1171,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     value = ordinaryUpdateValueV1,
                     comment = comment,
                     permissionRelevantAssertions = permissionRelevantAssertions,
+                    updateResourceLastModificationDate = updateResourceLastModificationDate,
                     userProfile = userProfile
                 )
         }
@@ -1175,6 +1186,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param linkUpdateV1 a [[LinkUpdateV1]] specifying the target resource.
       * @param permissionRelevantAssertions permission-relevant assertions for the new `knora-base:LinkValue`, i.e.
       *                                     its owner and project plus permissions.
+      * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
       * @param userProfile the profile of the user making the request.
       * @return a [[CreateValueResponseV1]].
       */
@@ -1184,6 +1196,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                              linkUpdateV1: LinkUpdateV1,
                                              comment: Option[String],
                                              permissionRelevantAssertions: Seq[(IRI, IRI)],
+                                             updateResourceLastModificationDate: Boolean,
                                              userProfile: UserProfileV1): Future[CreateValueResponseV1] = {
         for {
             sparqlTemplateLinkUpdate <- incrementLinkValue(
@@ -1200,7 +1213,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 linkSourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
                 maybeComment = comment,
-                overrideCardinality = false
+                updateResourceLastModificationDate = updateResourceLastModificationDate
             ).toString()
 
             /*
@@ -1244,6 +1257,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param value an [[UpdateValueV1]] describing the value.
       * @param permissionRelevantAssertions permission-relevant assertions for the new value, i.e.
       *                                     its owner and project plus permissions.
+      * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
       * @param userProfile the profile of the user making the request.
       * @return a [[CreateValueResponseV1]].
       */
@@ -1254,6 +1268,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                                  value: UpdateValueV1,
                                                  comment: Option[String],
                                                  permissionRelevantAssertions: Seq[(IRI, IRI)],
+                                                 updateResourceLastModificationDate: Boolean,
                                                  userProfile: UserProfileV1): Future[CreateValueResponseV1] = {
         for {
         // If we're creating a text value, update direct links and LinkValues for any resource references in Standoff.
@@ -1290,7 +1305,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 linkUpdates = standoffLinkUpdates,
                 maybeComment = comment,
                 permissionRelevantAssertions = permissionRelevantAssertions,
-                overrideCardinality = false
+                updateResourceLastModificationDate = updateResourceLastModificationDate
             ).toString()
 
             /*

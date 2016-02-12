@@ -504,14 +504,14 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case response: ResourceCreateResponseV1 =>
                     newResourceIri = response.res_id
+                    newResourceIri.nonEmpty should ===(true)
                     checkResourceCreation(valuesExpected, response)
             }
-        }
 
-        "query resource that has been created" in {
-            newResourceIri.nonEmpty should ===(true)
-
+            // Check that the resource doesn't have more than one lastModificationDate.
             getLastModificationDate(newResourceIri)
+
+            // See if we can query the resource.
 
             actorUnderTest ! ResourceFullGetRequestV1(iri = newResourceIri, userProfile = ResourcesResponderV1Spec.userProfile)
 
