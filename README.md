@@ -114,7 +114,12 @@ Lukas Rosenthaler `<lukas.rosenthaler@unibas.ch>`
 
 ### Commit Message Schema ###
 
-When writing commit messages, we stick to this schema: type (title): subject body
+When writing commit messages, we stick to this schema:
+
+```
+type (scope): subject
+body
+```
 
 Types:
 
@@ -130,7 +135,7 @@ Types:
 Example:
 
 ```
-feature (resources route): add route for resource creation
+feature (resources route): add route for esource creation
 - add path for multipart request
 - adapt handling of resources responder
 
