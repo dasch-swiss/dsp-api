@@ -385,7 +385,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#IntValue",
                     occurrence = "0-1",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = None,
+                    description = Some("Indicates the position of a resource within a sequence"),
                     label = Some("Sequenznummer"),
                     name = "http://www.knora.org/ontology/knora-base#seqnum",
                     id = "http://www.knora.org/ontology/knora-base#seqnum"
@@ -464,7 +464,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#IntValue",
                     occurrence = "0-1",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = None,
+                    description = Some("Indicates the position of a resource within a sequence"),
                     label = Some("Sequenznummer"),
                     name = "http://www.knora.org/ontology/knora-base#seqnum",
                     id = "http://www.knora.org/ontology/knora-base#seqnum"
@@ -497,7 +497,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#Resource",
                     occurrence = "1-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("This property (and subproperties thereof) connect directly 2 resources. It's always augmented by a hasLinkToValue property connecting to the reification node."),
+                    description = Some("Represents a direct connection between two resources."),
                     label = None,
                     name = "http://www.knora.org/ontology/knora-base#hasLinkTo",
                     id = "http://www.knora.org/ontology/knora-base#hasLinkTo"
@@ -530,7 +530,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#IntValue",
                     occurrence = "0-1",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = None,
+                    description = Some("Indicates the position of a resource within a sequence"),
                     label = Some("Sequenznummer"),
                     name = "http://www.knora.org/ontology/knora-base#seqnum",
                     id = "http://www.knora.org/ontology/knora-base#seqnum"

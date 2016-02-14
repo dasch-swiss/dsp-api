@@ -38,7 +38,7 @@
 
 :objectDatatypeConstraint rdf:type owl:AnnotationProperty ;
 
-                          rdfs:comment "Specifies the type required as the object of a datatype property." .
+                          rdfs:comment "Specifies the type required as the object of a datatype property."@en .
 
 
 
@@ -368,7 +368,7 @@
 
 :hasLinkTo rdf:type owl:ObjectProperty ;
            
-           rdfs:comment "This property (and subproperties thereof) connect directly 2 resources. It's always accompanied by a hasLinkToValue property connecting to the reification node."@en ;
+           rdfs:comment "Represents a direct connection between two resources."@en ;
            
            :objectClassConstraint :Resource ;
            
@@ -379,6 +379,8 @@
 ###  http://www.knora.org/ontology/knora-base#hasLinkToValue
 
 :hasLinkToValue rdf:type owl:ObjectProperty ;
+
+                rdfs:comment "Points to a LinkValue reification describing a link between two resources."@en ;
                 
                 :objectClassConstraint :LinkValue ;
                 
@@ -1844,7 +1846,7 @@
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ;
           
-          rdfs:comment """Represents a flat or hierarchical list."@en .
+          rdfs:comment "Represents a flat or hierarchical list."@en .
 
 
 
