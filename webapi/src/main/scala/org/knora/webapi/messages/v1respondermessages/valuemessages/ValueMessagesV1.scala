@@ -99,7 +99,7 @@ case class CreateFileV1(originalFilename: String,
 case class CreateFileQualityLevelV1(path: String,
                                     mimeType: String,
                                     dimX: Option[Int] = None,
-                                    dimY: Option[Int]= None) {
+                                    dimY: Option[Int] = None) {
 
     def toJsValue = ApiValueV1JsonProtocol.createFileQualityLevelFormat.write(this)
 }
@@ -229,6 +229,33 @@ case class CreateValueResponseV1(value: ApiValueV1,
 }
 
 /**
+  * Represents a value that should have been created in response to a [[CreateMultipleValuesRequestV1]].
+  * To verify that the value was in fact created, send a [[VerifyMultipleValueCreationRequestV1]].
+  *
+  * @param newValueIri the IRI of the value that should have been created.
+  * @param value the [[UpdateValueV1]] that was used to request the creation of the value.
+  */
+case class UnverifiedCreateValueResponseV1(newValueIri: IRI, value: UpdateValueV1)
+
+/**
+  * Requests verification that new values were created.
+  * @param resourceIri the IRI of the resource in which the values should have been created.
+  * @param unverifiedValues a [[Map]] of property IRIs to [[UnverifiedCreateValueResponseV1]] objects
+  *                         describing the values that should have been created for each property.
+  * @param userProfile the profile of the user making the request.
+  */
+case class VerifyMultipleValueCreationRequestV1(resourceIri: IRI,
+                                                unverifiedValues: Map[IRI, Seq[UnverifiedCreateValueResponseV1]],
+                                                userProfile: UserProfileV1) extends ValuesResponderRequestV1
+
+/**
+  * In response to a [[VerifyMultipleValueCreationRequestV1]], indicates that all requested values were
+  * created successfully.
+  * @param verifiedValues information about the values that were created.
+  */
+case class VerifyMultipleValueCreationResponseV1(verifiedValues: Map[IRI, Seq[CreateValueResponseV1]])
+
+/**
   * A holder for an [[UpdateValueV1]] along with an optional comment.
   *
   * @param updateValueV1 the [[UpdateValueV1]].
@@ -261,15 +288,13 @@ case class CreateMultipleValuesRequestV1(projectIri: IRI,
                                          apiRequestID: UUID) extends ValuesResponderRequestV1
 
 /**
-  * Represents a response to a [[CreateMultipleValuesRequestV1]]. The receiver is responsible for checking
-  * whether the update succeeded by querying the IRIs of the newly created values.
+  * Represents a response to a [[CreateMultipleValuesRequestV1]]. The receiver can check whether the values
+  * were actually created by sending a [[VerifyMultipleValueCreationRequestV1]].
   *
-  * @param newValueIris a map of property IRIs to newly created value IRIs.
+  * @param unverifiedValues a map of property IRIs to [[UnverifiedCreateValueResponseV1]] objects describing
+  *                         the values that should have been created.
   */
-case class CreateMultipleValuesResponseV1(newValueIris: Map[IRI, Seq[IRI]]) extends KnoraResponseV1 {
-
-    def toJsValue = ApiValueV1JsonProtocol.createMultipleValuesResponseV1Format.write(this)
-}
+case class CreateMultipleValuesResponseV1(unverifiedValues: Map[IRI, Seq[UnverifiedCreateValueResponseV1]])
 
 
 /**
@@ -956,5 +981,4 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat8(ChangeValueApiRequestV1)
     implicit val changeValueResponseV1Format: RootJsonFormat[ChangeValueResponseV1] = jsonFormat5(ChangeValueResponseV1)
     implicit val deleteValueResponseV1Format: RootJsonFormat[DeleteValueResponseV1] = jsonFormat2(DeleteValueResponseV1)
-    implicit val createMultipleValuesResponseV1Format: RootJsonFormat[CreateMultipleValuesResponseV1] = jsonFormat1(CreateMultipleValuesResponseV1)
 }

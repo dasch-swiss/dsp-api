@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v1respondermessages.valuemessages._
 import org.knora.webapi.responders.ResourceLocker
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.KnoraIriUtil
+import org.knora.webapi.util.{ActorUtil, KnoraIriUtil}
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
@@ -62,6 +62,7 @@ class ValuesResponderV1 extends ResponderV1 {
         case changeCommentRequest: ChangeCommentRequestV1 => future2Message(sender(), changeCommentV1(changeCommentRequest), log)
         case deleteValueRequest: DeleteValueRequestV1 => future2Message(sender(), deleteValueV1(deleteValueRequest), log)
         case createMultipleValuesRequest: CreateMultipleValuesRequestV1 => future2Message(sender(), createMultipleValuesV1(createMultipleValuesRequest), log)
+        case verifyMultipleValueCreationRequest: VerifyMultipleValueCreationRequestV1 => future2Message(sender(), verifyMultipleValueCreation(verifyMultipleValueCreationRequest), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -180,7 +181,7 @@ class ValuesResponderV1 extends ResponderV1 {
             permissionRelevantAssertionsForNewValue: Seq[(IRI, IRI)] = ownerTuple +: projectTuple +: permissionsFromDefaults
 
             // Create the new value.
-            newValueIri <- createValueV1AfterChecks(
+            unverifiedValue <- createValueV1AfterChecks(
                 projectIri = resourceFullResponse.resinfo.get.project_id,
                 resourceIri = createValueRequest.resourceIri,
                 propertyIri = createValueRequest.propertyIri,
@@ -194,8 +195,7 @@ class ValuesResponderV1 extends ResponderV1 {
             apiResponse <- verifyValueCreation(
                 resourceIri = createValueRequest.resourceIri,
                 propertyIri = createValueRequest.propertyIri,
-                value = createValueRequest.value,
-                newValueIri = newValueIri,
+                unverifiedValue = unverifiedValue,
                 userProfile = createValueRequest.userProfile
             )
         } yield apiResponse
@@ -252,7 +252,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 // We have a Map of property IRIs to lists of UpdateValueV1s. Create each value in the triplestore, and convert
                 // the results into a Map of property IRIs to lists of Futures, each of which contains the results of creating
                 // one value.
-                valueCreationFutures: Map[IRI, Future[Seq[IRI]]] = createMultipleValuesRequest.values.map {
+                valueCreationFutures: Map[IRI, Future[Seq[UnverifiedCreateValueResponseV1]]] = createMultipleValuesRequest.values.map {
                     case (propertyIri: IRI, valuesWithComments: Seq[CreateValueV1WithComment]) =>
                         // Construct a list of permission-relevant assertions about the new values of the property,
                         // i.e. the values' owner and project plus their permissions. Use the property's default
@@ -261,7 +261,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         val permissionsFromDefaults: Seq[(IRI, IRI)] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
                         val permissionRelevantAssertionsForNewValue: Seq[(IRI, IRI)] = ownerTuple +: projectTuple +: permissionsFromDefaults
 
-                        val valueCreationResponsesForProperty: Seq[Future[IRI]] = valuesWithComments.map {
+                        val valueCreationResponsesForProperty: Seq[Future[UnverifiedCreateValueResponseV1]] = valuesWithComments.map {
                             valueV1WithComment: CreateValueV1WithComment => createValueV1AfterChecks(
                                 projectIri = createMultipleValuesRequest.projectIri,
                                 resourceIri = createMultipleValuesRequest.resourceIri,
@@ -276,17 +276,9 @@ class ValuesResponderV1 extends ResponderV1 {
                         propertyIri -> Future.sequence(valueCreationResponsesForProperty)
                 }
 
-                // Convert a Map containing futures into a Future containing a Map: http://stackoverflow.com/a/17479415
-                newValueIris: Map[IRI, Seq[IRI]] <- Future.sequence {
-                    valueCreationFutures.map {
-                        case (propertyIri: IRI, responseFutures: Future[Seq[IRI]]) =>
-                            responseFutures.map {
-                                responses: Seq[IRI] => (propertyIri, responses)
-                            }
-                    }
-                }.map(_.toMap)
+                valueCreationResponses <- ActorUtil.sequenceFuturesInMap(valueCreationFutures)
 
-            } yield CreateMultipleValuesResponseV1(newValueIris = newValueIris)
+            } yield CreateMultipleValuesResponseV1(unverifiedValues = valueCreationResponses)
         }
 
         for {
@@ -303,6 +295,33 @@ class ValuesResponderV1 extends ResponderV1 {
                 () => makeTaskFuture(userIri)
             )
         } yield taskResult
+    }
+
+    /**
+      * Verifies the creation of multiple values.
+      * @param verifyRequest a [[VerifyMultipleValueCreationRequestV1]].
+      * @return a [[VerifyMultipleValueCreationResponseV1]] if all values were created successfully, or a failed
+      *         future if any values were not created.
+      */
+    private def verifyMultipleValueCreation(verifyRequest: VerifyMultipleValueCreationRequestV1): Future[VerifyMultipleValueCreationResponseV1] = {
+        val valueVerificationFutures: Map[IRI, Future[Seq[CreateValueResponseV1]]] = verifyRequest.unverifiedValues.map {
+            case (propertyIri: IRI, unverifiedValues: Seq[UnverifiedCreateValueResponseV1]) =>
+                val valueVerificationResponsesForPropererty = unverifiedValues.map {
+                    unverifiedValue =>
+                        verifyValueCreation(
+                            resourceIri = verifyRequest.resourceIri,
+                            propertyIri = propertyIri,
+                            unverifiedValue = unverifiedValue,
+                            userProfile = verifyRequest.userProfile
+                        )
+                }
+
+                propertyIri -> Future.sequence(valueVerificationResponsesForPropererty)
+        }
+
+        for {
+            valueVerificationResponses: Map[IRI, Seq[CreateValueResponseV1]] <- ActorUtil.sequenceFuturesInMap(valueVerificationFutures)
+        } yield VerifyMultipleValueCreationResponseV1(verifiedValues = valueVerificationResponses)
     }
 
     /**
@@ -960,25 +979,23 @@ class ValuesResponderV1 extends ResponderV1 {
       * Verifies that a value was created.
       * @param resourceIri the IRI of the resource in which the value should have been created.
       * @param propertyIri the IRI of the property that should point from the resource to the value.
-      * @param value the value that should have been created.
-      * @param newValueIri the IRI of the value that should have been created.
+      * @param unverifiedValue the value that should have been created.
       * @param userProfile the profile of the user making the request.
       * @return a [[CreateValueResponseV1]], or a failed [[Future]] if the value could not be found in
       *         the resource's version history.
       */
     private def verifyValueCreation(resourceIri: IRI,
                                     propertyIri: IRI,
-                                    value: UpdateValueV1,
-                                    newValueIri: IRI,
+                                    unverifiedValue: UnverifiedCreateValueResponseV1,
                                     userProfile: UserProfileV1): Future[CreateValueResponseV1] = {
-        value match {
+        unverifiedValue.value match {
             case linkUpdateV1: LinkUpdateV1 =>
                 for {
                     linkValueQueryResult <- verifyLinkUpdate(
                         linkSourceIri = resourceIri,
                         linkPropertyIri = propertyIri,
                         linkTargetIri = linkUpdateV1.targetResourceIri,
-                        linkValueIri = newValueIri,
+                        linkValueIri = unverifiedValue.newValueIri,
                         userProfile = userProfile
                     )
 
@@ -989,7 +1006,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 } yield CreateValueResponseV1(
                     value = apiResponseValue,
                     comment = linkValueQueryResult.comment,
-                    id = newValueIri,
+                    id = unverifiedValue.newValueIri,
                     rights = linkValueQueryResult.permissionCode,
                     userdata = userProfile.userData
                 )
@@ -999,13 +1016,13 @@ class ValuesResponderV1 extends ResponderV1 {
                     verifyUpdateResult <- verifyOrdinaryValueUpdate(
                         resourceIri = resourceIri,
                         propertyIri = propertyIri,
-                        searchValueIri = newValueIri,
+                        searchValueIri = unverifiedValue.newValueIri,
                         userProfile = userProfile
                     )
                 } yield CreateValueResponseV1(
                     value = verifyUpdateResult.value,
                     comment = verifyUpdateResult.comment,
-                    id = newValueIri,
+                    id = unverifiedValue.newValueIri,
                     rights = verifyUpdateResult.permissionCode,
                     userdata = userProfile.userData
                 )
@@ -1199,7 +1216,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                          value: UpdateValueV1,
                                          comment: Option[String],
                                          permissionRelevantAssertions: Seq[(IRI, IRI)],
-                                         userProfile: UserProfileV1): Future[IRI] = {
+                                         userProfile: UserProfileV1): Future[UnverifiedCreateValueResponseV1] = {
         value match {
             case linkUpdateV1: LinkUpdateV1 =>
                 createLinkValueV1AfterChecks(
@@ -1235,7 +1252,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param permissionRelevantAssertions permission-relevant assertions for the new `knora-base:LinkValue`, i.e.
       *                                     its owner and project plus permissions.
       * @param userProfile the profile of the user making the request.
-      * @return a [[CreateValueResponseV1]].
+      * @return an [[UnverifiedCreateValueResponseV1]].
       */
     private def createLinkValueV1AfterChecks(projectIri: IRI,
                                              resourceIri: IRI,
@@ -1243,7 +1260,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                              linkUpdateV1: LinkUpdateV1,
                                              comment: Option[String],
                                              permissionRelevantAssertions: Seq[(IRI, IRI)],
-                                             userProfile: UserProfileV1): Future[IRI] = {
+                                             userProfile: UserProfileV1): Future[UnverifiedCreateValueResponseV1] = {
         for {
             sparqlTemplateLinkUpdate <- incrementLinkValue(
                 sourceResourceIri = resourceIri,
@@ -1270,7 +1287,10 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Do the update.
             sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
-        } yield sparqlTemplateLinkUpdate.newLinkValueIri
+        } yield UnverifiedCreateValueResponseV1(
+            newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
+            value = linkUpdateV1
+        )
     }
 
     /**
@@ -1283,7 +1303,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param permissionRelevantAssertions permission-relevant assertions for the new value, i.e.
       *                                     its owner and project plus permissions.
       * @param userProfile the profile of the user making the request.
-      * @return the IRI of the new value.
+      * @return an [[UnverifiedCreateValueResponseV1]].
       */
     private def createOrdinaryValueV1AfterChecks(projectIri: IRI,
                                                  resourceIri: IRI,
@@ -1291,7 +1311,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                                  value: UpdateValueV1,
                                                  comment: Option[String],
                                                  permissionRelevantAssertions: Seq[(IRI, IRI)],
-                                                 userProfile: UserProfileV1): Future[IRI] = {
+                                                 userProfile: UserProfileV1): Future[UnverifiedCreateValueResponseV1] = {
         // Generate an IRI for the new value.
         val newValueIri = knoraIriUtil.makeRandomValueIri(resourceIri)
 
@@ -1341,7 +1361,10 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Do the update.
             sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
-        } yield newValueIri
+        } yield UnverifiedCreateValueResponseV1(
+            newValueIri = newValueIri,
+            value = value
+        )
     }
 
     /**

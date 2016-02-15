@@ -991,7 +991,11 @@ class ResourcesResponderV1 extends ResponderV1 {
                     throw OntologyConstraintException(s"Values were not submitted for the following property or properties, which are required by resource class $resourceClassIri: $missingProps")
                 }
 
-                // Everything looks OK, so create an empty resource.
+                // Everything looks OK, so we can create an empty resource and add the values to it.
+
+                // TODO: Ask the store manager to begin an update transaction here.
+
+                // Create an empty resource.
 
                 createNewResourceSparql <- Future(queries.sparql.v1.txt.createNewResource(
                     dataNamedGraph = namedGraph,
@@ -1003,14 +1007,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                     permissions = permissions).toString())
 
                 createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]
-
-                // check if triples have been inserted correctly: Do a Select query with the given resource IRI
-                createdResourcesSparql <- Future(queries.sparql.v1.txt.getCreatedResource(resourceIri = resourceIri).toString())
-                createdResourceResponse <- (storeManager ? SparqlSelectRequest(createdResourcesSparql)).mapTo[SparqlSelectResponse]
-
-                _ = if (createdResourceResponse.results.bindings.isEmpty) {
-                    throw UpdateNotPerformedException()
-                }
 
                 // Ask the values responder to create the values.
 
@@ -1025,10 +1021,32 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 createValuesResponse: CreateMultipleValuesResponseV1 <- (responderManager ? createValuesRequest).mapTo[CreateMultipleValuesResponseV1]
 
-                results: Map[IRI, Seq[ResourceCreateValueResponseV1]] = createValuesResponse.values.map {
+                // TODO: Ask the store manager to commit the update transaction here.
+
+                // Verify that the resource was created.
+
+                createdResourcesSparql <- Future(queries.sparql.v1.txt.getCreatedResource(resourceIri = resourceIri).toString())
+                createdResourceResponse <- (storeManager ? SparqlSelectRequest(createdResourcesSparql)).mapTo[SparqlSelectResponse]
+
+                _ = if (createdResourceResponse.results.bindings.isEmpty) {
+                    throw UpdateNotPerformedException(s"Resource $resourceIri was not created, perhaps because the request was based on outdated information")
+                }
+
+                // Verify that all the requested values were created.
+
+                verifyCreateValuesRequest = VerifyMultipleValueCreationRequestV1(
+                    resourceIri = resourceIri,
+                    unverifiedValues = createValuesResponse.unverifiedValues,
+                    userProfile = userProfile
+                )
+
+                verifyMultipleValueCreationResponse: VerifyMultipleValueCreationResponseV1 <- (responderManager ? verifyCreateValuesRequest).mapTo[VerifyMultipleValueCreationResponseV1]
+
+                // Convert CreateValueResponseV1 objects to ResourceCreateValueResponseV1 objects.
+
+                resourceCreateValueResponses: Map[IRI, Seq[ResourceCreateValueResponseV1]] = verifyMultipleValueCreationResponse.verifiedValues.map {
                     case (propIri: IRI, values: Seq[CreateValueResponseV1]) => (propIri, values.map {
                         valueResponse: CreateValueResponseV1 =>
-                            // convert values message [[CreateValueResponseV1]] to resources message [[ResourceCreateValueResponseV1]]
                             MessageUtil.convertCreateValueResponseV1ToResourceCreateValueResponseV1(ownerIri = ownerIri,
                                 propertyIri = propIri,
                                 resourceIri = resourceIri,
@@ -1036,9 +1054,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                     })
                 }
 
-                result: ResourceCreateResponseV1 = ResourceCreateResponseV1(results = results, res_id = resourceIri, userdata = userProfile.userData)
-
-            } yield result
+                apiResponse: ResourceCreateResponseV1 = ResourceCreateResponseV1(results = resourceCreateValueResponses, res_id = resourceIri, userdata = userProfile.userData)
+            } yield apiResponse
         }
 
         val maybeUserIri: Option[IRI] = userProfile.userData.user_id

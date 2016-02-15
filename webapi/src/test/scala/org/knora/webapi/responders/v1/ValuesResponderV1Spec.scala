@@ -1444,9 +1444,21 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! createMultipleValuesRequest
 
+            val createMultipleValuesResponse = expectMsgPF(timeout) {
+                case response: CreateMultipleValuesResponseV1 => response
+            }
+
+            val verifyMultipleValuesRequest = VerifyMultipleValueCreationRequestV1(
+                resourceIri = "http://data.knora.org/c3f913666f",
+                unverifiedValues = createMultipleValuesResponse.unverifiedValues,
+                userProfile = ValuesResponderV1Spec.userProfile
+            )
+
+            actorUnderTest ! verifyMultipleValuesRequest
+
             expectMsgPF(timeout) {
-                case response: CreateMultipleValuesResponseV1 =>
-                    val justTheValues: Map[IRI, Seq[ApiValueV1]] = response.values.map {
+                case response: VerifyMultipleValueCreationResponseV1 =>
+                    val justTheValues: Map[IRI, Seq[ApiValueV1]] = response.verifiedValues.map {
                         case (propertyIri, createValueResponses) =>
                             propertyIri -> createValueResponses.map(_.value)
                     }
