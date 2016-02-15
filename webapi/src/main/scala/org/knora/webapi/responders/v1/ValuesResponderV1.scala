@@ -169,7 +169,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 throw OntologyConstraintException(s"Cardinality restrictions do not allow a value to be added for property ${createValueRequest.propertyIri} of resource ${createValueRequest.resourceIri}")
             }
 
-            // Everything seems OK, so create the value.
+            // Everything seems OK, so we can create the value.
 
             // Construct a list of permission-relevant assertions about the new value, i.e. its owner and project
             // plus its permissions. Use the property's default permissions to make permissions for the new value.
@@ -179,13 +179,23 @@ class ValuesResponderV1 extends ResponderV1 {
             permissionsFromDefaults: Seq[(IRI, IRI)] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
             permissionRelevantAssertionsForNewValue: Seq[(IRI, IRI)] = ownerTuple +: projectTuple +: permissionsFromDefaults
 
-            apiResponse <- createValueV1AfterChecks(
+            // Create the new value.
+            newValueIri <- createValueV1AfterChecks(
                 projectIri = resourceFullResponse.resinfo.get.project_id,
                 resourceIri = createValueRequest.resourceIri,
                 propertyIri = createValueRequest.propertyIri,
                 value = createValueRequest.value,
                 comment = createValueRequest.comment,
                 permissionRelevantAssertions = permissionRelevantAssertionsForNewValue,
+                userProfile = createValueRequest.userProfile
+            )
+
+            // Verify that it was created.
+            apiResponse <- verifyValueCreation(
+                resourceIri = createValueRequest.resourceIri,
+                propertyIri = createValueRequest.propertyIri,
+                value = createValueRequest.value,
+                newValueIri = newValueIri,
                 userProfile = createValueRequest.userProfile
             )
         } yield apiResponse
@@ -242,7 +252,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 // We have a Map of property IRIs to lists of UpdateValueV1s. Create each value in the triplestore, and convert
                 // the results into a Map of property IRIs to lists of Futures, each of which contains the results of creating
                 // one value.
-                valueCreationFutures: Map[IRI, Future[Seq[CreateValueResponseV1]]] = createMultipleValuesRequest.values.map {
+                valueCreationFutures: Map[IRI, Future[Seq[IRI]]] = createMultipleValuesRequest.values.map {
                     case (propertyIri: IRI, valuesWithComments: Seq[CreateValueV1WithComment]) =>
                         // Construct a list of permission-relevant assertions about the new values of the property,
                         // i.e. the values' owner and project plus their permissions. Use the property's default
@@ -251,7 +261,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         val permissionsFromDefaults: Seq[(IRI, IRI)] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
                         val permissionRelevantAssertionsForNewValue: Seq[(IRI, IRI)] = ownerTuple +: projectTuple +: permissionsFromDefaults
 
-                        val valueCreationResponsesForProperty: Seq[Future[CreateValueResponseV1]] = valuesWithComments.map {
+                        val valueCreationResponsesForProperty: Seq[Future[IRI]] = valuesWithComments.map {
                             valueV1WithComment: CreateValueV1WithComment => createValueV1AfterChecks(
                                 projectIri = createMultipleValuesRequest.projectIri,
                                 resourceIri = createMultipleValuesRequest.resourceIri,
@@ -267,17 +277,16 @@ class ValuesResponderV1 extends ResponderV1 {
                 }
 
                 // Convert a Map containing futures into a Future containing a Map: http://stackoverflow.com/a/17479415
-                valueCreationResponses: Map[IRI, Seq[CreateValueResponseV1]] <- Future.sequence {
+                newValueIris: Map[IRI, Seq[IRI]] <- Future.sequence {
                     valueCreationFutures.map {
-                        case (propertyIri: IRI, responseFutures: Future[Seq[CreateValueResponseV1]]) =>
+                        case (propertyIri: IRI, responseFutures: Future[Seq[IRI]]) =>
                             responseFutures.map {
-                                responses: Seq[CreateValueResponseV1] =>
-                                    (propertyIri, responses)
+                                responses: Seq[IRI] => (propertyIri, responses)
                             }
                     }
                 }.map(_.toMap)
 
-            } yield CreateMultipleValuesResponseV1(values = valueCreationResponses)
+            } yield CreateMultipleValuesResponseV1(newValueIris = newValueIris)
         }
 
         for {
@@ -526,7 +535,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
                 // To find out whether the update succeeded, look for the new value in the triplestore.
-                verifyUpdateResult <- verifyValueUpdate(
+                verifyUpdateResult <- verifyOrdinaryValueUpdate(
                     resourceIri = findResourceWithValueResult.resourceIri,
                     propertyIri = findResourceWithValueResult.propertyIri,
                     searchValueIri = newValueIri,
@@ -568,8 +577,6 @@ class ValuesResponderV1 extends ResponderV1 {
       * @return a [[DeleteValueResponseV1]].
       */
     private def deleteValueV1(deleteValueRequest: DeleteValueRequestV1): Future[DeleteValueResponseV1] = {
-        // TODO: handle deleting links.
-
         /**
           * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
           * called by [[ResourceLocker]] once it has acquired an update lock on the resource.
@@ -738,14 +745,15 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Make a set of the IRIs of the versions that the user has permission to see.
-            visibleVersionIris = filteredVersionRowsVector.map(_("value")).toSet
+            visibleVersionIris = filteredVersionRowsVector.map(_ ("value")).toSet
 
             versionV1Vector = filteredVersionRowsVector.map {
                 rowMap =>
                     ValueVersionV1(
                         valueObjectIri = rowMap("value"),
                         valueCreationDate = rowMap.get("valueCreationDate"),
-                        previousValue = rowMap.get("previousValue") match { // Don't refer to a previous value that the user doesn't have permission to see.
+                        previousValue = rowMap.get("previousValue") match {
+                            // Don't refer to a previous value that the user doesn't have permission to see.
                             case Some(previousValueIri) if visibleVersionIris.contains(previousValueIri) => Some(previousValueIri)
                             case _ => None
                         }
@@ -949,6 +957,62 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
+      * Verifies that a value was created.
+      * @param resourceIri the IRI of the resource in which the value should have been created.
+      * @param propertyIri the IRI of the property that should point from the resource to the value.
+      * @param value the value that should have been created.
+      * @param newValueIri the IRI of the value that should have been created.
+      * @param userProfile the profile of the user making the request.
+      * @return a [[CreateValueResponseV1]], or a failed [[Future]] if the value could not be found in
+      *         the resource's version history.
+      */
+    private def verifyValueCreation(resourceIri: IRI,
+                                    propertyIri: IRI,
+                                    value: UpdateValueV1,
+                                    newValueIri: IRI,
+                                    userProfile: UserProfileV1): Future[CreateValueResponseV1] = {
+        value match {
+            case linkUpdateV1: LinkUpdateV1 =>
+                for {
+                    linkValueQueryResult <- verifyLinkUpdate(
+                        linkSourceIri = resourceIri,
+                        linkPropertyIri = propertyIri,
+                        linkTargetIri = linkUpdateV1.targetResourceIri,
+                        linkValueIri = newValueIri,
+                        userProfile = userProfile
+                    )
+
+                    apiResponseValue = LinkV1(
+                        targetResourceIri = linkUpdateV1.targetResourceIri,
+                        valueResourceClass = linkValueQueryResult.targetResourceClass
+                    )
+                } yield CreateValueResponseV1(
+                    value = apiResponseValue,
+                    comment = linkValueQueryResult.comment,
+                    id = newValueIri,
+                    rights = linkValueQueryResult.permissionCode,
+                    userdata = userProfile.userData
+                )
+
+            case ordinaryUpdateValueV1 =>
+                for {
+                    verifyUpdateResult <- verifyOrdinaryValueUpdate(
+                        resourceIri = resourceIri,
+                        propertyIri = propertyIri,
+                        searchValueIri = newValueIri,
+                        userProfile = userProfile
+                    )
+                } yield CreateValueResponseV1(
+                    value = verifyUpdateResult.value,
+                    comment = verifyUpdateResult.comment,
+                    id = newValueIri,
+                    rights = verifyUpdateResult.permissionCode,
+                    userdata = userProfile.userData
+                )
+        }
+    }
+
+    /**
       * Given the IRI of a value that should have been created, looks for the value in the resource's version history,
       * and returns details about it. If the value is not found, throws [[UpdateNotPerformedException]].
       *
@@ -960,7 +1024,7 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     @throws(classOf[UpdateNotPerformedException])
     @throws(classOf[ForbiddenException])
-    private def verifyValueUpdate(resourceIri: IRI, propertyIri: IRI, searchValueIri: IRI, userProfile: UserProfileV1): Future[ValueQueryResult] = {
+    private def verifyOrdinaryValueUpdate(resourceIri: IRI, propertyIri: IRI, searchValueIri: IRI, userProfile: UserProfileV1): Future[ValueQueryResult] = {
         for {
         // Do a SPARQL query to look for the value in the resource's version history.
             sparqlQuery <- Future {
@@ -1127,7 +1191,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param permissionRelevantAssertions the permission-relevant assertions to assign to the value, i.e. its owner
       *                                     and project plus its permissions.
       * @param userProfile the profile of the user making the request.
-      * @return a [[CreateValueResponseV1]].
+      * @return the IRI of the newly created value.
       */
     private def createValueV1AfterChecks(projectIri: IRI,
                                          resourceIri: IRI,
@@ -1135,10 +1199,9 @@ class ValuesResponderV1 extends ResponderV1 {
                                          value: UpdateValueV1,
                                          comment: Option[String],
                                          permissionRelevantAssertions: Seq[(IRI, IRI)],
-                                         userProfile: UserProfileV1): Future[CreateValueResponseV1] = {
+                                         userProfile: UserProfileV1): Future[IRI] = {
         value match {
             case linkUpdateV1: LinkUpdateV1 =>
-                // We're creating a link.
                 createLinkValueV1AfterChecks(
                     projectIri = projectIri,
                     resourceIri = resourceIri,
@@ -1150,14 +1213,10 @@ class ValuesResponderV1 extends ResponderV1 {
                 )
 
             case ordinaryUpdateValueV1 =>
-                // We're creating an ordinary value. Generate an IRI for it.
-                val newValueIri = knoraIriUtil.makeRandomValueIri(resourceIri)
-
                 createOrdinaryValueV1AfterChecks(
                     projectIri = projectIri,
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
-                    newValueIri = newValueIri,
                     value = ordinaryUpdateValueV1,
                     comment = comment,
                     permissionRelevantAssertions = permissionRelevantAssertions,
@@ -1184,7 +1243,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                              linkUpdateV1: LinkUpdateV1,
                                              comment: Option[String],
                                              permissionRelevantAssertions: Seq[(IRI, IRI)],
-                                             userProfile: UserProfileV1): Future[CreateValueResponseV1] = {
+                                             userProfile: UserProfileV1): Future[IRI] = {
         for {
             sparqlTemplateLinkUpdate <- incrementLinkValue(
                 sourceResourceIri = resourceIri,
@@ -1211,27 +1270,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Do the update.
             sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
-
-            // To find out whether the update succeeded, check that the link is in the triplestore.
-            linkValueQueryResult <- verifyLinkUpdate(
-                linkSourceIri = resourceIri,
-                linkPropertyIri = propertyIri,
-                linkTargetIri = linkUpdateV1.targetResourceIri,
-                linkValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
-                userProfile = userProfile
-            )
-
-            apiResponseValue = LinkV1(
-                targetResourceIri = linkUpdateV1.targetResourceIri,
-                valueResourceClass = linkValueQueryResult.targetResourceClass
-            )
-        } yield CreateValueResponseV1(
-            value = apiResponseValue,
-            comment = linkValueQueryResult.comment,
-            id = sparqlTemplateLinkUpdate.newLinkValueIri,
-            rights = linkValueQueryResult.permissionCode,
-            userdata = userProfile.userData
-        )
+        } yield sparqlTemplateLinkUpdate.newLinkValueIri
     }
 
     /**
@@ -1240,21 +1279,22 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param projectIri the project in which the value is to be created.
       * @param resourceIri the resource in which the value is to be created.
       * @param propertyIri the property that should point to the value.
-      * @param newValueIri the IRI of the new value.
       * @param value an [[UpdateValueV1]] describing the value.
       * @param permissionRelevantAssertions permission-relevant assertions for the new value, i.e.
       *                                     its owner and project plus permissions.
       * @param userProfile the profile of the user making the request.
-      * @return a [[CreateValueResponseV1]].
+      * @return the IRI of the new value.
       */
     private def createOrdinaryValueV1AfterChecks(projectIri: IRI,
                                                  resourceIri: IRI,
                                                  propertyIri: IRI,
-                                                 newValueIri: IRI,
                                                  value: UpdateValueV1,
                                                  comment: Option[String],
                                                  permissionRelevantAssertions: Seq[(IRI, IRI)],
-                                                 userProfile: UserProfileV1): Future[CreateValueResponseV1] = {
+                                                 userProfile: UserProfileV1): Future[IRI] = {
+        // Generate an IRI for the new value.
+        val newValueIri = knoraIriUtil.makeRandomValueIri(resourceIri)
+
         for {
         // If we're creating a text value, update direct links and LinkValues for any resource references in Standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- value match {
@@ -1301,21 +1341,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Do the update.
             sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
-
-            // To find out whether the update succeeded, check that the new value is in the triplestore.
-            verifyUpdateResult <- verifyValueUpdate(
-                resourceIri = resourceIri,
-                propertyIri = propertyIri,
-                searchValueIri = newValueIri,
-                userProfile = userProfile
-            )
-        } yield CreateValueResponseV1(
-            value = verifyUpdateResult.value,
-            comment = verifyUpdateResult.comment,
-            id = newValueIri,
-            rights = verifyUpdateResult.permissionCode,
-            userdata = userProfile.userData
-        )
+        } yield newValueIri
     }
 
     /**
@@ -1493,7 +1519,7 @@ class ValuesResponderV1 extends ResponderV1 {
             sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
             // To find out whether the update succeeded, look for the new value in the triplestore.
-            verifyUpdateResult <- verifyValueUpdate(
+            verifyUpdateResult <- verifyOrdinaryValueUpdate(
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
                 searchValueIri = newValueIri,

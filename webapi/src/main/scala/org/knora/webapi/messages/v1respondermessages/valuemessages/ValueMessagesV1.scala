@@ -261,11 +261,12 @@ case class CreateMultipleValuesRequestV1(projectIri: IRI,
                                          apiRequestID: UUID) extends ValuesResponderRequestV1
 
 /**
-  * Represents a response to a [[CreateMultipleValuesRequestV1]].
+  * Represents a response to a [[CreateMultipleValuesRequestV1]]. The receiver is responsible for checking
+  * whether the update succeeded by querying the IRIs of the newly created values.
   *
-  * @param values The values that have been added to the resource.
+  * @param newValueIris a map of property IRIs to newly created value IRIs.
   */
-case class CreateMultipleValuesResponseV1(values: Map[IRI, Seq[CreateValueResponseV1]]) extends KnoraResponseV1 {
+case class CreateMultipleValuesResponseV1(newValueIris: Map[IRI, Seq[IRI]]) extends KnoraResponseV1 {
 
     def toJsValue = ApiValueV1JsonProtocol.createMultipleValuesResponseV1Format.write(this)
 }
