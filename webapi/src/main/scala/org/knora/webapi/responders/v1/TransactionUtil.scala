@@ -21,8 +21,9 @@
 package org.knora.webapi.responders.v1
 
 import java.util.UUID
-import akka.pattern._
+
 import akka.actor.ActorSelection
+import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
 
@@ -52,10 +53,11 @@ object TransactionUtil {
             _ <- (storeManager ? CommitUpdateTransaction(transactionID)).mapTo[UpdateTransactionCommitted]
         } yield result
 
-        transactionFuture.recover {
+        transactionFuture.recoverWith {
             case err: Exception =>
-                (storeManager ? RollbackUpdateTransaction(transactionID)).mapTo[UpdateTransactionRolledBack]
-                throw err
+                (storeManager ? RollbackUpdateTransaction(transactionID)).mapTo[UpdateTransactionRolledBack].flatMap {
+                    _ => throw err
+                }
         }
     }
 }
