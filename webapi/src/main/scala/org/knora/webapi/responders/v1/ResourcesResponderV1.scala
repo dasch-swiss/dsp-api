@@ -993,35 +993,34 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 // Everything looks OK, so we can create an empty resource and add the values to it.
 
-                // TODO: Ask the store manager to begin an update transaction here.
+                createMultipleValuesResponse <- TransactionUtil.runInUpdateTransaction({
+                    transactionID =>
+                        for {
+                        // Create an empty resource.
+                            createNewResourceSparql <- Future(queries.sparql.v1.txt.createNewResource(
+                                dataNamedGraph = namedGraph,
+                                resourceIri = resourceIri,
+                                label = label,
+                                resourceClassIri = resourceClassIri,
+                                ownerIri = ownerIri,
+                                projectIri = projectIri,
+                                permissions = permissions).toString())
+                            createResourceResponse <- (storeManager ? SparqlUpdateRequest(transactionID, createNewResourceSparql)).mapTo[SparqlUpdateResponse]
 
-                // Create an empty resource.
+                            // Ask the values responder to create the values.
+                            createValuesRequest = CreateMultipleValuesRequestV1(
+                                transactionID = transactionID,
+                                projectIri = projectIri,
+                                resourceIri = resourceIri,
+                                resourceClassIri = resourceClassIri,
+                                values = values,
+                                userProfile = userProfile,
+                                apiRequestID = apiRequestID
+                            )
+                            createValuesResponse: CreateMultipleValuesResponseV1 <- (responderManager ? createValuesRequest).mapTo[CreateMultipleValuesResponseV1]
+                        } yield createValuesResponse
+                }, storeManager)
 
-                createNewResourceSparql <- Future(queries.sparql.v1.txt.createNewResource(
-                    dataNamedGraph = namedGraph,
-                    resourceIri = resourceIri,
-                    label = label,
-                    resourceClassIri = resourceClassIri,
-                    ownerIri = ownerIri,
-                    projectIri = projectIri,
-                    permissions = permissions).toString())
-
-                createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]
-
-                // Ask the values responder to create the values.
-
-                createValuesRequest = CreateMultipleValuesRequestV1(
-                    projectIri = projectIri,
-                    resourceIri = resourceIri,
-                    resourceClassIri = resourceClassIri,
-                    values = values,
-                    userProfile = userProfile,
-                    apiRequestID = apiRequestID
-                )
-
-                createValuesResponse: CreateMultipleValuesResponseV1 <- (responderManager ? createValuesRequest).mapTo[CreateMultipleValuesResponseV1]
-
-                // TODO: Ask the store manager to commit the update transaction here.
 
                 // Verify that the resource was created.
 
@@ -1036,7 +1035,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 verifyCreateValuesRequest = VerifyMultipleValueCreationRequestV1(
                     resourceIri = resourceIri,
-                    unverifiedValues = createValuesResponse.unverifiedValues,
+                    unverifiedValues = createMultipleValuesResponse.unverifiedValues,
                     userProfile = userProfile
                 )
 

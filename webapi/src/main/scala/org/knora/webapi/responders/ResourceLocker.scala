@@ -22,8 +22,8 @@ package org.knora.webapi.responders
 
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import java.util.function._
 
+import org.knora.webapi.util.JavaFunctionUtil
 import org.knora.webapi.{ApplicationLockException, IRI}
 
 import scala.annotation.tailrec
@@ -107,7 +107,7 @@ object ResourceLocker {
         val newLock = lockMap.merge(
             resourceIri,
             ResourceLock(apiRequestID, 1),
-            biFunction({ (currentLock, _) =>
+            JavaFunctionUtil.biFunction({ (currentLock, _) =>
                 // The lock is already in use. Who has it?
                 if (currentLock.apiRequestID == apiRequestID) {
                     // We already have it, so increment the entry count.
@@ -145,7 +145,7 @@ object ResourceLocker {
     private def decrementOrReleaseLock(resourceIri: IRI, apiRequestID: UUID): Unit = {
         lockMap.compute(
             resourceIri,
-            biFunction({ (_, maybeCurrentLock) =>
+            JavaFunctionUtil.biFunction({ (_, maybeCurrentLock) =>
                 Option(maybeCurrentLock) match {
                     case Some(currentLock) =>
                         if (currentLock.apiRequestID == apiRequestID) {
@@ -169,17 +169,6 @@ object ResourceLocker {
             })
         )
     }
-
-    /**
-      * Converts a 2-argument Scala function into a Java [[BiFunction]].
-      *
-      * @param f the Scala function.
-      * @return a [[BiFunction]] that calls the Scala function.
-      */
-    private def biFunction[A, B, C](f: (A, B) => C): BiFunction[A, B, C] =
-        new BiFunction[A, B, C] {
-            override def apply(a: A, b: B) = f(a, b)
-        }
 
     def dumpLockMap(): Unit = {
         println(lockMap)

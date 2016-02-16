@@ -20,6 +20,8 @@
 
 package org.knora.webapi.responders.v1
 
+import java.util.UUID
+
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
@@ -181,15 +183,18 @@ class ValuesResponderV1 extends ResponderV1 {
             permissionRelevantAssertionsForNewValue: Seq[(IRI, IRI)] = ownerTuple +: projectTuple +: permissionsFromDefaults
 
             // Create the new value.
-            unverifiedValue <- createValueV1AfterChecks(
-                projectIri = resourceFullResponse.resinfo.get.project_id,
-                resourceIri = createValueRequest.resourceIri,
-                propertyIri = createValueRequest.propertyIri,
-                value = createValueRequest.value,
-                comment = createValueRequest.comment,
-                permissionRelevantAssertions = permissionRelevantAssertionsForNewValue,
-                userProfile = createValueRequest.userProfile
-            )
+            unverifiedValue <- TransactionUtil.runInUpdateTransaction({
+                transactionID => createValueV1AfterChecks(
+                    transactionID = transactionID,
+                    projectIri = resourceFullResponse.resinfo.get.project_id,
+                    resourceIri = createValueRequest.resourceIri,
+                    propertyIri = createValueRequest.propertyIri,
+                    value = createValueRequest.value,
+                    comment = createValueRequest.comment,
+                    permissionRelevantAssertions = permissionRelevantAssertionsForNewValue,
+                    userProfile = createValueRequest.userProfile
+                )
+            }, storeManager)
 
             // Verify that it was created.
             apiResponse <- verifyValueCreation(
@@ -217,8 +222,9 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Creates multiple values in a new, empty resource. The resource ''must'' be a new, empty resource, i.e. it must
-      * have no values. All pre-update checks must already have been performed. Specifically, this method assumes that:
+      * Creates multiple values in a new, empty resource, using an existing transaction. The resource ''must'' be a new,
+      * empty resource, i.e. it must have no values. All pre-update checks must already have been performed. Specifically,
+      * this method assumes that:
       *
       * - The requesting user has permission to add values to the resource.
       * - Each submitted value is consistent with the `rdfs:range` of the property that is supposed to point to it.
@@ -249,9 +255,9 @@ class ValuesResponderV1 extends ResponderV1 {
                     userProfile = createMultipleValuesRequest.userProfile
                 )).mapTo[EntityInfoGetResponseV1]
 
-                // We have a Map of property IRIs to lists of UpdateValueV1s. Create each value in the triplestore, and convert
-                // the results into a Map of property IRIs to lists of Futures, each of which contains the results of creating
-                // one value.
+                // We have a Map of property IRIs to sequences of UpdateValueV1s. Create each value in the triplestore, and
+                // build a Map with the same structure, except that instead of UpdateValueV1s, it contains Futures
+                // providing the results of creating the values.
                 valueCreationFutures: Map[IRI, Future[Seq[UnverifiedCreateValueResponseV1]]] = createMultipleValuesRequest.values.map {
                     case (propertyIri: IRI, valuesWithComments: Seq[CreateValueV1WithComment]) =>
                         // Construct a list of permission-relevant assertions about the new values of the property,
@@ -263,6 +269,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                         val valueCreationResponsesForProperty: Seq[Future[UnverifiedCreateValueResponseV1]] = valuesWithComments.map {
                             valueV1WithComment: CreateValueV1WithComment => createValueV1AfterChecks(
+                                transactionID = createMultipleValuesRequest.transactionID,
                                 projectIri = createMultipleValuesRequest.projectIri,
                                 resourceIri = createMultipleValuesRequest.resourceIri,
                                 propertyIri = propertyIri,
@@ -276,8 +283,9 @@ class ValuesResponderV1 extends ResponderV1 {
                         propertyIri -> Future.sequence(valueCreationResponsesForProperty)
                 }
 
+                // Convert our Map full of Futures into one Future, which will provide a Map of all the results
+                // when they're available.
                 valueCreationResponses <- ActorUtil.sequenceFuturesInMap(valueCreationFutures)
-
             } yield CreateMultipleValuesResponseV1(unverifiedValues = valueCreationResponses)
         }
 
@@ -304,6 +312,9 @@ class ValuesResponderV1 extends ResponderV1 {
       *         future if any values were not created.
       */
     private def verifyMultipleValueCreation(verifyRequest: VerifyMultipleValueCreationRequestV1): Future[VerifyMultipleValueCreationResponseV1] = {
+        // We have a Map of property IRIs to sequences of UnverifiedCreateValueResponseV1s. Query each value and
+        // build a Map with the same structure, except that instead of UnverifiedCreateValueResponseV1s, it contains Futures
+        // providing the results of querying the values.
         val valueVerificationFutures: Map[IRI, Future[Seq[CreateValueResponseV1]]] = verifyRequest.unverifiedValues.map {
             case (propertyIri: IRI, unverifiedValues: Seq[UnverifiedCreateValueResponseV1]) =>
                 val valueVerificationResponsesForPropererty = unverifiedValues.map {
@@ -319,6 +330,8 @@ class ValuesResponderV1 extends ResponderV1 {
                 propertyIri -> Future.sequence(valueVerificationResponsesForPropererty)
         }
 
+        // Convert our Map full of Futures into one Future, which will provide a Map of all the results
+        // when they're available.
         for {
             valueVerificationResponses: Map[IRI, Seq[CreateValueResponseV1]] <- ActorUtil.sequenceFuturesInMap(valueVerificationFutures)
         } yield VerifyMultipleValueCreationResponseV1(verifiedValues = valueVerificationResponses)
@@ -551,7 +564,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 ).toString()
 
                 // Do the update.
-                sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+                sparqlUpdateResponse <- TransactionUtil.runInUpdateTransaction({
+                    transactionID => (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
+                }, storeManager)
 
                 // To find out whether the update succeeded, look for the new value in the triplestore.
                 verifyUpdateResult <- verifyOrdinaryValueUpdate(
@@ -653,7 +668,9 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Do the update.
-            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+            sparqlUpdateResponse <- TransactionUtil.runInUpdateTransaction({
+                transactionID => (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
+            }, storeManager)
 
             // Check whether the update succeeded.
             sparqlQuery = queries.sparql.v1.txt.checkDeletion(newValueIri).toString()
@@ -1198,9 +1215,10 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Creates a new value (either an ordinary value or a link), assuming that pre-update checks have already been
-      * done.
+      * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that
+      * pre-update checks have already been done.
       *
+      * @param transactionID the transaction ID.
       * @param projectIri the IRI of the project in which to create the value.
       * @param resourceIri the IRI of the resource in which to create the value.
       * @param propertyIri the IRI of the property that will point from the resource to the value.
@@ -1210,7 +1228,8 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param userProfile the profile of the user making the request.
       * @return the IRI of the newly created value.
       */
-    private def createValueV1AfterChecks(projectIri: IRI,
+    private def createValueV1AfterChecks(transactionID: UUID,
+                                         projectIri: IRI,
                                          resourceIri: IRI,
                                          propertyIri: IRI,
                                          value: UpdateValueV1,
@@ -1220,6 +1239,7 @@ class ValuesResponderV1 extends ResponderV1 {
         value match {
             case linkUpdateV1: LinkUpdateV1 =>
                 createLinkValueV1AfterChecks(
+                    transactionID = transactionID,
                     projectIri = projectIri,
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
@@ -1231,6 +1251,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             case ordinaryUpdateValueV1 =>
                 createOrdinaryValueV1AfterChecks(
+                    transactionID = transactionID,
                     projectIri = projectIri,
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
@@ -1243,8 +1264,9 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Creates a link, assuming that pre-update checks have already been done.
+      * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
       *
+      * @param transactionID the transaction ID.
       * @param projectIri the IRI of the project in which the link is to be created.
       * @param resourceIri the resource in which the link is to be created.
       * @param propertyIri the link property.
@@ -1254,7 +1276,8 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param userProfile the profile of the user making the request.
       * @return an [[UnverifiedCreateValueResponseV1]].
       */
-    private def createLinkValueV1AfterChecks(projectIri: IRI,
+    private def createLinkValueV1AfterChecks(transactionID: UUID,
+                                             projectIri: IRI,
                                              resourceIri: IRI,
                                              propertyIri: IRI,
                                              linkUpdateV1: LinkUpdateV1,
@@ -1286,7 +1309,7 @@ class ValuesResponderV1 extends ResponderV1 {
             */
 
             // Do the update.
-            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedCreateValueResponseV1(
             newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
             value = linkUpdateV1
@@ -1294,8 +1317,9 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Creates an ordinary value (i.e. not a link), assuming that pre-update checks have already been done.
+      * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
       *
+      * @param transactionID the transaction ID.
       * @param projectIri the project in which the value is to be created.
       * @param resourceIri the resource in which the value is to be created.
       * @param propertyIri the property that should point to the value.
@@ -1305,7 +1329,8 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param userProfile the profile of the user making the request.
       * @return an [[UnverifiedCreateValueResponseV1]].
       */
-    private def createOrdinaryValueV1AfterChecks(projectIri: IRI,
+    private def createOrdinaryValueV1AfterChecks(transactionID: UUID,
+                                                 projectIri: IRI,
                                                  resourceIri: IRI,
                                                  propertyIri: IRI,
                                                  value: UpdateValueV1,
@@ -1360,7 +1385,7 @@ class ValuesResponderV1 extends ResponderV1 {
             */
 
             // Do the update.
-            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedCreateValueResponseV1(
             newValueIri = newValueIri,
             value = value
@@ -1423,7 +1448,9 @@ class ValuesResponderV1 extends ResponderV1 {
             */
 
             // Do the update.
-            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+            sparqlUpdateResponse <- TransactionUtil.runInUpdateTransaction({
+                transactionID => (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
+            }, storeManager)
 
             // To find out whether the update succeeded, check that the new link is in the triplestore.
             linkValueQueryResult <- verifyLinkUpdate(
@@ -1539,7 +1566,9 @@ class ValuesResponderV1 extends ResponderV1 {
             */
 
             // Do the update.
-            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+            sparqlUpdateResponse <- TransactionUtil.runInUpdateTransaction({
+                transactionID => (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
+            }, storeManager)
 
             // To find out whether the update succeeded, look for the new value in the triplestore.
             verifyUpdateResult <- verifyOrdinaryValueUpdate(

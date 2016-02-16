@@ -18,14 +18,13 @@
 
 .. _development-tools:
 
-*****************
 Development Tools
-*****************
+=================
 
 TODO: complete this file.
 
 Local Development
-=================
+-----------------
 
 - Using GraphDb for development and how to initializing the 'knora-test-unit' repository
 - Using Fuseki for development
@@ -35,6 +34,6 @@ Local Development
 
 
 Continuous Integration
-======================
+----------------------
 
 - Gitlab-CI configuration

@@ -4,6 +4,7 @@ import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{InconsistentTriplestoreDataException, TriplestoreResponseException}
+import java.util.UUID
 import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,17 +77,53 @@ case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
     }, "An empty string is not allowed as a variable name or value in a VariableResultsRow")
 }
 
+/**
+  * Starts a new SPARQL update transaction.
+  * @param transactionID the transaction ID.
+  */
+case class BeginUpdateTransaction(transactionID: UUID) extends TriplestoreRequest
 
 /**
-  * Represents a SPARQL Update operation to be sent to the triplestore.
+  * Indicates that the specified transaction was begun.
+  */
+case class UpdateTransactionBegun(transactionID: UUID)
+
+/**
+  * Commits a SPARQL update transaction.
+  * @param transactionID the transaction ID.
+  */
+case class CommitUpdateTransaction(transactionID: UUID) extends TriplestoreRequest
+
+/**
+  * Indicates that the specified transaction was committed.
+  * @param transactionID the transaction ID.
+  */
+case class UpdateTransactionCommitted(transactionID: UUID)
+
+/**
+  * Rolls back an uncommitted SPARQL update transaction.
+  * @param transactionID the transaction ID.
+  */
+case class RollbackUpdateTransaction(transactionID: UUID) extends TriplestoreRequest
+
+/**
+  * Indicates that the specified transaction was rolled back.
+  * @param transactionID the transaction ID.
+  */
+case class UpdateTransactionRolledBack(transactionID: UUID)
+
+/**
+  * Represents a SPARQL Update operation to be entered as part of an update transaction.
+  * @param transactionID the transaction ID.
   * @param sparql the SPARQL string.
   */
-case class SparqlUpdateRequest(sparql: String) extends TriplestoreRequest
+case class SparqlUpdateRequest(transactionID: UUID, sparql: String) extends TriplestoreRequest
 
 /**
-  * Indicates that the requested SPARQL Update completed successfully.
+  * Indicates that the requested SPARQL Update was entered into the transaction..
+  * @param transactionID the transaction ID.
   */
-case class SparqlUpdateResponse()
+case class SparqlUpdateResponse(transactionID: UUID)
 
 /**
   * Message for resetting the contents of the triplestore and loading a fresh set of data. The data needs to be

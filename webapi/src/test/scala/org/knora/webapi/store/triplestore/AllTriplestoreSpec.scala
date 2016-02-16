@@ -20,6 +20,8 @@
 
 package org.knora.webapi.store.triplestore
 
+import java.util.UUID
+
 import akka.actor.Props
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
@@ -260,8 +262,15 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                 }
 
 
-                storeManager ! SparqlUpdateRequest(insertQuery)
-                expectMsg(SparqlUpdateResponse())
+                val transactionID = UUID.randomUUID()
+                storeManager ! BeginUpdateTransaction(transactionID)
+                expectMsg(timeout, UpdateTransactionBegun(transactionID))
+
+                storeManager ! SparqlUpdateRequest(transactionID, insertQuery)
+                expectMsg(SparqlUpdateResponse(transactionID))
+
+                storeManager ! CommitUpdateTransaction(transactionID)
+                expectMsg(timeout, UpdateTransactionCommitted(transactionID))
 
                 storeManager ! SparqlSelectRequest(checkInsertQuery)
                 expectMsgPF(timeout) {
@@ -297,11 +306,15 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                     }
                 }
 
+                val transactionID = UUID.randomUUID()
+                storeManager ! BeginUpdateTransaction(transactionID)
+                expectMsg(timeout, UpdateTransactionBegun(transactionID))
 
-                storeManager ! SparqlUpdateRequest(revertInsertQuery)
-                expectMsg(SparqlUpdateResponse())
+                storeManager ! SparqlUpdateRequest(transactionID, revertInsertQuery)
+                expectMsg(SparqlUpdateResponse(transactionID))
 
-
+                storeManager ! CommitUpdateTransaction(transactionID)
+                expectMsg(timeout, UpdateTransactionCommitted(transactionID))
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
                 expectMsgPF(timeout) {

@@ -264,15 +264,17 @@ case class VerifyMultipleValueCreationResponseV1(verifiedValues: Map[IRI, Seq[Cr
 case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Option[String] = None)
 
 /**
-  * Creates multiple values in a new, empty resource. The resource ''must'' be a new, empty resource, i.e. it must
-  * have no values. This message is used only internally by Knora, and is not part of the Knora v1 API. All pre-update
-  * checks must already have been performed before this message is sent. Specifically, the sender must ensure that:
+  * Creates multiple values in a new, empty resource, using an existing transaction. The resource ''must'' be a new,
+  * empty resource, i.e. it must have no values. This message is used only internally by Knora, and is not part of the
+  * Knora v1 API. All pre-update checks must already have been performed before this message is sent. Specifically, the
+  * sender must ensure that:
   *
   * - The requesting user has permission to add values to the resource.
   * - Each submitted value is consistent with the `rdfs:range` of the property that is supposed to point to it.
   * - The resource class has a suitable cardinality for each submitted value.
   * - All required values are provided.
   *
+  * @param transactionID the ID of the transaction in which the values should be created.
   * @param projectIri the project the values belong to.
   * @param resourceIri the resource the values will be attached to.
   * @param resourceClassIri the IRI of the resource's OWL class.
@@ -280,7 +282,8 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * @param userProfile the user that is creating the values.
   * @param apiRequestID the ID of this API request.
   */
-case class CreateMultipleValuesRequestV1(projectIri: IRI,
+case class CreateMultipleValuesRequestV1(transactionID: UUID,
+                                         projectIri: IRI,
                                          resourceIri: IRI,
                                          resourceClassIri: IRI,
                                          values: Map[IRI, Seq[CreateValueV1WithComment]],

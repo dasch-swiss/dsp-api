@@ -224,6 +224,11 @@ object InconsistentTriplestoreDataException {
 case class ApplicationLockException(message: String) extends InternalServerException(message)
 
 /**
+  * Indicates that an error occurred in transaction management.
+  */
+case class TransactionManagementException(message: String) extends InternalServerException(message)
+
+/**
   * Indicates that an Akka actor received an unexpected message.
   * @param message a description of the error.
   */

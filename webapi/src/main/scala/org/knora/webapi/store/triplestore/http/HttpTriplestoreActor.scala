@@ -22,6 +22,7 @@ package org.knora.webapi.store.triplestore.http
 
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging, Status}
 import dispatch._
@@ -128,7 +129,10 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
       */
     def receive = {
         case SparqlSelectRequest(sparql) => future2Message(sender(), sparqlHttpSelect(sparql), log)
-        case SparqlUpdateRequest(sparql) => future2Message(sender(), sparqlHttpUpdate(sparql), log)
+        case BeginUpdateTransaction(transactionID) => future2Message(sender(), beginUpdateTransaction(transactionID), log)
+        case CommitUpdateTransaction(transactionID) => future2Message(sender(), commitUpdateTransaction(transactionID), log)
+        case RollbackUpdateTransaction(transactionID) => future2Message(sender(), rollbackUpdateTransaction(transactionID), log)
+        case SparqlUpdateRequest(transactionID, sparql) => future2Message(sender(), sparqlHttpUpdate(transactionID, sparql), log)
         case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
         case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
@@ -168,19 +172,44 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
     }
 
     /**
-      * Given the SPARQL update query string, runs the update operation, returning a [[SparqlUpdateResponse]] if the
-      * operation succeeded.
-      * @param sparql the SPARQL UPDATE query string.
+      * Begins a SPARQL Update transaction.
+      * @param transactionID the transaction ID.
+      * @return an [[UpdateTransactionBegun]].
+      */
+    private def beginUpdateTransaction(transactionID: UUID): Future[UpdateTransactionBegun] = {
+        // Nothing to do here.
+        Future(UpdateTransactionBegun(transactionID))
+    }
+
+    /**
+      * Enters a SPARQL update operation as part of an update transaction.
+      * @param sparqlUpdate the SPARQL update.
       * @return a [[SparqlUpdateResponse]].
       */
-    private def sparqlHttpUpdate(sparql: String): Future[SparqlUpdateResponse] = {
+    private def sparqlHttpUpdate(transactionID: UUID, sparqlUpdate: String): Future[SparqlUpdateResponse] = {
         for {
-        // Send the SPARQL to the triplestore.
-            _ <- getTriplestoreHttpResponse(sparql, update = true)
+            _ <- Future(HttpTriplestoreTransactionManager.addUpdateToTransaction(transactionID, sparqlUpdate))
+        } yield SparqlUpdateResponse(transactionID)
+    }
 
-            /* In the case of GraphDB we need to update the index after every update */
+    /**
+      * Commits a SPARQL update transaction.
+      * @param transactionID the transaction ID.
+      * @return an [[UpdateTransactionCommitted]].
+      */
+    private def commitUpdateTransaction(transactionID: UUID): Future[UpdateTransactionCommitted] = {
+        for {
+            // Get the SPARQL update operations that were submitted for the transaction, concatenated
+            // into a single request.
+            sparqlUpdate <- Future(HttpTriplestoreTransactionManager.concatenateAndForgetUpdates(transactionID))
+
+            // _ = println(sparqlUpdate)
+
+            // Send the request to the triplestore.
+            _ <- getTriplestoreHttpResponse(sparqlUpdate, update = true)
+
+            // If we're using GraphDB, update the full-text search index.
             _ = if (tsType == HTTP_GRAPH_DB_TS_TYPE) {
-                /* need to update the lucene index */
                 val indexUpdateSparqlString =
                     """
                         PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
@@ -188,7 +217,18 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
                     """
                 getTriplestoreHttpResponse(indexUpdateSparqlString, update = true)
             }
-        } yield SparqlUpdateResponse()
+        } yield UpdateTransactionCommitted(transactionID)
+    }
+
+    /**
+      * Rolls back a SPARQL update transaction.
+      * @param transactionID the transaction ID.
+      * @return an [[UpdateTransactionRolledBack]].
+      */
+    private def rollbackUpdateTransaction(transactionID: UUID): Future[UpdateTransactionRolledBack] = {
+        for {
+            _ <- Future(HttpTriplestoreTransactionManager.forgetUpdates(transactionID))
+        } yield UpdateTransactionRolledBack(transactionID)
     }
 
     /**
@@ -284,7 +324,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
                             PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
                             INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
                         """
-                    Await.result(getTriplestoreHttpResponse(indexUpdateSparqlString, true), 5.seconds)
+                    Await.result(getTriplestoreHttpResponse(indexUpdateSparqlString, update = true), 5.seconds)
                 }
 
                 log.debug(s"added: ${elem.name}")
@@ -299,7 +339,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
     }
 
-    private def checkTriplestore {
+    private def checkTriplestore() {
 
         val sparql = "SELECT ?s ?p ?o WHERE { ?s ?p ?o  } LIMIT 10"
 
