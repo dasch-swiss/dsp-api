@@ -72,10 +72,10 @@ concatenate them and send them as a single HTTP request. This ensures that
 consistency checks will be performed on the combined results of all the
 updates.
 
-This requires the store module to implement its own transaction management.
-Each transaction is given a ``UUID``. The implementation is intended to mimic the
-semantics of typical transaction management APIs, by means of messages that are
-handled by ``HttpTriplestoreActor``:
+This requires the store module to implement its own transaction management
+for SPARQL updates. Each update transaction is given a ``UUID``. The implementation
+is intended to mimic the semantics of typical transaction management APIs, by means
+of messages that are handled by ``HttpTriplestoreActor``:
 
 * ``BeginUpdateTransaction``
 * ``CommitUpdateTransaction``
@@ -87,7 +87,11 @@ update requests to ``HttpTriplestoreTransactionManager``.
 Responders are expected to use ``TransactionUtil``, which takes care of
 generating transaction IDs, sending transaction management messages to
 ``HttpTriplestoreActor``, and ensuring that a transaction is rolled back if
-an error occurs.
+an error occurs. A responder must include the transaction ID  provided by
+``TransactionUtil`` in each update request that it sends to the store manager.
+
+Note that with this built-in transaction management, updates will not take effect
+until the transaction is committed.
 
 GraphDB
 ^^^^^^^
