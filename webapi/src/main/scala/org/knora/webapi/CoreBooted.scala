@@ -30,5 +30,5 @@ trait CoreBooted extends Core {
     /**
       * Knora's Akka [[ActorSystem]].
       */
-    implicit def system = ActorSystem("webapi")
+    implicit lazy val system = ActorSystem("webapi")
 }
