@@ -93,7 +93,26 @@ case class SipiResponderConversionFileRequestV1(originalFilename: String,
 }
 
 /**
-  * Represents the response received from SIPI after a conversion request.
+  * Abstract trait that represents any response returned by SIPI.
+  */
+sealed trait SipiConversionResponse {
+    val status: Int
+}
+
+/**
+  * Represents an error message returned by SIPI
+  *
+  * @param status status code rerurned by SIPI.
+  * @param message description of the error.
+  */
+case class SipiErrorConversionResponse(status: Int, message: String) extends SipiConversionResponse {
+    override def toString() = {
+        s"Sipi status code is${status}, Sipi error message: ${message}"
+    }
+}
+
+/**
+  * Represents the response received from SIPI after an image conversion request.
   *
   * @param status status code returned by SIPI.
   * @param nx_full x dim of the full quality representation.
@@ -108,19 +127,18 @@ case class SipiResponderConversionFileRequestV1(originalFilename: String,
   * @param original_filename name of the original file.
   * @param file_type type of file that has been converted (image, audio, video etc.)
   */
-// TODO: This response format must be made generic for each possible file type converted by Sipi. We have to use one case class only because we do not know what to expect from Sipi
-case class SipiConversionResponse(status: Int,
-                                  nx_full: Option[Int],
-                                  ny_full: Option[Int],
-                                  mimetype_full: Option[String],
-                                  filename_full: Option[String],
-                                  nx_thumb: Option[Int],
-                                  ny_thumb: Option[Int],
-                                  mimetype_thumb: Option[String],
-                                  filename_thumb: Option[String],
-                                  original_mimetype: Option[String],
-                                  original_filename: Option[String],
-                                  file_type: Option[String]) // TODO: could be an enum
+case class SipiImageConversionResponse(status: Int,
+                                       nx_full: Int,
+                                       ny_full: Int,
+                                       mimetype_full: String,
+                                       filename_full: String,
+                                       nx_thumb: Int,
+                                       ny_thumb: Int,
+                                       mimetype_thumb: String,
+                                       filename_thumb: String,
+                                       original_mimetype: String,
+                                       original_filename: String,
+                                       file_type: String) extends SipiConversionResponse
 
 
 
@@ -129,19 +147,38 @@ object Sipi {
     // TODO: Shall we better use an ErrorHandlingMap here?
     // map file types converted by Sipi to file value properties in Knora
     val fileType2FileValueProperty = Map(
-        FileType.image -> OntologyConstants.KnoraBase.HasStillImageFileValue,
-        FileType.movie -> OntologyConstants.KnoraBase.HasMovingImageFileValue,
-        FileType.audio -> OntologyConstants.KnoraBase.HasAudioFileValue,
-        FileType.binary -> OntologyConstants.KnoraBase.HasDocumentFileValue
+        FileType.IMAGE -> OntologyConstants.KnoraBase.HasStillImageFileValue,
+        FileType.MOVIE -> OntologyConstants.KnoraBase.HasMovingImageFileValue,
+        FileType.AUDIO -> OntologyConstants.KnoraBase.HasAudioFileValue,
+        FileType.BINARY -> OntologyConstants.KnoraBase.HasDocumentFileValue
 
     )
-    // TODO: Would it be better to make this an Enumeration? However, I had problems to use it in match case statement
-    // (http://stackoverflow.com/questions/24087550/scala-pattern-match-against-a-java-enum-type).
-    object FileType  {
-        val image = "image"
-        val movie = "movie"
-        val audio = "audio"
-        val binary = "binary"
+
+    object FileType extends Enumeration {
+        // the string representations correspond to Sipi's internal enum.
+        val IMAGE = Value(0, "image")
+        val MOVIE = Value(1, "movie")
+        val AUDIO = Value(2, "audio")
+        val BINARY = Value(3, "binary")
+
+        val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+
+        /**
+          * Given the name of a file type in this enumeration, returns the file type. If the file type is not found, throws an
+          * [[BadRequestException]].
+          *
+          * @param filetype the name of the file type.
+          * @return the requested file type.
+          */
+        def lookup(filetype: String): Value = {
+            valueMap.get(filetype) match {
+                case Some(ftype) => ftype
+                case None => throw SipiException(message = s"file type $filetype returned by Sipi not found in enumeration")
+            }
+        }
+
+
+
     }
 }
 
@@ -150,7 +187,7 @@ object Sipi {
   *
   * @param fileValuesV1 a list of [[FileValueV1]]
   */
-case class SipiResponderConversionResponseV1(fileValuesV1: Vector[FileValueV1], file_type: String)
+case class SipiResponderConversionResponseV1(fileValuesV1: Vector[FileValueV1], file_type: Sipi.FileType.Value)
 
 
 /**
@@ -187,7 +224,8 @@ case class SipiFileInfoGetResponseV1(permissionCode: Option[Int],
 object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
     implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat2(SipiFileInfoGetResponseV1)
-    implicit val sipiConversionResponseFormat = jsonFormat12(SipiConversionResponse)
+    implicit val sipiErrorConversionResponseFormat = jsonFormat2(SipiErrorConversionResponse)
+    implicit val sipiImageConversionResponseFormat = jsonFormat12(SipiImageConversionResponse)
 }
 
 

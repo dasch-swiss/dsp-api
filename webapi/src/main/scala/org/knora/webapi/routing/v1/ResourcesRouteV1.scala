@@ -24,14 +24,12 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1respondermessages.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1respondermessages.resourcemessages._
-import org.knora.webapi.messages.v1respondermessages.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionPathRequestV1, SipiResponderConversionResponseV1}
+import org.knora.webapi.messages.v1respondermessages.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1respondermessages.valuemessages._
-import org.knora.webapi.responders.v1.ValueUtilV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
@@ -41,7 +39,6 @@ import spray.json._
 import spray.routing.Directives._
 import spray.routing._
 
-import scala.concurrent.Future
 import scala.util.Try
 
 /**
