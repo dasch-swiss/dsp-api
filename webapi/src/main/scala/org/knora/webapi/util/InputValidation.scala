@@ -231,7 +231,7 @@ object InputValidation {
       * @param binaryData the binary file data to be saved.
       * @return the location where the file has been written to.
       */
-    def saveFileToTmpLocation(settings: SettingsImpl, binaryData: Array[Byte]): String = {
+    def saveFileToTmpLocation(settings: SettingsImpl, binaryData: Array[Byte]): File = {
 
         // check if the location for writing temporary files exists
         if (!Files.exists(Paths.get(settings.tmpDataDir))) {
@@ -240,21 +240,23 @@ object InputValidation {
             } does not exist on server")
         }
 
-        val sourcePath: File = File.createTempFile("tmp_", ".bin", new File(settings.tmpDataDir))
+        val fileName: File = File.createTempFile("tmp_", ".bin", new File(settings.tmpDataDir))
 
-        // TODO: error handling: do we need a try catch block here? (e.g. in case Knora does not have sufficient permissions)
+        if (!fileName.canWrite) throw FileWriteException(s"File ${fileName} cannot be written.")
 
         // write given file to disk
-        Files.write(sourcePath.toPath, binaryData)
+        Files.write(fileName.toPath, binaryData)
 
-        sourcePath.toString
+        fileName
     }
 
-    def deleteFileFromTmpLocation(path: String): Boolean = {
+    def deleteFileFromTmpLocation(fileName: File): Boolean = {
 
-        // TODO: error handling: do we need a try catch block here? (e.g. in case Knora does not have sufficient permissions)
+        val path = fileName.toPath
 
-            Files.deleteIfExists(Paths.get(path))
+        if (!fileName.canWrite) throw FileWriteException(s"File ${path} cannot be deleted.")
+
+        Files.deleteIfExists(path)
 
     }
 

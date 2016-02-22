@@ -24,7 +24,7 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1respondermessages.sipimessages.RepresentationV1JsonProtocol._
-import org.knora.webapi.messages.v1respondermessages.sipimessages.Sipi.FileType
+import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiConstants.FileType
 import org.knora.webapi.messages.v1respondermessages.sipimessages._
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
@@ -88,7 +88,7 @@ class SipiResponderV1 extends ResponderV1 {
 
     private def callSipiConvertRoute(url: String, conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
 
-        // delete tmp file (depending on the kind of reuest given)
+        // delete tmp file (depending on the kind of request given)
         def deleteTmpFile(conversionRequest: SipiResponderConversionRequestV1): Unit = {
             conversionRequest match {
                 case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
@@ -98,7 +98,7 @@ class SipiResponderV1 extends ResponderV1 {
             }
         }
 
-        // define a pipeline function that gets turned into a generic HTTP Response (containing JSON)
+        // define a pipeline function that gets turned into a generic [[HTTP Response]] (containing JSON)
         val pipeline: HttpRequest => Future[HttpResponse] = (
             addHeader("Accept", "application/json")
                 ~> sendReceive
@@ -106,10 +106,13 @@ class SipiResponderV1 extends ResponderV1 {
             )
 
         // send a conversion request to SIPI and parse the response as a generic [[HTTPResponse]]
-        val conversionResultFuture =
+        val conversionResultFuture: Future[HttpResponse] =
         pipeline (Post (url, FormData (conversionRequest.toFormData ())))
-        
+
         // TODO: the errors thrown here do not reach the client. Why? Spray errors cannot be caught and rethrown here.
+        //
+        // handle unsuccessful requests to Sipi
+        //
         conversionResultFuture.recoverWith {
             case noResponse: spray.can.Http.ConnectionAttemptFailedException =>
                 deleteTmpFile(conversionRequest) // delete tmp file (if given)
@@ -120,6 +123,7 @@ class SipiResponderV1 extends ResponderV1 {
                 deleteTmpFile(conversionRequest) // delete tmp file (if given)
                 val statusCode = httpError.response.status
                 val errMsg = try {
+                    // parse answer as a Sipi error message
                     httpError.response.entity.asString.parseJson.convertTo[SipiErrorConversionResponse]
                 } catch {
                     // the Sipi error message could not be parsed correctly
@@ -158,11 +162,11 @@ class SipiResponderV1 extends ResponderV1 {
             }
 
             // turn fileType returned by Sipi (a string) into an enum
-            fileTypeEnum: FileType.Value = Sipi.FileType.lookup(fileType)
+            fileTypeEnum: FileType.Value = SipiConstants.FileType.lookup(fileType)
 
             // create the apt case class depending on the file type returned by Sipi
             fileValuesV1: Vector[FileValueV1] = fileTypeEnum match {
-                case Sipi.FileType.IMAGE =>
+                case SipiConstants.FileType.IMAGE =>
                     // parse response as a [[SipiImageConversionResponse]]
                     val imageConversionResult = try {
                         conversionResultResponse.entity.asString.parseJson.convertTo[SipiImageConversionResponse]
@@ -196,7 +200,7 @@ class SipiResponderV1 extends ResponderV1 {
                 case unknownType => throw BadRequestException (s"Could not handle file type $unknownType")
             }
 
-        } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = Sipi.FileType.IMAGE)
+        } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = SipiConstants.FileType.IMAGE)
     }
 
     private def convertPathV1(conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {

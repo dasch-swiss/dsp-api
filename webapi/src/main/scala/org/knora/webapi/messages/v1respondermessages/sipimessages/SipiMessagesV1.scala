@@ -20,6 +20,8 @@
 
 package org.knora.webapi.messages.v1respondermessages.sipimessages
 
+import java.io.File
+
 import org.knora.webapi._
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1respondermessages.valuemessages.{StillImageFileValueV1, FileValueV1}
@@ -30,7 +32,7 @@ import spray.json._
 // Messages
 
 /**
-  * Abstract trait to represent a conversion request to the SipiResponder
+  * Abstract trait to represent a conversion request to Sipi Responder.
   *
   * For each type of conversion request, an implementation of `toFormData` must be provided.
   *
@@ -40,12 +42,21 @@ sealed trait SipiResponderConversionRequestV1 extends SipiResponderRequestV1 {
     val originalMimeType: String
     val userProfile: UserProfileV1
 
+    /**
+      * Creates a Map representing the parameters to be submitted to Sipi's conversion routes.
+      * This method must be implemented for each type of conversion request
+      * because different Sipi routes are called and the parameters differ.
+      *
+      * @return a Map of key-value pairs that can be turned into form data by Sipi responder.
+      */
     def toFormData(): Map[String, String]
 }
 
 
 /**
-  * Represents an binary file that has been temporarily stored by Knora (non GUI-case).
+  * Represents a binary file that has been temporarily stored by Knora (non GUI-case). Knora route received a multipart request
+  * containing binary data which it saved to a temporary location, so it can be accessed by Sipi. Knora has to delete that file afterwards.
+  * For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
   *
   * @param originalFilename the original name of the binary file.
   * @param originalMimeType the MIME type of the binary file (e.g. image/tiff).
@@ -54,21 +65,33 @@ sealed trait SipiResponderConversionRequestV1 extends SipiResponderRequestV1 {
   */
 case class SipiResponderConversionPathRequestV1(originalFilename: String,
                                                 originalMimeType: String,
-                                                source: String,
+                                                source: File,
                                                 userProfile: UserProfileV1) extends SipiResponderConversionRequestV1 {
 
-    // create params for SIPI's route convert_path
+    /**
+      * Creates the parameters needed to call the Sipi route convert_path.
+      *
+      * Required parameters:
+      * - originalFilename: original name of the file to be converted.
+      * - originalMimeType: original mime type of the file to be converted.
+      * - source: path to the file to be converted (file was created by Knora).
+      *
+      * @return a Map of key-value pairs that can be turned into form data by Sipi responder.
+      */
     def toFormData() = {
         Map(
             "originalFilename" -> originalFilename,
             "originalMimeType" -> originalMimeType,
-            "source" -> source
+            "source" -> source.toString
         )
     }
 }
 
 /**
-  * Represents an binary file that has been temporarily stored by SIPI (GUI-case).
+  * Represents an binary file that has been temporarily stored by SIPI (GUI-case). Knora route recieved a request telling it about
+  * a file that is already managed by Sipi. The binary file data have already been sent to Sipi by the client (browser-based GUI).
+  * Knora has to tell Sipi about the name of the file to be converted.
+  * For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
   *
   * @param originalFilename the original name of the binary file.
   * @param originalMimeType the MIME type of the binary file (e.g. image/tiff).
@@ -81,7 +104,16 @@ case class SipiResponderConversionFileRequestV1(originalFilename: String,
                                                 filename: String,
                                                 userProfile: UserProfileV1) extends SipiResponderConversionRequestV1 {
 
-    // create params for SIPI's route convert_file
+    /**
+      * Creates the parameters needed to call the Sipi route convert_file.
+      *
+      * Required parameters:
+      * - originalFilename: original name of the file to be converted.
+      * - originalMimeType: original mime type of the file to be converted.
+      * - filename: name of the file to be converted (already managed by Sipi).
+      *
+      * @return a Map of key-value pairs that can be turned into form data by Sipi responder.
+      */
     def toFormData() = {
         Map(
             "originalFilename" -> originalFilename,
@@ -143,7 +175,7 @@ case class SipiImageConversionResponse(status: Int,
 
 
 
-object Sipi {
+object SipiConstants {
     // TODO: Shall we better use an ErrorHandlingMap here?
     // map file types converted by Sipi to file value properties in Knora
     val fileType2FileValueProperty = Map(
@@ -187,7 +219,7 @@ object Sipi {
   *
   * @param fileValuesV1 a list of [[FileValueV1]]
   */
-case class SipiResponderConversionResponseV1(fileValuesV1: Vector[FileValueV1], file_type: Sipi.FileType.Value)
+case class SipiResponderConversionResponseV1(fileValuesV1: Vector[FileValueV1], file_type: SipiConstants.FileType.Value)
 
 
 /**

@@ -41,69 +41,6 @@ import scala.concurrent.{ExecutionContext, Future}
   * Converts data from SPARQL query results into [[ApiValueV1]] objects.
   */
 class ValueUtilV1(private val settings: SettingsImpl) {
-    //val log = Logger(LoggerFactory.getLogger("org.knora.webapi.responders.v1.ValueUtilV1"))
-
-    /**
-      * Create a [[FileValueV1]] from an API requests [[CreateFileV1]].
-      *
-      * @param file the file value to be created.
-      * @return a [[FileValueV1]]
-      */
-    /*def makeFileValueV1FromCreateFileV1(file: CreateFileV1): Vector[FileValueV1] = {
-
-        /**
-          * Handle image file value types.
-          *
-          * @param file the image file value to be created.
-          * @return a list of [[StillImageFileValueV1]] (full and thumbnail).
-          */
-        def handleImageMimeType(file: CreateFileV1): Vector[StillImageFileValueV1] = {
-
-            // TODO: copy image to def. location and delete from temporary location.
-
-            // TODO: should input validation happen in the router?
-
-            val fullImage = StillImageFileValueV1(
-                originalFilename = InputValidation.toSparqlEncodedString(file.originalFilename),
-                originalMimeType = Some(InputValidation.toSparqlEncodedString(InputValidation.toSparqlEncodedString(file.originalMimeType))),
-                internalMimeType = InputValidation.toSparqlEncodedString(file.originalMimeType),
-                dimX = file.full.dimX.getOrElse(throw BadRequestException(s"DimX was not set for image.")),
-                dimY = file.full.dimY.getOrElse(throw BadRequestException(s"DimY was not set for image.")),
-                qualityName = Some("full"),
-                qualityLevel = 100,
-                internalFilename = InputValidation.toSparqlEncodedString(file.full.path) // TODO: do be adapted to final location
-            )
-
-            val thumb = StillImageFileValueV1(
-                originalFilename = InputValidation.toSparqlEncodedString(file.originalFilename),
-                originalMimeType = Some(InputValidation.toSparqlEncodedString(file.originalMimeType)),
-                internalMimeType = InputValidation.toSparqlEncodedString(file.originalMimeType),
-                dimX = file.preview.getOrElse(throw BadRequestException("Preview is not set for image file."))
-                    .dimX.getOrElse(throw BadRequestException("DimX is not set for preview.")),
-                dimY = file.preview.getOrElse(throw BadRequestException("Preview is not set for image file."))
-                    .dimY.getOrElse(throw BadRequestException("DimY is not set for preview.")),
-                qualityName = Some("thumbnail"),
-                qualityLevel = 10,
-                internalFilename = InputValidation.toSparqlEncodedString(file
-                    .preview.getOrElse(throw BadRequestException("Preview is not set for image file.")).path) // TODO: do be adapted to final location
-            )
-
-            Vector(fullImage, thumb)
-        }
-
-        // Create a Vector of Tuples of handlers and a Vector of appropriate mime types.
-        val handlers = Vector(
-            (handleImageMimeType: (CreateFileV1) => Vector[StillImageFileValueV1], settings.imageMimeTypes)
-        )
-
-        // Turn the `handlers` into a Map of mime type (key) -> handler (value)
-        val mimeTypes2Handlers: ErrorHandlingMap[String, (CreateFileV1) => Vector[FileValueV1]] = new ErrorHandlingMap(handlers.flatMap {
-            case (handler, mimeTypes) => mimeTypes.map(mimeType => mimeType -> handler)
-        }.toMap, { key: IRI => s"Unknown value type: $key" }) // TODO: accessing a non existing key in the map makes the application crash.
-
-        mimeTypes2Handlers(file.originalMimeType)(file)
-
-    }*/
 
     /**
       * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].

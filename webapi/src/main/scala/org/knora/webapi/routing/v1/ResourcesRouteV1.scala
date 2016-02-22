@@ -215,6 +215,9 @@ object ResourcesRouteV1 extends Authenticator {
                         log
                     )
             } ~ post {
+                // Create a new resource with he given type and possibly a file (GUI-case).
+                // The binary file is already managed by Sipi.
+                // For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
                 entity(as[CreateResourceApiRequestV1]) { apiRequest => requestContext =>
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
@@ -231,7 +234,9 @@ object ResourcesRouteV1 extends Authenticator {
                     )
                 }
             } ~ post {
-                // create a new resource with the given type, properties, and binary data (file)
+                // Create a new resource with the given type, properties, and binary data (file) (non GUI-case).
+                // The binary data are contained in the request and have to be temporarily stored by Knora.
+                // For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
                 entity(as[MultipartFormData]) { data => requestContext =>
 
                     val requestMessageTry = Try {
