@@ -24,7 +24,7 @@ import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
-import org.knora.webapi.routing.v1.AuthenticateRouteV1
+import org.knora.webapi.routing.v1.{ResourcesRouteV1, AuthenticateRouteV1}
 import org.knora.webapi.store._
 
 import spray.http.{BasicHttpCredentials, StatusCodes}
@@ -49,6 +49,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val authenticatePath = AuthenticateRouteV1.rapierPath(system, settings, log)
+    val resourcesPath = ResourcesRouteV1.rapierPath(system, settings, log)
 
     implicit val timeout: Timeout = 300.seconds
 
@@ -91,6 +92,22 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
 
             /* Correct username and wrong password */
             Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "wrong")) ~> authenticatePath ~> check {
+                log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.Unauthorized)
+            }
+        }
+    }
+
+    "The Resources Route using the Authenticator trait " should {
+        "provide authentication using URL parameters " in {
+            /* Correct username and password */
+            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test") ~> resourcesPath ~> check {
+                log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.OK)
+            }
+
+            /* Correct username and wrong password */
+            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=wrong") ~> resourcesPath ~> check {
                 log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.Unauthorized)
             }
