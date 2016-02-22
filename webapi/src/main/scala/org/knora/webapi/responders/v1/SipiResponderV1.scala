@@ -86,9 +86,17 @@ class SipiResponderV1 extends ResponderV1 {
         )
     }
 
+    /**
+      * Makes a conversion request to Sipi and creates a [[SipiResponderConversionResponseV1]]
+      * containing the file values to be added to the triplestore.
+      *
+      * @param url the Sipi route to be called.
+      * @param conversionRequest the message holding the information to make the request.
+      * @return a [[SipiResponderConversionResponseV1]].
+      */
     private def callSipiConvertRoute(url: String, conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
 
-        // delete tmp file (depending on the kind of request given)
+        // delete tmp file (depending on the kind of request given: only necessary if Knora stored the file - non GUI-case)
         def deleteTmpFile(conversionRequest: SipiResponderConversionRequestV1): Unit = {
             conversionRequest match {
                 case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
@@ -112,38 +120,50 @@ class SipiResponderV1 extends ResponderV1 {
             pipelineResult <- pipeline(postRequest)
         } yield pipelineResult
 
-        // TODO: the errors thrown here do not reach the client. Why? Spray errors cannot be caught and rethrown here.
         //
         // handle unsuccessful requests to Sipi
         //
-        conversionResultFuture.recoverWith {
+        val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
             case noResponse: spray.can.Http.ConnectionAttemptFailedException =>
                 deleteTmpFile(conversionRequest) // delete tmp file (if given)
                 // this problem is hardly the user's fault. Create a SipiException
-                throw SipiException(message = "Sipi not reachable", cause = Some(noResponse))
+                throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
 
             case httpError: spray.httpx.UnsuccessfulResponseException =>
                 deleteTmpFile(conversionRequest) // delete tmp file (if given)
-                val statusCode = httpError.response.status
-                val errMsg = try {
-                    // parse answer as a Sipi error message
-                    httpError.response.entity.asString.parseJson.convertTo[SipiErrorConversionResponse]
-                } catch {
-                    // the Sipi error message could not be parsed correctly
-                    case e: DeserializationException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", cause = Some(e))
+                val statusCode: StatusCode = httpError.response.status
+
+                val statusInt: Int = statusCode.intValue / 100
+
+                // match status codes
+                statusInt match {
+                    case 4 =>
+                        // Bad Request: it is the user's responsibility
+                        val errMsg = try {
+                            // parse answer as a Sipi error message
+                            httpError.response.entity.asString.parseJson.convertTo[SipiErrorConversionResponse]
+                        } catch {
+                            // the Sipi error message could not be parsed correctly
+                            case e: DeserializationException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
+                        }
+                        // most probably the user sent invalid data which caused a Sipi error
+                        throw BadRequestException(s"Sipi returned a non successful HTTP status code ${statusCode}: ${errMsg}")
+
+                    case 5 =>
+                        // Internal Server Error: not the user's fault
+                        throw SipiException(s"Sipi reported an internal server error ${statusCode}", e = httpError, log = log)
                 }
-                // most probably the user sent invalid data which caused a Sipi error
-                throw BadRequestException(s"Sipi returned a HTTP status code ${statusCode}: ${errMsg}")
 
             case err =>
+                // unknown error
                 deleteTmpFile(conversionRequest) // delete tmp file (if given)
-                throw SipiException(s"Unknown error: ${err.toString}")
+                throw SipiException(message = s"Unknown error: ${err.toString}", e = err, log = log)
 
         }
 
         for {
 
-            conversionResultResponse <- conversionResultFuture
+            conversionResultResponse <- recoveredConversionResultFuture
 
             // delete tmp file
             _ = deleteTmpFile(conversionRequest)
@@ -153,11 +173,11 @@ class SipiResponderV1 extends ResponderV1 {
 
             statusCode: Int = responseAsMap.getOrElse("status", throw SipiException(message = "Sipi did not return a status code")) match {
                 case JsNumber(ftype: BigDecimal) => ftype.toInt
-                case other => throw SipiException(message = s"Sipi did not return a correct status code, but ${other}")
+                case other => throw SipiException(message = s"Sipi did not return a correct status code, but ${other.toString()}")
             }
 
             // check if Sipi returned a status code != 0
-            _ = if (statusCode != 0) throw BadRequestException(s"Sipi returned a unsuccessful status code ${statusCode}")
+            _ = if (statusCode != 0) throw BadRequestException(s"Sipi returned a HTTP 200 status code, a unsuccessful status code ${statusCode}")
 
             fileType: String = responseAsMap.getOrElse("file_type", throw SipiException(message = "Sipi did not return a file type")) match {
                 case JsString(ftype: String) => ftype
@@ -174,7 +194,7 @@ class SipiResponderV1 extends ResponderV1 {
                     val imageConversionResult = try {
                         conversionResultResponse.entity.asString.parseJson.convertTo[SipiImageConversionResponse]
                     } catch {
-                        case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiImageConversionResponse", cause = Some(e))
+                        case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiImageConversionResponse", e = e, log = log)
                     }
 
                     // create two StillImageFileValueV1s
@@ -201,12 +221,20 @@ class SipiResponderV1 extends ResponderV1 {
                         ))
 
                 case unknownType => throw BadRequestException (s"Could not handle file type $unknownType")
+
+                // TODO: add missing file types
             }
 
-        } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = SipiConstants.FileType.IMAGE)
+        } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = fileTypeEnum)
     }
 
-    private def convertPathV1(conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
+    /**
+      * Convert a file that has been sent to Knora (non GUI-case).
+      *
+      * @param conversionRequest the information about the file (uploaded by Knora).
+      * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
+      */
+    private def convertPathV1(conversionRequest: SipiResponderConversionPathRequestV1): Future[SipiResponderConversionResponseV1] = {
 
         val url = settings.sipiURL + ":" + settings.sipiPort + "/" + settings.sipiPathConversionRoute
 
@@ -214,7 +242,13 @@ class SipiResponderV1 extends ResponderV1 {
 
     }
 
-    private def convertFileV1(conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
+    /**
+      * Convert a file that is already managed by Sipi (GUI-case).
+      *
+      * @param conversionRequest the information about the file (managed by Sipi).
+      * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
+      */
+    private def convertFileV1(conversionRequest: SipiResponderConversionFileRequestV1): Future[SipiResponderConversionResponseV1] = {
         val url = settings.sipiURL + ":" + settings.sipiPort + "/" + settings.sipiFileConversionRoute
 
         callSipiConvertRoute(url, conversionRequest)

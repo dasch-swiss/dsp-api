@@ -88,7 +88,7 @@ case class SipiResponderConversionPathRequestV1(originalFilename: String,
 }
 
 /**
-  * Represents an binary file that has been temporarily stored by SIPI (GUI-case). Knora route recieved a request telling it about
+  * Represents an binary file that has been temporarily stored by Sipi (GUI-case). Knora route recieved a request telling it about
   * a file that is already managed by Sipi. The binary file data have already been sent to Sipi by the client (browser-based GUI).
   * Knora has to tell Sipi about the name of the file to be converted.
   * For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
@@ -139,7 +139,7 @@ sealed trait SipiConversionResponse {
   */
 case class SipiErrorConversionResponse(status: Int, message: String) extends SipiConversionResponse {
     override def toString() = {
-        s"Sipi status code is${status}, Sipi error message: ${message}"
+        s"Sipi status code is ${status}, Sipi error message: ${message}"
     }
 }
 
