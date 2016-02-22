@@ -24,7 +24,11 @@ import akka.actor._
 import akka.io.IO
 import akka.pattern._
 import akka.util.Timeout
+import org.knora.webapi.http._
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.responders._
+import org.knora.webapi.responders.v1.ResponderManagerV1
+import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.CacheUtil
 import spray.can.Http
@@ -34,14 +38,37 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
-  * Provides methods for starting and stopping Knora from within another application. This is where the cake pattern
-  * is used to gather all dependencies needed for starting the server. The trait [[CoreBooted]] provides
-  * us with an actor system and the trait [[CoreManagerActors]] with the three main manager actors which are started
-  * inside the actor system provided by [[CoreBooted]].
+  * Provides methods for starting and stopping Knora from within another application. This is where the actor system
+  * is started along with the three main supervisor actors is started. All further actors are started and supervised
+  * by those three actors.
   */
-object KnoraService extends CoreBooted with CoreManagerActors {
+object KnoraService {
 
-    // The application's configuration.
+
+    /**
+      * The applications actor system.
+      */
+    implicit lazy val system = ActorSystem("webapi")
+
+    /**
+      * The supervisor actor that receives HTTP requests.
+      */
+    val knoraHttpServiceManager = system.actorOf(Props(new KnoraHttpServiceManager with LiveActorMaker), name = KNORA_HTTP_SERVICE_MANAGER_ACTOR_NAME)
+
+    /**
+      * The supervisor actor that forwards messages to responder actors to handle API requests.
+      */
+    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+
+    /**
+      * The supervisor actor that forwards messages to actors that deal with persistent storage.
+      */
+    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+
+    //
+    /**
+      * The application's configuration.
+      */
     val settings = Settings(system)
 
     /**
