@@ -106,8 +106,11 @@ class SipiResponderV1 extends ResponderV1 {
             )
 
         // send a conversion request to SIPI and parse the response as a generic [[HTTPResponse]]
-        val conversionResultFuture: Future[HttpResponse] =
-        pipeline (Post (url, FormData (conversionRequest.toFormData ())))
+        val conversionResultFuture: Future[HttpResponse] = for {
+            formData <- Future( conversionRequest.toFormData())
+            postRequest <- Future(Post (url, FormData(formData)))
+            pipelineResult <- pipeline(postRequest)
+        } yield pipelineResult
 
         // TODO: the errors thrown here do not reach the client. Why? Spray errors cannot be caught and rethrown here.
         //
@@ -117,7 +120,7 @@ class SipiResponderV1 extends ResponderV1 {
             case noResponse: spray.can.Http.ConnectionAttemptFailedException =>
                 deleteTmpFile(conversionRequest) // delete tmp file (if given)
                 // this problem is hardly the user's fault. Create a SipiException
-                Future.failed(SipiException(message = "Sipi not reachable", cause = Some(noResponse)))
+                throw SipiException(message = "Sipi not reachable", cause = Some(noResponse))
 
             case httpError: spray.httpx.UnsuccessfulResponseException =>
                 deleteTmpFile(conversionRequest) // delete tmp file (if given)
@@ -130,11 +133,11 @@ class SipiResponderV1 extends ResponderV1 {
                     case e: DeserializationException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", cause = Some(e))
                 }
                 // most probably the user sent invalid data which caused a Sipi error
-                Future.failed(BadRequestException(s"Sipi returned a HTTP status code ${statusCode}: ${errMsg}"))
+                throw BadRequestException(s"Sipi returned a HTTP status code ${statusCode}: ${errMsg}")
 
             case err =>
                 deleteTmpFile(conversionRequest) // delete tmp file (if given)
-                Future.failed(throw SipiException(s"Unknown error: ${err.toString}"))
+                throw SipiException(s"Unknown error: ${err.toString}")
 
         }
 
