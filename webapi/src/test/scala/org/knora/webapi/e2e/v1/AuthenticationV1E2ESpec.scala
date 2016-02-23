@@ -70,47 +70,65 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
     }
 
     "The Authentication Route " should {
-        "provide authentication using URL parameters " in {
+        "succeed with authentication using URL parameters and correct username / correct password " in {
             /* Correct username and password */
             Get("/v1/authenticate?username=root&password=test") ~> authenticatePath ~> check {
-                log.debug("==>> " + responseAs[String])
+                //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
             }
-
-            /* Correct username and wrong password */
+        }
+        "fail with authentication using URL parameters and correct username / wrong password " in {
+            /* Correct username / wrong password */
             Get("/v1/authenticate?username=root&password=wrong") ~> authenticatePath ~> check {
-                log.debug("==>> " + responseAs[String])
+                //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.Unauthorized)
             }
         }
-        "provide authentication using HTTP Basic Auth headers " in {
-            /* Correct username and password */
+        "succeed with authentication using HTTP Basic Auth headers and correct username / correct password " in {
+            /* Correct username / correct password */
             Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
-                log.debug("==>> " + responseAs[String])
+                //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
             }
-
-            /* Correct username and wrong password */
+        }
+        "fail with authentication using HTTP Basic Auth headers and correct username / wrong password " in {
+            /* Correct username / wrong password */
             Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "wrong")) ~> authenticatePath ~> check {
-                log.debug("==>> " + responseAs[String])
+                //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.Unauthorized)
             }
         }
     }
 
     "The Resources Route using the Authenticator trait " should {
-        "provide authentication using URL parameters " in {
-            /* Correct username and password */
+        "succeed with authentication using URL parameters and correct username / correct password " in {
+            /* Correct username / correct password */
             Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test") ~> resourcesPath ~> check {
-                log.debug("==>> " + responseAs[String])
+                //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
             }
-
-            /* Correct username and wrong password */
+        }
+        "fail with authentication using URL parameters and correct username / wrong password " in {
+            /* Correct username / wrong password */
             Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=wrong") ~> resourcesPath ~> check {
-                log.debug("==>> " + responseAs[String])
+                //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.Unauthorized)
             }
         }
+        "succeed with authentication using HTTP Basic Auth headers and correct username / correct password " in {
+            /* Correct username / correct password */
+            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> resourcesPath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.OK)
+            }
+        }
+        "fail with authentication using HTTP Basic Auth headers and correct username / wrong password " in {
+            /* Correct username / wrong password */
+            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "wrong")) ~> resourcesPath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.Unauthorized)
+            }
+        }
+
     }
 }
