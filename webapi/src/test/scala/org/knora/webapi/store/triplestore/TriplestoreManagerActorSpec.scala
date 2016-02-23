@@ -58,6 +58,35 @@ object TriplestoreManagerActorSpec {
             }
         }
         """.stripMargin)
+
+    /*
+    val configEmbeddedJenaTDB = ConfigFactory.parseString(
+        """
+        app {
+            triplestore {
+                dbtype = "embedded-jena-tdb"
+            }
+        }
+        """.stripMargin)
+
+    val configEmbeddedGraphDB = ConfigFactory.parseString(
+        """
+        app {
+            triplestore {
+                dbtype = "embedded-jena-graphdb"
+            }
+        }
+        """.stripMargin)
+
+    val configUnknownTriplestore = ConfigFactory.parseString(
+        """
+        app {
+            triplestore {
+                dbtype = "unknown-triplestore"
+            }
+        }
+        """.stripMargin)
+    */
 }
 
 /*
