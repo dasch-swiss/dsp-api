@@ -21,40 +21,46 @@
 package org.knora.webapi.e2e.v1
 
 import java.io.File
-import java.nio.file.{Paths, Files}
+import java.nio.file.{Files, Paths}
 
+import akka.actor.ActorDSL._
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.pattern._
-import akka.routing.FromConfig
 import akka.util.Timeout
-import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.InputValidation
-import org.knora.webapi.{InternalServerException, FileWriteException, UnexpectedMessageException, LiveActorMaker}
 import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1respondermessages.ckanmessages.CkanResponderRequestV1
 import org.knora.webapi.messages.v1respondermessages.graphdatamessages.GraphDataResponderRequestV1
 import org.knora.webapi.messages.v1respondermessages.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1respondermessages.ontologymessages.OntologyResponderRequestV1
 import org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectsResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.{ResourcesResponderRequestV1, CreateResourceApiRequestV1, CreateResourceValueV1}
+import org.knora.webapi.messages.v1respondermessages.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1, ResourcesResponderRequestV1}
 import org.knora.webapi.messages.v1respondermessages.searchmessages.SearchResponderRequestV1
 import org.knora.webapi.messages.v1respondermessages.sipimessages._
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1respondermessages.usermessages.UsersResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{StillImageFileValueV1, ValuesResponderRequestV1, CreateFileV1, CreateRichtextV1}
+import org.knora.webapi.messages.v1respondermessages.valuemessages.{CreateFileV1, CreateRichtextV1, StillImageFileValueV1, ValuesResponderRequestV1}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.ResourcesRouteV1
 import org.knora.webapi.store._
+import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.InputValidation
+import org.knora.webapi.{FileWriteException, LiveActorMaker, UnexpectedMessageException}
 import spray.http._
 
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration._
-import akka.actor.ActorDSL._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
-
+/**
+  * This is a responder manager that allows for a fake Sipi responder.
+  * All the actors are the real ones but the sipi responder.
+  *
+  * An implementation of the Sipi responder is provided inside this class: it imitates the behaviour of Sipi responder
+  * without having to call Sipi server.
+  */
+// TODO: refactor this so it is reusable also in other contexts
 class SipiResponderManagerTest extends Actor with ActorLogging {
 
     /**
@@ -212,7 +218,7 @@ class SipiV1E2ESpec extends E2ESpec {
             val pathToFile = "_test_data/test_route/images/Chlaus.jpg"
             val fileToSend = new File(pathToFile)
             // check if the file exists
-            assert(fileToSend.exists() ===(true), s"File ${pathToFile} does not exist")
+            assert(fileToSend.exists(), s"File ${pathToFile} does not exist")
 
             val formData = MultipartFormData(Seq(
                 BodyPart(entity = HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint), fieldName = "json"),
@@ -230,7 +236,7 @@ class SipiV1E2ESpec extends E2ESpec {
             }
 
             Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
-                assert(status === StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
+                assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
 
@@ -270,7 +276,7 @@ class SipiV1E2ESpec extends E2ESpec {
             )
 
             Post("/v1/resources", HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
-                assert(status === StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
+                assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
     }
