@@ -40,9 +40,9 @@ import scala.collection.breakOut
   * and properties attached to that resource.
   *
   * @param restype_id the resource type of the resource to be created.
-  * @param label the rdfs:label of the resource.
+  * @param label      the rdfs:label of the resource.
   * @param properties the properties to be created as a Map of property types to property value(s).
-  * @param file a file to be attached to the resource (GUI-case).
+  * @param file       a file to be attached to the resource (GUI-case).
   * @param project_id the IRI of the project the resources is added to.
   */
 case class CreateResourceApiRequestV1(restype_id: IRI,
@@ -59,7 +59,7 @@ case class CreateResourceApiRequestV1(restype_id: IRI,
   * Represents a property value to be created.
   *
   * @param richtext_value a richtext object to be added to the resource.
-  * @param int_value an integer literal to be used in the value.
+  * @param int_value      an integer literal to be used in the value.
   */
 case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None,
                                  link_value: Option[IRI] = None,
@@ -81,7 +81,7 @@ sealed trait ResourcesResponderRequestV1 extends KnoraRequestV1
 /**
   * Requests a description of a resource. A successful response will be a [[ResourceInfoResponseV1]].
   *
-  * @param iri the IRI of the resource to be queried.
+  * @param iri         the IRI of the resource to be queried.
   * @param userProfile the profile of the user making the request.
   */
 case class ResourceInfoGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends ResourcesResponderRequestV1
@@ -90,7 +90,7 @@ case class ResourceInfoGetRequestV1(iri: IRI, userProfile: UserProfileV1) extend
   * Requests a full description of a resource, along with its properties, their values, incoming references, and other
   * information. A successful response will be a [[ResourceFullResponseV1]].
   *
-  * @param iri the IRI of the resource to be queried.
+  * @param iri         the IRI of the resource to be queried.
   * @param userProfile the profile of the user making the request.
   * @param getIncoming if `true`, information about incoming references will be included in the response.
   */
@@ -99,16 +99,16 @@ case class ResourceFullGetRequestV1(iri: IRI, userProfile: UserProfileV1, getInc
 /**
   * Requests a [[ResourceContextResponseV1]] describing the context of a resource (i.e. the resources that are part of it).
   *
-  * @param iri the IRI of the resource to be queried.
+  * @param iri         the IRI of the resource to be queried.
   * @param userProfile the profile of the user making the request.
-  * @param resinfo if `true`, the [[ResourceContextResponseV1]] will include a [[ResourceInfoV1]].
+  * @param resinfo     if `true`, the [[ResourceContextResponseV1]] will include a [[ResourceInfoV1]].
   */
 case class ResourceContextGetRequestV1(iri: IRI, userProfile: UserProfileV1, resinfo: Boolean) extends ResourcesResponderRequestV1
 
 /**
   * Requests the permissions for the current user on the given resource. A successful response will be a [[ResourceRightsResponseV1]].
   *
-  * @param iri the IRI of the resource to be queried.
+  * @param iri         the IRI of the resource to be queried.
   * @param userProfile the profile of the user making the request.
   */
 case class ResourceRightsGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends ResourcesResponderRequestV1
@@ -116,11 +116,11 @@ case class ResourceRightsGetRequestV1(iri: IRI, userProfile: UserProfileV1) exte
 /**
   * Requests a search for resources matching the given string.
   *
-  * @param searchString the string to search for.
+  * @param searchString    the string to search for.
   * @param resourceTypeIri if set, restrict search to this resource class.
-  * @param numberOfProps the amount of describing properties to be returned for each found resource (e.g if set to two, for an incunabula book its title and creator would be returned).
-  * @param limitOfResults limits number of resources to be returned.
-  * @param userProfile the profile of the user making the request.
+  * @param numberOfProps   the amount of describing properties to be returned for each found resource (e.g if set to two, for an incunabula book its title and creator would be returned).
+  * @param limitOfResults  limits number of resources to be returned.
+  * @param userProfile     the profile of the user making the request.
   */
 case class ResourceSearchGetRequestV1(searchString: String, resourceTypeIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserProfileV1) extends ResourcesResponderRequestV1
 
@@ -128,11 +128,11 @@ case class ResourceSearchGetRequestV1(searchString: String, resourceTypeIri: Opt
   * Requests the creation of a new resource of the given type with the given properties.
   *
   * @param resourceTypeIri the type of the new resource.
-  * @param label the rdfs:label of the resource.
-  * @param values the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
-  * @param projectIri the IRI of the project the resources is added to.
-  * @param userProfile the profile of the user making the request.
-  * @param apiRequestID the ID of the API request.
+  * @param label           the rdfs:label of the resource.
+  * @param values          the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
+  * @param projectIri      the IRI of the project the resources is added to.
+  * @param userProfile     the profile of the user making the request.
+  * @param apiRequestID    the ID of the API request.
   */
 case class ResourceCreateRequestV1(resourceTypeIri: IRI, label: String, values: Map[IRI, Seq[CreateValueV1WithComment]], file: Option[SipiResponderConversionRequestV1] = None, projectIri: IRI, userProfile: UserProfileV1, apiRequestID: UUID) extends ResourcesResponderRequestV1
 
@@ -141,7 +141,7 @@ case class ResourceCreateRequestV1(resourceTypeIri: IRI, label: String, values: 
   * internally by Knora, and is not part of Knora API v1. A successful response will be a [[ResourceCheckClassResponseV1]].
   *
   * @param resourceIri the IRI of the resource.
-  * @param owlClass the IRI of the OWL class to compare the resource's class to.
+  * @param owlClass    the IRI of the OWL class to compare the resource's class to.
   * @param userProfile the profile of the user making the request.
   */
 case class ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1) extends ResourcesResponderRequestV1
@@ -157,8 +157,8 @@ case class ResourceCheckClassResponseV1(isInClass: Boolean)
   * Represents the Knora API v1 JSON response to a request for information about a resource.
   *
   * @param resource_info basic information about the resource.
-  * @param rights a permission code indicating what rights the user who made the request has on the resource.
-  * @param userdata information about the user that made the request.
+  * @param rights        a permission code indicating what rights the user who made the request has on the resource.
+  * @param userdata      information about the user that made the request.
   */
 case class ResourceInfoResponseV1(resource_info: Option[ResourceInfoV1] = None,
                                   rights: Option[Int] = None,
@@ -170,11 +170,11 @@ case class ResourceInfoResponseV1(resource_info: Option[ResourceInfoV1] = None,
   * Represents the Knora API v1 JSON response to a request for a full description of a resource, along with its
   * properties, their values, incoming references, and other information.
   *
-  * @param resinfo basic information about the resource.
-  * @param resdata additional information about the resource.
-  * @param props the resource's properties with their values.
+  * @param resinfo  basic information about the resource.
+  * @param resdata  additional information about the resource.
+  * @param props    the resource's properties with their values.
   * @param incoming incoming references to the resource.
-  * @param access `OK` if the user has access to the resource, otherwise `NO_ACCESS`.
+  * @param access   `OK` if the user has access to the resource, otherwise `NO_ACCESS`.
   * @param userdata information about the user that made the request.
   */
 case class ResourceFullResponseV1(resinfo: Option[ResourceInfoV1] = None,
@@ -190,7 +190,7 @@ case class ResourceFullResponseV1(resinfo: Option[ResourceInfoV1] = None,
   * Describes the context of a resource, i.e. the resources that are part of the specified resource.
   *
   * @param resource_context resources relating to this resource via `knora-base:partOf`.
-  * @param userdata information about the user that made the request.
+  * @param userdata         information about the user that made the request.
   */
 case class ResourceContextResponseV1(resource_context: ResourceContextV1,
                                      userdata: UserDataV1) extends KnoraResponseV1 {
@@ -201,7 +201,7 @@ case class ResourceContextResponseV1(resource_context: ResourceContextV1,
 /**
   * Describes the permissions that the current user has on a given resurce.
   *
-  * @param rights the permissions for the given user on this resource
+  * @param rights   the permissions for the given user on this resource
   * @param userdata information about the user that made the request.
   */
 case class ResourceRightsResponseV1(rights: Option[Int],
@@ -215,7 +215,7 @@ case class ResourceRightsResponseV1(rights: Option[Int],
   * the resources matching the given criteria (search string, resource class).
   *
   * @param resources the resorces that match the given given search criteria.
-  * @param userdata information about the user that made the request.
+  * @param userdata  information about the user that made the request.
   */
 case class ResourceSearchResponseV1(resources: Seq[ResourceSearchResultRowV1] = Vector.empty[ResourceSearchResultRowV1],
                                     userdata: UserDataV1) extends KnoraResponseV1 {
@@ -226,9 +226,9 @@ case class ResourceSearchResponseV1(resources: Seq[ResourceSearchResultRowV1] = 
 /**
   * Describes the answer to a newly created resource [[ResourceCreateRequestV1]].
   *
-  * @param res_id the IRI ow the new resource.
-  * @param results the values that have been attached to the resource. The key in the Map refers
-  *                to the property Iri and the Seq contains all instances of values of this type.
+  * @param res_id   the IRI ow the new resource.
+  * @param results  the values that have been attached to the resource. The key in the Map refers
+  *                 to the property Iri and the Seq contains all instances of values of this type.
   * @param userdata information about the user that made the request.
   */
 case class ResourceCreateResponseV1(res_id: IRI,
@@ -274,14 +274,14 @@ object ResourceContextCodeV1 extends Enumeration {
 /**
   * Describes the context of a resource, i.e. the other resources that are part of the queried resource.
   *
-  * @param res_id the IRI of each resource that is part of the queried resource.
-  * @param resclass_name obsolete.
-  * @param preview a thumbnail image of each resource that is part of the queried resource.
-  * @param firstprop the `rdfs:label` of each resource that is part of the queried resource.
-  * @param region unused, always an array of nulls.
-  * @param context indicates whether the queried resource is part of another resource, has parts of its own, or neither.
+  * @param res_id           the IRI of each resource that is part of the queried resource.
+  * @param resclass_name    obsolete.
+  * @param preview          a thumbnail image of each resource that is part of the queried resource.
+  * @param firstprop        the `rdfs:label` of each resource that is part of the queried resource.
+  * @param region           unused, always an array of nulls.
+  * @param context          indicates whether the queried resource is part of another resource, has parts of its own, or neither.
   * @param canonical_res_id the IRI of the containing resource.
-  * @param resinfo a [[ResourceInfoV1]] describing the containing resource.
+  * @param resinfo          a [[ResourceInfoV1]] describing the containing resource.
   */
 case class ResourceContextV1(res_id: Option[Seq[IRI]] = None,
                              resclass_name: Option[String] = None,
@@ -297,10 +297,10 @@ case class ResourceContextV1(res_id: Option[Seq[IRI]] = None,
 /**
   * Describes a resource that is part of the context of another resource. Used internally to construct instances of [[ResourceContextV1]].
   *
-  * @param res_id the IRI of a resource that is part of the queried resource.
-  * @param preview a thumbnail image of the resource represented by `res_id`.
+  * @param res_id    the IRI of a resource that is part of the queried resource.
+  * @param preview   a thumbnail image of the resource represented by `res_id`.
   * @param firstprop the `rdfs:label` of the resource represented by `res_id`.
-  * @param region unused, always null.
+  * @param region    unused, always null.
   */
 case class ResourceContextItemV1(res_id: IRI,
                                  preview: Option[LocationV1],
@@ -310,22 +310,22 @@ case class ResourceContextItemV1(res_id: IRI,
 /**
   * Represents basic information about a Knora resource, in Knora API v1 JSON.
   *
-  * @param project_id the IRI of the project that the resource is associated with.
-  * @param person_id the IRI of the resource's owner.
-  * @param permissions the permissions defined on the resource.
-  * @param restype_id the IRI of the resource's OWL class.
-  * @param restype_name same as `restype_id`.
-  * @param restype_label the label of the resource class.
-  * @param restype_description a description of the resource class.
-  * @param restype_iconsrc the URL of an icon for the resource class.
-  * @param preview the URL of a preview of the resource.
-  * @param locations if this resource has binary data, a list of the available representations of that data (e.g. resolutions of an image).
-  * @param locdata obsolete.
-  * @param resclass_name obsolete, always `object`.
+  * @param project_id            the IRI of the project that the resource is associated with.
+  * @param person_id             the IRI of the resource's owner.
+  * @param permissions           the permissions defined on the resource.
+  * @param restype_id            the IRI of the resource's OWL class.
+  * @param restype_name          same as `restype_id`.
+  * @param restype_label         the label of the resource class.
+  * @param restype_description   a description of the resource class.
+  * @param restype_iconsrc       the URL of an icon for the resource class.
+  * @param preview               the URL of a preview of the resource.
+  * @param locations             if this resource has binary data, a list of the available representations of that data (e.g. resolutions of an image).
+  * @param locdata               obsolete.
+  * @param resclass_name         obsolete, always `object`.
   * @param resclass_has_location `true` if the resource has binary data.
-  * @param lastmod a timestamp of the last modification of the resource.
-  * @param value_of obsolete, always 0.
-  * @param firstproperty a string representation of the resource's first property.
+  * @param lastmod               a timestamp of the last modification of the resource.
+  * @param value_of              obsolete, always 0.
+  * @param firstproperty         a string representation of the resource's first property.
   */
 case class ResourceInfoV1(project_id: IRI,
                           person_id: IRI,
@@ -347,11 +347,11 @@ case class ResourceInfoV1(project_id: IRI,
 /**
   * Provides additional information about a Knora resource, in Knora API v1 JSON.
   *
-  * @param res_id the IRI of the resource.
-  * @param restype_name the IRI of the resource's OWL class.
+  * @param res_id        the IRI of the resource.
+  * @param restype_name  the IRI of the resource's OWL class.
   * @param restype_label the `rdfs:label` of the resource's OWL class.
-  * @param iconsrc the icon of the resource's OWL class.
-  * @param rights a numeric code represting the permissions that the requesting user has on the resource.
+  * @param iconsrc       the icon of the resource's OWL class.
+  * @param rights        a numeric code represting the permissions that the requesting user has on the resource.
   */
 case class ResourceDataV1(res_id: IRI,
                           restype_name: IRI,
@@ -363,8 +363,8 @@ case class ResourceDataV1(res_id: IRI,
   * Represents information about a resource that has a reference to the queried resource.
   *
   * @param ext_res_id the IRI of the referring resource.
-  * @param resinfo a [[ResourceInfoV1]] describing the referring resource.
-  * @param value the `rdfs:label` of the referring resource.
+  * @param resinfo    a [[ResourceInfoV1]] describing the referring resource.
+  * @param value      the `rdfs:label` of the referring resource.
   */
 case class IncomingV1(ext_res_id: ExternalResourceIDV1,
                       resinfo: ResourceInfoV1,
@@ -373,7 +373,7 @@ case class IncomingV1(ext_res_id: ExternalResourceIDV1,
 /**
   * Represents an incoming reference from another resource.
   *
-  * @param id the IRI of the resource that is the source of the incoming reference.
+  * @param id  the IRI of the resource that is the source of the incoming reference.
   * @param pid the IRI of the property that points from the source resource to the target resource.
   */
 case class ExternalResourceIDV1(id: IRI,
@@ -383,10 +383,10 @@ case class ExternalResourceIDV1(id: IRI,
   * Represents an available binary representation of the resource (e.g. an image at a particular resolution).
   *
   * @param format_name `JPEG`, `JPEG2000`, `TIFF`, etc.
-  * @param origname the name of the original file containing the binary data.
-  * @param nx the width of the image in pixels.
-  * @param ny the height of the image in pixels.
-  * @param path the URL from which this representation can be retrieved.
+  * @param origname    the name of the original file containing the binary data.
+  * @param nx          the width of the image in pixels.
+  * @param ny          the height of the image in pixels.
+  * @param path        the URL from which this representation can be retrieved.
   */
 case class LocationV1(format_name: String,
                       origname: String,
@@ -401,23 +401,23 @@ case class LocationV1(format_name: String,
 /**
   * Represents a property of a resource.
   *
-  * @param pid the IRI of the property.
+  * @param pid              the IRI of the property.
   * @param regular_property obsolete, always 1.
-  * @param valuetype_id the IRI of the OWL class of the values of this property.
-  * @param guielement the type of GUI element used to render this property.
-  * @param is_annotation obsolete, always 0.
-  * @param label the `rdfs:label` of this property.
-  * @param attributes HTML attributes for the GUI element used to render this property.
-  * @param occurrence the cardinality of this property: 1, 1-n, 0-1, or 0-n.
-  * @param values the property's literal values for this resource (may be an empty list).
-  * @param value_ids the IRIs of the value objects representing the property's values for this resource.
-  * @param comments any comments attached to the value objects.
-  * @param value_restype if the property's value is another resource, contains the `rdfs:label` of the OWL class
-  *                      of each resource referred to.
+  * @param valuetype_id     the IRI of the OWL class of the values of this property.
+  * @param guielement       the type of GUI element used to render this property.
+  * @param is_annotation    obsolete, always 0.
+  * @param label            the `rdfs:label` of this property.
+  * @param attributes       HTML attributes for the GUI element used to render this property.
+  * @param occurrence       the cardinality of this property: 1, 1-n, 0-1, or 0-n.
+  * @param values           the property's literal values for this resource (may be an empty list).
+  * @param value_ids        the IRIs of the value objects representing the property's values for this resource.
+  * @param comments         any comments attached to the value objects.
+  * @param value_restype    if the property's value is another resource, contains the `rdfs:label` of the OWL class
+  *                         of each resource referred to.
   * @param value_firstprops if the property's value is another resource, contains the `rdfs:label` of each resource
   *                         referred to.
-  * @param value_iconsrcs if the property's value is another resource, contains the icon representing the OWL
-  *                       class of each resource referred to.
+  * @param value_iconsrcs   if the property's value is another resource, contains the icon representing the OWL
+  *                         class of each resource referred to.
   */
 case class PropertyV1(pid: IRI,
                       regular_property: Int = 1,
@@ -452,7 +452,7 @@ case class PropsV1(properties: Seq[PropertyV1])
 /**
   * Represents information about one resource matching the criteria of a [[ResourceSearchGetRequestV1]]
   *
-  * @param id Iri
+  * @param id    Iri
   * @param value property value(s) of the resource (the amount depends on `numberOfProps` defined in [[ResourceSearchGetRequestV1]])
   */
 case class ResourceSearchResultRowV1(id: IRI,
@@ -527,7 +527,7 @@ object SalsahGuiConversions {
   * Describes values that have been attached to a new resource.
   *
   * @param value the value that has been attached to the resource.
-  * @param id the value object Iri of the value.
+  * @param id    the value object Iri of the value.
   */
 case class ResourceCreateValueResponseV1(value: ResourceCreateValueObjectResponseV1, id: IRI) {
     def toJsValue = ResourceV1JsonProtocol.resourceCreateValueResponseV1Format.write(this)
@@ -557,20 +557,20 @@ object LiteralValueType extends Enumeration {
 /**
   * Represents the value. All values have a textual representation. The other types depend on the current value type.
   *
-  * @param textval textual representation of the value.
-  * @param ival integer value if it is an [[IntegerValueV1]].
-  * @param fval float value if it is a [[FloatValueV1]].
-  * @param dateval1 start date if it is a [[DateValueV1]].
-  * @param dateval2 end date if it is a [[DateValueV1]].
+  * @param textval        textual representation of the value.
+  * @param ival           integer value if it is an [[IntegerValueV1]].
+  * @param fval           float value if it is a [[FloatValueV1]].
+  * @param dateval1       start date if it is a [[DateValueV1]].
+  * @param dateval2       end date if it is a [[DateValueV1]].
   * @param dateprecision1 the start date's precision if it is a [[DateValueV1]].
   * @param dateprecision2 the end date's precision if it is a [[DateValueV1]].
-  * @param calendar the date's calendar if it is a [[DateValueV1]].
+  * @param calendar       the date's calendar if it is a [[DateValueV1]].
   * @param timeval1
   * @param timeval2
-  * @param resource_id the Iri of the new resource.
-  * @param property_id the Iri of the property the value belongs to.
-  * @param person_id the person that created the value.
-  * @param order the order of the value (valueHasOrder).
+  * @param resource_id    the Iri of the new resource.
+  * @param property_id    the Iri of the property the value belongs to.
+  * @param person_id      the person that created the value.
+  * @param order          the order of the value (valueHasOrder).
   */
 case class ResourceCreateValueObjectResponseV1(textval: Map[LiteralValueType.Value, String],
                                                ival: Option[Map[LiteralValueType.Value, Int]] = None,
@@ -654,8 +654,8 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
           * Converts an optional list to an [[Option]] containing a tuple of the list's name and [[JsValue]]. The
           * [[Option]] will be a [[Some]] if the list is non-empty, or a [[None]] if the list is empty.
           *
-          * @param name the list's name.
-          * @param list the list.
+          * @param name       the list's name.
+          * @param list       the list.
           * @param jsValueFun a function that returns the list's [[JsValue]].
           * @return either a [[Some]] containing the list's name and [[JsValue]], or a [[None]].
           */

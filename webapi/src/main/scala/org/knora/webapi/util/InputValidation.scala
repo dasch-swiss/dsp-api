@@ -227,7 +227,7 @@ object InputValidation {
 
     /**
       *
-      * @param settings Knora application settings.
+      * @param settings   Knora application settings.
       * @param binaryData the binary file data to be saved.
       * @return the location where the file has been written to.
       */

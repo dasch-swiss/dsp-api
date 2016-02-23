@@ -42,8 +42,8 @@ import spray.routing._
 import scala.util.Try
 
 /**
- * Provides a spray-routing function for API routes that deal with resources.
- */
+  * Provides a spray-routing function for API routes that deal with resources.
+  */
 object ResourcesRouteV1 extends Authenticator {
 
     def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {

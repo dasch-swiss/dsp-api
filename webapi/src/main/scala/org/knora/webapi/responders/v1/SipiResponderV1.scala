@@ -89,7 +89,7 @@ class SipiResponderV1 extends ResponderV1 {
       * Makes a conversion request to Sipi and creates a [[SipiResponderConversionResponseV1]]
       * containing the file values to be added to the triplestore.
       *
-      * @param url the Sipi route to be called.
+      * @param url               the Sipi route to be called.
       * @param conversionRequest the message holding the information to make the request.
       * @return a [[SipiResponderConversionResponseV1]].
       */
@@ -114,8 +114,8 @@ class SipiResponderV1 extends ResponderV1 {
 
         // send a conversion request to SIPI and parse the response as a generic [[HTTPResponse]]
         val conversionResultFuture: Future[HttpResponse] = for {
-            formData <- Future( conversionRequest.toFormData())
-            postRequest <- Future(Post (url, FormData(formData)))
+            formData <- Future(conversionRequest.toFormData())
+            postRequest <- Future(Post(url, FormData(formData)))
             pipelineResult <- pipeline(postRequest)
         } yield pipelineResult
 
@@ -130,7 +130,7 @@ class SipiResponderV1 extends ResponderV1 {
 
             case httpError: spray.httpx.UnsuccessfulResponseException =>
                 deleteTmpFile(conversionRequest) // delete tmp file (if given)
-                val statusCode: StatusCode = httpError.response.status
+            val statusCode: StatusCode = httpError.response.status
 
                 val statusInt: Int = statusCode.intValue / 100
 
@@ -197,7 +197,7 @@ class SipiResponderV1 extends ResponderV1 {
                     }
 
                     // create two StillImageFileValueV1s
-                    Vector(StillImageFileValueV1( // full representation
+                    Vector(StillImageFileValueV1(// full representation
                         internalMimeType = InputValidation.toSparqlEncodedString(imageConversionResult.mimetype_full),
                         originalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.original_filename),
                         originalMimeType = Some(InputValidation.toSparqlEncodedString(imageConversionResult.original_mimetype)),
@@ -207,7 +207,7 @@ class SipiResponderV1 extends ResponderV1 {
                         qualityLevel = 100,
                         qualityName = Some("full")
                     ),
-                        StillImageFileValueV1( // thumbnail representation
+                        StillImageFileValueV1(// thumbnail representation
                             internalMimeType = InputValidation.toSparqlEncodedString(imageConversionResult.mimetype_thumb),
                             originalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.original_filename),
                             originalMimeType = Some(InputValidation.toSparqlEncodedString(imageConversionResult.original_mimetype)),
@@ -219,7 +219,7 @@ class SipiResponderV1 extends ResponderV1 {
                             isPreview = true
                         ))
 
-                case unknownType => throw BadRequestException (s"Could not handle file type $unknownType")
+                case unknownType => throw BadRequestException(s"Could not handle file type $unknownType")
 
                 // TODO: add missing file types
             }

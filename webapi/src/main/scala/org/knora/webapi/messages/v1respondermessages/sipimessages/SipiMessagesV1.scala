@@ -60,8 +60,8 @@ sealed trait SipiResponderConversionRequestV1 extends SipiResponderRequestV1 {
   *
   * @param originalFilename the original name of the binary file.
   * @param originalMimeType the MIME type of the binary file (e.g. image/tiff).
-  * @param source the temporary location of the source file on disk (absolute path).
-  * @param userProfile the user making the request.
+  * @param source           the temporary location of the source file on disk (absolute path).
+  * @param userProfile      the user making the request.
   */
 case class SipiResponderConversionPathRequestV1(originalFilename: String,
                                                 originalMimeType: String,
@@ -95,8 +95,8 @@ case class SipiResponderConversionPathRequestV1(originalFilename: String,
   *
   * @param originalFilename the original name of the binary file.
   * @param originalMimeType the MIME type of the binary file (e.g. image/tiff).
-  * @param filename the name of the binary file created by SIPI.
-  * @param userProfile the user making the request.
+  * @param filename         the name of the binary file created by SIPI.
+  * @param userProfile      the user making the request.
   */
 
 case class SipiResponderConversionFileRequestV1(originalFilename: String,
@@ -134,7 +134,7 @@ sealed trait SipiConversionResponse {
 /**
   * Represents an error message returned by SIPI
   *
-  * @param status status code rerurned by SIPI.
+  * @param status  status code rerurned by SIPI.
   * @param message description of the error.
   */
 case class SipiErrorConversionResponse(status: Int, message: String) extends SipiConversionResponse {
@@ -146,18 +146,18 @@ case class SipiErrorConversionResponse(status: Int, message: String) extends Sip
 /**
   * Represents the response received from SIPI after an image conversion request.
   *
-  * @param status status code returned by SIPI.
-  * @param nx_full x dim of the full quality representation.
-  * @param ny_full y dim of the full quality representation.
-  * @param mimetype_full mime type of the full quality representation.
-  * @param filename_full filename of the full quality representation.
-  * @param nx_thumb x dim of the thumbnail representation.
-  * @param ny_thumb y dim of the thumbnail representation.
-  * @param mimetype_thumb mime type of the thumbnail representation.
-  * @param filename_thumb filename of the thumbnail representation.
+  * @param status            status code returned by SIPI.
+  * @param nx_full           x dim of the full quality representation.
+  * @param ny_full           y dim of the full quality representation.
+  * @param mimetype_full     mime type of the full quality representation.
+  * @param filename_full     filename of the full quality representation.
+  * @param nx_thumb          x dim of the thumbnail representation.
+  * @param ny_thumb          y dim of the thumbnail representation.
+  * @param mimetype_thumb    mime type of the thumbnail representation.
+  * @param filename_thumb    filename of the thumbnail representation.
   * @param original_mimetype mime type of the original file.
   * @param original_filename name of the original file.
-  * @param file_type type of file that has been converted (image, audio, video etc.)
+  * @param file_type         type of file that has been converted (image, audio, video etc.)
   */
 case class SipiImageConversionResponse(status: Int,
                                        nx_full: Int,
@@ -171,8 +171,6 @@ case class SipiImageConversionResponse(status: Int,
                                        original_mimetype: String,
                                        original_filename: String,
                                        file_type: String) extends SipiConversionResponse
-
-
 
 
 object SipiConstants {
@@ -197,7 +195,7 @@ object SipiConstants {
 
         /**
           * Given the name of a file type in this enumeration, returns the file type. If the file type is not found, throws an
-          * [[BadRequestException]].
+          * [[SipiException]].
           *
           * @param filetype the name of the file type.
           * @return the requested file type.
@@ -205,13 +203,13 @@ object SipiConstants {
         def lookup(filetype: String): Value = {
             valueMap.get(filetype) match {
                 case Some(ftype) => ftype
-                case None => throw SipiException(message = s"file type $filetype returned by Sipi not found in enumeration")
+                case None => throw SipiException(message = s"File type $filetype returned by Sipi not found in enumeration")
             }
         }
 
 
-
     }
+
 }
 
 /**
@@ -231,7 +229,7 @@ sealed trait SipiResponderRequestV1 extends KnoraRequestV1
   * A Knora v1 API request message that requests information about a `FileValue`.
   *
   * @param fileValueIri the IRI of the file value to be queried.
-  * @param userProfile the profile of the user making the request.
+  * @param userProfile  the profile of the user making the request.
   */
 case class SipiFileInfoGetRequestV1(fileValueIri: IRI, userProfile: UserProfileV1) extends SipiResponderRequestV1
 
@@ -239,7 +237,7 @@ case class SipiFileInfoGetRequestV1(fileValueIri: IRI, userProfile: UserProfileV
   * Represents the Knora API v1 JSON response to a request for a information about a `FileValue`.
   *
   * @param permissionCode a code representing the user's maximum permission on the file.
-  * @param path the path to the file.
+  * @param path           the path to the file.
   */
 case class SipiFileInfoGetResponseV1(permissionCode: Option[Int],
                                      path: Option[String]) extends KnoraResponseV1 {

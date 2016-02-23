@@ -36,7 +36,6 @@ import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
 import scala.concurrent.{ExecutionContext, Future}
 
 
-
 /**
   * Converts data from SPARQL query results into [[ApiValueV1]] objects.
   */
@@ -57,6 +56,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
     /**
       * Creates a URL for accessing a file via Sipi. // TODO: implement this correctly.
+      *
       * @param fileValueV1 the file value that the URL will point to.
       * @return a Sipi URL.
       */
@@ -67,6 +67,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
     /**
       * Creates a URL for accessing a file via Sipi. // TODO: implement this correctly.
+      *
       * @param filename the name of the file that the URL will point to.
       * @return a Sipi URL.
       */
@@ -100,6 +101,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     /**
       * Converts a [[FileValueV1]] (which is used internally by the Knora API server) to a [[LocationV1]] (which is
       * used in certain API responses).
+      *
       * @param fileValueV1 a [[FileValueV1]].
       * @return a [[LocationV1]].
       */
@@ -134,7 +136,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * - objStandoff: the string representation of the value assigned to predStandoff
       *
       * @param valueIri the IRI of the value that was queried.
-      * @param objRows SPARQL results.
+      * @param objRows  SPARQL results.
       * @return a [[ValueProps]] representing the SPARQL results.
       */
     def createValueProps(valueIri: IRI, objRows: Seq[VariableResultsRow]): ValueProps = {
@@ -155,8 +157,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * The remaining members are identical to those documented in [[createValueProps]].
       *
       * @param rowsWithOrdinaryValues SPARQL result rows describing properties that point to ordinary values (not link values).
-      * @param rowsWithLinkValues SPARQL result rows describing properties that point link values (reifications of links to resources).
-      * @param rowsWithLinks SPARQL result rows describing properties that point to resources.
+      * @param rowsWithLinkValues     SPARQL result rows describing properties that point link values (reifications of links to resources).
+      * @param rowsWithLinks          SPARQL result rows describing properties that point to resources.
       * @return a [[GroupedPropertiesByType]] representing the SPARQL results.
       */
     def createGroupedPropsByType(rowsWithOrdinaryValues: Seq[VariableResultsRow],
@@ -172,9 +174,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     /**
       * Checks that a value type is valid for the `rdfs:range` of a property.
       *
-      * @param propertyIri the IRI of the property.
-      * @param valueType the IRI of the value type.
-      * @param propertyRange the IRI of the property range.
+      * @param propertyIri      the IRI of the property.
+      * @param valueType        the IRI of the value type.
+      * @param propertyRange    the IRI of the property range.
       * @param responderManager a reference to the Knora API Server responder manager.
       * @return A future containing Unit on success, or a failed future if the value type is not valid for the property's range.
       */
@@ -521,8 +523,8 @@ object GroupedProps {
       * Contains the three types of [[GroupedProperties]] returned by a SPARQL query.
       *
       * @param groupedOrdinaryValueProperties properties pointing to ordinary Knora values (i.e. not link values).
-      * @param groupedLinkValueProperties properties pointing to link value objects (reifications of links to resources).
-      * @param groupedLinkProperties properties pointing to resources.
+      * @param groupedLinkValueProperties     properties pointing to link value objects (reifications of links to resources).
+      * @param groupedLinkProperties          properties pointing to resources.
       */
     case class GroupedPropertiesByType(groupedOrdinaryValueProperties: GroupedProperties, groupedLinkValueProperties: GroupedProperties, groupedLinkProperties: GroupedProperties)
 
@@ -544,7 +546,7 @@ object GroupedProps {
       * Represents the object properties belonging to a value object
       *
       * @param literalData The value properties: The Map's keys (IRI) consist of value object properties (e.g. http://www.knora.org/ontology/knora-base#valueHasString).
-      * @param standoff Each Map in the List stands for one standoff node, its keys consist of standoff properties (e.g. http://www.knora.org/ontology/knora-base#standoffHasStart
+      * @param standoff    Each Map in the List stands for one standoff node, its keys consist of standoff properties (e.g. http://www.knora.org/ontology/knora-base#standoffHasStart
       */
     case class ValueProps(literalData: Map[IRI, ValueLiterals], standoff: Seq[Map[IRI, String]] = Vector.empty[Map[IRI, String]])
 

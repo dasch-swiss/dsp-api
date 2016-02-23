@@ -559,7 +559,7 @@ class ResourcesResponderV1 extends ResponderV1 {
       *
       * @param resourceIri the IRI of the resource to be queried.
       * @param userProfile the profile of the user making the request.
-      * @param resinfo a flag if resinfo should be retrieved or not.
+      * @param resinfo     a flag if resinfo should be retrieved or not.
       * @return a [[ResourceContextResponseV1]] describing the context of the resource.
       */
     private def getContextResponseV1(resourceIri: IRI, userProfile: UserProfileV1, resinfo: Boolean): Future[ResourceContextResponseV1] = {
@@ -780,11 +780,11 @@ class ResourcesResponderV1 extends ResponderV1 {
     /**
       * Searches for resources matching the given criteria.
       *
-      * @param searchString the string to search for.
+      * @param searchString    the string to search for.
       * @param resourceTypeIri if set, restrict search to this resource type.
-      * @param numberOfProps the amount of describing properties to be returned for each found resource (e.g if set to two, for an incunabula book its title and creator would be returned).
-      * @param limitOfResults limits number of resources to be returned.
-      * @param userProfile the profile of the user making the request.
+      * @param numberOfProps   the amount of describing properties to be returned for each found resource (e.g if set to two, for an incunabula book its title and creator would be returned).
+      * @param limitOfResults  limits number of resources to be returned.
+      * @param userProfile     the profile of the user making the request.
       * @return the resources matching the given criteria.
       */
     private def getResourceSearchResponseV1(searchString: String, resourceTypeIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserProfileV1): Future[ResourceSearchResponseV1] = {
@@ -871,12 +871,12 @@ class ResourcesResponderV1 extends ResponderV1 {
     /**
       * Creates a new resource and attaches the given values to it.
       *
-      * @param resourceClassIri the resource type of the resource to be created.
-      * @param values the values to be attached to the resource.
-     *  @param sipiConversionRequest a file (binary representation) to be attached to the resource (GUI and non GUI-case)
-      * @param projectIri the project the resource belongs to.
-      * @param userProfile the user that is creating the resource
-      * @param apiRequestID the ID of this API request.
+      * @param resourceClassIri      the resource type of the resource to be created.
+      * @param values                the values to be attached to the resource.
+      * @param sipiConversionRequest a file (binary representation) to be attached to the resource (GUI and non GUI-case)
+      * @param projectIri            the project the resource belongs to.
+      * @param userProfile           the user that is creating the resource
+      * @param apiRequestID          the ID of this API request.
       * @return a [[ResourceCreateResponseV1]] informing the client about the new resource.
       */
     private def createNewResource(resourceClassIri: IRI, label: String, values: Map[IRI, Seq[CreateValueV1WithComment]], sipiConversionRequest: Option[SipiResponderConversionRequestV1] = None, projectIri: IRI, userProfile: UserProfileV1, apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
@@ -884,10 +884,10 @@ class ResourcesResponderV1 extends ResponderV1 {
           * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `rdfs:range` of
           * the property that is supposed to point to it.
           *
-          * @param propertyIri the IRI of the property.
+          * @param propertyIri   the IRI of the property.
           * @param propertyRange the IRI of the `rdfs:range` of the property.
           * @param updateValueV1 the value to be updated.
-          * @param userProfile the profile of the user making the request.
+          * @param userProfile   the profile of the user making the request.
           * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
           */
         def checkPropertyRangeForValue(propertyIri: IRI, propertyRange: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {
@@ -922,11 +922,11 @@ class ResourcesResponderV1 extends ResponderV1 {
           * Does pre-update checks, creates an empty resource, and asks the values responder to create the resource's
           * values. This function is called by [[ResourceLocker]] once it has acquired an update lock on the resource.
           *
-          * @param resourceIri the Iri of the resource to be created.
-          * @param values the values to be attached to the resource.
-          * @param permissions the permissions to be attached.
-          * @param ownerIri the owner of the resource to be created.
-          * @param namedGraph the named graph the resource belongs to.
+          * @param resourceIri  the Iri of the resource to be created.
+          * @param values       the values to be attached to the resource.
+          * @param permissions  the permissions to be attached.
+          * @param ownerIri     the owner of the resource to be created.
+          * @param namedGraph   the named graph the resource belongs to.
           * @param apiRequestID the ID used for the locking.
           * @return a [[ResourceCreateResponseV1]] containing information about the created resource.
           */
@@ -1006,8 +1006,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                             throw BadRequestException(s"Type of submitted file (${sipiResponse.file_type}) does not correspond to expected property type ${resourceClassInfo.fileValueProperties.head}")
                         }
 
-                        // in case we deal with a SipiResponderConversionPathRequestV1 (non GUI-case), the tmp file created by resources route
-                        // has already been deleted by the SipiResponder
+                    // in case we deal with a SipiResponderConversionPathRequestV1 (non GUI-case), the tmp file created by resources route
+                    // has already been deleted by the SipiResponder
 
                     } yield Some(resourceClassInfo.fileValueProperties.head -> sipiResponse.fileValuesV1.map(fileValue => CreateValueV1WithComment(fileValue)))
                 } else {
@@ -1137,7 +1137,7 @@ class ResourcesResponderV1 extends ResponderV1 {
       * Checks whether a resource belongs to a certain OWL class or to a subclass of that class.
       *
       * @param resourceIri the IRI of the resource to be checked.
-      * @param owlClass the IRI of the OWL class to compare the resource's class to.
+      * @param owlClass    the IRI of the OWL class to compare the resource's class to.
       * @param userProfile the profile of the user making the request.
       * @return a [[ResourceCheckClassResponseV1]].
       */
@@ -1162,8 +1162,8 @@ class ResourcesResponderV1 extends ResponderV1 {
     /**
       * Returns a [[ResourceInfoV1]] describing a resource.
       *
-      * @param resourceIri the IRI of the resource to be queried.
-      * @param userProfile the user that is making the request.
+      * @param resourceIri   the IRI of the resource to be queried.
+      * @param userProfile   the user that is making the request.
       * @param queryOntology if `true`, the ontology will be queried for information about the resource type, and the [[ResourceInfoV1]]
       *                      will include `restype_label`, `restype_description`, and `restype_iconsrc`. Otherwise, those member variables
       *                      will be empty.
@@ -1182,11 +1182,11 @@ class ResourcesResponderV1 extends ResponderV1 {
       * Queries the properties that have values for a given resource, and returns a [[Seq]] of [[PropertyV1]] objects representing
       * those properties and their values.
       *
-      * @param resourceIri the IRI of the resource to be queried.
+      * @param resourceIri          the IRI of the resource to be queried.
       * @param maybeResourceTypeIri an optional IRI representing the resource's class. If provided, an additional query will be done
       *                             to get ontology-based information, such as labels and cardinalities, which will be included in
       *                             the returned [[PropertyV1]] objects.
-      * @param userProfile the profile of the user making the request.
+      * @param userProfile          the profile of the user making the request.
       * @return a [[Seq]] of [[PropertyV1]] objects representing the properties that have values for the resource.
       */
     private def getResourceProperties(resourceIri: IRI, maybeResourceTypeIri: Option[IRI], userProfile: UserProfileV1): Future[Seq[PropertyV1]] = {
@@ -1231,12 +1231,12 @@ class ResourcesResponderV1 extends ResponderV1 {
       * Converts a SPARQL query result into a [[ResourceInfoV1]]. Expects the query result to contain columns called `p` (predicate),
       * `o` (object), `objPred` (file value predicate, if `o` is a file value), and `objObj` (file value object).
       *
-      * @param resourceIri the IRI of the resource.
+      * @param resourceIri         the IRI of the resource.
       * @param resInfoResponseRows the SPARQL query result.
-      * @param userProfile the user that is making the request.
-      * @param queryOntology if `true`, the ontology will be queried for information about the resource type, and the [[ResourceInfoV1]]
-      *                      will include `restype_label`, `restype_description`, and `restype_iconsrc`. Otherwise, those member variables
-      *                      will be empty.
+      * @param userProfile         the user that is making the request.
+      * @param queryOntology       if `true`, the ontology will be queried for information about the resource type, and the [[ResourceInfoV1]]
+      *                            will include `restype_label`, `restype_description`, and `restype_iconsrc`. Otherwise, those member variables
+      *                            will be empty.
       * @return a tuple (permission, [[ResourceInfoV1]]) describing the resource.
       */
     private def makeResourceInfoV1(resourceIri: IRI, resInfoResponseRows: Seq[VariableResultsRow], userProfile: UserProfileV1, queryOntology: Boolean): Future[(Option[Int], ResourceInfoV1)] = {
@@ -1356,13 +1356,13 @@ class ResourcesResponderV1 extends ResponderV1 {
       * using ontology-based data if provided.
       *
       * @param groupedPropertiesByType The [[GroupedPropertiesByType]] returned by `getGroupedProperties` containing the resuls of the SPARQL query.
-      * @param propertyEntityInfoMap a [[Map]] of entity IRIs to [[PropertyEntityInfoV1]] objects. If this [[Map]] is not empty, it will be used to include
-      *                              ontology-based information in the returned [[PropertyV1]] objects.
-      * @param resourceEntityInfoMap a [[Map]] of entity IRIs to [[ResourceEntityInfoV1]] objects. If this [[Map]] is not empty, it will be used to include
-      *                              ontology-based information for linking properties in the returned [[PropertyV1]] objects.
-      * @param propsAndCardinalities a [[Map]] of property IRIs to their cardinalities in the class of the queried resource. If this [[Map]] is not
-      *                              empty, it will be used to include cardinalities in the returned [[PropertyV1]] objects.
-      * @param userProfile the profile of the user making the request.
+      * @param propertyEntityInfoMap   a [[Map]] of entity IRIs to [[PropertyEntityInfoV1]] objects. If this [[Map]] is not empty, it will be used to include
+      *                                ontology-based information in the returned [[PropertyV1]] objects.
+      * @param resourceEntityInfoMap   a [[Map]] of entity IRIs to [[ResourceEntityInfoV1]] objects. If this [[Map]] is not empty, it will be used to include
+      *                                ontology-based information for linking properties in the returned [[PropertyV1]] objects.
+      * @param propsAndCardinalities   a [[Map]] of property IRIs to their cardinalities in the class of the queried resource. If this [[Map]] is not
+      *                                empty, it will be used to include cardinalities in the returned [[PropertyV1]] objects.
+      * @param userProfile             the profile of the user making the request.
       * @return a [[Seq]] of [[PropertyV1]] objects.
       */
     private def queryResults2PropertyV1s(containingResourceIri: IRI,
@@ -1374,10 +1374,10 @@ class ResourcesResponderV1 extends ResponderV1 {
         /**
           * Constructs a [[PropertyV1]].
           *
-          * @param propertyIri the IRI of the property.
+          * @param propertyIri         the IRI of the property.
           * @param propertyCardinality an optional cardinality that the queried resource's class assigns to the property.
-          * @param propertyEntityInfo an optional [[PropertyEntityInfoV1]] describing the property.
-          * @param valueObjects a list of [[ValueObjectV1]] instances representing the `knora-base:Value` objects associated with the property in the queried resource.
+          * @param propertyEntityInfo  an optional [[PropertyEntityInfoV1]] describing the property.
+          * @param valueObjects        a list of [[ValueObjectV1]] instances representing the `knora-base:Value` objects associated with the property in the queried resource.
           * @return a [[PropertyV1]].
           */
         def makePropertyV1(propertyIri: IRI, propertyCardinality: Option[Cardinality.Value], propertyEntityInfo: Option[PropertyEntityInfoV1], valueObjects: Seq[ValueObjectV1]): PropertyV1 = {
