@@ -22,4 +22,4 @@ package org.knora.webapi.testing.tagobjects
 
 import org.scalatest.Tag
 
-object SipiTest extends Tag("org.knora.rapier.testing.tags.SipiTest")
+object SipiTest extends Tag("org.knora.webapi.testing.tags.SipiTest")
