@@ -174,6 +174,10 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
       * @return a [[SparqlUpdateResponse]].
       */
     private def sparqlHttpUpdate(sparql: String): Future[SparqlUpdateResponse] = {
+        // println("============================= Update ==============================")
+        // println(sparql)
+        // println("===================================================================")
+
         for {
         // Send the SPARQL to the triplestore.
             _ <- getTriplestoreHttpResponse(sparql, update = true)

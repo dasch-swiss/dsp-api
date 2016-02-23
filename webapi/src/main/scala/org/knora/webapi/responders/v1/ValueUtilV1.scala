@@ -40,69 +40,6 @@ import scala.concurrent.{ExecutionContext, Future}
   * Converts data from SPARQL query results into [[ApiValueV1]] objects.
   */
 class ValueUtilV1(private val settings: SettingsImpl) {
-    //val log = Logger(LoggerFactory.getLogger("org.knora.webapi.responders.v1.ValueUtilV1"))
-
-    /**
-      * Create a [[FileValueV1]] from an API requests [[CreateFileV1]].
-      *
-      * @param file the file value to be created.
-      * @return a [[FileValueV1]]
-      */
-    def makeFileValueV1FromCreateFileV1(file: CreateFileV1): Vector[FileValueV1] = {
-
-        /**
-          * Handle image file value types.
-          *
-          * @param file the image file value to be created.
-          * @return a list of [[StillImageFileValueV1]] (full and thumbnail).
-          */
-        def handleImageMimeType(file: CreateFileV1): Vector[StillImageFileValueV1] = {
-
-            // TODO: copy image to def. location and delete from temporary location.
-
-            // TODO: should input validation happen in the router?
-
-            val fullImage = StillImageFileValueV1(
-                originalFilename = InputValidation.toSparqlEncodedString(file.originalFilename),
-                originalMimeType = Some(InputValidation.toSparqlEncodedString(InputValidation.toSparqlEncodedString(file.originalMimeType))),
-                internalMimeType = InputValidation.toSparqlEncodedString(file.originalMimeType),
-                dimX = file.full.dimX.getOrElse(throw BadRequestException(s"DimX was not set for image.")),
-                dimY = file.full.dimY.getOrElse(throw BadRequestException(s"DimY was not set for image.")),
-                qualityName = Some("full"),
-                qualityLevel = 100,
-                internalFilename = InputValidation.toSparqlEncodedString(file.full.path) // TODO: do be adapted to final location
-            )
-
-            val thumb = StillImageFileValueV1(
-                originalFilename = InputValidation.toSparqlEncodedString(file.originalFilename),
-                originalMimeType = Some(InputValidation.toSparqlEncodedString(file.originalMimeType)),
-                internalMimeType = InputValidation.toSparqlEncodedString(file.originalMimeType),
-                dimX = file.preview.getOrElse(throw BadRequestException("Preview is not set for image file."))
-                    .dimX.getOrElse(throw BadRequestException("DimX is not set for preview.")),
-                dimY = file.preview.getOrElse(throw BadRequestException("Preview is not set for image file."))
-                    .dimY.getOrElse(throw BadRequestException("DimY is not set for preview.")),
-                qualityName = Some("thumbnail"),
-                qualityLevel = 10,
-                internalFilename = InputValidation.toSparqlEncodedString(file
-                    .preview.getOrElse(throw BadRequestException("Preview is not set for image file.")).path) // TODO: do be adapted to final location
-            )
-
-            Vector(fullImage, thumb)
-        }
-
-        // Create a Vector of Tuples of handlers and a Vector of appropriate mime types.
-        val handlers = Vector(
-            (handleImageMimeType: (CreateFileV1) => Vector[StillImageFileValueV1], settings.imageMimeTypes)
-        )
-
-        // Turn the `handlers` into a Map of mime type (key) -> handler (value)
-        val mimeTypes2Handlers: ErrorHandlingMap[String, (CreateFileV1) => Vector[FileValueV1]] = new ErrorHandlingMap(handlers.flatMap {
-            case (handler, mimeTypes) => mimeTypes.map(mimeType => mimeType -> handler)
-        }.toMap, { key: IRI => s"Unknown value type: $key" }) // TODO: accessing a non existing key in the map makes the application crash.
-
-        mimeTypes2Handlers(file.originalMimeType)(file)
-
-    }
 
     /**
       * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
@@ -119,15 +56,18 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
     /**
       * Creates a URL for accessing a file via Sipi. // TODO: implement this correctly.
+      *
       * @param fileValueV1 the file value that the URL will point to.
       * @return a Sipi URL.
       */
+    // TODO: if this is a StillImageFileValue, create a IIIF URL
     def makeSipiFileGetUrlFromFileValueV1(fileValueV1: FileValueV1): String = {
         makeSipiFileGetUrlFromFilename(fileValueV1.internalFilename)
     }
 
     /**
       * Creates a URL for accessing a file via Sipi. // TODO: implement this correctly.
+      *
       * @param filename the name of the file that the URL will point to.
       * @return a Sipi URL.
       */
@@ -161,6 +101,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     /**
       * Converts a [[FileValueV1]] (which is used internally by the Knora API server) to a [[LocationV1]] (which is
       * used in certain API responses).
+      *
       * @param fileValueV1 a [[FileValueV1]].
       * @return a [[LocationV1]].
       */
@@ -195,7 +136,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * - objStandoff: the string representation of the value assigned to predStandoff
       *
       * @param valueIri the IRI of the value that was queried.
-      * @param objRows SPARQL results.
+      * @param objRows  SPARQL results.
       * @return a [[ValueProps]] representing the SPARQL results.
       */
     def createValueProps(valueIri: IRI, objRows: Seq[VariableResultsRow]): ValueProps = {
@@ -216,8 +157,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * The remaining members are identical to those documented in [[createValueProps]].
       *
       * @param rowsWithOrdinaryValues SPARQL result rows describing properties that point to ordinary values (not link values).
-      * @param rowsWithLinkValues SPARQL result rows describing properties that point link values (reifications of links to resources).
-      * @param rowsWithLinks SPARQL result rows describing properties that point to resources.
+      * @param rowsWithLinkValues     SPARQL result rows describing properties that point link values (reifications of links to resources).
+      * @param rowsWithLinks          SPARQL result rows describing properties that point to resources.
       * @return a [[GroupedPropertiesByType]] representing the SPARQL results.
       */
     def createGroupedPropsByType(rowsWithOrdinaryValues: Seq[VariableResultsRow],
@@ -582,8 +523,8 @@ object GroupedProps {
       * Contains the three types of [[GroupedProperties]] returned by a SPARQL query.
       *
       * @param groupedOrdinaryValueProperties properties pointing to ordinary Knora values (i.e. not link values).
-      * @param groupedLinkValueProperties properties pointing to link value objects (reifications of links to resources).
-      * @param groupedLinkProperties properties pointing to resources.
+      * @param groupedLinkValueProperties     properties pointing to link value objects (reifications of links to resources).
+      * @param groupedLinkProperties          properties pointing to resources.
       */
     case class GroupedPropertiesByType(groupedOrdinaryValueProperties: GroupedProperties, groupedLinkValueProperties: GroupedProperties, groupedLinkProperties: GroupedProperties)
 
@@ -605,7 +546,7 @@ object GroupedProps {
       * Represents the object properties belonging to a value object
       *
       * @param literalData The value properties: The Map's keys (IRI) consist of value object properties (e.g. http://www.knora.org/ontology/knora-base#valueHasString).
-      * @param standoff Each Map in the List stands for one standoff node, its keys consist of standoff properties (e.g. http://www.knora.org/ontology/knora-base#standoffHasStart
+      * @param standoff    Each Map in the List stands for one standoff node, its keys consist of standoff properties (e.g. http://www.knora.org/ontology/knora-base#standoffHasStart
       */
     case class ValueProps(literalData: Map[IRI, ValueLiterals], standoff: Seq[Map[IRI, String]] = Vector.empty[Map[IRI, String]])
 
