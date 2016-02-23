@@ -1615,7 +1615,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param sourceResourceIri            the resource containing the resource reference.
       * @param linkPropertyIri              the IRI of the property that links the source resource to the target resource.
       * @param targetResourceIri            the target resource for which a reference has been added.
-      * @param permissionRelevantAssertions the permission-relevant assertions to be used for a new `knora-base:LinkValue`.
+      * @param permissionRelevantAssertions the permission-relevant assertions to be used for a new `knora-base:LinkValue`
       *                                     (as opposed to a new version of an existing `LinkValue`).
       * @param userProfile                  the profile of the user making the request.
       * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
