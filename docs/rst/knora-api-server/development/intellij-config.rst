@@ -26,6 +26,7 @@ Setup IntelliJ for development of Knora
    support, do the following: ``Import Project`` -> Choose the option
    ``module SBT``
 -  Then install the Scala plugin for IntelliJ
+-  make sure that the tab size is set correctly to **4 spaces** (so you can use automatic code reformatting): Preferences -> Code Style and also Preferences -> Code Style -> Scala.
 
 Twirl
 -----

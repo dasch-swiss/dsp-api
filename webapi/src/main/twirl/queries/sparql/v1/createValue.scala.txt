@@ -35,7 +35,7 @@
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values.
  * @param maybeComment an optional comment on the value.
- * @param overrideCardinality if true, disregard the cardinality restrictions specified on the resource type.
+ * @param updateResourceLastModificationDate if true, update the resource's knora-base:lastModificationDate.
  * @param value the value to insert.
  *
  * This operation will do nothing if the information submitted is inconsistent with the resource's class definition,
@@ -51,7 +51,7 @@
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   maybeComment: Option[String],
   permissionRelevantAssertions: Seq[(IRI, IRI)],
-  overrideCardinality: Boolean)
+  updateResourceLastModificationDate: Boolean)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -60,8 +60,10 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?dataNamedGraph {
-        @* Delete the resource's last modification date so we can update it. *@
-        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+        @if(updateResourceLastModificationDate) {
+            @* Delete the resource's last modification date so we can update it. *@
+            ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+        }
 
         @* If any LinkValues need to be updated, detach them from the resource. *@
         @if(linkUpdates.exists(_.linkValueExists)) {
@@ -230,8 +232,10 @@ DELETE {
         @* Attach the value to the resource. *@
         ?resource ?property ?newValue .
 
-        @* Update the resource's last modification date. *@
-        ?resource knora-base:lastModificationDate ?currentTime .
+        @if(updateResourceLastModificationDate) {
+            @* Update the resource's last modification date. *@
+            ?resource knora-base:lastModificationDate ?currentTime .
+        }
     }
 } WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
@@ -255,57 +259,11 @@ DELETE {
 	?property rdfs:range ?propertyRange .
     ?valueType rdfs:subClassOf* ?propertyRange .
 
-    @if(!overrideCardinality) {
+    @* Do nothing if neither the resource class nor any of its superclasses has a cardinality for this property. *@
 
-        @* Do nothing if neither the resource class nor any of its superclasses has a cardinality for this property. *@
-
-        ?resourceClass rdfs:subClassOf* ?restriction .
-        ?restriction a owl:Restriction .
-        ?restriction owl:onProperty ?property .
-
-        @*
-
-        Do nothing if the resource class is allowed to have at most one value for this property, and it already has one,
-        unless the value is marked as deleted. TODO: This is commented out because it's slow on Jena/Fuseki.
-
-        MINUS {
-            ?restriction owl:cardinality 1 .
-            ?resource ?property ?value .
-
-            MINUS {
-                ?value knora-base:isDeleted true .
-            }
-        }
-
-        MINUS {
-            ?restriction owl:maxCardinality 1 .
-            ?resource ?property ?value .
-
-            MINUS {
-                ?value knora-base:isDeleted true .
-            }
-        }
-
-        MINUS {
-            ?restriction owl:qualifiedCardinality 1 .
-            ?resource ?property ?value .
-
-            MINUS {
-                ?value knora-base:isDeleted true .
-            }
-        }
-
-        MINUS {
-            ?restriction owl:maxQualifiedCardinality 1 .
-            ?resource ?property ?value .
-
-            MINUS {
-                ?value knora-base:isDeleted true .
-            }
-        }
-
-        *@
-    }
+    ?resourceClass rdfs:subClassOf* ?restriction .
+    ?restriction a owl:Restriction .
+    ?restriction owl:onProperty ?property .
 
     @*
 
@@ -376,10 +334,12 @@ DELETE {
         }
     }
 
-    @* Get the resource's last modification date, if it has one, so we can update it. *@
+    @if(updateResourceLastModificationDate) {
+        @* Get the resource's last modification date, if it has one, so we can update it. *@
 
-    OPTIONAL {
-        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+        OPTIONAL {
+            ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+        }
     }
 
     @*

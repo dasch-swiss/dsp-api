@@ -137,7 +137,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
         case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
         case HelloTriplestore(msg) if msg == tsType => sender ! HelloTriplestore(tsType)
-        case CheckConnection => checkTriplestore
+        case CheckConnection => checkTriplestore()
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 

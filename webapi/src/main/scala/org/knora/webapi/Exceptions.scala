@@ -263,6 +263,18 @@ case class FileWriteException(message: String) extends InternalServerException(m
   */
 case class NotImplementedException(message: String) extends InternalServerException(message)
 
+
+/**
+  * Indicates that an error occurred with Sipi not relating to the user's request (it is not the user's fault).
+  * @param message a description of the error.
+  */
+case class SipiException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
+
+object SipiException {
+    def apply(message: String, e: Throwable, log: LoggingAdapter): SipiException =
+        SipiException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+}
+
 /**
   * An abstract base class for exceptions indicating that something about a configuration made it impossible to start.
   * @param message a description of the error.

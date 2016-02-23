@@ -29,7 +29,7 @@
  * @param linkSourceIri the resource that is the source of the link.
  * @param linkUpdate a [[LinkUpdate]] object describing the link to insert.
  * @param maybeComment an optional comment on the link.
- * @param overrideCardinality if true, disregard the cardinality restrictions specified on the resource type.
+ * @param updateResourceLastModificationDate if true, update the resource's knora-base:lastModificationDate.
  *
  * To find out whether the update succeeded, the application must query the link.
  *@
@@ -37,7 +37,7 @@
   linkSourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
   maybeComment: Option[String],
-  overrideCardinality: Boolean)
+  updateResourceLastModificationDate: Boolean)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -46,12 +46,14 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?dataNamedGraph {
-        @* Delete the link source's last modification date so we can update it. *@
-        ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
+        @if(updateResourceLastModificationDate) {
+            @* Delete the link source's last modification date so we can update it. *@
+            ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
 
-        @* If an existing LinkValue needs to be updated, detach it from the link source. *@
-        @if(linkUpdate.linkValueExists) {
-            ?linkSource ?linkValueProperty ?existingLinkValue .
+            @* If an existing LinkValue needs to be updated, detach it from the link source. *@
+            @if(linkUpdate.linkValueExists) {
+                ?linkSource ?linkValueProperty ?existingLinkValue .
+            }
         }
     }
 } INSERT {
@@ -86,8 +88,10 @@ DELETE {
         @* Attach the new LinkValue to its containing resource. *@
         ?linkSource ?linkValueProperty ?newLinkValue .
 
-        @* Update the link source's last modification date. *@
-        ?linkSource knora-base:lastModificationDate ?currentTime .
+        @if(updateResourceLastModificationDate) {
+            @* Update the link source's last modification date. *@
+            ?linkSource knora-base:lastModificationDate ?currentTime .
+        }
     }
 } WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
@@ -121,58 +125,11 @@ DELETE {
         ?linkTarget knora-base:isDeleted true .
     }
 
-    @if(!overrideCardinality) {
+    @* Do nothing if the source resource's OWL class has no cardinality for the link property. *@
 
-        @* Do nothing if the source resource's OWL class has no cardinality for the link property. *@
-
-        ?linkSourceClass rdfs:subClassOf* ?restriction .
-        ?restriction a owl:Restriction .
-        ?restriction owl:onProperty ?linkProperty .
-
-        @*
-
-        Do nothing if the source resource's OWL class is allowed to have at most one target resource for this
-        property, and it already has one, unless the other target resource is marked as deleted. TODO: This is commented out because it's slow on Jena/Fuseki.
-
-
-        MINUS {
-            ?restriction owl:cardinality 1 .
-            ?linkSource ?linkProperty ?otherTarget .
-
-            MINUS {
-                ?otherTarget knora-base:isDeleted true .
-            }
-        }
-
-        MINUS {
-            ?restriction owl:maxCardinality 1 .
-            ?linkSource ?linkProperty ?otherTarget .
-
-            MINUS {
-                ?otherTarget knora-base:isDeleted true .
-            }
-        }
-
-        MINUS {
-            ?restriction owl:qualifiedCardinality 1 .
-            ?linkSource ?linkProperty ?otherTarget .
-
-            MINUS {
-                ?otherTarget knora-base:isDeleted true .
-            }
-        }
-
-        MINUS {
-            ?restriction owl:maxQualifiedCardinality 1 .
-            ?linkSource ?linkProperty ?otherTarget .
-
-            MINUS {
-                ?otherTarget knora-base:isDeleted true .
-            }
-        }
-
-        *@
-    }
+    ?linkSourceClass rdfs:subClassOf* ?restriction .
+    ?restriction a owl:Restriction .
+    ?restriction owl:onProperty ?linkProperty .
 
     @if(linkUpdate.directLinkExists) {
         @{throw SparqlGenerationException(s"linkUpdate.directLinkExists must be false in this SPARQL template"); ()}
@@ -205,9 +162,11 @@ DELETE {
         }
     }
 
-    @* Get the link source's last modification date, if it has one, so we can update it. *@
+    @if(updateResourceLastModificationDate) {
+        @* Get the link source's last modification date, if it has one, so we can update it. *@
 
-    OPTIONAL {
-        ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
+        OPTIONAL {
+            ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
+        }
     }
 }
