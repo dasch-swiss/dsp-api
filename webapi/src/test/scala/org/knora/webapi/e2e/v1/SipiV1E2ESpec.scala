@@ -21,13 +21,16 @@
 package org.knora.webapi.e2e.v1
 
 import java.io.File
+import java.nio.file.{Paths, Files}
 
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.pattern._
 import akka.routing.FromConfig
 import akka.util.Timeout
-import org.knora.webapi.{UnexpectedMessageException, LiveActorMaker}
+import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.InputValidation
+import org.knora.webapi.{InternalServerException, FileWriteException, UnexpectedMessageException, LiveActorMaker}
 import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1respondermessages.ckanmessages.CkanResponderRequestV1
 import org.knora.webapi.messages.v1respondermessages.graphdatamessages.GraphDataResponderRequestV1
@@ -36,27 +39,76 @@ import org.knora.webapi.messages.v1respondermessages.ontologymessages.OntologyRe
 import org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectsResponderRequestV1
 import org.knora.webapi.messages.v1respondermessages.resourcemessages.{ResourcesResponderRequestV1, CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1respondermessages.searchmessages.SearchResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiResponderRequestV1
+import org.knora.webapi.messages.v1respondermessages.sipimessages._
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1respondermessages.usermessages.UsersResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{ValuesResponderRequestV1, CreateFileV1, CreateRichtextV1}
+import org.knora.webapi.messages.v1respondermessages.valuemessages.{StillImageFileValueV1, ValuesResponderRequestV1, CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.ResourcesRouteV1
 import org.knora.webapi.store._
 import spray.http._
 
-import scala.concurrent.Await
+import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 import akka.actor.ActorDSL._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class SipiResponderManagerTest extends Actor with ActorLogging {
 
+    /**
+      * Imitates the Sipi server by returning a [[SipiResponderConversionResponseV1]] representing an image conversion request.
+      *
+      * @param conversionRequest the conversion request to be handled.
+      * @return a [[SipiResponderConversionResponseV1]] imitating the answer from Sipi.
+      */
+    private def imageConversionResponse(conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
+
+        // delete tmp file (depending on the kind of request given: only necessary if Knora stored the file - non GUI-case)
+        def deleteTmpFile(conversionRequest: SipiResponderConversionRequestV1): Unit = {
+            conversionRequest match {
+                case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
+                    // a tmp file has been created by the resources route (non GUI-case), delete it
+                    InputValidation.deleteFileFromTmpLocation(conversionPathRequest.source)
+                case _ => ()
+            }
+        }
+
+        val originalFilename = conversionRequest.originalFilename
+        val originalMimeType: String = conversionRequest.originalMimeType
+
+        val fileValuesV1 = Vector(StillImageFileValueV1(// full representation
+            internalMimeType = "image/jp2",
+            originalFilename = originalFilename,
+            originalMimeType = Some(originalMimeType),
+            dimX = 800,
+            dimY = 800,
+            internalFilename = "full.jp2",
+            qualityLevel = 100,
+            qualityName = Some("full")
+        ),
+            StillImageFileValueV1(// thumbnail representation
+                internalMimeType = "image/jpeg",
+                originalFilename = originalFilename,
+                originalMimeType = Some(originalMimeType),
+                dimX = 80,
+                dimY = 80,
+                internalFilename = "thumb.jpg",
+                qualityLevel = 10,
+                qualityName = Some("thumbnail"),
+                isPreview = true
+            ))
+
+        deleteTmpFile(conversionRequest)
+
+        Future(SipiResponderConversionResponseV1(fileValuesV1, file_type = SipiConstants.FileType.IMAGE))
+    }
+
     val sipiRouter = actor("mocksipi")(new Act {
         become {
-            case "hello" => sender ! "world!"
-            case msg => println(s"got $msg")
+            case sipiResponderConversionFileRequest: SipiResponderConversionFileRequestV1 => future2Message(sender(), imageConversionResponse(sipiResponderConversionFileRequest), log)
+            case sipiResponderConversionPathRequest: SipiResponderConversionPathRequestV1 => future2Message(sender(), imageConversionResponse(sipiResponderConversionPathRequest), log)
         }
     })
 
@@ -126,22 +178,6 @@ class SipiV1E2ESpec extends E2ESpec {
 
 
     "The Resources Endpoint" should {
-        "provide a HTML representation of the resource properties " in {
-            /* Incunabula resource*/
-            Get("/v1/resources.html/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?noresedit=true&reqtype=properties") ~> resourcesPath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
-                assert(responseAs[String] contains "preview")
-                assert(responseAs[String] contains "Phyiscal description")
-                assert(responseAs[String] contains "Location")
-                assert(responseAs[String] contains "Publication location")
-                assert(responseAs[String] contains "URI")
-                assert(responseAs[String] contains "Title")
-                assert(responseAs[String] contains "Datum der Herausgabe")
-                assert(responseAs[String] contains "Citation/reference")
-                assert(responseAs[String] contains "Publisher")
-            }
-        }
 
         "create a resource with a digital representation doing a multipart request containing the binary data (non GUI-case)" in {
 
@@ -182,6 +218,16 @@ class SipiV1E2ESpec extends E2ESpec {
                 BodyPart(entity = HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint), fieldName = "json"),
                 BodyPart(file = fileToSend, fieldName = "file", ContentType(mediaType = MediaTypes.`image/jpeg`))
             ))
+
+            // check if tmp datadir exists and create it if not
+            if (!Files.exists(Paths.get(settings.tmpDataDir))) {
+                try {
+                    val tmpDir = new File(settings.tmpDataDir)
+                    tmpDir.mkdir()
+                } catch {
+                    case e: Throwable => throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
+                }
+            }
 
             Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
                 assert(status === StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])

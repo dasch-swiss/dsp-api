@@ -45,11 +45,12 @@ from the other resource parameters (properties) under the name ``file``:
 In the route, a ``SipiResponderConversionFileRequestV1`` is created representing the information about the file to be attached to the new resource. Along with the other parameters,
 it is sent to the resources responder.
 
+See :ref:`resources-responder-and-sipi` for details of how the resources responder then handles the request.
+
 Change the Digital Representation of a Resource
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 TODO: implement values route
 
-See :ref:`resources-responder-and-sipi` for details of how the resources responder then handles the request.
 
 Non GUI-Case
 ------------
@@ -78,11 +79,11 @@ The binary data is saved to a temporary location by Knora. The route then create
 representing the information about the file (i.e. the temporary path to the file) to be attached to the new resource. Along with the other parameters,
 it is sent to the resources responder.
 
+See :ref:`resources-responder-and-sipi` for details of how the resources responder then handles the request.
+
 Change the Digital Representation of a Resource
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 TODO: implement values route
-
-See :ref:`resources-responder-and-sipi` for details of how the resources responder then handles the request.
 
 .. _resources-responder-and-sipi:
 
