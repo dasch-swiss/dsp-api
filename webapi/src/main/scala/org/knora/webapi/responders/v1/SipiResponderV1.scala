@@ -33,7 +33,6 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.InputValidation
 import spray.client.pipelining._
 import spray.http._
-import spray.httpx.SprayJsonSupport._
 import spray.json._
 
 import scala.concurrent.Future

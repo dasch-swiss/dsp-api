@@ -45,7 +45,15 @@ import scala.collection.breakOut
   * @param file a file to be attached to the resource (GUI-case).
   * @param project_id the IRI of the project the resources is added to.
   */
-case class CreateResourceApiRequestV1(restype_id: IRI, label: String, properties: Map[IRI, Seq[CreateResourceValueV1]], file: Option[CreateFileV1] = None, project_id: IRI)
+case class CreateResourceApiRequestV1(restype_id: IRI,
+                                      label: String,
+                                      properties: Map[IRI, Seq[CreateResourceValueV1]],
+                                      file: Option[CreateFileV1] = None,
+                                      project_id: IRI) {
+
+    def toJsValue = ResourceV1JsonProtocol.createResourceApiRequestV1Format.write(this)
+
+}
 
 /**
   * Represents a property value to be created.
