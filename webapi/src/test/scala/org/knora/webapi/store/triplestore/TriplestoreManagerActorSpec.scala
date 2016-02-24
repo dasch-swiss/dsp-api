@@ -59,6 +59,7 @@ object TriplestoreManagerActorSpec {
         }
         """.stripMargin)
 
+    /*
     val configEmbeddedJenaTDB = ConfigFactory.parseString(
         """
         app {
@@ -85,6 +86,7 @@ object TriplestoreManagerActorSpec {
             }
         }
         """.stripMargin)
+    */
 }
 
 /*

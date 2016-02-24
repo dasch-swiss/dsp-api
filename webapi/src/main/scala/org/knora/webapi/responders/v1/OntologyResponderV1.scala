@@ -59,6 +59,7 @@ class OntologyResponderV1 extends ResponderV1 {
       * Keys for the ontology cache.
       */
     private object OntologyCacheKeys {
+
         import scala.math.Ordered.orderingToOrdered
 
         /**
@@ -69,7 +70,7 @@ class OntologyResponderV1 extends ResponderV1 {
           */
         class ResourceEntityInfoKey(val resourceClassIri: IRI, val preferredLanguage: String) extends Ordered[ResourceEntityInfoKey] {
             def compare(that: ResourceEntityInfoKey): Int = {
-                (this.resourceClassIri, this.preferredLanguage) compare (that.resourceClassIri, that.preferredLanguage)
+                (this.resourceClassIri, this.preferredLanguage) compare(that.resourceClassIri, that.preferredLanguage)
             }
 
             override def equals(that: Any): Boolean = {
@@ -95,7 +96,7 @@ class OntologyResponderV1 extends ResponderV1 {
           */
         class PropertyEntityInfoKey(val propertyIri: IRI, val preferredLanguage: String) extends Ordered[PropertyEntityInfoKey] {
             def compare(that: PropertyEntityInfoKey): Int = {
-                (this.propertyIri, this.preferredLanguage) compare (that.propertyIri, that.preferredLanguage)
+                (this.propertyIri, this.preferredLanguage) compare(that.propertyIri, that.preferredLanguage)
             }
 
             override def equals(that: Any): Boolean = {
@@ -112,6 +113,7 @@ class OntologyResponderV1 extends ResponderV1 {
 
             override def toString: String = s"PropertyEntityInfoKey($propertyIri, $preferredLanguage)"
         }
+
     }
 
     /**
@@ -425,7 +427,7 @@ class OntologyResponderV1 extends ResponderV1 {
                                 description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
                                 vocabulary = entityInfo.predicates.values.head.ontologyIri,
                                 occurrence = cardinality.toString,
-                                valuetype_id = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Range).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:range")),
+                                valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
                                 attributes = makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute)),
                                 gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
                             )

@@ -1,20 +1,30 @@
+# Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+# Tobias Schweizer, André Kilchenmann, and André Fatton.
+#
+# This file is part of Knora.
+#
+# Knora is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Knora is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public
+# License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+
 @prefix : <http://www.knora.org/ontology/knora-base#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @base <http://www.knora.org/ontology/knora-base> .
 
-<http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology ;
-                                           
-                                           rdfs:comment "This is the admin ontology for knora with access rights management, user data etc." ,
-                                                        "Basic ontology for the KNORA System. It defines the primary semantic of Sresources and properties. It is to note that a value in knora is always a comnplex obect. That is, it is itself alsao a resources with attached properties/values pairs. This is necessary in order to represent complex values such as a date which always consits of a star- and endpoint of the uncertainty-period, the calender used and the precision for start- and enddate (day, month or year)." ;
-                                           
-                                           owl:imports rdf: ,
-                                                       rdfs: ,
-                                                       <http://xmlns.com/foaf/0.1/> .
+<http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology .
 
 
 #################################################################
@@ -24,11 +34,19 @@
 #################################################################
 
 
+###  http://www.knora.org/ontology/knora-base#objectDatatypeConstraint
+
+:objectDatatypeConstraint rdf:type owl:AnnotationProperty ;
+
+                          rdfs:comment "Specifies the type required as the object of a datatype property"@en .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#hasDefaultChangeRightsPermission
 
 :hasDefaultChangeRightsPermission rdf:type owl:AnnotationProperty ;
                                   
-                                  rdfs:range :UserGroup ;
+                                  :objectClassConstraint :UserGroup ;
                                   
                                   rdfs:subPropertyOf :hasDefaultDeletePermission .
 
@@ -38,7 +56,7 @@
 
 :hasDefaultDeletePermission rdf:type owl:AnnotationProperty ;
                             
-                            rdfs:range :UserGroup ;
+                            :objectClassConstraint :UserGroup ;
                             
                             rdfs:subPropertyOf :hasDefaultModifyPermission .
 
@@ -48,7 +66,7 @@
 
 :hasDefaultModifyPermission rdf:type owl:AnnotationProperty ;
                             
-                            rdfs:range :UserGroup ;
+                            :objectClassConstraint :UserGroup ;
                             
                             rdfs:subPropertyOf :hasDefaultViewPermission .
 
@@ -64,7 +82,7 @@
 
 :hasDefaultRestrictedViewPermission rdf:type owl:AnnotationProperty ;
                                     
-                                    rdfs:range :UserGroup ;
+                                    :objectClassConstraint :UserGroup ;
                                     
                                     rdfs:subPropertyOf :hasDefaultPermission .
 
@@ -82,9 +100,9 @@
 
 :resourceIcon rdf:type owl:AnnotationProperty ;
               
-              rdfs:domain :Resource ;
-              
-              rdfs:range xsd:string .
+              :subjectClassConstraint :Resource ;
+
+              :objectDatatypeConstraint xsd:string .
 
 
 
@@ -107,95 +125,6 @@
 
 
 
-
-#################################################################
-#
-#    Datatypes
-#
-#################################################################
-
-
-###  http://www.knora.org/ontology/knora-base#mimetypes
-
-:mimetypes rdf:type rdfs:Datatype ;
-           
-           owl:equivalentClass [ rdf:type rdfs:Datatype ;
-                                 owl:oneOf [ rdf:type rdf:List ;
-                                             rdf:first "audio/bsic" ;
-                                             rdf:rest [ rdf:type rdf:List ;
-                                                        rdf:first "audio/mp4" ;
-                                                        rdf:rest [ rdf:type rdf:List ;
-                                                                   rdf:first "audio/mpeg" ;
-                                                                   rdf:rest [ rdf:type rdf:List ;
-                                                                              rdf:first "audio/ogg" ;
-                                                                              rdf:rest [ rdf:type rdf:List ;
-                                                                                         rdf:first "audio/vnd.wav" ;
-                                                                                         rdf:rest [ rdf:type rdf:List ;
-                                                                                                    rdf:first "audio/vorbis" ;
-                                                                                                    rdf:rest [ rdf:type rdf:List ;
-                                                                                                               rdf:first "audio/x-aiff" ;
-                                                                                                               rdf:rest [ rdf:type rdf:List ;
-                                                                                                                          rdf:first "image/bmp" ;
-                                                                                                                          rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                     rdf:first "image/gif" ;
-                                                                                                                                     rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                rdf:first "image/jp2" ;
-                                                                                                                                                rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                           rdf:first "image/jpeg" ;
-                                                                                                                                                           rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                                      rdf:first "image/png" ;
-                                                                                                                                                                      rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                                                 rdf:first "image/quicktime" ;
-                                                                                                                                                                                 rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                                                            rdf:first "image/tiff" ;
-                                                                                                                                                                                            rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                                                                       rdf:first "video/knora" ;
-                                                                                                                                                                                                       rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                                                                                  rdf:first "video/mp4" ;
-                                                                                                                                                                                                                  rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                                                                                             rdf:first "video/mpeg" ;
-                                                                                                                                                                                                                             rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                                                                                                        rdf:first "video/ogg" ;
-                                                                                                                                                                                                                                        rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                                                                                                                   rdf:first "video/quicktime" ;
-                                                                                                                                                                                                                                                   rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                                                                                                                              rdf:first "video/webm" ;
-                                                                                                                                                                                                                                                              rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                                                                                                                                         rdf:first "video/x-flv" ;
-                                                                                                                                                                                                                                                                         rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                                                                                                                                                    rdf:first "video/x-matroska" ;
-                                                                                                                                                                                                                                                                                    rdf:rest [ rdf:type rdf:List ;
-                                                                                                                                                                                                                                                                                               rdf:first "video/x-ms-wmv" ;
-                                                                                                                                                                                                                                                                                               rdf:rest rdf:nil
-                                                                                                                                                                                                                                                                                             ]
-                                                                                                                                                                                                                                                                                  ]
-                                                                                                                                                                                                                                                                       ]
-                                                                                                                                                                                                                                                            ]
-                                                                                                                                                                                                                                                 ]
-                                                                                                                                                                                                                                      ]
-                                                                                                                                                                                                                           ]
-                                                                                                                                                                                                                ]
-                                                                                                                                                                                                     ]
-                                                                                                                                                                                          ]
-                                                                                                                                                                               ]
-                                                                                                                                                                    ]
-                                                                                                                                                         ]
-                                                                                                                                              ]
-                                                                                                                                   ]
-                                                                                                                        ]
-                                                                                                             ]
-                                                                                                  ]
-                                                                                       ]
-                                                                            ]
-                                                                 ]
-                                                      ]
-                                           ]
-                               ] .
-
-
-
-
-
 #################################################################
 #
 #    Object Properties
@@ -203,20 +132,29 @@
 #################################################################
 
 
+###  http://www.knora.org/ontology/knora-base#subjectClassConstraint
+
+:subjectClassConstraint rdf:type owl:ObjectProperty ;
+
+                   rdfs:comment "Specifies the OWL class that the subject of a property must belong to"@en .
+
+
+
+###  http://www.knora.org/ontology/knora-base#objectClassConstraint
+
+:objectClassConstraint rdf:type owl:ObjectProperty ;
+
+                  rdfs:comment "Specifies the OWL class that the object of a property must belong to"@en .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#attachedToProject
 
 :attachedToProject rdf:type owl:ObjectProperty ;
                    
-                   rdfs:comment "Connects a Resource or a Value to a project." ;
+                   rdfs:comment "Connects a Resource or a Value to a project"@en ;
                    
-                   rdfs:range :knoraProject ;
-                   
-                   rdfs:domain [ rdf:type owl:Class ;
-                                 owl:unionOf ( :Resource
-                                               :User
-                                               :Value
-                                             )
-                               ] .
+                   :objectClassConstraint :knoraProject .
 
 
 
@@ -224,15 +162,9 @@
 
 :attachedToUser rdf:type owl:ObjectProperty ;
                 
-                rdfs:comment "Connects a Resource or a Value to a user." ;
+                rdfs:comment "Connects a Resource or a Value to a user"@en ;
                 
-                rdfs:range :User ;
-                
-                rdfs:domain [ rdf:type owl:Class ;
-                              owl:unionOf ( :Resource
-                                            :Value
-                                          )
-                            ] .
+                :objectClassConstraint :User .
 
 
 
@@ -240,11 +172,11 @@
 
 :belongsTo rdf:type owl:ObjectProperty ;
            
-           rdfs:comment "This property indicates, to which Institution  a knoraProject belongs to." ;
+           rdfs:comment "Indicates which Institution a knoraProject belongs to"@en ;
            
-           rdfs:range :Institution ;
+           :objectClassConstraint :Institution ;
            
-           rdfs:domain :knoraProject .
+           :subjectClassConstraint :knoraProject .
 
 
 
@@ -252,11 +184,11 @@
 
 :currentproject rdf:type owl:ObjectProperty ;
                 
-                rdfs:comment "This property indicates, which is the \"current project\" of a given user. A user can be part of any number of projects, but only one can be the active project." ;
+                rdfs:comment "This property indicates, which is the \"current project\" of a given user. A user can be part of any number of projects, but only one can be the active project."@en ;
                 
-                rdfs:domain :User ;
+                :subjectClassConstraint :User ;
                 
-                rdfs:range :knoraProject .
+                :objectClassConstraint :knoraProject .
 
 
 
@@ -264,15 +196,9 @@
 
 :hasChangeRightsPermission rdf:type owl:ObjectProperty ;
                            
-                           rdfs:range :UserGroup ;
+                           :objectClassConstraint :UserGroup ;
                            
-                           rdfs:subPropertyOf :hasDeletePermission ;
-                           
-                           rdfs:domain [ rdf:type owl:Class ;
-                                         owl:unionOf ( :Resource
-                                                       :Value
-                                                     )
-                                       ] .
+                           rdfs:subPropertyOf :hasDeletePermission .
 
 
 
@@ -287,9 +213,9 @@
           
           <http://www.knora.org/ontology/salsah-gui#guiAttribute> "ncolors=8"^^xsd:string ;
           
-          rdfs:range :ColorValue ;
+          :objectClassConstraint :ColorValue ;
           
-          rdfs:domain :Region ;
+          :subjectClassConstraint :Region ;
           
           rdfs:subPropertyOf :hasValue ;
           
@@ -308,9 +234,9 @@
             
             rdfs:comment "Any commentary to a resource"@en ;
             
-            rdfs:domain :Resource ;
+            :subjectClassConstraint :Resource ;
             
-            rdfs:range :TextValue ;
+            :objectClassConstraint :TextValue ;
             
             rdfs:subPropertyOf :hasValue .
 
@@ -320,15 +246,9 @@
 
 :hasDeletePermission rdf:type owl:ObjectProperty ;
                      
-                     rdfs:range :UserGroup ;
+                     :objectClassConstraint :UserGroup ;
                      
-                     rdfs:subPropertyOf :hasModifyPermission ;
-                     
-                     rdfs:domain [ rdf:type owl:Class ;
-                                   owl:unionOf ( :Resource
-                                                 :Value
-                                               )
-                                 ] .
+                     rdfs:subPropertyOf :hasModifyPermission .
 
 
 
@@ -336,24 +256,18 @@
 
 :hasExtResValue rdf:type owl:ObjectProperty ;
                 
-                rdfs:domain :ExternalResource ;
+                :subjectClassConstraint :ExternalResource ;
                 
-                rdfs:subPropertyOf :hasValue ;
-                
-                rdfs:range [ rdf:type owl:Class ;
-                             owl:unionOf ( :Resource
-                                           :Value
-                                         )
-                           ] .
+                rdfs:subPropertyOf :hasValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasFileValue
 
 :hasFileValue rdf:type owl:ObjectProperty ;
               
-              rdfs:range :FileValue ;
+              :objectClassConstraint :FileValue ;
               
-              rdfs:domain :Representation ;
+              :subjectClassConstraint :Representation ;
               
               rdfs:subPropertyOf :hasValue .
 
@@ -363,9 +277,9 @@
 
 :hasStillImageFileValue rdf:type owl:ObjectProperty ;
               
-              rdfs:range :StillImageFileValue ;
+              :objectClassConstraint :StillImageFileValue ;
               
-              rdfs:domain :StillImageRepresentation ;
+              :subjectClassConstraint :StillImageRepresentation ;
               
               rdfs:subPropertyOf :hasFileValue .
 
@@ -375,9 +289,9 @@
 
 :hasMovingImageFileValue rdf:type owl:ObjectProperty ;
               
-              rdfs:range :MovingImageFileValue ;
+              :objectClassConstraint :MovingImageFileValue ;
               
-              rdfs:domain :MovingImageRepresentation ;
+              :subjectClassConstraint :MovingImageRepresentation ;
               
               rdfs:subPropertyOf :hasFileValue .
 
@@ -387,9 +301,9 @@
 
 :hasAudioFileValue rdf:type owl:ObjectProperty ;
               
-              rdfs:range :AudioFileValue ;
+              :objectClassConstraint :AudioFileValue ;
               
-              rdfs:domain :AudioRepresentation ;
+              :subjectClassConstraint :AudioRepresentation ;
               
               rdfs:subPropertyOf :hasFileValue .
 
@@ -399,9 +313,9 @@
 
 :hasDDDFileValue rdf:type owl:ObjectProperty ;
               
-              rdfs:range :DDDFileValue ;
+              :objectClassConstraint :DDDFileValue ;
               
-              rdfs:domain :DDDRepresentation ;
+              :subjectClassConstraint :DDDRepresentation ;
               
               rdfs:subPropertyOf :hasFileValue .
 
@@ -411,9 +325,9 @@
 
 :hasTextFileValue rdf:type owl:ObjectProperty ;
               
-              rdfs:range :TextFileValue ;
+              :objectClassConstraint :TextFileValue ;
               
-              rdfs:domain :TextRepresentation ;
+              :subjectClassConstraint :TextRepresentation ;
               
               rdfs:subPropertyOf :hasFileValue .
 
@@ -423,9 +337,9 @@
 
 :hasDocumentFileValue rdf:type owl:ObjectProperty ;
               
-              rdfs:range :DocumentFileValue ;
+              :objectClassConstraint :DocumentFileValue ;
               
-              rdfs:domain :DocumentRepresentation ;
+              :subjectClassConstraint :DocumentRepresentation ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -442,9 +356,9 @@
              
              <http://www.knora.org/ontology/salsah-gui#guiAttribute> "width=95%;rows=4;wrap=soft"^^xsd:string ;
              
-             rdfs:range :GeomValue ;
+             :objectClassConstraint :GeomValue ;
              
-             rdfs:domain :Region ;
+             :subjectClassConstraint :Region ;
              
              rdfs:subPropertyOf :hasValue ;
              
@@ -456,21 +370,23 @@
 
 :hasLinkTo rdf:type owl:ObjectProperty ;
            
-           rdfs:comment "This property (and subproperties thereof) connect directly 2 resources. It's always augmented by a hasLinkToValue property connecting to the reification node."@en ;
+           rdfs:comment "Represents a direct connection between two resources"@en ;
            
-           rdfs:range :Resource ;
+           :objectClassConstraint :Resource ;
            
-           rdfs:domain :Resource .
+           :subjectClassConstraint :Resource .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#hasLinkToValue
 
 :hasLinkToValue rdf:type owl:ObjectProperty ;
+
+                rdfs:comment "Points to a LinkValue reification describing a link between two resources"@en ;
                 
-                rdfs:range :LinkValue ;
+                :objectClassConstraint :LinkValue ;
                 
-                rdfs:domain :Resource ;
+                :subjectClassConstraint :Resource ;
                 
                 rdfs:subPropertyOf :hasValue .
 
@@ -480,15 +396,9 @@
 
 :hasModifyPermission rdf:type owl:ObjectProperty ;
                      
-                     rdfs:range :UserGroup ;
+                     :objectClassConstraint :UserGroup ;
                      
-                     rdfs:subPropertyOf :hasViewPermission ;
-                     
-                     rdfs:domain [ rdf:type owl:Class ;
-                                   owl:unionOf ( :Resource
-                                                 :Value
-                                               )
-                                 ] .
+                     rdfs:subPropertyOf :hasViewPermission .
 
 
 
@@ -496,9 +406,9 @@
 
 :hasParentListNode rdf:type owl:ObjectProperty ;
                    
-                   rdfs:domain :ListNode ;
+                   :subjectClassConstraint :ListNode ;
                    
-                   rdfs:range :ListNode ;
+                   :objectClassConstraint :ListNode ;
                    
                    owl:inverseOf :hasSubListNode .
 
@@ -508,11 +418,11 @@
 
 :hasPart rdf:type owl:ObjectProperty ;
          
-         rdfs:comment "The whole (resource) as a part"@en ;
+         rdfs:comment "Indicates that another resource is part of this resource"@en ;
          
-         rdfs:domain :Resource ;
+         :subjectClassConstraint :Resource ;
          
-         rdfs:range :Resource ;
+         :objectClassConstraint :Resource ;
          
          rdfs:subPropertyOf :hasLinkTo ;
          
@@ -524,9 +434,9 @@
 
 :hasPartValue rdf:type owl:ObjectProperty ;
               
-              rdfs:range :LinkValue ;
+              :objectClassConstraint :LinkValue ;
               
-              rdfs:domain :Resource ;
+              :subjectClassConstraint :Resource ;
               
               rdfs:subPropertyOf :hasLinkToValue .
 
@@ -536,13 +446,7 @@
 
 :hasPermission rdf:type owl:ObjectProperty ;
                
-               rdfs:range :UserGroup ;
-               
-               rdfs:domain [ rdf:type owl:Class ;
-                             owl:unionOf ( :Resource
-                                           :Value
-                                         )
-                           ] .
+               :objectClassConstraint :UserGroup .
 
 
 
@@ -550,13 +454,13 @@
 
 :hasProject rdf:type owl:ObjectProperty ;
             
-            rdfs:comment "The given Institution is responsible for the given knoraProject." ;
+            rdfs:comment "The given Institution is responsible for the given knoraProject"@en ;
             
-            rdfs:domain :Institution ;
+            :subjectClassConstraint :Institution ;
             
             owl:inverseOf :belongsTo ;
             
-            rdfs:range :knoraProject .
+            :objectClassConstraint :knoraProject .
 
 
 
@@ -564,9 +468,9 @@
 
 :hasProvider rdf:type owl:ObjectProperty ;
              
-             rdfs:range :ExternalResValue ;
+             :objectClassConstraint :ExternalResValue ;
              
-             rdfs:domain :ExternalResource ;
+             :subjectClassConstraint :ExternalResource ;
              
              rdfs:subPropertyOf :hasValue .
 
@@ -578,9 +482,9 @@
            
            rdfs:comment "Points to a region of the resource"@en ;
            
-           rdfs:range :Region ;
+           :objectClassConstraint :Region ;
            
-           rdfs:domain :Representation ;
+           :subjectClassConstraint :Representation ;
            
            rdfs:subPropertyOf :hasLinkTo ;
            
@@ -592,9 +496,9 @@
 
 :hasRegionValue rdf:type owl:ObjectProperty ;
                 
-                rdfs:range :LinkValue ;
+                :objectClassConstraint :LinkValue ;
                 
-                rdfs:domain :Resource ;
+                :subjectClassConstraint :Resource ;
                 
                 rdfs:subPropertyOf :hasLinkToValue .
 
@@ -606,9 +510,9 @@
                    
                    rdfs:comment "References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."@en ;
                    
-                   rdfs:range :Representation ;
+                   :objectClassConstraint :Representation ;
                    
-                   rdfs:domain :Resource ;
+                   :subjectClassConstraint :Resource ;
                    
                    rdfs:subPropertyOf :hasLinkTo .
 
@@ -618,9 +522,9 @@
 
 :hasRepresentationValue rdf:type owl:ObjectProperty ;
                         
-                        rdfs:range :LinkValue ;
+                        :objectClassConstraint :LinkValue ;
                         
-                        rdfs:domain :Resource ;
+                        :subjectClassConstraint :Resource ;
                         
                         rdfs:subPropertyOf :hasLinkToValue .
 
@@ -630,15 +534,9 @@
 
 :hasRestrictedViewPermission rdf:type owl:ObjectProperty ;
                              
-                             rdfs:range :UserGroup ;
+                             :objectClassConstraint :UserGroup ;
                              
-                             rdfs:subPropertyOf :hasPermission ;
-                             
-                             rdfs:domain [ rdf:type owl:Class ;
-                                           owl:unionOf ( :Resource
-                                                         :Value
-                                                       )
-                                         ] .
+                             rdfs:subPropertyOf :hasPermission .
 
 
 
@@ -646,9 +544,9 @@
 
 :hasStandoffLinkTo rdf:type owl:ObjectProperty ;
                    
-                   rdfs:range :Resource ;
+                   :objectClassConstraint :Resource ;
                    
-                   rdfs:domain :Resource ;
+                   :subjectClassConstraint :Resource ;
                    
                    rdfs:subPropertyOf :hasLinkTo .
 
@@ -658,9 +556,9 @@
 
 :hasStandoffLinkToValue rdf:type owl:ObjectProperty ;
                         
-                        rdfs:range :LinkValue ;
+                        :objectClassConstraint :LinkValue ;
                         
-                        rdfs:domain :Resource ;
+                        :subjectClassConstraint :Resource ;
                         
                         rdfs:subPropertyOf :hasLinkToValue .
 
@@ -670,11 +568,11 @@
 
 :hasSubListNode rdf:type owl:ObjectProperty ;
                 
-                rdfs:comment "A hierarchical list ist formed using the \"hasSubListNode\"-property."@en ;
+                rdfs:comment "A hierarchical list is formed using the \"hasSubListNode\"-property"@en ;
                 
-                rdfs:range :ListNode ;
+                :objectClassConstraint :ListNode ;
                 
-                rdfs:domain :ListNode .
+                :subjectClassConstraint :ListNode .
 
 
 
@@ -682,14 +580,7 @@
 
 :hasValue rdf:type owl:ObjectProperty ;
           
-          rdfs:domain :Resource ;
-          
-          rdfs:range [ rdf:type owl:Class ;
-                       owl:unionOf ( :Standoff
-                                     :Value
-                                     rdfs:Resource
-                                   )
-                     ] .
+          :subjectClassConstraint :Resource .
 
 
 
@@ -697,15 +588,9 @@
 
 :hasViewPermission rdf:type owl:ObjectProperty ;
                    
-                   rdfs:range :UserGroup ;
+                   :objectClassConstraint :UserGroup ;
                    
-                   rdfs:subPropertyOf :hasRestrictedViewPermission ;
-                   
-                   rdfs:domain [ rdf:type owl:Class ;
-                                 owl:unionOf ( :Resource
-                                               :Value
-                                             )
-                               ] .
+                   rdfs:subPropertyOf :hasRestrictedViewPermission .
 
 
 
@@ -713,9 +598,9 @@
 
 :isAnnotationOf rdf:type owl:ObjectProperty ;
                 
-                rdfs:domain :Annotation ;
+                :subjectClassConstraint :Annotation ;
                 
-                rdfs:range :Resource ;
+                :objectClassConstraint :Resource ;
                 
                 rdfs:subPropertyOf :hasLinkTo .
 
@@ -725,11 +610,11 @@
 
 :isInGroup rdf:type owl:ObjectProperty ;
            
-           rdfs:comment "The given User is part of the given UserGroup." ;
+           rdfs:comment "The given User is part of the given UserGroup"@en ;
            
-           rdfs:domain :User ;
+           :subjectClassConstraint :User ;
            
-           rdfs:range :UserGroup ;
+           :objectClassConstraint :UserGroup ;
            
            rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> .
 
@@ -739,11 +624,11 @@
 
 :isInProject rdf:type owl:ObjectProperty ;
              
-             rdfs:comment "The given User is part of the given knoraProject." ;
+             rdfs:comment "The given User is part of the given knoraProject"@en ;
              
-             rdfs:domain :User ;
+             :subjectClassConstraint :User ;
              
-             rdfs:range :knoraProject ;
+             :objectClassConstraint :knoraProject ;
              
              rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> .
 
@@ -753,11 +638,11 @@
 
 :isPartOf rdf:type owl:ObjectProperty ;
           
-          rdfs:comment "Points to a part of a whole"@en ;
+          rdfs:comment "Indicates that this resource is part of another resource"@en ;
           
-          rdfs:domain :Resource ;
+          :subjectClassConstraint :Resource ;
           
-          rdfs:range :Resource ;
+          :objectClassConstraint :Resource ;
           
           rdfs:subPropertyOf :hasLinkTo .
 
@@ -767,9 +652,9 @@
 
 :isPartOfValue rdf:type owl:ObjectProperty ;
                
-               rdfs:range :LinkValue ;
+               :objectClassConstraint :LinkValue ;
                
-               rdfs:domain :Resource ;
+               :subjectClassConstraint :Resource ;
                
                rdfs:subPropertyOf :hasLinkToValue .
 
@@ -781,9 +666,9 @@
             
             rdfs:comment "Region of interest within a digital object (e.g. an image)"@en ;
             
-            rdfs:domain :Region ;
+            :subjectClassConstraint :Region ;
             
-            rdfs:range :Representation ;
+            :objectClassConstraint :Representation ;
             
             rdfs:subPropertyOf :hasLinkTo .
 
@@ -793,9 +678,9 @@
 
 :isRegionOfValue rdf:type owl:ObjectProperty ;
                  
-                 rdfs:range :LinkValue ;
+                 :objectClassConstraint :LinkValue ;
                  
-                 rdfs:domain :Region ;
+                 :subjectClassConstraint :Region ;
                  
                  rdfs:subPropertyOf :hasLinkToValue .
 
@@ -805,11 +690,11 @@
 
 :previousValue rdf:type owl:ObjectProperty ;
                
-               rdfs:comment "Points to the previous value (used for history and versioning)"@en ;
+               rdfs:comment "Points to the previous verson of a value"@en ;
                
-               rdfs:domain :Value ;
+               :subjectClassConstraint :Value ;
                
-               rdfs:range :Value .
+               :objectClassConstraint :Value .
 
 
 
@@ -817,15 +702,16 @@
 
 :seqnum rdf:type owl:ObjectProperty ;
         
-        rdfs:range :IntValue ;
+        :objectClassConstraint :IntValue ;
         
         rdfs:subPropertyOf :hasValue ;
+
+        rdfs:label "Sequenznummer"@de ,
+                   "Sequence number"@en ,
+                   "Numéro de séquence"@fr ,
+                   "Numero di sequenza"@it ;
         
-        rdfs:domain [ rdf:type owl:Class ;
-                      owl:unionOf ( :Resource
-                                    :Value
-                                  )
-                    ] .
+        rdfs:comment "Indicates the position of a resource within a sequence"@en .
 
 
 
@@ -833,9 +719,9 @@
 
 :standoffHasLink rdf:type owl:ObjectProperty ;
                  
-                 rdfs:range :Resource ;
+                 :objectClassConstraint :Resource ;
                  
-                 rdfs:domain :StandoffLink .
+                 :subjectClassConstraint :StandoffLink .
 
 
 
@@ -843,9 +729,9 @@
 
 :valueHasStandoff rdf:type owl:ObjectProperty ;
                   
-                  rdfs:range :Standoff ;
+                  :objectClassConstraint :Standoff ;
                   
-                  rdfs:domain :TextValue .
+                  :subjectClassConstraint :TextValue .
 
 
 
@@ -859,7 +745,7 @@
 
 #################################################################
 #
-#    Data properties
+#    Datatype properties
 #
 #################################################################
 
@@ -867,10 +753,10 @@
 ###  http://www.knora.org/ontology/knora-base#address
 
 :address rdf:type owl:DatatypeProperty ;
+
+         :objectDatatypeConstraint xsd:string ;
          
-         rdfs:comment "Adress of a person or an institution" ;
-         
-         rdfs:range xsd:string .
+         rdfs:comment "Address of a person or an institution"@en .
 
 
 
@@ -878,31 +764,35 @@
 
 :basepath rdf:type owl:DatatypeProperty ;
           
-          rdfs:comment "Basepath for digital objects which belong to this project." ;
+          rdfs:comment "Basepath for digital objects which belong to this project"@en ;
           
-          rdfs:domain :knoraProject ;
-          
-          rdfs:range xsd:string .
+          :subjectClassConstraint :knoraProject ;
 
+          :objectDatatypeConstraint xsd:string .
+ 
 
 
 ###  http://www.knora.org/ontology/knora-base#creationDate
 
 :creationDate rdf:type owl:DatatypeProperty ;
               
-              rdfs:comment "Date and timestamp, when a resource has been created."@en ;
+              rdfs:comment "Indicates when a resource was created"@en ;
               
-              rdfs:domain :Resource ;
-              
-              rdfs:range xsd:dateTimeStamp .
+              :subjectClassConstraint :Resource ;
+
+              :objectDatatypeConstraint xsd:dateTimeStamp .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#deleteDate
 
 :deleteDate rdf:type owl:DatatypeProperty ;
-            
-            rdfs:range xsd:dateTimeStamp .
+
+            rdfs:comment "Indicates when a resource was deleted"@en ;
+              
+            :subjectClassConstraint :Resource ;
+
+            :objectDatatypeConstraint xsd:dateTimeStamp .
 
 
 
@@ -910,11 +800,9 @@
 
 :description rdf:type owl:DatatypeProperty ;
              
-             rdfs:comment "A Description of a resource class or a property class. It should indicate the purpose of the given \"thing\"." ;
-             
-             rdfs:range xsd:string ;
-             
-             rdfs:domain owl:Thing .
+             rdfs:comment "A Description of a resource class or a property class"@en ;
+
+             :objectDatatypeConstraint xsd:string .
 
 
 
@@ -922,11 +810,11 @@
 
 :dimX rdf:type owl:DatatypeProperty ;
       
-      rdfs:domain :Representation ;
+      :subjectClassConstraint :Representation ;
       
       rdfs:subPropertyOf :valueHas ;
-      
-      rdfs:range xsd:integer .
+
+      :objectDatatypeConstraint xsd:integer .
 
 
 
@@ -934,11 +822,11 @@
 
 :dimY rdf:type owl:DatatypeProperty ;
       
-      rdfs:domain :Representation ;
+      :subjectClassConstraint :Representation ;
       
       rdfs:subPropertyOf :valueHas ;
       
-      rdfs:range xsd:integer .
+      :objectDatatypeConstraint xsd:integer .
 
 
 
@@ -946,11 +834,11 @@
 
 :duration rdf:type owl:DatatypeProperty ;
           
-          rdfs:domain :Representation ;
-          
           rdfs:subPropertyOf :valueHas ;
           
-          rdfs:range xsd:float .
+          :subjectClassConstraint :Representation ;
+          
+          :objectDatatypeConstraint xsd:float .
 
 
 
@@ -958,9 +846,9 @@
 
 :email rdf:type owl:DatatypeProperty ;
        
-       rdfs:comment "The Emailadress of a person or institution" ;
+       rdfs:comment "The email address of a person or institution"@en ;
        
-       rdfs:range xsd:string .
+       :objectDatatypeConstraint xsd:string .
 
 
 
@@ -968,13 +856,13 @@
 
 :extResAccessInfo rdf:type owl:DatatypeProperty ;
                   
-                  rdfs:comment "Information (URL etc.) for accessing external resource."@en ;
-                  
-                  rdfs:domain :ExternalResValue ;
+                  rdfs:comment "Information (URL etc.) for accessing an external resource"@en ;
                   
                   rdfs:subPropertyOf :valueHas ;
                   
-                  rdfs:range xsd:string .
+                  :subjectClassConstraint :ExternalResValue ;
+                  
+                  :objectDatatypeConstraint xsd:string .
 
 
 
@@ -982,13 +870,13 @@
 
 :extResId rdf:type owl:DatatypeProperty ;
           
-          rdfs:comment "ID of the external resource. The form of the ID is dependent on the provider."@en ;
-          
-          rdfs:domain :ExternalResValue ;
+          rdfs:comment "The ID of the external resource. The form of the ID is dependent on the provider."@en ;
           
           rdfs:subPropertyOf :valueHas ;
           
-          rdfs:range xsd:string .
+          :subjectClassConstraint :ExternalResValue ;
+          
+          :objectDatatypeConstraint xsd:string .
 
 
 
@@ -996,13 +884,13 @@
 
 :extResProvider rdf:type owl:DatatypeProperty ;
                 
-                rdfs:comment "This is the name of the external provider of the resource"@en ;
-                
-                rdfs:domain :ExternalResValue ;
+                rdfs:comment "The name of the external provider of the resource"@en ;
                 
                 rdfs:subPropertyOf :valueHas ;
                 
-                rdfs:range xsd:string .
+                :subjectClassConstraint :ExternalResValue ;
+                
+                :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1010,11 +898,11 @@
 
 :filename rdf:type owl:DatatypeProperty ;
           
-          rdfs:domain :Representation ;
-          
           rdfs:subPropertyOf :valueHas ;
           
-          rdfs:range xsd:string .
+          :subjectClassConstraint :Representation ;
+          
+          :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1022,11 +910,11 @@
 
 :fps rdf:type owl:DatatypeProperty ;
      
-     rdfs:domain :MovingImageRepresentation ;
-     
      rdfs:subPropertyOf :valueHas ;
      
-     rdfs:range xsd:float .
+     :subjectClassConstraint :MovingImageRepresentation ;
+     
+     :objectDatatypeConstraint xsd:float .
 
 
 
@@ -1034,11 +922,11 @@
 
 :internalFilename rdf:type owl:DatatypeProperty ;
                   
-                  rdfs:domain :Representation ;
-                  
                   rdfs:subPropertyOf :valueHas ;
                   
-                  rdfs:range xsd:string .
+                  :subjectClassConstraint :Representation ;
+                  
+                  :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1046,11 +934,11 @@
 
 :internalMimeType rdf:type owl:DatatypeProperty ;
                   
-                  rdfs:domain :Representation ;
-                  
                   rdfs:subPropertyOf :valueHas ;
                   
-                  rdfs:range xsd:string .
+                  :subjectClassConstraint :Representation ;
+                  
+                  :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1058,15 +946,9 @@
 
 :isDeleted rdf:type owl:DatatypeProperty ;
            
-           rdfs:comment "exists and is true, if the resource has been deleted" ;
-           
-           rdfs:range xsd:boolean ;
-           
-           rdfs:domain [ rdf:type owl:Class ;
-                         owl:unionOf ( :Value
-                                       rdfs:Resource
-                                     )
-                       ] .
+           rdfs:comment "Exists and is true if the resource has been deleted"@en ;
+
+           :objectDatatypeConstraint xsd:boolean .
 
 
 
@@ -1074,11 +956,11 @@
 
 :isPreview rdf:type owl:DatatypeProperty ;
            
-           rdfs:domain :FileValue ;
-           
            rdfs:subPropertyOf :valueHas ;
            
-           rdfs:range xsd:boolean .
+           :subjectClassConstraint :FileValue ;
+           
+           :objectDatatypeConstraint xsd:boolean .
 
 
 
@@ -1086,9 +968,9 @@
 
 :isRootNode rdf:type owl:DatatypeProperty ;
             
-            rdfs:domain :ListNode ;
+            :subjectClassConstraint :ListNode ;
             
-            rdfs:range xsd:boolean .
+            :objectDatatypeConstraint xsd:boolean .
 
 
 
@@ -1096,9 +978,9 @@
 
 :lastModificationDate rdf:type owl:DatatypeProperty ;
                       
-                      rdfs:domain :Resource ;
+                      :subjectClassConstraint :Resource ;
                       
-                      rdfs:range xsd:dateTimeStamp .
+                      :objectDatatypeConstraint xsd:dateTimeStamp .
 
 
 
@@ -1106,9 +988,9 @@
 
 :listNodePosition rdf:type owl:DatatypeProperty ;
                   
-                  rdfs:domain :ListNode ;
+                  :subjectClassConstraint :ListNode ;
                   
-                  rdfs:range xsd:integer .
+                  :objectDatatypeConstraint xsd:integer .
 
 
 
@@ -1116,19 +998,17 @@
 
 :listNodeName rdf:type owl:DatatypeProperty ;
                
-               rdfs:domain :ListNode ;
+               :subjectClassConstraint :ListNode ;
                
-               rdfs:range xsd:string .
+               :objectDatatypeConstraint xsd:string .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#name
 
 :name rdf:type owl:DatatypeProperty ;
-      
-      rdfs:range xsd:string ;
-      
-      rdfs:domain owl:Thing .
+               
+      :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1136,11 +1016,11 @@
 
 :originalFilename rdf:type owl:DatatypeProperty ;
                   
-                  rdfs:domain :Representation ;
-                  
                   rdfs:subPropertyOf :valueHas ;
                   
-                  rdfs:range xsd:string .
+                  :subjectClassConstraint :Representation ;
+                  
+                  :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1148,11 +1028,11 @@
 
 :originalMimeType rdf:type owl:DatatypeProperty ;
                   
-                  rdfs:domain :Representation ;
-                  
                   rdfs:subPropertyOf :valueHas ;
                   
-                  rdfs:range xsd:string .
+                  :subjectClassConstraint :Representation ;
+                  
+                  :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1160,19 +1040,21 @@
 
 :password rdf:type owl:DatatypeProperty ;
           
-          rdfs:comment "A encrypted credential for access" ;
+          rdfs:comment "An encrypted credential for access"@en ;
           
-          rdfs:range xsd:string ;
-          
-          rdfs:domain <http://xmlns.com/foaf/0.1/Person> .
+          :subjectClassConstraint <http://xmlns.com/foaf/0.1/Person> ;
 
+          :objectDatatypeConstraint xsd:string .
+          
 
 
 ###  http://www.knora.org/ontology/knora-base#phone
 
 :phone rdf:type owl:DatatypeProperty ;
        
-       rdfs:comment "Phonenumber of a person, institution etc." .
+       rdfs:comment "Phone number of a person, institution, etc."@en ;
+
+       :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1180,44 +1062,19 @@
 
 :preferredLanguage rdf:type owl:DatatypeProperty ;
                    
-                   rdfs:comment "Language(\"en\", \"de\", \"fr\", \"it\", \"gr\",...)" ;
-                   
-                   rdfs:domain [ rdf:type owl:Class ;
-                                 owl:unionOf ( :User
-                                               :knoraProject
-                                             )
-                               ] .
+                   rdfs:comment "Language (\"en\", \"de\", \"fr\", \"it\", \"gr\", etc.)"@en ;
+
+                   :objectDatatypeConstraint xsd:string .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#protocol
 
 :protocol rdf:type owl:DatatypeProperty ;
-          
-          rdfs:range [ rdf:type rdfs:Datatype ;
-                       owl:oneOf [ rdf:type rdf:List ;
-                                   rdf:first "file" ;
-                                   rdf:rest [ rdf:type rdf:List ;
-                                              rdf:first "ftp" ;
-                                              rdf:rest [ rdf:type rdf:List ;
-                                                         rdf:first "http" ;
-                                                         rdf:rest [ rdf:type rdf:List ;
-                                                                    rdf:first "https" ;
-                                                                    rdf:rest [ rdf:type rdf:List ;
-                                                                               rdf:first "sftp" ;
-                                                                               rdf:rest [ rdf:type rdf:List ;
-                                                                                          rdf:first "soap" ;
-                                                                                          rdf:rest [ rdf:type rdf:List ;
-                                                                                                     rdf:first "xmlrpc" ;
-                                                                                                     rdf:rest rdf:nil
-                                                                                                   ]
-                                                                                        ]
-                                                                             ]
-                                                                  ]
-                                                       ]
-                                            ]
-                                 ]
-                     ] .
+
+          rdfs:comment "An Internet protocol (\"http\", \"https\", etc.)"@en ;
+
+          :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1225,19 +1082,19 @@
 
 :qualityLevel rdf:type owl:DatatypeProperty ;
               
-              rdfs:domain :Representation ;
-              
               rdfs:subPropertyOf :valueHas ;
               
-              rdfs:range xsd:integer .
+              :subjectClassConstraint :Representation ;
+              
+              :objectDatatypeConstraint xsd:integer .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#seqnum
 
 :seqnum rdf:type owl:DatatypeProperty ;
-        
-        rdfs:range xsd:int .
+              
+        :objectDatatypeConstraint xsd:integer .
 
 
 
@@ -1245,7 +1102,7 @@
 
 :shortname rdf:type owl:DatatypeProperty ;
            
-           rdfs:range xsd:string ;
+           :objectDatatypeConstraint xsd:string ;
            
            rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> .
 
@@ -1255,9 +1112,9 @@
 
 :standoffHasAttribute rdf:type owl:DatatypeProperty ;
                       
-                      rdfs:domain :StandoffVisualAttribute ;
+                      :subjectClassConstraint :StandoffVisualAttribute ;
                       
-                      rdfs:range xsd:string .
+                      :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1265,9 +1122,9 @@
 
 :standoffHasEnd rdf:type owl:DatatypeProperty ;
                 
-                rdfs:domain :Standoff ;
+                :subjectClassConstraint :Standoff ;
                 
-                rdfs:range xsd:integer .
+                :objectDatatypeConstraint xsd:integer .
 
 
 
@@ -1275,9 +1132,9 @@
 
 :standoffHasHref rdf:type owl:DatatypeProperty ;
                  
-                 rdfs:domain :StandoffHref ;
+                 :subjectClassConstraint :StandoffHref ;
                  
-                 rdfs:range xsd:anyURI .
+                 :objectDatatypeConstraint xsd:anyURI .
 
 
 
@@ -1285,9 +1142,9 @@
 
 :standoffHasStart rdf:type owl:DatatypeProperty ;
                   
-                  rdfs:domain :Standoff ;
+                  :subjectClassConstraint :Standoff ;
                   
-                  rdfs:range xsd:integer .
+                  :objectDatatypeConstraint xsd:integer .
 
 
 
@@ -1295,11 +1152,11 @@
 
 :userid rdf:type owl:DatatypeProperty ;
         
-        rdfs:comment "login name of a user of Knora" ;
+        rdfs:comment "The login name of a user of Knora"@en ;
         
-        rdfs:domain :User ;
+        :subjectClassConstraint :User ;
         
-        rdfs:range xsd:string ;
+        :objectDatatypeConstraint xsd:string ;
         
         rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/accountName> .
 
@@ -1309,13 +1166,13 @@
 
 :valueHasComment rdf:type owl:DatatypeProperty ;
               
-              rdfs:comment "A comment to a value."@en ;
-              
-              rdfs:domain :Value ;
+              rdfs:comment "A comment on a value"@en ;
               
               rdfs:subPropertyOf :valueHas ;
               
-              rdfs:range xsd:string .
+              :subjectClassConstraint :Value ;
+              
+              :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1323,11 +1180,11 @@
 
 :valueCreationDate rdf:type owl:DatatypeProperty ;
                    
-                   rdfs:domain :Value ;
+                   :subjectClassConstraint :Value ;
                    
                    rdfs:subPropertyOf :valueHas ;
                    
-                   rdfs:range xsd:dateTimeStamp .
+                   :objectDatatypeConstraint xsd:dateTimeStamp .
 
 
 
@@ -1335,7 +1192,7 @@
 
 :valueHas rdf:type owl:DatatypeProperty ;
           
-          rdfs:domain :Value .
+          :subjectClassConstraint :Value .
 
 
 
@@ -1343,13 +1200,13 @@
 
 :valueHasCalendar rdf:type owl:DatatypeProperty ;
                   
-                  rdfs:comment "Name of the calendar to be used. Allowed values currently are \"GREGORIAN\", \"JULIAN\", \"JEWISH\", \"REVOLUTIONARY\". This list max be expanded in the future."@en ;
-                  
-                  rdfs:domain :DateValue ;
+                  rdfs:comment "Name of the calendar to be used. Allowed values currently are \"GREGORIAN\", \"JULIAN\", \"JEWISH\", \"REVOLUTIONARY\". This list may be expanded in the future."@en ;
                   
                   rdfs:subPropertyOf :valueHas ;
                   
-                  rdfs:range xsd:string .
+                  :subjectClassConstraint :DateValue ;
+                  
+                  :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1359,11 +1216,11 @@
                
                rdfs:comment "Color in the form of #rrggbb (as defining web colors)"@en ;
                
-               rdfs:domain :ColorValue ;
-               
                rdfs:subPropertyOf :valueHas ;
                
-               rdfs:range xsd:string .
+               :subjectClassConstraint :ColorValue ;
+               
+               :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1373,11 +1230,11 @@
                 
                 rdfs:comment "Contains the end of a date as \"Julian day count\" (JDC)"@en ;
                 
-                rdfs:domain :DateValue ;
-                
                 rdfs:subPropertyOf :valueHas ;
                 
-                rdfs:range xsd:integer .
+                :subjectClassConstraint :DateValue ;
+                
+                :objectDatatypeConstraint xsd:integer .
 
 
 
@@ -1387,11 +1244,11 @@
                       
                       rdfs:comment "Precision of knowledge about the end of the date. Allowed are \"DAY\", \"MONTH\" or \"YEAR\"."@en ;
                       
-                      rdfs:domain :DateValue ;
-                      
                       rdfs:subPropertyOf :valueHas ;
                       
-                      rdfs:range xsd:string .
+                      :subjectClassConstraint :DateValue ;
+                      
+                      :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1399,11 +1256,11 @@
 
 :valueHasFloat rdf:type owl:DatatypeProperty ;
                
-               rdfs:domain :FloatValue ;
-               
                rdfs:subPropertyOf :valueHas ;
                
-               rdfs:range xsd:float .
+               :subjectClassConstraint :FloatValue ;
+               
+               :objectDatatypeConstraint xsd:float .
 
 
 
@@ -1411,13 +1268,13 @@
 
 :valueHasGeometry rdf:type owl:DatatypeProperty ;
                   
-                  rdfs:comment "JSON string describing a geometry (e.g. a region). Currently geometries are limited to 2d unions of primitive objects like circles, squartes and polygons."@en ;
-                  
-                  rdfs:domain :GeomValue ;
+                  rdfs:comment "JSON string describing a geometry (e.g. a region). Currently geometries are limited to 2D unions of primitive objects like circles, squartes and polygons."@en ;
                   
                   rdfs:subPropertyOf :valueHas ;
                   
-                  rdfs:range xsd:string .
+                  :subjectClassConstraint :GeomValue ;
+                  
+                  :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1425,11 +1282,11 @@
 
 :valueHasGeonameCode rdf:type owl:DatatypeProperty ;
                      
-                     rdfs:domain :GeonameValue ;
-                     
                      rdfs:subPropertyOf :valueHas ;
                      
-                     rdfs:range xsd:string .
+                     :subjectClassConstraint :GeonameValue ;
+                     
+                     :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1437,11 +1294,11 @@
 
 :valueHasInteger rdf:type owl:DatatypeProperty ;
                  
-                 rdfs:domain :IntValue ;
-                 
                  rdfs:subPropertyOf :valueHas ;
                  
-                 rdfs:range xsd:integer .
+                 :subjectClassConstraint :IntValue ;
+                 
+                 :objectDatatypeConstraint xsd:integer .
 
 
 
@@ -1449,11 +1306,11 @@
 
 :valueHasIntervalEnd rdf:type owl:DatatypeProperty ;
                      
-                     rdfs:domain :IntervalValue ;
-                     
                      rdfs:subPropertyOf :valueHas ;
                      
-                     rdfs:range xsd:float .
+                     :subjectClassConstraint :IntervalValue ;
+                     
+                     :objectDatatypeConstraint xsd:float .
 
 
 
@@ -1461,11 +1318,11 @@
 
 :valueHasIntervalStart rdf:type owl:DatatypeProperty ;
                        
-                       rdfs:domain :IntervalValue ;
-                       
                        rdfs:subPropertyOf :valueHas ;
                        
-                       rdfs:range xsd:float .
+                       :subjectClassConstraint :IntervalValue ;
+                       
+                       :objectDatatypeConstraint xsd:float .
 
 
 
@@ -1473,11 +1330,11 @@
 
 :valueHasListNode rdf:type owl:DatatypeProperty ;
                   
-                  rdfs:domain :ListValue ;
-                  
                   rdfs:subPropertyOf :valueHas ;
                   
-                  rdfs:range :ListNode .
+                  :subjectClassConstraint :ListValue ;
+                  
+                  :objectDatatypeConstraint :ListNode .
 
 
 
@@ -1485,22 +1342,22 @@
 
 :valueHasOrder rdf:type owl:DatatypeProperty ;
                
-               rdfs:domain :Value ;
-               
                rdfs:subPropertyOf :valueHas ;
                
-               rdfs:range xsd:integer .
+               :subjectClassConstraint :Value ;
+               
+               :objectDatatypeConstraint xsd:integer .
 
 
 ###  http://www.knora.org/ontology/knora-base#valueHasRefCount
 
 :valueHasRefCount rdf:type owl:DatatypeProperty ;
                   
-                  rdfs:domain :LinkValue ;
-                  
                   rdfs:subPropertyOf :valueHas ;
                   
-                  rdfs:range xsd:integer .
+                  :subjectClassConstraint :LinkValue ;
+                  
+                  :objectDatatypeConstraint xsd:integer .
 
 
 
@@ -1510,11 +1367,11 @@
                   
                   rdfs:comment "Contains the start of a date as \"Julian day count\" (JDC)"@en ;
                   
-                  rdfs:domain :DateValue ;
-                  
                   rdfs:subPropertyOf :valueHas ;
                   
-                  rdfs:range xsd:integer .
+                  :subjectClassConstraint :DateValue ;
+                  
+                  :objectDatatypeConstraint xsd:integer .
 
 
 
@@ -1522,13 +1379,13 @@
 
 :valueHasStartPrecision rdf:type owl:DatatypeProperty ;
                         
-                        rdfs:comment "Precision of knowledge about the start of the date. Allowed are \"DAY\", \"MONTH\" or \"YEAR\"."@en ;
-                        
-                        rdfs:domain :DateValue ;
+                        rdfs:comment "The precision the start of a date. Allowed values are \"DAY\", \"MONTH\", or \"YEAR\"."@en ;
                         
                         rdfs:subPropertyOf :valueHas ;
                         
-                        rdfs:range xsd:string .
+                        :subjectClassConstraint :DateValue ;
+                        
+                        :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1536,11 +1393,11 @@
 
 :valueHasString rdf:type owl:DatatypeProperty ;
                 
-                rdfs:domain :TextValue ;
-                
                 rdfs:subPropertyOf :valueHas ;
                 
-                rdfs:range xsd:string .
+                :subjectClassConstraint :TextValue ;
+                
+                :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1548,11 +1405,11 @@
 
 :valueHasTime rdf:type owl:DatatypeProperty ;
               
-              rdfs:domain :TimeValue ;
-              
               rdfs:subPropertyOf :valueHas ;
               
-              rdfs:range xsd:float .
+              :subjectClassConstraint :TimeValue ;
+              
+              :objectDatatypeConstraint xsd:float .
 
 
 
@@ -1560,11 +1417,11 @@
 
 :valueHasURI rdf:type owl:DatatypeProperty ;
              
-             rdfs:domain :Value ;
-             
              rdfs:subPropertyOf :valueHas ;
              
-             rdfs:range xsd:anyURI .
+             :subjectClassConstraint :Value ;
+             
+             :objectDatatypeConstraint xsd:anyURI .
 
 
 
@@ -1572,9 +1429,9 @@
 
 :website rdf:type owl:DatatypeProperty ;
          
-         rdfs:comment "URL of website of person or institution" ;
+         rdfs:comment "The URL of a web site"@en ;
          
-         rdfs:range xsd:anyURI .
+         :objectDatatypeConstraint xsd:anyURI .
 
 
 
@@ -1613,7 +1470,7 @@
                               owl:minCardinality "1"^^xsd:nonNegativeInteger
                             ] ;
             
-            rdfs:comment "This is a generic annotation"@en .
+            rdfs:comment "A generic class for representing annotations"@en .
 
 
 
@@ -1631,7 +1488,7 @@
                                   owl:minCardinality "0"^^xsd:nonNegativeInteger
                                 ] ;
                 
-                rdfs:comment "This represents an audio file."@en .
+                rdfs:comment "Represents an audio file"@en .
 
 
 
@@ -1673,7 +1530,7 @@
                                 owl:minCardinality "0"^^xsd:nonNegativeInteger
                               ] ;
               
-              rdfs:comment "This represents some 3D-object with mesh data, point cloud etc."@en .
+              rdfs:comment "This represents some 3D-object with mesh data, point cloud, etc."@en .
 
 
 
@@ -1717,7 +1574,7 @@
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ;
            
-           rdfs:comment "Represents a date value. In Knora, a date is always a complex object with properties defining the calendar, the precision of knowlade about the start- and end-date (YEAR, MONTH, DAY). Internally the start and end-dates are stored as JDC."@en .
+           rdfs:comment "Represents a Knora date value"@en .
 
 
 
@@ -1771,7 +1628,7 @@
                                     owl:cardinality "1"^^xsd:nonNegativeInteger
                                   ] ;
                   
-                  rdfs:comment "This is a proxy resource for representing an object from an external provider."@en .
+                  rdfs:comment "Represents a proxy for an object stored by an external provider"@en .
 
 
 
@@ -1813,7 +1670,7 @@
                               owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ;
             
-            rdfs:comment "Represents a float/double value."@en .
+            rdfs:comment "Represents a float/double value"@en .
 
 
 
@@ -1850,36 +1707,30 @@
              rdfs:subClassOf <http://xmlns.com/foaf/0.1/Organization> ,
                              [ rdf:type owl:Restriction ;
                                owl:onProperty :website ;
-                               owl:minQualifiedCardinality "0"^^xsd:nonNegativeInteger ;
-                               owl:onDataRange xsd:string
+                               owl:minCardinality "0"^^xsd:nonNegativeInteger
                              ] ,
                              [ rdf:type owl:Restriction ;
                                owl:onProperty :phone ;
-                               owl:minQualifiedCardinality "0"^^xsd:nonNegativeInteger ;
-                               owl:onDataRange xsd:string
+                               owl:minCardinality "0"^^xsd:nonNegativeInteger
                              ] ,
                              [ rdf:type owl:Restriction ;
                                owl:onProperty :address ;
-                               owl:minQualifiedCardinality "0"^^xsd:nonNegativeInteger ;
-                               owl:onDataRange xsd:string
+                               owl:minCardinality "0"^^xsd:nonNegativeInteger
                              ] ,
                              [ rdf:type owl:Restriction ;
                                owl:onProperty :email ;
-                               owl:minQualifiedCardinality "0"^^xsd:nonNegativeInteger ;
-                               owl:onDataRange xsd:string
+                               owl:minCardinality "0"^^xsd:nonNegativeInteger
                              ] ,
                              [ rdf:type owl:Restriction ;
                                owl:onProperty <http://xmlns.com/foaf/0.1/name> ;
-                               owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
-                               owl:onDataRange xsd:string
+                               owl:minCardinality "1"^^xsd:nonNegativeInteger
                              ] ,
                              [ rdf:type owl:Restriction ;
                                owl:onProperty :description ;
-                               owl:minQualifiedCardinality "0"^^xsd:nonNegativeInteger ;
-                               owl:onDataRange xsd:string
+                               owl:minCardinality "0"^^xsd:nonNegativeInteger
                              ] ;
              
-             rdfs:comment "An Institution is an academic (or similar) entity that has assets in Knora"@en .
+             rdfs:comment "An institution that has data in Knora"@en .
 
 
 
@@ -1911,7 +1762,7 @@
                                  owl:cardinality "1"^^xsd:nonNegativeInteger
                                ] ;
                
-               rdfs:comment "Represents an interval in date/time. Start/end are always exact!"@en .
+               rdfs:comment "Represents a time interval, e.g. in an audio recording"@en .
 
 
 
@@ -1940,8 +1791,8 @@
          
          :resourceIcon "link.gif"^^xsd:string ;
          
-         rdfs:comment "Verknüpfung mehrerer Resourcen (Systemobject)"@de ,
-                      "This Resource represents a generic link object (salsah:link)"@en .
+         rdfs:comment "Verknüpfung mehrerer Resourcen"@de ,
+                      "Represents a generic link object"@en .
 
 
 
@@ -1957,21 +1808,18 @@
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty rdf:subject ;
-                             owl:onClass :Resource ;
-                             owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty rdf:predicate ;
-                             owl:onClass rdf:Property ;
-                             owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty rdf:object ;
-                             owl:onClass rdfs:Resource ;
-                             owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ;
            
-           rdfs:comment "This is a reification node that describes direct links between resources."@en .
+           rdfs:comment "A reification node that describes direct links between resources"@en .
 
 
 
@@ -2000,10 +1848,7 @@
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ;
           
-          rdfs:comment """ListNodes are used to represent selections and hierarchical lists.
-A LisNode that thas the property \"hasRootNode\" is a root node of a flat selection or a hierarchical list. Its label indicates the name of the list.
-
-A ListNode may be connected by \"hasSubListNode\" to its elements (which also are ListNodes). If such a node also has \"hasSubListNode\" properties, we have a hierarchical list.""" .
+          rdfs:comment "Represents a flat or hierarchical list"@en .
 
 
 
@@ -2042,15 +1887,14 @@ A ListNode may be connected by \"hasSubListNode\" to its elements (which also ar
                                       ] ,
                                       [ rdf:type owl:Restriction ;
                                         owl:onProperty :hasComment ;
-                                        owl:onClass :TextValue ;
-                                        owl:minQualifiedCardinality "0"^^xsd:nonNegativeInteger
+                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
                                       ] ,
                                       [ rdf:type owl:Restriction ;
                                         owl:onProperty :duration ;
                                         owl:cardinality "1"^^xsd:nonNegativeInteger
                                       ] ;
                       
-                      rdfs:comment "This represents a moving image file (film, video,...)"@en .
+                      rdfs:comment "Represents a moving image file"@en .
 
 
 
@@ -2064,7 +1908,7 @@ A ListNode may be connected by \"hasSubListNode\" to its elements (which also ar
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
                            
-                           rdfs:comment "Represents a file containing moving image data"@en .
+                           rdfs:comment "A resource containing moving image data"@en .
 
 
 
@@ -2101,7 +1945,7 @@ A ListNode may be connected by \"hasSubListNode\" to its elements (which also ar
         
         :resourceIcon "region.gif"^^xsd:string ;
         
-        rdfs:comment "This Resource represents a geometric region of a resource. The geometry is represented currently as JSON string."@en .
+        rdfs:comment "Represents a geometric region of a resource. The geometry is represented currently as JSON string."@en .
 
 
 
@@ -2115,7 +1959,7 @@ A ListNode may be connected by \"hasSubListNode\" to its elements (which also ar
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
                 
-                rdfs:comment "Representation are RDF-nodes which represent a digital object that can be rendered (that is a file containing data that can be rendered such as an image file, and audio file etc.)"@en .
+                rdfs:comment "A resource that can store one or more FileValues"@en .
 
 
 
@@ -2160,9 +2004,7 @@ A ListNode may be connected by \"hasSubListNode\" to its elements (which also ar
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
           
-          rdfs:comment """A Resource is representing an \"object of interest\" and has properties which are \"rdf:subPropertyOf\" Value.
-
-Each Resource shall have a rdf:Label giving the Resource a human readable identifier or name"""@en .
+          rdfs:comment "Represents something in the world, or an abstract thing"@en .
 
 
 
@@ -2183,7 +2025,7 @@ Each Resource shall have a rdf:Label giving the Resource a human readable identi
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
           
-          rdfs:comment "This class represents a standoff markup attribute. It is used to represent standoff markup in TextValue nodes."@en .
+          rdfs:comment "Represents a standoff markup attribute in a TextValue"@en .
 
 
 
@@ -2241,7 +2083,7 @@ Each Resource shall have a rdf:Label giving the Resource a human readable identi
                                        owl:cardinality "1"^^xsd:nonNegativeInteger
                                      ] ;
                      
-                     rdfs:comment "This represents a 2D still image. Sepcial formats/mimetypes will be allowed for  special kind of imigary like multispectral or RTI images."@en .
+                     rdfs:comment "A file containing a two-dimensional still image"@en .
 
 
 
@@ -2255,7 +2097,7 @@ Each Resource shall have a rdf:Label giving the Resource a human readable identi
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
                           
-                          rdfs:comment "Represents a file containing 2D image data"@en .
+                          rdfs:comment "A resource that can contain two-dimensional still image files"@en .
 
 
 
@@ -2269,7 +2111,7 @@ Each Resource shall have a rdf:Label giving the Resource a human readable identi
                                  owl:minCardinality "0"^^xsd:nonNegativeInteger
                                ] ;
                
-               rdfs:comment "This represents an encoded text such as plain ASCII, LaTeX, TEI/XML etc."@en .
+               rdfs:comment "A text file such as plain Unicode text, LaTeX, TEI/XML, etc."@en .
 
 
 
@@ -2279,7 +2121,7 @@ Each Resource shall have a rdf:Label giving the Resource a human readable identi
                     
                     rdfs:subClassOf :Representation ;
                     
-                    rdfs:comment "Represents a file containing text data (e.g. ascii or TEI)"@en .
+                    rdfs:comment "A resource containing text files"@en .
 
 
 
@@ -2341,8 +2183,7 @@ Each Resource shall have a rdf:Label giving the Resource a human readable identi
                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ;
       
-      rdfs:comment """ A User is a person or a entity which is known to the Repository.
-The properties foaf:firstName, foaf:lastName, admin:password and foaf:member (of Organization) are mandatory. The Password ist stored ans SHA1 (or similar encoded) string"""@en .
+      rdfs:comment "Represents a Knora user"@en .
 
 
 
@@ -2353,16 +2194,14 @@ The properties foaf:firstName, foaf:lastName, admin:password and foaf:member (of
            rdfs:subClassOf <http://xmlns.com/foaf/0.1/Group> ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty <http://xmlns.com/foaf/0.1/name> ;
-                             owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
-                             owl:onDataRange xsd:string
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :description ;
-                             owl:minQualifiedCardinality "0"^^xsd:nonNegativeInteger ;
-                             owl:onDataRange xsd:string
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ] ;
            
-           rdfs:comment "A UserGroup is a resource which collects users into groups/roles. Each user can be member of several groups. Access rights are given according to the membership in the UserGroups."@en .
+           rdfs:comment "A group of Knora users"@en .
 
 
 
@@ -2399,9 +2238,7 @@ The properties foaf:firstName, foaf:lastName, admin:password and foaf:member (of
                          owl:cardinality "1"^^xsd:nonNegativeInteger
                        ] ;
        
-       rdfs:comment """A generic class for \"value resources\". In Knora, all values are itself resources which may be quite complex.
-
-All Values and subclasses thereoff should have a rdf:label property which represents the value in a human readable form."""@en .
+       rdfs:comment "The base class of classes representing Knora values"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#knoraProject
@@ -2430,7 +2267,7 @@ All Values and subclasses thereoff should have a rdf:label property which repres
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ;
               
-              rdfs:comment "A project is an entity which stands for a distinct research project that uses the knora framework."@en .
+              rdfs:comment "Represents a project that uses Knora"@en .
 
 
 
@@ -2500,38 +2337,3 @@ All Values and subclasses thereoff should have a rdf:label property which repres
                       owl:NamedIndividual ;
              
              <http://xmlns.com/foaf/0.1/name> "unknown user" .
-
-
-
-###  http://www.knora.org/ontology/knora-base#root
-
-:root rdf:type :User ,
-               owl:NamedIndividual ;
-      
-      <http://xmlns.com/foaf/0.1/givenName> "Administrator" ;
-      
-      :userid "root" .
-
-
-
-
-
-#################################################################
-#
-#    Annotations
-#
-#################################################################
-
-
-:seqnum rdfs:label "Sequenznummer"@de ,
-                   "Sequence Number"@en ,
-                   "Numéro de séquance"@fr ,
-                   "Numero di Sequenza"@it ;
-        
-        <http://www.knora.org/vocabularies/dc#dctermsDescription> "This predicate is to give a resource a position within a sequence" .
-
-
-
-
-###  Generated by the OWL API (version 3.5.1) http://owlapi.sourceforge.net
-

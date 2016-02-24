@@ -106,7 +106,7 @@ WHERE {
 
     @if(numberOfProps > 1) {
         ?resourceIri ?property ?valueObjectIri .
-        ?property rdfs:range knora-base:TextValue .
+        ?property knora-base:objectClassConstraint knora-base:TextValue .
         ?valueObjectIri knora-base:valueHasString ?valueString .
         ?valueObjectIri knora-base:valueHasOrder ?valueOrder .
         ?property salsah-gui:guiOrder ?guiOrder .

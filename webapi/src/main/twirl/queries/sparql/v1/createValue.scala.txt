@@ -256,7 +256,7 @@ DELETE {
 
     @* Do nothing if the submitted value has the wrong type. *@
 
-	?property rdfs:range ?propertyRange .
+	?property knora-base:objectClassConstraint ?propertyRange .
     ?valueType rdfs:subClassOf* ?propertyRange .
 
     @* Do nothing if neither the resource class nor any of its superclasses has a cardinality for this property. *@
@@ -287,7 +287,7 @@ DELETE {
             }
 
             ?linkTargetClass rdfs:subClassOf+ knora-base:Resource .
-            <@linkUpdate.linkPropertyIri> rdfs:range ?expectedTargetClass .
+            <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass .
             ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
         }
 
