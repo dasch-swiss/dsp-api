@@ -274,7 +274,7 @@ The more flexible approach, which is allowed by the Knora base ontology and will
 
 The Knora base ontology defines a set of OWL classes that are derived from \texttt{kb:Value} and represent different types of structured values found in humanities data. This set of classes may not be extended by project-specific ontologies.
 
-A value is always part of one particular resource, which points to it using some property derived from \texttt{hasValue}. For example, a project-specific ontology could specify a \texttt{Book} class with a property \texttt{hasSummary} (derived from \texttt{hasValue}), and that property could have an \texttt{rdfs:range} of \texttt{TextValue}. This would mean that the summary of each book is represented as a \texttt{TextValue}.
+A value is always part of one particular resource, which points to it using some property derived from \texttt{hasValue}. For example, a project-specific ontology could specify a \texttt{Book} class with a property \texttt{hasSummary} (derived from \texttt{hasValue}), and that property could have a \texttt{knora-base:objectClassConstraint} of \texttt{TextValue}. This would mean that the summary of each book is represented as a \texttt{TextValue}.
 
 Knora values are versioned. Existing values are not modified. Instead, a new version of an existing value is created. The new version is linked to the old version via the \texttt{previousValue} property.
 
@@ -472,17 +472,17 @@ For example, suppose a project describes paintings that belong to collections. T
 :hasName rdf:type owl:ObjectProperty ;
     rdfs:label "Name of artist" ;
     rdfs:domain :Painting ;
-    rdfs:range kb:TextValue .
+    kb:objectClassConstraint kb:TextValue .
             
 :title rdf:type owl:ObjectProperty ;
     rdfs:label "Title of painting"
     rdfs:domain :Painting ;
-    rdfs:range kb:TextValue .
+    kb:objectClassConstraint kb:TextValue .
 
 :hasName rdf:type owl:ObjectProperty ;
     rdfs:label "Name of collection" ;
     rdfs:domain :Collection ;
-    rdfs:range kb:TextValue .
+    kb:objectClassConstraint kb:TextValue .
 \end{verbatim}
 
 To link the paintings to the collection, we must add a \enquote{link property} to the ontology. In this case, the link property will point from a painting to the collection it belongs to. Every link property must be a subproperty of \texttt{hasLinkTo}.
@@ -491,7 +491,7 @@ To link the paintings to the collection, we must add a \enquote{link property} t
 :isInCollection rdf:type owl:ObjectProperty ;
     rdfs:subPropertyOf kb:hasLinkTo ;
     rdfs:domain :Painting ;
-    rdfs:range :Collection .
+    kb:objectClassConstraint :Collection .
 \end{verbatim}
 
 We must then add a \enquote{link value property}, which will point from a painting to a \texttt{LinkValue} (described in Section~\ref{subsubsec:linkvalue}), which will contain metadata about the link between the property and the collection. The name of the link value property is constructed using a simple naming convention: the word \texttt{Value} is appended to the name of the link property. In this case, since our link property is called \texttt{isInCollectionValue}, the link value property must be called \texttt{ex:isOnPageValue}. Every link value property must be a subproperty of \texttt{kb:hasLinkToValue}.
