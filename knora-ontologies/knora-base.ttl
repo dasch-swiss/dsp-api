@@ -38,7 +38,7 @@
 
 :objectDatatypeConstraint rdf:type owl:AnnotationProperty ;
 
-                          rdfs:comment "Specifies the type required as the object of a datatype property."@en .
+                          rdfs:comment "Specifies the type required as the object of a datatype property"@en .
 
 
 
@@ -136,7 +136,7 @@
 
 :subjectClassConstraint rdf:type owl:ObjectProperty ;
 
-                   rdfs:comment "Specifies the OWL class that the subject of a property must belong to."@en .
+                   rdfs:comment "Specifies the OWL class that the subject of a property must belong to"@en .
 
 
 
@@ -144,7 +144,7 @@
 
 :objectClassConstraint rdf:type owl:ObjectProperty ;
 
-                  rdfs:comment "Specifies the OWL class that the object of a property must belong to."@en .
+                  rdfs:comment "Specifies the OWL class that the object of a property must belong to"@en .
 
 
 
@@ -152,7 +152,7 @@
 
 :attachedToProject rdf:type owl:ObjectProperty ;
                    
-                   rdfs:comment "Connects a Resource or a Value to a project."@en ;
+                   rdfs:comment "Connects a Resource or a Value to a project"@en ;
                    
                    :objectClassConstraint :knoraProject .
 
@@ -162,7 +162,7 @@
 
 :attachedToUser rdf:type owl:ObjectProperty ;
                 
-                rdfs:comment "Connects a Resource or a Value to a user."@en ;
+                rdfs:comment "Connects a Resource or a Value to a user"@en ;
                 
                 :objectClassConstraint :User .
 
@@ -172,7 +172,7 @@
 
 :belongsTo rdf:type owl:ObjectProperty ;
            
-           rdfs:comment "This property indicates which Institution a knoraProject belongs to."@en ;
+           rdfs:comment "Indicates which Institution a knoraProject belongs to"@en ;
            
            :objectClassConstraint :Institution ;
            
@@ -232,7 +232,7 @@
                        "Commentaire"@fr ,
                        "Commento"@it ;
             
-            rdfs:comment "Any commentary to a resource" ;
+            rdfs:comment "Any commentary to a resource"@en ;
             
             :subjectClassConstraint :Resource ;
             
@@ -370,7 +370,7 @@
 
 :hasLinkTo rdf:type owl:ObjectProperty ;
            
-           rdfs:comment "Represents a direct connection between two resources."@en ;
+           rdfs:comment "Represents a direct connection between two resources"@en ;
            
            :objectClassConstraint :Resource ;
            
@@ -382,7 +382,7 @@
 
 :hasLinkToValue rdf:type owl:ObjectProperty ;
 
-                rdfs:comment "Points to a LinkValue reification describing a link between two resources."@en ;
+                rdfs:comment "Points to a LinkValue reification describing a link between two resources"@en ;
                 
                 :objectClassConstraint :LinkValue ;
                 
@@ -418,7 +418,7 @@
 
 :hasPart rdf:type owl:ObjectProperty ;
          
-         rdfs:comment "The whole (resource) as a part" ;
+         rdfs:comment "Indicates that another resource is part of this resource"@en ;
          
          :subjectClassConstraint :Resource ;
          
@@ -454,7 +454,7 @@
 
 :hasProject rdf:type owl:ObjectProperty ;
             
-            rdfs:comment "The given Institution is responsible for the given knoraProject."@en ;
+            rdfs:comment "The given Institution is responsible for the given knoraProject"@en ;
             
             :subjectClassConstraint :Institution ;
             
@@ -568,7 +568,7 @@
 
 :hasSubListNode rdf:type owl:ObjectProperty ;
                 
-                rdfs:comment "A hierarchical list ist formed using the \"hasSubListNode\"-property."@en ;
+                rdfs:comment "A hierarchical list is formed using the \"hasSubListNode\"-property"@en ;
                 
                 :objectClassConstraint :ListNode ;
                 
@@ -610,7 +610,7 @@
 
 :isInGroup rdf:type owl:ObjectProperty ;
            
-           rdfs:comment "The given User is part of the given UserGroup."@en ;
+           rdfs:comment "The given User is part of the given UserGroup"@en ;
            
            :subjectClassConstraint :User ;
            
@@ -624,7 +624,7 @@
 
 :isInProject rdf:type owl:ObjectProperty ;
              
-             rdfs:comment "The given User is part of the given knoraProject."@en ;
+             rdfs:comment "The given User is part of the given knoraProject"@en ;
              
              :subjectClassConstraint :User ;
              
@@ -638,7 +638,7 @@
 
 :isPartOf rdf:type owl:ObjectProperty ;
           
-          rdfs:comment "Points to a part of a whole" ;
+          rdfs:comment "Indicates that this resource is part of another resource"@en ;
           
           :subjectClassConstraint :Resource ;
           
@@ -764,7 +764,7 @@
 
 :basepath rdf:type owl:DatatypeProperty ;
           
-          rdfs:comment "Basepath for digital objects which belong to this project."@en ;
+          rdfs:comment "Basepath for digital objects which belong to this project"@en ;
           
           :subjectClassConstraint :knoraProject ;
 
@@ -776,7 +776,7 @@
 
 :creationDate rdf:type owl:DatatypeProperty ;
               
-              rdfs:comment "Indicates when a resource was created." ;
+              rdfs:comment "Indicates when a resource was created"@en ;
               
               :subjectClassConstraint :Resource ;
 
@@ -788,7 +788,7 @@
 
 :deleteDate rdf:type owl:DatatypeProperty ;
 
-            rdfs:comment "Indicates when a resource was deleted." ;
+            rdfs:comment "Indicates when a resource was deleted"@en ;
               
             :subjectClassConstraint :Resource ;
 
@@ -800,7 +800,7 @@
 
 :description rdf:type owl:DatatypeProperty ;
              
-             rdfs:comment "A Description of a resource class or a property class."@en ;
+             rdfs:comment "A Description of a resource class or a property class"@en ;
 
              :objectDatatypeConstraint xsd:string .
 
@@ -856,7 +856,7 @@
 
 :extResAccessInfo rdf:type owl:DatatypeProperty ;
                   
-                  rdfs:comment "Information (URL etc.) for accessing an external resource."@en ;
+                  rdfs:comment "Information (URL etc.) for accessing an external resource"@en ;
                   
                   rdfs:subPropertyOf :valueHas ;
                   
@@ -1040,7 +1040,7 @@
 
 :password rdf:type owl:DatatypeProperty ;
           
-          rdfs:comment "A encrypted credential for access" ;
+          rdfs:comment "An encrypted credential for access"@en ;
           
           :subjectClassConstraint <http://xmlns.com/foaf/0.1/Person> ;
 
@@ -1052,7 +1052,7 @@
 
 :phone rdf:type owl:DatatypeProperty ;
        
-       rdfs:comment "Phone number of a person, institution, etc." ;
+       rdfs:comment "Phone number of a person, institution, etc."@en ;
 
        :objectDatatypeConstraint xsd:string .
 
@@ -1152,7 +1152,7 @@
 
 :userid rdf:type owl:DatatypeProperty ;
         
-        rdfs:comment "login name of a user of Knora" ;
+        rdfs:comment "The login name of a user of Knora"@en ;
         
         :subjectClassConstraint :User ;
         
@@ -1166,7 +1166,7 @@
 
 :valueHasComment rdf:type owl:DatatypeProperty ;
               
-              rdfs:comment "A comment on a value." ;
+              rdfs:comment "A comment on a value"@en ;
               
               rdfs:subPropertyOf :valueHas ;
               
@@ -1429,7 +1429,7 @@
 
 :website rdf:type owl:DatatypeProperty ;
          
-         rdfs:comment "URL of a web site" ;
+         rdfs:comment "The URL of a web site"@en ;
          
          :objectDatatypeConstraint xsd:anyURI .
 
@@ -1488,7 +1488,7 @@
                                   owl:minCardinality "0"^^xsd:nonNegativeInteger
                                 ] ;
                 
-                rdfs:comment "Represents an audio file."@en .
+                rdfs:comment "Represents an audio file"@en .
 
 
 
@@ -1574,7 +1574,7 @@
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ;
            
-           rdfs:comment "Represents a Knora date value."@en .
+           rdfs:comment "Represents a Knora date value"@en .
 
 
 
@@ -1628,7 +1628,7 @@
                                     owl:cardinality "1"^^xsd:nonNegativeInteger
                                   ] ;
                   
-                  rdfs:comment "Represents a proxy for an object stored by an external provider."@en .
+                  rdfs:comment "Represents a proxy for an object stored by an external provider"@en .
 
 
 
@@ -1670,7 +1670,7 @@
                               owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ;
             
-            rdfs:comment "Represents a float/double value."@en .
+            rdfs:comment "Represents a float/double value"@en .
 
 
 
@@ -1819,7 +1819,7 @@
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ;
            
-           rdfs:comment "A reification node that describes direct links between resources."@en .
+           rdfs:comment "A reification node that describes direct links between resources"@en .
 
 
 
@@ -1848,7 +1848,7 @@
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ;
           
-          rdfs:comment "Represents a flat or hierarchical list."@en .
+          rdfs:comment "Represents a flat or hierarchical list"@en .
 
 
 
@@ -2025,7 +2025,7 @@
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
           
-          rdfs:comment "Represents a standoff markup attribute in a TextValue."@en .
+          rdfs:comment "Represents a standoff markup attribute in a TextValue"@en .
 
 
 
@@ -2083,7 +2083,7 @@
                                        owl:cardinality "1"^^xsd:nonNegativeInteger
                                      ] ;
                      
-                     rdfs:comment "A file containing a two-dimensional still image."@en .
+                     rdfs:comment "A file containing a two-dimensional still image"@en .
 
 
 
@@ -2183,7 +2183,7 @@
                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ;
       
-      rdfs:comment "Represents a Knora user."@en .
+      rdfs:comment "Represents a Knora user"@en .
 
 
 
@@ -2201,7 +2201,7 @@
                              owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ] ;
            
-           rdfs:comment "A group of Knora users."@en .
+           rdfs:comment "A group of Knora users"@en .
 
 
 
@@ -2267,7 +2267,7 @@
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ;
               
-              rdfs:comment "Represents a project that uses Knora."@en .
+              rdfs:comment "Represents a project that uses Knora"@en .
 
 
 
