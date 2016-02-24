@@ -497,7 +497,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#Resource",
                     occurrence = "1-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("Represents a direct connection between two resources."),
+                    description = Some("Represents a direct connection between two resources"),
                     label = None,
                     name = "http://www.knora.org/ontology/knora-base#hasLinkTo",
                     id = "http://www.knora.org/ontology/knora-base#hasLinkTo"
