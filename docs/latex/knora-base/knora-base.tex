@@ -162,20 +162,6 @@ edge [<-,cyan!60!blue] node[text style,above]{ex:pagename} (page);
 \label{fig:rdf-graph-with-prefix-labels}
 \end{figure}
 
-\section{Projects}
-
-In Knora, each item of data belongs to some particular project. Each project using Knora must define a \texttt{kb:knoraProject}, which has these properties (cardinalities are indicated in parentheses after each property name):
-
-\begin{description}
-	\item[shortname (1)] A short name that can be used to identify the project in configuration files and the like.
-	\item[basepath (1)] The filesystem path of the directory where the project's files are stored. \issue{290}{Should this be in the triplestore?}
-	\item[foaf:name (0-1)] The name of the project.
-	\item[description (0-1)] A description of the project.
-	\item[belongsTo (0-1)] The \texttt{kb:Institution} that the project belongs to.
-\end{description}
-
-Resources and values are associated with a project by means of the \texttt{kb:attached\-To\-Project} property, as described in Section~\ref{sec:data-model}. Users are associated with a project by means of the \texttt{kb:is\-In\-Project} property, as described in Section~\ref{sec:authorization}.
-
 \section{The Knora Data Model}
 
 \label{sec:data-model}
@@ -221,9 +207,25 @@ edge [<-,cyan!60!green] node[text style,above]{kb:valueHasEndJDC} (pubdate);
 \label{fig:structured-values}
 \end{figure}
 
+\subsection{Projects}
+
+In Knora, each item of data belongs to some particular project. Each project using Knora must define a \texttt{kb:knoraProject}, which has these properties (cardinalities are indicated in parentheses after each property name):
+
+\begin{description}
+	\item[shortname (1)] A short name that can be used to identify the project in configuration files and the like.
+	\item[basepath (1)] The filesystem path of the directory where the project's files are stored. \issue{290}{Should this be in the triplestore?}
+	\item[foaf:name (0-1)] The name of the project.
+	\item[description (0-1)] A description of the project.
+	\item[belongsTo (0-1)] The \texttt{kb:Institution} that the project belongs to.
+\end{description}
+
+Resources and values are associated with a project by means of the \texttt{kb:attached\-To\-Project} property, as described in Section~\ref{sec:data-model}. Users are associated with a project by means of the \texttt{kb:is\-In\-Project} property, as described in Section~\ref{sec:authorization}.
+
 \subsection{Resources}
 
-Each project using the Knora base ontology defines its own OWL classes, derived from \texttt{kb:Resource}, to represent the types of data it deals with. Each project-specific resource class definition must use OWL cardinality restrictions to specify the properties that a given type of resource can have. Properties that point to Knora values (see Section~\ref{subsec:values}) must be derived from \texttt{kb:hasValue}, and properties that point to other resources must be derived from \texttt{kb:hasLinkTo}. A few such properties are defined in the Knora base ontology, but projects typically need to define many of their own properties.
+\label{subsec:resources}
+
+Each project using the Knora base ontology defines its own OWL classes, derived from \texttt{kb:Resource}, to represent the types of data it deals with. Each project-specific resource class definition must use OWL cardinality restrictions to specify the properties that a given type of resource can have (see Section~\ref{subsec:cardinalities} for details). Properties that point to Knora values (see Section~\ref{subsec:values}) must be derived from \texttt{kb:hasValue}, and properties that point to other resources must be derived from \texttt{kb:hasLinkTo}. A few such properties are defined in the Knora base ontology, but projects typically need to define many of their own properties. Each property definition must specify the types that its subjects and objects must belong to (see Section~\ref{subsec:property-restrictions} for details).
 
 Resources are not versioned; only their values are versioned (see Section~\ref{subsec:values}). A resource can be marked as deleted. It then remains in the repository, but becomes invisible to ordinary queries. It cannot be undeleted, because even though resources are not versioned, it is necessary to be able to find out when a resource was deleted. If desired, a new resource can be created by copying data from a deleted resource.
 
@@ -758,6 +760,67 @@ Each permission in the above list implies all lower-numbered permissions. A user
     \item From the resulting list, select the highest-level permission.
     \item If the result is that she would have no permissions, give her whatever permission \texttt{UnknownUser} would have.
 \end{enumerate}
+
+\section{Consistency Checking}
+
+Knora tries to enforce repository consistency by checking constraints that are specified in the Knora base ontology and in project-specific ontologies. Two types of constraints are enforced:
+
+\begin{itemize}
+	\item Cardinalities in OWL class definitions.
+	\item Constraints on the types of the subjects and objects of OWL object properties.
+\end{itemize}
+
+The implementation of consistency checking is partly triplestore-dependent; Knora may be able to provide stricter checks with some triplestores than with others.
+
+\subsection{OWL Cardinalities}
+
+\label{subsec:cardinalities}
+
+As noted in Section~\ref{subsec:resources}, each subclass of \texttt{Resource} must use OWL cardinality restrictions to specify the properties it can have. More specifically, a resource is allowed to have a property that is a subproperty of \texttt{kb:hasValue} only if the resource's class has some cardinality for that property. In addition, Knora supports, and attempts to enforce, the following cardinality constraints:
+ 
+\begin{description}
+	\item[owl:cardinality 1] A resource of this class must have exactly one instance of the specified property.
+	\item[owl:minCardinality 1] A resource of this class must have at least one instance of the specified property.
+	\item[owl:maxCardinality 1] A resource of this class may have zero or one instance of the specified property.
+	\item[owl:minCardinality 0] A resource of this class may have zero or more instances of the specified property.
+\end{description}
+
+For more information about OWL cardinalities, see~\cite[§2.1, Object Property Restrictions]{OWL_2_Quick_Reference_Guide}.
+
+\subsection{Constraints on the Types of Property Subjects and Objects}
+
+\label{subsec:property-restrictions}
+
+When a project-specific ontology defines a property, it must indicate the types that are allowed as subjects and objects of the property. This is done using the following Knora-specific properties:
+
+\begin{description}
+	\item[subjectClassConstraint] Specifies the class that subjects of the property must belong to. Knora will attempt to enforce this constraint.
+	\item[objectClassConstraint] If the property is an object property, specifies the class that objects of the property must belong to. Knora will attempt to enforce this constraint.
+	\item[objectDatatypeConstraint] If the property is a datatype property, specifies the type of literals that can be objects of the property. Knora will not attempt to enforce this constraint, but it is useful for documentation purposes.
+\end{description}
+
+\subsection{Consistency Constraint Example}
+
+A project-specific ontology could define consistency constraints as in this simplified example:
+
+\begin{verbatim}
+:book rdf:type owl:Class ;
+    rdfs:subClassOf knora-base:Resource ,
+        [ rdf:type owl:Restriction ;
+          owl:onProperty :hasTitle ;
+          owl:cardinality "1"^^xsd:nonNegativeInteger ] ,
+        [ rdf:type owl:Restriction ;
+          owl:onProperty :hasAuthor ;
+          owl:minCardinality "0"^^xsd:nonNegativeInteger ] .
+
+:hasTitle rdf:type owl:ObjectProperty ;
+    knora-base:subjectClassConstraint :book ;
+    knora-base:objectClassConstraint knora-base:TextValue .
+
+:hasAuthor rdf:type owl:ObjectProperty ;
+    knora-base:subjectClassConstraint :book ;
+    knora-base:objectClassConstraint knora-base:TextValue .
+\end{verbatim}
 
 \section{Open Questions}
 

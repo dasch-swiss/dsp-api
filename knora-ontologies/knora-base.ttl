@@ -100,7 +100,9 @@
 
 :resourceIcon rdf:type owl:AnnotationProperty ;
               
-              :subjectClassConstraint :Resource .
+              :subjectClassConstraint :Resource ;
+
+              :objectDatatypeConstraint xsd:string .
 
 
 
