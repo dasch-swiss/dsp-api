@@ -252,7 +252,7 @@ DELETE {
     BIND(NOW() AS ?currentTime)
 
     ?resource ?property ?currentValue .
-    ?property rdfs:range ?valueType .
+    ?property knora-base:objectClassConstraint ?valueType .
     ?currentValue knora-base:valueHasOrder ?order .
 
     @*
@@ -298,7 +298,7 @@ DELETE {
             }
 
             ?linkTargetClass rdfs:subClassOf+ knora-base:Resource .
-            <@linkUpdate.linkPropertyIri> rdfs:range ?expectedTargetClass .
+            <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass .
             ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
         }
 

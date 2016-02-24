@@ -215,7 +215,7 @@ INSERT {
     @if(linkUpdateForNewLink.insertDirectLink) {
         ?linkTargetForNewLink rdf:type ?linkTargetClass .
         ?linkTargetClass rdfs:subClassOf+ knora-base:Resource .
-        ?linkProperty rdfs:range ?expectedTargetClass .
+        ?linkProperty knora-base:objectClassConstraint ?expectedTargetClass .
         ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
 
         MINUS {

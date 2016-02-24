@@ -85,12 +85,12 @@ When creating a new value (as opposed to adding a new version of an existing val
 allow the update if the containing resource's OWL class does not contain a cardinality restriction for the
 submitted property, or if the new value would violate the cardinality restriction.
 
-It must also not allow the update if the type of the submitted value does not match the ``rdfs:range`` of the
-property, or if the property has no ``rdfs:range``. In the case of a property that points to a resource,
-Knora must ensure that the target resource belongs to the OWL class specified in the property's
-``rdfs:range``, or to a subclass of that class.
-
-When creating the set of new values in a new, empty resource,
+It must also not allow the update if the type of the submitted value does not
+match the ``knora-base:objectClassConstraint`` of the property, or if the
+property has no ``knora-base:objectClassConstraint``. In the case of a
+property that points to a resource, Knora must ensure that the target resource
+belongs to the OWL class specified in the property's
+``knora-base:objectClassConstraint``, or to a subclass of that class.
 
 Duplicate and Redundant Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -242,7 +242,7 @@ but we take the view that redundant checks are a good thing when a database is b
 Moreover, while some pre-update checks are easy to do in a SPARQL update,
 others are difficult, impractical, or impossible. Easy checks include checking
 whether a resource or value exists or is deleted, and checking that the
-``rdfs:range`` of a predicate matches the ``rdf:type`` of its intended object.
+``knora-base:objectClassConstraint`` of a predicate matches the ``rdf:type`` of its intended object.
 Cardinality checks are not very difficult, but they perform poorly on Jena
 (although GraphDB does them efficiently). Knora does not do permission checks
 in SPARQL, because its permission-checking algorithm is too complex to be
@@ -314,7 +314,7 @@ Creating the first value of a property
         ?resource rdf:type ?resourceClass .
 
         # Do nothing if the submitted value has the wrong type.
-        ?property rdfs:range ?valueType .
+        ?property knora-base:objectClassConstraint ?valueType .
 
         # Do nothing if the resource class has no cardinality for this property.
 
@@ -382,7 +382,7 @@ Adding a new version of a value
         BIND(NOW() AS ?currentTime)
 
         ?resource ?property ?currentValue .
-        ?property rdfs:range ?valueType .
+        ?property knora-base:objectClassConstraint ?valueType .
     }
 
 The update request must contain the IRI of the most recent version of

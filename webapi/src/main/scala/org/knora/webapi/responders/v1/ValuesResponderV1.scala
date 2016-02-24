@@ -117,15 +117,15 @@ class ValuesResponderV1 extends ResponderV1 {
             )).mapTo[EntityInfoGetResponseV1]
 
             propertyInfo = entityInfoResponse.propertyEntityInfoMap(createValueRequest.propertyIri)
-            propertyRange = propertyInfo.getPredicateObject(OntologyConstants.Rdfs.Range).getOrElse {
-                throw InconsistentTriplestoreDataException(s"Property ${createValueRequest.propertyIri} has no rdfs:range")
+            propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
+                throw InconsistentTriplestoreDataException(s"Property ${createValueRequest.propertyIri} has no knora-base:objectClassConstraint")
             }
 
             // Check that the object of the property (the value to be created, or the target of the link to be created) will have
-            // the correct type for the property's rdfs:range.
-            _ <- checkPropertyRangeForValue(
+            // the correct type for the property's knora-base:objectClassConstraint.
+            _ <- checkPropertyObjectClassConstraintForValue(
                 propertyIri = createValueRequest.propertyIri,
-                propertyRange = propertyRange,
+                propertyObjectClassConstraint = propertyObjectClassConstraint,
                 updateValueV1 = createValueRequest.value,
                 userProfile = createValueRequest.userProfile
             )
@@ -212,7 +212,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * have no values. All pre-update checks must already have been performed. Specifically, this method assumes that:
       *
       * - The requesting user has permission to add values to the resource.
-      * - Each submitted value is consistent with the `rdfs:range` of the property that is supposed to point to it.
+      * - Each submitted value is consistent with the `knora-base:objectClassConstraint` of the property that is supposed to point to it.
       * - The resource has a suitable cardinality for each submitted value.
       * - All required values are provided.
       *
@@ -371,15 +371,15 @@ class ValuesResponderV1 extends ResponderV1 {
                 )).mapTo[EntityInfoGetResponseV1]
 
                 propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
-                propertyRange = propertyInfo.getPredicateObject(OntologyConstants.Rdfs.Range).getOrElse {
-                    throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:range")
+                propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
+                    throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                 }
 
                 // Check that the object of the property (the value to be updated, or the target of the link to be updated) will have
-                // the correct type for the property's rdfs:range.
-                _ <- checkPropertyRangeForValue(
+                // the correct type for the property's knora-base:objectClassConstraint.
+                _ <- checkPropertyObjectClassConstraintForValue(
                     propertyIri = propertyIri,
-                    propertyRange = propertyRange,
+                    propertyObjectClassConstraint = propertyObjectClassConstraint,
                     updateValueV1 = changeValueRequest.value,
                     userProfile = changeValueRequest.userProfile
                 )
@@ -646,9 +646,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 throw UpdateNotPerformedException(s"Value ${deleteValueRequest.valueIri} was not deleted, perhaps because the request was based on outdated information")
             }
         } yield DeleteValueResponseV1(
-            id = newValueIri,
-            userdata = deleteValueRequest.userProfile.userData
-        )
+                id = newValueIri,
+                userdata = deleteValueRequest.userProfile.userData
+            )
 
         for {
         // Don't allow anonymous users to update values.
@@ -1663,16 +1663,16 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `rdfs:range` of
+      * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `knora-base:objectClassConstraint` of
       * the property that is supposed to point to it.
       *
-      * @param propertyIri   the IRI of the property.
-      * @param propertyRange the IRI of the `rdfs:range` of the property.
+      * @param propertyIri the IRI of the property.
+      * @param propertyObjectClassConstraint the IRI of the `knora-base:objectClassConstraint` of the property.
       * @param updateValueV1 the value to be updated.
       * @param userProfile   the profile of the user making the request.
       * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
       */
-    private def checkPropertyRangeForValue(propertyIri: IRI, propertyRange: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {
+    private def checkPropertyObjectClassConstraintForValue(propertyIri: IRI, propertyObjectClassConstraint: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {
         for {
             result <- updateValueV1 match {
                 case linkUpdate: LinkUpdateV1 =>
@@ -1680,20 +1680,20 @@ class ValuesResponderV1 extends ResponderV1 {
                     for {
                         checkTargetClassResponse <- (responderManager ? ResourceCheckClassRequestV1(
                             resourceIri = linkUpdate.targetResourceIri,
-                            owlClass = propertyRange,
+                            owlClass = propertyObjectClassConstraint,
                             userProfile = userProfile
                         )).mapTo[ResourceCheckClassResponseV1]
 
                         _ = if (!checkTargetClassResponse.isInClass) {
-                            throw OntologyConstraintException(s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyRange")
+                            throw OntologyConstraintException(s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint")
                         }
                     } yield ()
 
                 case otherValue =>
-                    // We're creating an ordinary value. Check that its type is valid for the property's rdfs:range.
-                    valueUtilV1.checkValueTypeForPropertyRange(
+                    // We're creating an ordinary value. Check that its type is valid for the property's knora-base:objectClassConstraint.
+                    valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
                         propertyIri = propertyIri,
-                        propertyRange = propertyRange,
+                        propertyObjectClassConstraint = propertyObjectClassConstraint,
                         valueType = otherValue.valueTypeIri,
                         responderManager = responderManager)
             }

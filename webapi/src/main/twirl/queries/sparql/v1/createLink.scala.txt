@@ -112,7 +112,7 @@ DELETE {
 
     @* Do nothing if the target resource belongs to the wrong OWL class. *@
 
-    ?linkProperty rdfs:range ?expectedTargetClass .
+    ?linkProperty knora-base:objectClassConstraint ?expectedTargetClass .
     ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
 
     @* Do nothing if the source or target resource doesn't exist or is marked as deleted. *@

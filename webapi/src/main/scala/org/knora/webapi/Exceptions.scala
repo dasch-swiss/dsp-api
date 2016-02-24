@@ -132,7 +132,7 @@ case class DuplicateValueException(message: String = "Duplicate values are not p
 
 /**
   * An exception indicating that a requested update is not allowed because it would violate an ontology constraint,
-  * e.g. an `rdfs:range` or an OWL cardinality restriction.
+  * e.g. an `knora-base:objectClassConstraint` or an OWL cardinality restriction.
   * @param message a description of the error.
   */
 case class OntologyConstraintException(message: String) extends RequestRejectedException(message)
