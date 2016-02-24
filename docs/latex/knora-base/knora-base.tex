@@ -471,17 +471,17 @@ For example, suppose a project describes paintings that belong to collections. T
             
 :hasName rdf:type owl:ObjectProperty ;
     rdfs:label "Name of artist" ;
-    rdfs:domain :Painting ;
+    kb:subjectClassConstraint :Painting ;
     kb:objectClassConstraint kb:TextValue .
             
 :title rdf:type owl:ObjectProperty ;
     rdfs:label "Title of painting"
-    rdfs:domain :Painting ;
+    kb:subjectClassConstraint :Painting ;
     kb:objectClassConstraint kb:TextValue .
 
 :hasName rdf:type owl:ObjectProperty ;
     rdfs:label "Name of collection" ;
-    rdfs:domain :Collection ;
+    kb:subjectClassConstraint :Collection ;
     kb:objectClassConstraint kb:TextValue .
 \end{verbatim}
 
@@ -490,7 +490,7 @@ To link the paintings to the collection, we must add a \enquote{link property} t
 \begin{verbatim}
 :isInCollection rdf:type owl:ObjectProperty ;
     rdfs:subPropertyOf kb:hasLinkTo ;
-    rdfs:domain :Painting ;
+    kb:subjectClassConstraint :Painting ;
     kb:objectClassConstraint :Collection .
 \end{verbatim}
 
@@ -499,8 +499,8 @@ We must then add a \enquote{link value property}, which will point from a painti
 \begin{verbatim}
 :isInCollectionValue rdf:type owl:ObjectProperty ;
     rdfs:subPropertyOf kb:hasLinkToValue ;
-    rdfs:domain :painting ;
-    rdf:range kb:LinkValue .                     
+    kb:subjectClassConstraint :painting ;
+    kb:objectClassConstraint kb:LinkValue .
 \end{verbatim}
 
 Given this ontology, we can create some RDF data describing a painting and a collection:
