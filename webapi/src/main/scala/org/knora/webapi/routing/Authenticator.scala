@@ -42,23 +42,16 @@ import scala.util.{Failure, Success, Try}
 // needs Java 1.8 !!!
 import java.util.Base64
 
+
 /**
   * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
-  * to extract credentials, authenticate provided credentials, and look up cached credentials through thte use of the
-  * session id.
+  * to extract credentials, authenticate provided credentials, and look up cached credentials through the use of the
+  * session id. All private methods used in this trait can be found in the companion object.
   */
 trait Authenticator {
 
-    val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
-    val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
-    val BAD_CRED_USERNAME_NOT_SUPPLIED = "bad credentials: no username supplied"
-    val BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE = "bad credentials: none found"
-
-    val sessionStore: scala.collection.mutable.Map[String, UserProfileV1] = scala.collection.mutable.Map()
-    implicit val timeout: Timeout = Duration(5, SECONDS)
-    val log = Logger(LoggerFactory.getLogger("org.knora.webapi.util.authentication"))
-
-    private val cacheName = "authenticationCache"
+    /* Import companion object */
+    import Authenticator._
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // LOGIN ENTRY POINT
@@ -67,6 +60,7 @@ trait Authenticator {
     /**
       * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message and cookie header
       * with the generated session id for the client to save.
+      *
       * @param requestContext a [[RequestContext]] containing the http request
       * @param system the current [[ActorSystem]]
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
@@ -108,6 +102,7 @@ trait Authenticator {
     /**
       * Checks if the provided session id is valid, i.e. if a [[UserProfileV1]] can be retrieved from the cache for the
       * supplied session id.
+      *
       * @param requestContext a [[RequestContext]] containing the http request
       * @return a [[HttpRequest]]
       */
@@ -145,6 +140,7 @@ trait Authenticator {
     /**
       * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message. No session is
       * generated.
+      *
       * @param requestContext a [[RequestContext]] containing the http request
       * @param system the current [[ActorSystem]]
       * @return a [[RequestContext]]
@@ -179,62 +175,7 @@ trait Authenticator {
         }
     }
 
-    /**
-      * Tries to extract and then authenticate the credentials.
-      * @param requestContext a [[RequestContext]] containing the http request
-      * @param session a flag if set true then the creation of the session id and caching of the user profile will be skipped
-      * @param system the current [[ActorSystem]]
-      * @return [[ Try[String] ]] containing the session id if successful, which means that the credentials could be
-      *         extracted and authenticated. In the case where the credentials could not be extracted or could be
-      *         extracted but not authenticated, a corresponding exception is thrown.
-      */
-    private def extractCredentialsAndAuthenticate(requestContext: RequestContext, session: Boolean)(implicit system: ActorSystem): Try[String] = {
-        Try {
-            extractCredentials(requestContext) match {
-                case Some((u, p)) => authenticateCredentials(u, p, session) match {
-                    case Success(sId) => sId
-                    case Failure(ex) => throw ex
-                }
-                case None => throw BadCredentialsException(BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE)
-            }
-        }
-    }
 
-    /**
-      * Tries to authenticate the credentials by getting the [[UserProfileV1]] from the triple store and checking if the
-      * password matches. Caches the user profile after successful authentication under a generated session id if 'session=true', and
-      * returns that said session id (or 0 if no session is needed).
-      * @param username the username of the user
-      * @param password the password of th user
-      * @param session a [[Boolean]] if set true then a session id will be created and the user profile cached
-      * @param system the current [[ActorSystem]]
-      * @return a [[Try[String]] which is the session id under which the profile is stored if authentication was successful.
-      */
-    private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem): Try[String] = {
-        Try {
-            getUserProfileByUsername(username) match {
-                case Success(userProfileV1: UserProfileV1) => {
-                    if (userProfileV1.passwordMatch(password)) {
-                        // create session id and cache user profile under this id
-                        log.debug("password matched")
-                        if (session) {
-                            val sId = System.currentTimeMillis().toString
-                            CacheUtil.put(cacheName, sId, userProfileV1)
-                            sId
-                        } else {
-                            "0"
-                        }
-                    } else {
-                        log.debug("password did not match")
-                        throw BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)
-                    }
-                }
-                case Failure(ex) => {
-                    throw ex
-                }
-            }
-        }
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // LOGOUT ENTRY POINT
@@ -243,6 +184,7 @@ trait Authenticator {
     /**
       * Used to logout the user, i.e. returns a header deleting the cookie and removes the [[UserProfileV1]] from the
       * cache.
+      *
       * @param requestContext a [[RequestContext]] containing the http request
       * @param system the current [[ActorSystem]]
       * @return a [[HttpResponse]]
@@ -278,6 +220,7 @@ trait Authenticator {
       * The credentials can be username/password as parameters, auth headers, or username in a cookie if the profile is
       * found in the cache. If no credentials are found, then a default [[UserProfileV1]] is returned. If the credentials
       * not correct, then the corresponding error is returned.
+      *
       * @param requestContext a [[RequestContext]] containing the http request
       * @param system the current [[ActorSystem]]
       * @return a [[UserProfileV1]]
@@ -310,10 +253,90 @@ trait Authenticator {
             }
         }
     }
+}
 
+/**
+  * This companion object holds all private methods used in the trait. This division is needed so that we can test
+  * the private methods directly with scalatest as described in [1] and [3]
+  *
+  * [1] https://groups.google.com/forum/#!topic/scalatest-users/FeaO__f1dN4
+  * [2] http://doc.scalatest.org/2.2.6/index.html#org.scalatest.PrivateMethodTester
+  */
+object Authenticator {
+
+    val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
+    val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
+    val BAD_CRED_USERNAME_NOT_SUPPLIED = "bad credentials: no username supplied"
+    val BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE = "bad credentials: none found"
+
+    val sessionStore: scala.collection.mutable.Map[String, UserProfileV1] = scala.collection.mutable.Map()
+    implicit val timeout: Timeout = Duration(5, SECONDS)
+    val log = Logger(LoggerFactory.getLogger("org.knora.webapi.util.authentication"))
+
+    private val cacheName = "authenticationCache"
+
+    /**
+      * Tries to extract and then authenticate the credentials.
+      *
+      * @param requestContext a [[RequestContext]] containing the http request
+      * @param session a flag if set true then the creation of the session id and caching of the user profile will be skipped
+      * @param system the current [[ActorSystem]]
+      * @return [[ Try[String] ]] containing the session id if successful, which means that the credentials could be
+      *         extracted and authenticated. In the case where the credentials could not be extracted or could be
+      *         extracted but not authenticated, a corresponding exception is thrown.
+      */
+    private def extractCredentialsAndAuthenticate(requestContext: RequestContext, session: Boolean)(implicit system: ActorSystem): Try[String] = {
+        Try {
+            extractCredentials(requestContext) match {
+                case Some((u, p)) => authenticateCredentials(u, p, session) match {
+                    case Success(sId) => sId
+                    case Failure(ex) => throw ex
+                }
+                case None => throw BadCredentialsException(BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE)
+            }
+        }
+    }
+
+    /**
+      * Tries to authenticate the credentials by getting the [[UserProfileV1]] from the triple store and checking if the
+      * password matches. Caches the user profile after successful authentication under a generated session id if 'session=true', and
+      * returns that said session id (or 0 if no session is needed).
+      *
+      * @param username the username of the user
+      * @param password the password of th user
+      * @param session a [[Boolean]] if set true then a session id will be created and the user profile cached
+      * @param system the current [[ActorSystem]]
+      * @return a [[Try[String]] which is the session id under which the profile is stored if authentication was successful.
+      */
+    private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem): Try[String] = {
+        Try {
+            getUserProfileByUsername(username) match {
+                case Success(userProfileV1: UserProfileV1) => {
+                    if (userProfileV1.passwordMatch(password)) {
+                        // create session id and cache user profile under this id
+                        log.debug("password matched")
+                        if (session) {
+                            val sId = System.currentTimeMillis().toString
+                            CacheUtil.put(cacheName, sId, userProfileV1)
+                            sId
+                        } else {
+                            "0"
+                        }
+                    } else {
+                        log.debug("password did not match")
+                        throw BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)
+                    }
+                }
+                case Failure(ex) => {
+                    throw ex
+                }
+            }
+        }
+    }
 
     /**
       * Try to get the session id from the cookie and return a [[UserProfileV1]] if still in the cache.
+      *
       * @param requestContext a [[RequestContext]] containing the http request
       * @return a [[ Option[UserProfileV1] ]]
       */
@@ -336,6 +359,7 @@ trait Authenticator {
 
     /**
       * Tries to extract the credentials from the requestContext (parameters, auth headers)
+      *
       * @param requestContext a [[RequestContext]] containing the http request
       * @return a [[Option[(String, String)]] either a [[Some]] containing a tuple with the username and password, or a [[None]]
       *         if no credentials could be found.
@@ -411,6 +435,7 @@ trait Authenticator {
 
     /**
       * Get a user profile with the specific IRI from the triple store
+      *
       * @param iri the IRI of the user to be queried
       * @param system the current akka actor system
       * @param timeout the timeout of the query
@@ -434,6 +459,7 @@ trait Authenticator {
 
     /**
       * Tries to get a [[UserProfileV1]] from the cache or from the triple store matching the username.
+      *
       * @param username the username of the user to be queried
       * @param system the current akka actor system
       * @param timeout the timeout of the query
@@ -471,5 +497,6 @@ trait Authenticator {
             }
         }
     }
-
 }
+
+
