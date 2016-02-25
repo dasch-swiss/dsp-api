@@ -324,7 +324,7 @@ class ValuesResponderV1 extends ResponderV1 {
         // providing the results of querying the values.
         val valueVerificationFutures: Map[IRI, Future[Seq[CreateValueResponseV1]]] = verifyRequest.unverifiedValues.map {
             case (propertyIri: IRI, unverifiedValues: Seq[UnverifiedCreateValueResponseV1]) =>
-                val valueVerificationResponsesForPropererty = unverifiedValues.map {
+                val valueVerificationResponsesForProperty = unverifiedValues.map {
                     unverifiedValue =>
                         verifyValueCreation(
                             resourceIri = verifyRequest.resourceIri,
@@ -334,7 +334,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         )
                 }
 
-                propertyIri -> Future.sequence(valueVerificationResponsesForPropererty)
+                propertyIri -> Future.sequence(valueVerificationResponsesForProperty)
         }
 
         // Convert our Map full of Futures into one Future, which will provide a Map of all the results
