@@ -79,12 +79,12 @@ case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
 
 /**
   * Starts a new SPARQL update transaction.
-  * @param transactionID the transaction ID.
   */
-case class BeginUpdateTransaction(transactionID: UUID) extends TriplestoreRequest
+case class BeginUpdateTransaction() extends TriplestoreRequest
 
 /**
   * Indicates that the specified transaction was begun.
+  * @param transactionID the transaction ID.
   */
 case class UpdateTransactionBegun(transactionID: UUID)
 

@@ -45,19 +45,25 @@ object TransactionUtil {
       * @return the return value of `task`, or a failed future if an error occurred.
       */
     def runInUpdateTransaction[T](task: UUID => Future[T], storeManager: ActorSelection)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[T] = {
-        val transactionID = UUID.randomUUID()
+        for {
+        // Begin a transaction, getting the transaction ID from the store module.
+            updateTransactionBegun <- (storeManager ? BeginUpdateTransaction()).mapTo[UpdateTransactionBegun]
+            transactionID = updateTransactionBegun.transactionID
 
-        val transactionFuture = for {
-            _ <- (storeManager ? BeginUpdateTransaction(transactionID)).mapTo[UpdateTransactionBegun]
-            result <- task(transactionID)
-            _ <- (storeManager ? CommitUpdateTransaction(transactionID)).mapTo[UpdateTransactionCommitted]
-        } yield result
+            // Run the task, then commit the transaction.
+            taskResultFuture = for {
+                result <- task(transactionID)
+                _ <- (storeManager ? CommitUpdateTransaction(transactionID)).mapTo[UpdateTransactionCommitted]
+            } yield result
 
-        transactionFuture.recoverWith {
-            case err: Exception =>
-                (storeManager ? RollbackUpdateTransaction(transactionID)).mapTo[UpdateTransactionRolledBack].flatMap {
-                    _ => throw err
-                }
-        }
+            // If the task or the commit failed, roll back the transaction and return a failed future containing
+            // the exception that occurred.
+            recoveredTaskResult <- taskResultFuture.recoverWith {
+                case err: Exception =>
+                    (storeManager ? RollbackUpdateTransaction(transactionID)).mapTo[UpdateTransactionRolledBack].flatMap {
+                        _ => Future.failed(err)
+                    }
+            }
+        } yield recoveredTaskResult
     }
 }

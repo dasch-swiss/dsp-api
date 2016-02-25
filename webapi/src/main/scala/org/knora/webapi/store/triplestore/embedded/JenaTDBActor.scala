@@ -120,7 +120,7 @@ class JenaTDBActor extends Actor with ActorLogging {
       */
     def receive = {
         case SparqlSelectRequest(sparqlSelectString) => future2Message(sender(), executeSparqlSelectQuery(sparqlSelectString), log)
-        case BeginUpdateTransaction(transactionID) => future2Message(sender(), beginUpdateTransaction(transactionID), log)
+        case BeginUpdateTransaction() => future2Message(sender(), beginUpdateTransaction(), log)
         case CommitUpdateTransaction(transactionID) => future2Message(sender(), commitUpdateTransaction(transactionID), log)
         case RollbackUpdateTransaction(transactionID) => future2Message(sender(), rollbackUpdateTransaction(transactionID), log)
         case SparqlUpdateRequest(transactionID, sparqlUpdateString) => future2Message(sender(), executeSparqlUpdateQuery(transactionID, sparqlUpdateString), log)
@@ -216,12 +216,11 @@ class JenaTDBActor extends Actor with ActorLogging {
 
     /**
       * Begins a SPARQL Update transaction.
-      * @param transactionID the transaction ID.
       * @return an [[UpdateTransactionBegun]].
       */
-    private def beginUpdateTransaction(transactionID: UUID): Future[UpdateTransactionBegun] = {
+    private def beginUpdateTransaction(): Future[UpdateTransactionBegun] = {
         // TODO: support transaction management in this actor.
-        Future(UpdateTransactionBegun(transactionID))
+        Future(UpdateTransactionBegun(UUID.randomUUID()))
     }
 
     /**

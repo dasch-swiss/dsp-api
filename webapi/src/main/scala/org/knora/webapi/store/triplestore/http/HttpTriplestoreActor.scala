@@ -129,7 +129,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
       */
     def receive = {
         case SparqlSelectRequest(sparql) => future2Message(sender(), sparqlHttpSelect(sparql), log)
-        case BeginUpdateTransaction(transactionID) => future2Message(sender(), beginUpdateTransaction(transactionID), log)
+        case BeginUpdateTransaction() => future2Message(sender(), beginUpdateTransaction(), log)
         case CommitUpdateTransaction(transactionID) => future2Message(sender(), commitUpdateTransaction(transactionID), log)
         case RollbackUpdateTransaction(transactionID) => future2Message(sender(), rollbackUpdateTransaction(transactionID), log)
         case SparqlUpdateRequest(transactionID, sparql) => future2Message(sender(), sparqlHttpUpdate(transactionID, sparql), log)
@@ -163,8 +163,8 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
                 FakeTriplestore.add(sparql, resultStr, log)
             }
 
-            // _ = log.debug(s"SPARQL: $logDelimiter$sparql")
-            //_ = log.debug(s"Result: $logDelimiter$resultStr")
+            // _ = println(s"SPARQL: $logDelimiter$sparql")
+            // _ = println(s"Result: $logDelimiter$resultStr")
 
             // Parse the response as a JSON object and generate a response message.
             responseMessage <- SparqlUtil.parseJsonResponse(sparql, resultStr, log)
@@ -173,12 +173,11 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
     /**
       * Begins a SPARQL Update transaction.
-      * @param transactionID the transaction ID.
       * @return an [[UpdateTransactionBegun]].
       */
-    private def beginUpdateTransaction(transactionID: UUID): Future[UpdateTransactionBegun] = {
-        // Nothing to do here.
-        Future(UpdateTransactionBegun(transactionID))
+    private def beginUpdateTransaction(): Future[UpdateTransactionBegun] = {
+        // Create a transaction ID for the transaction and return it.
+        Future(UpdateTransactionBegun(UUID.randomUUID()))
     }
 
     /**

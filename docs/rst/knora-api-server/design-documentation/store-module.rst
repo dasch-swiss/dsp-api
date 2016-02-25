@@ -92,10 +92,9 @@ SPARQL update strings. This is how ``HttpTriplestoreActor`` handles the
 relevant messages from responders, using
 ``HttpTriplestoreTransactionManager``:
 
-* ``BeginUpdateTransaction``: Does nothing, because the current implementation
-  does not need this operation. It is there to maintain typical transaction
-  manager semantics in case another implementation is used in the future, such
-  as a native Scala or Java transaction API.
+* ``BeginUpdateTransaction``: Returns a new, random transaction ID. (If
+  a native Scala or Java transaction API were used, the transaction ID might
+  be provided by that API.)
 * ``SparqlUpdateRequest``: Calls
   ``HttpTriplestoreTransactionManager.addUpdateToTransaction``, which adds the
   update to the sequence of updates for the transaction ID, creating the
@@ -113,10 +112,10 @@ relevant messages from responders, using
   transaction ID and the update sequence from the ``ConcurrentHashMap``.
 
 Responders are expected to use ``TransactionUtil``, which takes care of
-generating transaction IDs, sending transaction management messages to
-``HttpTriplestoreActor``, and ensuring that a transaction is rolled back if an
-error occurs. A responder must include the transaction ID  provided by
-``TransactionUtil`` in each update request that it sends to the store manager.
+sending transaction management messages to ``HttpTriplestoreActor`` and
+ensuring that a transaction is rolled back if an error occurs. A responder
+must include the transaction ID  provided by ``TransactionUtil`` in each
+update request that it sends to the store manager.
 
 Note that with this built-in transaction management, updates will not take effect
 until the transaction is committed.

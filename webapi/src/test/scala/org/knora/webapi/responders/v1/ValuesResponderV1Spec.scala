@@ -1433,9 +1433,11 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 "http://www.knora.org/ontology/incunabula#pubdate" -> pubdate
             )
 
-            val transactionID = UUID.randomUUID()
-            storeManager ! BeginUpdateTransaction(transactionID)
-            expectMsg(timeout, UpdateTransactionBegun(transactionID))
+            storeManager ! BeginUpdateTransaction()
+
+            val transactionID = expectMsgPF(timeout) {
+                case UpdateTransactionBegun(id) => id
+            }
 
             val createMultipleValuesRequest = CreateMultipleValuesRequestV1(
                 transactionID = transactionID,

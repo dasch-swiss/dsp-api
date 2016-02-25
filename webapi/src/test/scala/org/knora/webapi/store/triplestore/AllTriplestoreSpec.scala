@@ -262,9 +262,11 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                 }
 
 
-                val transactionID = UUID.randomUUID()
-                storeManager ! BeginUpdateTransaction(transactionID)
-                expectMsg(timeout, UpdateTransactionBegun(transactionID))
+                storeManager ! BeginUpdateTransaction()
+
+                val transactionID = expectMsgPF(timeout) {
+                    case UpdateTransactionBegun(id) => id
+                }
 
                 storeManager ! SparqlUpdateRequest(transactionID, insertQuery)
                 expectMsg(SparqlUpdateResponse(transactionID))
@@ -306,9 +308,11 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                     }
                 }
 
-                val transactionID = UUID.randomUUID()
-                storeManager ! BeginUpdateTransaction(transactionID)
-                expectMsg(timeout, UpdateTransactionBegun(transactionID))
+                storeManager ! BeginUpdateTransaction()
+
+                val transactionID = expectMsgPF(timeout) {
+                    case UpdateTransactionBegun(id) => id
+                }
 
                 storeManager ! SparqlUpdateRequest(transactionID, revertInsertQuery)
                 expectMsg(SparqlUpdateResponse(transactionID))
