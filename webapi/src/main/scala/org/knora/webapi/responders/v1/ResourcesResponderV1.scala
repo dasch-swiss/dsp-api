@@ -1189,17 +1189,12 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @return a tuple (permission, [[ResourceInfoV1]]) describing the resource.
       */
     private def getResourceInfoV1(resourceIri: IRI, userProfile: UserProfileV1, queryOntology: Boolean): Future[(Option[Int], ResourceInfoV1)] = {
-        if (resourceIri.isEmpty) {
-            Future.failed(BadRequestException("Cannot query an empty resource IRI"))
-        } else {
-            for {
-                sparqlQuery <- Future(queries.sparql.v1.txt.getResourceInfo(resourceIri).toString())
-                resInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-                resInfoResponseRows = resInfoResponse.results.bindings
-                resInfo <- makeResourceInfoV1(resourceIri, resInfoResponseRows, userProfile, queryOntology)
-            } yield resInfo
-
-        }
+        for {
+            sparqlQuery <- Future(queries.sparql.v1.txt.getResourceInfo(resourceIri).toString())
+            resInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            resInfoResponseRows = resInfoResponse.results.bindings
+            resInfo <- makeResourceInfoV1(resourceIri, resInfoResponseRows, userProfile, queryOntology)
+        } yield resInfo
     }
 
     /**

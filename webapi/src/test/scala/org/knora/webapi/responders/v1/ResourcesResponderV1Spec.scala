@@ -183,7 +183,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
     // The default timeout for receiving reply messages from actors.
     private val timeout = 60.seconds
 
-    private var newResourceIri: IRI = ""
+    private var newResourceIri = new MutableTestIri
 
     private def compareResourceFullResponses(expected: ResourceFullResponseV1, received: ResourceFullResponseV1): Unit = {
         // println(MessageUtil.toSource(received))
@@ -605,17 +605,16 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: ResourceCreateResponseV1 =>
-                    newResourceIri = response.res_id
-                    newResourceIri.nonEmpty should ===(true)
+                    newResourceIri.set(response.res_id)
                     checkResourceCreation(valuesExpected, response)
             }
 
             // Check that the resource doesn't have more than one lastModificationDate.
-            getLastModificationDate(newResourceIri)
+            getLastModificationDate(newResourceIri.get)
 
             // See if we can query the resource.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = newResourceIri, userProfile = ResourcesResponderV1Spec.userProfile)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = newResourceIri.get, userProfile = ResourcesResponderV1Spec.userProfile)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => () // If we got a ResourceFullResponseV1, the operation succeeded.
@@ -651,9 +650,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 isPreview = false
             )
 
-            assert(newResourceIri.nonEmpty, "The previous test failed")
-
-            val book = newResourceIri
+            val book = newResourceIri.get
 
             val valuesToBeCreated = Map(
                 "http://www.knora.org/ontology/incunabula#hasRightSideband" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://data.knora.org/482a33d65c36"))),
@@ -689,7 +686,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: ResourceCreateResponseV1 =>
-                    newResourceIri = response.res_id
+                    newResourceIri.set(response.res_id)
                     checkResourceCreation(expected, response)
             }
         }
