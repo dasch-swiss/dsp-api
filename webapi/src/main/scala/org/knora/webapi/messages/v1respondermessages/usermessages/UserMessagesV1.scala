@@ -63,7 +63,33 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
     }
 
     def passwordMatchBCrypt(password: String): Boolean = userData.password.exists(hp => BCrypt.checkpw(password, hp))
+
+    /**
+      * Creating a [[UserProfileV1]] with sensitive information stripped.
+      * @return a [[UserProfileV1]]
+      */
+    def getCleanUserProfileV1: UserProfileV1 = {
+
+        val olduserdata = userData
+        val newuserdata = UserDataV1(
+            olduserdata.lang,
+            olduserdata.user_id,
+            None, // remove token
+            olduserdata.username,
+            olduserdata.firstname,
+            olduserdata.lastname,
+            olduserdata.email,
+            None, // remove password
+            olduserdata.activeProject,
+            olduserdata.projects,
+            olduserdata.projects_info
+        )
+
+        UserProfileV1(newuserdata, groups, projects)
+    }
 }
+
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

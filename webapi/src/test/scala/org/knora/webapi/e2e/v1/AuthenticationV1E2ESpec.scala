@@ -165,6 +165,14 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
                 assert(status === StatusCodes.Unauthorized)
             }
         }
+        "not return sensitive information (token, password) in the response " in {
+            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test") ~> resourcesPath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.OK)
+                assert(responseAs[String] contains "\"password\":null")
+                assert(responseAs[String] contains "\"token\":null")
+            }
+        }
 
     }
 }

@@ -230,14 +230,15 @@ trait Authenticator {
         val hardCodedUser: IRI = "http://data.knora.org/users/b83acc5f05" // testuser
         if (settings.skipAuthentication) {
             // skip authentication and return hardCodedUser
-            getUserProfileByIri(hardCodedUser).getOrElse(UserProfileV1(UserDataV1(settings.fallbackLanguage)))
+            getUserProfileByIri(hardCodedUser).getOrElse(UserProfileV1(UserDataV1(settings.fallbackLanguage))).getCleanUserProfileV1
         }
         else {
             // let us first try to get the user profile through the session id from the cookie
             getUserProfileV1FromSessionId(requestContext) match {
                 case Some(userProfile) =>
                     log.debug(s"Got this UserProfileV1 through the session id: '${userProfile.toString}'")
-                    userProfile
+                    /* we return the userProfileV1 without sensitive information */
+                    userProfile.getCleanUserProfileV1
                 case None => {
                     log.debug("No cookie or valid session id, so let's look for supplied credentials")
                     extractCredentials(requestContext) match {
@@ -249,7 +250,8 @@ trait Authenticator {
                                     getUserProfileByUsername(u) match {
                                         case Success(userProfileV1: UserProfileV1) =>
                                             log.debug(s"I got a UserProfileV1 '${userProfileV1.toString}', which means that the password is a match")
-                                            userProfileV1
+                                            /* we return the userProfileV1 without sensitive information */
+                                            userProfileV1.getCleanUserProfileV1
                                         case Failure(ex) =>
                                             log.debug(s"Something went wrong. Just throwing the exception containing this message '${ex.getMessage}' upwards")
                                             throw ex
