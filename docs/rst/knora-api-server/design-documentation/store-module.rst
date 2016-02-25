@@ -72,22 +72,50 @@ concatenate them and send them as a single HTTP request. This ensures that
 consistency checks will be performed on the combined results of all the
 updates.
 
-This requires the store module to implement its own transaction management
-for SPARQL updates. Each update transaction is given a ``UUID``. The implementation
-is intended to mimic the semantics of typical transaction management APIs, by means
-of messages that are handled by ``HttpTriplestoreActor``:
+This requires the store module to implement its own transaction management for
+SPARQL updates. Each update transaction is given a random ``UUID``. The
+implementation is intended to mimic the semantics of typical transaction
+management APIs, by means of messages that are handled by
+``HttpTriplestoreActor``:
 
 * ``BeginUpdateTransaction``
 * ``CommitUpdateTransaction``
 * ``RollbackUpdateTransaction``
 
 ``HttpTriplestoreActor`` delegates the storage and concatenation of SPARQL
-update requests to ``HttpTriplestoreTransactionManager``.
+update requests to ``HttpTriplestoreTransactionManager``. The implementation
+of ``HttpTriplestoreTransactionManager`` stores SPARQL updates in a
+``java.util.concurrent.ConcurrentHashMap`` so it can accumulate updates for
+different transactions concurrently with minimal blocking. The keys of the
+``ConcurrentHashMap`` are transaction IDs, and the values are sequences of
+SPARQL update strings. This is how ``HttpTriplestoreActor`` handles the
+relevant messages from responders, using
+``HttpTriplestoreTransactionManager``:
+
+* ``BeginUpdateTransaction``: Does nothing, because the current implementation
+  does not need this operation. It is there to maintain typical transaction
+  manager semantics in case another implementation is used in the future, such
+  as a native Scala or Java transaction API.
+* ``SparqlUpdateRequest``: Calls
+  ``HttpTriplestoreTransactionManager.addUpdateToTransaction``, which adds the
+  update to the sequence of updates for the transaction ID, creating the
+  sequence if there isn't yet one in the ``ConcurrentHashMap`` for the
+  transaction ID.
+* ``CommitUpdateTransaction``: Calls
+  ``HttpTriplestoreTransactionManager.concatenateAndForgetUpdates``, which
+  concatenates the sequence of updates for the transaction ID into a single
+  SPARQL string (using semicolons as a delimiter, as specified in
+  `SPARQL 1.1 Update Language`_) and removes the transaction ID and the
+  update sequence from the ``ConcurrentHashMap``. ``HttpTriplestoreActor``
+  then sends the concatenated SPARQL string to the triplestore.
+* ``RollbackUpdateTransaction``: Calls
+  ``HttpTriplestoreTransactionManager.forgetUpdates``, which removes the
+  transaction ID and the update sequence from the ``ConcurrentHashMap``.
 
 Responders are expected to use ``TransactionUtil``, which takes care of
 generating transaction IDs, sending transaction management messages to
-``HttpTriplestoreActor``, and ensuring that a transaction is rolled back if
-an error occurs. A responder must include the transaction ID  provided by
+``HttpTriplestoreActor``, and ensuring that a transaction is rolled back if an
+error occurs. A responder must include the transaction ID  provided by
 ``TransactionUtil`` in each update request that it sends to the store manager.
 
 Note that with this built-in transaction management, updates will not take effect
@@ -267,3 +295,6 @@ As an example, to use it inside a test you could write something like:
         storeManager ! ResetTripleStoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTripleStoreContentACK())
     }
+
+
+.. _SPARQL 1.1 Update Language: https://www.w3.org/TR/sparql11-update/#updateLanguage

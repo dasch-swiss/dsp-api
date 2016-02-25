@@ -1025,8 +1025,12 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 }
 
-                // Everything looks OK, so we can create an empty resource and add the values to it.
-
+                // Everything looks OK, so we can create an empty resource and add the values to it. This must
+                // happen in an update transaction managed by the store package, to ensure that triplestore
+                // consistency checks are performed on the result of the whole set of updates. We use
+                // TransactionUtil.runInUpdateTransaction to handle the store module's transaction management.
+                // Its first argument is a lambda function that sends all the updates to the store manager,
+                // using a transaction ID provided by TransactionUtil.runInUpdateTransaction.
                 createMultipleValuesResponse <- TransactionUtil.runInUpdateTransaction({
                     transactionID =>
                         for {
