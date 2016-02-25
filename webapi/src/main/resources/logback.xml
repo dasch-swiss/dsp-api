@@ -35,7 +35,7 @@
 
     <logger name="org.knora" level="DEBUG"/>
     <logger name="org.knora.webapi" level="DEBUG"/>
-    <logger name="org.knora.webapi.util.authentication" level="INFO"/>
+    <logger name="org.knora.webapi.util.authentication" level="DEBUG"/>
     <logger name="org.knora.webapi.util.cache" level="INFO"/>
     <logger name="org.knora.webapi.store.StoreManager" level="INFO"/>
     <logger name="org.knora.webapi.store.triplestore" level="INFO"/>

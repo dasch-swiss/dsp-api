@@ -235,19 +235,32 @@ trait Authenticator {
         else {
             // let us first try to get the user profile through the session id from the cookie
             getUserProfileV1FromSessionId(requestContext) match {
-                case Some(userProfile) => log.debug(s"got this through the session id: ${userProfile.toString}"); userProfile
+                case Some(userProfile) =>
+                    log.debug(s"Got this UserProfileV1 through the session id: '${userProfile.toString}'")
+                    userProfile
                 case None => {
-                    // no cookie or valid session id, so let's look for credentials
+                    log.debug("No cookie or valid session id, so let's look for supplied credentials")
                     extractCredentials(requestContext) match {
-                        // got some credentials, lets try to get a UserProfileV1
-                        case Some((u, p)) => getUserProfileByUsername(u) match {
-                            // I got a UserProfileV1, which means that the password is a match
-                            case Success(userProfileV1: UserProfileV1) => userProfileV1
-                            // something went wrong. I'll just throw the exception upwards.
-                            case Failure(ex) => throw ex
-                        }
-                        // no credentials found, return default UserProfileV1
-                        case None => UserProfileV1(UserDataV1(settings.fallbackLanguage))
+                        case Some((u, p)) =>
+                            log.debug(s"found some credentials '$u', '$p', lets try to authenticate them first")
+                            authenticateCredentials(u, p, false) match {
+                                case Success(_) =>
+                                    log.debug("Supplied credentials pass authentication, get the UserProfileV1")
+                                    getUserProfileByUsername(u) match {
+                                        case Success(userProfileV1: UserProfileV1) =>
+                                            log.debug(s"I got a UserProfileV1 '${userProfileV1.toString}', which means that the password is a match")
+                                            userProfileV1
+                                        case Failure(ex) =>
+                                            log.debug(s"Something went wrong. Just throwing the exception containing this message '${ex.getMessage}' upwards")
+                                            throw ex
+                                    }
+                                case Failure(ex) =>
+                                    log.debug(s"Supplied credentials didn't pass authentication. Returned exception '${ex.getMessage}' is thrown upwards")
+                                    throw ex
+                            }
+                        case None =>
+                            log.debug("No credentials found, returning default UserProfileV1!")
+                            UserProfileV1(UserDataV1(settings.fallbackLanguage))
                     }
                 }
             }

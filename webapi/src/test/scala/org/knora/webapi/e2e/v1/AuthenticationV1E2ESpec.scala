@@ -69,33 +69,69 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
     }
 
-    "The Authentication Route " should {
-        "succeed with authentication using URL parameters and correct username / correct password " in {
+    "The Authentication Route ('v1/authenticate') with credentials supplied via URL parameters " should {
+        "succeed with authentication and correct username / correct password " in {
             /* Correct username and password */
             Get("/v1/authenticate?username=root&password=test") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
             }
         }
-        "fail with authentication using URL parameters and correct username / wrong password " in {
+        "fail with authentication and correct username / wrong password " in {
             /* Correct username / wrong password */
             Get("/v1/authenticate?username=root&password=wrong") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.Unauthorized)
             }
         }
-        "succeed with authentication using HTTP Basic Auth headers and correct username / correct password " in {
+    }
+    "The Authentication Route ('v1/authenticate') with credentials supplied via Basic Auth " should {
+        "succeed with authentication and correct username / correct password " in {
             /* Correct username / correct password */
             Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
             }
         }
-        "fail with authentication using HTTP Basic Auth headers and correct username / wrong password " in {
+        "fail with authentication and correct username / wrong password " in {
             /* Correct username / wrong password */
             Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "wrong")) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.Unauthorized)
+            }
+        }
+    }
+
+    "The Session Route ('v1/session') with credentials supplied via URL parameters " should {
+        "succeed with 'login' and correct username / correct password " in {
+            /* Correct username and password */
+            Get("/v1/session?login&username=root&password=test") ~> authenticatePath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.OK)
+            }
+        }
+        "fail with 'login' and correct username / wrong password " in {
+
+        }
+        "fail with 'login' and wrong username " in {
+
+        }
+        "succed with authentication using correct session id " in {
+            // do login and store session id
+            // authenticate by calling '/v2/session' without parameters but by providing session id in cookie
+        }
+        "succeed with 'logout' when providing the session cookie " in {
+            // do login and store session id
+            // do logout with stored session id
+        }
+    }
+
+    "The Session Route ('v1/session') with credentials supplied via Basic Auth " should {
+        "succeed with 'login' and correct username / correct password " in {
+            /* Correct username and password */
+            Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.OK)
             }
         }
     }

@@ -22,12 +22,15 @@ package org.knora.webapi.routing
 
 import akka.actor.ActorDSL._
 import akka.testkit.ImplicitSender
+import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1respondermessages.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
+import org.knora.webapi.routing.Authenticator.{BAD_CRED_PASSWORD_MISMATCH, BAD_CRED_USERNAME_NOT_SUPPLIED, BAD_CRED_USER_NOT_FOUND}
 import org.knora.webapi.{BadCredentialsException, CoreSpec}
 import org.scalatest.PrivateMethodTester
 
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 object AuthenticatorSpec {
@@ -47,28 +50,29 @@ object AuthenticatorSpec {
  *  - API Key based authentication
  */
 
-class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSender with Authenticator with PrivateMethodTester {
+class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSender with PrivateMethodTester {
 
     implicit val executionContext = system.dispatcher
+    implicit val timeout: Timeout = Duration(5, SECONDS)
 
-    val usernameCorrect = "isubotic"
-    val usernameWrong = "usernamewrong"
+    val usernameCorrect = "root"
+    val usernameWrong = "wrong"
     val usernameEmpty = ""
 
-    val passUnhashed = "123456"
-    // gensalt's log_rounds parameter determines the complexity
-    // the work factor is 2**log_rounds, and the default is 10
-    val passHashed = "7c4a8d09ca3762af61e59520943dc26494f8941b"
-    val passEmpty = ""
+    val passwordCorrect = "test"
+    val passwordCorrectHashed = "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" // hashed with sha-1
+    val passwordWrong = "wrong"
+    val passwordEmpty = ""
+
 
     val lang = "en"
-    val user_id = Some("http://data.knora.org/users/b83acc5f05")
+    val user_id = Some("http://data.knora.org/users/91e19f1e01")
     val token = None
     val username = Some(usernameCorrect)
-    val firstname = Some("Ivan")
-    val lastname = Some("Subotic")
-    val email = Some("ivan.subotic@unibas.ch")
-    val password = Some(passHashed)
+    val firstname = Some("Administrator")
+    val lastname = Some("Admin")
+    val email = Some("test@test.ch")
+    val password = Some(passwordCorrectHashed)
 
     val mockUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password), Nil, Nil)
 
@@ -76,7 +80,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         become {
             case UserProfileByUsernameGetRequestV1(submittedUsername) => {
                 if (submittedUsername == usernameCorrect) {
-                    sender ! Some(mockUserProfileV1)
+                    sender !  Some(mockUserProfileV1)
                 } else {
                     sender ! None
                 }
@@ -85,19 +89,28 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     })
 
     val getUserProfileByUsername = PrivateMethod[Try[UserProfileV1]]('getUserProfileByUsername)
+    val authenticateCredentials = PrivateMethod[Try[String]]('authenticateCredentials)
 
     "During Authentication " when {
-        "called, the getUserProfile method " should {
-            "succeed with the correct 'username' " ignore {
-                this invokePrivate getUserProfileByUsername(usernameCorrect) should be(Success(mockUserProfileV1))
+        "called, the 'getUserProfile' method " should {
+            "succeed with the correct 'username' " in {
+                Authenticator invokePrivate getUserProfileByUsername(usernameCorrect, system, timeout, executionContext) should be(Success(mockUserProfileV1))
             }
 
-            "fail with the wrong 'username' " ignore {
-                this invokePrivate getUserProfileByUsername(usernameWrong) should be(Failure(BadCredentialsException(BAD_CRED_USER_NOT_FOUND)))
+            "fail with the wrong 'username' " in {
+                Authenticator invokePrivate getUserProfileByUsername(usernameWrong, system, timeout, executionContext) should be(Failure(BadCredentialsException(BAD_CRED_USER_NOT_FOUND)))
             }
 
-            "fail when not providing a username " ignore {
-                this invokePrivate getUserProfileByUsername(usernameEmpty) should be(Failure(BadCredentialsException(BAD_CRED_USERNAME_NOT_SUPPLIED)))
+            "fail when not providing a username " in {
+                Authenticator invokePrivate getUserProfileByUsername(usernameEmpty, system, timeout, executionContext) should be(Failure(BadCredentialsException(BAD_CRED_USERNAME_NOT_SUPPLIED)))
+            }
+        }
+        "called, the 'authenticateCredentials' method " should {
+            "succeed with the correct 'username' / correct 'password' " in {
+                Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordCorrect, false, system) should be(Success("0"))
+            }
+            "fail with correct 'username' / wrong 'password' " in {
+                Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordWrong, false, system) should be(Failure(BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)))
             }
         }
     }
