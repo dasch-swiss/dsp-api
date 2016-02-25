@@ -20,28 +20,20 @@
 
 .. _documentation:
 
-*************************
 Documentation Guidelines
-*************************
+========================
 
 The Knora documentation uses `reStructuredText`_ as its markup language and is
 built using `Sphinx`_.
 
-Sphinx
-======
-
-For more details, see `The Sphinx Documentation <http://sphinx.pocoo.org/contents.html>`_.
-
-reStructuredText
-================
-
-For more details, see `The reST Quickref <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`_.
+For more details, see `The Sphinx Documentation <http://sphinx.pocoo.org/contents.html>`_
+and `Quick reStructuredText <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`_.
 
 Sections
 --------
 
 Section headings are very flexible in reST. We use the following convention in
-the Knora documentation based on the `Python Documentation Convention https://docs.python.org/devguide/documenting.html`_:
+the Knora documentation based on the `Python Documentation Conventions`_:
 
 * ``#`` (over and under) for parts
 * ``*`` (over and under) for chapters
@@ -63,36 +55,33 @@ For example::
 
   .. _knora_part::
 
-  #################
+  ##########
   Knora Part
-  #################
+  ##########
 
   .. _knora-chapter:
 
-  ***************
-   Knora Chapter
-  ***************
+  *************
+  Knora Chapter
+  *************
 
   This is the chapter documentation.
 
   .. _knora-section:
 
   Knora Section
-  ============
+  =============
 
   Knora Subsection
-  ---------------
+  ----------------
 
   Here is a reference to "knora section": :ref:`knora-section` which will have the
   name "Knora Section".
 
 Build the documentation
-=======================
+-----------------------
 
 First install `Sphinx`_. See below.
-
-Building
---------
 
 For the html version of the docs::
 
@@ -159,5 +148,5 @@ If you get the error ``unknown locale: UTF-8`` when generating the documentation
   export LC_ALL=en_GB.UTF-8
 
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
-.. _sphinx: http://sphinx.pocoo.org
-.. _pythonDocumentationConventions: https://docs.python.org/devguide/documenting.html
+.. _Sphinx: http://sphinx.pocoo.org
+.. _Python Documentation Conventions: https://docs.python.org/devguide/documenting.html

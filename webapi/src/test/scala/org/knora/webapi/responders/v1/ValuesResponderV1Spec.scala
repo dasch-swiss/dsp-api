@@ -1433,7 +1433,14 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 "http://www.knora.org/ontology/incunabula#pubdate" -> pubdate
             )
 
+            storeManager ! BeginUpdateTransaction()
+
+            val transactionID = expectMsgPF(timeout) {
+                case UpdateTransactionBegun(id) => id
+            }
+
             val createMultipleValuesRequest = CreateMultipleValuesRequestV1(
+                transactionID = transactionID,
                 projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/c3f913666f",
                 resourceClassIri = "http://www.knora.org/ontology/incunabula#book",
@@ -1444,9 +1451,24 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! createMultipleValuesRequest
 
+            val createMultipleValuesResponse = expectMsgPF(timeout) {
+                case response: CreateMultipleValuesResponseV1 => response
+            }
+
+            storeManager ! CommitUpdateTransaction(transactionID)
+            expectMsg(timeout, UpdateTransactionCommitted(transactionID))
+
+            val verifyMultipleValuesRequest = VerifyMultipleValueCreationRequestV1(
+                resourceIri = "http://data.knora.org/c3f913666f",
+                unverifiedValues = createMultipleValuesResponse.unverifiedValues,
+                userProfile = ValuesResponderV1Spec.userProfile
+            )
+
+            actorUnderTest ! verifyMultipleValuesRequest
+
             expectMsgPF(timeout) {
-                case response: CreateMultipleValuesResponseV1 =>
-                    val justTheValues: Map[IRI, Seq[ApiValueV1]] = response.values.map {
+                case response: VerifyMultipleValueCreationResponseV1 =>
+                    val justTheValues: Map[IRI, Seq[ApiValueV1]] = response.verifiedValues.map {
                         case (propertyIri, createValueResponses) =>
                             propertyIri -> createValueResponses.map(_.value)
                     }

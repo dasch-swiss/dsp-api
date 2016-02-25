@@ -1025,44 +1025,64 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 }
 
-                // Everything looks OK, so create an empty resource.
+                // Everything looks OK, so we can create an empty resource and add the values to it. This must
+                // happen in an update transaction managed by the store package, to ensure that triplestore
+                // consistency checks are performed on the result of the whole set of updates. We use
+                // TransactionUtil.runInUpdateTransaction to handle the store module's transaction management.
+                // Its first argument is a lambda function that sends all the updates to the store manager,
+                // using a transaction ID provided by TransactionUtil.runInUpdateTransaction.
+                createMultipleValuesResponse <- TransactionUtil.runInUpdateTransaction({
+                    transactionID =>
+                        for {
+                        // Create an empty resource.
+                            createNewResourceSparql <- Future(queries.sparql.v1.txt.createNewResource(
+                                dataNamedGraph = namedGraph,
+                                resourceIri = resourceIri,
+                                label = label,
+                                resourceClassIri = resourceClassIri,
+                                ownerIri = ownerIri,
+                                projectIri = projectIri,
+                                permissions = permissions).toString())
+                            createResourceResponse <- (storeManager ? SparqlUpdateRequest(transactionID, createNewResourceSparql)).mapTo[SparqlUpdateResponse]
 
-                createNewResourceSparql <- Future(queries.sparql.v1.txt.createNewResource(
-                    dataNamedGraph = namedGraph,
-                    resourceIri = resourceIri,
-                    label = label,
-                    resourceClassIri = resourceClassIri,
-                    ownerIri = ownerIri,
-                    projectIri = projectIri,
-                    permissions = permissions).toString())
+                            // Ask the values responder to create the values.
+                            createValuesRequest = CreateMultipleValuesRequestV1(
+                                transactionID = transactionID,
+                                projectIri = projectIri,
+                                resourceIri = resourceIri,
+                                resourceClassIri = resourceClassIri,
+                                values = values ++ fileValuesV1,
+                                userProfile = userProfile,
+                                apiRequestID = apiRequestID
+                            )
+                            createValuesResponse: CreateMultipleValuesResponseV1 <- (responderManager ? createValuesRequest).mapTo[CreateMultipleValuesResponseV1]
+                        } yield createValuesResponse
+                }, storeManager)
 
-                createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]
+                // Verify that the resource was created.
 
-                // check if triples have been inserted correctly: Do a Select query with the given resource IRI
                 createdResourcesSparql <- Future(queries.sparql.v1.txt.getCreatedResource(resourceIri = resourceIri).toString())
                 createdResourceResponse <- (storeManager ? SparqlSelectRequest(createdResourcesSparql)).mapTo[SparqlSelectResponse]
 
                 _ = if (createdResourceResponse.results.bindings.isEmpty) {
-                    throw UpdateNotPerformedException()
+                    throw UpdateNotPerformedException(s"Resource $resourceIri was not created. Please report this as a possible bug.")
                 }
 
-                // Ask the values responder to create the values.
+                // Verify that all the requested values were created.
 
-                createValuesRequest = CreateMultipleValuesRequestV1(
-                    projectIri = projectIri,
+                verifyCreateValuesRequest = VerifyMultipleValueCreationRequestV1(
                     resourceIri = resourceIri,
-                    resourceClassIri = resourceClassIri,
-                    values = values ++ fileValuesV1,
-                    userProfile = userProfile,
-                    apiRequestID = apiRequestID
+                    unverifiedValues = createMultipleValuesResponse.unverifiedValues,
+                    userProfile = userProfile
                 )
 
-                createValuesResponse: CreateMultipleValuesResponseV1 <- (responderManager ? createValuesRequest).mapTo[CreateMultipleValuesResponseV1]
+                verifyMultipleValueCreationResponse: VerifyMultipleValueCreationResponseV1 <- (responderManager ? verifyCreateValuesRequest).mapTo[VerifyMultipleValueCreationResponseV1]
 
-                results: Map[IRI, Seq[ResourceCreateValueResponseV1]] = createValuesResponse.values.map {
+                // Convert CreateValueResponseV1 objects to ResourceCreateValueResponseV1 objects.
+
+                resourceCreateValueResponses: Map[IRI, Seq[ResourceCreateValueResponseV1]] = verifyMultipleValueCreationResponse.verifiedValues.map {
                     case (propIri: IRI, values: Seq[CreateValueResponseV1]) => (propIri, values.map {
                         valueResponse: CreateValueResponseV1 =>
-                            // convert values message [[CreateValueResponseV1]] to resources message [[ResourceCreateValueResponseV1]]
                             MessageUtil.convertCreateValueResponseV1ToResourceCreateValueResponseV1(ownerIri = ownerIri,
                                 propertyIri = propIri,
                                 resourceIri = resourceIri,
@@ -1070,9 +1090,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                     })
                 }
 
-                result: ResourceCreateResponseV1 = ResourceCreateResponseV1(results = results, res_id = resourceIri, userdata = userProfile.userData)
-
-            } yield result
+                apiResponse: ResourceCreateResponseV1 = ResourceCreateResponseV1(results = resourceCreateValueResponses, res_id = resourceIri, userdata = userProfile.userData)
+            } yield apiResponse
         }
 
         val maybeUserIri: Option[IRI] = userProfile.userData.user_id
@@ -1170,12 +1189,17 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @return a tuple (permission, [[ResourceInfoV1]]) describing the resource.
       */
     private def getResourceInfoV1(resourceIri: IRI, userProfile: UserProfileV1, queryOntology: Boolean): Future[(Option[Int], ResourceInfoV1)] = {
-        for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getResourceInfo(resourceIri).toString())
-            resInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-            resInfoResponseRows = resInfoResponse.results.bindings
-            resInfo <- makeResourceInfoV1(resourceIri, resInfoResponseRows, userProfile, queryOntology)
-        } yield resInfo
+        if (resourceIri.isEmpty) {
+            Future.failed(BadRequestException("Cannot query an empty resource IRI"))
+        } else {
+            for {
+                sparqlQuery <- Future(queries.sparql.v1.txt.getResourceInfo(resourceIri).toString())
+                resInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+                resInfoResponseRows = resInfoResponse.results.bindings
+                resInfo <- makeResourceInfoV1(resourceIri, resInfoResponseRows, userProfile, queryOntology)
+            } yield resInfo
+
+        }
     }
 
     /**

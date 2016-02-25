@@ -117,4 +117,21 @@ object ActorUtil {
             case Failure(e) => Failure(e)
         }
     }
+
+    /**
+      * Convert a [[Map]] containing futures of sequences into a future containing a [[Map]] containing sequences.
+      * @param mapToSequence the [[Map]] to be converted.
+      * @return a future that will provide the results of the futures that were in the [[Map]].
+      */
+    def sequenceFuturesInMap[KeyT: ClassTag, ElemT](mapToSequence: Map[KeyT, Future[Seq[ElemT]]])(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Map[KeyT, Seq[ElemT]]] = {
+        // See http://stackoverflow.com/a/17479415
+        Future.sequence {
+            mapToSequence.map {
+                case (propertyIri: KeyT, responseFutures: Future[Seq[ElemT]]) =>
+                    responseFutures.map {
+                        responses: Seq[ElemT] => (propertyIri, responses)
+                    }
+            }
+        }.map(_.toMap)
+    }
 }

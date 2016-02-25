@@ -20,28 +20,28 @@
 
 
 Store Module
-=============
+============
 
 
 Overview
----------
+--------
 
 The store module houses the different types of data stores supported by
-rapier. At the moment, only triplestores are supported. The triplestore
+the Knora API server. At the moment, only triplestores are supported. The triplestore
 support is implemented in the ``org.knora.webapi.store.triplestore``
 package.
 
 Lifecycle
-----------
+---------
 
 At the top level, the store package houses  the ``StoreManager``-Actor
-which is started when rapier starts. The ``StoreManager`` then starts
+which is started when the Knora API server starts. The ``StoreManager`` then starts
 the ``TripleStoreManagerActor`` which in turn starts the correct actor
 implementation (e.g., GraphDB, Fuseki, embedded Jena, etc.).
 
 
 HTTP-based Triplestores
-------------------------
+-----------------------
 
 HTTP-based triplestore support is implemented in the ``org.knora.webapi.triplestore.http`` package.
 
@@ -52,15 +52,82 @@ the following triplestores:
 
   * Fuseki 2
 
+.. _transaction-management:
+
+Transaction Management
+----------------------
+
+Some triplestores can be configured to perform database consistency checks
+when committing each update transaction. This requires each transaction to
+leave the database in a consistent state. However, consider the case in which
+a resource is created with its required values. The Knora API server generates
+a SPARQL update operation to create an empty resource, then a SPARQL update
+operation for each value that needs to be created. Database consistency
+constraints will not be satisfied until all these operations have completed.
+This means that they must all be run in a single database transaction. The
+SPARQL HTTP protocol does not provide transaction management, and GraphDB runs
+each HTTP request in its own transaction. Therefore, the only way to perform
+multiple update operations in a single triplestore transaction is to
+concatenate them and send them as a single HTTP request. This ensures that
+consistency checks will be performed on the combined results of all the
+updates.
+
+This requires the store module to implement its own transaction management for
+SPARQL updates. Each update transaction is given a random ``UUID``. The
+implementation is intended to mimic the semantics of typical transaction
+management APIs, by means of messages that are handled by
+``HttpTriplestoreActor``:
+
+* ``BeginUpdateTransaction``
+* ``CommitUpdateTransaction``
+* ``RollbackUpdateTransaction``
+
+``HttpTriplestoreActor`` delegates the storage and concatenation of SPARQL
+update requests to ``HttpTriplestoreTransactionManager``. The implementation
+of ``HttpTriplestoreTransactionManager`` stores SPARQL updates in a
+``java.util.concurrent.ConcurrentHashMap`` so it can accumulate updates for
+different transactions concurrently with minimal blocking. The keys of the
+``ConcurrentHashMap`` are transaction IDs, and the values are sequences of
+SPARQL update strings. This is how ``HttpTriplestoreActor`` handles the
+relevant messages from responders, using
+``HttpTriplestoreTransactionManager``:
+
+* ``BeginUpdateTransaction``: Returns a new, random transaction ID. (If
+  a native Scala or Java transaction API were used, the transaction ID might
+  be provided by that API.)
+* ``SparqlUpdateRequest``: Calls
+  ``HttpTriplestoreTransactionManager.addUpdateToTransaction``, which adds the
+  update to the sequence of updates for the transaction ID, creating the
+  sequence if there isn't yet one in the ``ConcurrentHashMap`` for the
+  transaction ID.
+* ``CommitUpdateTransaction``: Calls
+  ``HttpTriplestoreTransactionManager.concatenateAndForgetUpdates``, which
+  concatenates the sequence of updates for the transaction ID into a single
+  SPARQL string (using semicolons as a delimiter, as specified in
+  `SPARQL 1.1 Update Language`_) and removes the transaction ID and the
+  update sequence from the ``ConcurrentHashMap``. ``HttpTriplestoreActor``
+  then sends the concatenated SPARQL string to the triplestore.
+* ``RollbackUpdateTransaction``: Calls
+  ``HttpTriplestoreTransactionManager.forgetUpdates``, which removes the
+  transaction ID and the update sequence from the ``ConcurrentHashMap``.
+
+Responders are expected to use ``TransactionUtil``, which takes care of
+sending transaction management messages to ``HttpTriplestoreActor`` and
+ensuring that a transaction is rolled back if an error occurs. A responder
+must include the transaction ID  provided by ``TransactionUtil`` in each
+update request that it sends to the store manager.
+
+Note that with this built-in transaction management, updates will not take effect
+until the transaction is committed.
 
 GraphDB
-^^^^^^^^^
+^^^^^^^
 
 Fuseki 2
-^^^^^^^^^^
+^^^^^^^^
 
 Embedded Triplestores
------------------------
+---------------------
 
 Embedded triplestores is implemented in the ``org.knora.webapi.triplestore.embedded`` package.
 
@@ -68,7 +135,7 @@ An embedded triplestore is one that runs in the same JVM as the Knora API server
 
 
 Apache Jena TDB
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
 .. note::
    The support for embedded Jena TDB is currently dropped.
@@ -84,7 +151,7 @@ The relevant Jena libraries that are used are the following:
 
 
 Concurrency
-~~~~~~~~~~~~
+~~~~~~~~~~~
 
 Jena provides concurrency on different levels.
 
@@ -101,7 +168,7 @@ Reader Single Writer) access is allowed.
  *  https://jena.apache.org/documentation/notes/concurrency-howto.html
 
 Implementation
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 We employ transactions on the ``Dataset`` level. This means that every
 thread that accesses the triplestore, starts a read or write enabled
@@ -124,7 +191,7 @@ read transactions seeing the state of the database after the updates
 running at the same time.
 
 Configuration
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 In ``application.conf`` set to use the embedded triplestore:
 
@@ -227,3 +294,6 @@ As an example, to use it inside a test you could write something like:
         storeManager ! ResetTripleStoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTripleStoreContentACK())
     }
+
+
+.. _SPARQL 1.1 Update Language: https://www.w3.org/TR/sparql11-update/#updateLanguage

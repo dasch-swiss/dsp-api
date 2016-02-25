@@ -18,10 +18,6 @@
 
 .. _intellij-config:
 
-***********************
-Intellij Configuration
-***********************
-
 Setup IntelliJ for development of Knora
 =======================================
 
@@ -33,13 +29,13 @@ Setup IntelliJ for development of Knora
 -  make sure that the tab size is set correctly to **4 spaces** (so you can use automatic code reformatting): Preferences -> Code Style and also Preferences -> Code Style -> Scala.
 
 Twirl
-=====
+-----
 
 By default, Intellij excludes some folders like the twirl template files. To include them, go to ``Project Structure`` and remove ``target/scala-2.1*/twirl`` from excluded folders.
 Then Intellij will correctly resolve the references to the template files.
 
 How Use IntelliJ IDEA's Debugger with the Knora API Server
-==========================================================
+----------------------------------------------------------
 
 -  Create an application configuration:
 

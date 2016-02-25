@@ -16,9 +16,9 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-**************************
-Using the Knora API Server
-**************************
+******************************
+Deploying the Knora API Server
+******************************
 
 .. toctree::
    :maxdepth: 2

@@ -651,6 +651,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 isPreview = false
             )
 
+            assert(newResourceIri.nonEmpty, "The previous test failed")
 
             val book = newResourceIri
 

@@ -16,9 +16,9 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-**********************
+
 Testing with Fuseki 2
-**********************
+=====================
 
 Inside the Knora API server git repository, there is a folder called
 ``_fuseki`` containing a script named ``fuseki-server``. All needed
@@ -26,7 +26,7 @@ configuration files are in place. To start Fuseki 2, just run this
 script.
 
 How to Write Your Test
-======================
+----------------------
 
 (1) Inside a test, at the beginning, add the following (change the paths
     to the test data as needed):
