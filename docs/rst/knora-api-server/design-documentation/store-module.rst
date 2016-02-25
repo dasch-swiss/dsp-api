@@ -27,7 +27,7 @@ Overview
 --------
 
 The store module houses the different types of data stores supported by
-rapier. At the moment, only triplestores are supported. The triplestore
+the Knora API server. At the moment, only triplestores are supported. The triplestore
 support is implemented in the ``org.knora.webapi.store.triplestore``
 package.
 
@@ -35,7 +35,7 @@ Lifecycle
 ---------
 
 At the top level, the store package houses  the ``StoreManager``-Actor
-which is started when rapier starts. The ``StoreManager`` then starts
+which is started when the Knora API server starts. The ``StoreManager`` then starts
 the ``TripleStoreManagerActor`` which in turn starts the correct actor
 implementation (e.g., GraphDB, Fuseki, embedded Jena, etc.).
 

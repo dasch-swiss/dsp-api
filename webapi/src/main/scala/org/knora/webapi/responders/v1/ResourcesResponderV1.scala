@@ -1061,7 +1061,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 createdResourceResponse <- (storeManager ? SparqlSelectRequest(createdResourcesSparql)).mapTo[SparqlSelectResponse]
 
                 _ = if (createdResourceResponse.results.bindings.isEmpty) {
-                    throw UpdateNotPerformedException(s"Resource $resourceIri was not created, perhaps because the request was based on outdated information")
+                    throw UpdateNotPerformedException(s"Resource $resourceIri was not created. Please report this as a possible bug.")
                 }
 
                 // Verify that all the requested values were created.

@@ -686,7 +686,7 @@ class ValuesResponderV1 extends ResponderV1 {
             rows = sparqlSelectResponse.results.bindings
 
             _ = if (rows.isEmpty || !rows.head.rowMap.get("isDeleted").exists(_.toBoolean)) {
-                throw UpdateNotPerformedException(s"Value ${deleteValueRequest.valueIri} was not deleted, perhaps because the request was based on outdated information")
+                throw UpdateNotPerformedException(s"Value ${deleteValueRequest.valueIri} was not deleted. Please report this as a possible bug.")
             }
         } yield DeleteValueResponseV1(
                 id = newValueIri,
@@ -1089,7 +1089,7 @@ class ValuesResponderV1 extends ResponderV1 {
             result = if (rows.nonEmpty) {
                 sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, userProfile = userProfile)
             } else {
-                throw UpdateNotPerformedException(s"The update to value $searchValueIri for property $propertyIri in resource $resourceIri was not performed, perhaps because it was based on outdated information")
+                throw UpdateNotPerformedException(s"The update to value $searchValueIri for property $propertyIri in resource $resourceIri was not performed. Please report this as a possible bug.")
             }
         } yield result
     }
@@ -1126,7 +1126,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     }
 
                 case None =>
-                    throw UpdateNotPerformedException(s"The update to link value $linkValueIri with source IRI $linkSourceIri, link property $linkPropertyIri, and target $linkTargetIri was not performed, perhaps because it was based on outdated information")
+                    throw UpdateNotPerformedException(s"The update to link value $linkValueIri with source IRI $linkSourceIri, link property $linkPropertyIri, and target $linkTargetIri was not performed. Please report this as a possible bug.")
             }
         } yield result
     }
