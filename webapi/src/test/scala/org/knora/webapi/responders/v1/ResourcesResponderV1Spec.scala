@@ -183,7 +183,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
     // The default timeout for receiving reply messages from actors.
     private val timeout = 60.seconds
 
-    private var newResourceIri = new MutableTestIri
+    private val newResourceIri = new MutableTestIri
 
     private def compareResourceFullResponses(expected: ResourceFullResponseV1, received: ResourceFullResponseV1): Unit = {
         // println(MessageUtil.toSource(received))
