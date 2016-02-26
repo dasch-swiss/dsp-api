@@ -563,6 +563,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Generate a SPARQL update.
                 sparqlUpdate = queries.sparql.v1.txt.changeComment(
                     dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
+                    triplestore = settings.triplestoreType,
                     resourceIri = findResourceWithValueResult.resourceIri,
                     propertyIri = findResourceWithValueResult.propertyIri,
                     currentValueIri = changeCommentRequest.valueIri,
@@ -654,6 +655,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                         sparqlUpdate = queries.sparql.v1.txt.deleteLink(
                             dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
+                            triplestore = settings.triplestoreType,
                             linkSourceIri = findResourceWithValueResult.resourceIri,
                             linkUpdate = sparqlTemplateLinkUpdate,
                             maybeComment = deleteValueRequest.comment
@@ -665,6 +667,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     val newValueIri = knoraIriUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
                     val sparqlUpdate = queries.sparql.v1.txt.deleteValue(
                         dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
+                        triplestore = settings.triplestoreType,
                         resourceIri = findResourceWithValueResult.resourceIri,
                         propertyIri = findResourceWithValueResult.propertyIri,
                         currentValueIri = deleteValueRequest.valueIri,
@@ -1317,6 +1320,7 @@ class ValuesResponderV1 extends ResponderV1 {
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createLink(
                 dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
+                triplestore = settings.triplestoreType,
                 linkSourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
                 maybeComment = comment,
@@ -1390,6 +1394,7 @@ class ValuesResponderV1 extends ResponderV1 {
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createValue(
                 dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
+                triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
                 newValueIri = newValueIri,
@@ -1458,6 +1463,7 @@ class ValuesResponderV1 extends ResponderV1 {
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.changeLink(
                 dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
+                triplestore = settings.triplestoreType,
                 linkSourceIri = resourceIri,
                 linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
                 linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
@@ -1571,6 +1577,7 @@ class ValuesResponderV1 extends ResponderV1 {
             // Generate a SPARQL update.
             sparqlUpdate = queries.sparql.v1.txt.addValueVersion(
                 dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
+                triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
                 currentValueIri = currentValueIri,

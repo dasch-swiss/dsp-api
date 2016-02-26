@@ -1037,6 +1037,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         // Create an empty resource.
                             createNewResourceSparql <- Future(queries.sparql.v1.txt.createNewResource(
                                 dataNamedGraph = namedGraph,
+                                triplestore = settings.triplestoreType,
                                 resourceIri = resourceIri,
                                 label = label,
                                 resourceClassIri = resourceClassIri,

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-cd webapi/scripts
-
 # Delete repository
 curl -s -S -X DELETE "http://localhost:8080/repositories/knora-test-unit"
 
