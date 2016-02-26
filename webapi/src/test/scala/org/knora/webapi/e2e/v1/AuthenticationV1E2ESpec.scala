@@ -173,6 +173,5 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
                 assert(responseAs[String] contains "\"token\":null")
             }
         }
-
     }
 }

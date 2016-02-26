@@ -244,7 +244,7 @@ trait Authenticator {
                     extractCredentials(requestContext) match {
                         case Some((u, p)) =>
                             log.debug(s"found some credentials '$u', '$p', lets try to authenticate them first")
-                            authenticateCredentials(u, p, false) match {
+                            authenticateCredentials(u, p, session = false) match {
                                 case Success(_) =>
                                     log.debug("Supplied credentials pass authentication, get the UserProfileV1")
                                     getUserProfileByUsername(u) match {
@@ -253,11 +253,11 @@ trait Authenticator {
                                             /* we return the userProfileV1 without sensitive information */
                                             userProfileV1.getCleanUserProfileV1
                                         case Failure(ex) =>
-                                            log.debug(s"Something went wrong. Just throwing the exception containing this message '${ex.getMessage}' upwards")
+                                            log.debug(s"Something went wrong. Just throwing this exception: $ex")
                                             throw ex
                                     }
                                 case Failure(ex) =>
-                                    log.debug(s"Supplied credentials didn't pass authentication. Returned exception '${ex.getMessage}' is thrown upwards")
+                                    log.debug(s"Supplied credentials didn't pass authentication. Rethrowing this exception: $ex")
                                     throw ex
                             }
                         case None =>
