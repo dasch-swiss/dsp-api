@@ -38,10 +38,19 @@ import spray.json.DefaultJsonProtocol
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-
+/**
+  * Represents a response Knora returns when communicating with the 'v1/session' route during the 'login' operation.
+  * @param status is the returned status code.
+  * @param message is the returned message.
+  * @param sid is the returned session id.
+  */
 case class SessionResponse(status: Int, message: String, sid: String)
 
-object MyJsonSessionResponseProtocol extends DefaultJsonProtocol {
+/**
+  * A spray-json protocol used for turning the JSON responses from the 'login' operation during communication with the
+  * 'v1/session' route into a case classes for easier testing.
+  */
+object JsonSessionResponseProtocol extends DefaultJsonProtocol {
     implicit val SessionResponseFormat = jsonFormat3(SessionResponse)
 }
 
@@ -57,7 +66,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    import MyJsonSessionResponseProtocol._
+    import JsonSessionResponseProtocol._
 
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
