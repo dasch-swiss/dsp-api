@@ -70,7 +70,7 @@ trait Authenticator {
         extractCredentialsAndAuthenticate(requestContext, true) match {
             case Success(sId) =>
                 HttpResponse(
-                    headers = List(HttpHeaders.`Set-Cookie`(HttpCookie("KnoraAuthentication", sId))),
+                    headers = List(HttpHeaders.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sId))),
                     status = StatusCodes.OK,
                     entity = HttpEntity(
                         ContentTypes.`application/json`,
@@ -199,7 +199,7 @@ trait Authenticator {
             case None => // no cookie, so I can't do anything really
         }
         HttpResponse(
-            headers = List(HttpHeaders.`Set-Cookie`(HttpCookie("KnoraAuthentication", "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
+            headers = List(HttpHeaders.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
             status = StatusCodes.OK,
             entity = HttpEntity(
                 ContentTypes.`application/json`,
@@ -283,6 +283,8 @@ object Authenticator {
     val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
     val BAD_CRED_USERNAME_NOT_SUPPLIED = "bad credentials: no username supplied"
     val BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE = "bad credentials: none found"
+
+    val KNORA_AUTHENTICATION_COOKIE_NAME = "KnoraAuthentication"
 
     val sessionStore: scala.collection.mutable.Map[String, UserProfileV1] = scala.collection.mutable.Map()
     implicit val timeout: Timeout = Duration(5, SECONDS)
