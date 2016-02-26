@@ -23,125 +23,22 @@ package org.knora.webapi.e2e.v1
 import java.io.File
 import java.nio.file.{Files, Paths}
 
-import akka.actor.ActorDSL._
 import akka.actor._
-import akka.event.LoggingReceive
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.e2e.E2ESpec
-import org.knora.webapi.messages.v1respondermessages.ckanmessages.CkanResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.graphdatamessages.GraphDataResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.listmessages.ListsResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.ontologymessages.OntologyResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectsResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1, ResourcesResponderRequestV1}
-import org.knora.webapi.messages.v1respondermessages.searchmessages.SearchResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.sipimessages._
+import org.knora.webapi.messages.v1respondermessages.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.messages.v1respondermessages.usermessages.UsersResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{CreateFileV1, CreateRichtextV1, StillImageFileValueV1, ValuesResponderRequestV1}
+import org.knora.webapi.messages.v1respondermessages.valuemessages.{CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.ResourcesRouteV1
 import org.knora.webapi.store._
-import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.InputValidation
-import org.knora.webapi.{FileWriteException, LiveActorMaker, UnexpectedMessageException}
+import org.knora.webapi.{FileWriteException, LiveActorMaker}
 import spray.http._
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
-
-/**
-  * This is a responder manager that allows for a fake Sipi responder.
-  * All the actors are the real ones but the sipi responder.
-  *
-  * An implementation of the Sipi responder is provided inside this class: it imitates the behaviour of Sipi responder
-  * without having to call Sipi server.
-  */
-// TODO: refactor this so it is reusable also in other contexts
-class SipiResponderManagerTest extends Actor with ActorLogging {
-
-    /**
-      * Imitates the Sipi server by returning a [[SipiResponderConversionResponseV1]] representing an image conversion request.
-      *
-      * @param conversionRequest the conversion request to be handled.
-      * @return a [[SipiResponderConversionResponseV1]] imitating the answer from Sipi.
-      */
-    private def imageConversionResponse(conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
-
-        // delete tmp file (depending on the kind of request given: only necessary if Knora stored the file - non GUI-case)
-        def deleteTmpFile(conversionRequest: SipiResponderConversionRequestV1): Unit = {
-            conversionRequest match {
-                case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
-                    // a tmp file has been created by the resources route (non GUI-case), delete it
-                    InputValidation.deleteFileFromTmpLocation(conversionPathRequest.source)
-                case _ => ()
-            }
-        }
-
-        val originalFilename = conversionRequest.originalFilename
-        val originalMimeType: String = conversionRequest.originalMimeType
-
-        val fileValuesV1 = Vector(StillImageFileValueV1(// full representation
-            internalMimeType = "image/jp2",
-            originalFilename = originalFilename,
-            originalMimeType = Some(originalMimeType),
-            dimX = 800,
-            dimY = 800,
-            internalFilename = "full.jp2",
-            qualityLevel = 100,
-            qualityName = Some("full")
-        ),
-            StillImageFileValueV1(// thumbnail representation
-                internalMimeType = "image/jpeg",
-                originalFilename = originalFilename,
-                originalMimeType = Some(originalMimeType),
-                dimX = 80,
-                dimY = 80,
-                internalFilename = "thumb.jpg",
-                qualityLevel = 10,
-                qualityName = Some("thumbnail"),
-                isPreview = true
-            ))
-
-        deleteTmpFile(conversionRequest)
-
-        Future(SipiResponderConversionResponseV1(fileValuesV1, file_type = SipiConstants.FileType.IMAGE))
-    }
-
-    val sipiRouter = actor("mocksipi")(new Act {
-        become {
-            case sipiResponderConversionFileRequest: SipiResponderConversionFileRequestV1 => future2Message(sender(), imageConversionResponse(sipiResponderConversionFileRequest), log)
-            case sipiResponderConversionPathRequest: SipiResponderConversionPathRequestV1 => future2Message(sender(), imageConversionResponse(sipiResponderConversionPathRequest), log)
-        }
-    })
-
-    private val resourcesRouter = context.actorOf(Props(new ResourcesResponderV1), RESOURCES_ROUTER_ACTOR_NAME)
-    private val valuesRouter = context.actorOf(Props(new ValuesResponderV1), VALUES_ROUTER_ACTOR_NAME)
-
-    private val usersRouter = context.actorOf(Props(new UsersResponderV1), USERS_ROUTER_ACTOR_NAME)
-    private val listsRouter = context.actorOf(Props(new HierarchicalListsResponderV1), HIERARCHICAL_LISTS_ROUTER_ACTOR_NAME)
-    private val searchRouter = context.actorOf(Props(new SearchResponderV1), SEARCH_ROUTER_ACTOR_NAME)
-    private val ontologyRouter = context.actorOf(Props(new OntologyResponderV1), ONTOLOGY_ROUTER_ACTOR_NAME)
-    private val projectsRouter = context.actorOf(Props(new ProjectsResponderV1), PROJECTS_ROUTER_ACTOR_NAME)
-    private val ckanRouter = context.actorOf(Props(new CkanResponderV1), CKAN_ROUTER_ACTOR_NAME)
-
-    def receive = LoggingReceive {
-        case resourcesResponderRequestV1: ResourcesResponderRequestV1 => resourcesRouter.forward(resourcesResponderRequestV1)
-        case valuesResponderRequest: ValuesResponderRequestV1 => valuesRouter.forward(valuesResponderRequest)
-        case sipiResponderRequest: SipiResponderRequestV1 => sipiRouter.forward(sipiResponderRequest)
-        case usersResponderRequest: UsersResponderRequestV1 => usersRouter forward usersResponderRequest
-        case listsResponderRequest: ListsResponderRequestV1 => listsRouter.forward(listsResponderRequest)
-        case searchResponderRequest: SearchResponderRequestV1 => searchRouter.forward(searchResponderRequest)
-        case ontologyResponderRequest: OntologyResponderRequestV1 => ontologyRouter.forward(ontologyResponderRequest)
-        case graphdataResponderRequest: GraphDataResponderRequestV1 => resourcesRouter.forward(graphdataResponderRequest)
-        case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter forward projectsResponderRequest
-        case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter forward ckanResponderRequest
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
-    }
-}
 
 /**
   * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
@@ -155,7 +52,7 @@ class SipiV1E2ESpec extends E2ESpec {
          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    val responderManager = system.actorOf(Props(new SipiResponderManagerTest), name = RESPONDER_MANAGER_ACTOR_NAME)
+    val responderManager = system.actorOf(Props(new TestResponderManagerV1), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 

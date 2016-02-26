@@ -42,15 +42,15 @@ import org.knora.webapi.{ActorMaker, UnexpectedMessageException}
 class ResponderManagerV1 extends Actor with ActorLogging {
     this: ActorMaker =>
 
-    private val resourcesRouter = makeActor(FromConfig.props(Props[ResourcesResponderV1]), RESOURCES_ROUTER_ACTOR_NAME)
-    private val valuesRouter = makeActor(FromConfig.props(Props[ValuesResponderV1]), VALUES_ROUTER_ACTOR_NAME)
-    private val sipiRouter = makeActor(FromConfig.props(Props[SipiResponderV1]), SIPI_ROUTER_ACTOR_NAME)
-    private val usersRouter = makeActor(FromConfig.props(Props[UsersResponderV1]), USERS_ROUTER_ACTOR_NAME)
-    private val listsRouter = makeActor(FromConfig.props(Props[HierarchicalListsResponderV1]), HIERARCHICAL_LISTS_ROUTER_ACTOR_NAME)
-    private val searchRouter = makeActor(FromConfig.props(Props[SearchResponderV1]), SEARCH_ROUTER_ACTOR_NAME)
-    private val ontologyRouter = makeActor(FromConfig.props(Props[OntologyResponderV1]), ONTOLOGY_ROUTER_ACTOR_NAME)
-    private val projectsRouter = makeActor(FromConfig.props(Props[ProjectsResponderV1]), PROJECTS_ROUTER_ACTOR_NAME)
-    private val ckanRouter = makeActor(FromConfig.props(Props[CkanResponderV1]), CKAN_ROUTER_ACTOR_NAME)
+    protected val resourcesRouter = makeActor(FromConfig.props(Props[ResourcesResponderV1]), RESOURCES_ROUTER_ACTOR_NAME)
+    protected val valuesRouter = makeActor(FromConfig.props(Props[ValuesResponderV1]), VALUES_ROUTER_ACTOR_NAME)
+    protected val sipiRouter = makeActor(FromConfig.props(Props[SipiResponderV1]), SIPI_ROUTER_ACTOR_NAME)
+    protected val usersRouter = makeActor(FromConfig.props(Props[UsersResponderV1]), USERS_ROUTER_ACTOR_NAME)
+    protected val listsRouter = makeActor(FromConfig.props(Props[HierarchicalListsResponderV1]), HIERARCHICAL_LISTS_ROUTER_ACTOR_NAME)
+    protected val searchRouter = makeActor(FromConfig.props(Props[SearchResponderV1]), SEARCH_ROUTER_ACTOR_NAME)
+    protected val ontologyRouter = makeActor(FromConfig.props(Props[OntologyResponderV1]), ONTOLOGY_ROUTER_ACTOR_NAME)
+    protected val projectsRouter = makeActor(FromConfig.props(Props[ProjectsResponderV1]), PROJECTS_ROUTER_ACTOR_NAME)
+    protected val ckanRouter = makeActor(FromConfig.props(Props[CkanResponderV1]), CKAN_ROUTER_ACTOR_NAME)
 
     def receive = LoggingReceive {
         case resourcesResponderRequestV1: ResourcesResponderRequestV1 => resourcesRouter.forward(resourcesResponderRequestV1)
