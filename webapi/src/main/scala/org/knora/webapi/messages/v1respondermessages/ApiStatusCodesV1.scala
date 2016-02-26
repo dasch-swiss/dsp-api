@@ -107,13 +107,16 @@ object ApiStatusCodesV1 extends Enumeration {
       */
     def fromException(ex: Throwable): Value = {
         ex match {
+            // Subclasses of RequestRejectedException (which must be last in this group)
             case NotFoundException(_) => ApiStatusCodesV1.NOT_FOUND
             case ForbiddenException(_) => ApiStatusCodesV1.NO_RIGHTS_FOR_OPERATION
-            case RequestRejectedException(_) => ApiStatusCodesV1.INVALID_REQUEST_TYPE
+            case BadCredentialsException(_) => ApiStatusCodesV1.CREDENTIALS_NOT_VALID
             case DuplicateValueException(_) => ApiStatusCodesV1.DUPLICATE_VALUE
             case OntologyConstraintException(_) => ApiStatusCodesV1.ONTOLOGY_CONSTRAINT
+            case RequestRejectedException(_) => ApiStatusCodesV1.INVALID_REQUEST_TYPE
+
+            // Subclasses of InternalServerException (which must be last in this group)
             case UpdateNotPerformedException(_) => ApiStatusCodesV1.UPDATE_NOT_PERFORMED
-            case BadCredentialsException(_) => ApiStatusCodesV1.CREDENTIALS_NOT_VALID
             case InternalServerException(_) => ApiStatusCodesV1.INTERNAL_SALSAH_ERROR
             case other => ApiStatusCodesV1.INTERNAL_SALSAH_ERROR
         }
