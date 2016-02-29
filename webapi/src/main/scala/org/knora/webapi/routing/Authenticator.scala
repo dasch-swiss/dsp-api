@@ -42,23 +42,16 @@ import scala.util.{Failure, Success, Try}
 // needs Java 1.8 !!!
 import java.util.Base64
 
+
 /**
   * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
-  * to extract credentials, authenticate provided credentials, and look up cached credentials through thte use of the
-  * session id.
+  * to extract credentials, authenticate provided credentials, and look up cached credentials through the use of the
+  * session id. All private methods used in this trait can be found in the companion object.
   */
 trait Authenticator {
 
-    val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
-    val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
-    val BAD_CRED_USERNAME_NOT_SUPPLIED = "bad credentials: no username supplied"
-    val BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE = "bad credentials: none found"
-
-    val sessionStore: scala.collection.mutable.Map[String, UserProfileV1] = scala.collection.mutable.Map()
-    implicit val timeout: Timeout = Duration(5, SECONDS)
-    val log = Logger(LoggerFactory.getLogger("org.knora.webapi.util.authentication"))
-
-    private val cacheName = "authenticationCache"
+    /* Import companion object */
+    import Authenticator._
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // LOGIN ENTRY POINT
@@ -67,6 +60,7 @@ trait Authenticator {
     /**
       * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message and cookie header
       * with the generated session id for the client to save.
+      *
       * @param requestContext a [[RequestContext]] containing the http request
       * @param system the current [[ActorSystem]]
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
@@ -76,7 +70,7 @@ trait Authenticator {
         extractCredentialsAndAuthenticate(requestContext, true) match {
             case Success(sId) =>
                 HttpResponse(
-                    headers = List(HttpHeaders.`Set-Cookie`(HttpCookie("KnoraAuthentication", sId))),
+                    headers = List(HttpHeaders.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sId))),
                     status = StatusCodes.OK,
                     entity = HttpEntity(
                         ContentTypes.`application/json`,
@@ -108,6 +102,7 @@ trait Authenticator {
     /**
       * Checks if the provided session id is valid, i.e. if a [[UserProfileV1]] can be retrieved from the cache for the
       * supplied session id.
+      *
       * @param requestContext a [[RequestContext]] containing the http request
       * @return a [[HttpRequest]]
       */
@@ -145,6 +140,7 @@ trait Authenticator {
     /**
       * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message. No session is
       * generated.
+      *
       * @param requestContext a [[RequestContext]] containing the http request
       * @param system the current [[ActorSystem]]
       * @return a [[RequestContext]]
@@ -179,8 +175,126 @@ trait Authenticator {
         }
     }
 
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // LOGOUT ENTRY POINT
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+      * Used to logout the user, i.e. returns a header deleting the cookie and removes the [[UserProfileV1]] from the
+      * cache.
+      *
+      * @param requestContext a [[RequestContext]] containing the http request
+      * @param system the current [[ActorSystem]]
+      * @return a [[HttpResponse]]
+      */
+    def doLogout(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
+
+        val cookies: Seq[HttpCookie] = requestContext.request.cookies
+        cookies.find(_.name == "KnoraAuthentication") match {
+            case Some(authCookie) =>
+                // maybe the value is in the cache or maybe it expired in the meantime.
+                CacheUtil.remove(cacheName, authCookie.content)
+            case None => // no cookie, so I can't do anything really
+        }
+        HttpResponse(
+            headers = List(HttpHeaders.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
+            status = StatusCodes.OK,
+            entity = HttpEntity(
+                ContentTypes.`application/json`,
+                JsObject(
+                    "status" -> JsNumber(0),
+                    "message" -> JsString("Logout OK")
+                ).compactPrint
+            )
+        )
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // GET USER PROFILE / AUTHENTICATION ENTRY POINT
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+      * Returns a [[UserProfileV1]] matching the credentials found in the [[RequestContext]].
+      * The credentials can be username/password as parameters, auth headers, or username in a cookie if the profile is
+      * found in the cache. If no credentials are found, then a default [[UserProfileV1]] is returned. If the credentials
+      * not correct, then the corresponding error is returned.
+      *
+      * @param requestContext a [[RequestContext]] containing the http request
+      * @param system the current [[ActorSystem]]
+      * @return a [[UserProfileV1]]
+      */
+    def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem): UserProfileV1 = {
+        val settings = Settings(system)
+        val hardCodedUser: IRI = "http://data.knora.org/users/b83acc5f05" // testuser
+        if (settings.skipAuthentication) {
+            // skip authentication and return hardCodedUser
+            getUserProfileByIri(hardCodedUser).getOrElse(UserProfileV1(UserDataV1(settings.fallbackLanguage))).getCleanUserProfileV1
+        }
+        else {
+            // let us first try to get the user profile through the session id from the cookie
+            getUserProfileV1FromSessionId(requestContext) match {
+                case Some(userProfile) =>
+                    log.debug(s"Got this UserProfileV1 through the session id: '${userProfile.toString}'")
+                    /* we return the userProfileV1 without sensitive information */
+                    userProfile.getCleanUserProfileV1
+                case None => {
+                    log.debug("No cookie or valid session id, so let's look for supplied credentials")
+                    extractCredentials(requestContext) match {
+                        case Some((u, p)) =>
+                            log.debug(s"found some credentials '$u', '$p', lets try to authenticate them first")
+                            authenticateCredentials(u, p, session = false) match {
+                                case Success(_) =>
+                                    log.debug("Supplied credentials pass authentication, get the UserProfileV1")
+                                    getUserProfileByUsername(u) match {
+                                        case Success(userProfileV1: UserProfileV1) =>
+                                            log.debug(s"I got a UserProfileV1 '${userProfileV1.toString}', which means that the password is a match")
+                                            /* we return the userProfileV1 without sensitive information */
+                                            userProfileV1.getCleanUserProfileV1
+                                        case Failure(ex) =>
+                                            log.debug(s"Something went wrong. Just throwing this exception: $ex")
+                                            throw ex
+                                    }
+                                case Failure(ex) =>
+                                    log.debug(s"Supplied credentials didn't pass authentication. Rethrowing this exception: $ex")
+                                    throw ex
+                            }
+                        case None =>
+                            log.debug("No credentials found, returning default UserProfileV1!")
+                            UserProfileV1(UserDataV1(settings.fallbackLanguage))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+  * This companion object holds all private methods used in the trait. This division is needed so that we can test
+  * the private methods directly with scalatest as described in [1] and [3]
+  *
+  * [1] https://groups.google.com/forum/#!topic/scalatest-users/FeaO__f1dN4
+  * [2] http://doc.scalatest.org/2.2.6/index.html#org.scalatest.PrivateMethodTester
+  */
+object Authenticator {
+
+    val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
+    val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
+    val BAD_CRED_USERNAME_NOT_SUPPLIED = "bad credentials: no username supplied"
+    val BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE = "bad credentials: none found"
+
+    val KNORA_AUTHENTICATION_COOKIE_NAME = "KnoraAuthentication"
+
+    val sessionStore: scala.collection.mutable.Map[String, UserProfileV1] = scala.collection.mutable.Map()
+    implicit val timeout: Timeout = Duration(5, SECONDS)
+    val log = Logger(LoggerFactory.getLogger("org.knora.webapi.util.authentication"))
+
+    private val cacheName = "authenticationCache"
+
     /**
       * Tries to extract and then authenticate the credentials.
+      *
       * @param requestContext a [[RequestContext]] containing the http request
       * @param session a flag if set true then the creation of the session id and caching of the user profile will be skipped
       * @param system the current [[ActorSystem]]
@@ -204,6 +318,7 @@ trait Authenticator {
       * Tries to authenticate the credentials by getting the [[UserProfileV1]] from the triple store and checking if the
       * password matches. Caches the user profile after successful authentication under a generated session id if 'session=true', and
       * returns that said session id (or 0 if no session is needed).
+      *
       * @param username the username of the user
       * @param password the password of th user
       * @param session a [[Boolean]] if set true then a session id will be created and the user profile cached
@@ -236,84 +351,9 @@ trait Authenticator {
         }
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // LOGOUT ENTRY POINT
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-      * Used to logout the user, i.e. returns a header deleting the cookie and removes the [[UserProfileV1]] from the
-      * cache.
-      * @param requestContext a [[RequestContext]] containing the http request
-      * @param system the current [[ActorSystem]]
-      * @return a [[HttpResponse]]
-      */
-    def doLogout(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
-
-        val cookies: Seq[HttpCookie] = requestContext.request.cookies
-        cookies.find(_.name == "KnoraAuthentication") match {
-            case Some(authCookie) =>
-                // maybe the value is in the cache or maybe it expired in the meantime.
-                CacheUtil.remove(cacheName, authCookie.content)
-            case None => // no cookie, so I can't do anything really
-        }
-        HttpResponse(
-            headers = List(HttpHeaders.`Set-Cookie`(HttpCookie("KnoraAuthentication", "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
-            status = StatusCodes.OK,
-            entity = HttpEntity(
-                ContentTypes.`application/json`,
-                JsObject(
-                    "status" -> JsNumber(0),
-                    "message" -> JsString("Logout OK")
-                ).compactPrint
-            )
-        )
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // GET USER PROFILE / AUTHENTICATION ENTRY POINT
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-      * Returns a [[UserProfileV1]] matching the credentials found in the [[RequestContext]].
-      * The credentials can be username/password as parameters, auth headers, or username in a cookie if the profile is
-      * found in the cache. If no credentials are found, then a default [[UserProfileV1]] is returned. If the credentials
-      * not correct, then the corresponding error is returned.
-      * @param requestContext a [[RequestContext]] containing the http request
-      * @param system the current [[ActorSystem]]
-      * @return a [[UserProfileV1]]
-      */
-    def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem): UserProfileV1 = {
-        val settings = Settings(system)
-        val hardCodedUser: IRI = "http://data.knora.org/users/b83acc5f05" // testuser
-        if (settings.skipAuthentication) {
-            // skip authentication and return hardCodedUser
-            getUserProfileByIri(hardCodedUser).getOrElse(UserProfileV1(UserDataV1(settings.fallbackLanguage)))
-        }
-        else {
-            // let us first try to get the user profile through the session id from the cookie
-            getUserProfileV1FromSessionId(requestContext) match {
-                case Some(userProfile) => log.debug(s"got this through the session id: ${userProfile.toString}"); userProfile
-                case None => {
-                    // no cookie or valid session id, so let's look for credentials
-                    extractCredentials(requestContext) match {
-                        // got some credentials, lets try to get a UserProfileV1
-                        case Some((u, p)) => getUserProfileByUsername(u) match {
-                            // I got a UserProfileV1, which means that the password is a match
-                            case Success(userProfileV1: UserProfileV1) => userProfileV1
-                            // something went wrong. I'll just throw the exception upwards.
-                            case Failure(ex) => throw ex
-                        }
-                        // no credentials found, return default UserProfileV1
-                        case None => UserProfileV1(UserDataV1(settings.fallbackLanguage))
-                    }
-                }
-            }
-        }
-    }
-
-
     /**
       * Try to get the session id from the cookie and return a [[UserProfileV1]] if still in the cache.
+      *
       * @param requestContext a [[RequestContext]] containing the http request
       * @return a [[ Option[UserProfileV1] ]]
       */
@@ -336,6 +376,7 @@ trait Authenticator {
 
     /**
       * Tries to extract the credentials from the requestContext (parameters, auth headers)
+      *
       * @param requestContext a [[RequestContext]] containing the http request
       * @return a [[Option[(String, String)]] either a [[Some]] containing a tuple with the username and password, or a [[None]]
       *         if no credentials could be found.
@@ -411,6 +452,7 @@ trait Authenticator {
 
     /**
       * Get a user profile with the specific IRI from the triple store
+      *
       * @param iri the IRI of the user to be queried
       * @param system the current akka actor system
       * @param timeout the timeout of the query
@@ -434,6 +476,7 @@ trait Authenticator {
 
     /**
       * Tries to get a [[UserProfileV1]] from the cache or from the triple store matching the username.
+      *
       * @param username the username of the user to be queried
       * @param system the current akka actor system
       * @param timeout the timeout of the query
@@ -471,5 +514,6 @@ trait Authenticator {
             }
         }
     }
-
 }
+
+

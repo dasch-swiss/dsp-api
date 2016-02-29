@@ -150,7 +150,7 @@ lazy val webApiLibs = Seq(
     "org.joda" % "joda-convert" % "1.8",
     // testing
     "com.typesafe.akka" %% "akka-testkit" % "2.4.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
-    "org.scalatest" %% "scalatest" % "2.2.5" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
+    "org.scalatest" %% "scalatest" % "2.2.6" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "io.spray" %% "spray-testkit" % "1.3.3" % "test, fuseki, fuseki-tomcat, graphdb, tdb"
 )
 
