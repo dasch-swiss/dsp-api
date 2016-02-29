@@ -2,6 +2,10 @@
 
 import requests, json
 
+#
+# This scripts tests the creation of a page and submits binary image data to the resources route, testing the running Sipi server.
+#
+
 try:
     base_url = "http://localhost/v1/"
 
