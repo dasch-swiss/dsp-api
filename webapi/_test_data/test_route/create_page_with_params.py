@@ -3,7 +3,7 @@
 import requests, json
 
 #
-# This scripts tests the creation of a page and submits binary image data to the resources route, testing the running Sipi server.
+# This scripts tests the creation of a page and submits image data params (no binaries) to the resources route, testing the running Sipi server.
 #
 
 try:
@@ -23,22 +23,19 @@ try:
             ],
             'http://www.knora.org/ontology/incunabula#seqnum': [{'int_value': 99999999}]
         },
+        'file': {
+            'originalFilename' : "Chlaus.jpg",
+            'originalMimeType' : "image/jpeg",
+            'filename' : "./test_server/images/Chlaus.jpg"
+        },
         'label': 'test page',
         'project_id': 'http://data.knora.org/projects/77275339'
     }
 
-    filename = 'Chlaus.jpg'
-    path = 'images/'
-    mimetype = 'image/jpeg'
-
-    files = {'file': (filename, open(path + filename, 'rb'), mimetype)}
-
-    props = json.dumps(params)
 
     r = requests.post(base_url + 'resources',
-                      data={'json': props},
-                      files=files,
-                      headers=None,
+                      data=json.dumps(params),
+                      headers={'content-type': 'application/json; charset=utf8'},
                       auth=('root', 'test'),
                       proxies={'http': 'http://localhost:3333'})
 
