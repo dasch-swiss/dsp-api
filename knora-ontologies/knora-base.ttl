@@ -760,9 +760,9 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#basepath
+###  http://www.knora.org/ontology/knora-base#projectBasepath
 
-:basepath rdf:type owl:DatatypeProperty ;
+:projectBasepath rdf:type owl:DatatypeProperty ;
           
           rdfs:comment "Basepath for digital objects which belong to this project"@en ;
           
@@ -800,7 +800,19 @@
 
 :description rdf:type owl:DatatypeProperty ;
              
-             rdfs:comment "A Description of a resource class or a property class"@en ;
+             rdfs:comment "A description of a resource class or a property class"@en ;
+
+             :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectDescription
+
+:projectDescription rdf:type owl:DatatypeProperty ;
+
+             rdfs:comment "A description of a Knora project"@en ;
+
+             :subjectClassConstraint :knoraProject ;
 
              :objectDatatypeConstraint xsd:string .
 
@@ -1098,13 +1110,49 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#shortname
+###  http://www.knora.org/ontology/knora-base#projectShortname
 
-:shortname rdf:type owl:DatatypeProperty ;
+:projectShortname rdf:type owl:DatatypeProperty ;
+
+           :subjectClassConstraint :knoraProject ;
            
            :objectDatatypeConstraint xsd:string ;
            
            rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectLongname
+
+:projectLongname rdf:type owl:DatatypeProperty ;
+
+           :subjectClassConstraint :knoraProject ;
+
+           :objectDatatypeConstraint xsd:string ;
+
+           rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectKeyword
+
+:projectKeyword rdf:type owl:DatatypeProperty ;
+
+           rdfs:comment "A comma-delimited list of keywords describing a project"@en ;
+
+           :subjectClassConstraint :knoraProject ;
+
+           :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectLogo
+
+:projectLogo rdf:type owl:DatatypeProperty ;
+
+           :subjectClassConstraint :knoraProject ;
+
+           :objectDatatypeConstraint xsd:string .
 
 
 
@@ -2247,15 +2295,15 @@
               
               rdfs:subClassOf <http://xmlns.com/foaf/0.1/Project> ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :shortname ;
+                                owl:onProperty :projectShortname ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :description ;
+                                owl:onProperty :projectLongname ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty <http://xmlns.com/foaf/0.1/name> ;
+                                owl:onProperty :projectDescription ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
@@ -2263,10 +2311,18 @@
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :basepath ;
+                                owl:onProperty :projectBasepath ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :projectKeyword ;
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :projectLogo ;
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ;
-              
+
               rdfs:comment "Represents a project that uses Knora"@en .
 
 
