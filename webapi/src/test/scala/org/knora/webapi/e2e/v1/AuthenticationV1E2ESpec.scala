@@ -91,7 +91,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
     }
-    "The Authentication Route ('v1/authenticate') with credentials supplied via URL parameters " should {
+    "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via URL parameters " should {
         "succeed with authentication and correct username / correct password " in {
             /* Correct username and password */
             Get("/v1/authenticate?username=root&password=test") ~> authenticatePath ~> check {
@@ -107,7 +107,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
             }
         }
     }
-    "The Authentication Route ('v1/authenticate') with credentials supplied via Basic Auth " should {
+    "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via Basic Auth " should {
         "succeed with authentication and correct username / correct password " in {
             /* Correct username / correct password */
             Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
@@ -123,7 +123,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
             }
         }
     }
-    "The Session Route ('v1/session') with credentials supplied via URL parameters " should {
+    "The Session Route ('v1/session') when accessed with credentials supplied via URL parameters " should {
         var sid = ""
         "succeed with 'login' and correct username / correct password " in {
             /* Correct username and correct password */
@@ -177,7 +177,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
             }
         }
     }
-    "The Session Route ('v1/session') with credentials supplied via Basic Auth " should {
+    "The Session Route ('v1/session') when accessed with credentials supplied via Basic Auth " should {
         "succeed with 'login' and correct username / correct password " in {
             /* Correct username and correct password */
             Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
@@ -200,7 +200,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
             }
         }
     }
-    "The Resources Route using the Authenticator trait " should {
+    "The Resources Route using the Authenticator trait when accessed " should {
         "succeed with authentication using URL parameters and correct username / correct password " in {
             /* Correct username / correct password */
             Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test") ~> resourcesPath ~> check {

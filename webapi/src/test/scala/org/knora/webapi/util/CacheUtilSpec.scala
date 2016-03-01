@@ -71,7 +71,7 @@ class CacheUtilSpec extends CoreSpec("CachingTestSystem") with ImplicitSender wi
 
     val mockUsersActor = actor("responderManager")(new Act {
         become {
-            case UserProfileByUsernameGetRequestV1(username) => {
+            case UserProfileByUsernameGetRequestV1(username, clean) => {
                 if (username == usernameCorrect) {
                     sender ! Some(mockUserProfileV1)
                 } else {

@@ -78,7 +78,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
 
     val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
         become {
-            case UserProfileByUsernameGetRequestV1(submittedUsername) => {
+            case UserProfileByUsernameGetRequestV1(submittedUsername, clean) => {
                 if (submittedUsername == usernameCorrect) {
                     sender !  Some(mockUserProfileV1)
                 } else {
@@ -96,11 +96,9 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
             "succeed with the correct 'username' " in {
                 Authenticator invokePrivate getUserProfileByUsername(usernameCorrect, system, timeout, executionContext) should be(Success(mockUserProfileV1))
             }
-
             "fail with the wrong 'username' " in {
                 Authenticator invokePrivate getUserProfileByUsername(usernameWrong, system, timeout, executionContext) should be(Failure(BadCredentialsException(BAD_CRED_USER_NOT_FOUND)))
             }
-
             "fail when not providing a username " in {
                 Authenticator invokePrivate getUserProfileByUsername(usernameEmpty, system, timeout, executionContext) should be(Failure(BadCredentialsException(BAD_CRED_USERNAME_NOT_SUPPLIED)))
             }

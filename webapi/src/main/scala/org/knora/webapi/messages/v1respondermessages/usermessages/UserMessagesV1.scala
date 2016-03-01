@@ -38,14 +38,16 @@ sealed trait UsersResponderRequestV1 extends KnoraRequestV1
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
   * @param userIri the IRI of the user to be queried.
+  * @param clean a flag denoting if sensitive information (token, password) should be stripped
   */
-case class UserProfileGetRequestV1(userIri: IRI) extends UsersResponderRequestV1
+case class UserProfileGetRequestV1(userIri: IRI, clean: Boolean = false) extends UsersResponderRequestV1
 
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
   * @param username the username of the user to be queried.
+  * @param clean a flag denoting if sensitive information (token, password) should be stripped.
   */
-case class UserProfileByUsernameGetRequestV1(username: String) extends UsersResponderRequestV1
+case class UserProfileByUsernameGetRequestV1(username: String, clean: Boolean = false) extends UsersResponderRequestV1
 
 
 /**

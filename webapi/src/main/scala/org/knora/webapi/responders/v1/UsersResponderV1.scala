@@ -41,8 +41,8 @@ class UsersResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case UserProfileGetRequestV1(userIri) => future2Message(sender(), getUserProfileV1(userIri), log)
-        case UserProfileByUsernameGetRequestV1(username) => future2Message(sender(), getUserProfileByUsernameV1(username), log)
+        case UserProfileGetRequestV1(userIri, clean) => future2Message(sender(), getUserProfileV1(userIri, clean), log)
+        case UserProfileByUsernameGetRequestV1(username, clean) => future2Message(sender(), getUserProfileByUsernameV1(username, clean), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -51,10 +51,14 @@ class UsersResponderV1 extends ResponderV1 {
       * @param userIri the IRI of the user.
       * @return a [[Option[UserProfileV1]] describing the user.
       */
-    private def getUserProfileV1(userIri: IRI): Future[Option[UserProfileV1]] = {
+    private def getUserProfileV1(userIri: IRI, clean: Boolean): Future[Option[UserProfileV1]] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getUser(userIri).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            _ = if (userDataQueryResponse.results.bindings.isEmpty) {
+                throw NotFoundException(s"User '$userIri' not found")
+            }
 
             groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -88,7 +92,11 @@ class UsersResponderV1 extends ResponderV1 {
                 if (groupedUserData.isEmpty) {
                     None
                 } else {
-                    Some(UserProfileV1(userDataV1, groupIris, projectIris))
+                    if (clean) {
+                        Some(UserProfileV1(userDataV1, groupIris, projectIris).getCleanUserProfileV1)
+                    } else {
+                        Some(UserProfileV1(userDataV1, groupIris, projectIris))
+                    }
                 }
             }
 
@@ -101,7 +109,7 @@ class UsersResponderV1 extends ResponderV1 {
       * @param username the username of the user.
       * @return a [[Option[UserProfileV1]] describing the user.
       */
-    private def getUserProfileByUsernameV1(username: String): Future[Option[UserProfileV1]] = {
+    private def getUserProfileByUsernameV1(username: String, clean: Boolean): Future[Option[UserProfileV1]] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(username).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
@@ -109,7 +117,7 @@ class UsersResponderV1 extends ResponderV1 {
             //_ = println(MessageUtil.toSource(userDataQueryResponse))
 
             _ = if (userDataQueryResponse.results.bindings.isEmpty) {
-                throw NotFoundException(s"User $username not found")
+                throw NotFoundException(s"User '$username' not found")
             }
 
             userIri = userDataQueryResponse.getFirstRow.rowMap("s")
@@ -120,12 +128,12 @@ class UsersResponderV1 extends ResponderV1 {
 
             groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
                 case Some(groups) => groups
-                case None => Nil
+                case None => Vector.empty[IRI]
             }
 
             projectIris: Seq[String] = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
                 case Some(projects) => projects
-                case None => Nil
+                case None => Vector.empty[IRI]
             }
 
             projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
@@ -154,7 +162,11 @@ class UsersResponderV1 extends ResponderV1 {
                 if (groupedUserData.isEmpty) {
                     None
                 } else {
-                    Some(UserProfileV1(userDataV1, groupIris, projectIris))
+                    if (clean) {
+                        Some(UserProfileV1(userDataV1, groupIris, projectIris).getCleanUserProfileV1)
+                    } else {
+                        Some(UserProfileV1(userDataV1, groupIris, projectIris))
+                    }
                 }
             }
 

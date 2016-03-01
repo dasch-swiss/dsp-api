@@ -24,14 +24,19 @@
   */
 package org.knora.webapi.responders.v1
 
+import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import akka.util.Timeout
-import org.knora.webapi.CoreSpec
+import akka.pattern._
+import org.knora.webapi.store._
+import org.knora.webapi.{NotFoundException, LiveActorMaker, IRI, CoreSpec}
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1respondermessages.usermessages.{UserProfileGetRequestV1, UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileV1}
 import org.mindrot.jbcrypt.BCrypt
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Failure
 
 
 /*
@@ -47,69 +52,75 @@ class UsersResponderV1Spec extends CoreSpec() with ImplicitSender {
     implicit val timeout: Timeout = Duration(5, SECONDS)
     implicit val executionContext = system.dispatcher
 
-    val usernameCorrect = "isubotic"
-    val usernameWrong = "usernamewrong"
+    val usernameCorrect = "root"
+    val usernameWrong = "wrong"
     val usernameEmpty = ""
 
-    val passUnhashed = "123456"
-    // gensalt's log_rounds parameter determines the complexity
-    // the work factor is 2**log_rounds, and the default is 10
-    val passHashed: String = BCrypt.hashpw(passUnhashed, BCrypt.gensalt(12));
-    val passEmpty = ""
+    val passwordCorrect = "test"
+    val passwordCorrectHashed = "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" // hashed with sha-1
+    val passwordWrong = "wrong"
+    val passwordEmpty = ""
 
-    val lang = "en"
-    val user_id = Some("http://data.knora.org/users/b83acc5f05")
+
+    val lang = "de"
+    val user_id = Some("http://data.knora.org/users/91e19f1e01")
     val token = None
     val username = Some(usernameCorrect)
-    val firstname = Some("Ivan")
-    val lastname = Some("Subotic")
-    val email = Some("ivan.subotic@unibas.ch")
-    val password = Some(passHashed)
+    val firstname = Some("Administrator")
+    val lastname = Some("Admin")
+    val email = Some("test@test.ch")
+    val password = Some(passwordCorrectHashed)
+    val projects = List[IRI]("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images")
 
-    val mockUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password), Nil, Nil)
+    val rootUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password), Vector.empty[IRI], projects)
 
-    /*
-    val gaga = new ErrorHandlingMap(Map("x" -> "y"), "No such foo found: {{ key }}")
-
-    gaga("bar")
-
-    val storeResponseUserIdFound = SparqlSelectResponse(
-        SparqlSelectJsonResponse(SparqlSelectJsonResponseHeader(Vector("")), SparqlSelectJsonResponseBody(Vector(VariableResultsRow(gaga)))),
-        "",
-        ""
-    )
-
-    */
+    val user_id_url_encoded: IRI = "http://data.knora.org/users/91e19f1e01"
+    val user_id_not_existing_url_encoded: IRI = "http://data.knora.org/users/notexisting"
 
     val storeResponseUserIdNotFound = SparqlSelectResponse(
         SparqlSelectResponseHeader(Vector("p", "o")),
         SparqlSelectResponseBody(Nil)
     )
 
-    /*
-        val mockStoreManagerActor = actor(STORE_MANAGER_ACTOR_NAME)(new Act {
-            become {
-                case SparqlPebbleSelectRequest(templatename, templateContext) => {
-                  if (templatename == "get-user-by-username" && templateContext == Map("userId" -> usernameWrong)) {
-                      println(templateContext)
-                      sender ! storeResponseUserIdNotFound
-                  }
-                }
-            }
-        })
-    */
     val actorUnderTest = TestActorRef[UsersResponderV1]
+    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+
+
+    val rdfDataObjects = List(
+        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
+        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
+        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
+        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
+    )
+
+    "Load test data" in {
+        storeManager ! ResetTriplestoreContent(rdfDataObjects)
+        expectMsg(300.seconds, ResetTriplestoreContentACK())
+    }
 
     "The UsersResponder " when {
-        "asked about an existing user identified by 'username' " must {
-            "return a profile if user is known " ignore {
+        "asked about an user identified by 'iri' " should {
+            "return a profile if the user is known " in {
+                actorUnderTest ! UserProfileGetRequestV1(user_id_url_encoded)
+                expectMsg(Some(rootUserProfileV1))
+            }
+            "return 'None' when the user is unknown " in {
+                actorUnderTest ! UserProfileGetRequestV1(user_id_not_existing_url_encoded)
+                expectMsg(Failure(NotFoundException(s"User '$user_id_not_existing_url_encoded' not found")))
+            }
+        }
+        "asked about an user identified by 'username' " should {
+            "return a profile if the user is known " in {
                 actorUnderTest ! UserProfileByUsernameGetRequestV1(usernameCorrect)
-                expectMsg(Some(mockUserProfileV1))
+                expectMsg(Some(rootUserProfileV1))
             }
 
-            "return 'None' when user is unknown " ignore {
+            "return 'None' when the user is unknown " in {
                 actorUnderTest ! UserProfileByUsernameGetRequestV1(usernameWrong)
-                expectMsg(None)
+                expectMsg((Failure(NotFoundException(s"User '$usernameWrong' not found"))))
             }
         }
     }
