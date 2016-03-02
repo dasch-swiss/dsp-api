@@ -23,6 +23,7 @@ package org.knora.webapi.util
 import java.io.File
 import java.nio.file.{Files, Paths}
 
+import akka.event.LoggingAdapter
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
 import org.joda.time.DateTime
@@ -250,14 +251,15 @@ object InputValidation {
         fileName
     }
 
-    def deleteFileFromTmpLocation(fileName: File): Boolean = {
+    def deleteFileFromTmpLocation(fileName: File, log: LoggingAdapter): Boolean = {
 
         val path = fileName.toPath
 
-        if (!fileName.canWrite) throw FileWriteException(s"File ${path} cannot be deleted.")
+        if (!fileName.canWrite) {
+            val ex = FileWriteException(s"File $path cannot be deleted.")
+            log.error(ex, ex.getMessage)
+        }
 
         Files.deleteIfExists(path)
-
     }
-
 }

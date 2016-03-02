@@ -40,16 +40,6 @@ class MockSipiResponderV1 extends ResponderV1 {
       */
     private def imageConversionResponse(conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
 
-        // delete tmp file (depending on the kind of request given: only necessary if Knora stored the file - non GUI-case)
-        def deleteTmpFile(conversionRequest: SipiResponderConversionRequestV1): Unit = {
-            conversionRequest match {
-                case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
-                    // a tmp file has been created by the resources route (non GUI-case), delete it
-                    InputValidation.deleteFileFromTmpLocation(conversionPathRequest.source)
-                case _ => ()
-            }
-        }
-
         val originalFilename = conversionRequest.originalFilename
         val originalMimeType: String = conversionRequest.originalMimeType
 
@@ -74,8 +64,6 @@ class MockSipiResponderV1 extends ResponderV1 {
                 qualityName = Some("thumbnail"),
                 isPreview = true
             ))
-
-        deleteTmpFile(conversionRequest)
 
         Future(SipiResponderConversionResponseV1(fileValuesV1, file_type = SipiConstants.FileType.IMAGE))
     }

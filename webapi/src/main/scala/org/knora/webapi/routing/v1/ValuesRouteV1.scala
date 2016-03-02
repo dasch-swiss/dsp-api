@@ -24,13 +24,18 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import org.knora.webapi.messages.v1respondermessages.resourcemessages.CreateResourceApiRequestV1
+import org.knora.webapi.messages.v1respondermessages.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1respondermessages.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.messages.v1respondermessages.valuemessages._
+import org.knora.webapi.routing.v1.ResourcesRouteV1._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
-import spray.json.JsonParser
+import spray.http.HttpEntity.NonEmpty
+import spray.http.{BodyPart, MultipartFormData}
+import spray.json.{DeserializationException, JsonParser}
 import spray.routing.Directives._
 import spray.routing._
 
@@ -195,12 +200,44 @@ object ValuesRouteV1 extends Authenticator {
         ValueGetRequestV1(valueIri, userProfile)
     }
 
+    private def makeChangeFileValueRequest(resourceIri: IRI, apiRequest: Option[ChangeFileValueApiRequestV1], multipartConversionRequest: Option[SipiResponderConversionPathRequestV1], userProfile: UserProfileV1) = {
+        if (apiRequest.nonEmpty && multipartConversionRequest.nonEmpty) throw BadRequestException("File information is present twice, only one is allowed.")
+
+        if (apiRequest.nonEmpty) {
+            // GUI-case
+            val fileRequest = SipiResponderConversionFileRequestV1(
+                originalFilename = InputValidation.toSparqlEncodedString(apiRequest.get.file.originalFilename),
+                originalMimeType = InputValidation.toSparqlEncodedString(apiRequest.get.file.originalMimeType),
+                filename = InputValidation.toSparqlEncodedString(apiRequest.get.file.filename),
+                userProfile = userProfile
+            )
+            ChangeFileValueRequestV1(
+                resourceIri = resourceIri,
+                file = fileRequest,
+                apiRequestID = UUID.randomUUID,
+                userProfile = userProfile)
+        }
+        else if (multipartConversionRequest.nonEmpty) {
+            // non GUI-case
+            ChangeFileValueRequestV1(
+                resourceIri = resourceIri,
+                file = multipartConversionRequest.get,
+                apiRequestID = UUID.randomUUID,
+                userProfile = userProfile)
+        } else {
+            // no file information was provided
+            throw BadRequestException("A file value change was requested but no file information was provided")
+        }
+
+    }
+
     def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
+        // TODO: add documentation
         path("v1" / "values" / "history" / Segments) { iris =>
             get {
                 requestContext => {
@@ -256,7 +293,6 @@ object ValuesRouteV1 extends Authenticator {
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
 
-                        // TODO: handle a fileValue request (without binary data contained in the http request)
                         apiRequest match {
                             case ChangeValueApiRequestV1(_, _, _, _, _, _, _, Some(comment)) => makeChangeCommentRequestMessage(userProfile, valueIri, comment)
                             case _ => makeAddValueVersionRequestMessage(userProfile, valueIri, apiRequest)
@@ -293,6 +329,75 @@ object ValuesRouteV1 extends Authenticator {
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
                         makeLinkValueGetRequestMessage(userProfile, iris)
+                    }
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            }
+        } ~ path("v1" / "filevalue" / Segment) { (resIri: IRI) =>
+            put {
+                entity(as[ChangeFileValueApiRequestV1]) { apiRequest => requestContext =>
+                    val requestMessageTry = Try {
+
+                        val userProfile = getUserProfileV1(requestContext)
+                        makeChangeFileValueRequest(InputValidation.toSparqlEncodedString(resIri), apiRequest = Some(apiRequest), multipartConversionRequest = None, userProfile = userProfile)
+                    }
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            } ~ put {
+                entity(as[MultipartFormData]) { data => requestContext =>
+                    val requestMessageTry = Try {
+
+                        // get all the body parts from multipart request
+                        val fields: Seq[BodyPart] = data.fields
+
+                        //
+                        // turn Sequence of BodyParts into a Map(name -> BodyPart),
+                        // according to the given keys in the HTTP request
+                        // e.g. 'json' -> BodyPart or 'file' -> BodyPart
+                        //
+                        val namedParts: Map[String, BodyPart] = fields.map {
+                            // assumes that only one file is given (this may change for API V2)
+                            case (bodyPart: BodyPart) =>
+                                (bodyPart.dispositionParameterValue("name").getOrElse(throw BadRequestException("part of HTTP multipart request has no name")), bodyPart)
+                        }.toMap
+
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        // get binary data from bodyPart 'file'
+                        val bodyPartFile: BodyPart = namedParts.getOrElse("file", throw BadRequestException("MultiPart Post request was sent but no files"))
+
+                        // TODO: how to check if the user has sent multiple files?
+                        val nonEmpty: NonEmpty = bodyPartFile.entity
+                            .toOption.getOrElse(throw BadRequestException("no binary data submitted in multipart request"))
+
+                        // save file to temporary location
+                        // this file will be deleted by Knora once it is not needed anymore
+                        // TODO: add a script that cleans files in the tmp location that have a certain age
+                        // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
+                        val sourcePath = InputValidation.saveFileToTmpLocation(settings, nonEmpty.data.toByteArray)
+
+                        val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
+                            originalFilename = InputValidation.toSparqlEncodedString(bodyPartFile.filename.getOrElse(throw BadRequestException(s"Filename is not given"))),
+                            originalMimeType = InputValidation.toSparqlEncodedString(nonEmpty.contentType.toString),
+                            source = sourcePath,
+                            userProfile = userProfile
+                        )
+
+                        makeChangeFileValueRequest(InputValidation.toSparqlEncodedString(resIri), apiRequest = None, multipartConversionRequest = Some(sipiConvertPathRequest), userProfile = userProfile)
                     }
 
                     RouteUtilV1.runJsonRoute(

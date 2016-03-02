@@ -23,6 +23,7 @@ package org.knora.webapi.messages.v1respondermessages.valuemessages
 import java.util.UUID
 
 import org.knora.webapi._
+import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.DateUtilV1
@@ -45,6 +46,8 @@ import spray.json._
   * @param float_value    a floating-point literal to be used in the value.
   * @param date_value     a date object to be used in the value.
   * @param color_value    a colour literal to be used in the value.
+  * @param geom_value     a geometry literal to be used in the value.
+  * @param comment        a comment to add to the value.
   */
 case class CreateValueApiRequestV1(project_id: IRI,
                                    res_id: IRI,
@@ -113,6 +116,7 @@ case class CreateFileQualityLevelV1(path: String,
   * @param date_value     a date object to be used in the value.
   * @param color_value    a colour literal to be used in the value.
   * @param geom_value     a geometry literal to be used in the value.
+  * @param comment        a comment to add to the value.
   */
 case class ChangeValueApiRequestV1(project_id: IRI,
                                    richtext_value: Option[CreateRichtextV1] = None,
@@ -122,6 +126,14 @@ case class ChangeValueApiRequestV1(project_id: IRI,
                                    color_value: Option[String] = None,
                                    geom_value: Option[String] = None,
                                    comment: Option[String] = None)
+
+/**
+  * Represents an API request payload that asks the Knora API server to change the file attached to a resource
+  * (i. e. to create a new version of its file values).
+  *
+  * @param file the new file to be attached to the resource (GUI-case).
+  */
+case class ChangeFileValueApiRequestV1(file: CreateFileV1)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -237,6 +249,7 @@ case class UnverifiedCreateValueResponseV1(newValueIri: IRI, value: UpdateValueV
 
 /**
   * Requests verification that new values were created.
+  *
   * @param resourceIri the IRI of the resource in which the values should have been created.
   * @param unverifiedValues a [[Map]] of property IRIs to [[UnverifiedCreateValueResponseV1]] objects
   *                         describing the values that should have been created for each property.
@@ -249,6 +262,7 @@ case class VerifyMultipleValueCreationRequestV1(resourceIri: IRI,
 /**
   * In response to a [[VerifyMultipleValueCreationRequestV1]], indicates that all requested values were
   * created successfully.
+  *
   * @param verifiedValues information about the values that were created.
   */
 case class VerifyMultipleValueCreationResponseV1(verifiedValues: Map[IRI, Seq[CreateValueResponseV1]])
@@ -368,6 +382,26 @@ case class DeleteValueResponseV1(id: IRI,
     def toJsValue = ApiValueV1JsonProtocol.deleteValueResponseV1Format.write(this)
 }
 
+/**
+  * Represents a request to change (update) the file value(s) of a given resource.
+  * In case of an image, two file valueshave to be changed: thumbnail and full quality.
+  *
+  * @param resourceIri the resource whose files value(s) should be changed.
+  * @param file the file to be created and added.
+  */
+case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiResponderConversionRequestV1, apiRequestID: UUID, userProfile: UserProfileV1) extends ValuesResponderRequestV1
+
+/**
+  * Represents a response to a [[ChangeFileValueRequestV1]].
+  * Possibly, two file values have been changed (thumb and full quality).
+  *
+  * @param changedFilesValues the updated file value(s).
+  * @param userdata information about the user that made the request.
+  */
+case class ChangeFileValueResponseV1(changedFilesValues: Vector[ChangeValueResponseV1],
+                                 userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = ApiValueV1JsonProtocol.changeFileValueresponseV1Format.write(this)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -871,6 +905,19 @@ case class StillImageFileValueV1(internalMimeType: String,
     override def toString = originalFilename
 }
 
+case class MovingImageFileValueV1(internalMimeType: String,
+                                internalFilename: String,
+                                originalFilename: String,
+                                originalMimeType: Option[String] = None) extends FileValueV1 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.MovingImageFileValue
+
+    def toJsValue = ApiValueV1JsonProtocol.movingImageFileValueV1Format.write(this)
+
+    override def toString = originalFilename
+
+}
+
 
 /**
   * Represents information about a version of a value.
@@ -973,6 +1020,7 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat4(ValueGetResponseV1)
     implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat3(DateValueV1)
     implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat9(StillImageFileValueV1)
+    implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat4(MovingImageFileValueV1)
     implicit val valueVersionV1Format: JsonFormat[ValueVersionV1] = jsonFormat3(ValueVersionV1)
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
     implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat2(ValueVersionHistoryGetResponseV1)
@@ -982,4 +1030,6 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat8(ChangeValueApiRequestV1)
     implicit val changeValueResponseV1Format: RootJsonFormat[ChangeValueResponseV1] = jsonFormat5(ChangeValueResponseV1)
     implicit val deleteValueResponseV1Format: RootJsonFormat[DeleteValueResponseV1] = jsonFormat2(DeleteValueResponseV1)
+    implicit val changeFileValueApiRequestV1Format: RootJsonFormat[ChangeFileValueApiRequestV1] = jsonFormat1(ChangeFileValueApiRequestV1)
+    implicit val changeFileValueresponseV1Format: RootJsonFormat[ChangeFileValueResponseV1] = jsonFormat2(ChangeFileValueResponseV1)
 }
