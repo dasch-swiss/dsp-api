@@ -1901,11 +1901,11 @@
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :listNodePosition ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :listNodeName ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :isRootNode ;
@@ -1913,7 +1913,7 @@
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :hasRootNode ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
           
           rdfs:comment "Represents a flat or hierarchical list"@en .
