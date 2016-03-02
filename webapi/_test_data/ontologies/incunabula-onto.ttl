@@ -3,7 +3,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix foaf: <http://xmln.com/foaf/0.1/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix dc: <http://www.knora.org/ontology/dc#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
@@ -248,7 +248,7 @@
 
              rdfs:comment """Beschreibung"""@de ;
 
-             knora-base:subjectClassConstraint :Sideband ;
+             knora-base:subjectClassConstraint knora-base:Resource ;
 
              knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -338,7 +338,7 @@
           rdfs:label "Verweis"@de ,
                      "Citation/reference"@en ;
 
-          knora-base:subjectClassConstraint :page ;
+          knora-base:subjectClassConstraint knora-base:Resource ;
 
           knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -777,7 +777,7 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :title ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasAuthor ;
@@ -785,11 +785,11 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :publisher ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :publoc ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :pubdate ;
@@ -849,7 +849,7 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :pagenum ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :partOfValue ;
@@ -861,7 +861,7 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :seqnum ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :description ;
@@ -930,7 +930,7 @@
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :description ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger                          ] ,
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                          ] ,
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :sideband_comment ;
