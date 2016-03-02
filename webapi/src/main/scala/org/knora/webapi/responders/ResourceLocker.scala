@@ -130,7 +130,7 @@ object ResourceLocker {
                 acquireOrIncrementLock(resourceIri, apiRequestID, tries - 1)
             } else {
                 // No, we've run out of retries, so throw an exception.
-                throw ApplicationLockException(s"Could not acquire update lock on resource $resourceIri within $MAX_LOCK_RETRY_MILLIS ms")
+                throw ApplicationLockException(s"Could not acquire update lock on resource $resourceIri within $MAX_LOCK_RETRY_MILLIS ms, because ${newLock.apiRequestID} is holding it")
             }
         }
     }
