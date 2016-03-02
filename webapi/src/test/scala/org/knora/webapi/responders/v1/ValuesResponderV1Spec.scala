@@ -29,9 +29,11 @@ import org.knora.webapi.messages.v1respondermessages.resourcemessages.{ResourceF
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
 import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1respondermessages.valuemessages._
+import org.knora.webapi.messages.v1respondermessages.sipimessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.{MutableTestIri, DateUtilV1}
+import org.knora.webapi.util.{ScalaPrettyPrinter}
 
 import scala.concurrent.duration._
 
@@ -83,7 +85,9 @@ object ValuesResponderV1Spec {
   */
 class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val actorUnderTest = TestActorRef[ValuesResponderV1]
-    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+
+    val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
+
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = Vector(
@@ -219,6 +223,18 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             end = 10
         ))
     )
+
+    private def checkImageFileValueChange(received: ChangeFileValueResponseV1, request: ChangeFileValueRequestV1): Unit = {
+        assert(received.changedFilesValues.size == 2, "Expected two file values to have been changed (thumb and full quality)")
+
+        received.changedFilesValues.foreach {
+            (changeResponse: ChangeValueResponseV1) =>
+                assert(changeResponse.value.isInstanceOf[StillImageFileValueV1], "created value is not of type StillImageFileValue1")
+                assert(changeResponse.value.asInstanceOf[StillImageFileValueV1].originalFilename == request.file.originalFilename, "wrong original file name")
+        }
+
+
+    }
 
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
@@ -1522,6 +1538,29 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // Check that the resource's last modification date got updated.
             val lastModAfterUpdate = getLastModificationDate(ValuesResponderV1Spec.zeitglöckleinIri)
             lastModBeforeUpdate != lastModAfterUpdate should ===(true)
+        }
+
+        "add a new image file value to an incunabula:page" in {
+
+            val fileRequest = SipiResponderConversionFileRequestV1(
+                originalFilename = "Chlaus.jpg",
+                originalMimeType = "image/jpeg",
+                filename = "./test_server/images/Chlaus.jpg",
+                userProfile = ValuesResponderV1Spec.userProfile
+            )
+
+            val fileChangeRequest = ChangeFileValueRequestV1(
+                resourceIri = "http://data.knora.org/8a0b1e75",
+                file = fileRequest,
+                apiRequestID = UUID.randomUUID,
+                userProfile = ValuesResponderV1Spec.userProfile)
+
+            actorUnderTest ! fileChangeRequest
+
+            expectMsgPF(timeout) {
+                case msg: ChangeFileValueResponseV1 => checkImageFileValueChange(msg, fileChangeRequest)
+            }
+
         }
     }
 }
