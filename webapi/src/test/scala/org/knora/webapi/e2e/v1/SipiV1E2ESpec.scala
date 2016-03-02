@@ -29,13 +29,15 @@ import akka.util.Timeout
 import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1respondermessages.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{CreateFileV1, CreateRichtextV1}
+import org.knora.webapi.messages.v1respondermessages.valuemessages.{CreateFileV1, CreateRichtextV1, ChangeFileValueApiRequestV1}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.ResourcesRouteV1
+import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.store._
 import org.knora.webapi.{FileWriteException, LiveActorMaker}
 import spray.http._
+import java.net.URLEncoder
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -59,6 +61,7 @@ class SipiV1E2ESpec extends E2ESpec {
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val resourcesPath = ResourcesRouteV1.rapierPath(system, settings, log)
+    val valuesPath = ValuesRouteV1.rapierPath(system, settings, log)
 
     implicit val timeout: Timeout = 300.seconds
 
@@ -177,6 +180,58 @@ class SipiV1E2ESpec extends E2ESpec {
             Post("/v1/resources", HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
+        }
+    }
+
+    "The Values endpoint" should {
+
+        "change the file value of an existing page (submitting binaries)" in {
+
+            val pathToFile = "_test_data/test_route/images/Chlaus.jpg"
+            val fileToSend = new File(pathToFile)
+            // check if the file exists
+            assert(fileToSend.exists(), s"File ${pathToFile} does not exist")
+
+            val formData = MultipartFormData(Seq(
+                BodyPart(file = fileToSend, fieldName = "file", ContentType(mediaType = MediaTypes.`image/jpeg`))
+            ))
+
+            // check if tmp datadir exists and create it if not
+            if (!Files.exists(Paths.get(settings.tmpDataDir))) {
+                try {
+                    val tmpDir = new File(settings.tmpDataDir)
+                    tmpDir.mkdir()
+                } catch {
+                    case e: Throwable => throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
+                }
+            }
+
+            val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
+
+            Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(user, password)) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
+            }
+
+        }
+
+
+
+        "change the file value of an existing page (submitting params only, no binaries)" in {
+
+            val params = ChangeFileValueApiRequestV1(
+                file = CreateFileV1(
+                    originalFilename = "Chlaus.jpg",
+                    originalMimeType = "image/jpeg",
+                    filename = "./test_server/images/Chlaus.jpg"
+                )
+            )
+
+            val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
+
+            Put("/v1/filevalue/" + resIri, HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
+            }
+
         }
     }
 

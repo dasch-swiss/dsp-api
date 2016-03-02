@@ -133,7 +133,10 @@ case class ChangeValueApiRequestV1(project_id: IRI,
   *
   * @param file the new file to be attached to the resource (GUI-case).
   */
-case class ChangeFileValueApiRequestV1(file: CreateFileV1)
+case class ChangeFileValueApiRequestV1(file: CreateFileV1) {
+
+    def toJsValue = ApiValueV1JsonProtocol.changeFileValueApiRequestV1Format.write(this)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -243,17 +246,17 @@ case class CreateValueResponseV1(value: ApiValueV1,
   * To verify that the value was in fact created, send a [[VerifyMultipleValueCreationRequestV1]].
   *
   * @param newValueIri the IRI of the value that should have been created.
-  * @param value the [[UpdateValueV1]] that was used to request the creation of the value.
+  * @param value       the [[UpdateValueV1]] that was used to request the creation of the value.
   */
 case class UnverifiedCreateValueResponseV1(newValueIri: IRI, value: UpdateValueV1)
 
 /**
   * Requests verification that new values were created.
   *
-  * @param resourceIri the IRI of the resource in which the values should have been created.
+  * @param resourceIri      the IRI of the resource in which the values should have been created.
   * @param unverifiedValues a [[Map]] of property IRIs to [[UnverifiedCreateValueResponseV1]] objects
   *                         describing the values that should have been created for each property.
-  * @param userProfile the profile of the user making the request.
+  * @param userProfile      the profile of the user making the request.
   */
 case class VerifyMultipleValueCreationRequestV1(resourceIri: IRI,
                                                 unverifiedValues: Map[IRI, Seq[UnverifiedCreateValueResponseV1]],
@@ -286,9 +289,9 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * - The resource class has a suitable cardinality for each submitted value.
   * - All required values are provided.
   *
-  * @param transactionID the ID of the transaction in which the values should be created.
-  * @param projectIri the project the values belong to.
-  * @param resourceIri the resource the values will be attached to.
+  * @param transactionID    the ID of the transaction in which the values should be created.
+  * @param projectIri       the project the values belong to.
+  * @param resourceIri      the resource the values will be attached to.
   * @param resourceClassIri the IRI of the resource's OWL class.
   * @param values           the values to be added, with optional comments.
   * @param userProfile      the user that is creating the values.
@@ -387,7 +390,7 @@ case class DeleteValueResponseV1(id: IRI,
   * In case of an image, two file valueshave to be changed: thumbnail and full quality.
   *
   * @param resourceIri the resource whose files value(s) should be changed.
-  * @param file the file to be created and added.
+  * @param file        the file to be created and added.
   */
 case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiResponderConversionRequestV1, apiRequestID: UUID, userProfile: UserProfileV1) extends ValuesResponderRequestV1
 
@@ -396,10 +399,10 @@ case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiResponderConvers
   * Possibly, two file values have been changed (thumb and full quality).
   *
   * @param changedFilesValues the updated file value(s).
-  * @param userdata information about the user that made the request.
+  * @param userdata           information about the user that made the request.
   */
 case class ChangeFileValueResponseV1(changedFilesValues: Vector[ChangeValueResponseV1],
-                                 userdata: UserDataV1) extends KnoraResponseV1 {
+                                     userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ApiValueV1JsonProtocol.changeFileValueresponseV1Format.write(this)
 }
 
@@ -906,9 +909,9 @@ case class StillImageFileValueV1(internalMimeType: String,
 }
 
 case class MovingImageFileValueV1(internalMimeType: String,
-                                internalFilename: String,
-                                originalFilename: String,
-                                originalMimeType: Option[String] = None) extends FileValueV1 {
+                                  internalFilename: String,
+                                  originalFilename: String,
+                                  originalMimeType: Option[String] = None) extends FileValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.MovingImageFileValue
 

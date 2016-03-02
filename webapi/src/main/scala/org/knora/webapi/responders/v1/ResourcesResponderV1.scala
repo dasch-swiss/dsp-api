@@ -1005,7 +1005,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                         // check if the file type returned by Sipi corresponds to the expected fileValue property in resourceClassInfo.fileValueProperties.head
                         _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != resourceClassInfo.fileValueProperties.head) {
-                            // TODO: remove the file from SIPI
+                            // TODO: remove the file from SIPI (delete request)
                             throw BadRequestException(s"Type of submitted file (${sipiResponse.file_type}) does not correspond to expected property type ${resourceClassInfo.fileValueProperties.head}")
                         }
 

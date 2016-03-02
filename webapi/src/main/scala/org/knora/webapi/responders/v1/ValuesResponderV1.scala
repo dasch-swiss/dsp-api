@@ -377,9 +377,9 @@ class ValuesResponderV1 extends ResponderV1 {
                     CurrentFileValue(
                         property = row.rowMap("p"),
                         valueObjectIri = row.rowMap("fileValueIri"),
-                        quality = row.rowMap("quality") match {
-                            case "" => None
-                            case quality: String => Some(quality.toInt)
+                        quality = row.rowMap.get("quality") match {
+                            case Some(quality: String) => Some(quality.toInt)
+                            case None => None
                         }
                     )
             }
@@ -396,16 +396,18 @@ class ValuesResponderV1 extends ResponderV1 {
 
             sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? sipiConversionRequest).mapTo[SipiResponderConversionResponseV1]
 
-            // check if the file type returned by Sipi corresponds to the already exisitng file value type (e.g., hasStillImageRepresentation)
+            // check if the file type returned by Sipi corresponds to the already existing file value type (e.g., hasStillImageRepresentation)
             _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != fileValues.head.property) {
-                // TODO: remove the file from SIPI
+                // TODO: remove the file from SIPI (delete request)
                 throw BadRequestException(s"Type of submitted file (${sipiResponse.file_type}) does not correspond to expected property type ${fileValues.head.property}")
             }
 
+            //
             // handle file types individually
+            //
 
             // create the apt case class depending on the file type returned by Sipi
-            changedFileValues: Vector[ChangeValueResponseV1] <- Future.sequence(sipiResponse.file_type match {
+            changedFileValuesFuture: Vector[Future[ChangeValueResponseV1]] = sipiResponse.file_type match {
                 case SipiConstants.FileType.IMAGE =>
                     // we deal with hasStillImageFileValue, so there need to be two file values:
                     // one for the full and one for the thumb
@@ -413,16 +415,25 @@ class ValuesResponderV1 extends ResponderV1 {
                         throw InconsistentTriplestoreDataException(s"Expected 2 file values for ${resourceIri}, but ${fileValues.size} given.")
                     }
 
-                    // sort file values by quality
+                    // make sure that we have quality information for the existing file values
+                    fileValues.foreach {
+                        (fileValue) => fileValue.quality.getOrElse(throw InconsistentTriplestoreDataException(s"No quality level given for ${fileValue.valueObjectIri}"))
+                    }
+
+                    // sort file values by quality: the thumbnail file value has to be updated with another thumbnail file value,
+                    // the applies for the full quality
                     val oldFileValuesSorted: Seq[CurrentFileValue] = fileValues.sortBy(_.quality)
                     val newFileValuesSorted: Vector[FileValueV1] = sipiResponse.fileValuesV1.sortBy {
                         case imageFileValue: StillImageFileValueV1 => imageFileValue.qualityLevel
                         case otherFileValue: FileValueV1 => throw SipiException(s"Sipi returned a wrong file value type: ${otherFileValue.valueTypeIri}")
                     }
 
-                    // now change the values
+                    //
+                    // now request to change the values
+                    //
                     newFileValuesSorted.zip(oldFileValuesSorted).map {
                         case (newFileValue: StillImageFileValueV1, oldFileValue: CurrentFileValue) =>
+                            // create ChangeValueRequest
                             val changeImageFileValueRequest: ChangeValueRequestV1 = ChangeValueRequestV1(
                                 valueIri = oldFileValue.valueObjectIri,
                                 value = newFileValue,
@@ -430,16 +441,19 @@ class ValuesResponderV1 extends ResponderV1 {
                                 apiRequestID = changeFileValueRequest.apiRequestID
                             )
 
+                            // do change request
                             changeValueV1(changeImageFileValueRequest)
-                        case _ => throw SipiException("Sipi created a wrong file value type")
+                        case _ => throw SipiException("Sipi created a wrong file value type (not a StillImageFileValueV1)")
                     }
 
 
-                case otherFileType => throw SipiException(s"File type ${otherFileType} not yet supported")
-            })
+                case otherFileType => throw NotImplementedException(s"File type ${otherFileType} not yet supported")
+            }
 
+            // turn a sequence of Futures of messages into a sequence of messages
+            changedFileValues: Vector[ChangeValueResponseV1] <- Future.sequence(changedFileValuesFuture)
 
-        } yield ChangeFileValueResponseV1(
+        } yield ChangeFileValueResponseV1(// return the response(s) of the call(s) of changeValueV1
             changedFilesValues = changedFileValues,
             userdata = changeFileValueRequest.userProfile.userData
         )

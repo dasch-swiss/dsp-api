@@ -67,7 +67,13 @@ See :ref:`resources-responder-and-sipi` for details of how the resources respond
 
 Change the Digital Representation of a Resource
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TODO: implement values route
+The request is taken care of in ``ValuesRouteV1.scala``. The PUT request is handled in path ``v1/filevalue/{resIri}`` which receives the resource Iri as a part of the URL:
+*The submitted file will update the existing file values of the given resource.*
+
+The file parameters are submitted as json and are parsed into a ``ChangeFileValueApiRequestV1``. To represent the conversion request for the Sipi responder,
+a ``SipiResponderConversionFileRequestV1`` is created. A ``ChangeFileValueRequestV1`` containing the resource Iri and the message for Sipi is then created and sent to the values responder.
+
+See :ref:`values-responder-and-sipi` for details of how the values responder then handles the request.
 
 
 Non GUI-Case
@@ -80,6 +86,8 @@ The request is handled in ``ResourcesRouteV1.scala``. The multipart POST request
 and ``file`` containing the binary data as well as the file name and its mime type.
 Using Python's `request module <http://docs.python-requests.org/en/master/user/quickstart/#post-a-multipart-encoded-file>`_,
 a request could look like this:
+
+.. _python_code:
 
  .. code::
 
@@ -101,7 +109,15 @@ See :ref:`resources-responder-and-sipi` for details of how the resources respond
 
 Change the Digital Representation of a Resource
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TODO: implement values route
+The request is taken care of in ``ValuesRouteV1.scala``. The multipart PUT request is handled in path ``v1/filevalue/{resIri}`` which receives the resource Iri as a part of the URL:
+*The submitted file will update the existing file values of the given resource.*
+
+For the request, no json parameters are required. So its body just consists of the binary data (cf. :ref:`Python code example <python_code>`).
+The values route stores the submitted binaries as a temporary file and creates a ``SipiResponderConversionPathRequestV1``.
+A ``ChangeFileValueRequestV1`` containing the resource Iri and the message for Sipi is then created and sent to the values responder.
+
+See :ref:`values-responder-and-sipi` for details of how the values responder then handles the request.
+
 
 .. _resources-responder-and-sipi:
 
@@ -133,10 +149,25 @@ Also all the possible file types are defined in enumeration.
 
 Depending on the given file type, Sipi responder can create the apt message (here: ``StillImageFileValueV1``) to save the data to the triplestore.
 
+.. _values-responder-and-sipi:
 
 Further Handling of the GUI and the non GUI-case by the Values Responder
 ---------------------------------------------------------------------------
-TODO: implement SIPI responder call from values responder
+In the values responder, ``ChangeFileValueRequestV1`` is passed to the method ``changeFileValueV1``. Unlike ordinary value change requests,
+the Iris of the value objects to be updated are not known yet. Because of this, all the existing file values of the given resource Iri have to be queried first.
+Also their quality levels are queried because in case of a ``StillImageFileValue``, we have to deal with a file value for the thumbnail and another one for the full quality representation.
+When these two file values are being updated, the quality levels have to be considered for the sake of consistency (otherwise a full quality value's ``knora-base:previous-value`` may point to a thumbnail file value).
+
+With the file values being returned, we actually know about the current Iris of the value objects. Now the Sipi responder is called to handle the file conversion request (cf. :ref:`resources-responder-and-sipi`).
+After that, it is checked that the ``file_type`` returned by Sipi responder corresponds to the property type of the existing file values. For example, if the ``file_type`` is an image, the property pointing to the current file values
+must be a ``hasStillImageFileValue``. Otherwise, the user submitted a non image file that has to be rejected.
+
+Depending on the ``file_type``, messages of type ``ChangeValueRequestV1`` can be created.
+For each existing file value, such a message is instantiated containing the current value Iri and the new value to be created (returned by the sipi responder).
+These messages are passed to ``changeValueV1`` because with the described handling done in ``changeFileValueV1``, the file values can be changed like any other value type.
+
+In case of success, a ``ChangeFileValueResponseV1`` is sent back to the client, containing a list of the single ``ChangeValueResponseV1``.
+
 
 
 

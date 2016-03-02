@@ -203,7 +203,7 @@ class SipiResponderV1 extends ResponderV1 {
                             isPreview = true
                         ))
 
-                case unknownType => throw BadRequestException(s"Could not handle file type $unknownType")
+                case unknownType => throw NotImplementedException(s"Could not handle file type $unknownType")
 
                 // TODO: add missing file types
             }
