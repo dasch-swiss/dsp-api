@@ -19,7 +19,8 @@ SALSAH.showval = function(value_container, prop, value_index, options)
 	switch (prop.valuetype_id) {
 		case VALTYPE_TEXT: {
 			var reg = new RegExp('(http://[^<>\\s]+[\\w\\d])', 'g');     // replace URL's with anchor tags
-			value_container.append(prop.values[value_index].replace(reg, '<a href="$1" target="_blank">$1</a>'));
+			//value_container.append(prop.values[value_index].replace(reg, '<a href="$1" target="_blank">$1</a>'));
+			value_container.append(prop.values[value_index]);
 			break;
 		}
 		case VALTYPE_INTEGER: {
