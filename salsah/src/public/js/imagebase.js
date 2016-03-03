@@ -940,7 +940,7 @@ $(function() {
 				var region_area = metadata_area_tabs.tabs('contentElement', 'regions');
 				var comment;
 
-				SALSAH.ApGet('resourcetypes/salsah:generic_region', {}, function(data) {
+				SALSAH.ApiGet('resourcetypes/salsah:generic_region', {}, function(data) {
 					if (data.status == ApiErrors.OK) {
 						region_area.resadd({
 							rtinfo: data.restype_info,
