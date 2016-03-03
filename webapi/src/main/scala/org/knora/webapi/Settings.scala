@@ -44,8 +44,10 @@ class SettingsImpl(config: Config) extends Extension {
         (mType: ConfigValue) => mType.unwrapped.toString
     }.toVector
 
-    val sipiURL = config.getString("app.sipi.url")
+    val sipiBaseUrl = config.getString("app.sipi.url")
     val sipiPort = config.getString("app.sipi.port")
+    val sipiPath = config.getString("app.sipi.path")
+    val sipiUrl = s"$sipiBaseUrl:$sipiPort$sipiPath"
     val sipiPathConversionRoute = config.getString("app.sipi.path-conversion-route")
     val sipiFileConversionRoute = config.getString("app.sipi.file-conversion-route")
     val httpPort = config.getInt("app.http.port")
@@ -105,8 +107,6 @@ class SettingsImpl(config: Config) extends Extension {
     val fakeTriplestoreDataDir = new File(config.getString("app.triplestore.fake-triplestore-data-dir"))
 
     val skipAuthentication = config.getBoolean("app.skip-authentication")
-
-    val imageServerUrl = config.getString("app.image-server.url")
 
     val fallbackLanguage = config.getString("user.default-language")
 
