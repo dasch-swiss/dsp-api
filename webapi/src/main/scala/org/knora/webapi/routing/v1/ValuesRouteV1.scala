@@ -237,7 +237,7 @@ object ValuesRouteV1 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        // TODO: add documentation
+        // Version history request requires 3 URL path segments: resource IRI, property IRI, and current value IRI
         path("v1" / "values" / "history" / Segments) { iris =>
             get {
                 requestContext => {
@@ -323,7 +323,9 @@ object ValuesRouteV1 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v1" / "links" / Segments) { iris =>
+        } ~
+            // Link value request requires 3 URL path segments: subject IRI, predicate IRI, and object IRI
+            path("v1" / "links" / Segments) { iris =>
             get {
                 requestContext => {
                     val requestMessageTry = Try {
