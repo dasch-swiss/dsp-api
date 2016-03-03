@@ -349,15 +349,22 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Temporary structure to represent existing file values of a resource.
+      * Preprocesses a file value change request by calling the Sipi responder to create a new file
+      * and calls [[changeValueV1]] to actually change the file value in Knora.
       *
-      * @param property       the property Iri (e.g., hasStillImageFileValueRepresentation)
-      * @param valueObjectIri the Iri of the value object.
-      * @param quality        the quality of the file value
+      * @param changeFileValueRequest a [[ChangeFileValueRequestV1]] sent by the values route.
+      * @return a [[ChangeFileValueResponseV1]] representing all the changed file values.
       */
-    private case class CurrentFileValue(property: IRI, valueObjectIri: IRI, quality: Option[Int])
-
     private def changeFileValueV1(changeFileValueRequest: ChangeFileValueRequestV1): Future[ChangeFileValueResponseV1] = {
+
+        /**
+          * Temporary structure to represent existing file values of a resource.
+          *
+          * @param property       the property Iri (e.g., hasStillImageFileValueRepresentation)
+          * @param valueObjectIri the Iri of the value object.
+          * @param quality        the quality of the file value
+          */
+        case class CurrentFileValue(property: IRI, valueObjectIri: IRI, quality: Option[Int])
 
         // get the Iris of the current file value(s)
         val resultFuture = for {
