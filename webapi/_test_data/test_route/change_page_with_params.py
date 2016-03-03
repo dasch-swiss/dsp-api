@@ -3,7 +3,7 @@
 import requests, json, urllib
 
 #
-# This scripts tests the chaning ogf the file value of a page and submits image data params (no binaries) to the values route, testing the running Sipi server.
+# This scripts tests the changing of the file value of a page and submits image data params (no binaries) to the values route, testing the running Sipi server.
 #
 
 try:
