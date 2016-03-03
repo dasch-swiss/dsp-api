@@ -109,7 +109,20 @@ WHERE {
         ?property knora-base:objectClassConstraint knora-base:TextValue .
         ?valueObjectIri knora-base:valueHasString ?valueString .
         ?valueObjectIri knora-base:valueHasOrder ?valueOrder .
-        ?property salsah-gui:guiOrder ?guiOrder .
+
+        OPTIONAL {
+            ?property salsah-gui:guiOrder ?maybeGuiOrder .
+        }
+
+        @*
+            If no guiOrder is given for the property, assign -1.
+
+            This may occur in case of resources like the knora-base:LinkObj that are directly
+            assigned a property like hasComment, which project specific properties extend and attach a guiOrder to.
+
+        *@
+
+        BIND(IF(BOUND(?maybeGuiOrder), ?maybeGuiOrder, -1) AS ?guiOrder)
 
         MINUS {
                  ?valueObjectIri knora-base:isDeleted true .

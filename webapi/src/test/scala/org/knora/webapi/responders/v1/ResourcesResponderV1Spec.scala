@@ -400,6 +400,45 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "return 27 resources containing 'Narrenschiff' in their label" in {
+            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=4&limit=100&restype_id=-1
+
+            // This query is going to return also resources of knora-baseLinkObj with a knora-base:hasComment.
+            // Because this resource is directly defined in knora-base, its property knora-base:hasComment
+            // has no guiOrder (normally, the guiOrder is defined in project specific ontologies) which used to cause problems in the SPARQL query.
+            // Now, the guiOrder was made optional in the SPARQL query, and this test ensures that the query works as expected.
+
+            actorUnderTest ! ResourceSearchGetRequestV1(
+                searchString = "Narrenschiff",
+                numberOfProps = 4,
+                limitOfResults = 100,
+                userProfile = ResourcesResponderV1Spec.userProfile,
+                resourceTypeIri = None
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceSearchResponseV1 =>
+                    assert(response.resources.size == 27, s"expected 27 resources")
+            }
+        }
+
+        "return 3 resources containing 'Narrenschiff' in their label of type incunabula:book" in {
+            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=3&limit=100&restype_id=-1
+
+            actorUnderTest ! ResourceSearchGetRequestV1(
+                searchString = "Narrenschiff",
+                numberOfProps = 3,
+                limitOfResults = 100,
+                userProfile = ResourcesResponderV1Spec.userProfile,
+                resourceTypeIri = Some("http://www.knora.org/ontology/incunabula#book")
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceSearchResponseV1 =>
+                    assert(response.resources.size == 3, s"expected 3 resources")
+            }
+        }
+
         "not create a resource when too many values are submitted for a property" in {
             // The Incunabula ontology specifies that an incunabula:book must have exactly one title.
             val valuesToBeCreated = Map(
