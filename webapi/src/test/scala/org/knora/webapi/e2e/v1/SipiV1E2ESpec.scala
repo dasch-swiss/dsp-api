@@ -84,49 +84,39 @@ class SipiV1E2ESpec extends E2ESpec {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
     }
 
+    object RequestParams {
 
-    "The Resources Endpoint" should {
-
-        "create a resource with a digital representation doing a multipart request containing the binary data (non GUI-case)" in {
-
-            val params = CreateResourceApiRequestV1(
-                restype_id = "http://www.knora.org/ontology/incunabula#page",
-                properties = Map(
-                    "http://www.knora.org/ontology/incunabula#pagenum" -> Seq(CreateResourceValueV1(
-                        richtext_value = Some(CreateRichtextV1(
-                            utf8str = "test_page",
-                            textattr = "{}",
-                            resource_reference = List.empty[String]
-                        ))
-                    )),
-                    "http://www.knora.org/ontology/incunabula#origname" -> Seq(CreateResourceValueV1(
-                        richtext_value = Some(CreateRichtextV1(
-                            utf8str = "test",
-                            textattr = "{}",
-                            resource_reference = List.empty[String]
-                        ))
-                    )),
-                    "http://www.knora.org/ontology/incunabula#partOf" -> Seq(CreateResourceValueV1(
-                        link_value = Some("http://data.knora.org/5e77e98d2603")
-                    )),
-                    "http://www.knora.org/ontology/incunabula#seqnum" -> Seq(CreateResourceValueV1(
-                        int_value = Some(999)
+        val createResourceParams = CreateResourceApiRequestV1(
+            restype_id = "http://www.knora.org/ontology/incunabula#page",
+            properties = Map(
+                "http://www.knora.org/ontology/incunabula#pagenum" -> Seq(CreateResourceValueV1(
+                    richtext_value = Some(CreateRichtextV1(
+                        utf8str = "test_page",
+                        textattr = "{}",
+                        resource_reference = List.empty[String]
                     ))
-                ),
-                label = "test",
-                project_id = "http://data.knora.org/projects/77275339"
-            )
+                )),
+                "http://www.knora.org/ontology/incunabula#origname" -> Seq(CreateResourceValueV1(
+                    richtext_value = Some(CreateRichtextV1(
+                        utf8str = "test",
+                        textattr = "{}",
+                        resource_reference = List.empty[String]
+                    ))
+                )),
+                "http://www.knora.org/ontology/incunabula#partOf" -> Seq(CreateResourceValueV1(
+                    link_value = Some("http://data.knora.org/5e77e98d2603")
+                )),
+                "http://www.knora.org/ontology/incunabula#seqnum" -> Seq(CreateResourceValueV1(
+                    int_value = Some(999)
+                ))
+            ),
+            label = "test",
+            project_id = "http://data.knora.org/projects/77275339"
+        )
 
-            val pathToFile = "_test_data/test_route/images/Chlaus.jpg"
-            val fileToSend = new File(pathToFile)
-            // check if the file exists
-            assert(fileToSend.exists(), s"File ${pathToFile} does not exist")
+        val pathToFile = "_test_data/test_route/images/Chlaus.jpg"
 
-            val formData = MultipartFormData(Seq(
-                BodyPart(entity = HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint), fieldName = "json"),
-                BodyPart(file = fileToSend, fieldName = "file", ContentType(mediaType = MediaTypes.`image/jpeg`))
-            ))
-
+        def createTmpFileDir() = {
             // check if tmp datadir exists and create it if not
             if (!Files.exists(Paths.get(settings.tmpDataDir))) {
                 try {
@@ -136,40 +126,60 @@ class SipiV1E2ESpec extends E2ESpec {
                     case e: Throwable => throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
                 }
             }
+        }
+
+    }
+
+    "The Resources Endpoint" should {
+
+        "create a resource with a digital representation doing a multipart request containing the binary data (non GUI-case)" in {
+
+            val fileToSend = new File(RequestParams.pathToFile)
+            // check if the file exists
+            assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
+
+            val formData = MultipartFormData(Seq(
+                BodyPart(entity = HttpEntity(MediaTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint), fieldName = "json"),
+                BodyPart(file = fileToSend, fieldName = "file", ContentType(mediaType = MediaTypes.`image/jpeg`))
+            ))
+
+            RequestParams.createTmpFileDir()
 
             Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+
+                val tmpFile = SourcePath.getSourcePath()
+
+                assert(!tmpFile.exists(), s"Tmp file ${tmpFile} was not deleted.")
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
 
+        /*"create a resource with a digital representation doing a multipart request submitting a wrong mimetype to make the request fail" in {
+
+            val fileToSend = new File(RequestParams.pathToFile)
+            // check if the file exists
+            assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
+
+            val formData = MultipartFormData(Seq(
+                BodyPart(entity = HttpEntity(MediaTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint), fieldName = "json"),
+                BodyPart(file = fileToSend, fieldName = "file", ContentType(mediaType = MediaTypes.`image/tiff`))
+            ))
+
+            RequestParams.createTmpFileDir()
+
+            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+                // TODO: assert that this test fails!
+
+                val tmpFile = SourcePath.getSourcePath()
+
+                assert(!tmpFile.exists(), s"Tmp file ${tmpFile} was not deleted.")
+                assert(status != StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
+            }
+        }*/
+
         "create a resource with a digital representation doing a params only request without binary data (GUI-case)" in {
 
-            val params = CreateResourceApiRequestV1(
-                restype_id = "http://www.knora.org/ontology/incunabula#page",
-                properties = Map(
-                    "http://www.knora.org/ontology/incunabula#pagenum" -> Seq(CreateResourceValueV1(
-                        richtext_value = Some(CreateRichtextV1(
-                            utf8str = "test_page",
-                            textattr = "{}",
-                            resource_reference = List.empty[String]
-                        ))
-                    )),
-                    "http://www.knora.org/ontology/incunabula#origname" -> Seq(CreateResourceValueV1(
-                        richtext_value = Some(CreateRichtextV1(
-                            utf8str = "test",
-                            textattr = "{}",
-                            resource_reference = List.empty[String]
-                        ))
-                    )),
-                    "http://www.knora.org/ontology/incunabula#partOf" -> Seq(CreateResourceValueV1(
-                        link_value = Some("http://data.knora.org/5e77e98d2603")
-                    )),
-                    "http://www.knora.org/ontology/incunabula#seqnum" -> Seq(CreateResourceValueV1(
-                        int_value = Some(999)
-                    ))
-                ),
-                label = "test",
-                project_id = "http://data.knora.org/projects/77275339",
+            val params = RequestParams.createResourceParams.copy(
                 file = Some(CreateFileV1(
                     originalFilename = "Chlaus.jpg",
                     originalMimeType = "image/jpeg",
@@ -209,6 +219,10 @@ class SipiV1E2ESpec extends E2ESpec {
             val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
 
             Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(user, password)) ~> valuesPath ~> check {
+
+                val tmpFile = SourcePath.getSourcePath()
+
+                assert(!tmpFile.exists(), s"Tmp file ${tmpFile} was not deleted.")
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
 

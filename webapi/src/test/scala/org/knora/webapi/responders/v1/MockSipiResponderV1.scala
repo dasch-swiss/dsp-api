@@ -21,11 +21,27 @@
 package org.knora.webapi.responders.v1
 
 import org.knora.webapi.messages.v1respondermessages.sipimessages._
-import org.knora.webapi.messages.v1respondermessages.valuemessages.StillImageFileValueV1
+import org.knora.webapi.messages.v1respondermessages.valuemessages._
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.InputValidation
-
+import java.io.File
 import scala.concurrent.Future
+import org.knora.webapi.BadRequestException
+
+/**
+  * Keep track of the temporary files that was written in the route
+  * when submitting a multipart request
+  */
+object SourcePath {
+    private var sourcePath: File = new File("") // for init
+
+    def setSourcePath(path: File) = {
+        sourcePath = path
+    }
+
+    def getSourcePath() = {
+        sourcePath
+    }
+}
 
 /**
   * Takes the place of [[SipiResponderV1]] for tests without an actual Sipi server, by returning hard-coded responses
@@ -42,6 +58,9 @@ class MockSipiResponderV1 extends ResponderV1 {
 
         val originalFilename = conversionRequest.originalFilename
         val originalMimeType: String = conversionRequest.originalMimeType
+
+        // we expect original mimetype to be "image/jpeg"
+        if (originalMimeType != "image/jpeg") throw BadRequestException("")
 
         val fileValuesV1 = Vector(StillImageFileValueV1(// full representation
             internalMimeType = "image/jp2",
@@ -64,6 +83,16 @@ class MockSipiResponderV1 extends ResponderV1 {
                 qualityName = Some("thumbnail"),
                 isPreview = true
             ))
+
+        // Whenever Knora had to create a temporary file, store its path
+        // the calling test context can then make sure that is has actually been deleted after the test is done
+        // (on successful or failed conversion)
+        conversionRequest match {
+            case conversionPathRequest: SipiResponderConversionPathRequestV1 =>
+                // store path to tmp file
+                SourcePath.setSourcePath(conversionPathRequest.source)
+            case _ => () // params request only
+        }
 
         Future(SipiResponderConversionResponseV1(fileValuesV1, file_type = SipiConstants.FileType.IMAGE))
     }
