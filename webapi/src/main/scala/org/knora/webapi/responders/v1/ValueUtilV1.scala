@@ -115,6 +115,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                     ny = Some(stillImageFileValueV1.dimY),
                     path = makeSipiFileGetUrlFromFileValueV1(fileValueV1)
                 )
+            case otherType => throw NotImplementedException(s"Type not yet implemented: ${otherType.valueTypeIri}")
         }
     }
 

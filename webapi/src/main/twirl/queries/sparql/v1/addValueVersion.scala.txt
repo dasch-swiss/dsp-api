@@ -203,6 +203,7 @@ DELETE {
             ?newValue <@assertion._1> <@assertion._2> .
         }
 
+        @* TODO: in case of a file value, order is not given *@
         ?newValue knora-base:valueHasOrder ?order .
         ?newValue knora-base:valueCreationDate ?currentTime .
         ?newValue knora-base:previousValue ?currentValue .
@@ -271,7 +272,16 @@ WHERE {
 
     ?resource ?property ?currentValue .
     ?property knora-base:objectClassConstraint ?valueType .
-    ?currentValue knora-base:valueHasOrder ?order .
+
+    @*
+
+        Consider order if given (not given for file values)
+
+    *@
+
+    OPTIONAL {
+        ?currentValue knora-base:valueHasOrder ?order .
+    }
 
     @*
 
