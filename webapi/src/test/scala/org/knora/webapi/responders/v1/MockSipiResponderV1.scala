@@ -55,46 +55,47 @@ class MockSipiResponderV1 extends ResponderV1 {
       * @return a [[SipiResponderConversionResponseV1]] imitating the answer from Sipi.
       */
     private def imageConversionResponse(conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
+        Future {
+            val originalFilename = conversionRequest.originalFilename
+            val originalMimeType: String = conversionRequest.originalMimeType
 
-        val originalFilename = conversionRequest.originalFilename
-        val originalMimeType: String = conversionRequest.originalMimeType
+            // we expect original mimetype to be "image/jpeg"
+            if (originalMimeType != "image/jpeg") throw BadRequestException("")
 
-        // we expect original mimetype to be "image/jpeg"
-        if (originalMimeType != "image/jpeg") throw BadRequestException("")
-
-        val fileValuesV1 = Vector(StillImageFileValueV1(// full representation
-            internalMimeType = "image/jp2",
-            originalFilename = originalFilename,
-            originalMimeType = Some(originalMimeType),
-            dimX = 800,
-            dimY = 800,
-            internalFilename = "full.jp2",
-            qualityLevel = 100,
-            qualityName = Some("full")
-        ),
-            StillImageFileValueV1(// thumbnail representation
-                internalMimeType = "image/jpeg",
+            val fileValuesV1 = Vector(StillImageFileValueV1(// full representation
+                internalMimeType = "image/jp2",
                 originalFilename = originalFilename,
                 originalMimeType = Some(originalMimeType),
-                dimX = 80,
-                dimY = 80,
-                internalFilename = "thumb.jpg",
-                qualityLevel = 10,
-                qualityName = Some("thumbnail"),
-                isPreview = true
-            ))
+                dimX = 800,
+                dimY = 800,
+                internalFilename = "full.jp2",
+                qualityLevel = 100,
+                qualityName = Some("full")
+            ),
+                StillImageFileValueV1(// thumbnail representation
+                    internalMimeType = "image/jpeg",
+                    originalFilename = originalFilename,
+                    originalMimeType = Some(originalMimeType),
+                    dimX = 80,
+                    dimY = 80,
+                    internalFilename = "thumb.jpg",
+                    qualityLevel = 10,
+                    qualityName = Some("thumbnail"),
+                    isPreview = true
+                ))
 
-        // Whenever Knora had to create a temporary file, store its path
-        // the calling test context can then make sure that is has actually been deleted after the test is done
-        // (on successful or failed conversion)
-        conversionRequest match {
-            case conversionPathRequest: SipiResponderConversionPathRequestV1 =>
-                // store path to tmp file
-                SourcePath.setSourcePath(conversionPathRequest.source)
-            case _ => () // params request only
+            // Whenever Knora had to create a temporary file, store its path
+            // the calling test context can then make sure that is has actually been deleted after the test is done
+            // (on successful or failed conversion)
+            conversionRequest match {
+                case conversionPathRequest: SipiResponderConversionPathRequestV1 =>
+                    // store path to tmp file
+                    SourcePath.setSourcePath(conversionPathRequest.source)
+                case _ => () // params request only
+            }
+
+            SipiResponderConversionResponseV1(fileValuesV1, file_type = SipiConstants.FileType.IMAGE)
         }
-
-        Future(SipiResponderConversionResponseV1(fileValuesV1, file_type = SipiConstants.FileType.IMAGE))
     }
 
     def receive = {

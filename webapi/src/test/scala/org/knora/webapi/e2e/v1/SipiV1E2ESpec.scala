@@ -21,6 +21,7 @@
 package org.knora.webapi.e2e.v1
 
 import java.io.File
+import java.net.URLEncoder
 import java.nio.file.{Files, Paths}
 
 import akka.actor._
@@ -29,15 +30,13 @@ import akka.util.Timeout
 import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1respondermessages.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{CreateFileV1, CreateRichtextV1, ChangeFileValueApiRequestV1}
+import org.knora.webapi.messages.v1respondermessages.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
-import org.knora.webapi.routing.v1.ResourcesRouteV1
-import org.knora.webapi.routing.v1.ValuesRouteV1
+import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
 import org.knora.webapi.{FileWriteException, LiveActorMaker}
 import spray.http._
-import java.net.URLEncoder
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -154,7 +153,7 @@ class SipiV1E2ESpec extends E2ESpec {
             }
         }
 
-        /*"create a resource with a digital representation doing a multipart request submitting a wrong mimetype to make the request fail" in {
+        "create a resource with a digital representation doing a multipart request submitting a wrong mimetype to make the request fail" in {
 
             val fileToSend = new File(RequestParams.pathToFile)
             // check if the file exists
@@ -175,7 +174,7 @@ class SipiV1E2ESpec extends E2ESpec {
                 assert(!tmpFile.exists(), s"Tmp file ${tmpFile} was not deleted.")
                 assert(status != StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
-        }*/
+        }
 
         "create a resource with a digital representation doing a params only request without binary data (GUI-case)" in {
 
@@ -191,6 +190,7 @@ class SipiV1E2ESpec extends E2ESpec {
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
+
     }
 
     "The Values endpoint" should {
@@ -248,5 +248,4 @@ class SipiV1E2ESpec extends E2ESpec {
 
         }
     }
-
 }
