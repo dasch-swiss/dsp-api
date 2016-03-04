@@ -60,8 +60,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param imageFileValueV1 the image file value representing the image.
       * @return a Sipi URL.
       */
-    // TODO: add params for size/resolution and region to be able to create an apt IIIF URL
     def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String = {
+        // TODO: depending on imageFileValueV1 dims, create a correct IIIF URL
         s"${settings.sipiUrl}/${imageFileValueV1.internalFilename}"
     }
 
