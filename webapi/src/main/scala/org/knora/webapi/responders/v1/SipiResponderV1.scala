@@ -220,8 +220,7 @@ class SipiResponderV1 extends ResponderV1 {
       * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
       */
     private def convertPathV1(conversionRequest: SipiResponderConversionPathRequestV1): Future[SipiResponderConversionResponseV1] = {
-
-        val url = s"${settings.sipiUrl}/${settings.sipiPathConversionRoute}"
+        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiPathConversionRoute}"
 
         callSipiConvertRoute(url, conversionRequest)
 
@@ -234,7 +233,7 @@ class SipiResponderV1 extends ResponderV1 {
       * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
       */
     private def convertFileV1(conversionRequest: SipiResponderConversionFileRequestV1): Future[SipiResponderConversionResponseV1] = {
-        val url = s"${settings.sipiUrl}/${settings.sipiFileConversionRoute}"
+        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiFileConversionRoute}"
 
         callSipiConvertRoute(url, conversionRequest)
     }

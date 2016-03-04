@@ -47,7 +47,8 @@ class SettingsImpl(config: Config) extends Extension {
     val sipiBaseUrl = config.getString("app.sipi.url")
     val sipiPort = config.getString("app.sipi.port")
     val sipiPrefix = config.getString("app.sipi.prefix")
-    val sipiUrl = s"$sipiBaseUrl:$sipiPort/$sipiPrefix"
+    val sipiIIIFGetUrl = s"$sipiBaseUrl:$sipiPort/$sipiPrefix"
+    val sipiImageConversionUrl = s"$sipiBaseUrl:$sipiPort"
     val sipiPathConversionRoute = config.getString("app.sipi.path-conversion-route")
     val sipiFileConversionRoute = config.getString("app.sipi.file-conversion-route")
     val httpPort = config.getInt("app.http.port")

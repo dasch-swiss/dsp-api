@@ -30,7 +30,6 @@ import org.knora.webapi.messages.v1respondermessages.valuemessages.KnoraCalendar
 import org.knora.webapi.twirl.SearchCriterion
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{DateUtilV1, FormatConstants}
-import org.knora.webapi.responders.v1.ValueUtilV1
 
 import scala.concurrent.Future
 

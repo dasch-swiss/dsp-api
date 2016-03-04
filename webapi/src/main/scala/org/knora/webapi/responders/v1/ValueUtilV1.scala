@@ -55,7 +55,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     def makeSipiImagePreviewGetUrlFromFilename(filename: String): String = {
-        s"${settings.sipiUrl}/${filename}/full/full/0/default.jpg"
+        s"${settings.sipiIIIFGetUrl}/${filename}/full/full/0/default.jpg"
     }
 
     /**
@@ -68,7 +68,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         if (!imageFileValueV1.isPreview) {
             // not a thumbnail
             // calculate the correct size from the source image depending on the given dimensions
-            s"${settings.sipiUrl}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
+            s"${settings.sipiIIIFGetUrl}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
         } else {
             // thumbnail
             makeSipiImagePreviewGetUrlFromFilename(imageFileValueV1.internalFilename)
