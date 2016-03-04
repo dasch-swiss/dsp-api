@@ -207,7 +207,7 @@ class SipiResponderV1 extends ResponderV1 {
                         dimY = imageConversionResult.ny_full,
                         internalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.filename_full),
                         qualityLevel = 100,
-                        qualityName = Some("full")
+                        qualityName = Some(SipiConstants.StillImage.fullQuality)
                     ),
                         StillImageFileValueV1(// thumbnail representation
                             internalMimeType = InputValidation.toSparqlEncodedString(imageConversionResult.mimetype_thumb),
@@ -217,7 +217,7 @@ class SipiResponderV1 extends ResponderV1 {
                             dimY = imageConversionResult.ny_thumb,
                             internalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.filename_thumb),
                             qualityLevel = 10,
-                            qualityName = Some("thumbnail"),
+                            qualityName = Some(SipiConstants.StillImage.thumbnailQuality),
                             isPreview = true
                         ))
 

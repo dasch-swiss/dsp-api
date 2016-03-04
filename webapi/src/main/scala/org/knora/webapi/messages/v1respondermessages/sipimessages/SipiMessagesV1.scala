@@ -207,9 +207,12 @@ object SipiConstants {
             }
         }
 
-
     }
 
+    object StillImage {
+        val fullQuality = "full"
+        val thumbnailQuality = "thumbnail"
+    }
 }
 
 /**

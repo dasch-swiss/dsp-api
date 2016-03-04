@@ -231,16 +231,17 @@ case class CreateValueResponseV1(value: ApiValueV1,
   * To verify that the value was in fact created, send a [[VerifyMultipleValueCreationRequestV1]].
   *
   * @param newValueIri the IRI of the value that should have been created.
-  * @param value the [[UpdateValueV1]] that was used to request the creation of the value.
+  * @param value       the [[UpdateValueV1]] that was used to request the creation of the value.
   */
 case class UnverifiedCreateValueResponseV1(newValueIri: IRI, value: UpdateValueV1)
 
 /**
   * Requests verification that new values were created.
-  * @param resourceIri the IRI of the resource in which the values should have been created.
+  *
+  * @param resourceIri      the IRI of the resource in which the values should have been created.
   * @param unverifiedValues a [[Map]] of property IRIs to [[UnverifiedCreateValueResponseV1]] objects
   *                         describing the values that should have been created for each property.
-  * @param userProfile the profile of the user making the request.
+  * @param userProfile      the profile of the user making the request.
   */
 case class VerifyMultipleValueCreationRequestV1(resourceIri: IRI,
                                                 unverifiedValues: Map[IRI, Seq[UnverifiedCreateValueResponseV1]],
@@ -249,6 +250,7 @@ case class VerifyMultipleValueCreationRequestV1(resourceIri: IRI,
 /**
   * In response to a [[VerifyMultipleValueCreationRequestV1]], indicates that all requested values were
   * created successfully.
+  *
   * @param verifiedValues information about the values that were created.
   */
 case class VerifyMultipleValueCreationResponseV1(verifiedValues: Map[IRI, Seq[CreateValueResponseV1]])
@@ -272,9 +274,9 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * - The resource class has a suitable cardinality for each submitted value.
   * - All required values are provided.
   *
-  * @param transactionID the ID of the transaction in which the values should be created.
-  * @param projectIri the project the values belong to.
-  * @param resourceIri the resource the values will be attached to.
+  * @param transactionID    the ID of the transaction in which the values should be created.
+  * @param projectIri       the project the values belong to.
+  * @param resourceIri      the resource the values will be attached to.
   * @param resourceClassIri the IRI of the resource's OWL class.
   * @param values           the values to be added, with optional comments.
   * @param userProfile      the user that is creating the values.
@@ -853,6 +855,8 @@ sealed trait FileValueV1 extends UpdateValueV1 with ApiValueV1 {
   * @param dimX             the X dimension of the object.
   * @param dimY             the Y dimension of the object.
   * @param qualityLevel     the quality level of this image (higher values mean higher resolutions).
+  * @param qualityName      a string representation of the qualityLevel
+  * @param isPreview        indicates if the file value is used as a preview (thumbnail)
   */
 case class StillImageFileValueV1(internalMimeType: String,
                                  internalFilename: String,

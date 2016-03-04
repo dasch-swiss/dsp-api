@@ -55,14 +55,20 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     /**
-      * Creates a URL for accessing an image file via Sipi.
+      * Creates a IIIF URL for accessing an image file via Sipi.
       *
       * @param imageFileValueV1 the image file value representing the image.
       * @return a Sipi URL.
       */
     def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String = {
-        // TODO: depending on imageFileValueV1 dims, create a correct IIIF URL
-        s"${settings.sipiUrl}/${imageFileValueV1.internalFilename}"
+        if (!imageFileValueV1.isPreview) {
+            // not a thumbnail
+            // calculate the correct size from the source image depending on the given dimensions
+            s"${settings.sipiUrl}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
+        } else {
+            // thumbnail
+            s"${settings.sipiUrl}/${imageFileValueV1.internalFilename}/full/full/0/default.jpg"
+        }
     }
 
     // A Map of MIME types to Knora API v1 binary format name.
