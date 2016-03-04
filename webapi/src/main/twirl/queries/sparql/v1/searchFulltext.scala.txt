@@ -172,11 +172,10 @@ WHERE {
     }
 
     OPTIONAL {
-        ?fileValueProp rdfs:subPropertyOf* knora-base:hasFileValue .
-        ?resource ?fileValueProp ?fileValue .
-        ?fileValue a knora-base:StillImageFileValue .
-        ?fileValue knora-base:valueIsPreview true .
-        ?fileValue knora-base:internalFilename ?previewPath .
+       ?resource knora-base:hasStillImageFileValue ?fileValue .
+       ?fileValue a knora-base:StillImageFileValue .
+       ?fileValue knora-base:isPreview true .
+       ?fileValue knora-base:internalFilename ?previewPath .
 
         OPTIONAL {
             ?fileValue knora-base:dimX ?previewDimX .

@@ -54,6 +54,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         valueFunction(valueProps)
     }
 
+    def makeSipiImagePreviewGetUrlFromFilename(filename: String): String = {
+        s"${settings.sipiUrl}/${filename}/full/full/0/default.jpg"
+    }
+
     /**
       * Creates a IIIF URL for accessing an image file via Sipi.
       *
@@ -67,7 +71,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             s"${settings.sipiUrl}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
         } else {
             // thumbnail
-            s"${settings.sipiUrl}/${imageFileValueV1.internalFilename}/full/full/0/default.jpg"
+            makeSipiImagePreviewGetUrlFromFilename(imageFileValueV1.internalFilename)
         }
     }
 
