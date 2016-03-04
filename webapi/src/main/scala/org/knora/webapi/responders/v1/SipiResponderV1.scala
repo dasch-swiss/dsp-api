@@ -95,16 +95,6 @@ class SipiResponderV1 extends ResponderV1 {
       */
     private def callSipiConvertRoute(url: String, conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
 
-        // delete tmp file (depending on the kind of request given: only necessary if Knora stored the file - non GUI-case)
-        def deleteTmpFile(conversionRequest: SipiResponderConversionRequestV1): Unit = {
-            conversionRequest match {
-                case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
-                    // a tmp file has been created by the resources route (non GUI-case), delete it
-                    InputValidation.deleteFileFromTmpLocation(conversionPathRequest.source)
-                case _ => ()
-            }
-        }
-
         // define a pipeline function that gets turned into a generic [[HTTP Response]] (containing JSON)
         val pipeline: HttpRequest => Future[HttpResponse] = (
             addHeader("Accept", "application/json")
@@ -124,13 +114,11 @@ class SipiResponderV1 extends ResponderV1 {
         //
         val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
             case noResponse: spray.can.Http.ConnectionAttemptFailedException =>
-                deleteTmpFile(conversionRequest) // delete tmp file (if given)
                 // this problem is hardly the user's fault. Create a SipiException
                 throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
 
             case httpError: spray.httpx.UnsuccessfulResponseException =>
-                deleteTmpFile(conversionRequest) // delete tmp file (if given)
-            val statusCode: StatusCode = httpError.response.status
+                val statusCode: StatusCode = httpError.response.status
 
                 val statusInt: Int = statusCode.intValue / 100
 
@@ -155,7 +143,6 @@ class SipiResponderV1 extends ResponderV1 {
 
             case err =>
                 // unknown error
-                deleteTmpFile(conversionRequest) // delete tmp file (if given)
                 throw SipiException(message = s"Unknown error: ${err.toString}", e = err, log = log)
 
         }
@@ -163,9 +150,6 @@ class SipiResponderV1 extends ResponderV1 {
         for {
 
             conversionResultResponse <- recoveredConversionResultFuture
-
-            // delete tmp file
-            _ = deleteTmpFile(conversionRequest)
 
             // get file type from Sipi response
             responseAsMap: Map[String, JsValue] = conversionResultResponse.entity.asString.parseJson.asJsObject.fields.toMap
@@ -219,7 +203,7 @@ class SipiResponderV1 extends ResponderV1 {
                             isPreview = true
                         ))
 
-                case unknownType => throw BadRequestException(s"Could not handle file type $unknownType")
+                case unknownType => throw NotImplementedException(s"Could not handle file type $unknownType")
 
                 // TODO: add missing file types
             }
