@@ -57,6 +57,13 @@ object JsonSessionResponseProtocol extends DefaultJsonProtocol {
 /**
   * End-to-end test specification for testing authentication using [[AuthenticateRouteV1]]. This specification uses the
   * Spray Testkit as documented here: http://spray.io/documentation/1.2.2/spray-testkit/
+  *
+  * This test needs a running http layer, so that different api access authentication schemes can be tested
+  *  - Browser basic auth
+  *  - Basic auth over API
+  *  - Username/password over API
+  *  - API Key based authentication
+  *
   */
 class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
 

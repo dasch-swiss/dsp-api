@@ -27,60 +27,50 @@ package org.knora.webapi.responders.v1
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import akka.util.Timeout
-import akka.pattern._
-import org.knora.webapi.store._
-import org.knora.webapi.{NotFoundException, LiveActorMaker, IRI, CoreSpec}
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserProfileGetRequestV1, UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileV1}
-import org.mindrot.jbcrypt.BCrypt
+import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1}
+import org.knora.webapi.store._
+import org.knora.webapi.{CoreSpec, IRI, LiveActorMaker, NotFoundException}
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Failure
 
 
-/*
- *  This test needs a running http layer, so that different api access authentication schemes can be tested
- *  - Browser basic auth
- *  - Basic auth over API
- *  - Username/password over API
- *  - API Key based authentication
- */
+object UsersResponderV1Spec {
 
-class UsersResponderV1Spec extends CoreSpec() with ImplicitSender {
+    val config = ConfigFactory.parseString(
+        """
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
+
+/**
+  * This spec is used to test the messages received by the [[UsersResponderV1]] actor.
+  */
+class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with ImplicitSender {
 
     implicit val timeout: Timeout = Duration(5, SECONDS)
     implicit val executionContext = system.dispatcher
 
-    val usernameCorrect = "root"
-    val usernameWrong = "wrong"
-    val usernameEmpty = ""
+    val requested_user_id_existing: IRI = "http://data.knora.org/users/91e19f1e01"
+    val requested_user_id_not_existing: IRI = "http://data.knora.org/users/notexisting"
 
-    val passwordCorrect = "test"
-    val passwordCorrectHashed = "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" // hashed with sha-1
-    val passwordWrong = "wrong"
-    val passwordEmpty = ""
-
+    val requested_username_existing = "root"
+    val requested_username_not_existing = "userwrong"
 
     val lang = "de"
-    val user_id = Some("http://data.knora.org/users/91e19f1e01")
+    val user_id = Some(requested_user_id_existing)
     val token = None
-    val username = Some(usernameCorrect)
+    val username = Some(requested_username_existing)
     val firstname = Some("Administrator")
     val lastname = Some("Admin")
     val email = Some("test@test.ch")
-    val password = Some(passwordCorrectHashed)
+    val password = None
     val projects = List[IRI]("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images")
 
     val rootUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password), Vector.empty[IRI], projects)
-
-    val user_id_url_encoded: IRI = "http://data.knora.org/users/91e19f1e01"
-    val user_id_not_existing_url_encoded: IRI = "http://data.knora.org/users/notexisting"
-
-    val storeResponseUserIdNotFound = SparqlSelectResponse(
-        SparqlSelectResponseHeader(Vector("p", "o")),
-        SparqlSelectResponseBody(Nil)
-    )
 
     val actorUnderTest = TestActorRef[UsersResponderV1]
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
@@ -104,23 +94,23 @@ class UsersResponderV1Spec extends CoreSpec() with ImplicitSender {
     "The UsersResponder " when {
         "asked about an user identified by 'iri' " should {
             "return a profile if the user is known " in {
-                actorUnderTest ! UserProfileGetRequestV1(user_id_url_encoded)
+                actorUnderTest ! UserProfileGetRequestV1(requested_user_id_existing, true)
                 expectMsg(Some(rootUserProfileV1))
             }
             "return 'None' when the user is unknown " in {
-                actorUnderTest ! UserProfileGetRequestV1(user_id_not_existing_url_encoded)
-                expectMsg(Failure(NotFoundException(s"User '$user_id_not_existing_url_encoded' not found")))
+                actorUnderTest ! UserProfileGetRequestV1(requested_user_id_not_existing, true)
+                expectMsg(Failure(NotFoundException(s"User '$requested_user_id_not_existing' not found")))
             }
         }
         "asked about an user identified by 'username' " should {
             "return a profile if the user is known " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1(usernameCorrect)
+                actorUnderTest ! UserProfileByUsernameGetRequestV1(requested_username_existing, true)
                 expectMsg(Some(rootUserProfileV1))
             }
 
             "return 'None' when the user is unknown " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1(usernameWrong)
-                expectMsg((Failure(NotFoundException(s"User '$usernameWrong' not found"))))
+                actorUnderTest ! UserProfileByUsernameGetRequestV1(requested_username_not_existing, true)
+                expectMsg(Failure(NotFoundException(s"User '$requested_username_not_existing' not found")))
             }
         }
     }

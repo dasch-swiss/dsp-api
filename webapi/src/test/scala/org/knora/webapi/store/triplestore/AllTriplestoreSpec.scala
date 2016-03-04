@@ -20,8 +20,6 @@
 
 package org.knora.webapi.store.triplestore
 
-import java.util.UUID
-
 import akka.actor.Props
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory

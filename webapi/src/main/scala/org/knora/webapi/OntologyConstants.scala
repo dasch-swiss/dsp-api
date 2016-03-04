@@ -204,8 +204,8 @@ object OntologyConstants {
     }
 
     object Foaf {
-        val FirstName = "http://xmln.com/foaf/0.1/firstName"
-        val LastName = "http://xmln.com/foaf/0.1/lastName"
+        val GivenName = "http://xmlns.com/foaf/0.1/givenName"
+        val FamilyName = "http://xmlns.com/foaf/0.1/familyName"
     }
 
 }

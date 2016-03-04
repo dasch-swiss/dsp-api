@@ -22,6 +22,7 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
+import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
 import org.knora.webapi.messages.v1respondermessages.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
@@ -48,6 +49,7 @@ class UsersResponderV1 extends ResponderV1 {
 
     /**
       * Gets information about a Knora user, and returns it in a [[Option[UserProfileV1]].
+ *
       * @param userIri the IRI of the user.
       * @return a [[Option[UserProfileV1]] describing the user.
       */
@@ -71,8 +73,8 @@ class UsersResponderV1 extends ResponderV1 {
                 },
                 user_id = Some(userIri),
                 username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
-                firstname = groupedUserData.get(OntologyConstants.Foaf.FirstName).map(_.head),
-                lastname = groupedUserData.get(OntologyConstants.Foaf.LastName).map(_.head),
+                firstname = groupedUserData.get(OntologyConstants.Foaf.GivenName).map(_.head),
+                lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
                 email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
                 activeProject = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head)
@@ -88,6 +90,8 @@ class UsersResponderV1 extends ResponderV1 {
                 case None => Vector.empty[IRI]
             }
 
+            _ = log.debug(s"RAW: ${groupedUserData.toString}")
+
             userProfileV1 = {
                 if (groupedUserData.isEmpty) {
                     None
@@ -100,12 +104,14 @@ class UsersResponderV1 extends ResponderV1 {
                 }
             }
 
+            _ = log.debug(s"${userProfileV1.toString}")
 
         } yield userProfileV1
     }
 
     /**
       * Gets information about a Knora user, and returns it in a [[Option[UserProfileV1]].
+      *
       * @param username the username of the user.
       * @return a [[Option[UserProfileV1]] describing the user.
       */
@@ -149,14 +155,16 @@ class UsersResponderV1 extends ResponderV1 {
                 },
                 user_id = Some(userIri),
                 username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
-                firstname = groupedUserData.get(OntologyConstants.Foaf.FirstName).map(_.head),
-                lastname = groupedUserData.get(OntologyConstants.Foaf.LastName).map(_.head),
+                firstname = groupedUserData.get(OntologyConstants.Foaf.GivenName).map(_.head),
+                lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
                 email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
                 activeProject = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head),
                 projects = if (projectIris.nonEmpty) Some(projectIris) else None,
                 projects_info = projectInfos
             )
+
+            _ = log.debug(s"RAW: ${groupedUserData.toString}")
 
             userProfileV1 = {
                 if (groupedUserData.isEmpty) {
@@ -169,6 +177,8 @@ class UsersResponderV1 extends ResponderV1 {
                     }
                 }
             }
+
+            _ = log.debug(s"${userProfileV1.toString}")
 
         } yield userProfileV1 // Some(UserProfileV1(userDataV1, groupIris, projectIris))
     }
