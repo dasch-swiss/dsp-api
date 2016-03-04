@@ -349,8 +349,7 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Preprocesses a file value change request by calling the Sipi responder to create a new file
-      * and calls [[changeValueV1]] to actually change the file value in Knora.
+      * Adds a new version of an existing file value.
       *
       * @param changeFileValueRequest a [[ChangeFileValueRequestV1]] sent by the values route.
       * @return a [[ChangeFileValueResponseV1]] representing all the changed file values.
@@ -358,124 +357,148 @@ class ValuesResponderV1 extends ResponderV1 {
     private def changeFileValueV1(changeFileValueRequest: ChangeFileValueRequestV1): Future[ChangeFileValueResponseV1] = {
 
         /**
-          * Temporary structure to represent existing file values of a resource.
+          * Preprocesses a file value change request by calling the Sipi responder to create a new file
+          * and calls [[changeValueV1]] to actually change the file value in Knora.
           *
-          * @param property       the property Iri (e.g., hasStillImageFileValueRepresentation)
-          * @param valueObjectIri the Iri of the value object.
-          * @param quality        the quality of the file value
+          * @param changeFileValueRequest a [[ChangeFileValueRequestV1]] sent by the values route.
+          * @return a [[ChangeFileValueResponseV1]] representing all the changed file values.
           */
-        case class CurrentFileValue(property: IRI, valueObjectIri: IRI, quality: Option[Int])
+        def makeTaskFuture(changeFileValueRequest: ChangeFileValueRequestV1): Future[ChangeFileValueResponseV1] = {
 
-        // get the Iris of the current file value(s)
-        val resultFuture = for {
+            /**
+              * Temporary structure to represent existing file values of a resource.
+              *
+              * @param property       the property Iri (e.g., hasStillImageFileValueRepresentation)
+              * @param valueObjectIri the Iri of the value object.
+              * @param quality        the quality of the file value
+              */
+            case class CurrentFileValue(property: IRI, valueObjectIri: IRI, quality: Option[Int])
 
-            resourceIri <- Future(changeFileValueRequest.resourceIri)
+            // get the Iris of the current file value(s)
+            val resultFuture = for {
 
-            getFileValuesSparql = queries.sparql.v1.txt.getFileValuesForResource(resourceIri = resourceIri).toString()
-            //_ = print(getFileValuesSparql)
-            getFileValuesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(getFileValuesSparql)).mapTo[SparqlSelectResponse]
-            // _ <- Future(println(getFileValuesResponse))
+                resourceIri <- Future(changeFileValueRequest.resourceIri)
+
+                getFileValuesSparql = queries.sparql.v1.txt.getFileValuesForResource(resourceIri = resourceIri).toString()
+                //_ = print(getFileValuesSparql)
+                getFileValuesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(getFileValuesSparql)).mapTo[SparqlSelectResponse]
+                // _ <- Future(println(getFileValuesResponse))
 
 
-            // get the property Iris, file value Iris and qualities attached to the resource
-            fileValues: Seq[CurrentFileValue] = getFileValuesResponse.results.bindings.map {
-                (row: VariableResultsRow) =>
+                // get the property Iris, file value Iris and qualities attached to the resource
+                fileValues: Seq[CurrentFileValue] = getFileValuesResponse.results.bindings.map {
+                    (row: VariableResultsRow) =>
 
-                    CurrentFileValue(
-                        property = row.rowMap("p"),
-                        valueObjectIri = row.rowMap("fileValueIri"),
-                        quality = row.rowMap.get("quality") match {
-                            case Some(quality: String) => Some(quality.toInt)
-                            case None => None
+                        CurrentFileValue(
+                            property = row.rowMap("p"),
+                            valueObjectIri = row.rowMap("fileValueIri"),
+                            quality = row.rowMap.get("quality") match {
+                                case Some(quality: String) => Some(quality.toInt)
+                                case None => None
+                            }
+                        )
+                }
+
+                sipiConversionMessage: SipiResponderConversionRequestV1 = changeFileValueRequest.file
+
+                // if resource has no existing file values, throw an exception
+                _ = if (fileValues.isEmpty) {
+                    BadRequestException(s"File values for ${resourceIri} should be updated, but resource has no existing file values")
+                }
+
+                // the message to be sent to Sipi responder
+                sipiConversionRequest: SipiResponderConversionRequestV1 = changeFileValueRequest.file
+
+                sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? sipiConversionRequest).mapTo[SipiResponderConversionResponseV1]
+
+                // check if the file type returned by Sipi corresponds to the already existing file value type (e.g., hasStillImageRepresentation)
+                _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != fileValues.head.property) {
+                    // TODO: remove the file from SIPI (delete request)
+                    throw BadRequestException(s"Type of submitted file (${sipiResponse.file_type}) does not correspond to expected property type ${fileValues.head.property}")
+                }
+
+                //
+                // handle file types individually
+                //
+
+                // create the apt case class depending on the file type returned by Sipi
+                changedFileValuesFuture: Vector[Future[ChangeValueResponseV1]] = sipiResponse.file_type match {
+                    case SipiConstants.FileType.IMAGE =>
+                        // we deal with hasStillImageFileValue, so there need to be two file values:
+                        // one for the full and one for the thumb
+                        if (fileValues.size != 2) {
+                            throw InconsistentTriplestoreDataException(s"Expected 2 file values for ${resourceIri}, but ${fileValues.size} given.")
                         }
-                    )
+
+                        // make sure that we have quality information for the existing file values
+                        fileValues.foreach {
+                            (fileValue) => fileValue.quality.getOrElse(throw InconsistentTriplestoreDataException(s"No quality level given for ${fileValue.valueObjectIri}"))
+                        }
+
+                        // sort file values by quality: the thumbnail file value has to be updated with another thumbnail file value,
+                        // the applies for the full quality
+                        val oldFileValuesSorted: Seq[CurrentFileValue] = fileValues.sortBy(_.quality)
+                        val newFileValuesSorted: Vector[FileValueV1] = sipiResponse.fileValuesV1.sortBy {
+                            case imageFileValue: StillImageFileValueV1 => imageFileValue.qualityLevel
+                            case otherFileValue: FileValueV1 => throw SipiException(s"Sipi returned a wrong file value type: ${otherFileValue.valueTypeIri}")
+                        }
+
+                        //
+                        // now request to change all the values
+                        //
+                        newFileValuesSorted.zip(oldFileValuesSorted).map {
+                            case (newFileValue: StillImageFileValueV1, oldFileValue: CurrentFileValue) =>
+                                // create ChangeValueRequest
+                                val changeImageFileValueRequest: ChangeValueRequestV1 = ChangeValueRequestV1(
+                                    valueIri = oldFileValue.valueObjectIri,
+                                    value = newFileValue,
+                                    userProfile = changeFileValueRequest.userProfile,
+                                    apiRequestID = changeFileValueRequest.apiRequestID // re-use the same id
+                                )
+
+                                // do change request
+                                changeValueV1(changeImageFileValueRequest)
+                            case _ => throw SipiException("Sipi created a wrong file value type (not a StillImageFileValueV1)")
+                        }
+
+
+                    case otherFileType => throw NotImplementedException(s"File type ${otherFileType} not yet supported")
+                }
+
+                // turn a sequence of Futures of messages into a sequence of messages
+                changedFileValues: Vector[ChangeValueResponseV1] <- Future.sequence(changedFileValuesFuture)
+
+            } yield ChangeFileValueResponseV1(// return the response(s) of the call(s) of changeValueV1
+                changedFilesValues = changedFileValues,
+                userdata = changeFileValueRequest.userProfile.userData
+            )
+
+            // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
+            resultFuture.andThen {
+                case _ => changeFileValueRequest.file match {
+                    case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
+                        // a tmp file has been created by the resources route (non GUI-case), delete it
+                        InputValidation.deleteFileFromTmpLocation(conversionPathRequest.source, log)
+                    case _ => ()
+                }
+
+
             }
-
-            sipiConversionMessage: SipiResponderConversionRequestV1 = changeFileValueRequest.file
-
-            // if resource has no existing file values, throw an exception
-            _ = if (fileValues.isEmpty) {
-                BadRequestException(s"File values for ${resourceIri} should be updated, but resource has no existing file values")
-            }
-
-            // the message to be sent to Sipi responder
-            sipiConversionRequest: SipiResponderConversionRequestV1 = changeFileValueRequest.file
-
-            sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? sipiConversionRequest).mapTo[SipiResponderConversionResponseV1]
-
-            // check if the file type returned by Sipi corresponds to the already existing file value type (e.g., hasStillImageRepresentation)
-            _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != fileValues.head.property) {
-                // TODO: remove the file from SIPI (delete request)
-                throw BadRequestException(s"Type of submitted file (${sipiResponse.file_type}) does not correspond to expected property type ${fileValues.head.property}")
-            }
-
-            //
-            // handle file types individually
-            //
-
-            // create the apt case class depending on the file type returned by Sipi
-            changedFileValuesFuture: Vector[Future[ChangeValueResponseV1]] = sipiResponse.file_type match {
-                case SipiConstants.FileType.IMAGE =>
-                    // we deal with hasStillImageFileValue, so there need to be two file values:
-                    // one for the full and one for the thumb
-                    if (fileValues.size != 2) {
-                        throw InconsistentTriplestoreDataException(s"Expected 2 file values for ${resourceIri}, but ${fileValues.size} given.")
-                    }
-
-                    // make sure that we have quality information for the existing file values
-                    fileValues.foreach {
-                        (fileValue) => fileValue.quality.getOrElse(throw InconsistentTriplestoreDataException(s"No quality level given for ${fileValue.valueObjectIri}"))
-                    }
-
-                    // sort file values by quality: the thumbnail file value has to be updated with another thumbnail file value,
-                    // the applies for the full quality
-                    val oldFileValuesSorted: Seq[CurrentFileValue] = fileValues.sortBy(_.quality)
-                    val newFileValuesSorted: Vector[FileValueV1] = sipiResponse.fileValuesV1.sortBy {
-                        case imageFileValue: StillImageFileValueV1 => imageFileValue.qualityLevel
-                        case otherFileValue: FileValueV1 => throw SipiException(s"Sipi returned a wrong file value type: ${otherFileValue.valueTypeIri}")
-                    }
-
-                    //
-                    // now request to change the values
-                    //
-                    newFileValuesSorted.zip(oldFileValuesSorted).map {
-                        case (newFileValue: StillImageFileValueV1, oldFileValue: CurrentFileValue) =>
-                            // create ChangeValueRequest
-                            val changeImageFileValueRequest: ChangeValueRequestV1 = ChangeValueRequestV1(
-                                valueIri = oldFileValue.valueObjectIri,
-                                value = newFileValue,
-                                userProfile = changeFileValueRequest.userProfile,
-                                apiRequestID = changeFileValueRequest.apiRequestID
-                            )
-
-                            // do change request
-                            changeValueV1(changeImageFileValueRequest)
-                        case _ => throw SipiException("Sipi created a wrong file value type (not a StillImageFileValueV1)")
-                    }
-
-
-                case otherFileType => throw NotImplementedException(s"File type ${otherFileType} not yet supported")
-            }
-
-            // turn a sequence of Futures of messages into a sequence of messages
-            changedFileValues: Vector[ChangeValueResponseV1] <- Future.sequence(changedFileValuesFuture)
-
-        } yield ChangeFileValueResponseV1(// return the response(s) of the call(s) of changeValueV1
-            changedFilesValues = changedFileValues,
-            userdata = changeFileValueRequest.userProfile.userData
-        )
-
-        // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
-        resultFuture.andThen {
-            case _ => changeFileValueRequest.file match {
-                case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
-                    // a tmp file has been created by the resources route (non GUI-case), delete it
-                    InputValidation.deleteFileFromTmpLocation(conversionPathRequest.source, log)
-                case _ => ()
-            }
-
-
         }
+
+        for {
+
+            // Do the preparations of a file value change while already holding an update lock on the resource.
+            // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource Iri have to been retrieved.
+            // Using the lock, we make sure that these are still up to date when `changeValueV1` is being called.
+            //
+            // The method `changeValueV1` will be called using the same lock.
+            taskResult <- ResourceLocker.runWithResourceLock(
+                changeFileValueRequest.apiRequestID,
+                changeFileValueRequest.resourceIri,
+                () => makeTaskFuture(changeFileValueRequest)
+            )
+        } yield taskResult
 
     }
 
