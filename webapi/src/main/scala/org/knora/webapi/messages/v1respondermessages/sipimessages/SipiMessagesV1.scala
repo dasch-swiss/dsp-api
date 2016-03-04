@@ -213,6 +213,7 @@ object SipiConstants {
         val fullQuality = "full"
         val thumbnailQuality = "thumbnail"
     }
+
 }
 
 /**
@@ -240,10 +241,10 @@ case class SipiFileInfoGetRequestV1(fileValueIri: IRI, userProfile: UserProfileV
   * Represents the Knora API v1 JSON response to a request for a information about a `FileValue`.
   *
   * @param permissionCode a code representing the user's maximum permission on the file.
-  * @param path           the path to the file.
+  * @param filepath       the path to the file.
   */
 case class SipiFileInfoGetResponseV1(permissionCode: Option[Int],
-                                     path: Option[String]) extends KnoraResponseV1 {
+                                     filepath: Option[String]) extends KnoraResponseV1 {
     def toJsValue = RepresentationV1JsonProtocol.sipiFileInfoGetResponseV1Format.write(this)
 }
 
