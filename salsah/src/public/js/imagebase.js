@@ -940,7 +940,7 @@ $(function() {
 				var region_area = metadata_area_tabs.tabs('contentElement', 'regions');
 				var comment;
 
-				SALSAH.ApGet('resourcetypes/salsah:generic_region', {}, function(data) {
+				SALSAH.ApiGet('resourcetypes/salsah:generic_region', {}, function(data) {
 					if (data.status == ApiErrors.OK) {
 						region_area.resadd({
 							rtinfo: data.restype_info,
@@ -4176,7 +4176,8 @@ $(function() {
 						$.extend(viewer_settings, viewer_options);
 					}
 					switch (context.resinfo.locdata.format_name) {
-						case 'JPEG': {
+						case 'JPEG':
+						case 'JPEG2000': {
 							if ((regtab_active !== undefined) && (regtab_active)) {
 								viewer_settings.regtab_active = true;
 							}
@@ -4188,7 +4189,7 @@ $(function() {
 							break;
 						}
 						default: {
-                            console.log("3. not compound and have locations and default in create_viewer in imagebase.js")
+                            console.log("3. default case in create_viewer in imagebase.js: not compound, have locations")
 							viewer = RESVIEW.ObjectViewer(RESVIEW.winclass, window_settings, viewer_settings);
 						}
 					}
