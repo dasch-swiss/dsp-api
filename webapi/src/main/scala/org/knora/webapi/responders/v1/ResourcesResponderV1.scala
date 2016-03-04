@@ -39,6 +39,7 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
 import scala.concurrent.{Future, Promise}
+import scala.util.Try
 
 /**
   * Responds to requests for information about resources, and returns responses in Knora API v1 format.
@@ -880,6 +881,7 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @return a [[ResourceCreateResponseV1]] informing the client about the new resource.
       */
     private def createNewResource(resourceClassIri: IRI, label: String, values: Map[IRI, Seq[CreateValueV1WithComment]], sipiConversionRequest: Option[SipiResponderConversionRequestV1] = None, projectIri: IRI, userProfile: UserProfileV1, apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
+
         /**
           * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `knora-base:objectClassConstraint` of
           * the property that is supposed to point to it.
@@ -1003,6 +1005,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                         // check if the file type returned by Sipi corresponds to the expected fileValue property in resourceClassInfo.fileValueProperties.head
                         _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != resourceClassInfo.fileValueProperties.head) {
+                            // TODO: remove the file from SIPI (delete request)
                             throw BadRequestException(s"Type of submitted file (${sipiResponse.file_type}) does not correspond to expected property type ${resourceClassInfo.fileValueProperties.head}")
                         }
 
@@ -1013,16 +1016,14 @@ class ResourcesResponderV1 extends ResponderV1 {
                 } else {
                     // resource class requires no binary representation
                     // check if there was no file sent
+                    // TODO: in all cases of an error, the tmp file has to be deleted
                     sipiConversionRequest match {
                         case None => Future(None) // expected behaviour
                         case Some(sipiConversionFileRequest: SipiResponderConversionFileRequestV1) =>
                             throw BadRequestException(s"File params (GUI-case) are given but resource class $resourceClassIri does not allow any representation")
                         case Some(sipiConversionPathRequest: SipiResponderConversionPathRequestV1) =>
-                            // a tmp file has been created by the resources route, delete it (SipiResponder was not called, so do it here)
-                            InputValidation.deleteFileFromTmpLocation(sipiConversionPathRequest.source)
                             throw BadRequestException(s"A binary file was provided (non GUI-case) but resource class $resourceClassIri does not have any binary representation")
                     }
-
                 }
 
                 // Everything looks OK, so we can create an empty resource and add the values to it. This must
@@ -1094,19 +1095,17 @@ class ResourcesResponderV1 extends ResponderV1 {
             } yield apiResponse
         }
 
-        val maybeUserIri: Option[IRI] = userProfile.userData.user_id
-        // TODO: remove dummy user after testing!
-        //val maybeUserIri: Option[IRI] = Some("http://data.knora.org/users/91e19f1e01")
-
-        val namedGraph = settings.projectNamedGraphs(projectIri).data
-        val resourceIri: IRI = knoraIriUtil.makeRandomResourceIri
-
-        for {
+        val resultFuture = for {
         // Don't allow anonymous users to create resources.
-            userIri <- maybeUserIri match {
-                case Some(iri) => Future(iri)
-                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to create resources"))
+            userIri: IRI <- Future {
+                userProfile.userData.user_id match {
+                    case Some(iri) => iri
+                    case None => throw ForbiddenException("Anonymous users aren't allowed to create resources")
+                }
             }
+
+            namedGraph = settings.projectNamedGraphs(projectIri).data
+            resourceIri: IRI = knoraIriUtil.makeRandomResourceIri
 
             // check if the user has the permissions to create a new resource in the given project
             // get project info that includes the permissions the current user has on the project
@@ -1150,6 +1149,21 @@ class ResourcesResponderV1 extends ResponderV1 {
                 )
             )
         } yield result
+
+        // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
+        resultFuture.andThen {
+            case _ =>
+                sipiConversionRequest match {
+                    case Some(conversionRequest) =>
+                        conversionRequest match {
+                            case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
+                                // a tmp file has been created by the resources route (non GUI-case), delete it
+                                InputValidation.deleteFileFromTmpLocation(conversionPathRequest.source, log)
+                            case _ => ()
+                        }
+                    case None => ()
+                }
+        }
     }
 
     /**
