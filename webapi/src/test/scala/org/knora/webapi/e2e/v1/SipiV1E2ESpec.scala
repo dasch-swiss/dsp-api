@@ -153,7 +153,7 @@ class SipiV1E2ESpec extends E2ESpec {
             }
         }
 
-        "create a resource with a digital representation doing a multipart request submitting a wrong mimetype to make the request fail" in {
+        "try to create a resource sending binaries (multipart request) but fail because the mimetype is wrong" in {
 
             val fileToSend = new File(RequestParams.pathToFile)
             // check if the file exists
@@ -161,16 +161,19 @@ class SipiV1E2ESpec extends E2ESpec {
 
             val formData = MultipartFormData(Seq(
                 BodyPart(entity = HttpEntity(MediaTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint), fieldName = "json"),
+                // set mimetype tiff, but jpeg is expected
                 BodyPart(file = fileToSend, fieldName = "file", ContentType(mediaType = MediaTypes.`image/tiff`))
             ))
 
             RequestParams.createTmpFileDir()
 
             Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
-                // TODO: assert that this test fails!
 
                 val tmpFile = SourcePath.getSourcePath()
 
+                // this test is expected to fail
+
+                // check that the tmp file is also deleted in case the test fails
                 assert(!tmpFile.exists(), s"Tmp file ${tmpFile} was not deleted.")
                 assert(status != StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
@@ -197,24 +200,15 @@ class SipiV1E2ESpec extends E2ESpec {
 
         "change the file value of an existing page (submitting binaries)" in {
 
-            val pathToFile = "_test_data/test_route/images/Chlaus.jpg"
-            val fileToSend = new File(pathToFile)
+            val fileToSend = new File(RequestParams.pathToFile)
             // check if the file exists
-            assert(fileToSend.exists(), s"File ${pathToFile} does not exist")
+            assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
 
             val formData = MultipartFormData(Seq(
                 BodyPart(file = fileToSend, fieldName = "file", ContentType(mediaType = MediaTypes.`image/jpeg`))
             ))
 
-            // check if tmp datadir exists and create it if not
-            if (!Files.exists(Paths.get(settings.tmpDataDir))) {
-                try {
-                    val tmpDir = new File(settings.tmpDataDir)
-                    tmpDir.mkdir()
-                } catch {
-                    case e: Throwable => throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
-                }
-            }
+            RequestParams.createTmpFileDir()
 
             val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
 
@@ -228,6 +222,33 @@ class SipiV1E2ESpec extends E2ESpec {
 
         }
 
+        "try to change the file value of an existing page (submitting binaries) but fail because the mimetype is wrong" in {
+
+            val fileToSend = new File(RequestParams.pathToFile)
+            // check if the file exists
+            assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
+
+            val formData = MultipartFormData(Seq(
+                // set mimetype tiff, but jpeg is expected
+                BodyPart(file = fileToSend, fieldName = "file", ContentType(mediaType = MediaTypes.`image/tiff`))
+            ))
+
+            RequestParams.createTmpFileDir()
+
+            val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
+
+            Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(user, password)) ~> valuesPath ~> check {
+
+                val tmpFile = SourcePath.getSourcePath()
+
+                // this test is expected to fail
+
+                // check that the tmp file is also deleted in case the test fails
+                assert(!tmpFile.exists(), s"Tmp file ${tmpFile} was not deleted.")
+                assert(status != StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
+            }
+
+        }
 
 
         "change the file value of an existing page (submitting params only, no binaries)" in {

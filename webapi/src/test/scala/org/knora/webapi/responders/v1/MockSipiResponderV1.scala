@@ -60,7 +60,7 @@ class MockSipiResponderV1 extends ResponderV1 {
             val originalMimeType: String = conversionRequest.originalMimeType
 
             // we expect original mimetype to be "image/jpeg"
-            if (originalMimeType != "image/jpeg") throw BadRequestException("")
+            if (originalMimeType != "image/jpeg") throw BadRequestException("Wrong mimetype for jpg file")
 
             val fileValuesV1 = Vector(StillImageFileValueV1(// full representation
                 internalMimeType = "image/jp2",
