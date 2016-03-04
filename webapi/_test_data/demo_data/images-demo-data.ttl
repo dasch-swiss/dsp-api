@@ -12119,9 +12119,9 @@
 
                                          knora-base:userid "user01" ;
 
-                                         foaf:lastName "User01" ;
+                                         foaf:givenName "User01" ;
 
-                                         foaf:firstName "User" ;
+                                         foaf:familyName "User" ;
 
                                          knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 
@@ -12139,9 +12139,9 @@
 
                                          knora-base:userid "user02" ;
 
-                                         foaf:lastName "User02" ;
+                                         foaf:givenName "User02" ;
 
-                                         foaf:firstName "User" ;
+                                         foaf:familyName "User" ;
 
                                          knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 
@@ -12171,5 +12171,4 @@
 
                                          knora-base:preferredLanguage "de" ;
 
-                                         knora-base:isInProject <http://data.knora.org/projects/images> ,
-                                                                <http://data.knora.org/projects/77275339> .
+                                         knora-base:isInProject <http://data.knora.org/projects/images> .

@@ -152,7 +152,7 @@ class SipiV1E2ESpec extends E2ESpec {
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
-
+/*
         "try to create a resource sending binaries (multipart request) but fail because the mimetype is wrong" in {
 
             val fileToSend = new File(RequestParams.pathToFile)
@@ -193,9 +193,9 @@ class SipiV1E2ESpec extends E2ESpec {
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
-
+*/
     }
-
+/*
     "The Values endpoint" should {
 
         "change the file value of an existing page (submitting binaries)" in {
@@ -268,5 +268,5 @@ class SipiV1E2ESpec extends E2ESpec {
             }
 
         }
-    }
+    } */
 }

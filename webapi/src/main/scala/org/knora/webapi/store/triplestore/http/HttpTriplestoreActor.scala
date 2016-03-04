@@ -202,7 +202,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
             // into a single request.
             sparqlUpdate <- Future(HttpTriplestoreTransactionManager.concatenateAndForgetUpdates(transactionID))
 
-            // _ = println(sparqlUpdate)
+            _ = println(sparqlUpdate)
 
             // Send the request to the triplestore.
             _ <- getTriplestoreHttpResponse(sparqlUpdate, update = true)

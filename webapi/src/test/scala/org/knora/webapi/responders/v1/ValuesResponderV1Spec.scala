@@ -240,7 +240,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
     }
-
+/*
     "The values responder" should {
         "add a new text value without Standoff" in {
             val lastModBeforeUpdate = getLastModificationDate(ValuesResponderV1Spec.zeitglöckleinIri)
@@ -1562,5 +1562,5 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
         }
-    }
+    }*/
 }
