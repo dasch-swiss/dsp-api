@@ -30,6 +30,7 @@ import org.knora.webapi.messages.v1respondermessages.valuemessages.KnoraCalendar
 import org.knora.webapi.twirl.SearchCriterion
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{DateUtilV1, FormatConstants}
+import org.knora.webapi.responders.v1.ValueUtilV1
 
 import scala.concurrent.Future
 
@@ -94,6 +95,7 @@ class SearchResponderV1 extends ResponderV1 {
         )
     )
 
+    val valueUtilV1 = new ValueUtilV1(settings)
 
     def receive = {
         case searchGetRequest: FulltextSearchGetRequestV1 => future2Message(sender(), fulltextSearchV1(searchGetRequest), log)
@@ -174,9 +176,14 @@ class SearchResponderV1 extends ResponderV1 {
                         case None => (None, None, None)
                     }
 
+
+
                     val searchResultRow = SearchResultRowV1(
                         obj_id = resourceIri,
-                        preview_path = row.rowMap.get("previewPath"),
+                        preview_path = row.rowMap.get("previewPath") match {
+                            case Some(previewPath) => Some(valueUtilV1.makeSipiImagePreviewGetUrlFromFilename(previewPath))
+                            case None => None
+                        },
                         iconsrc = None,
                         iconlabel = None,
                         icontitle = None,
@@ -493,7 +500,7 @@ class SearchResponderV1 extends ResponderV1 {
                     SearchResultRowV1(
                         obj_id = resourceIri,
                         preview_path = row.rowMap.get("previewPath") match {
-                            case Some(path) => Some(path)
+                            case Some(path) => Some(valueUtilV1.makeSipiImagePreviewGetUrlFromFilename(path))
                             case None =>
                                 // If there is no preview image, use the resource class icon from the ontology.
                                 resourceClassIcon

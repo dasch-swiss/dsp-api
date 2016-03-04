@@ -55,7 +55,7 @@ object SipiResponderV1Spec {
         This file value has not project Iri attached, it has to be retrieved from the resource.
      */
     private val fileValueResponseFull = SipiFileInfoGetResponseV1(
-        path = Some("http://localhost:1024/incunabula_0000000002.jp2"),
+        filepath = Some("incunabula_0000000002.jp2"),
         permissionCode = Some(6)
     )
 
@@ -63,7 +63,7 @@ object SipiResponderV1Spec {
         This file value is attached to the test project 666
      */
     private val fileValueResponsePreview = SipiFileInfoGetResponseV1(
-        path = Some("http://localhost:1024/incunabula_0000000002.jpg"),
+        filepath = Some("incunabula_0000000002.jpg"),
         permissionCode = Some(2) // the user is not member of the file value's project.
     )
 }
