@@ -240,7 +240,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
     }
-/*
+
     "The values responder" should {
         "add a new text value without Standoff" in {
             val lastModBeforeUpdate = getLastModificationDate(ValuesResponderV1Spec.zeitglöckleinIri)
@@ -264,7 +264,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val lastModAfterUpdate = getLastModificationDate(ValuesResponderV1Spec.zeitglöckleinIri)
             lastModBeforeUpdate != lastModAfterUpdate should ===(true)
         }
-
+/*
         "query a text value without Standoff" in {
             actorUnderTest ! ValueGetRequestV1(
                 valueIri = commentIri.get,
@@ -1561,6 +1561,6 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 case msg: ChangeFileValueResponseV1 => checkImageFileValueChange(msg, fileChangeRequest)
             }
 
-        }
-    }*/
+        }*/
+    }
 }

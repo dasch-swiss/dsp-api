@@ -127,26 +127,25 @@ object Cardinality extends Enumeration {
       * @return a [[Value]].
       */
     def owlCardinality2KnoraCardinality(propertyIri: IRI, owlCardinalityIri: IRI, owlCardinalityValue: Int): Value = {
-        if (owlCardinalityIri == OntologyConstants.Owl.MinCardinality
-            || owlCardinalityIri == OntologyConstants.Owl.MinQualifiedCardinality) {
-            if (owlCardinalityValue == 0) {
-                Cardinality.MayHaveMany
-            } else if (owlCardinalityValue == 1) {
-                Cardinality.MustHaveSome
-            } else {
+        owlCardinalityIri match {
+            case OntologyConstants.Owl.MinCardinality =>
+                if (owlCardinalityValue == 0) {
+                    Cardinality.MayHaveMany
+                } else if (owlCardinalityValue == 1) {
+                    Cardinality.MustHaveSome
+                } else {
+                    throw new InconsistentTriplestoreDataException(s"Invalid cardinality restriction $owlCardinalityIri $owlCardinalityValue for $propertyIri")
+                }
+
+            case OntologyConstants.Owl.Cardinality if owlCardinalityValue == 1 =>
+                Cardinality.MustHaveOne
+
+            case OntologyConstants.Owl.MaxCardinality if owlCardinalityValue == 1 =>
+                Cardinality.MayHaveOne
+
+            case _ =>
+                // if none of the cases above match, the data is inconsistent
                 throw new InconsistentTriplestoreDataException(s"Invalid cardinality restriction $owlCardinalityIri $owlCardinalityValue for $propertyIri")
-            }
-        } else if ((owlCardinalityIri == OntologyConstants.Owl.Cardinality
-            || owlCardinalityIri == OntologyConstants.Owl.QualifiedCardinality)
-            && owlCardinalityValue == 1) {
-            Cardinality.MustHaveOne
-        } else if ((owlCardinalityIri == OntologyConstants.Owl.MaxCardinality
-            || owlCardinalityIri == OntologyConstants.Owl.MaxQualifiedCardinality)
-            && owlCardinalityValue == 1) {
-            Cardinality.MayHaveOne
-        } else {
-            // if none of the cases above match, the data is inconsistent
-            throw new InconsistentTriplestoreDataException(s"Invalid cardinality restriction $owlCardinalityIri $owlCardinalityValue for $propertyIri")
         }
     }
 }
