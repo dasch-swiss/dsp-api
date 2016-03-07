@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v1respondermessages.projectmessages.{ProjectInf
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1, UsersResponderRequestV1}
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.Future
 
@@ -90,7 +91,7 @@ class UsersResponderV1 extends ResponderV1 {
                 case None => Vector.empty[IRI]
             }
 
-            _ = log.debug(s"RAW: ${groupedUserData.toString}")
+            //_ = log.debug(s"RAW: ${groupedUserData.toString}")
 
             userProfileV1 = {
                 if (groupedUserData.isEmpty) {
@@ -104,7 +105,7 @@ class UsersResponderV1 extends ResponderV1 {
                 }
             }
 
-            _ = log.debug(s"${userProfileV1.toString}")
+            //_ = log.debug(s"${userProfileV1.toString}")
 
         } yield userProfileV1
     }
@@ -116,11 +117,12 @@ class UsersResponderV1 extends ResponderV1 {
       * @return a [[Option[UserProfileV1]] describing the user.
       */
     private def getUserProfileByUsernameV1(username: String, clean: Boolean): Future[Option[UserProfileV1]] = {
+        log.debug(s"getUserProfileByUsernameV1('$username', '$clean') called")
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(username).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
-            //_ = println(MessageUtil.toSource(userDataQueryResponse))
+            _ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
             _ = if (userDataQueryResponse.results.bindings.isEmpty) {
                 throw NotFoundException(s"User '$username' not found")
@@ -142,11 +144,15 @@ class UsersResponderV1 extends ResponderV1 {
                 case None => Vector.empty[IRI]
             }
 
+            /*
             projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
                 projectIri => (responderManager ? ProjectInfoByIRIGetRequest(projectIri, ProjectInfoType.SHORT, None)).mapTo[ProjectInfoResponseV1] map (_.project_info)
             }
 
+
             projectInfos <- Future.sequence(projectInfoFutures)
+            */
+
 
             userDataV1 = UserDataV1(
                 lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
@@ -159,9 +165,9 @@ class UsersResponderV1 extends ResponderV1 {
                 lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
                 email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-                activeProject = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head),
-                projects = if (projectIris.nonEmpty) Some(projectIris) else None,
-                projects_info = projectInfos
+                activeProject = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head) //,
+                //projects = if (projectIris.nonEmpty) Some(projectIris) else None,
+                //projects_info = projectInfos
             )
 
             _ = log.debug(s"RAW: ${groupedUserData.toString}")

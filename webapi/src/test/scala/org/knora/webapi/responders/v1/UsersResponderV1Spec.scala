@@ -28,13 +28,14 @@ import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
 import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1}
 import org.knora.webapi.store._
 import org.knora.webapi.{CoreSpec, IRI, LiveActorMaker, NotFoundException}
 
 import scala.concurrent.duration._
-import scala.util.Failure
+import akka.actor.Status.Failure
 
 
 object UsersResponderV1Spec {
