@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiConstants.
 import org.knora.webapi.messages.v1respondermessages.sipimessages._
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{FileValueV1, StillImageFileValueV1}
+import org.knora.webapi.messages.v1respondermessages.valuemessages.{ApiValueV1, FileValueV1, StillImageFileValueV1}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.InputValidation
 import spray.client.pipelining._
@@ -73,15 +73,17 @@ class SipiResponderV1 extends ResponderV1 {
             queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = queryResponse.results.bindings
             valueProps = valueUtilV1.createValueProps(fileValueIri, rows)
-            valueV1 = valueUtilV1.makeValueV1(valueProps)
+            valueV1: ApiValueV1 = valueUtilV1.makeValueV1(valueProps)
             path = valueV1 match {
-                case fileValueV1: FileValueV1 => valueUtilV1.makeSipiFileGetUrlFromFileValueV1(fileValueV1)
+                case imageValueV1: StillImageFileValueV1 => imageValueV1.internalFilename // return internal filename associated with the given file value Iri to Sipi
+                // TODO: prepend file value specific cases for each file value type (movie, audio etc.)
+                case otherFileValueV1: FileValueV1 => throw NotImplementedException(s"Handling of file value type ${otherFileValueV1.valueTypeIri} not implemented yet")
                 case otherValue => throw InconsistentTriplestoreDataException(s"Value $fileValueIri is not a FileValue, it is an instance of ${otherValue.valueTypeIri}")
             }
             permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(fileValueIri, valueProps, userProfile)
         } yield SipiFileInfoGetResponseV1(
             permissionCode = permissionCode,
-            path = permissionCode.map(_ => path)
+            filepath = permissionCode.map(_ => path)
         )
     }
 
@@ -189,7 +191,7 @@ class SipiResponderV1 extends ResponderV1 {
                         dimY = imageConversionResult.ny_full,
                         internalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.filename_full),
                         qualityLevel = 100,
-                        qualityName = Some("full")
+                        qualityName = Some(SipiConstants.StillImage.fullQuality)
                     ),
                         StillImageFileValueV1(// thumbnail representation
                             internalMimeType = InputValidation.toSparqlEncodedString(imageConversionResult.mimetype_thumb),
@@ -199,7 +201,7 @@ class SipiResponderV1 extends ResponderV1 {
                             dimY = imageConversionResult.ny_thumb,
                             internalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.filename_thumb),
                             qualityLevel = 10,
-                            qualityName = Some("thumbnail"),
+                            qualityName = Some(SipiConstants.StillImage.thumbnailQuality),
                             isPreview = true
                         ))
 
@@ -218,8 +220,7 @@ class SipiResponderV1 extends ResponderV1 {
       * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
       */
     private def convertPathV1(conversionRequest: SipiResponderConversionPathRequestV1): Future[SipiResponderConversionResponseV1] = {
-
-        val url = s"${settings.sipiUrl}/${settings.sipiPathConversionRoute}"
+        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiPathConversionRoute}"
 
         callSipiConvertRoute(url, conversionRequest)
 
@@ -232,7 +233,7 @@ class SipiResponderV1 extends ResponderV1 {
       * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
       */
     private def convertFileV1(conversionRequest: SipiResponderConversionFileRequestV1): Future[SipiResponderConversionResponseV1] = {
-        val url = s"${settings.sipiUrl}/${settings.sipiFileConversionRoute}"
+        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiFileConversionRoute}"
 
         callSipiConvertRoute(url, conversionRequest)
     }

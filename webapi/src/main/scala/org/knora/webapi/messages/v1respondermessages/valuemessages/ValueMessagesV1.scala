@@ -890,6 +890,8 @@ sealed trait FileValueV1 extends UpdateValueV1 with ApiValueV1 {
   * @param dimX             the X dimension of the object.
   * @param dimY             the Y dimension of the object.
   * @param qualityLevel     the quality level of this image (higher values mean higher resolutions).
+  * @param qualityName      a string representation of the qualityLevel
+  * @param isPreview        indicates if the file value is used as a preview (thumbnail)
   */
 case class StillImageFileValueV1(internalMimeType: String,
                                  internalFilename: String,
