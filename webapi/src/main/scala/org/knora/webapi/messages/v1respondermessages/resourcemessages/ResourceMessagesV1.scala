@@ -226,7 +226,7 @@ case class ResourceSearchResponseV1(resources: Seq[ResourceSearchResultRowV1] = 
 /**
   * Describes the answer to a newly created resource [[ResourceCreateRequestV1]].
   *
-  * @param res_id   the IRI ow the new resource.
+  * @param res_id   the IRI of the new resource.
   * @param results  the values that have been attached to the resource. The key in the Map refers
   *                 to the property Iri and the Seq contains all instances of values of this type.
   * @param userdata information about the user that made the request.
