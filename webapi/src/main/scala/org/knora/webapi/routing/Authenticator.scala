@@ -27,7 +27,7 @@ import com.typesafe.scalalogging.Logger
 import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
-import org.knora.webapi.{BadCredentialsException, IRI, Settings}
+import org.knora.webapi.{IRI, InvalidCredentialsException, Settings}
 import org.slf4j.LoggerFactory
 import spray.http._
 import spray.json.{JsNumber, JsObject, JsString}
@@ -279,10 +279,9 @@ trait Authenticator {
   */
 object Authenticator {
 
-    val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
-    val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
-    val BAD_CRED_USERNAME_NOT_SUPPLIED = "bad credentials: no username supplied"
-    val BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE = "bad credentials: none found"
+    val INVALID_CREDENTIALS_USERNAME_OR_PASSWORD = "Invalid username or password"
+    val INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED = "No username supplied"
+    val INVALID_CREDENTIALS_NON_FOUND = "No credentials could be found"
 
     val KNORA_AUTHENTICATION_COOKIE_NAME = "KnoraAuthentication"
 
@@ -309,7 +308,7 @@ object Authenticator {
                     case Success(sId) => sId
                     case Failure(ex) => throw ex
                 }
-                case None => throw BadCredentialsException(BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE)
+                case None => throw InvalidCredentialsException(INVALID_CREDENTIALS_NON_FOUND)
             }
         }
     }
@@ -341,7 +340,7 @@ object Authenticator {
                         }
                     } else {
                         log.debug("password did not match")
-                        throw BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)
+                        throw InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD)
                     }
                 }
                 case Failure(ex) => {
@@ -505,12 +504,12 @@ object Authenticator {
                             }
                             case None => {
                                 log.debug("No user found by this username")
-                                throw BadCredentialsException(BAD_CRED_USER_NOT_FOUND)
+                                throw InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD)
                             }
                         }
                 }
             } else {
-                throw BadCredentialsException(BAD_CRED_USERNAME_NOT_SUPPLIED)
+                throw InvalidCredentialsException(INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED)
             }
         }
     }

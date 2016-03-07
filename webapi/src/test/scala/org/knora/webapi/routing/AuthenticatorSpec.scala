@@ -26,8 +26,8 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1respondermessages.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
-import org.knora.webapi.routing.Authenticator.{BAD_CRED_PASSWORD_MISMATCH, BAD_CRED_USERNAME_NOT_SUPPLIED, BAD_CRED_USER_NOT_FOUND}
-import org.knora.webapi.{BadCredentialsException, CoreSpec}
+import org.knora.webapi.routing.Authenticator.{INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED, INVALID_CREDENTIALS_NON_FOUND, INVALID_CREDENTIALS_USERNAME_OR_PASSWORD}
+import org.knora.webapi.{InvalidCredentialsException, CoreSpec}
 import org.scalatest.PrivateMethodTester
 
 import scala.concurrent.duration._
@@ -97,10 +97,10 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
                 Authenticator invokePrivate getUserProfileByUsername(usernameCorrect, system, timeout, executionContext) should be(Success(mockUserProfileV1))
             }
             "fail with the wrong 'username' " in {
-                Authenticator invokePrivate getUserProfileByUsername(usernameWrong, system, timeout, executionContext) should be(Failure(BadCredentialsException(BAD_CRED_USER_NOT_FOUND)))
+                Authenticator invokePrivate getUserProfileByUsername(usernameWrong, system, timeout, executionContext) should be(Failure(InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD)))
             }
             "fail when not providing a username " in {
-                Authenticator invokePrivate getUserProfileByUsername(usernameEmpty, system, timeout, executionContext) should be(Failure(BadCredentialsException(BAD_CRED_USERNAME_NOT_SUPPLIED)))
+                Authenticator invokePrivate getUserProfileByUsername(usernameEmpty, system, timeout, executionContext) should be(Failure(InvalidCredentialsException(INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED)))
             }
         }
         "called, the 'authenticateCredentials' method " should {
@@ -108,7 +108,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
                 Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordCorrect, false, system) should be(Success("0"))
             }
             "fail with correct 'username' / wrong 'password' " in {
-                Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordWrong, false, system) should be(Failure(BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)))
+                Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordWrong, false, system) should be(Failure(InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD)))
             }
         }
     }

@@ -110,7 +110,7 @@ object ApiStatusCodesV1 extends Enumeration {
             // Subclasses of RequestRejectedException (which must be last in this group)
             case NotFoundException(_) => ApiStatusCodesV1.NOT_FOUND
             case ForbiddenException(_) => ApiStatusCodesV1.NO_RIGHTS_FOR_OPERATION
-            case BadCredentialsException(_) => ApiStatusCodesV1.CREDENTIALS_NOT_VALID
+            case InvalidCredentialsException(_) => ApiStatusCodesV1.CREDENTIALS_NOT_VALID
             case DuplicateValueException(_) => ApiStatusCodesV1.DUPLICATE_VALUE
             case OntologyConstraintException(_) => ApiStatusCodesV1.ONTOLOGY_CONSTRAINT
             case RequestRejectedException(_) => ApiStatusCodesV1.INVALID_REQUEST_TYPE
