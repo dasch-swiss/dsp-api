@@ -44,6 +44,7 @@ object ValuesResponderV1Spec {
     private val projectIri = "http://data.knora.org/projects/77275339"
 
     private val zeitglöckleinIri = "http://data.knora.org/c5058f3a"
+    private val miscResourceIri = "http://data.knora.org/miscResource"
 
     // A test UserDataV1.
     private val userData = UserDataV1(
@@ -108,7 +109,6 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val standoffLinkValueIri = new MutableTestIri
     private val currentSeqnumValueIri = new MutableTestIri
     private val currentPubdateValueIri = new MutableTestIri
-    private val regionLinkValueIri = new MutableTestIri
     private val linkObjLinkValueIri = new MutableTestIri
     private val currentColorValueIri = new MutableTestIri
     private val currentGeomValueIri = new MutableTestIri
@@ -582,6 +582,82 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsg(timeout, ValuesResponderV1Spec.versionHistoryWithHiddenVersion)
+        }
+
+
+        "create a color value" in {
+
+            val color = "#000000"
+
+            actorUnderTest ! CreateValueRequestV1(
+                projectIri = "http://data.knora.org/projects/77275339",
+                resourceIri = ValuesResponderV1Spec.miscResourceIri,
+                propertyIri = "http://www.knora.org/ontology/incunabula#miscHasColor",
+                value = ColorValueV1(color),
+                userProfile = ValuesResponderV1Spec.userProfile,
+                apiRequestID = UUID.randomUUID)
+
+            expectMsgPF(timeout) {
+                case msg: CreateValueResponseV1 =>
+                    currentColorValueIri.set(msg.id)
+                    msg.value should ===(ColorValueV1(color))
+            }
+        }
+
+        "change an existing color value" in {
+
+            val color = "#FFFFFF"
+
+            actorUnderTest ! ChangeValueRequestV1(
+                value = ColorValueV1(color),
+                userProfile = ValuesResponderV1Spec.userProfile,
+                valueIri = currentColorValueIri.get,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ChangeValueResponseV1 =>
+                    currentColorValueIri.set(msg.id)
+                    msg.value should ===(ColorValueV1(color))
+            }
+        }
+
+        "create a geometry value" in {
+
+            val geom = "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"
+
+            actorUnderTest ! CreateValueRequestV1(
+                projectIri = "http://data.knora.org/projects/77275339",
+                resourceIri = ValuesResponderV1Spec.miscResourceIri,
+                propertyIri = "http://www.knora.org/ontology/incunabula#miscHasGeometry",
+                value = GeomValueV1(geom),
+                userProfile = ValuesResponderV1Spec.userProfile,
+                apiRequestID = UUID.randomUUID)
+
+            expectMsgPF(timeout) {
+                case msg: CreateValueResponseV1 =>
+                    currentGeomValueIri.set(msg.id)
+                    msg.value should ===(GeomValueV1(geom))
+            }
+
+        }
+
+        "change a geometry value for a region" in {
+
+            val geom = "{\"status\":\"active\",\"lineColor\":\"#ff4433\",\"lineWidth\":1,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"
+
+            actorUnderTest ! ChangeValueRequestV1(
+                value = GeomValueV1(geom),
+                valueIri = currentGeomValueIri.get,
+                userProfile = ValuesResponderV1Spec.userProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ChangeValueResponseV1 =>
+                    currentGeomValueIri.set(msg.id)
+                    msg.value should ===(GeomValueV1(geom))
+            }
         }
 
         "add a new text value with Standoff" in {
@@ -1122,204 +1198,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "create a color value for a region (disabled because of cardinality constraints)" ignore {
-
-            // TODO: fix this test to use test data that respects cardinality constraints.
-
-            val color = "#000000"
-
-            actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
-                resourceIri = "http://data.knora.org/5e51519c4407",
-                propertyIri = "http://www.knora.org/ontology/knora-base#hasColor",
-                value = ColorValueV1(color),
-                userProfile = ValuesResponderV1Spec.userProfile,
-                apiRequestID = UUID.randomUUID)
-
-            expectMsgPF(timeout) {
-                case msg: CreateValueResponseV1 =>
-                    currentColorValueIri.set(msg.id)
-                    msg.value should ===(ColorValueV1(color))
-            }
-
-        }
-
-        "change an existing color of a region (disabled because of cardinality constraints)" ignore {
-
-            // TODO: fix this test to use test data that respects cardinality constraints.
-
-            val color = "#FFFFFF"
-
-            actorUnderTest ! ChangeValueRequestV1(
-                value = ColorValueV1(color),
-                userProfile = ValuesResponderV1Spec.userProfile,
-                valueIri = currentColorValueIri.get,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case msg: ChangeValueResponseV1 =>
-                    currentColorValueIri.set(msg.id)
-                    msg.value should ===(ColorValueV1(color))
-            }
-
-        }
-
-        "create a geometry value for a region (disabled because of cardinality constraints)" ignore {
-
-            val geom = "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"
-
-            actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
-                resourceIri = "http://data.knora.org/5e51519c4407",
-                propertyIri = "http://www.knora.org/ontology/knora-base#hasGeometry",
-                value = GeomValueV1(geom),
-                userProfile = ValuesResponderV1Spec.userProfile,
-                apiRequestID = UUID.randomUUID)
-
-            expectMsgPF(timeout) {
-                case msg: CreateValueResponseV1 =>
-                    currentGeomValueIri.set(msg.id)
-                    msg.value should ===(GeomValueV1(geom))
-            }
-
-        }
-
-        "change a geometry value for a region (disabled because of cardinality constraints)" ignore {
-
-            // TODO: fix this test to use test data that respects cardinality constraints.
-
-            val geom = "{\"status\":\"active\",\"lineColor\":\"#ff4433\",\"lineWidth\":1,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"
-
-            actorUnderTest ! ChangeValueRequestV1(
-                value = GeomValueV1(geom),
-                valueIri = currentGeomValueIri.get,
-                userProfile = ValuesResponderV1Spec.userProfile,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case msg: ChangeValueResponseV1 =>
-                    currentGeomValueIri.set(msg.id)
-                    msg.value should ===(GeomValueV1(geom))
-            }
-        }
-
-        "create a link between two resources (disabled because of cardinality constraints)" ignore {
-
-            // TODO: fix this test to use test data that respects cardinality constraints.
-
-            val linkSourceIri = "http://data.knora.org/5e51519c4407"
-            val linkTargetIri = "http://data.knora.org/8a0b1e75"
-            val lastModBeforeUpdate = getLastModificationDate(linkSourceIri)
-
-            actorUnderTest ! CreateValueRequestV1(
-                projectIri = ValuesResponderV1Spec.projectIri,
-                resourceIri = linkSourceIri,
-                propertyIri = OntologyConstants.KnoraBase.IsRegionOf,
-                value = LinkUpdateV1(
-                    targetResourceIri = linkTargetIri
-                ),
-                userProfile = ValuesResponderV1Spec.userProfile,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case CreateValueResponseV1(regionLinkValue: LinkV1, _, newLinkValueIri: IRI, _, _) =>
-                    regionLinkValueIri.set(newLinkValueIri)
-                    regionLinkValue.targetResourceIri should ===("http://data.knora.org/8a0b1e75")
-                    regionLinkValue.valueResourceClass should ===(Some("http://www.knora.org/ontology/incunabula#page"))
-            }
-
-            val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
-                subjectIri = "http://data.knora.org/5e51519c4407",
-                predicateIri = OntologyConstants.KnoraBase.IsRegionOf,
-                objectIri = "http://data.knora.org/8a0b1e75"
-            ).toString()
-
-            storeManager ! SparqlSelectRequest(sparqlQuery)
-
-            // The new LinkValue should have no previous version, and there should be a direct link between the resources.
-
-            expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
-                    val rows = response.results.bindings
-                    rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-                    rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
-            }
-
-            // Check that the link source's last modification date got updated.
-            val lastModAfterUpdate = getLastModificationDate(linkSourceIri)
-            lastModBeforeUpdate != lastModAfterUpdate should ===(true)
-        }
-
-        "delete a link between two resources (disabled because of cardinality constraints)" ignore {
-
-            // TODO: fix this test to use test data that respects cardinality constraints.
-
-            val linkSourceIri = "http://data.knora.org/5e51519c4407"
-            val linkTargetIri = "http://data.knora.org/8a0b1e75"
-            val lastModBeforeUpdate = getLastModificationDate(linkSourceIri)
-
-            val comment = "This link is no longer needed"
-
-            actorUnderTest ! DeleteValueRequestV1(
-                valueIri = regionLinkValueIri.get,
-                comment = Some(comment),
-                userProfile = ValuesResponderV1Spec.userProfile,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case msg: DeleteValueResponseV1 => () // If we got a DeleteValueResponseV1, the operation was successful.
-            }
-
-            val deletedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
-                subjectIri = linkSourceIri,
-                predicateIri = OntologyConstants.KnoraBase.IsRegionOf,
-                objectIri = linkTargetIri,
-                includeDeleted = true
-            ).toString()
-
-            storeManager ! SparqlSelectRequest(deletedLinkValueSparqlQuery)
-
-            expectMsgPF(timeout) {
-                case response: SparqlSelectResponse =>
-                    val rows = response.results.bindings
-                    rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(true)
-                    rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
-                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.ValueHasComment && row.rowMap("objObj") == comment) should ===(true)
-            }
-
-            // Check that the link source's last modification date got updated.
-            val lastModAfterUpdate = getLastModificationDate(linkSourceIri)
-            lastModBeforeUpdate != lastModAfterUpdate should ===(true)
-        }
-
-        "not create a link that points to the wrong type of resource (disabled because of cardinality constraints)" ignore {
-
-            // TODO: fix this test to use test data that respects cardinality constraints.
-
-            actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
-                resourceIri = "http://data.knora.org/4f11adaf",
-                propertyIri = "http://www.knora.org/ontology/incunabula#partOf", // can only point to an incunabula:book
-                value = LinkUpdateV1(
-                    targetResourceIri = "http://data.knora.org/5e51519c4407" // a knora-base:Region
-                ),
-                userProfile = ValuesResponderV1Spec.userProfile,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
-            }
-        }
-
-        "not create a duplicate link" in {
+        "create a link between two resources" in {
             val createValueRequest = CreateValueRequestV1(
                 projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/cb1a74e3e2f6",
@@ -1357,6 +1236,19 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
                     rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
             }
+        }
+
+        "not create a duplicate link" in {
+            val createValueRequest = CreateValueRequestV1(
+                projectIri = "http://data.knora.org/projects/77275339",
+                resourceIri = "http://data.knora.org/cb1a74e3e2f6",
+                propertyIri = OntologyConstants.KnoraBase.HasLinkTo,
+                value = LinkUpdateV1(
+                    targetResourceIri = ValuesResponderV1Spec.zeitglöckleinIri
+                ),
+                userProfile = ValuesResponderV1Spec.userProfile,
+                apiRequestID = UUID.randomUUID
+            )
 
             actorUnderTest ! createValueRequest
 
@@ -1365,14 +1257,31 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not create a link that points to an object of the wrong class" in {
+            actorUnderTest ! CreateValueRequestV1(
+                projectIri = "http://data.knora.org/projects/77275339",
+                resourceIri = "http://data.knora.org/4f11adaf",
+                propertyIri = "http://www.knora.org/ontology/incunabula#hasLinkTo", // can only point to a knora-base:Resource
+                value = LinkUpdateV1(
+                    targetResourceIri = linkObjLinkValueIri.get // a knora-base:Value, not a knora-base:Resource
+                ),
+                userProfile = ValuesResponderV1Spec.userProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+            }
+        }
+
         "change a link" in {
             val linkSourceIri = "http://data.knora.org/cb1a74e3e2f6"
+            val linkTargetIri = "http://data.knora.org/21abac2162"
             val lastModBeforeUpdate = getLastModificationDate(linkSourceIri)
 
-            // Try to change the link that was created in the "not create a duplicate link" test above.
             val changeValueRequest = ChangeValueRequestV1(
                 value = LinkUpdateV1(
-                    targetResourceIri = "http://data.knora.org/21abac2162"
+                    targetResourceIri = linkTargetIri
                 ),
                 userProfile = ValuesResponderV1Spec.userProfile,
                 valueIri = linkObjLinkValueIri.get,
@@ -1384,7 +1293,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case ChangeValueResponseV1(linkValue: LinkV1, _, newLinkValueIri: IRI, _, _) =>
                     linkObjLinkValueIri.set(newLinkValueIri)
-                    linkValue.targetResourceIri should ===("http://data.knora.org/21abac2162")
+                    linkValue.targetResourceIri should ===(linkTargetIri)
             }
 
             // The old LinkValue should be deleted now, and the old direct link should have been removed.
@@ -1412,7 +1321,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val newLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
-                objectIri = "http://data.knora.org/21abac2162"
+                objectIri = linkTargetIri
             ).toString()
 
             storeManager ! SparqlSelectRequest(newLinkValueSparqlQuery)
@@ -1423,6 +1332,50 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
                     rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+            }
+
+            // Check that the link source's last modification date got updated.
+            val lastModAfterUpdate = getLastModificationDate(linkSourceIri)
+            lastModBeforeUpdate != lastModAfterUpdate should ===(true)
+        }
+
+        "delete a link between two resources" in {
+
+            val linkSourceIri = "http://data.knora.org/cb1a74e3e2f6"
+            val linkTargetIri = "http://data.knora.org/21abac2162"
+            val lastModBeforeUpdate = getLastModificationDate(linkSourceIri)
+
+            val comment = "This link is no longer needed"
+
+            actorUnderTest ! DeleteValueRequestV1(
+                valueIri = linkObjLinkValueIri.get,
+                comment = Some(comment),
+                userProfile = ValuesResponderV1Spec.userProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case DeleteValueResponseV1(newLinkValueIri: IRI, _) =>
+                    linkObjLinkValueIri.set(newLinkValueIri)
+            }
+
+            val deletedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                subjectIri = linkSourceIri,
+                predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
+                objectIri = linkTargetIri,
+                includeDeleted = true
+            ).toString()
+
+            storeManager ! SparqlSelectRequest(deletedLinkValueSparqlQuery)
+
+            expectMsgPF(timeout) {
+                case response: SparqlSelectResponse =>
+                    val rows = response.results.bindings
+                    rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(true)
+                    rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
+                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.ValueHasComment && row.rowMap("objObj") == comment) should ===(true)
             }
 
             // Check that the link source's last modification date got updated.

@@ -761,6 +761,79 @@
 
                   knora-base:hasDefaultDeletePermission knora-base:Owner .
 
+
+### ###########################################
+### incunabula:miscHasColor
+
+:miscHasColor rdf:type owl:ObjectProperty ;
+
+                        rdfs:subPropertyOf knora-base:hasValue ;
+
+                        rdfs:label "Farbe"@de ;
+
+                        knora-base:subjectClassConstraint :misc ;
+
+                        knora-base:objectClassConstraint knora-base:ColorValue ;
+
+                        salsah-gui:guiOrder "1"^^xsd:integer ;
+
+                        salsah-gui:guiElement salsah-gui:Colorpicker ;
+
+                        knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+                        knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                        knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### incunabula:miscHasGeometry
+
+:miscHasGeometry rdf:type owl:ObjectProperty ;
+
+                           rdfs:subPropertyOf knora-base:hasValue ;
+
+                           rdfs:label "Geometrie"@de ;
+
+                           knora-base:subjectClassConstraint :misc ;
+
+                           knora-base:objectClassConstraint knora-base:GeomValue ;
+
+                           salsah-gui:guiOrder "2"^^xsd:integer ;
+
+                           salsah-gui:guiElement salsah-gui:Geometry ;
+
+                           knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+                           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                           knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### incunabula:miscHasBook
+
+:miscHasBook rdf:type owl:ObjectProperty ;
+
+                           rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                           rdfs:label "Geometrie"@de ;
+
+                           knora-base:subjectClassConstraint :misc ;
+
+                           knora-base:objectClassConstraint knora-base:GeomValue ;
+
+                           salsah-gui:guiOrder "2"^^xsd:integer ;
+
+                           salsah-gui:guiElement salsah-gui:Geometry ;
+
+                           knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+                           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                           knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+
 ##########################################################
 #
 # RESOURCES
@@ -946,3 +1019,30 @@
 
           knora-base:hasDefaultDeletePermission knora-base:Owner .
 
+
+### ###########################################
+### incunabula:misc
+
+:misc rdf:type owl:Class ;
+
+      rdfs:subClassOf knora-base:Resource,
+                      [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :miscHasColor ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :miscHasGeometry ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ] ;
+
+      rdfs:label "Sonstiges"@de ;
+
+      rdfs:comment "A fake resource class that only has optional properties"@en;
+
+      knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+      knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+      knora-base:hasDefaultDeletePermission knora-base:Owner .

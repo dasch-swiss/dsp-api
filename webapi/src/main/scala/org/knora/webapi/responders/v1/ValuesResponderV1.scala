@@ -35,7 +35,7 @@ import org.knora.webapi.messages.v1respondermessages.valuemessages._
 import org.knora.webapi.responders.ResourceLocker
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{InputValidation, ScalaPrettyPrinter, ActorUtil, KnoraIriUtil}
+import org.knora.webapi.util._
 
 import scala.annotation.tailrec
 import scala.collection.breakOut

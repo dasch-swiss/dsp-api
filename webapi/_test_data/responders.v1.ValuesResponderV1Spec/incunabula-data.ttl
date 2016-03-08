@@ -2637,6 +2637,28 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 
 
+### ###########################################
+### <http://data.knora.org/miscResource>
+
+<http://data.knora.org/miscResource> rdf:type incunabula:misc ;
+
+                                     knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+
+                                     knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+
+                                     knora-base:hasViewPermission knora-base:KnownUser ;
+
+                                     knora-base:hasRestrictedViewPermission knora-base:UnknownUser ;
+
+                                     knora-base:hasModifyPermission knora-base:ProjectMember ,
+                                                                    knora-base:Owner ;
+
+                                     rdfs:label """Empty resource for testing optional properties""" ;
+
+                                     knora-base:creationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp .
+
+
+
 ##########################################################
 #
 # PERSONS
