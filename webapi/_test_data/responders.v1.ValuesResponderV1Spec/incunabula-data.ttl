@@ -363,13 +363,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                      knora-base:hasComment <http://data.knora.org/cb1a74e3e2f6/values/dfe0ce1e099e04> ;
 
-                                     knora-base:hasLinkTo <http://data.knora.org/c5058f3a> ,
-                                                          <http://data.knora.org/e41ab5695c> ,
-                                                          <http://data.knora.org/21abac2162> ;
+                                     knora-base:hasLinkTo <http://data.knora.org/e41ab5695c> ;
 
-                                     knora-base:hasLinkToValue <http://data.knora.org/cb1a74e3e2f6/values/add0efdb-7af4-4a73-9bf4-3965d50dac28> ,
-                                                               <http://data.knora.org/cb1a74e3e2f6/values/87fbf1ca-05b7-4cf0-aa2f-4964ee1a7a8d> ,
-                                                               <http://data.knora.org/cb1a74e3e2f6/values/05e6d443-01eb-4e6a-ba95-329eb60e07d5> ;
+                                     knora-base:hasLinkToValue <http://data.knora.org/cb1a74e3e2f6/values/87fbf1ca-05b7-4cf0-aa2f-4964ee1a7a8d> ;
 
                                      rdfs:label """Diese drei Texte sind in einem Band zusammengebunden.""" ;
 
@@ -397,31 +393,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                                            knora-base:hasDeletePermission knora-base:Owner .
 
 
-### ###########################################
-### <http://data.knora.org/cb1a74e3e2f6/values/add0efdb-7af4-4a73-9bf4-3965d50dac28>
-
-<http://data.knora.org/cb1a74e3e2f6/values/add0efdb-7af4-4a73-9bf4-3965d50dac28> rdf:type knora-base:LinkValue ;
-
-                                                                                 rdf:subject <http://data.knora.org/cb1a74e3e2f6> ;
-
-                                                                                 rdf:predicate knora-base:hasLinkTo ;
-
-                                                                                 rdf:object <http://data.knora.org/c5058f3a> ;
-
-                                                                                 knora-base:valueHasRefCount "1"^^xsd:integer ;
-
-                                                                                 knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-
-                                                                                 knora-base:hasViewPermission knora-base:UnknownUser ,
-                                                                                                              knora-base:KnownUser ,
-                                                                                                              knora-base:ProjectMember ;
-
-                                                                                 knora-base:hasDeletePermission knora-base:Owner ;
-
-                                                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-
-                                                                                 knora-base:valueHasString """1""" .
-
 
 ### ###########################################
 ### <http://data.knora.org/cb1a74e3e2f6/values/87fbf1ca-05b7-4cf0-aa2f-4964ee1a7a8d>
@@ -447,32 +418,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                                                                  knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                                                  knora-base:valueHasString """404""" .
-
-
-### ###########################################
-### <http://data.knora.org/cb1a74e3e2f6/values/05e6d443-01eb-4e6a-ba95-329eb60e07d5>
-
-<http://data.knora.org/cb1a74e3e2f6/values/05e6d443-01eb-4e6a-ba95-329eb60e07d5> rdf:type knora-base:LinkValue ;
-
-                                                                                 rdf:subject <http://data.knora.org/cb1a74e3e2f6> ;
-
-                                                                                 rdf:predicate knora-base:hasLinkTo ;
-
-                                                                                 rdf:object <http://data.knora.org/21abac2162> ;
-
-                                                                                 knora-base:valueHasRefCount "1"^^xsd:integer ;
-
-                                                                                 knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-
-                                                                                 knora-base:hasViewPermission knora-base:UnknownUser ,
-                                                                                                              knora-base:KnownUser ,
-                                                                                                              knora-base:ProjectMember ;
-
-                                                                                 knora-base:hasDeletePermission knora-base:Owner ;
-
-                                                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-
-                                                                                 knora-base:valueHasString """429""" .
 
 
 
