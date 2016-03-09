@@ -54562,6 +54562,8 @@
 
                                          knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 
+                                         knora-base:passwordSalt "" ;
+
                                          knora-base:email "user.user01@example.com" ;
 
                                          knora-base:preferredLanguage "de" ;
@@ -54582,6 +54584,8 @@
 
                                          knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 
+                                         knora-base:passwordSalt "" ;
+
                                          knora-base:email "user.user02@example.com" ;
 
                                          knora-base:preferredLanguage "de" ;
@@ -54601,6 +54605,8 @@
                                          foaf:givenName "Administrator" ;
 
                                          knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+
+                                         knora-base:passwordSalt "" ;
 
                                          knora-base:email "test@test.ch" ;
 
