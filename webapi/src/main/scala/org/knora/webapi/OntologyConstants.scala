@@ -109,6 +109,7 @@ object OntologyConstants {
         val Username = "http://www.knora.org/ontology/knora-base#userid"
         val Email = "http://www.knora.org/ontology/knora-base#email"
         val Password = "http://www.knora.org/ontology/knora-base#password"
+        val PasswordSalt ="http://www.knora.org/ontology/knora-base#passwordSalt"
 
         val InternalMimeType = "http://www.knora.org/ontology/knora-base#internalMimeType"
         val InternalFilename = "http://www.knora.org/ontology/knora-base#internalFilename"

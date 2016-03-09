@@ -26,7 +26,7 @@ import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
 import org.knora.webapi.messages.v1respondermessages.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1, UsersResponderRequestV1}
+import org.knora.webapi.messages.v1respondermessages.usermessages._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.MessageUtil
 
@@ -45,12 +45,13 @@ class UsersResponderV1 extends ResponderV1 {
     def receive = {
         case UserProfileGetRequestV1(userIri, clean) => future2Message(sender(), getUserProfileV1(userIri, clean), log)
         case UserProfileByUsernameGetRequestV1(username, clean) => future2Message(sender(), getUserProfileByUsernameV1(username, clean), log)
+        case UserCreateRequestV1(newUserData, userProfile) => future2Message(sender(), createNewUserV1(newUserData, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
     /**
       * Gets information about a Knora user, and returns it in a [[Option[UserProfileV1]].
- *
+      *
       * @param userIri the IRI of the user.
       * @return a [[Option[UserProfileV1]] describing the user.
       */
@@ -78,7 +79,7 @@ class UsersResponderV1 extends ResponderV1 {
                 lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
                 email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-                activeProject = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head)
+                passwordSalt = groupedUserData.get(OntologyConstants.KnoraBase.PasswordSalt).map(_.head)
             )
 
             groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
@@ -105,7 +106,7 @@ class UsersResponderV1 extends ResponderV1 {
                 }
             }
 
-            //_ = log.debug(s"${userProfileV1.toString}")
+        //_ = log.debug(s"${userProfileV1.toString}")
 
         } yield userProfileV1
     }
@@ -165,9 +166,7 @@ class UsersResponderV1 extends ResponderV1 {
                 lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
                 email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-                activeProject = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head) //,
-                //projects = if (projectIris.nonEmpty) Some(projectIris) else None,
-                //projects_info = projectInfos
+                passwordSalt = groupedUserData.get(OntologyConstants.KnoraBase.PasswordSalt).map(_.head)
             )
 
             _ = log.debug(s"RAW: ${groupedUserData.toString}")
@@ -188,4 +187,42 @@ class UsersResponderV1 extends ResponderV1 {
 
         } yield userProfileV1 // Some(UserProfileV1(userDataV1, groupIris, projectIris))
     }
+
+    /**
+      * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
+      * is allowed to create the new user. If the projects list is not empty, then credentials need to be supplied, so
+      * that the requesting user can be checked if he has the needed rights to add the new user to the listed projects.
+      * If projects are listed, and the requesting user does not have the needed rights, then the user is still created
+      * and only the adding-to-projects part is skipped.
+      *
+      * Referenced Websites:
+      *                     - https://crackstation.net/hashing-security.htm
+      *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
+      *
+      * @param newUserData a [[NewUserDataV1]] object containing information about the new user to be created.
+      * @param userProfile a [[UserProfileV1]] object containing information about the requesting user.
+      * @return a future containing the [[UserOperationResponseV1]].
+      */
+    private def createNewUserV1(newUserData: NewUserDataV1, userProfile: UserProfileV1): Future[UserOperationResponseV1] = {
+        // self-registration allowed, so no checking if the user has the right to create a new user
+        // check if the supplied username and email address for the new user are unique
+        // create the user
+
+        // if projects list is not empty, check if the requesting user has the right to add the newly created user to
+        // these projects. If so, then add. If not, then still return successfully but add message saying that
+        // adding-to-group did fail.
+
+        val newUserProfile = UserProfileV1(UserDataV1(lang = "de", username = Some(newUserData.username), email = Some(newUserData.email)))
+
+        Future.successful(UserOperationResponseV1(newUserProfile, userProfile.userData))
+    }
+
+    /**
+      *
+      * @param user
+      * @param groups
+      * @param userProfile
+      * @return
+      */
+    private def addUserToGroupV1(user: IRI, groups: Vector[IRI], userProfile: UserProfileV1): Future[UserOperationResponseV1] = ???
 }

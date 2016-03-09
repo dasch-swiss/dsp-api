@@ -21,10 +21,34 @@
 package org.knora.webapi.messages.v1respondermessages.usermessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.KnoraRequestV1
-import org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectInfoV1
-import org.mindrot.jbcrypt.BCrypt
+import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
+import spray.httpx.SprayJsonSupport
 import spray.json._
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// API requests
+
+/**
+  * Represents an API request payload that asks the Knora API server to create a new user.
+  *
+  * @param username   the username of the user to be created.
+  * @param givenName  the given name of the user to be created.
+  * @param familyName the family name of the user to be created
+  * @param email      the email of the user to be created.
+  * @param password   the password of the user to be created.
+  * @param lang       the default language of the user to be created.
+  */
+case class CreateUserApiRequestV1(username: String,
+                                  givenName: String,
+                                  familyName: String,
+                                  email: String,
+                                  password: String,
+                                  lang: String,
+                                  projects: Seq[IRI] = Vector.empty[IRI]) {
+
+    def toJsValue = UserV1JsonProtocol.createUserApiRequestV1Format.write(this)
+
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -37,37 +61,99 @@ sealed trait UsersResponderRequestV1 extends KnoraRequestV1
 
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
+  *
   * @param userIri the IRI of the user to be queried.
-  * @param clean a flag denoting if sensitive information (token, password) should be stripped
+  * @param clean   a flag denoting if sensitive information (token, password) should be stripped
   */
-case class UserProfileGetRequestV1(userIri: IRI, clean: Boolean = false) extends UsersResponderRequestV1
+case class UserProfileGetRequestV1(userIri: IRI,
+                                   clean: Boolean = false) extends UsersResponderRequestV1
 
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
+  *
   * @param username the username of the user to be queried.
-  * @param clean a flag denoting if sensitive information (token, password) should be stripped.
+  * @param clean    a flag denoting if sensitive information (token, password) should be stripped.
   */
-case class UserProfileByUsernameGetRequestV1(username: String, clean: Boolean = false) extends UsersResponderRequestV1
+case class UserProfileByUsernameGetRequestV1(username: String,
+                                             clean: Boolean = false) extends UsersResponderRequestV1
 
 
 /**
+  * Requests the creation of a new user.
+  *
+  * @param newUserData the [[NewUserDataV1]] information for creating the new user.
+  * @param userProfile the user profile of the user creating the new user.
+  */
+case class UserCreateRequestV1(newUserData: NewUserDataV1,
+                               userProfile: UserProfileV1) extends UsersResponderRequestV1
+
+/**
+  * Describes the answer to an user creating/modifying operation.
+  *
+  * @param userProfile the new user profile of the created/modified user.
+  * @param userData    information about the user that made the request.
+  * @param message     a message describing what went wrong if operation was only partially successful.
+  */
+case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDataV1, message: Option[String] = None) extends KnoraResponseV1 {
+    def toJsValue = UserV1JsonProtocol.userCreateResponseV1Format.write(this)
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Components of messages
+
+/**
   * Represents a user's profile.
+  *
   * @param userData basic information about the user.
-  * @param groups the groups that the user belongs to.
+  * @param groups   the groups that the user belongs to.
   * @param projects the projects that the user belongs to.
   */
 case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects: Seq[IRI] = Nil) {
+
+    /**
+      * Check password.
+      *
+      * @param password the password to check.
+      * @return true if password matches and false if password doesn't match.
+      */
     def passwordMatch(password: String): Boolean = {
-        val md = java.security.MessageDigest.getInstance("SHA-1")
-        userData.password.exists { hp =>
-            md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hp)
+        userData.passwordSalt match {
+            case Some(salt) if salt.isEmpty => passwordMatchSha1(password)
+            case Some(salt) => passwordMatchBCrypt(password, salt)
+            case None => passwordMatchSha1(password)
         }
     }
 
-    def passwordMatchBCrypt(password: String): Boolean = userData.password.exists(hp => BCrypt.checkpw(password, hp))
+    /**
+      * Check password hashed using SHA-1.
+      *
+      * @param password the password to check.
+      * @return true if password matches and false if password doesn't match.
+      */
+    private def passwordMatchSha1(password: String): Boolean = {
+        val md = java.security.MessageDigest.getInstance("SHA-1")
+        userData.password.exists { hashedPassword =>
+            md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hashedPassword)
+        }
+    }
+
+    /**
+      * Check password hashed using BCrypt.
+      *
+      * @param password the password to check
+      * @param salt the stored unique user's password salt
+      * @return true if password matches and false if password doesn't match.
+      */
+    private def passwordMatchBCrypt(password: String, salt: String): Boolean = {
+        import org.mindrot.jbcrypt.BCrypt
+        userData.password.exists {
+            hashedPassword => BCrypt.checkpw(salt + password, hashedPassword)
+        }
+    }
 
     /**
       * Creating a [[UserProfileV1]] with sensitive information stripped.
+      *
       * @return a [[UserProfileV1]]
       */
     def getCleanUserProfileV1: UserProfileV1 = {
@@ -82,9 +168,7 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
             olduserdata.lastname,
             olduserdata.email,
             None, // remove password
-            olduserdata.activeProject,
-            olduserdata.projects,
-            olduserdata.projects_info
+            None // remove password salt
         )
 
         UserProfileV1(newuserdata, groups, projects)
@@ -92,24 +176,21 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
 }
 
 
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
 /**
   * Represents basic information about a user.
-  * @param lang The ISO 639-1 code of the user's preferred language.
-  * @param user_id The user's IRI.
-  * @param token TODO: document this
-  * @param username The user's username.
-  * @param firstname The user's given name.
-  * @param lastname The user's surname.
-  * @param email The user's email address.
-  * @param password The user's hashed password.
-  * @param activeProject
-  * @param projects
-  * @param projects_info
+  *
+  * @param lang         the ISO 639-1 code of the user's preferred language.
+  * @param user_id      the user's IRI.
+  * @param token        the user's API token used as credentials.
+  * @param username     the user's username.
+  * @param firstname    the user's given name.
+  * @param lastname     the user's surname.
+  * @param email        the user's email address.
+  * @param password     the user's hashed password.
+  * @param passwordSalt the user's unique salt used in hashing the password.
   */
 case class UserDataV1(lang: String,
                       user_id: Option[IRI] = None,
@@ -119,21 +200,38 @@ case class UserDataV1(lang: String,
                       lastname: Option[String] = None,
                       email: Option[String] = None,
                       password: Option[String] = None,
-                      activeProject: Option[IRI] = None,
-                      projects: Option[Seq[IRI]] = None, // TODO: we do not need an option here as the list could simply be empty.
-                      projects_info: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1])
+                      passwordSalt: Option[String] = None)
+
+
+/**
+  * Represents basic information about the user which needs to be supplied during user creation.
+  *
+  * @param username   the new user's username. Needs to be unique on the server.
+  * @param givenName  the new user's given name.
+  * @param familyName the new user's family name.
+  * @param email      the new users's email address. Needs to be unique on the server.
+  * @param password   the new user's password in clear text.
+  * @param lang       the ISO 639-1 code of the new user's preferred language.
+  */
+case class NewUserDataV1(username: String,
+                         givenName: String,
+                         familyName: String,
+                         email: String,
+                         password: String,
+                         lang: String,
+                         projects: Seq[IRI] = Vector.empty[IRI])
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
 /**
-  * A spray-json protocol for formatting [[UserDataV1]] objects as JSON.
+  * A spray-json protocol for formatting objects as JSON.
   */
+object UserV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
-
-object UserDataV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
-
-    import org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectV1JsonProtocol.projectInfoV1Format
-
-    implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat11(UserDataV1)
+    implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat9(UserDataV1)
+    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat3(UserProfileV1)
+    implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat7(NewUserDataV1)
+    implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
+    implicit val userCreateResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat3(UserOperationResponseV1)
 }

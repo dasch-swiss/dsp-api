@@ -23,11 +23,10 @@ package org.knora.webapi.routing.v1
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import org.apache.commons.validator.routines.UrlValidator
-import org.knora.webapi.messages.v1respondermessages.listmessages._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1}
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import org.knora.webapi.util.InputValidation
 import org.knora.webapi._
+import org.knora.webapi.messages.v1respondermessages.usermessages.UserV1JsonProtocol._
+import org.knora.webapi.messages.v1respondermessages.usermessages._
+import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import spray.routing.Directives._
 import spray.routing._
 
@@ -66,6 +65,31 @@ object UsersRouteV1 extends Authenticator {
                         responderManager,
                         log
                     )
+            } ~ post {
+                /* create a new user */
+                entity(as[CreateUserApiRequestV1]) { apiRequest => requestContext =>
+                    val requestMessageTry = Try {
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        val newUserData = NewUserDataV1(apiRequest.username,
+                            apiRequest.givenName,
+                            apiRequest.familyName,
+                            apiRequest.email,
+                            apiRequest.password,
+                            apiRequest.lang,
+                            apiRequest.projects)
+
+                        UserCreateRequestV1(newUserData, userProfile)
+                    }
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
             }
         }
     }

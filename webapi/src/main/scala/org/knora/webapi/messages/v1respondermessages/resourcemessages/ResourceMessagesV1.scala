@@ -600,7 +600,7 @@ case class ResourceCreateValueObjectResponseV1(textval: Map[LiteralValueType.Val
 object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
     import LiteralValueType.LiteralValueTypeV1Protocol._
-    import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1respondermessages.usermessages.UserV1JsonProtocol._
     import org.knora.webapi.messages.v1respondermessages.valuemessages.ApiValueV1JsonProtocol._
 
     implicit val locationFormat: JsonFormat[LocationV1] = jsonFormat8(LocationV1)
@@ -737,7 +737,7 @@ object ResourceContextV1JsonProtocol extends DefaultJsonProtocol {
 
     import ResourceContextCodeV1.ResourceContextCodeV1Protocol._
     import ResourceV1JsonProtocol._
-    import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1respondermessages.usermessages.UserV1JsonProtocol._
 
     implicit val resourceContextV1Format: JsonFormat[ResourceContextV1] = jsonFormat10(ResourceContextV1)
     implicit val resourceContextResponseV1Format: RootJsonFormat[ResourceContextResponseV1] = jsonFormat2(ResourceContextResponseV1)
