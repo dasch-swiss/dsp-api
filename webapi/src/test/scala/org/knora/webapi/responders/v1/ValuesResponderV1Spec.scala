@@ -1257,13 +1257,13 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "not create a link that points to an object of the wrong class" in {
+        "not create a link that points to a resource of the wrong class" in {
             actorUnderTest ! CreateValueRequestV1(
                 projectIri = "http://data.knora.org/projects/77275339",
-                resourceIri = "http://data.knora.org/4f11adaf",
-                propertyIri = "http://www.knora.org/ontology/incunabula#hasLinkTo", // can only point to a knora-base:Resource
+                resourceIri = ValuesResponderV1Spec.miscResourceIri,
+                propertyIri = "http://www.knora.org/ontology/incunabula#miscHasBook", // can only point to an incunabula:book
                 value = LinkUpdateV1(
-                    targetResourceIri = linkObjLinkValueIri.get // a knora-base:Value, not a knora-base:Resource
+                    targetResourceIri = "http://data.knora.org/8a0b1e75" // an incunabula:page, not an incunabula:book
                 ),
                 userProfile = ValuesResponderV1Spec.userProfile,
                 apiRequestID = UUID.randomUUID

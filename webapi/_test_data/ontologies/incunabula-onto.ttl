@@ -817,15 +817,15 @@
 
                            rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-                           rdfs:label "Geometrie"@de ;
+                           rdfs:label "Verbindung mit einem Buch"@de ;
 
                            knora-base:subjectClassConstraint :misc ;
 
-                           knora-base:objectClassConstraint knora-base:GeomValue ;
+                           knora-base:objectClassConstraint :book ;
 
-                           salsah-gui:guiOrder "2"^^xsd:integer ;
+                           salsah-gui:guiOrder "3"^^xsd:integer ;
 
-                           salsah-gui:guiElement salsah-gui:Geometry ;
+                           salsah-gui:guiElement salsah-gui:Searchbox ;
 
                            knora-base:hasDefaultViewPermission knora-base:KnownUser ;
 
@@ -1034,6 +1034,11 @@
                       [
                         rdf:type owl:Restriction ;
                         owl:onProperty :miscHasGeometry ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ],
+                      [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :misHasBook ;
                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
                       ] ;
 

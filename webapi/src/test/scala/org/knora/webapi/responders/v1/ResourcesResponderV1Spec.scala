@@ -440,17 +440,17 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource when too many values are submitted for a property" in {
-            // The Incunabula ontology specifies that an incunabula:book must have exactly one title.
+            // An incunabula:misc allows at most one color value.
             val valuesToBeCreated = Map(
-                "http://www.knora.org/ontology/incunabula#title" -> Vector(
-                    CreateValueV1WithComment(TextValueV1(utf8str = "De generatione Christi"), None),
-                    CreateValueV1WithComment(TextValueV1(utf8str = "Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae"), None)
+                "http://www.knora.org/ontology/incunabula#miscHasColor" -> Vector(
+                    CreateValueV1WithComment(ColorValueV1("#000000")),
+                    CreateValueV1WithComment(ColorValueV1("#FFFFFF"))
                 )
             )
 
             val resourceCreateRequest = ResourceCreateRequestV1(
-                resourceTypeIri = "http://www.knora.org/ontology/incunabula#book",
-                label = "Test-Book",
+                resourceTypeIri = "http://www.knora.org/ontology/incunabula#misc",
+                label = "Test-Misc",
                 projectIri = "http://data.knora.org/projects/77275339",
                 values = valuesToBeCreated,
                 userProfile = ResourcesResponderV1Spec.userProfile,

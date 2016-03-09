@@ -213,6 +213,199 @@ conditions are not met, the update will not be performed. Redundant database
 integrity checks are a good thing. Therefore, whenever possible, the SPARQL
 update itself checks that the conditions for the update are met.
 
+Consistency Checks
+^^^^^^^^^^^^^^^^^^
+
+Knora enforces consistency constraints in two ways:
+
+First, by doing pre-update checks, i.e. SPARQL ``SELECT`` queries, while
+holding an application-level lock on the resource to be updated. These checks
+should work with any triplestore, and can return helpful, Knora- specific
+error messages to the client if the request would violate a consistency
+constraint.
+
+Second, on GraphDB, the triplestore's consistency checker can be turned on to
+ensure that each update transaction respects the consistency constraints, as
+described in the section `Consistency checks`_ of the GraphDB documentation.
+This makes it possible to catch consistency constraint violations caused by
+bugs in Knora, and it also checks data that is uploaded directly into the
+triplestore without going through the Knora API. However, this feature is not
+yet enabled, because of problems described in `issue 33`_.
+
+GraphDB's consistency checker requires the repository to be created with
+reasoning enabled. GraphDB's reasoning rules are defined in rule files with
+the ``.pie`` filename extension, as described in Reasoning_ in the GraphDB
+documentation. To use consistency checking, it is necessary to modify one of
+GraphDB's standard ``.pie`` files by adding consistency rules. We have added
+rules to the standard RDFS inference rules file ``builtin_RdfsRules.pie``, to
+create the file ``KnoraRules.pie``. The ``.ttl`` configuration file that is
+used to create the repository must contain these settings:
+
+::
+
+    owlim:ruleset "/path/to/KnoraRules.pie" ;
+    owlim:check-for-inconsistencies "true" ;
+
+
+The path to ``KnoraRules.pie`` must be an absolute path. The scripts provided
+with Knora to create test repositories set this path automatically.
+
+A GraphDB consistency rule is composed of two parts: a pattern that will match
+if corresponding triples are found in the data, and an optional pattern that
+will match if corresponding triples are not found in the data. If both
+parts match, this means that there is a consistency violation, and the
+transaction will be rolled back. A rule is written in this form:
+
+::
+
+    Consistency: <rule name>
+        <pattern for triples found in the data>
+        -------------------------------
+        <pattern for triples not found in the data>
+
+The triple patterns can contain variable names for subjects, predicates, and
+objects, as well as actual property names.
+
+owl:maxCardinality 1
+~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    // owl:maxCardinality 1
+    Consistency: max_cardinality_1
+        i <rdf:type> r
+        r <owl:maxCardinality> "1"^^xsd:nonNegativeInteger
+        r <owl:onProperty> p
+        i p j
+        i p k [Constraint j != k]
+        ------------------------------------
+
+If resource ``i`` is a member of a subclass of ``owl:Restriction`` ``r``,
+which has a maximum cardinality of 1 for property ``p``, and there are two
+different triples with ``i`` as the subject and ``p`` as the predicate, the
+constraint is violated.
+
+owl:minCardinality 1
+~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    // owl:minCardinality 1
+    Consistency: min_cardinality_1
+        i <rdf:type> r
+        r <owl:minCardinality> "1"^^xsd:nonNegativeInteger
+        r <owl:onProperty> p
+        ------------------------------------
+        i p j
+
+If resource ``i`` is a member of a subclass of ``owl:Restriction`` ``r``,
+which has a minimum cardinality of 1 for property ``p``, and there is no
+triple with ``i`` as the subject and ``p`` as the predicate, the constraint is
+violated.
+
+owl:cardinality 1
+~~~~~~~~~~~~~~~~~
+
+This requires two rules, which are essentially the same as the two previous rules.
+
+::
+
+    // owl:cardinality 1 (check that the number of property instances is not greater than 1)
+    Consistency: cardinality_1_not_greater
+        i <rdf:type> r
+        r <owl:cardinality> "1"^^xsd:nonNegativeInteger
+        r <owl:onProperty> p
+        i p j
+        i p k [Constraint j != k]
+        ------------------------------------
+
+    // owl:cardinality 1 (check that the number of property instances is not 0)
+    Consistency: cardinality_1_not_less
+        i <rdf:type> r
+        r <owl:cardinality> "1"^^xsd:nonNegativeInteger
+        r <owl:onProperty> p
+        ------------------------------------
+        i p j
+
+Any cardinality
+~~~~~~~~~~~~~~~
+
+Knora allows a subproperty of ``knora-base:hasValue`` to be a predicate of a
+resource only if the resource's class has some cardinality for the property.
+To indicate that there is no restriction on the number of values that can be
+created with the same predicate, the cardinality ``owl:minCardinality 0`` can
+be used.
+
+::
+
+    // Check that if a resource has a subproperty of knora-base:hasValue, the resource class has
+    // some cardinality for that property (or for a subproperty of that property). This is the
+    // only way we check owl:minCardinality 0.
+    Consistency: cardinality_any
+        i <knora-base:hasValue> j
+        i p j [Constraint p != <knora-base:hasValue>]
+        ------------------------------------
+        q <rdfs:subPropertyOf> p
+        i q j
+        i <rdf:type> r
+        r <owl:onProperty> q
+
+If resource ``i`` has a predicate that is a subproperty of
+``knora-base:hasValue``, and ``i`` is not a member of a subclass of
+``owl:Restriction`` ``r`` specifying a cardinality for that predicate, the
+constraint is violated.
+
+For example, suppose ``incunabula:title`` is a subproperty of ``dc:title``,
+which is a subproperty of ``knora-base:hasValue``. (The project-specific
+``incunabula`` ontology is required to make its own subproperty of
+``dc:title`` rather than use it directly.) Furthermore, suppose that there is
+an instance of ``incunabula:book`` that has an ``incunabula:title``. By
+inference, the book also has a ``dc:title``. Therefore, if ``i`` matches the
+book, ``p`` can match either ``dc:title`` or ``incunabula:title``. There are
+two possibilities:
+
+1. The class ``incunabula:book`` has no cardinality for ``incunabula:title``.
+   Regardless of whether ``p``  matches ``dc:title`` or ``incunabula:title``,
+   there is no match for ``q`` that has the required cardinality, so the
+   constraint is violated.
+2. The class ``incunabula:book`` has a cardinality for ``incunabula:title``.
+   If ``p`` matches ``dc:title``, ``q`` will match ``incunabula:title``, for
+   which there is a cardinality, so the constraint is respected. If ``p``
+   matches ``incunabula:title``, ``q`` also matches ``incunabula:title``
+   (``q`` equals ``p``), and the constraint is again respected.
+
+
+knora-base:subjectClassConstraint
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    // knora-base:subjectClassConstraint
+    Consistency: subject_class_constraint
+        p <knora-base:subjectClassConstraint> t
+        i p j
+        ------------------------------------
+        i <rdf:type> t
+
+
+If resource ``i`` has a predicate ``p`` that requires a subject of type ``t``,
+and ``i`` is not a ``t``, the constraint is violated.
+
+knora-base:objectClassConstraint
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    // knora-base:objectClassConstraint
+    Consistency: object_class_constraint
+        p <knora-base:objectClassConstraint> t
+        i p j
+        ------------------------------------
+        j <rdf:type> t
+
+
+If resource ``i`` has a predicate ``p`` that requires an object of type ``t``,
+and the object of ``p`` is not a ``t``, the constraint is violated.
 
 Responsibilities of Responders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -450,3 +643,6 @@ return no rows.
 .. _SPARQL 1.1 Protocol: http://www.w3.org/TR/sparql11-protocol/
 .. _SPARQL 1.1 Update: http://www.w3.org/TR/sparql11-update/
 .. _reifications: http://www.w3.org/TR/rdf-schema/#ch_reificationvocab
+.. _issue 33: https://github.com/dhlab-basel/Knora/issues/33
+.. _Consistency checks: http://graphdb.ontotext.com/documentation/standard/reasoning.html#consistency-checks
+.. _Reasoning: http://graphdb.ontotext.com/documentation/standard/reasoning.html
