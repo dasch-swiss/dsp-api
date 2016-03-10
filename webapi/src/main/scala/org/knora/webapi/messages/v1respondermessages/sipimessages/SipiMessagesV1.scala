@@ -232,10 +232,10 @@ sealed trait SipiResponderRequestV1 extends KnoraRequestV1
 /**
   * A Knora v1 API request message that requests information about a `FileValue`.
   *
-  * @param fileValueIri the IRI of the file value to be queried.
+  * @param filename the name of the file belonging to the file value to be queried.
   * @param userProfile  the profile of the user making the request.
   */
-case class SipiFileInfoGetRequestV1(fileValueIri: IRI, userProfile: UserProfileV1) extends SipiResponderRequestV1
+case class SipiFileInfoGetRequestV1(filename: String, userProfile: UserProfileV1) extends SipiResponderRequestV1
 
 /**
   * Represents the Knora API v1 JSON response to a request for a information about a `FileValue`.

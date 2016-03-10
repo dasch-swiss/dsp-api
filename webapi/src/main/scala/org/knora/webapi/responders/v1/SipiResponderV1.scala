@@ -64,23 +64,25 @@ class SipiResponderV1 extends ResponderV1 {
     /**
       * Returns a [[SipiFileInfoGetResponseV1]] containing the permissions and path for a file.
       *
-      * @param fileValueIri the iri of the resource.
+      * @param filename the iri of the resource.
       * @return a [[SipiFileInfoGetResponseV1]].
       */
-    private def getFileInfoForSipiV1(fileValueIri: IRI, userProfile: UserProfileV1): Future[SipiFileInfoGetResponseV1] = {
+    private def getFileInfoForSipiV1(filename: IRI, userProfile: UserProfileV1): Future[SipiFileInfoGetResponseV1] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getFileValue(fileValueIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getFileValue(filename).toString())
             queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = queryResponse.results.bindings
-            valueProps = valueUtilV1.createValueProps(fileValueIri, rows)
+            // check if rows were found for the given filename
+            _ = if (rows.size == 0) throw BadRequestException(s"No file value was found for filename $filename")
+            valueProps = valueUtilV1.createValueProps(filename, rows)
             valueV1: ApiValueV1 = valueUtilV1.makeValueV1(valueProps)
             path = valueV1 match {
                 case imageValueV1: StillImageFileValueV1 => imageValueV1.internalFilename // return internal filename associated with the given file value Iri to Sipi
                 // TODO: prepend file value specific cases for each file value type (movie, audio etc.)
                 case otherFileValueV1: FileValueV1 => throw NotImplementedException(s"Handling of file value type ${otherFileValueV1.valueTypeIri} not implemented yet")
-                case otherValue => throw InconsistentTriplestoreDataException(s"Value $fileValueIri is not a FileValue, it is an instance of ${otherValue.valueTypeIri}")
+                case otherValue => throw InconsistentTriplestoreDataException(s"Value $filename is not a FileValue, it is an instance of ${otherValue.valueTypeIri}")
             }
-            permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(fileValueIri, valueProps, userProfile)
+            permissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1WithValueProps(filename, valueProps, userProfile)
         } yield SipiFileInfoGetResponseV1(
             permissionCode = permissionCode,
             filepath = permissionCode.map(_ => path)
