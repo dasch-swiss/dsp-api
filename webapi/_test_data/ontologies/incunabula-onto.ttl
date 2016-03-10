@@ -3,7 +3,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix foaf: <http://xmln.com/foaf/0.1/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix dc: <http://www.knora.org/ontology/dc#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
@@ -248,7 +248,7 @@
 
              rdfs:comment """Beschreibung"""@de ;
 
-             knora-base:subjectClassConstraint :Sideband ;
+             knora-base:subjectClassConstraint knora-base:Resource ;
 
              knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -338,7 +338,7 @@
           rdfs:label "Verweis"@de ,
                      "Citation/reference"@en ;
 
-          knora-base:subjectClassConstraint :page ;
+          knora-base:subjectClassConstraint knora-base:Resource ;
 
           knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -761,6 +761,79 @@
 
                   knora-base:hasDefaultDeletePermission knora-base:Owner .
 
+
+### ###########################################
+### incunabula:miscHasColor
+
+:miscHasColor rdf:type owl:ObjectProperty ;
+
+                        rdfs:subPropertyOf knora-base:hasValue ;
+
+                        rdfs:label "Farbe"@de ;
+
+                        knora-base:subjectClassConstraint :misc ;
+
+                        knora-base:objectClassConstraint knora-base:ColorValue ;
+
+                        salsah-gui:guiOrder "1"^^xsd:integer ;
+
+                        salsah-gui:guiElement salsah-gui:Colorpicker ;
+
+                        knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+                        knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                        knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### incunabula:miscHasGeometry
+
+:miscHasGeometry rdf:type owl:ObjectProperty ;
+
+                           rdfs:subPropertyOf knora-base:hasValue ;
+
+                           rdfs:label "Geometrie"@de ;
+
+                           knora-base:subjectClassConstraint :misc ;
+
+                           knora-base:objectClassConstraint knora-base:GeomValue ;
+
+                           salsah-gui:guiOrder "2"^^xsd:integer ;
+
+                           salsah-gui:guiElement salsah-gui:Geometry ;
+
+                           knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+                           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                           knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### incunabula:miscHasBook
+
+:miscHasBook rdf:type owl:ObjectProperty ;
+
+                           rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                           rdfs:label "Verbindung mit einem Buch"@de ;
+
+                           knora-base:subjectClassConstraint :misc ;
+
+                           knora-base:objectClassConstraint :book ;
+
+                           salsah-gui:guiOrder "3"^^xsd:integer ;
+
+                           salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                           knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+                           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                           knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+
 ##########################################################
 #
 # RESOURCES
@@ -777,7 +850,7 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :title ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasAuthor ;
@@ -785,11 +858,11 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :publisher ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :publoc ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :pubdate ;
@@ -849,7 +922,7 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :pagenum ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :partOfValue ;
@@ -861,7 +934,7 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :seqnum ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :description ;
@@ -930,7 +1003,7 @@
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :description ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger                          ] ,
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                          ] ,
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :sideband_comment ;
@@ -946,3 +1019,35 @@
 
           knora-base:hasDefaultDeletePermission knora-base:Owner .
 
+
+### ###########################################
+### incunabula:misc
+
+:misc rdf:type owl:Class ;
+
+      rdfs:subClassOf knora-base:Resource,
+                      [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :miscHasColor ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :miscHasGeometry ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ],
+                      [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :misHasBook ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ] ;
+
+      rdfs:label "Sonstiges"@de ;
+
+      rdfs:comment "A fake resource class that only has optional properties"@en;
+
+      knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+      knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+      knora-base:hasDefaultDeletePermission knora-base:Owner .

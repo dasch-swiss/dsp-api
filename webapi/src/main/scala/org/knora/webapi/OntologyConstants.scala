@@ -44,11 +44,8 @@ object OntologyConstants {
         val OnProperty = "http://www.w3.org/2002/07/owl#onProperty"
 
         val Cardinality = "http://www.w3.org/2002/07/owl#cardinality"
-        val QualifiedCardinality = "http://www.w3.org/2002/07/owl#qualifiedCardinality"
         val MinCardinality = "http://www.w3.org/2002/07/owl#minCardinality"
-        val MinQualifiedCardinality = "http://www.w3.org/2002/07/owl#minQualifiedCardinality"
         val MaxCardinality = "http://www.w3.org/2002/07/owl#maxCardinality"
-        val MaxQualifiedCardinality = "http://www.w3.org/2002/07/owl#maxQualifiedCardinality"
 
 
         /**
@@ -57,11 +54,8 @@ object OntologyConstants {
           */
         val cardinalityOWLRestrictions = Set(
             Cardinality,
-            QualifiedCardinality,
             MinCardinality,
-            MinQualifiedCardinality,
-            MaxCardinality,
-            MaxQualifiedCardinality
+            MaxCardinality
         )
     }
 
@@ -205,8 +199,8 @@ object OntologyConstants {
     }
 
     object Foaf {
-        val FirstName = "http://xmln.com/foaf/0.1/firstName"
-        val LastName = "http://xmln.com/foaf/0.1/lastName"
+        val GivenName = "http://xmlns.com/foaf/0.1/givenName"
+        val FamilyName = "http://xmlns.com/foaf/0.1/familyName"
     }
 
 }

@@ -460,9 +460,15 @@ For example, suppose a project describes paintings that belong to collections. T
             owl:onProperty :hasName ;
             owl:cardinality 1 ] ,
         [ rdf:type owl:Restriction ;
-                owl:onProperty :title ;
-                owl:cardinality 1 ] .
-          
+              owl:onProperty :title ;
+              owl:cardinality 1 ] ;
+        [ rdf:type owl:Restriction ;
+              owl:onProperty :isInCollection ;
+              owl:minCardinality 1 ] ;
+        [ rdf:type owl:Restriction ;
+              owl:onProperty :isInCollectionValue ;
+              owl:minCardinality 1 ] .
+
 :Collection rdf:type owl:Class ;
     rdfs:subClassOf kb:Resource ,
         [ rdf:type owl:Restriction ;
@@ -494,7 +500,7 @@ To link the paintings to the collection, we must add a \enquote{link property} t
     kb:objectClassConstraint :Collection .
 \end{verbatim}
 
-We must then add a \enquote{link value property}, which will point from a painting to a \texttt{LinkValue} (described in Section~\ref{subsubsec:linkvalue}), which will contain metadata about the link between the property and the collection. The name of the link value property is constructed using a simple naming convention: the word \texttt{Value} is appended to the name of the link property. In this case, since our link property is called \texttt{isInCollectionValue}, the link value property must be called \texttt{ex:isOnPageValue}. Every link value property must be a subproperty of \texttt{kb:hasLinkToValue}.
+We must then add a \enquote{link value property}, which will point from a painting to a \texttt{LinkValue} (described in Section~\ref{subsubsec:linkvalue}), which will contain metadata about the link between the property and the collection. In particular, the link value specifies the owner of the link, the date when it was created, and the permissions that determine who can view or modify it. The name of the link value property is constructed using a simple naming convention: the word \texttt{Value} is appended to the name of the link property. In this case, since our link property is called \texttt{isInCollectionValue}, the link value property must be called \texttt{ex:isOnPageValue}. Every link value property must be a subproperty of \texttt{kb:hasLinkToValue}.
 
 \begin{verbatim}
 :isInCollectionValue rdf:type owl:ObjectProperty ;
@@ -536,7 +542,7 @@ data:value_D rdf:type kb:LinkValue ;
     rdf:subject data:dali_4587 ;
     rdf:predicate paintings:isInCollection ;
     rdf:object data:pompidou ;
-    kb:valueHasRefCount 1 ;
+    kb:valueHasRefCount 1 .
 \end{verbatim}
 
 This creates a link (\texttt{isInCollection}) between the painting and the collection, along with a reification containing metadata about the link. We can visualise the result as the graph shown in Figure~\ref{fig:basic-link-graph}.

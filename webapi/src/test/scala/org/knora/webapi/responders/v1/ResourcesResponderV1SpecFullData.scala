@@ -111,7 +111,7 @@ object ResourcesResponderV1SpecFullData {
                             _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
                         )
                     ),
-                    person_id = "http://data.knora.org/users/5d741e8e0e",
+                    person_id = "http://data.knora.org/users/b83acc5f05",
                     project_id = "http://data.knora.org/projects/77275339"
                 ),
                 ext_res_id = ExternalResourceIDV1(
@@ -157,7 +157,7 @@ object ResourcesResponderV1SpecFullData {
                     textattr = emptyTextattr,
                     utf8str = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
                 )),
-                occurrence = Some("1"),
+                occurrence = Some("1-n"),
                 attributes = "size=80;maxlength=255",
                 label = Some("Titel"),
                 is_annotation = "0",
@@ -308,7 +308,7 @@ object ResourcesResponderV1SpecFullData {
                     textattr = emptyTextattr,
                     utf8str = "Basel"
                 )),
-                occurrence = Some("1"),
+                occurrence = Some("0-1"),
                 attributes = "size=60;maxlength=100",
                 label = Some("Ort der Herausgabe"),
                 is_annotation = "0",
@@ -354,7 +354,7 @@ object ResourcesResponderV1SpecFullData {
                     textattr = emptyTextattr,
                     utf8str = "Johann Amerbach"
                 )),
-                occurrence = Some("0-1"),
+                occurrence = Some("0-n"),
                 attributes = "maxlength=255;size=60",
                 label = Some("Verleger"),
                 is_annotation = "0",
@@ -626,7 +626,7 @@ object ResourcesResponderV1SpecFullData {
                     textattr = Map(),
                     utf8str = "a1r, Titelblatt"
                 )),
-                occurrence = Some("1"),
+                occurrence = Some("0-1"),
                 attributes = "min=4;max=8",
                 label = Some("Seitenbezeichnung"),
                 is_annotation = "0",
@@ -714,7 +714,7 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/e71e39e902"),
                 values = Vector(IntegerValueV1(ival = 1)),
-                occurrence = Some("1"),
+                occurrence = Some("0-1"),
                 attributes = "max=-1;min=0",
                 label = Some("Sequenznummer"),
                 is_annotation = "0",
@@ -731,7 +731,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(Some("book.gif")),
                 value_restype = Vector(Some("Buch")),
                 comments = Vector(""),
-                value_ids = Vector("http://data.knora.org/8a0b1e75/values/29c7848d-26f8-4b18-9a13-5096f80b2eeb"),
+                value_ids = Vector("http://data.knora.org/8a0b1e75/values/ac9ddbf4-62a7-4cdc-b530-16cbbaa265bf"),
                 values = Vector(LinkV1(
                     valueResourceClassIcon = Some("book.gif"),
                     valueResourceClassLabel = Some("Buch"),
