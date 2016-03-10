@@ -23,7 +23,7 @@
 @**
  * Gets all information about a single project, given the project's knora-base:projectShortname.
  *
- * @param shortname the project's `knora-base:shortname`.
+ * @param shortname the project's `knora-base:projectShortname`.
  *@
 @(shortname: String)
 

@@ -26,6 +26,8 @@
  * Deletes an existing link between two resources and replaces it with a link to a different target resource.
  *
  * @param dataNamedGraph the named graph in which the project stores its data.
+ * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
+                      results from the WHERE clause of the update.
  * @param linkSourceIri the resource that is the source of the links.
  * @param linkUpdateForCurrentLink a [[SparqlTemplateLinkUpdate]] specifying how to update the current link.
  * @param linkUpdateForNewLink a [[SparqlTemplateLinkUpdate]] specifying how to update the new link.
@@ -34,6 +36,7 @@
  * To find out whether the update succeeded, the application must query the changed links.
  *@
 @(dataNamedGraph: IRI,
+  triplestore: String,
   linkSourceIri: IRI,
   linkUpdateForCurrentLink: SparqlTemplateLinkUpdate,
   linkUpdateForNewLink: SparqlTemplateLinkUpdate,
@@ -116,7 +119,22 @@ INSERT {
         @* Update the link source's last modification date. *@
         ?linkSource knora-base:lastModificationDate ?currentTime .
     }
-} WHERE {
+}
+@*
+
+GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
+in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
+explicit statements in the WHERE clause here.
+
+*@
+@triplestore match {
+    case "graphdb" | "graphdb-free" => {
+        USING <http://www.ontotext.com/explicit>
+    }
+
+    case other => {}
+}
+WHERE {
     @if(linkUpdateForCurrentLink.linkPropertyIri != linkUpdateForNewLink.linkPropertyIri) {
         @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.linkPropertyIri <${linkUpdateForCurrentLink.linkPropertyIri}> must be equal to linkUpdateForNewLink.linkPropertyIri <${linkUpdateForNewLink.linkPropertyIri}> in this SPARQL template"); ()}
     }

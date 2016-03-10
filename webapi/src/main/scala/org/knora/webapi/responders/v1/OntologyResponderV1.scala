@@ -159,70 +159,62 @@ class OntologyResponderV1 extends ResponderV1 {
 
             case class OwlCardinality(propertyIri: IRI, cardinalityIri: IRI, cardinalityValue: Int, isLinkProp: Boolean, isLinkValueProp: Boolean, isFileValueProp: Boolean)
 
+            val resourceClassIris = resourceIris.map(_.resourceClassIri).toVector
+
             for {
             // get information about resource entities
-                sparqlQueryStringForResources <- Future(queries.sparql.v1.txt.getEntityInfoForResource(resourceIris.map(_.resourceClassIri).toVector).toString())
-                // _ = println(sparqlQueryStringForResources)
-                resourcesResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryStringForResources)).mapTo[SparqlSelectResponse]
+                sparqlQueryStringForResourceClasses <- Future(queries.sparql.v1.txt.getResourceClassInfo(resourceClassIris).toString())
+                // _ = println(sparqlQueryStringForResourceClasses)
+                resourceClassesResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryStringForResourceClasses)).mapTo[SparqlSelectResponse]
+
+                sparqlQueryStringForCardinalities = queries.sparql.v1.txt.getResourceClassCardinalities(resourceClassIris).toString()
+                // _ = println(sparqlQueryStringForCardinalities)
+                cardinalitiesResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryStringForCardinalities)).mapTo[SparqlSelectResponse]
 
                 // Filter the query results to get text in the user's preferred language (or the application's default language),
                 // if possible.
-                resourcesFilteredByLanguage = SparqlUtil.filterByLanguage(response = resourcesResponse,
+                resourceClassesFilteredByLanguage = SparqlUtil.filterByLanguage(response = resourceClassesResponse,
                     langSpecificColumnName = "o",
                     preferredLanguage = userProfile.userData.lang,
                     settings = settings
                 )
 
                 // Group the resource query results by subject (resource type).
-                resourcesGroupedBySubject: Map[IRI, Seq[VariableResultsRow]] = resourcesFilteredByLanguage.groupBy(_.rowMap("s"))
+                resourceClassesGroupedBySubject: Map[IRI, Seq[VariableResultsRow]] = resourceClassesFilteredByLanguage.groupBy(_.rowMap("s"))
+                cardinalitiesGroupedBySubject: Map[IRI, Seq[VariableResultsRow]] = cardinalitiesResponse.results.bindings.groupBy(_.rowMap("s"))
 
                 // Convert the results for each subject into an ResourceEntityInfoV1.
-                resourceEntities: Map[OntologyCacheKeys.ResourceEntityInfoKey, ResourceEntityInfoV1] = resourcesGroupedBySubject.map {
-                    case (resourceType: IRI, rows: Seq[VariableResultsRow]) =>
+                resourceEntities: Map[OntologyCacheKeys.ResourceEntityInfoKey, ResourceEntityInfoV1] = resourceClassesGroupedBySubject.map {
+                    case (resourceClass: IRI, rows: Seq[VariableResultsRow]) =>
 
-                        // group by predicates (e.g. rdfs:subClassOf, rdf:type)
+                        // Group resource class info by predicates (e.g. rdf:type)
                         val groupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = rows.groupBy(_.rowMap("p"))
 
-                        // get Restrictions expressing cardinalities for this resource type (defined as a subclass of a blank node)
-                        val owlCardinalities: Iterable[OwlCardinality] = groupedByPredicate.get(OntologyConstants.Rdfs.SubclassOf) match {
-                            case Some(superClasses: Seq[VariableResultsRow]) =>
-
-                                // filter Seq by checking for the row "isCardinality".
-                                // "isCardinality" may be set to "true" or not exist all.
-                                // Therefore, we use "exist" on an Option[String] and pass it a function which converts the given String to a Boolean
-                                // If the Option is None, false is returned withut evaluating the passed function.
-                                superClasses.filter {
-                                    row =>
+                        // Get the cardinality information for each subject.
+                        val owlCardinalities = cardinalitiesGroupedBySubject.get(resourceClass) match {
+                            case Some(cardinalityRows) =>
+                                cardinalityRows.filter {
+                                    cardinalityRow =>
                                         // Only return cardinalities for Knora value properties or Knora link properties (not for Knora system
                                         // properties).
-                                        val rowMap = row.rowMap
-                                        InputValidation.optionStringToBoolean(rowMap.get("isCardinality")) &&
-                                            (InputValidation.optionStringToBoolean(rowMap.get("isKnoraValueProp")) ||
-                                                InputValidation.optionStringToBoolean(rowMap.get("isLinkProp")))
-                                }.groupBy(_.rowMap("o")).map {
-                                    // get rid of the names of the blank nodes and group by property names (in order to access them directly later)
-                                    case (blankNode: String, rows: Seq[VariableResultsRow]) =>
-
-                                        rows.groupBy(_.rowMap("oProp"))
+                                        val cardinalityRowMap = cardinalityRow.rowMap
+                                        InputValidation.optionStringToBoolean(cardinalityRowMap.get("isKnoraValueProp")) || InputValidation.optionStringToBoolean(cardinalityRowMap.get("isLinkProp"))
                                 }.map {
-                                    case (restriction: Map[String, Seq[VariableResultsRow]]) =>
-
-                                        // How to use a Set as a function predicate: http://alvinalexander.com/scala/how-use-scala-set-function-predicate
-                                        val owlCardinalityIri = restriction.keys.find(OntologyConstants.Owl.cardinalityOWLRestrictions).get // get the cardinalityIri (contained in Set cardinalityOWLRestrictions)
-                                    val owlCardinalityRowMap = restriction(owlCardinalityIri).head.rowMap
-
+                                    cardinalityRow =>
+                                        val cardinalityRowMap = cardinalityRow.rowMap
                                         OwlCardinality(
-                                            propertyIri = restriction(OntologyConstants.Owl.OnProperty).head.rowMap("oVal"), // we grouped by predicates before: get the value of "owl:onProperty"
-                                            cardinalityIri = owlCardinalityIri,
-                                            cardinalityValue = owlCardinalityRowMap("oVal").toInt,
-                                            isLinkProp = owlCardinalityRowMap.get("isLinkProp").exists(_.toBoolean),
-                                            isLinkValueProp = InputValidation.optionStringToBoolean(owlCardinalityRowMap.get("isLinkValueProp")),
-                                            isFileValueProp = InputValidation.optionStringToBoolean(owlCardinalityRowMap.get("isFileValueProp"))
+                                            propertyIri = cardinalityRowMap("cardinalityProp"),
+                                            cardinalityIri = cardinalityRowMap("cardinality"),
+                                            cardinalityValue = cardinalityRowMap("cardinalityVal").toInt,
+                                            isLinkProp = InputValidation.optionStringToBoolean(cardinalityRowMap.get("isLinkProp")),
+                                            isLinkValueProp = InputValidation.optionStringToBoolean(cardinalityRowMap.get("isLinkValueProp")),
+                                            isFileValueProp = InputValidation.optionStringToBoolean(cardinalityRowMap.get("isFileValueProp"))
                                         )
                                 }
 
-                            // TODO: May there be a resource type without cardinalities?
-                            case None => Nil
+                            case None =>
+                                // TODO: can there be a resource class without cardinalities?
+                                Nil
                         }
 
                         // Identify the link properties, like value properties, and file value properties in the cardinalities.
@@ -233,15 +225,14 @@ class OntologyResponderV1 extends ResponderV1 {
                         // Make sure there is a link value property for each link property.
                         val missingLinkValueProps = linkProps.map(linkProp => knoraIriUtil.linkPropertyIriToLinkValuePropertyIri(linkProp)) -- linkValueProps
                         if (missingLinkValueProps.nonEmpty) {
-                            throw InconsistentTriplestoreDataException(s"Resource class $resourceType has cardinalities for one or more link properties without corresponding link value properties. The missing link value property or properties: ${missingLinkValueProps.mkString(", ")}")
+                            throw InconsistentTriplestoreDataException(s"Resource class $resourceClass has cardinalities for one or more link properties without corresponding link value properties. The missing link value property or properties: ${missingLinkValueProps.mkString(", ")}")
                         }
 
                         // Make sure there is a link property for each link value property.
                         val missingLinkProps = linkValueProps.map(linkValueProp => knoraIriUtil.linkValuePropertyIri2LinkPropertyIri(linkValueProp)) -- linkProps
                         if (missingLinkProps.nonEmpty) {
-                            throw InconsistentTriplestoreDataException(s"Resource class $resourceType has cardinalities for one or more link value properties without corresponding link properties. The missing link property or properties: ${missingLinkProps.mkString(", ")}")
+                            throw InconsistentTriplestoreDataException(s"Resource class $resourceClass has cardinalities for one or more link value properties without corresponding link properties. The missing link property or properties: ${missingLinkProps.mkString(", ")}")
                         }
-
                         // Make a PredicateInfoV1 for each of the subject's predicates.
                         val predicates: Map[IRI, PredicateInfoV1] = groupedByPredicate.map {
                             case (predicateIri, predicateRowList) =>
@@ -249,13 +240,13 @@ class OntologyResponderV1 extends ResponderV1 {
                                     predicateIri = predicateIri,
                                     ontologyIri = getOntologyIri(predicateIri),
                                     // Don't include cardinalities among the predicates, because we return them separately.
-                                    objects = predicateRowList.filterNot(row => row.rowMap.get("isCardinality").exists(_.toBoolean)).map(row => row.rowMap("o")).toSet
+                                    objects = predicateRowList.map(row => row.rowMap("o")).toSet
                                 )
                         }
 
-                        new OntologyCacheKeys.ResourceEntityInfoKey(resourceType, userProfile.userData.lang) -> ResourceEntityInfoV1(
-                            resourceIri = resourceType,
-                            predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for ontology entity $resourceType" }),
+                        new OntologyCacheKeys.ResourceEntityInfoKey(resourceClass, userProfile.userData.lang) -> ResourceEntityInfoV1(
+                            resourceIri = resourceClass,
+                            predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for resource class $resourceClass" }),
                             cardinalities = owlCardinalities.map {
                                 owlCardinality =>
                                     // Convert the OWL cardinality to a Knora Cardinality enum value.

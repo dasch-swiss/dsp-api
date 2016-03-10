@@ -54,25 +54,25 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         valueFunction(valueProps)
     }
 
-    /**
-      * Creates a URL for accessing a file via Sipi. // TODO: implement this correctly.
-      *
-      * @param fileValueV1 the file value that the URL will point to.
-      * @return a Sipi URL.
-      */
-    // TODO: if this is a StillImageFileValue, create a IIIF URL
-    def makeSipiFileGetUrlFromFileValueV1(fileValueV1: FileValueV1): String = {
-        makeSipiFileGetUrlFromFilename(fileValueV1.internalFilename)
+    def makeSipiImagePreviewGetUrlFromFilename(filename: String): String = {
+        s"${settings.sipiIIIFGetUrl}/${filename}/full/full/0/default.jpg"
     }
 
     /**
-      * Creates a URL for accessing a file via Sipi. // TODO: implement this correctly.
+      * Creates a IIIF URL for accessing an image file via Sipi.
       *
-      * @param filename the name of the file that the URL will point to.
+      * @param imageFileValueV1 the image file value representing the image.
       * @return a Sipi URL.
       */
-    def makeSipiFileGetUrlFromFilename(filename: String): String = {
-        s"${settings.sipiUrl}/$filename"
+    def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String = {
+        if (!imageFileValueV1.isPreview) {
+            // not a thumbnail
+            // calculate the correct size from the source image depending on the given dimensions
+            s"${settings.sipiIIIFGetUrl}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
+        } else {
+            // thumbnail
+            makeSipiImagePreviewGetUrlFromFilename(imageFileValueV1.internalFilename)
+        }
     }
 
     // A Map of MIME types to Knora API v1 binary format name.
@@ -113,8 +113,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                     origname = stillImageFileValueV1.originalFilename,
                     nx = Some(stillImageFileValueV1.dimX),
                     ny = Some(stillImageFileValueV1.dimY),
-                    path = makeSipiFileGetUrlFromFileValueV1(fileValueV1)
+                    path = makeSipiImageGetUrlFromFilename(stillImageFileValueV1)
                 )
+            case otherType => throw NotImplementedException(s"Type not yet implemented: ${otherType.valueTypeIri}")
         }
     }
 

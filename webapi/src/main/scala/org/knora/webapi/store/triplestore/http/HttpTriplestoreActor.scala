@@ -87,11 +87,11 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
         case HTTP_GRAPH_DB_TS_TYPE => queryRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-            addParameter("infer", "false") // Turn off SPARQL inference (Sesame-specific).
+            addParameter("infer", "false") // Turn off reasoning.
         case HTTP_GRAPH_DB_FREE_TS_TYPE => queryRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-            addParameter("infer", "false") // Turn off SPARQL inference (Sesame-specific).
+            addParameter("infer", "false") // Turn off reasoning.
         case HTTP_FUSEKI_TS_TYPE => queryRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name)
@@ -105,11 +105,11 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
         case HTTP_GRAPH_DB_TS_TYPE => updateRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-            addParameter("infer", "false") // Turn off SPARQL inference (Sesame-specific).
+            addParameter("infer", "true") // Turn on reasoning, which is needed for consistency checking.
         case HTTP_GRAPH_DB_FREE_TS_TYPE => updateRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-            addParameter("infer", "false") // Turn off SPARQL inference (Sesame-specific).
+            addParameter("infer", "true") // Turn on reasoning, which is needed for consistency checking.
         case HTTP_FUSEKI_TS_TYPE => updateRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name)

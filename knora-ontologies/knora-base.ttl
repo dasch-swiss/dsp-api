@@ -19,9 +19,9 @@
 @prefix : <http://www.knora.org/ontology/knora-base#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @base <http://www.knora.org/ontology/knora-base> .
 
 <http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology .
@@ -100,7 +100,7 @@
 
 :resourceIcon rdf:type owl:AnnotationProperty ;
               
-              :subjectClassConstraint :Resource ;
+              :subjectClassConstraint owl:Class ;
 
               :objectDatatypeConstraint xsd:string .
 
@@ -231,10 +231,6 @@
                        "Comment"@en ,
                        "Commentaire"@fr ,
                        "Commento"@it ;
-            
-            rdfs:comment "Any commentary to a resource"@en ;
-            
-            :subjectClassConstraint :Resource ;
             
             :objectClassConstraint :TextValue ;
             
@@ -760,9 +756,9 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#basepath
+###  http://www.knora.org/ontology/knora-base#projectBasepath
 
-:basepath rdf:type owl:DatatypeProperty ;
+:projectBasepath rdf:type owl:DatatypeProperty ;
           
           rdfs:comment "Basepath for digital objects which belong to this project"@en ;
           
@@ -800,7 +796,19 @@
 
 :description rdf:type owl:DatatypeProperty ;
              
-             rdfs:comment "A Description of a resource class or a property class"@en ;
+             rdfs:comment "A description of a resource class or a property class"@en ;
+
+             :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectDescription
+
+:projectDescription rdf:type owl:DatatypeProperty ;
+
+             rdfs:comment "A description of a Knora project"@en ;
+
+             :subjectClassConstraint :knoraProject ;
 
              :objectDatatypeConstraint xsd:string .
 
@@ -810,7 +818,7 @@
 
 :dimX rdf:type owl:DatatypeProperty ;
       
-      :subjectClassConstraint :Representation ;
+      :subjectClassConstraint :FileValue ;
       
       rdfs:subPropertyOf :valueHas ;
 
@@ -822,7 +830,7 @@
 
 :dimY rdf:type owl:DatatypeProperty ;
       
-      :subjectClassConstraint :Representation ;
+      :subjectClassConstraint :FileValue ;
       
       rdfs:subPropertyOf :valueHas ;
       
@@ -836,7 +844,7 @@
           
           rdfs:subPropertyOf :valueHas ;
           
-          :subjectClassConstraint :Representation ;
+          :subjectClassConstraint :FileValue ;
           
           :objectDatatypeConstraint xsd:float .
 
@@ -912,7 +920,7 @@
      
      rdfs:subPropertyOf :valueHas ;
      
-     :subjectClassConstraint :MovingImageRepresentation ;
+     :subjectClassConstraint :MovingImageFileValue ;
      
      :objectDatatypeConstraint xsd:float .
 
@@ -924,7 +932,7 @@
                   
                   rdfs:subPropertyOf :valueHas ;
                   
-                  :subjectClassConstraint :Representation ;
+                  :subjectClassConstraint :FileValue ;
                   
                   :objectDatatypeConstraint xsd:string .
 
@@ -936,7 +944,7 @@
                   
                   rdfs:subPropertyOf :valueHas ;
                   
-                  :subjectClassConstraint :Representation ;
+                  :subjectClassConstraint :FileValue ;
                   
                   :objectDatatypeConstraint xsd:string .
 
@@ -1018,7 +1026,7 @@
                   
                   rdfs:subPropertyOf :valueHas ;
                   
-                  :subjectClassConstraint :Representation ;
+                  :subjectClassConstraint :FileValue ;
                   
                   :objectDatatypeConstraint xsd:string .
 
@@ -1030,7 +1038,7 @@
                   
                   rdfs:subPropertyOf :valueHas ;
                   
-                  :subjectClassConstraint :Representation ;
+                  :subjectClassConstraint :FileValue ;
                   
                   :objectDatatypeConstraint xsd:string .
 
@@ -1096,7 +1104,7 @@
               
               rdfs:subPropertyOf :valueHas ;
               
-              :subjectClassConstraint :Representation ;
+              :subjectClassConstraint :FileValue ;
               
               :objectDatatypeConstraint xsd:integer .
 
@@ -1110,9 +1118,11 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#shortname
+###  http://www.knora.org/ontology/knora-base#projectShortname
 
-:shortname rdf:type owl:DatatypeProperty ;
+:projectShortname rdf:type owl:DatatypeProperty ;
+
+           :subjectClassConstraint :knoraProject ;
            
            :objectDatatypeConstraint xsd:string ;
            
@@ -1120,11 +1130,45 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#projectLongname
+
+:projectLongname rdf:type owl:DatatypeProperty ;
+
+           :subjectClassConstraint :knoraProject ;
+
+           :objectDatatypeConstraint xsd:string ;
+
+           rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectKeyword
+
+:projectKeyword rdf:type owl:DatatypeProperty ;
+
+           rdfs:comment "A comma-delimited list of keywords describing a project"@en ;
+
+           :subjectClassConstraint :knoraProject ;
+
+           :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectLogo
+
+:projectLogo rdf:type owl:DatatypeProperty ;
+
+           :subjectClassConstraint :knoraProject ;
+
+           :objectDatatypeConstraint xsd:string .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#standoffHasAttribute
 
 :standoffHasAttribute rdf:type owl:DatatypeProperty ;
                       
-                      :subjectClassConstraint :StandoffVisualAttribute ;
+                      :subjectClassConstraint :Standoff ;
                       
                       :objectDatatypeConstraint xsd:string .
 
@@ -1407,7 +1451,7 @@
                 
                 rdfs:subPropertyOf :valueHas ;
                 
-                :subjectClassConstraint :TextValue ;
+                :subjectClassConstraint :Value ;
                 
                 :objectDatatypeConstraint xsd:string .
 
@@ -1526,6 +1570,10 @@
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :valueHasColor ;
                               owl:cardinality "1"^^xsd:nonNegativeInteger
+                            ] ,
+                            [ rdf:type owl:Restriction ;
+                              owl:onProperty :valueHasString ;
+                              owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ;
             
             rdfs:comment "Represents a color in HTML format, e.g. \"#33eeff\""@en .
@@ -1583,6 +1631,10 @@
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasStartJDC ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :valueHasString ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ;
            
@@ -1680,6 +1732,10 @@
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :valueHasFloat ;
                               owl:cardinality "1"^^xsd:nonNegativeInteger
+                            ] ,
+                            [ rdf:type owl:Restriction ;
+                              owl:onProperty :valueHasString ;
+                              owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ;
             
             rdfs:comment "Represents a float/double value"@en .
@@ -1707,6 +1763,10 @@
               rdfs:subClassOf :Value ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :valueHasGeonameCode ;
+                                owl:cardinality "1"^^xsd:nonNegativeInteger
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :valueHasString ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] .
 
@@ -1754,6 +1814,10 @@
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :valueHasInteger ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :valueHasString ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ;
           
           rdfs:comment "Represents an integer value"@en .
@@ -1771,6 +1835,10 @@
                                ] ,
                                [ rdf:type owl:Restriction ;
                                  owl:onProperty :valueHasIntervalStart ;
+                                 owl:cardinality "1"^^xsd:nonNegativeInteger
+                               ] ,
+                               [ rdf:type owl:Restriction ;
+                                 owl:onProperty :valueHasString ;
                                  owl:cardinality "1"^^xsd:nonNegativeInteger
                                ] ;
                
@@ -1845,11 +1913,11 @@
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :listNodePosition ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :listNodeName ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :isRootNode ;
@@ -1857,7 +1925,7 @@
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :hasRootNode ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
           
           rdfs:comment "Represents a flat or hierarchical list"@en .
@@ -1871,6 +1939,10 @@
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasListNode ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :valueHasString ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
@@ -2145,6 +2217,10 @@
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasStandoff ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :valueHasString ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
 
@@ -2156,6 +2232,10 @@
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasTime ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :valueHasString ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
@@ -2248,10 +2328,6 @@
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :previousValue ;
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                       ] ,
-                       [ rdf:type owl:Restriction ;
-                         owl:onProperty :valueHasString ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger
                        ] ;
        
        rdfs:comment "The base class of classes representing Knora values"@en .
@@ -2263,15 +2339,15 @@
               
               rdfs:subClassOf <http://xmlns.com/foaf/0.1/Project> ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :shortname ;
+                                owl:onProperty :projectShortname ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :description ;
+                                owl:onProperty :projectLongname ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty <http://xmlns.com/foaf/0.1/name> ;
+                                owl:onProperty :projectDescription ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
@@ -2279,10 +2355,18 @@
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :basepath ;
+                                owl:onProperty :projectBasepath ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :projectKeyword ;
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :projectLogo ;
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ;
-              
+
               rdfs:comment "Represents a project that uses Knora"@en .
 
 

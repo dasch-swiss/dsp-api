@@ -26,6 +26,8 @@
  * Inserts a new value of a resource property (as opposed to a new version of an existing value).
  *
  * @param dataNamedGraph the named graph in which the project stores its data.
+ * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
+                      results from the WHERE clause of the update.
  * @param resourceIri the resource to update.
  * @param propertyIri the resource property to update.
  * @param newValueIri the new value IRI.
@@ -43,6 +45,7 @@
  * the update succeeded, the application must query the property's version history.
  *@
 @(dataNamedGraph: IRI,
+  triplestore: String,
   resourceIri: IRI,
   propertyIri: IRI,
   newValueIri: IRI,
@@ -237,7 +240,22 @@ DELETE {
             ?resource knora-base:lastModificationDate ?currentTime .
         }
     }
-} WHERE {
+}
+@*
+
+GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
+in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
+explicit statements in the WHERE clause here.
+
+*@
+@triplestore match {
+    case "graphdb" | "graphdb-free" => {
+        USING <http://www.ontotext.com/explicit>
+    }
+
+    case other => {}
+}
+WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
     BIND(IRI("@resourceIri") AS ?resource)
     BIND(IRI("@propertyIri") AS ?property)

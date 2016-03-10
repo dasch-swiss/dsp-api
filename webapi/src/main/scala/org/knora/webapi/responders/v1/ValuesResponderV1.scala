@@ -27,13 +27,15 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1respondermessages.ontologymessages._
 import org.knora.webapi.messages.v1respondermessages.resourcemessages._
+import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiConstants.FileType
+import org.knora.webapi.messages.v1respondermessages.sipimessages.{SipiConstants, SipiResponderConversionResponseV1, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1}
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1respondermessages.valuemessages._
 import org.knora.webapi.responders.ResourceLocker
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{ActorUtil, KnoraIriUtil}
+import org.knora.webapi.util._
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
@@ -61,6 +63,7 @@ class ValuesResponderV1 extends ResponderV1 {
         case versionHistoryRequest: ValueVersionHistoryGetRequestV1 => future2Message(sender(), getValueVersionHistoryResponseV1(versionHistoryRequest), log)
         case createValueRequest: CreateValueRequestV1 => future2Message(sender(), createValueV1(createValueRequest), log)
         case changeValueRequest: ChangeValueRequestV1 => future2Message(sender(), changeValueV1(changeValueRequest), log)
+        case changeFileValueRequest: ChangeFileValueRequestV1 => future2Message(sender(), changeFileValueV1(changeFileValueRequest), log)
         case changeCommentRequest: ChangeCommentRequestV1 => future2Message(sender(), changeCommentV1(changeCommentRequest), log)
         case deleteValueRequest: DeleteValueRequestV1 => future2Message(sender(), deleteValueV1(deleteValueRequest), log)
         case createMultipleValuesRequest: CreateMultipleValuesRequestV1 => future2Message(sender(), createMultipleValuesV1(createMultipleValuesRequest), log)
@@ -314,6 +317,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
     /**
       * Verifies the creation of multiple values.
+      *
       * @param verifyRequest a [[VerifyMultipleValueCreationRequestV1]].
       * @return a [[VerifyMultipleValueCreationResponseV1]] if all values were created successfully, or a failed
       *         future if any values were not created.
@@ -342,6 +346,160 @@ class ValuesResponderV1 extends ResponderV1 {
         for {
             valueVerificationResponses: Map[IRI, Seq[CreateValueResponseV1]] <- ActorUtil.sequenceFuturesInMap(valueVerificationFutures)
         } yield VerifyMultipleValueCreationResponseV1(verifiedValues = valueVerificationResponses)
+    }
+
+    /**
+      * Adds a new version of an existing file value.
+      *
+      * @param changeFileValueRequest a [[ChangeFileValueRequestV1]] sent by the values route.
+      * @return a [[ChangeFileValueResponseV1]] representing all the changed file values.
+      */
+    private def changeFileValueV1(changeFileValueRequest: ChangeFileValueRequestV1): Future[ChangeFileValueResponseV1] = {
+
+        /**
+          * Preprocesses a file value change request by calling the Sipi responder to create a new file
+          * and calls [[changeValueV1]] to actually change the file value in Knora.
+          *
+          * @param changeFileValueRequest a [[ChangeFileValueRequestV1]] sent by the values route.
+          * @return a [[ChangeFileValueResponseV1]] representing all the changed file values.
+          */
+        def makeTaskFuture(changeFileValueRequest: ChangeFileValueRequestV1): Future[ChangeFileValueResponseV1] = {
+
+            /**
+              * Temporary structure to represent existing file values of a resource.
+              *
+              * @param property       the property Iri (e.g., hasStillImageFileValueRepresentation)
+              * @param valueObjectIri the Iri of the value object.
+              * @param quality        the quality of the file value
+              */
+            case class CurrentFileValue(property: IRI, valueObjectIri: IRI, quality: Option[Int])
+
+            // get the Iris of the current file value(s)
+            val resultFuture = for {
+
+                resourceIri <- Future(changeFileValueRequest.resourceIri)
+
+                getFileValuesSparql = queries.sparql.v1.txt.getFileValuesForResource(resourceIri = resourceIri).toString()
+                //_ = print(getFileValuesSparql)
+                getFileValuesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(getFileValuesSparql)).mapTo[SparqlSelectResponse]
+                // _ <- Future(println(getFileValuesResponse))
+
+
+                // get the property Iris, file value Iris and qualities attached to the resource
+                fileValues: Seq[CurrentFileValue] = getFileValuesResponse.results.bindings.map {
+                    (row: VariableResultsRow) =>
+
+                        CurrentFileValue(
+                            property = row.rowMap("p"),
+                            valueObjectIri = row.rowMap("fileValueIri"),
+                            quality = row.rowMap.get("quality") match {
+                                case Some(quality: String) => Some(quality.toInt)
+                                case None => None
+                            }
+                        )
+                }
+
+                sipiConversionMessage: SipiResponderConversionRequestV1 = changeFileValueRequest.file
+
+                // if resource has no existing file values, throw an exception
+                _ = if (fileValues.isEmpty) {
+                    BadRequestException(s"File values for ${resourceIri} should be updated, but resource has no existing file values")
+                }
+
+                // the message to be sent to Sipi responder
+                sipiConversionRequest: SipiResponderConversionRequestV1 = changeFileValueRequest.file
+
+                sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? sipiConversionRequest).mapTo[SipiResponderConversionResponseV1]
+
+                // check if the file type returned by Sipi corresponds to the already existing file value type (e.g., hasStillImageRepresentation)
+                _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != fileValues.head.property) {
+                    // TODO: remove the file from SIPI (delete request)
+                    throw BadRequestException(s"Type of submitted file (${sipiResponse.file_type}) does not correspond to expected property type ${fileValues.head.property}")
+                }
+
+                //
+                // handle file types individually
+                //
+
+                // create the apt case class depending on the file type returned by Sipi
+                changedFileValuesFuture: Vector[Future[ChangeValueResponseV1]] = sipiResponse.file_type match {
+                    case SipiConstants.FileType.IMAGE =>
+                        // we deal with hasStillImageFileValue, so there need to be two file values:
+                        // one for the full and one for the thumb
+                        if (fileValues.size != 2) {
+                            throw InconsistentTriplestoreDataException(s"Expected 2 file values for ${resourceIri}, but ${fileValues.size} given.")
+                        }
+
+                        // make sure that we have quality information for the existing file values
+                        fileValues.foreach {
+                            (fileValue) => fileValue.quality.getOrElse(throw InconsistentTriplestoreDataException(s"No quality level given for ${fileValue.valueObjectIri}"))
+                        }
+
+                        // sort file values by quality: the thumbnail file value has to be updated with another thumbnail file value,
+                        // the applies for the full quality
+                        val oldFileValuesSorted: Seq[CurrentFileValue] = fileValues.sortBy(_.quality)
+                        val newFileValuesSorted: Vector[FileValueV1] = sipiResponse.fileValuesV1.sortBy {
+                            case imageFileValue: StillImageFileValueV1 => imageFileValue.qualityLevel
+                            case otherFileValue: FileValueV1 => throw SipiException(s"Sipi returned a wrong file value type: ${otherFileValue.valueTypeIri}")
+                        }
+
+                        //
+                        // now request to change all the values
+                        //
+                        newFileValuesSorted.zip(oldFileValuesSorted).map {
+                            case (newFileValue: StillImageFileValueV1, oldFileValue: CurrentFileValue) =>
+                                // create ChangeValueRequest
+                                val changeImageFileValueRequest: ChangeValueRequestV1 = ChangeValueRequestV1(
+                                    valueIri = oldFileValue.valueObjectIri,
+                                    value = newFileValue,
+                                    userProfile = changeFileValueRequest.userProfile,
+                                    apiRequestID = changeFileValueRequest.apiRequestID // re-use the same id
+                                )
+
+                                // do change request
+                                changeValueV1(changeImageFileValueRequest)
+                            case _ => throw SipiException("Sipi created a wrong file value type (not a StillImageFileValueV1)")
+                        }
+
+
+                    case otherFileType => throw NotImplementedException(s"File type ${otherFileType} not yet supported")
+                }
+
+                // turn a sequence of Futures of messages into a sequence of messages
+                changedFileValues: Vector[ChangeValueResponseV1] <- Future.sequence(changedFileValuesFuture)
+
+            } yield ChangeFileValueResponseV1(// return the response(s) of the call(s) of changeValueV1
+                changedFilesValues = changedFileValues,
+                userdata = changeFileValueRequest.userProfile.userData
+            )
+
+            // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
+            resultFuture.andThen {
+                case _ => changeFileValueRequest.file match {
+                    case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
+                        // a tmp file has been created by the resources route (non GUI-case), delete it
+                        InputValidation.deleteFileFromTmpLocation(conversionPathRequest.source, log)
+                    case _ => ()
+                }
+
+
+            }
+        }
+
+        for {
+
+            // Do the preparations of a file value change while already holding an update lock on the resource.
+            // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource Iri have to been retrieved.
+            // Using the lock, we make sure that these are still up to date when `changeValueV1` is being called.
+            //
+            // The method `changeValueV1` will be called using the same lock.
+            taskResult <- ResourceLocker.runWithResourceLock(
+                changeFileValueRequest.apiRequestID,
+                changeFileValueRequest.resourceIri,
+                () => makeTaskFuture(changeFileValueRequest)
+            )
+        } yield taskResult
+
     }
 
     /**
@@ -438,21 +596,26 @@ class ValuesResponderV1 extends ResponderV1 {
                     getIncoming = false
                 )).mapTo[ResourceFullResponseV1]
 
-                // Ensure that adding the new value version would not create a duplicate value. This works in API v1 because a
-                // ResourceFullResponseV1 contains only the values that the user is allowed to see, otherwise checking for
-                // duplicate values would be a security risk. We'll have to implement this in a different way in API v2.
-                _ = resourceFullResponse.props.flatMap(_.properties.find(_.pid == propertyIri)) match {
-                    case Some(prop: PropertyV1) =>
-                        // Don't consider the current value version when looking for duplicates.
-                        val filteredValues = prop.value_ids.zip(prop.values).filter(_._1 != changeValueRequest.valueIri).unzip._2
+                _ = changeValueRequest.value match {
+                    case fileValue: FileValueV1 => () // It is a file value, do not check for duplicates.
+                    case _ => // It is not a file value.
+                        // Ensure that adding the new value version would not create a duplicate value. This works in API v1 because a
+                        // ResourceFullResponseV1 contains only the values that the user is allowed to see, otherwise checking for
+                        // duplicate values would be a security risk. We'll have to implement this in a different way in API v2.
+                        resourceFullResponse.props.flatMap(_.properties.find(_.pid == propertyIri)) match {
+                            case Some(prop: PropertyV1) =>
+                                // Don't consider the current value version when looking for duplicates.
+                                val filteredValues = prop.value_ids.zip(prop.values).filter(_._1 != changeValueRequest.valueIri).unzip._2
 
-                        if (filteredValues.exists(apiValueV1 => changeValueRequest.value.isDuplicateOfOtherValue(apiValueV1))) {
-                            throw DuplicateValueException()
+                                if (filteredValues.exists(apiValueV1 => changeValueRequest.value.isDuplicateOfOtherValue(apiValueV1))) {
+                                    throw DuplicateValueException()
+                                }
+
+                            case None =>
+                                // This shouldn't happen unless someone just changed the ontology.
+                                throw NotFoundException(s"No information found about property $propertyIri for resource ${findResourceWithValueResult.resourceIri}")
                         }
 
-                    case None =>
-                        // This shouldn't happen unless someone just changed the ontology.
-                        throw NotFoundException(s"No information found about property $propertyIri for resource ${findResourceWithValueResult.resourceIri}")
                 }
 
                 // The rest of the preparation for the update depends on whether we're changing a link or an ordinary value.
@@ -563,6 +726,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Generate a SPARQL update.
                 sparqlUpdate = queries.sparql.v1.txt.changeComment(
                     dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
+                    triplestore = settings.triplestoreType,
                     resourceIri = findResourceWithValueResult.resourceIri,
                     propertyIri = findResourceWithValueResult.propertyIri,
                     currentValueIri = changeCommentRequest.valueIri,
@@ -654,6 +818,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                         sparqlUpdate = queries.sparql.v1.txt.deleteLink(
                             dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
+                            triplestore = settings.triplestoreType,
                             linkSourceIri = findResourceWithValueResult.resourceIri,
                             linkUpdate = sparqlTemplateLinkUpdate,
                             maybeComment = deleteValueRequest.comment
@@ -665,6 +830,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     val newValueIri = knoraIriUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
                     val sparqlUpdate = queries.sparql.v1.txt.deleteValue(
                         dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
+                        triplestore = settings.triplestoreType,
                         resourceIri = findResourceWithValueResult.resourceIri,
                         propertyIri = findResourceWithValueResult.propertyIri,
                         currentValueIri = deleteValueRequest.valueIri,
@@ -689,9 +855,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 throw UpdateNotPerformedException(s"Value ${deleteValueRequest.valueIri} was not deleted. Please report this as a possible bug.")
             }
         } yield DeleteValueResponseV1(
-                id = newValueIri,
-                userdata = deleteValueRequest.userProfile.userData
-            )
+            id = newValueIri,
+            userdata = deleteValueRequest.userProfile.userData
+        )
 
         for {
         // Don't allow anonymous users to update values.
@@ -1005,10 +1171,11 @@ class ValuesResponderV1 extends ResponderV1 {
 
     /**
       * Verifies that a value was created.
-      * @param resourceIri the IRI of the resource in which the value should have been created.
-      * @param propertyIri the IRI of the property that should point from the resource to the value.
+      *
+      * @param resourceIri     the IRI of the resource in which the value should have been created.
+      * @param propertyIri     the IRI of the property that should point from the resource to the value.
       * @param unverifiedValue the value that should have been created.
-      * @param userProfile the profile of the user making the request.
+      * @param userProfile     the profile of the user making the request.
       * @return a [[CreateValueResponseV1]], or a failed [[Future]] if the value could not be found in
       *         the resource's version history.
       */
@@ -1233,15 +1400,15 @@ class ValuesResponderV1 extends ResponderV1 {
       * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that
       * pre-update checks have already been done.
       *
-      * @param transactionID the transaction ID.
-      * @param projectIri the IRI of the project in which to create the value.
-      * @param resourceIri the IRI of the resource in which to create the value.
-      * @param propertyIri the IRI of the property that will point from the resource to the value.
-      * @param value the value to create.
-      * @param permissionRelevantAssertions the permission-relevant assertions to assign to the value, i.e. its owner
-      *                                     and project plus its permissions.
+      * @param transactionID                      the transaction ID.
+      * @param projectIri                         the IRI of the project in which to create the value.
+      * @param resourceIri                        the IRI of the resource in which to create the value.
+      * @param propertyIri                        the IRI of the property that will point from the resource to the value.
+      * @param value                              the value to create.
+      * @param permissionRelevantAssertions       the permission-relevant assertions to assign to the value, i.e. its owner
+      *                                           and project plus its permissions.
       * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
-      * @param userProfile the profile of the user making the request.
+      * @param userProfile                        the profile of the user making the request.
       * @return an [[UnverifiedCreateValueResponseV1]].
       */
     private def createValueV1AfterChecks(transactionID: UUID,
@@ -1285,15 +1452,15 @@ class ValuesResponderV1 extends ResponderV1 {
     /**
       * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
       *
-      * @param transactionID the transaction ID.
-      * @param projectIri the IRI of the project in which the link is to be created.
-      * @param resourceIri the resource in which the link is to be created.
-      * @param propertyIri the link property.
-      * @param linkUpdateV1 a [[LinkUpdateV1]] specifying the target resource.
-      * @param permissionRelevantAssertions permission-relevant assertions for the new `knora-base:LinkValue`, i.e.
-      *                                     its owner and project plus permissions.
+      * @param transactionID                      the transaction ID.
+      * @param projectIri                         the IRI of the project in which the link is to be created.
+      * @param resourceIri                        the resource in which the link is to be created.
+      * @param propertyIri                        the link property.
+      * @param linkUpdateV1                       a [[LinkUpdateV1]] specifying the target resource.
+      * @param permissionRelevantAssertions       permission-relevant assertions for the new `knora-base:LinkValue`, i.e.
+      *                                           its owner and project plus permissions.
       * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
-      * @param userProfile the profile of the user making the request.
+      * @param userProfile                        the profile of the user making the request.
       * @return an [[UnverifiedCreateValueResponseV1]].
       */
     private def createLinkValueV1AfterChecks(transactionID: UUID,
@@ -1317,6 +1484,7 @@ class ValuesResponderV1 extends ResponderV1 {
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createLink(
                 dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
+                triplestore = settings.triplestoreType,
                 linkSourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
                 maybeComment = comment,
@@ -1340,15 +1508,15 @@ class ValuesResponderV1 extends ResponderV1 {
     /**
       * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
       *
-      * @param transactionID the transaction ID.
-      * @param projectIri the project in which the value is to be created.
-      * @param resourceIri the resource in which the value is to be created.
-      * @param propertyIri the property that should point to the value.
-      * @param value an [[UpdateValueV1]] describing the value.
-      * @param permissionRelevantAssertions permission-relevant assertions for the new value, i.e.
-      *                                     its owner and project plus permissions.
+      * @param transactionID                      the transaction ID.
+      * @param projectIri                         the project in which the value is to be created.
+      * @param resourceIri                        the resource in which the value is to be created.
+      * @param propertyIri                        the property that should point to the value.
+      * @param value                              an [[UpdateValueV1]] describing the value.
+      * @param permissionRelevantAssertions       permission-relevant assertions for the new value, i.e.
+      *                                           its owner and project plus permissions.
       * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
-      * @param userProfile the profile of the user making the request.
+      * @param userProfile                        the profile of the user making the request.
       * @return an [[UnverifiedCreateValueResponseV1]].
       */
     private def createOrdinaryValueV1AfterChecks(transactionID: UUID,
@@ -1390,6 +1558,7 @@ class ValuesResponderV1 extends ResponderV1 {
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createValue(
                 dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
+                triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
                 newValueIri = newValueIri,
@@ -1458,6 +1627,7 @@ class ValuesResponderV1 extends ResponderV1 {
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.changeLink(
                 dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
+                triplestore = settings.triplestoreType,
                 linkSourceIri = resourceIri,
                 linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
                 linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
@@ -1571,6 +1741,7 @@ class ValuesResponderV1 extends ResponderV1 {
             // Generate a SPARQL update.
             sparqlUpdate = queries.sparql.v1.txt.addValueVersion(
                 dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
+                triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
                 currentValueIri = currentValueIri,
@@ -1747,10 +1918,10 @@ class ValuesResponderV1 extends ResponderV1 {
       * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `knora-base:objectClassConstraint` of
       * the property that is supposed to point to it.
       *
-      * @param propertyIri the IRI of the property.
+      * @param propertyIri                   the IRI of the property.
       * @param propertyObjectClassConstraint the IRI of the `knora-base:objectClassConstraint` of the property.
-      * @param updateValueV1 the value to be updated.
-      * @param userProfile   the profile of the user making the request.
+      * @param updateValueV1                 the value to be updated.
+      * @param userProfile                   the profile of the user making the request.
       * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
       */
     private def checkPropertyObjectClassConstraintForValue(propertyIri: IRI, propertyObjectClassConstraint: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {

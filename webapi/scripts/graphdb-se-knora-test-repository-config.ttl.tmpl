@@ -1,0 +1,20 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rep: <http://www.openrdf.org/config/repository#>.
+@prefix sr: <http://www.openrdf.org/config/repository/sail#>.
+@prefix sail: <http://www.openrdf.org/config/sail#>.
+@prefix owlim: <http://www.ontotext.com/trree/owlim#>.
+
+[] a rep:Repository ;
+   rep:repositoryID "knora-test" ;
+   rdfs:label "Knora test repository" ;
+   rep:repositoryImpl [
+     rep:repositoryType "openrdf:SailRepository" ;
+     sr:sailImpl [
+       owlim:ruleset "empty" ;
+       # owlim:ruleset "PIE_FILE" ;
+       # owlim:check-for-inconsistencies "true";
+       sail:sailType "owlim:Sail" ;
+       owlim:base-URL "http://data.knora.org/" ;
+       owlim:repository-type "file-repository" ;
+      ]
+   ].

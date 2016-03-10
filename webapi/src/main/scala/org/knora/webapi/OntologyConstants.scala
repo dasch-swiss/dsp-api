@@ -44,11 +44,8 @@ object OntologyConstants {
         val OnProperty = "http://www.w3.org/2002/07/owl#onProperty"
 
         val Cardinality = "http://www.w3.org/2002/07/owl#cardinality"
-        val QualifiedCardinality = "http://www.w3.org/2002/07/owl#qualifiedCardinality"
         val MinCardinality = "http://www.w3.org/2002/07/owl#minCardinality"
-        val MinQualifiedCardinality = "http://www.w3.org/2002/07/owl#minQualifiedCardinality"
         val MaxCardinality = "http://www.w3.org/2002/07/owl#maxCardinality"
-        val MaxQualifiedCardinality = "http://www.w3.org/2002/07/owl#maxQualifiedCardinality"
 
 
         /**
@@ -57,11 +54,8 @@ object OntologyConstants {
           */
         val cardinalityOWLRestrictions = Set(
             Cardinality,
-            QualifiedCardinality,
             MinCardinality,
-            MinQualifiedCardinality,
-            MaxCardinality,
-            MaxQualifiedCardinality
+            MaxCardinality
         )
     }
 
@@ -128,6 +122,7 @@ object OntologyConstants {
         val IntervalValue = "http://www.knora.org/ontology/knora-base#IntervalValue"
         val TimeValue = "http://www.knora.org/ontology/knora-base#TimeValue"
         val StillImageFileValue = "http://www.knora.org/ontology/knora-base#StillImageFileValue"
+        val MovingImageFileValue = "http://www.knora.org/ontology/knora-base#MovingImageFileValue"
         val FileValue = "http://www.knora.org/ontology/knora-base#FileValue"
         val LinkValue = "http://www.knora.org/ontology/knora-base#LinkValue"
 
