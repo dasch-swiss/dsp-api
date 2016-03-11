@@ -23,9 +23,10 @@ package org.knora.webapi.routing.v1
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiFileInfoGetRequestV1
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.routing.{Authenticator, Proxy, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
+import spray.http.Uri
 import spray.routing.Directives._
 import spray.routing._
 
@@ -34,7 +35,7 @@ import scala.util.Try
 /**
   * Provides a spray-routing function for the API routes that Sipi connects to.
   */
-object SipiRouteV1 extends Authenticator {
+object SipiRouteV1 extends Authenticator with Proxy {
 
     /**
       * A spray-routing function for the API routes that Sipi connects to.
@@ -62,6 +63,9 @@ object SipiRouteV1 extends Authenticator {
                         log
                     )
             }
+        } ~ path("v1" / "sipi" / Rest) { iiif =>
+                println(iiif)
+                proxyToUnmatchedPath(Uri("http://localhost:3333/v1/assets/"), Uri.Path(iiif))
         }
     }
 }
