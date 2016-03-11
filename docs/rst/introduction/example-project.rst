@@ -16,21 +16,22 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-****************************
-A Sample Project: Incunabula
-****************************
+******************************
+An Example Project: Incunabula
+******************************
 
-Before reading this document, it will be helpful to have some familiarity with
-the basic concepts explained in :download:`The Knora Base Ontology </latex/knora-base/knora-base.pdf>`.
+This section introduces some of the basic concepts involved in creating
+ontologies for Knora projects, by means of a relatively simple example
+project. Before reading this document, it will be helpful to have some
+familiarity with the basic concepts explained in
+:download:`The Knora Base Ontology </latex/knora-base/knora-base.pdf>`.
 
-Knora comes with two sample projects, called ``incunabula`` and ``images-demo``.
-Here we will consider the ``incunabula`` sample to illustrate some
-typical elements of the ontology and data of a Knora project. This sample
-project is a reduced version of a real research project on early printed books
-called *incunabula*. It contains an image of each page of each book, as well
-as RDF data about books, pages, their contents, and relationships between
-them. At the moment, only the RDF data is provided in the sample project, not
-the images.
+Knora comes with two example projects, called ``incunabula`` and
+``images-demo``. Here we will consider the ``incunabula`` example, which is
+a reduced version of a real research project on early printed books. It
+is designed to store an image of each page of each book, as well as RDF data
+about books, pages, their contents, and relationships between them. At the moment,
+only the RDF data is provided in the example project, not the images.
 
 The ``incunabula`` ontology is in the file ``incunabula-onto.ttl``, and its
 data is in the file ``incunabula-data.ttl``. Both these files are in a
@@ -96,8 +97,8 @@ Properties
 ^^^^^^^^^^
 
 Now we need some RDF property definitions. The project contains books, which
-have properties like ``title``. Here are some of the main parts of the
-definition of the ``title`` property:
+have properties like ``title``. Here is the definition of the ``title``
+property:
 
 ::
 
@@ -139,8 +140,8 @@ definition of ``:title`` says:
   include that resource. (This feature is planned but not yet implemented in
   the Knora API server.) It is important to note that ``dc:title`` is a
   subproperty of ``knora-base:hasValue``. It would have been possible to
-  define ``incunabula:title`` as a direct subproperty of ``knora-
-  base:hasValue``, and indeed many properties in Knora projects are defined in
+  define ``incunabula:title`` as a direct subproperty of ``knora-base:hasValue``,
+  and indeed many properties in Knora projects are defined in
   that way. Any property that points to a ``knora-base:Value`` must be a
   subproperty of ``knora-base:hasValue``.
 * ``rdfs:label "Titel"@de``, etc.: It has the specified labels in various
@@ -161,14 +162,14 @@ definition of ``:title`` says:
   field for entering a value for this property should be 80 characters wide,
   and should accept at most 255 characters.
 
-The ``incunabula`` ontology contains several property definitions that are
-basically similar. Note that different subclasses of ``Value`` are used. For
-example, ``incunabula:pubdate``, which represents the publication date of a
-book, points to a ``knora-base:DateValue``. The ``DateValue`` class stores a
+The ``incunabula`` ontology contains several other property definitions that
+are basically similar. Note that different subclasses of ``Value`` are used.
+For example, ``incunabula:pubdate``, which represents the publication date of
+a book, points to a ``knora-base:DateValue``. The ``DateValue`` class stores a
 date range, with a specified degree of precision and a preferred calendar
 system for display.
 
-A Knora property can point to a Knora resource instead of a Knora value. For
+A property can point to a Knora resource instead of to a Knora value. For
 example, in the ``incunabula`` ontology, there are resources representing
 pages and books, and each page is part of some book. This relationship is
 expressed using the property ``incunabula:partOf``:
@@ -198,8 +199,8 @@ The key things to notice here are:
 
 * ``rdfs:subPropertyOf knora-base:isPartOf``: The Knora base ontology provides
   a generic ``isPartOf`` property to express part-whole relationships. Like
-  many properties defined in ``knora-base``, a project cannot use ``knora-
-  base:isPartOf`` directly, but must make a subproperty such as
+  many properties defined in ``knora-base``, a project cannot use
+  ``knora-base:isPartOf`` directly, but must make a subproperty such as
   ``incunabula:partOf``.  It is important to note that ``knora-base:isPartOf``
   is a subproperty of ``knora-base:hasLinkTo``. Any property that points to a
   ``knora-base:Resource`` must be a subproperty of ``knora-base:hasLinkTo``.
@@ -221,9 +222,9 @@ repository in which a deleted link had not yet been deleted. (The ability to
 query previous states of a repository is planned for Knora API version 2.)
 
 The name of a link property and its link value property must be related by the
-following naming convention: to find the name of the link value property, add
-the word ``Value`` to the name of the link property. Hence, the ``incunabula``
-ontology defines the property ``partOfValue``:
+following naming convention: to determine the name of the link value property,
+add the word ``Value`` to the name of the link property. Hence, the
+``incunabula`` ontology defines the property ``partOfValue``:
 
 ::
 
@@ -235,227 +236,279 @@ ontology defines the property ``partOfValue``:
 
                      knora-base:objectClassConstraint knora-base:LinkValue .
 
-As a link value property, ``incunabula:partOfValue`` must point to a ``knora-
-base:LinkValue``. The ``LinkValue`` class is an RDF *reification* of a triple
+As a link value property, ``incunabula:partOfValue`` must point to a
+``knora-base:LinkValue``. The ``LinkValue`` class is an RDF *reification* of a triple
 (in this case, the triple that links a page to a book). For more details about
-this, see :download:`The Knora Base Ontology </latex/knora-base/knora-
-base.pdf>`.
+this, see
+:download:`The Knora Base Ontology </latex/knora-base/knora-base.pdf>`.
 
 
+Resource Classes
+^^^^^^^^^^^^^^^^
 
+The two main resource classes in the ``incunabula`` ontology are ``book`` and ``page``.
+Here is ``incunabula:book``:
 
-### ###########################################
-### incunabula:book
+::
 
-:book rdf:type owl:Class ;
+    :book rdf:type owl:Class ;
 
-      rdfs:subClassOf knora-base:Resource ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :title ;
-                         owl:minCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasAuthor ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :publisher ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :publoc ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :pubdate ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :location ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :url ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :description ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :physical_desc ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :note ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :citation ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :book_comment ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ;
+          rdfs:subClassOf knora-base:Resource ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :title ;
+                             owl:minCardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :hasAuthor ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :publisher ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :publoc ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :pubdate ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :location ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :url ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :description ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :physical_desc ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :note ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :citation ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :book_comment ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
 
-      knora-base:resourceIcon "book.gif" ;
+          knora-base:resourceIcon "book.gif" ;
 
-      rdfs:label "Buch"@de ,
-                 "Livre"@fr ,
-                 "Libro"@it ,
-                 "Book"@en ;
+          rdfs:label "Buch"@de ,
+                     "Livre"@fr ,
+                     "Libro"@it ,
+                     "Book"@en ;
 
-      rdfs:comment """Diese Resource-Klasse beschreibt ein Buch"""@de ;
+          rdfs:comment """Diese Resource-Klasse beschreibt ein Buch"""@de .
 
-      knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
+Like every Knora resource class, ``incunabula:book`` is a subclass of
+``knora-base:Resource``. It is also a subclass of a number of other classes of type
+``owl:Restriction``, which are defined in square brackets, using Turtle's
+syntax for anonymous blank nodes. Each ``owl:Restriction`` specifies a
+cardinality for a property that is allowed in resources of type
+``incunabula:book``. A cardinality is indeed a kind of restriction: it means
+that a resource of this type may have, or must have, a certain number of
+instances of the specified property. For example, ``incunabula:book`` has
+cardinalities saying that a book must have at least one title and at most one
+publication date. In the Knora API version 1, the word 'occurrence' is used
+instead of 'cardinality'.
 
-      knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+As explained in
+:download:`The Knora Base Ontology </latex/knora-base/knora-base.pdf>`, these
+are the cardinalities supported by Knora:
 
-      knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
-                                            knora-base:Owner .
+* ``owl:cardinality 1`` A resource of this class must have exactly one
+  instance of the specified property (occurrence ``1``).
+* ``owl:minCardinality 1`` A resource of this class must have at least one
+  instance of the specified property (occurrence ``1-n``).
+* ``owl:maxCardinality 1`` A resource of this class may have zero or one
+  instance of the specified property (occurrence ``0-1``).
+* ``owl:minCardinality 0`` A resource of this class may have zero or more
+  instances of the specified property (occurrence ``0-n``).
 
+Note that ``incunabula:book`` specifies a cardinality of ``owl:minCardinality
+0`` on the property ``incunabula:hasAuthor``. At first glance, this might seem
+as if it serves no purpose, since it says that the property is optional and
+can have any number of instances. You may be wondering whether this
+cardinality could simply be omitted from the definition of
+``incunabula:book``. However, Knora requires every property of a resource to
+have some cardinality in the resource's class. This is because Knora uses
+the cardinalities to determine which properties are *possible* for instances
+of the class, and the Knora API relies on this information. If there was no
+cardinality for ``incunabula:hasAuthor``, Knora would not allow a book to have
+an author.
 
-### ###########################################
-### incunabula:page
+Here is the definition of ``incunabula:page``:
 
-:page rdf:type owl:Class ;
+::
 
-      rdfs:subClassOf knora-base:StillImageRepresentation ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :pagenum ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :partOfValue ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :partOf ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :seqnum ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :description ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :citation ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :page_comment ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :origname ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasLeftSidebandValue ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasLeftSideband ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasRightSidebandValue ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasRightSideband ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :transcription ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ;
-
-      knora-base:resourceIcon "page.gif" ;
-
-      rdfs:label "Seite"@de ,
-                 "Page"@fr ,
-                 "Page"@en ;
-
-      rdfs:comment """Eine Seite ist ein Teil eines Buchs"""@de ,
-                   """Une page est une partie d'un livre"""@fr ,
-                   """A page is a part of a book"""@en ;
-
-      knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
-
-      knora-base:hasDefaultViewPermission knora-base:KnownUser ;
-
-      knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
-                                            knora-base:Owner .
-
-
-### ###########################################
-### incunabula:Sideband
-
-:Sideband rdf:type owl:Class ;
+    :page rdf:type owl:Class ;
 
           rdfs:subClassOf knora-base:StillImageRepresentation ,
                           [
                              rdf:type owl:Restriction ;
-                             owl:onProperty :sbTitle ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger                          ] ,
+                             owl:onProperty :pagenum ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :partOfValue ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :partOf ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :seqnum ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :description ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                          ] ,
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
                           [
                              rdf:type owl:Restriction ;
-                             owl:onProperty :sideband_comment ;
-                             owl:minCardinality "0"^^xsd:nonNegativeInteger                          ] ;
+                             owl:onProperty :citation ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :page_comment ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :origname ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :hasLeftSidebandValue ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :hasLeftSideband ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :hasRightSidebandValue ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :hasRightSideband ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :transcription ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
 
-          rdfs:label "Randleiste"@de ;
+          knora-base:resourceIcon "page.gif" ;
 
-          rdfs:comment """Randleistentyp"""@de ;
+          rdfs:label "Seite"@de ,
+                     "Page"@fr ,
+                     "Page"@en ;
 
-          knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+          rdfs:comment """Eine Seite ist ein Teil eines Buchs"""@de ,
+                       """Une page est une partie d'un livre"""@fr ,
+                       """A page is a part of a book"""@en .
 
-          knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+The ``incunabula:page`` class is a subclass of
+``knora-base:StillImageRepresentation``, which is a subclass of
+``knora-base:Representation``, which is a subclass of ``knora-base:Resource``.
+The class ``knora-base:Representation`` is used for resources that contain
+metadata about files stored by Knora. Each It has different subclasses that can
+hold different types of files, including still images, audio, and video files.
+A given ``Representation`` can store metadata about several different files,
+as long as they are of the same type and are semantically equivalent, e.g.
+are different versions of the same image with different colorspaces, so that
+coordinates in one file will work in the other files.
 
-          knora-base:hasDefaultDeletePermission knora-base:Owner .
+In Knora, a subclass inherits the cardinalities defined in its superclasses.
+Let's look at the class hierarchy of ``incunabula:page``, starting with
+``knora-base:Representation``:
 
+::
 
-### ###########################################
-### incunabula:misc
+    :Representation rdf:type owl:Class ;
+                
+                    rdfs:subClassOf :Resource ,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :hasFileValue ;
+                                      owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                    ] ;
+                
+                    rdfs:comment "A resource that can store one or more FileValues"@en .
 
-:misc rdf:type owl:Class ;
+This says that a ``Representation`` must have at least one instance of the
+property ``hasFileValue``, which is defined like this:
 
-      rdfs:subClassOf knora-base:Resource,
-                      [
-                        rdf:type owl:Restriction ;
-                        owl:onProperty :miscHasColor ;
-                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                      ] ,
-                      [
-                        rdf:type owl:Restriction ;
-                        owl:onProperty :miscHasGeometry ;
-                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                      ],
-                      [
-                        rdf:type owl:Restriction ;
-                        owl:onProperty :misHasBook ;
-                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                      ] ;
+::
 
-      rdfs:label "Sonstiges"@de ;
+    :hasFileValue rdf:type owl:ObjectProperty ;
+              
+                  rdfs:subPropertyOf :hasValue ;
 
-      rdfs:comment "A fake resource class that only has optional properties"@en;
+                  :subjectClassConstraint :Representation ;
+              
+                  :objectClassConstraint :FileValue .              
 
-      knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+The subject of ``hasFileValue`` must be a ``Representation``, and its object
+must be a ``FileValue``. There are different subclasses of ``FileValue`` for
+different kinds of files, but we'll skip the details here.
 
-      knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+This is the definition of ``knora-base:StillImageRepresentation``:
 
-      knora-base:hasDefaultDeletePermission knora-base:Owner .
+::
 
+    :StillImageRepresentation rdf:type owl:Class ;
+                          
+                              rdfs:subClassOf :Representation  ,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :hasStillImageFileValue ;
+                                      owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                    ] ;
+                          
+                              rdfs:comment "A resource that can contain two-dimensional still image files"@en .
 
+It must have at least one instance of the property ``hasStillImageFileValue``, which
+is defined as follows:
+
+::
+
+  :hasStillImageFileValue rdf:type owl:ObjectProperty ;
+              
+                rdfs:subPropertyOf :hasFileValue ;
+
+                :subjectClassConstraint :StillImageRepresentation ;
+
+                :objectClassConstraint :StillImageFileValue .              
+
+Because ``hasStillImageFileValue`` is a subproperty of ``hasFileValue``, the
+cardinality on ``hasStillImageFileValue``, defined in the subclass
+``StillImageRepresentation``, overrides the cardinality on ``hasFileValue``,
+defined in the superclass ``Representation``. In other words, the more general
+cardinality in the superclass is replaced by a more specific cardinality in
+the base class. Since ``incunabula:page`` is a subclass of
+``StillImageRepresentation``, it inherits the cardinality on
+``hasStillImageFileValue``. As a result, a page must have at least one image
+file attached to it.
+
+Here's another example of cardinality inheritance. The class ``knora-base:Resource``
+has a cardinality for ``knora-base:seqnum``. The idea is that resources of any
+type could be arranged in some sort of sequence. As we saw above,
+``incunabula:page`` is a subclass of ``knora-base:Resource``. But
+``incunabula:page`` has its own cardinality for ``incunabula:seqnum``, which
+is a subproperty of ``knora-base:seqnum``. Once again, the subclass's
+cardinality on the subproperty replaces the superclass's cardinality on the
+superproperty: a page is allowed to have an ``incunabula:seqnum``, but it is
+not allowed to have a ``knora-base:seqnum``.
 
 .. _Turtle: https://www.w3.org/TR/turtle/
 
