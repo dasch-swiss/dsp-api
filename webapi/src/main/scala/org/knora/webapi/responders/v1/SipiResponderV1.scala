@@ -165,7 +165,7 @@ class SipiResponderV1 extends ResponderV1 {
             }
 
             // check if Sipi returned a status code != 0
-            _ = if (statusCode != 0) throw BadRequestException(s"Sipi returned a HTTP 200 status code, a unsuccessful status code ${statusCode}")
+            _ = if (statusCode != 0) throw BadRequestException(s"Sipi returned a HTTP 200 status code, but an unsuccessful status code ${statusCode}")
 
             fileType: String = responseAsMap.getOrElse("file_type", throw SipiException(message = "Sipi did not return a file type")) match {
                 case JsString(ftype: String) => ftype
