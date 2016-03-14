@@ -262,17 +262,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                 }
 
 
-                storeManager ! BeginUpdateTransaction()
-
-                val transactionID = expectMsgPF(timeout) {
-                    case UpdateTransactionBegun(id) => id
-                }
-
-                storeManager ! SparqlUpdateRequest(transactionID, insertQuery)
-                expectMsg(SparqlUpdateResponse(transactionID))
-
-                storeManager ! CommitUpdateTransaction(transactionID)
-                expectMsg(timeout, UpdateTransactionCommitted(transactionID))
+                storeManager ! SparqlUpdateRequest(insertQuery)
+                expectMsg(SparqlUpdateResponse())
 
                 storeManager ! SparqlSelectRequest(checkInsertQuery)
                 expectMsgPF(timeout) {
@@ -308,17 +299,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                     }
                 }
 
-                storeManager ! BeginUpdateTransaction()
-
-                val transactionID = expectMsgPF(timeout) {
-                    case UpdateTransactionBegun(id) => id
-                }
-
-                storeManager ! SparqlUpdateRequest(transactionID, revertInsertQuery)
-                expectMsg(SparqlUpdateResponse(transactionID))
-
-                storeManager ! CommitUpdateTransaction(transactionID)
-                expectMsg(timeout, UpdateTransactionCommitted(transactionID))
+                storeManager ! SparqlUpdateRequest(revertInsertQuery)
+                expectMsg(SparqlUpdateResponse())
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
                 expectMsgPF(timeout) {

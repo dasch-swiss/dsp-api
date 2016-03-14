@@ -1545,8 +1545,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 value = value,
                 linkUpdates = standoffLinkUpdates,
                 maybeComment = comment,
-                permissionRelevantAssertions = permissionRelevantAssertions,
-                updateResourceLastModificationDate = updateResourceLastModificationDate
+                permissionRelevantAssertions = permissionRelevantAssertions
             ).toString()
 
             /*

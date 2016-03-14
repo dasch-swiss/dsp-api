@@ -319,15 +319,15 @@ WHERE {
 
             *@
 
-            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass .
+            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex .
 
             MINUS {
                 <@linkUpdate.linkTargetIri> knora-base:isDeleted true .
             }
 
-            ?linkTargetClass rdfs:subClassOf+ knora-base:Resource .
-            <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass .
-            ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
+            ?linkTargetClass@linkValueIndex rdfs:subClassOf+ knora-base:Resource .
+            <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
+            ?linkTargetClass@linkValueIndex rdfs:subClassOf* ?expectedTargetClass@linkValueIndex .
         }
 
         @if(linkUpdate.directLinkExists) {
