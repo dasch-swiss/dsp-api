@@ -120,10 +120,7 @@ class JenaTDBActor extends Actor with ActorLogging {
       */
     def receive = {
         case SparqlSelectRequest(sparqlSelectString) => future2Message(sender(), executeSparqlSelectQuery(sparqlSelectString), log)
-        case BeginUpdateTransaction() => future2Message(sender(), beginUpdateTransaction(), log)
-        case CommitUpdateTransaction(transactionID) => future2Message(sender(), commitUpdateTransaction(transactionID), log)
-        case RollbackUpdateTransaction(transactionID) => future2Message(sender(), rollbackUpdateTransaction(transactionID), log)
-        case SparqlUpdateRequest(transactionID, sparqlUpdateString) => future2Message(sender(), executeSparqlUpdateQuery(transactionID, sparqlUpdateString), log)
+        case SparqlUpdateRequest(sparqlUpdateString) => future2Message(sender(), executeSparqlUpdateQuery(sparqlUpdateString), log)
         case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
         case DropAllTriplestoreContent() => future2Message(sender(), Future(dropAllTriplestoreContent()), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), Future(insertDataIntoTriplestore(rdfDataObjects)), log)
@@ -215,42 +212,12 @@ class JenaTDBActor extends Actor with ActorLogging {
     }
 
     /**
-      * Begins a SPARQL Update transaction.
-      * @return an [[UpdateTransactionBegun]].
-      */
-    private def beginUpdateTransaction(): Future[UpdateTransactionBegun] = {
-        // TODO: support transaction management in this actor.
-        Future(UpdateTransactionBegun(UUID.randomUUID()))
-    }
-
-    /**
-      * Commits a SPARQL update transaction.
-      * @param transactionID the transaction ID.
-      * @return an [[UpdateTransactionCommitted]].
-      */
-    private def commitUpdateTransaction(transactionID: UUID): Future[UpdateTransactionCommitted] = {
-        // TODO: support transaction management in this actor.
-        Future(UpdateTransactionCommitted(transactionID))
-    }
-
-    /**
-      * Rolls back a SPARQL update transaction.
-      * @param transactionID the transaction ID.
-      * @return an [[UpdateTransactionRolledBack]].
-      */
-    private def rollbackUpdateTransaction(transactionID: UUID): Future[UpdateTransactionRolledBack] = {
-        // TODO: support transaction management in this actor.
-        Future(UpdateTransactionRolledBack(transactionID))
-    }
-
-    /**
       * Submits a SPARQL update request to the embedded Jena TDB store, and returns a [[SparqlUpdateResponse]] if the
       * operation completed successfully.
-      * @param transactionID the transaction ID. // TODO: support transaction management in this actor.
       * @param updateString the SPARQL update to be submitted.
       * @return a [[SparqlUpdateResponse]].
       */
-    private def executeSparqlUpdateQuery(transactionID: UUID, updateString: String): Future[SparqlUpdateResponse] = {
+    private def executeSparqlUpdateQuery(updateString: String): Future[SparqlUpdateResponse] = {
         // println("=============================")
         // println(updateString)
         // println()
@@ -275,7 +242,7 @@ class JenaTDBActor extends Actor with ActorLogging {
 
             //println("==>> SparqlUpdate End")
 
-            Future.successful(SparqlUpdateResponse(transactionID))
+            Future.successful(SparqlUpdateResponse())
         } catch {
             case ex: Throwable =>
                 this.dataset.abort()

@@ -43,6 +43,11 @@ import scala.util.{Failure, Success}
   * `application.conf`.
   */
 class HttpTriplestoreActor extends Actor with ActorLogging {
+    /*
+     * Transaction management for SPARQL updates over HTTP is currently commented out because of
+     * issue <https://github.com/dhlab-basel/Knora/issues/85>.
+     */
+
     // HTTP header constants.
     private val headerAccept = "Accept"
 
@@ -129,10 +134,13 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
       */
     def receive = {
         case SparqlSelectRequest(sparql) => future2Message(sender(), sparqlHttpSelect(sparql), log)
+        /*
         case BeginUpdateTransaction() => future2Message(sender(), beginUpdateTransaction(), log)
         case CommitUpdateTransaction(transactionID) => future2Message(sender(), commitUpdateTransaction(transactionID), log)
         case RollbackUpdateTransaction(transactionID) => future2Message(sender(), rollbackUpdateTransaction(transactionID), log)
         case SparqlUpdateRequest(transactionID, sparql) => future2Message(sender(), sparqlHttpUpdate(transactionID, sparql), log)
+        */
+        case SparqlUpdateRequest(sparql) => future2Message(sender(), sparqlHttpUpdate(sparql), log)
         case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
         case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
@@ -170,6 +178,8 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
             responseMessage <- SparqlUtil.parseJsonResponse(sparql, resultStr, log)
         } yield responseMessage
     }
+
+    /*
 
     /**
       * Begins a SPARQL Update transaction.
@@ -228,6 +238,28 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
         for {
             _ <- Future(HttpTriplestoreTransactionManager.forgetUpdates(transactionID))
         } yield UpdateTransactionRolledBack(transactionID)
+    }
+
+    */
+
+
+    private def sparqlHttpUpdate(sparqlUpdate: String): Future[SparqlUpdateResponse] = {
+        // _ = println(sparqlUpdate)
+
+        for {
+            // Send the request to the triplestore.
+            _ <- getTriplestoreHttpResponse(sparqlUpdate, update = true)
+
+            // If we're using GraphDB, update the full-text search index.
+            _ = if (tsType == HTTP_GRAPH_DB_TS_TYPE) {
+                val indexUpdateSparqlString =
+                    """
+                        PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
+                        INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
+                    """
+                getTriplestoreHttpResponse(indexUpdateSparqlString, update = true)
+            }
+        } yield SparqlUpdateResponse()
     }
 
     /**

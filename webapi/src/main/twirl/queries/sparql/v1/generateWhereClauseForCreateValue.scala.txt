@@ -1,0 +1,164 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi._
+@import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
+@import org.knora.webapi.messages.v1respondermessages.valuemessages._
+
+@**
+ * Generates statements to be added to the WHERE clause of a SPARQL update when creating a new value of a resource
+ * property (as opposed to a new version of an existing value).
+ *
+ * @param dataNamedGraph the named graph in which the project stores its data.
+ * @param resourceIri the resource to update.
+ * @param propertyIri the resource property to update.
+ * @param valueIndex the index of the value in the sequence of values that are being created in the transaction (can
+ *                   be 0 if only one value is being created).
+ * @param newValueIri the new value IRI.
+ * @param valueTypeIri the type of the new value.
+ * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
+ *        updated for resource references in Standoff text values.
+ *@
+@(dataNamedGraph: IRI,
+  resourceIri: IRI,
+  propertyIri: IRI,
+  newValueIri: IRI,
+  valueTypeIri: IRI,
+  linkUpdates: Seq[SparqlTemplateLinkUpdate]
+  valueIndex: Int)
+
+BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
+BIND(IRI("@resourceIri") AS ?resource)
+BIND(IRI("@propertyIri") AS ?property)
+BIND(IRI("@newValueIri") AS ?newValue)
+BIND(IRI("@valueTypeIri") AS ?valueType)
+BIND(NOW() AS ?currentTime)
+
+@* Do nothing if the resource doesn't exist, is marked as deleted, or isn't actually a resource. *@
+
+?resource rdf:type ?resourceClass .
+?resourceClass rdfs:subClassOf+ knora-base:Resource .
+
+MINUS {
+    ?resource knora-base:isDeleted true .
+}
+
+@* Do nothing if the submitted value has the wrong type. *@
+
+?property knora-base:objectClassConstraint ?propertyRange .
+?valueType rdfs:subClassOf* ?propertyRange .
+
+@* Do nothing if neither the resource class nor any of its superclasses has a cardinality for this property. *@
+
+?resourceClass rdfs:subClassOf* ?restriction .
+?restriction a owl:Restriction .
+?restriction owl:onProperty ?property .
+
+@*
+
+Check the state of any LinkValues to be updated for resource references.
+
+*@
+
+@for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
+    @if(linkUpdate.insertDirectLink) {
+        @*
+
+        Do nothing if we were asked to insert a direct link to a target that doesn't exist, is marked as deleted,
+        isn't a knora-base:Resource, or belongs to the wrong OWL class for the link property.
+
+        *@
+
+        <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass .
+
+        MINUS {
+            <@linkUpdate.linkTargetIri> knora-base:isDeleted true .
+        }
+
+        ?linkTargetClass rdfs:subClassOf+ knora-base:Resource .
+        <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass .
+        ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
+    }
+
+    @if(linkUpdate.directLinkExists) {
+        @* Make sure the relevant direct link exists between the two resources. *@
+        ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+    } else {
+        @* Make sure there no such direct link. *@
+        MINUS {
+            ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+        }
+    }
+
+    @if(linkUpdate.linkValueExists) {
+        @*
+
+        Make sure a knora-base:LinkValue exists, describing the relevant direct link
+        between the source and target resources, and has the correct reference count.
+
+        *@
+        ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+        ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
+            rdf:subject ?resource ;
+            rdf:predicate <@linkUpdate.linkPropertyIri> ;
+            rdf:object <@linkUpdate.linkTargetIri> ;
+            knora-base:valueHasRefCount @linkUpdate.currentReferenceCount .
+
+        MINUS {
+            ?linkValue@linkValueIndex knora-base:isDeleted true .
+        }
+    } else {
+        @* Make sure there is no such knora-base:LinkValue. *@
+        MINUS {
+            ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+            ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
+                rdf:subject ?resource ;
+                rdf:predicate <@linkUpdate.linkPropertyIri> ;
+                rdf:object <@linkUpdate.linkTargetIri> .
+
+            MINUS {
+              ?linkValue@linkValueIndex knora-base:isDeleted true .
+            }
+        }
+    }
+}
+
+@*
+
+Generate knora-base:valueHasOrder for the new value. If the property already has one or more (non-deleted)
+values in the resource, find the one with the highest order, add 1 to its order, and give the resulting
+order to the new value. Otherwise, give the new value an order of 0.
+
+*@
+
+{
+  SELECT ((MAX(?order)) AS ?maxOrder) (IF(BOUND(?maxOrder), ?maxOrder + 1, 0) AS ?nextOrder)
+  WHERE {
+      BIND(IRI("@resourceIri") AS ?resource)
+      BIND(IRI("@propertyIri") AS ?property)
+
+      ?resource ?property ?value .
+      ?value knora-base:valueHasOrder ?order .
+
+      MINUS {
+          ?value knora-base:isDeleted true .
+      }
+  }
+}

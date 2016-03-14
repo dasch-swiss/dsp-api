@@ -20,15 +20,12 @@
 
 package org.knora.webapi.responders.v1
 
-import java.util.UUID
-
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1respondermessages.ontologymessages._
 import org.knora.webapi.messages.v1respondermessages.resourcemessages._
-import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiConstants.FileType
-import org.knora.webapi.messages.v1respondermessages.sipimessages.{SipiConstants, SipiResponderConversionResponseV1, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1}
+import org.knora.webapi.messages.v1respondermessages.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1respondermessages.valuemessages._
@@ -45,7 +42,6 @@ import scala.concurrent.Future
   * Updates Knora values.
   */
 class ValuesResponderV1 extends ResponderV1 {
-
     // Creates IRIs for new Knora value objects.
     val knoraIriUtil = new KnoraIriUtil
 
@@ -186,19 +182,15 @@ class ValuesResponderV1 extends ResponderV1 {
             permissionRelevantAssertionsForNewValue: Seq[(IRI, IRI)] = ownerTuple +: projectTuple +: permissionsFromDefaults
 
             // Create the new value.
-            unverifiedValue <- TransactionUtil.runInUpdateTransaction({
-                transactionID => createValueV1AfterChecks(
-                    transactionID = transactionID,
-                    projectIri = resourceFullResponse.resinfo.get.project_id,
-                    resourceIri = createValueRequest.resourceIri,
-                    propertyIri = createValueRequest.propertyIri,
-                    value = createValueRequest.value,
-                    comment = createValueRequest.comment,
-                    permissionRelevantAssertions = permissionRelevantAssertionsForNewValue,
-                    updateResourceLastModificationDate = true,
-                    userProfile = createValueRequest.userProfile
-                )
-            }, storeManager)
+            unverifiedValue <- createValueV1AfterChecks(
+                projectIri = resourceFullResponse.resinfo.get.project_id,
+                resourceIri = createValueRequest.resourceIri,
+                propertyIri = createValueRequest.propertyIri,
+                value = createValueRequest.value,
+                comment = createValueRequest.comment,
+                permissionRelevantAssertions = permissionRelevantAssertionsForNewValue,
+                updateResourceLastModificationDate = true,
+                userProfile = createValueRequest.userProfile)
 
             // Verify that it was created.
             apiResponse <- verifyValueCreation(
@@ -278,7 +270,6 @@ class ValuesResponderV1 extends ResponderV1 {
                         // and they could all add it, giving the resource multiple lastModificationDate triples.)
                         val valueCreationResponsesForProperty: Seq[Future[UnverifiedCreateValueResponseV1]] = valuesWithComments.map {
                             valueV1WithComment: CreateValueV1WithComment => createValueV1AfterChecks(
-                                transactionID = createMultipleValuesRequest.transactionID,
                                 projectIri = createMultipleValuesRequest.projectIri,
                                 resourceIri = createMultipleValuesRequest.resourceIri,
                                 propertyIri = propertyIri,
@@ -488,11 +479,11 @@ class ValuesResponderV1 extends ResponderV1 {
 
         for {
 
-            // Do the preparations of a file value change while already holding an update lock on the resource.
-            // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource Iri have to been retrieved.
-            // Using the lock, we make sure that these are still up to date when `changeValueV1` is being called.
-            //
-            // The method `changeValueV1` will be called using the same lock.
+        // Do the preparations of a file value change while already holding an update lock on the resource.
+        // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource Iri have to been retrieved.
+        // Using the lock, we make sure that these are still up to date when `changeValueV1` is being called.
+        //
+        // The method `changeValueV1` will be called using the same lock.
             taskResult <- ResourceLocker.runWithResourceLock(
                 changeFileValueRequest.apiRequestID,
                 changeFileValueRequest.resourceIri,
@@ -735,9 +726,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 ).toString()
 
                 // Do the update.
-                sparqlUpdateResponse <- TransactionUtil.runInUpdateTransaction({
-                    transactionID => (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
-                }, storeManager)
+                sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
                 // To find out whether the update succeeded, look for the new value in the triplestore.
                 verifyUpdateResult <- verifyOrdinaryValueUpdate(
@@ -842,9 +831,7 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Do the update.
-            sparqlUpdateResponse <- TransactionUtil.runInUpdateTransaction({
-                transactionID => (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
-            }, storeManager)
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
             // Check whether the update succeeded.
             sparqlQuery = queries.sparql.v1.txt.checkDeletion(newValueIri).toString()
@@ -855,9 +842,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 throw UpdateNotPerformedException(s"Value ${deleteValueRequest.valueIri} was not deleted. Please report this as a possible bug.")
             }
         } yield DeleteValueResponseV1(
-            id = newValueIri,
-            userdata = deleteValueRequest.userProfile.userData
-        )
+                id = newValueIri,
+                userdata = deleteValueRequest.userProfile.userData
+            )
 
         for {
         // Don't allow anonymous users to update values.
@@ -1400,7 +1387,6 @@ class ValuesResponderV1 extends ResponderV1 {
       * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that
       * pre-update checks have already been done.
       *
-      * @param transactionID                      the transaction ID.
       * @param projectIri                         the IRI of the project in which to create the value.
       * @param resourceIri                        the IRI of the resource in which to create the value.
       * @param propertyIri                        the IRI of the property that will point from the resource to the value.
@@ -1411,8 +1397,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param userProfile                        the profile of the user making the request.
       * @return an [[UnverifiedCreateValueResponseV1]].
       */
-    private def createValueV1AfterChecks(transactionID: UUID,
-                                         projectIri: IRI,
+    private def createValueV1AfterChecks(projectIri: IRI,
                                          resourceIri: IRI,
                                          propertyIri: IRI,
                                          value: UpdateValueV1,
@@ -1423,7 +1408,6 @@ class ValuesResponderV1 extends ResponderV1 {
         value match {
             case linkUpdateV1: LinkUpdateV1 =>
                 createLinkValueV1AfterChecks(
-                    transactionID = transactionID,
                     projectIri = projectIri,
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
@@ -1436,7 +1420,6 @@ class ValuesResponderV1 extends ResponderV1 {
 
             case ordinaryUpdateValueV1 =>
                 createOrdinaryValueV1AfterChecks(
-                    transactionID = transactionID,
                     projectIri = projectIri,
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
@@ -1452,7 +1435,6 @@ class ValuesResponderV1 extends ResponderV1 {
     /**
       * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
       *
-      * @param transactionID                      the transaction ID.
       * @param projectIri                         the IRI of the project in which the link is to be created.
       * @param resourceIri                        the resource in which the link is to be created.
       * @param propertyIri                        the link property.
@@ -1463,8 +1445,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param userProfile                        the profile of the user making the request.
       * @return an [[UnverifiedCreateValueResponseV1]].
       */
-    private def createLinkValueV1AfterChecks(transactionID: UUID,
-                                             projectIri: IRI,
+    private def createLinkValueV1AfterChecks(projectIri: IRI,
                                              resourceIri: IRI,
                                              propertyIri: IRI,
                                              linkUpdateV1: LinkUpdateV1,
@@ -1498,7 +1479,7 @@ class ValuesResponderV1 extends ResponderV1 {
             */
 
             // Do the update.
-            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedCreateValueResponseV1(
             newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
             value = linkUpdateV1
@@ -1508,7 +1489,6 @@ class ValuesResponderV1 extends ResponderV1 {
     /**
       * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
       *
-      * @param transactionID                      the transaction ID.
       * @param projectIri                         the project in which the value is to be created.
       * @param resourceIri                        the resource in which the value is to be created.
       * @param propertyIri                        the property that should point to the value.
@@ -1519,8 +1499,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param userProfile                        the profile of the user making the request.
       * @return an [[UnverifiedCreateValueResponseV1]].
       */
-    private def createOrdinaryValueV1AfterChecks(transactionID: UUID,
-                                                 projectIri: IRI,
+    private def createOrdinaryValueV1AfterChecks(projectIri: IRI,
                                                  resourceIri: IRI,
                                                  propertyIri: IRI,
                                                  value: UpdateValueV1,
@@ -1577,7 +1556,7 @@ class ValuesResponderV1 extends ResponderV1 {
             */
 
             // Do the update.
-            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedCreateValueResponseV1(
             newValueIri = newValueIri,
             value = value
@@ -1641,9 +1620,7 @@ class ValuesResponderV1 extends ResponderV1 {
             */
 
             // Do the update.
-            sparqlUpdateResponse <- TransactionUtil.runInUpdateTransaction({
-                transactionID => (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
-            }, storeManager)
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
             // To find out whether the update succeeded, check that the new link is in the triplestore.
             linkValueQueryResult <- verifyLinkUpdate(
@@ -1760,9 +1737,7 @@ class ValuesResponderV1 extends ResponderV1 {
             */
 
             // Do the update.
-            sparqlUpdateResponse <- TransactionUtil.runInUpdateTransaction({
-                transactionID => (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
-            }, storeManager)
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
             // To find out whether the update succeeded, look for the new value in the triplestore.
             verifyUpdateResult <- verifyOrdinaryValueUpdate(

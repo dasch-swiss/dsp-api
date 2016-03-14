@@ -18,6 +18,13 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * Transaction management for SPARQL updates over HTTP is currently commented out because of
+ * issue <https://github.com/dhlab-basel/Knora/issues/85>.
+ */
+
+/*
+
 package org.knora.webapi.store.triplestore.http
 
 import java.util.UUID
@@ -87,3 +94,5 @@ object HttpTriplestoreTransactionManager {
         transactionMap.remove(transactionID)
     }
 }
+
+*/

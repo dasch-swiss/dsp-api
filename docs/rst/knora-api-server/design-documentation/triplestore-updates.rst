@@ -189,6 +189,31 @@ as the text value containing the reference.
 Design
 ------
 
+Responsibilities of Responders
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``ResourcesResponderV1`` has sole responsibility for generating SPARQL to
+create and updating resources, and ``ValuesResponderV1`` has sole
+responsibility for generating SPARQL to create and update values. When a new
+resource is created with its values, ``ValuesResponderV1`` generates SPARQL
+statements that can be included in the ``WHERE`` and ``INSERT`` clauses of a
+SPARQL update to create the values, and ``ResourcesResponderV1`` adds these
+statements to the SPARQL update that creates the resource. This ensures that
+the resource and its values are created in a single SPARQL update operation,
+and hence in a single triplestore transaction.
+
+.. Transaction management for SPARQL updates over HTTP is currently commented out because of
+   issue <https://github.com/dhlab-basel/Knora/issues/85>.
+
+   When a new resource is created with its initial values,
+   ``ResourcesResponderV1`` is also responsible for using ``TransactionUtil`` to
+   manage the update transaction that will be used to create both the resource
+   and its values (see :ref:`transaction-management`). First,
+   ``ResourcesResponderV1`` creates an empty resource. Then, while still holding
+   a write lock on the resource, it sends a ``CreateMultipleValuesRequestV1``
+   message to ``ValuesResponderV1``, asking it to create the initial values. Once
+   it receives a reply from ``ValuesResponderV1``, it releases the lock.
+
 Application-level Locking
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -202,35 +227,62 @@ a time can update a given resource. Before each update, the application
 acquires a resource lock. It then does the pre-update checks and the update,
 then releases the lock. The lock implementation (in ``ResourceLocker``)
 requires each API request message to include a random UUID, which is generated
-in the :ref:`api-routing` package.
-
-Using application-level locks allows us to do pre-update checks in their own
-transactions, and finally to do the SPARQL update in its own transaction.
-However, the SPARQL update itself is our only chance to do pre-update checks
-in the same transaction that will perform the update. The design of the
-`SPARQL 1.1 Update`_ standard makes it possible to ensure that if certain
-conditions are not met, the update will not be performed. Redundant database
-integrity checks are a good thing. Therefore, whenever possible, the SPARQL
-update itself checks that the conditions for the update are met.
+in the :ref:`api-routing` package. Using application-level locks allows us to
+do pre-update checks in their own transactions, and finally to do the SPARQL
+update in its own transaction.
 
 Consistency Checks
 ^^^^^^^^^^^^^^^^^^
 
-Knora enforces consistency constraints in two ways:
+Knora enforces consistency constraints in three ways: by doing pre-update
+checks, by doing checks in the ``WHERE`` clauses of SPARQL updates, and
+by using GraphDB's built-in consistency checker. We take the view that
+redundant consistency checks are a good thing.
 
-First, by doing pre-update checks, i.e. SPARQL ``SELECT`` queries, while
+Pre-update checks are SPARQL ``SELECT`` queries that are executed while
 holding an application-level lock on the resource to be updated. These checks
-should work with any triplestore, and can return helpful, Knora- specific
+should work with any triplestore, and can return helpful, Knora-specific
 error messages to the client if the request would violate a consistency
 constraint.
 
-Second, on GraphDB, the triplestore's consistency checker can be turned on to
-ensure that each update transaction respects the consistency constraints, as
-described in the section `Consistency checks`_ of the GraphDB documentation.
-This makes it possible to catch consistency constraint violations caused by
-bugs in Knora, and it also checks data that is uploaded directly into the
-triplestore without going through the Knora API. However, this feature is not
-yet enabled, because of problems described in `issue 33`_.
+However, the SPARQL update itself is our only chance to do pre-update checks
+in the same transaction that will perform the update. The design of the
+`SPARQL 1.1 Update`_ standard makes it possible to ensure that if certain
+conditions are not met, the update will not be performed. In our SPARQL update
+code, each update contains a ``WHERE`` clause, possibly a ``DELETE`` clause,
+and an ``INSERT`` clause. The ``WHERE`` clause is executed first. It performs
+consistency checks and provides values for variables that are used in the
+``DELETE`` and/or ``INSERT`` clauses. In our updates, if the expectations of
+the ``WHERE`` clause are not met (e.g. because the data to be updated does not
+exist), the ``WHERE`` clause should return no results; as a result, the update
+will not be performed.
+
+Regardless of whether the update succeeds or not, it returns nothing. So the
+only way to find out whether it was successful is to do a ``SELECT``
+afterwards. Moreover, if the update failed, there is no straightforward way to
+find out why. This is one reason why Knora does pre-update checks by means of
+separate ``SELECT`` queries, *before* performing the update. This makes it
+possible to return specific error messages to the user to indicate why an
+update cannot be performed.
+
+Moreover, while some checks are easy to do in a SPARQL update, others are
+difficult, impractical, or impossible. Easy checks include checking whether a
+resource or value exists or is deleted, and checking that the
+``knora-base:objectClassConstraint`` of a predicate matches the ``rdf:type`` of
+its intended object. Cardinality checks are not very difficult, but they perform
+poorly on Jena. Knora does not do permission checks in SPARQL, because its
+permission-checking algorithm is too complex to be implemented in SPARQL. For
+this reason, Knora's check for duplicate values cannot be done in SPARQL
+update code, because it relies on permission checks.
+
+
+GraphDB's consistency checker can be turned on to ensure that each update
+transaction respects the consistency constraints, as described in the section
+`Consistency checks`_ of the GraphDB documentation. This makes it possible to
+catch consistency constraint violations caused by bugs in Knora, and it also
+checks data that is uploaded directly into the triplestore without going
+through the Knora API. However, this feature is not yet enabled, because of
+problems described in `issue 33`_.
 
 GraphDB's consistency checker requires the repository to be created with
 reasoning enabled. GraphDB's reasoning rules are defined in rule files with
@@ -407,49 +459,6 @@ knora-base:objectClassConstraint
 If resource ``i`` has a predicate ``p`` that requires an object of type ``t``,
 and the object of ``p`` is not a ``t``, the constraint is violated.
 
-Responsibilities of Responders
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-``ResourcesResponderV1`` has sole responsibility for creating and updating resources, and
-``ValuesResponderV1`` has sole responsibility for creating and updating values.
-
-When a new resource is created with its initial values,
-``ResourcesResponderV1`` is also responsible for using ``TransactionUtil`` to
-manage the update transaction that will be used to create both the resource
-and its values (see :ref:`transaction-management`). First,
-``ResourcesResponderV1`` creates an empty resource. Then, while still holding
-a write lock on the resource, it sends a ``CreateMultipleValuesRequestV1``
-message to ``ValuesResponderV1``, asking it to create the initial values. Once
-it receives a reply from ``ValuesResponderV1``, it releases the lock.
-
-SPARQL Update Design
-^^^^^^^^^^^^^^^^^^^^
-
-The `SPARQL 1.1 Update`_ standard allows for a number of ways to design updates. In our SPARQL update code,
-each update contains a ``WHERE`` clause, possibly a ``DELETE`` clause, and an ``INSERT`` clause. The
-``WHERE`` clause is executed first. It does pre-update checks and provides values for variables that are
-used in the ``DELETE`` and/or ``INSERT`` clauses. In our updates, if the pre-update checks succeed, the
-``WHERE`` clause will return exactly one row of results. If the pre-update checks fail (e.g. because the
-data to be updated does not exist), the ``WHERE`` clause returns no results, and the update is not performed.
-
-However, regardless of whether the update succeeds or not, it returns nothing. So the only way
-to find out whether it was successful is to do a ``SELECT`` afterwards. Moreover, if the update failed,
-there is no straightforward way to find out why. Therefore, Knora does all pre-update checks by means of
-separate ``SELECT`` queries, *before* performing the update. This makes it possible to return specific
-error messages to the user to indicate why an update cannot be performed. Any pre-update checks carried out
-in the SPARQL update itself are therefore strictly redundant, and the application must not rely on them,
-but we take the view that redundant checks are a good thing when a database is being updated.
-
-Moreover, while some pre-update checks are easy to do in a SPARQL update,
-others are difficult, impractical, or impossible. Easy checks include checking
-whether a resource or value exists or is deleted, and checking that the
-``knora-base:objectClassConstraint`` of a predicate matches the ``rdf:type`` of its intended object.
-Cardinality checks are not very difficult, but they perform poorly on Jena
-(although GraphDB does them efficiently). Knora does not do permission checks
-in SPARQL, because its permission-checking algorithm is too complex to be
-implemented in SPARQL. For this reason, Knora's check for duplicate values
-cannot be done in SPARQL update code, because it relies on permission checks.
-
 SPARQL Update Examples
 ----------------------
 
@@ -482,8 +491,8 @@ value, or nothing otherwise:
         ?searchValue ?p ?o .
     }
 
-Creating the first value of a property
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating the initial version of a value
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -516,34 +525,6 @@ Creating the first value of a property
 
         # Do nothing if the submitted value has the wrong type.
         ?property knora-base:objectClassConstraint ?valueType .
-
-        # Do nothing if the resource class has no cardinality for this property.
-
-        ?resourceClass rdfs:subClassOf ?restriction .
-        ?restriction a owl:Restriction .
-        ?restriction owl:onProperty ?property .
-
-        # Do nothing if the resource class is allowed to have at most one instance of this property, and it already has one.
-
-        MINUS {
-            ?restriction owl:cardinality 1 .
-            ?resource ?property ?value .
-        }
-
-        MINUS {
-            ?restriction owl:maxCardinality 1 .
-            ?resource ?property ?value .
-        }
-
-        MINUS {
-            ?restriction owl:qualifiedCardinality 1 .
-            ?resource ?property ?value .
-        }
-
-        MINUS {
-            ?restriction owl:maxQualifiedCardinality 1 .
-            ?resource ?property ?value .
-        }
     }
 
 To find out whether the insert succeeded, the application can use the
@@ -639,7 +620,7 @@ This assumes that we know the current version of the value. If the
 version we have is not actually the current version, this query will
 return no rows.
 
-.. _GraphDB SE Transactions: https://confluence.ontotext.com/display/GraphDB6/GraphDB-SE+Indexing+Specifics#GraphDB-SEIndexingSpecifics-TransactionControl
+.. _GraphDB SE Transactions: http://graphdb.ontotext.com/documentation/free/storage.html#transaction-control
 .. _SPARQL 1.1 Protocol: http://www.w3.org/TR/sparql11-protocol/
 .. _SPARQL 1.1 Update: http://www.w3.org/TR/sparql11-update/
 .. _reifications: http://www.w3.org/TR/rdf-schema/#ch_reificationvocab

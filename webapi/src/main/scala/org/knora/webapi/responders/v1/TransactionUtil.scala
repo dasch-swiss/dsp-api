@@ -18,6 +18,12 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * Transaction management for SPARQL updates over HTTP is currently commented out because of
+ * issue <https://github.com/dhlab-basel/Knora/issues/85>.
+ */
+
+/*
 package org.knora.webapi.responders.v1
 
 import java.util.UUID
@@ -67,3 +73,4 @@ object TransactionUtil {
         } yield recoveredTaskResult
     }
 }
+*/

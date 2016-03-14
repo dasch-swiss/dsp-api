@@ -39,7 +39,6 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
 import scala.concurrent.{Future, Promise}
-import scala.util.Try
 
 /**
   * Responds to requests for information about resources, and returns responses in Knora API v1 format.
@@ -1026,40 +1025,30 @@ class ResourcesResponderV1 extends ResponderV1 {
                     }
                 }
 
-                // Everything looks OK, so we can create an empty resource and add the values to it. This must
-                // happen in an update transaction managed by the store package, to ensure that triplestore
-                // consistency checks are performed on the result of the whole set of updates. We use
-                // TransactionUtil.runInUpdateTransaction to handle the store module's transaction management.
-                // Its first argument is a lambda function that sends all the updates to the store manager,
-                // using a transaction ID provided by TransactionUtil.runInUpdateTransaction.
-                createMultipleValuesResponse <- TransactionUtil.runInUpdateTransaction({
-                    transactionID =>
-                        for {
-                        // Create an empty resource.
-                            createNewResourceSparql <- Future(queries.sparql.v1.txt.createNewResource(
-                                dataNamedGraph = namedGraph,
-                                triplestore = settings.triplestoreType,
-                                resourceIri = resourceIri,
-                                label = label,
-                                resourceClassIri = resourceClassIri,
-                                ownerIri = ownerIri,
-                                projectIri = projectIri,
-                                permissions = permissions).toString())
-                            createResourceResponse <- (storeManager ? SparqlUpdateRequest(transactionID, createNewResourceSparql)).mapTo[SparqlUpdateResponse]
+                // Everything looks OK, so we can create an empty resource and add the values to it.
 
-                            // Ask the values responder to create the values.
-                            createValuesRequest = CreateMultipleValuesRequestV1(
-                                transactionID = transactionID,
-                                projectIri = projectIri,
-                                resourceIri = resourceIri,
-                                resourceClassIri = resourceClassIri,
-                                values = values ++ fileValuesV1,
-                                userProfile = userProfile,
-                                apiRequestID = apiRequestID
-                            )
-                            createValuesResponse: CreateMultipleValuesResponseV1 <- (responderManager ? createValuesRequest).mapTo[CreateMultipleValuesResponseV1]
-                        } yield createValuesResponse
-                }, storeManager)
+                // Create an empty resource.
+                createNewResourceSparql <- Future(queries.sparql.v1.txt.createNewResource(
+                    dataNamedGraph = namedGraph,
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceIri,
+                    label = label,
+                    resourceClassIri = resourceClassIri,
+                    ownerIri = ownerIri,
+                    projectIri = projectIri,
+                    permissions = permissions).toString())
+                createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]
+
+                // Ask the values responder to create the values.
+                createValuesRequest = CreateMultipleValuesRequestV1(
+                    projectIri = projectIri,
+                    resourceIri = resourceIri,
+                    resourceClassIri = resourceClassIri,
+                    values = values ++ fileValuesV1,
+                    userProfile = userProfile,
+                    apiRequestID = apiRequestID
+                )
+                createValuesResponse: CreateMultipleValuesResponseV1 <- (responderManager ? createValuesRequest).mapTo[CreateMultipleValuesResponseV1]
 
                 // Verify that the resource was created.
 
@@ -1074,7 +1063,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 verifyCreateValuesRequest = VerifyMultipleValueCreationRequestV1(
                     resourceIri = resourceIri,
-                    unverifiedValues = createMultipleValuesResponse.unverifiedValues,
+                    unverifiedValues = createValuesResponse.unverifiedValues,
                     userProfile = userProfile
                 )
 
