@@ -85,7 +85,8 @@ class SipiResponderV1 extends ResponderV1 {
             permissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1WithValueProps(filename, valueProps, userProfile)
         } yield SipiFileInfoGetResponseV1(
             permissionCode = permissionCode,
-            filepath = permissionCode.map(_ => path)
+            filepath = permissionCode.map(_ => path),
+            userdata = userProfile.userData
         )
     }
 

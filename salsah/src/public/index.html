@@ -179,6 +179,21 @@
 
             SALSAH.ApiPost('session', {username: $('#user_id').val(), password: $('#password').val()}, authorization, function(data) {
 				if (data.status == ApiErrors.OK) {
+					console.log("session created with id " + data.sid);
+					$.ajax({
+						url: "http://localhost:1024/Knora_login",
+						type: "POST",
+						data: {
+							sid: data.sid
+						},
+						xhrFields: {
+							withCredentials: true
+						},
+						success: function(data) {
+							console.log("from Sipi: " + data.status)
+						}
+					})
+
 					$('#dologin').simpledialog('loginbox', 'close');
 					SALSAH.reload_css();
 					$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userdata.username)
