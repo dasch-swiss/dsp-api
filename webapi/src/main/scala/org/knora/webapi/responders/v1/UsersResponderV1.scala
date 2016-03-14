@@ -43,7 +43,7 @@ class UsersResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case UserProfileGetRequestV1(userIri, clean) => future2Message(sender(), getUserProfileV1(userIri, clean), log)
+        case UserProfileByIRIGetRequestV1(userIri, clean) => future2Message(sender(), getUserProfileByIRIV1(userIri, clean), log)
         case UserProfileByUsernameGetRequestV1(username, clean) => future2Message(sender(), getUserProfileByUsernameV1(username, clean), log)
         case UserCreateRequestV1(newUserData, userProfile) => future2Message(sender(), createNewUserV1(newUserData, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
@@ -55,7 +55,7 @@ class UsersResponderV1 extends ResponderV1 {
       * @param userIri the IRI of the user.
       * @return a [[Option[UserProfileV1]] describing the user.
       */
-    private def getUserProfileV1(userIri: IRI, clean: Boolean): Future[Option[UserProfileV1]] = {
+    private def getUserProfileByIRIV1(userIri: IRI, clean: Boolean): Future[Option[UserProfileV1]] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getUser(userIri).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]

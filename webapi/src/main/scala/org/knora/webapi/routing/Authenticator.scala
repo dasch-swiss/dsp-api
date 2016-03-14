@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileByIRIGetRequestV1, UserProfileV1}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
 import org.knora.webapi.{IRI, InvalidCredentialsException, Settings}
@@ -461,7 +461,7 @@ object Authenticator {
     private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Option[UserProfileV1] = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
-        val userProfileV1Future = responderManager ? UserProfileGetRequestV1(iri)
+        val userProfileV1Future = responderManager ? UserProfileByIRIGetRequestV1(iri)
         Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
             case Some(userProfileV1) => {
                 log.debug("This user was found: " + userProfileV1.toString)

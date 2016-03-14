@@ -52,7 +52,7 @@ object UsersRouteV1 extends Authenticator {
                     val requestMessageTry = Try {
                         if (urlValidator.isValid(value)) {
                             /* valid URL */
-                            UserProfileGetRequestV1(value, true)
+                            UserProfileByIRIGetRequestV1(value, true)
                         } else {
                             /* not valid URL so I assume it is an username */
                             UserProfileByUsernameGetRequestV1(value, true)

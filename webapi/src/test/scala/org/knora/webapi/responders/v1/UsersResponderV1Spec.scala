@@ -30,7 +30,7 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileByIRIGetRequestV1, UserProfileV1}
 import org.knora.webapi.store._
 import org.knora.webapi.{CoreSpec, IRI, LiveActorMaker, NotFoundException}
 
@@ -95,11 +95,11 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     "The UsersResponder " when {
         "asked about an user identified by 'iri' " should {
             "return a profile if the user is known " in {
-                actorUnderTest ! UserProfileGetRequestV1(requested_user_id_existing, true)
+                actorUnderTest ! UserProfileByIRIGetRequestV1(requested_user_id_existing, true)
                 expectMsg(Some(rootUserProfileV1))
             }
             "return 'None' when the user is unknown " in {
-                actorUnderTest ! UserProfileGetRequestV1(requested_user_id_not_existing, true)
+                actorUnderTest ! UserProfileByIRIGetRequestV1(requested_user_id_not_existing, true)
                 expectMsg(Failure(NotFoundException(s"User '$requested_user_id_not_existing' not found")))
             }
         }
