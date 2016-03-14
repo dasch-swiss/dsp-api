@@ -96,9 +96,15 @@ However, outside the ontology file, it would make more sense to define an
 Properties
 ^^^^^^^^^^
 
-Now we need some RDF property definitions. The project contains books, which
-have properties like ``title``. Here is the definition of the ``title``
-property:
+All the content produced by a Knora project must be stored in Knora resources
+(see :ref:`incunabula-resource-classes`). Resources have properties that point
+to different parts of their contents; for example, the ``incunabula`` project
+contains books, which have properties like ``title``. Every property that
+poitns to a Knora value must be a subproperty of ``knora-base:hasValue``, and
+every property that points to another Knora resource must be a subproperty of
+``knora-base:hasLinkTo``.
+
+Here is the definition of the ``incunabula:title`` property:
 
 ::
 
@@ -134,16 +140,14 @@ definition of ``:title`` says:
   Object properties point to objects, which have IRIs and can have their own
   properties. Datatype properties point to literal values, such as strings and
   integers.
-* ``rdfs:subPropertyOf dc:title``: It is a subproperty of ``dc:title``, so if
-  you do a search for resources that have a certain ``dc:title``, and there is
-  a resource with a matching ``incunabula:title``, the search results could
-  include that resource. (This feature is planned but not yet implemented in
-  the Knora API server.) It is important to note that ``dc:title`` is a
-  subproperty of ``knora-base:hasValue``. It would have been possible to
+* ``rdfs:subPropertyOf dc:title``: It is a subproperty of ``dc:title``, which
+  is a subproperty of ``knora-base:hasValue``. It would have been possible to
   define ``incunabula:title`` as a direct subproperty of ``knora-base:hasValue``,
-  and indeed many properties in Knora projects are defined in
-  that way. Any property that points to a ``knora-base:Value`` must be a
-  subproperty of ``knora-base:hasValue``.
+  and indeed many properties in Knora projects are defined in that way. The
+  advantage of using ``dc:title`` is that if you do a search for resources that
+  have a certain ``dc:title``, and there is a resource with a matching
+  ``incunabula:title``, the search results could include that resource. (This
+  feature is planned but not yet implemented in the Knora API server.)
 * ``rdfs:label "Titel"@de``, etc.: It has the specified labels in various
   languages. These are needed, for example, by user interfaces, to prompt the
   user to enter a value.
@@ -242,6 +246,14 @@ As a link value property, ``incunabula:partOfValue`` must point to a
 this, see
 :download:`The Knora Base Ontology </latex/knora-base/knora-base.pdf>`.
 
+Note that the property ``incunabula:hasAuthor`` points to a
+``knora-base:TextValue``, because the ``incunabula`` project repåresents
+authors simply by their names. A more complex project could represent each
+author as a resource, in which case ``incunabula:hasAuthor`` would need to be
+a subproperty of ``knora-base:hasLinkTo``.
+
+
+.. _incunabula-resource-classes:
 
 Resource Classes
 ^^^^^^^^^^^^^^^^
