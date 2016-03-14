@@ -62,8 +62,10 @@ ontologies that are very commonly used in RDF:
 
 The ``rdf``, ``rdfs``, and ``owl`` ontologies contain basic properties that
 are used to define ontology entities. The ``xsd`` ontology contains
-definitions of literal data types such as ``string`` and ``integer``. The
-``foaf`` ontology contains classes and properties for representing people.
+definitions of literal data types such as ``string`` and ``integer``. (For
+more information about these ontologies, see the references in
+:download:`The Knora Base Ontology </latex/knora-base/knora-base.pdf>`.)
+The ``foaf`` ontology contains classes and properties for representing people.
 
 Then we define prefixes for Knora ontologies:
 
