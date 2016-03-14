@@ -22,7 +22,8 @@ package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import org.knora.webapi.messages.v1respondermessages.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoType, ProjectsGetRequestV1}
+import org.apache.commons.validator.routines.UrlValidator
+import org.knora.webapi.messages.v1respondermessages.projectmessages.{ProjectInfoByShortnameGetRequest, ProjectInfoByIRIGetRequest, ProjectInfoType, ProjectsGetRequestV1}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
@@ -32,6 +33,9 @@ import spray.routing._
 import scala.util.Try
 
 object ProjectsRouteV1 extends Authenticator {
+
+    private val schemes = Array("http", "https")
+    private val urlValidator = new UrlValidator(schemes)
 
     def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
@@ -56,16 +60,20 @@ object ProjectsRouteV1 extends Authenticator {
                     )
             }
         } ~
-            path("v1" / "projects" / Segment) { iri =>
+            path("v1" / "projects" / Segment) { value =>
                 get {
-                    // TODO: here, we should differentiate between a given project Iri and a project shortname
                     requestContext =>
                         val requestMessageTry = Try {
                             val userProfile = getUserProfileV1(requestContext)
                             val params = requestContext.request.uri.query.toMap
                             val requestType = params.getOrElse("requestType", ProjectInfoType.SHORT.toString)
-                            val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
-                            ProjectInfoByIRIGetRequest(resIri, ProjectInfoType.lookup(requestType), Some(userProfile))
+                            if (urlValidator.isValid(value)) {
+                                /* valid URL */
+                                ProjectInfoByIRIGetRequest(value, ProjectInfoType.lookup(requestType), Some(userProfile))
+                            } else {
+                                /* not valid URL so I assume it is an username */
+                                ProjectInfoByShortnameGetRequest(value, ProjectInfoType.lookup(requestType), Some(userProfile))
+                            }
                         }
                         RouteUtilV1.runJsonRoute(
                             requestMessageTry,
