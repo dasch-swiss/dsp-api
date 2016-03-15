@@ -15,7 +15,9 @@
  */
 
 var API_URL = 'http://localhost:3333';
-
+var SIPI_URL = 'http://localhost:1024';
+var SIPI_LOGIN_ROUTE = '/Knora_login';
+var SIPI_LOGOUT_ROUTE = '/Knora_logout';
 
 /*
  * let's find the SITE_URL...

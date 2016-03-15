@@ -43,14 +43,14 @@ object AssetsRouteV1 extends Authenticator {
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
 
-        path("v1" / "assets" / Segment) { assetId =>
+        path("v1" / "assets" / Rest) { assetId =>
             get {
                 requestContext => {
                     requestContext.complete {
-
+                        log.debug(s"got request: ${requestContext.toString}")
 
                         val (width, height, text) = assetId match {
-                            case string if string.contains("http".toCharArray) => (1024, 1024, assetId)
+                            case string if string.contains("big".toCharArray) => (1024, 1024, assetId)
                             case _ => (16, 16, assetId)
                         }
 

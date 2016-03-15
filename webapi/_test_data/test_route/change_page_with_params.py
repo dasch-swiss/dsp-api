@@ -9,11 +9,27 @@ import requests, json, urllib
 try:
     base_url = "http://localhost/v1/"
 
+    filename = 'Chlaus.jpg'
+    path = 'images/'
+    mimetype = 'image/jpeg'
+
+    files = {'file': (filename, open(path + filename, 'rb'), mimetype)}
+
+    r = requests.post("http://localhost:1024/make_thumbnail", files = files)
+
+    print(r.text)
+
+    thumb_response = r.json()
+
+    # Get the thumbnail
+    r = requests.get(thumb_response['preview_path'])
+    print("Got preview with status code " + str(r.status_code))
+
     params = {
         'file': {
-            'originalFilename' : "Chlaus.jpg",
-            'originalMimeType' : "image/jpeg",
-            'filename' : "./test_server/images/Chlaus.jpg"
+            'originalFilename' : thumb_response["original_filename"],
+            'originalMimeType' : thumb_response["original_mimetype"],
+            'filename' : thumb_response['filename']
         }
     }
 
