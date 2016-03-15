@@ -37,6 +37,8 @@ import scala.concurrent.duration._
   */
 class SettingsImpl(config: Config) extends Extension {
     val baseApiUrl = config.getString("app.http.base-api-url")
+    val baseSALSAHUrl = config.getString("app.http.base-salsah-url")
+    val projectIconsBasePath = config.getString("app.http.project-icons-basepath")
     val httpInterface = config.getString("app.http.interface")
     val tmpDataDir = config.getString("app.tmp-datadir")
     val dataDir = config.getString("app.datadir")

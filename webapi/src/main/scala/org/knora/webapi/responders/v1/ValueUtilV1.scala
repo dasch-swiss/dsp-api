@@ -120,6 +120,24 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     /**
+      * Creates a URL pointing to the given resource class icon. From the resource class Iri it gets the ontology specific path, i.e. the ontology name.
+      * If the resource class Iri is "http://www.knora.org/ontology/knora-base#Region", the ontology name would be "knora-base".
+      * To the base path, the icon name is appended. In case of a region with the icon name "region.gif",
+      * "http://salsahapp:port/project-icons-basepath/knora-base/region.gif" is returned.
+      *
+      * @param resourceClassIri the Iri of the resource class in question.
+      * @param iconsSrc the name of the icon file.
+      */
+    def makeResourceClassIconURL(resourceClassIri: IRI, iconsSrc: String): IRI = {
+        // get ontology name, e.g. "knora-base" from "http://www.knora.org/ontology/knora-base#Region"
+        // add +1 to ignore the slash
+        val ontologyName = resourceClassIri.substring(resourceClassIri.lastIndexOf('/') + 1, resourceClassIri.lastIndexOf('#'))
+
+        // create URL: combine salsah-address and port, project icons base path, ontology name, icon name
+        settings.baseSALSAHUrl + settings.projectIconsBasePath + ontologyName + '/' + iconsSrc
+    }
+
+    /**
       * Creates [[ValueProps]] from a List of [[VariableResultsRow]] representing a value object
       * (the triples where the given value object is the subject in).
       *
