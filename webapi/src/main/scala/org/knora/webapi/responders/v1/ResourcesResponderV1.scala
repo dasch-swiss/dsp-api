@@ -1040,7 +1040,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]
 
                 // Ask the values responder to create the values.
-                createValuesRequest = CreateMultipleValuesRequestV1(
+                createValuesRequest = GenerateSparqlToCreateMultipleValuesRequestV1(
                     projectIri = projectIri,
                     resourceIri = resourceIri,
                     resourceClassIri = resourceClassIri,
@@ -1048,7 +1048,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     userProfile = userProfile,
                     apiRequestID = apiRequestID
                 )
-                createValuesResponse: CreateMultipleValuesResponseV1 <- (responderManager ? createValuesRequest).mapTo[CreateMultipleValuesResponseV1]
+                createValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- (responderManager ? createValuesRequest).mapTo[GenerateSparqlToCreateMultipleValuesResponseV1]
 
                 // Verify that the resource was created.
 

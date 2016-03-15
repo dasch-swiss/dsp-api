@@ -202,7 +202,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         expectMsgPF(timeout) {
             case response: SparqlSelectResponse =>
                 val rows = response.results.bindings
-                (rows.size <= 1) should ===(true)
+                assert(rows.size <= 1, s"Resource $resourceIri has more than one instance of knora-base:lastModificationDate")
 
                 if (rows.size == 1) {
                     Some(rows.head.rowMap("lastModificationDate"))

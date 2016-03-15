@@ -67,23 +67,25 @@ DELETE {
         @if(linkUpdates.exists(_.linkValueExists)) {
             @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
                 @if(linkUpdate.linkValueExists) {
-                    ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+                    @* The SPARQL variable ?linkValue0_n has been set by the WHERE clause. *@
+                    ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue0_@linkValueIndex .
                 }
             }
         }
     }
 } INSERT {
     GRAPH ?dataNamedGraph {
+        ?resource knora-base:lastModificationDate ?currentTime .
+
         @{
             queries.sparql.v1.txt.generateInsertStatementsForCreateValue(valueIndex = 0,
+                                                                         propertyIri = propertyIri,
                                                                          value = value,
                                                                          linkUpdates = linkUpdates,
                                                                          maybeComment = maybeComment,
                                                                          permissionRelevantAssertions = permissionRelevantAssertions)
         }
     }
-
-    ?resource knora-base:lastModificationDate ?currentTime .
 }
 @*
 
@@ -100,8 +102,24 @@ explicit statements in the WHERE clause here.
     case other => {}
 }
 WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
     BIND(IRI("@resourceIri") AS ?resource)
     BIND(NOW() as ?currentTime)
+
+    @* Do nothing if the resource doesn't exist, is marked as deleted, or isn't actually a resource. *@
+
+    ?resource rdf:type ?resourceClass .
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+
+    MINUS {
+        ?resource knora-base:isDeleted true .
+    }
+
+    @* Get the resource's last modification date, if it has one, so we can update it. *@
+
+    OPTIONAL {
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+    }
 
     @{
         queries.sparql.v1.txt.generateWhereStatementsForCreateValue(valueIndex = 0,
@@ -109,12 +127,7 @@ WHERE {
                                                                     propertyIri = propertyIri,
                                                                     newValueIri = newValueIri,
                                                                     valueTypeIri = valueTypeIri,
-                                                                    linkUpdates = linkUpdates)
+                                                                    linkUpdates = linkUpdates,
+                                                                    maybeValueHasOrder = None)
      }
-
-    @* Get the resource's last modification date, if it has one, so we can update it. *@
-
-    OPTIONAL {
-        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
-    }
 }

@@ -36,6 +36,7 @@ import org.knora.webapi.util._
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
+import scala.collection.immutable.Iterable
 import scala.concurrent.Future
 
 /**
@@ -62,7 +63,7 @@ class ValuesResponderV1 extends ResponderV1 {
         case changeFileValueRequest: ChangeFileValueRequestV1 => future2Message(sender(), changeFileValueV1(changeFileValueRequest), log)
         case changeCommentRequest: ChangeCommentRequestV1 => future2Message(sender(), changeCommentV1(changeCommentRequest), log)
         case deleteValueRequest: DeleteValueRequestV1 => future2Message(sender(), deleteValueV1(deleteValueRequest), log)
-        case createMultipleValuesRequest: CreateMultipleValuesRequestV1 => future2Message(sender(), createMultipleValuesV1(createMultipleValuesRequest), log)
+        case createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV1 => future2Message(sender(), createMultipleValuesV1(createMultipleValuesRequest), log)
         case verifyMultipleValueCreationRequest: VerifyMultipleValueCreationRequestV1 => future2Message(sender(), verifyMultipleValueCreation(verifyMultipleValueCreationRequest), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
@@ -218,9 +219,9 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Creates multiple values in a new, empty resource, using an existing transaction. The resource ''must'' be a new,
-      * empty resource, i.e. it must have no values. All pre-update checks must already have been performed. Specifically,
-      * this method assumes that:
+      * Generates SPARQL for creating multiple values in a new, empty resource, using an existing transaction.
+      * The resource ''must'' be a new, empty resource, i.e. it must have no values. All pre-update checks must already
+      * have been performed. Specifically, this method assumes that:
       *
       * - The requesting user has permission to add values to the resource.
       * - Each submitted value is consistent with the `knora-base:objectClassConstraint` of the property that is supposed to point to it.
@@ -228,9 +229,9 @@ class ValuesResponderV1 extends ResponderV1 {
       * - All required values are provided.
       *
       * @param createMultipleValuesRequest the request message.
-      * @return a [[CreateMultipleValuesResponseV1]].
+      * @return a [[GenerateSparqlToCreateMultipleValuesResponseV1]].
       */
-    private def createMultipleValuesV1(createMultipleValuesRequest: CreateMultipleValuesRequestV1): Future[CreateMultipleValuesResponseV1] = {
+    private def createMultipleValuesV1(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV1): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
         /**
           * Creates a [[Future]] that performs the update. This function will be called by [[ResourceLocker]] once it
           * has acquired an update lock on the resource.
@@ -238,7 +239,7 @@ class ValuesResponderV1 extends ResponderV1 {
           * @param userIri the IRI of the user making the request.
           * @return a [[Future]] that does pre-update checks and performs the update.
           */
-        def makeTaskFuture(userIri: IRI): Future[CreateMultipleValuesResponseV1] = {
+        def makeTaskFuture(userIri: IRI): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
             // Make owner and project assertions for the new values. Give them the same project as the
             // containing resource, and make the requesting user the owner.
             val ownerTuple: (IRI, IRI) = OntologyConstants.KnoraBase.AttachedToUser -> userIri
@@ -251,10 +252,35 @@ class ValuesResponderV1 extends ResponderV1 {
                     userProfile = createMultipleValuesRequest.userProfile
                 )).mapTo[EntityInfoGetResponseV1]
 
-                // We have a Map of property IRIs to sequences of UpdateValueV1s. Create each value in the triplestore, and
-                // build a Map with the same structure, except that instead of UpdateValueV1s, it contains Futures
-                // providing the results of creating the values.
-                valueCreationFutures: Map[IRI, Future[Seq[UnverifiedCreateValueResponseV1]]] = createMultipleValuesRequest.values.map {
+                // We could be creating several text values with standoff links to the same target resource. Count
+                // the number of standoff links to each target resource.
+                targetIris: Seq[(IRI, Int)] = createMultipleValuesRequest.values.values.flatten.collect {
+                    case CreateValueV1WithComment(textValueV1: TextValueV1, _) => textValueV1.resource_reference
+                }.flatten.groupBy(identity).mapValues(_.size).toSeq // http://stackoverflow.com/a/10934489
+
+                // Construct a SparqlTemplateLinkUpdate to create one link and one LinkValue for each resource that is
+                // the target of a standoff link.
+                standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = targetIris.map {
+                    case (targetIri, referenceCount) =>
+                        SparqlTemplateLinkUpdate(
+                            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                            directLinkExists = false,
+                            insertDirectLink = true,
+                            deleteDirectLink = false,
+                            linkValueExists = false,
+                            newLinkValueIri = knoraIriUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
+                            linkTargetIri = targetIri,
+                            currentReferenceCount = 0,
+                            newReferenceCount = referenceCount,
+                            permissionRelevantAssertions = Vector(ownerTuple, projectTuple) // TODO: How should we create permissions for a LinkValue for standoff links?
+                        )
+                }
+
+                // TODO: instead of creating values, generate SPARQL statements for WHERE and INSERT clauses.
+
+                // We have a Map of property IRIs to sequences of UpdateValueV1s. Generate SPARQL for creating each value.
+                // Also, build a Map with the same structure, except that instead of UpdateValueV1s, it contains UnverifiedValueV1s.
+                valueCreationFutures: Map[IRI, Future[Seq[UnverifiedValueV1]]] = createMultipleValuesRequest.values.map {
                     case (propertyIri: IRI, valuesWithComments: Seq[CreateValueV1WithComment]) =>
                         // Construct a list of permission-relevant assertions about the new values of the property,
                         // i.e. the values' owner and project plus their permissions. Use the property's default
@@ -268,7 +294,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         // run concurrently, and it is not safe to update a resource in multiple concurrent operations.
                         // (Multiple operations could simultaneously find that the resource has no lastModificationDate,
                         // and they could all add it, giving the resource multiple lastModificationDate triples.)
-                        val valueCreationResponsesForProperty: Seq[Future[UnverifiedCreateValueResponseV1]] = valuesWithComments.map {
+                        val valueCreationResponsesForProperty: Seq[Future[UnverifiedValueV1]] = valuesWithComments.map {
                             valueV1WithComment: CreateValueV1WithComment => createValueV1AfterChecks(
                                 projectIri = createMultipleValuesRequest.projectIri,
                                 resourceIri = createMultipleValuesRequest.resourceIri,
@@ -287,7 +313,13 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Convert our Map full of Futures into one Future, which will provide a Map of all the results
                 // when they're available.
                 valueCreationResponses <- ActorUtil.sequenceFuturesInMap(valueCreationFutures)
-            } yield CreateMultipleValuesResponseV1(unverifiedValues = valueCreationResponses)
+
+                // TODO: generate SPARQL for statements in the INSERT clause for the the SparqlTemplateLinkUpdates.
+            } yield GenerateSparqlToCreateMultipleValuesResponseV1(
+                whereSparql = "",
+                insertSparql = "",
+                unverifiedValues = valueCreationResponses
+            )
         }
 
         for {
@@ -318,7 +350,7 @@ class ValuesResponderV1 extends ResponderV1 {
         // build a Map with the same structure, except that instead of UnverifiedCreateValueResponseV1s, it contains Futures
         // providing the results of querying the values.
         val valueVerificationFutures: Map[IRI, Future[Seq[CreateValueResponseV1]]] = verifyRequest.unverifiedValues.map {
-            case (propertyIri: IRI, unverifiedValues: Seq[UnverifiedCreateValueResponseV1]) =>
+            case (propertyIri: IRI, unverifiedValues: Seq[UnverifiedValueV1]) =>
                 val valueVerificationResponsesForProperty = unverifiedValues.map {
                     unverifiedValue =>
                         verifyValueCreation(
@@ -1168,7 +1200,7 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     private def verifyValueCreation(resourceIri: IRI,
                                     propertyIri: IRI,
-                                    unverifiedValue: UnverifiedCreateValueResponseV1,
+                                    unverifiedValue: UnverifiedValueV1,
                                     userProfile: UserProfileV1): Future[CreateValueResponseV1] = {
         unverifiedValue.value match {
             case linkUpdateV1: LinkUpdateV1 =>
@@ -1395,7 +1427,7 @@ class ValuesResponderV1 extends ResponderV1 {
       *                                           and project plus its permissions.
       * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
       * @param userProfile                        the profile of the user making the request.
-      * @return an [[UnverifiedCreateValueResponseV1]].
+      * @return an [[UnverifiedValueV1]].
       */
     private def createValueV1AfterChecks(projectIri: IRI,
                                          resourceIri: IRI,
@@ -1404,7 +1436,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                          comment: Option[String],
                                          permissionRelevantAssertions: Seq[(IRI, IRI)],
                                          updateResourceLastModificationDate: Boolean,
-                                         userProfile: UserProfileV1): Future[UnverifiedCreateValueResponseV1] = {
+                                         userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         value match {
             case linkUpdateV1: LinkUpdateV1 =>
                 createLinkValueV1AfterChecks(
@@ -1443,7 +1475,7 @@ class ValuesResponderV1 extends ResponderV1 {
       *                                           its owner and project plus permissions.
       * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
       * @param userProfile                        the profile of the user making the request.
-      * @return an [[UnverifiedCreateValueResponseV1]].
+      * @return an [[UnverifiedValueV1]].
       */
     private def createLinkValueV1AfterChecks(projectIri: IRI,
                                              resourceIri: IRI,
@@ -1452,7 +1484,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                              comment: Option[String],
                                              permissionRelevantAssertions: Seq[(IRI, IRI)],
                                              updateResourceLastModificationDate: Boolean,
-                                             userProfile: UserProfileV1): Future[UnverifiedCreateValueResponseV1] = {
+                                             userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         for {
             sparqlTemplateLinkUpdate <- incrementLinkValue(
                 sourceResourceIri = resourceIri,
@@ -1466,10 +1498,9 @@ class ValuesResponderV1 extends ResponderV1 {
             sparqlUpdate = queries.sparql.v1.txt.createLink(
                 dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
                 triplestore = settings.triplestoreType,
-                linkSourceIri = resourceIri,
+                resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
-                maybeComment = comment,
-                updateResourceLastModificationDate = updateResourceLastModificationDate
+                maybeComment = comment
             ).toString()
 
             /*
@@ -1480,7 +1511,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Do the update.
             sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
-        } yield UnverifiedCreateValueResponseV1(
+        } yield UnverifiedValueV1(
             newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
             value = linkUpdateV1
         )
@@ -1497,7 +1528,7 @@ class ValuesResponderV1 extends ResponderV1 {
       *                                           its owner and project plus permissions.
       * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
       * @param userProfile                        the profile of the user making the request.
-      * @return an [[UnverifiedCreateValueResponseV1]].
+      * @return an [[UnverifiedValueV1]].
       */
     private def createOrdinaryValueV1AfterChecks(projectIri: IRI,
                                                  resourceIri: IRI,
@@ -1506,7 +1537,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                                  comment: Option[String],
                                                  permissionRelevantAssertions: Seq[(IRI, IRI)],
                                                  updateResourceLastModificationDate: Boolean,
-                                                 userProfile: UserProfileV1): Future[UnverifiedCreateValueResponseV1] = {
+                                                 userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         // Generate an IRI for the new value.
         val newValueIri = knoraIriUtil.makeRandomValueIri(resourceIri)
 
@@ -1524,7 +1555,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 sourceResourceIri = resourceIri,
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = targetResourceIri,
-                                permissionRelevantAssertions = permissionRelevantAssertions,
+                                permissionRelevantAssertions = permissionRelevantAssertions, // TODO: How should we create permissions for a LinkValue for standoff links?
                                 userProfile = userProfile
                             )
                         }
@@ -1556,7 +1587,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Do the update.
             sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
-        } yield UnverifiedCreateValueResponseV1(
+        } yield UnverifiedValueV1(
             newValueIri = newValueIri,
             value = value
         )

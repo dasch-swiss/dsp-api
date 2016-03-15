@@ -244,7 +244,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
 
     private def sparqlHttpUpdate(sparqlUpdate: String): Future[SparqlUpdateResponse] = {
-        // _ = println(sparqlUpdate)
+        // println(logDelimiter + sparqlUpdate)
 
         for {
             // Send the request to the triplestore.
