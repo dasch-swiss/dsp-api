@@ -29,6 +29,9 @@ import spray.routing.{Route, RequestContext}
 /**
   * This trait provides proxy capabilities to routes, i.e. it allows to tunnel a http requests to an external service
   * and pipe the result back to the client.
+  *
+  * A possible use case for a proxy is when a service not run by Knora should be called using a Knora route. This can be necessary in case
+  * a cross-domain request is not possible due to browsers' security restraints.
   */
 trait Proxy {
 
