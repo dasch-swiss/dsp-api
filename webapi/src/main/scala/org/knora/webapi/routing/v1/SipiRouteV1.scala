@@ -63,9 +63,12 @@ object SipiRouteV1 extends Authenticator with Proxy {
                         log
                     )
             }
-        } ~ path("v1" / "sipi" / Rest) { iiif =>
+        } /*~ path("v1" / "sipi" / Rest) { iiif =>
                 println(iiif)
                 proxyToUnmatchedPath(Uri("http://localhost:3333/v1/assets/"), Uri.Path(iiif))
-        }
+        }*/
+        // this proxy is meant to be used in case we decide that IIIF-URLs should not refer directly to Sipi,
+        // but be processed and fowarded to Sipi
+
     }
 }
