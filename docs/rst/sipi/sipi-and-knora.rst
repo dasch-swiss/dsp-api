@@ -168,12 +168,58 @@ These messages are passed to ``changeValueV1`` because with the described handli
 
 In case of success, a ``ChangeFileValueResponseV1`` is sent back to the client, containing a list of the single ``ChangeValueResponseV1``.
 
-
-
-
-
-
-
 .. [#] Of course, also the GUI uses the API. But the user does not need to know about it.
 
+Retrieving Files from Sipi
+==========================
 
+Binary representions of Knora locations are served by Sipi. For each file value, Knora creates several locations representing different quality levels:
+
+.. code::
+
+   "resinfo": {
+      "locations": [
+         {
+            "duration": ​0,
+            "nx": ​95,
+            "path": "http://sipiserver:port/knora/incunabula_0000000002.jpg/full/full/0/default.jpg",
+            "ny": ​128,
+            "fps": ​0,
+            "format_name": "JPEG",
+            "origname": "ad+s167_druck1=0001.tif",
+            "protocol": "file"
+         },
+         {
+            "duration": ​0,
+             "nx": ​82,
+             "path": "http://sipiserver:port/knora/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
+             "ny": ​110,
+             "fps": ​0,
+             "format_name": "JPEG2000",
+             "origname": "ad+s167_druck1=0001.tif",
+             "protocol": "file"
+         },
+         {
+             "duration": ​0,
+             "nx": ​163,
+             "path": "http://sipiserver:port/knora/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
+             "ny": ​219,
+             "fps": ​0,
+             "format_name": "JPEG2000",
+             "origname": "ad+s167_druck1=0001.tif",
+             "protocol": "file"
+         }
+         ...
+      ],
+   "restype_label": "Seite",
+   "resclass_has_location": true,
+
+Each of these paths has to be handled by the browser by making a call to Sipi, obtaining the binary representation in the desired quality.
+To deal with different image quality levels, Sipi implements the `IIIF standard <http://iiif.io/api/image/2.0/>`_. The different quality level paths
+are created by Knora in ``ValueUtilV1``.
+
+Whenever Sipi serves a binary representation of a Knora file value (indicated by using the prefix ``knora`` in the path), it has to make a request to Knora's
+Sipi responder to get the user's permissions on the requested file. Sipi's request to Knora contains a cookie with the Knora session id the user has obtained when logging in to Knora:
+As a response to a successful login, Knora returns the user's session id and this id is automatically sent to Sipi by the browser, setting a second cookie for the communication with Sipi.
+The reason the Knora session id is set in two cookies, is the fact that cookies can not be shared among different domains. Since Knora and Sipi are likely to be running
+under different domains, this solution offers the necessary flexibility.
