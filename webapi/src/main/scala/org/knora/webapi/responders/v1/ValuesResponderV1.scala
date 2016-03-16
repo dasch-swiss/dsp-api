@@ -257,10 +257,12 @@ class ValuesResponderV1 extends ResponderV1 {
               * @param whereSparql statements to be included in the SPARQL WHERE clause.
               * @param insertSparql statements to be included in the SPARQL INSERT clause.
               * @param valuesToVerify information about each value to be created.
+              * @param valueIndexes the value index of each value described by this object (so they can be sorted).
               */
-            case class SparqlGenerationResultForProperty(whereSparql: Seq[String] = Vector.empty[String],
-                                                         insertSparql: Seq[String] = Vector.empty[String],
-                                                         valuesToVerify: Seq[UnverifiedValueV1] = Seq.empty[UnverifiedValueV1])
+            case class SparqlGenerationResultForProperty(whereSparql: Vector[String] = Vector.empty[String],
+                                                         insertSparql: Vector[String] = Vector.empty[String],
+                                                         valuesToVerify: Vector[UnverifiedValueV1] = Vector.empty[UnverifiedValueV1],
+                                                         valueIndexes: Vector[Int] = Vector.empty[Int])
 
             // Make owner and project assertions for the new values. Give them the same project as the
             // containing resource, and make the requesting user the owner.
@@ -412,7 +414,8 @@ class ValuesResponderV1 extends ResponderV1 {
                                 propertyAcc.copy(
                                     whereSparql = propertyAcc.whereSparql :+ whereSparql,
                                     insertSparql = propertyAcc.insertSparql :+ insertSparql,
-                                    valuesToVerify = propertyAcc.valuesToVerify :+ UnverifiedValueV1(newValueIri = newValueIri, value = updateValueV1)
+                                    valuesToVerify = propertyAcc.valuesToVerify :+ UnverifiedValueV1(newValueIri = newValueIri, value = updateValueV1),
+                                    valueIndexes = propertyAcc.valueIndexes :+ valueToCreate.valueIndex
                                 )
                         }
 
@@ -420,9 +423,10 @@ class ValuesResponderV1 extends ResponderV1 {
                 }
 
                 // Concatenate all the generated SPARQL into one string for the WHERE clause and one string for the INSERT clause.
+                // Sort the contents of each string by value index.
                 resultsForAllProperties: Iterable[SparqlGenerationResultForProperty] = sparqlGenerationResults.values
-                allWhereSparql: String = resultsForAllProperties.flatMap(_.whereSparql).mkString("\n\n")
-                allInsertSparql: String = (resultsForAllProperties.flatMap(_.insertSparql).toVector :+ standoffLinkInsertSparql).mkString("\n\n")
+                allWhereSparql: String = resultsForAllProperties.flatMap(result => result.whereSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n")
+                allInsertSparql: String = resultsForAllProperties.flatMap(result => result.insertSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n")
 
                 // Collect all the UnverifiedValueV1s for each property.
                 allUnverifiedValues: Map[IRI, Seq[UnverifiedValueV1]] = sparqlGenerationResults.map {
