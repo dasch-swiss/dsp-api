@@ -1517,11 +1517,14 @@ class ResourcesResponderV1 extends ResponderV1 {
                         val referencedResType = predicates(OntologyConstants.Rdf.Type).literals.head
 
                         // Get info about that resource class, if available.
-                        // Use reource entity infos to do so.
-                        val (maybeResourceClassLabel, maybeResourceClassIcon) = resourceEntityInfoMap.get(referencedResType) match {
+                        // Use resource entity infos to do so.
+                        val (maybeResourceClassLabel: Option[String], maybeResourceClassIcon: Option[String]) = resourceEntityInfoMap.get(referencedResType) match {
                             case Some(referencedResTypeEntityInfo) =>
-                                Some(referencedResTypeEntityInfo.getPredicateObjects(OntologyConstants.Rdfs.Label).head) ->
-                                    Some(referencedResTypeEntityInfo.getPredicateObjects(OntologyConstants.KnoraBase.ResourceIcon).head)
+
+                                val labelOption: Option[String] = referencedResTypeEntityInfo.getPredicateObjects(OntologyConstants.Rdfs.Label).headOption
+                                val resIconOption: Option[String] = referencedResTypeEntityInfo.getPredicateObjects(OntologyConstants.KnoraBase.ResourceIcon).headOption
+
+                                (labelOption, resIconOption)
 
                             case None => (None, None)
                         }
