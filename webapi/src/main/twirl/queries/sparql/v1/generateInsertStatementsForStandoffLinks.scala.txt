@@ -24,19 +24,14 @@
 
 @**
  * Generates statements to be added to the INSERT clause of a SPARQL update to insert direct links and LinkValues
- * for Standoff resource references, when creating a new value of a resource property (as opposed to a new version of
- * an existing value).
+ * for Standoff resource references, when creating new values (as opposed to new versions of existing values).
  *
- * @param valueIndex the index of the value in the sequence of values that are being created in the transaction (can
- *                   be 0 if only one value is being created). This index will be used to make SPARQL variable names
- *                   specific to the value being created.
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values.
  *
  * The SPARQL variables `?resource` and `?currentTime` must already be bound.
  *@
-@(valueIndex: Int,
-  linkUpdates: Seq[SparqlTemplateLinkUpdate])
+@(linkUpdates: Seq[SparqlTemplateLinkUpdate])
 
         @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
             @* Insert a direct link for the resource reference if necessary. *@
@@ -56,9 +51,20 @@
                 <@linkUpdate.newLinkValueIri> <@assertion._1> <@assertion._2> .
             }
 
-            @* If we're inserting a new version of an existing LinkValue, attach it to the previous version. *@
+            @*
+
+            If this template is being used to create a single text value containing standoff links, the new LinkValue
+            we are creating may be a new version of an existing LinkValue (linkUpdate.linkValueExists will be true).
+            In that case, the WHERE clause will have already bound a SPARQL variable ?linkValueN, containing the IRI
+            of the existing LinkValue, where N is an index in the sequence linkUpdates. In that case, add a triple
+            indicating that the new LinkValue is a new version of the existing one.
+
+            If this template is being used in the context of creating multiple new values in an empty resource,
+            there won't be any existing LinkValues for standoff links, so linkUpdate.linkValueExists will be false.
+
+            *@
             @if(linkUpdate.linkValueExists) {
-                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@{valueIndex}_@{linkValueIndex} .
+                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@{linkValueIndex} .
             }
 
             @* Attach the new LinkValue to its containing resource. *@

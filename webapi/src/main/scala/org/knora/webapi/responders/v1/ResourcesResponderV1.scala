@@ -1025,22 +1025,10 @@ class ResourcesResponderV1 extends ResponderV1 {
                     }
                 }
 
-                // Everything looks OK, so we can create an empty resource and add the values to it.
+                // Everything looks OK, so we can create the resource and its values.
 
-                // Create an empty resource.
-                createNewResourceSparql <- Future(queries.sparql.v1.txt.createNewResource(
-                    dataNamedGraph = namedGraph,
-                    triplestore = settings.triplestoreType,
-                    resourceIri = resourceIri,
-                    label = label,
-                    resourceClassIri = resourceClassIri,
-                    ownerIri = ownerIri,
-                    projectIri = projectIri,
-                    permissions = permissions).toString())
-                createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]
-
-                // Ask the values responder to create the values.
-                createValuesRequest = GenerateSparqlToCreateMultipleValuesRequestV1(
+                // Ask the values responder for the SPARQL statements that are needed to create the values.
+                generateSparqlForValuesRequest = GenerateSparqlToCreateMultipleValuesRequestV1(
                     projectIri = projectIri,
                     resourceIri = resourceIri,
                     resourceClassIri = resourceClassIri,
@@ -1048,7 +1036,26 @@ class ResourcesResponderV1 extends ResponderV1 {
                     userProfile = userProfile,
                     apiRequestID = apiRequestID
                 )
-                createValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- (responderManager ? createValuesRequest).mapTo[GenerateSparqlToCreateMultipleValuesResponseV1]
+                generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- (responderManager ? generateSparqlForValuesRequest).mapTo[GenerateSparqlToCreateMultipleValuesResponseV1]
+
+                // Generate SPARQL for creating the resource, and include the SPARQL for creating the values.
+                createNewResourceSparql = queries.sparql.v1.txt.createNewResource(
+                    dataNamedGraph = namedGraph,
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceIri,
+                    label = label,
+                    resourceClassIri = resourceClassIri,
+                    ownerIri = ownerIri,
+                    projectIri = projectIri,
+                    permissions = permissions,
+                    whereStatementsForValues = generateSparqlForValuesResponse.whereSparql,
+                    insertStatementsForValues = generateSparqlForValuesResponse.insertSparql
+                ).toString()
+
+                // _ = println(createNewResourceSparql)
+
+                // Do the update.
+                createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]
 
                 // Verify that the resource was created.
 
@@ -1063,7 +1070,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 verifyCreateValuesRequest = VerifyMultipleValueCreationRequestV1(
                     resourceIri = resourceIri,
-                    unverifiedValues = createValuesResponse.unverifiedValues,
+                    unverifiedValues = generateSparqlForValuesResponse.unverifiedValues,
                     userProfile = userProfile
                 )
 

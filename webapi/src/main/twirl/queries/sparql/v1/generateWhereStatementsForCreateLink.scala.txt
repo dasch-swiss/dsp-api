@@ -78,10 +78,15 @@
 
     @*
 
-    Bind a variable for knora-base:valueHasOrder for the new value. If we were given a value for this variable, use that.
-    Otherwise, if the property already has one or more (non-deleted) values in the resource, find the one with the
-    highest order, add 1 to its order, and give the resulting order to the new value. Otherwise, give the new value an
-    order of 0.
+    Bind a variable for knora-base:valueHasOrder for the new value.
+
+    If this template is being used to create multiple values, maybeValueHasOrder will contain the knora-base:valueHasOrder
+    to be used.
+
+    If this template is being used to create a single value, maybeValueHasOrder will be None, and we have to do a subquery
+    to determine the next available knora-base:valueHasOrder. This works as follows: if the property already has one or more
+    (non-deleted) values in the resource, find the one with the highest order, add 1 to its order, and give the resulting
+    order to the new value. Otherwise, give the new value an order of 0.
 
     *@
 

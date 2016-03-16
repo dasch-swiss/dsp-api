@@ -67,8 +67,15 @@ DELETE {
         @if(linkUpdates.exists(_.linkValueExists)) {
             @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
                 @if(linkUpdate.linkValueExists) {
-                    @* The SPARQL variable ?linkValue0_n has been set by the WHERE clause. *@
-                    ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue0_@linkValueIndex .
+                    @*
+
+                    If we need to make a new version of an existing LinkValue for a standoff link, the WHERE
+                    clause will have bound a SPARQL variable ?linkValueN containing the IRI of the existing LinkValue,
+                    where N is an index in the sequence linkUpdates. Detach the existing LinkValue from the resource
+                    so we can attach the new version.
+
+                    *@
+                    ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
                 }
             }
         }

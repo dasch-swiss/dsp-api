@@ -36,7 +36,6 @@ import org.knora.webapi.util._
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
-import scala.collection.immutable.Iterable
 import scala.concurrent.Future
 
 /**
@@ -240,6 +239,29 @@ class ValuesResponderV1 extends ResponderV1 {
           * @return a [[Future]] that does pre-update checks and performs the update.
           */
         def makeTaskFuture(userIri: IRI): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
+            /**
+              * Assists in the numbering of values to be created.
+              * @param createValueV1WithComment the value to be created.
+              * @param valueIndex the index of the value in the sequence of all values to be created. This will be used
+              *                   to generate unique SPARQL variable names.
+              * @param valueHasOrder the index of the value in the sequence of values to be created for a particular property.
+              *                      This will be used to generate `knora-base:valueHasOrder`.
+              */
+            case class NumberedValueToCreate(createValueV1WithComment: CreateValueV1WithComment,
+                                             valueIndex: Int,
+                                             valueHasOrder: Int)
+
+            /**
+              * Assists in collecting generated SPARQL as well as other information about values to be created for
+              * a particular property.
+              * @param whereSparql statements to be included in the SPARQL WHERE clause.
+              * @param insertSparql statements to be included in the SPARQL INSERT clause.
+              * @param valuesToVerify information about each value to be created.
+              */
+            case class SparqlGenerationResultForProperty(whereSparql: Seq[String] = Vector.empty[String],
+                                                         insertSparql: Seq[String] = Vector.empty[String],
+                                                         valuesToVerify: Seq[UnverifiedValueV1] = Seq.empty[UnverifiedValueV1])
+
             // Make owner and project assertions for the new values. Give them the same project as the
             // containing resource, and make the requesting user the owner.
             val ownerTuple: (IRI, IRI) = OntologyConstants.KnoraBase.AttachedToUser -> userIri
@@ -261,7 +283,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Construct a SparqlTemplateLinkUpdate to create one link and one LinkValue for each resource that is
                 // the target of a standoff link.
                 standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = targetIris.map {
-                    case (targetIri, referenceCount) =>
+                    case (targetIri, initialReferenceCount) =>
                         SparqlTemplateLinkUpdate(
                             linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                             directLinkExists = false,
@@ -271,54 +293,146 @@ class ValuesResponderV1 extends ResponderV1 {
                             newLinkValueIri = knoraIriUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
                             linkTargetIri = targetIri,
                             currentReferenceCount = 0,
-                            newReferenceCount = referenceCount,
-                            permissionRelevantAssertions = Vector(ownerTuple, projectTuple) // TODO: How should we create permissions for a LinkValue for standoff links?
+                            newReferenceCount = initialReferenceCount,
+                            permissionRelevantAssertions = Vector(ownerTuple, projectTuple) // TODO: How should we create permissions for a LinkValue for standoff links? (issue 88)
                         )
                 }
 
-                // TODO: instead of creating values, generate SPARQL statements for WHERE and INSERT clauses.
+                // Generate INSERT clause statements based on those SparqlTemplateLinkUpdates.
+                standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(linkUpdates = standoffLinkUpdates).toString()
 
-                // We have a Map of property IRIs to sequences of UpdateValueV1s. Generate SPARQL for creating each value.
-                // Also, build a Map with the same structure, except that instead of UpdateValueV1s, it contains UnverifiedValueV1s.
-                valueCreationFutures: Map[IRI, Future[Seq[UnverifiedValueV1]]] = createMultipleValuesRequest.values.map {
-                    case (propertyIri: IRI, valuesWithComments: Seq[CreateValueV1WithComment]) =>
-                        // Construct a list of permission-relevant assertions about the new values of the property,
+                // Ungroup the values to be created so we can number them as a single sequence (to create unique SPARQL variable names for each value).
+                ungroupedValues: Seq[(IRI, CreateValueV1WithComment)] = createMultipleValuesRequest.values.toSeq.flatMap {
+                    case (propertyIri, values) => values.map(value => (propertyIri, value))
+                }
+
+                // Number them all as a single sequence. Give each one a knora-base:valueHasOrder of 0 for now; we'll take care of that in a moment.
+                numberedValues: Seq[(IRI, NumberedValueToCreate)] = ungroupedValues.zipWithIndex.map {
+                    case ((propertyIri: IRI, valueWithComment: CreateValueV1WithComment), valueIndex) => (propertyIri, NumberedValueToCreate(valueWithComment, valueIndex, 0))
+                }
+
+                // Group them again by property so we generate knora-base:valueHasOrder for the values of each property.
+                groupedNumberedValues: Map[IRI, Seq[NumberedValueToCreate]] = numberedValues.groupBy(_._1).map {
+                    case (propertyIri, propertyIriAndValueTuples) => (propertyIri, propertyIriAndValueTuples.map(_._2))
+                }
+
+                // Generate knora-base:valueHasOrder for the values of each property.
+                groupedNumberedValuesWithValueHasOrder: Map[IRI, Seq[NumberedValueToCreate]] = groupedNumberedValues.map {
+                    case (propertyIri, values) =>
+                        val valuesWithValueHasOrder = values.zipWithIndex.map {
+                            case (numberedValueToCreate, valueHasOrder) => numberedValueToCreate.copy(valueHasOrder = valueHasOrder)
+                        }
+
+                        (propertyIri, valuesWithValueHasOrder)
+                }
+
+                // For each value to be created, generate WHERE clause statements, INSERT clause statements, and an UnverifiedValueV1 (so the successful
+                // creation of the value can be verified later).
+                sparqlGenerationResults: Map[IRI, SparqlGenerationResultForProperty] = groupedNumberedValuesWithValueHasOrder.foldLeft(Map.empty[IRI, SparqlGenerationResultForProperty]) {
+                    case (acc, (propertyIri: IRI, valuesToCreate: Seq[NumberedValueToCreate])) =>
+                        // Construct a list of permission-relevant assertions about the new values of each property,
                         // i.e. the values' owner and project plus their permissions. Use the property's default
                         // permissions to make permissions for the new values.
                         val propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
                         val permissionsFromDefaults: Seq[(IRI, IRI)] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
-                        val permissionRelevantAssertionsForNewValue: Seq[(IRI, IRI)] = ownerTuple +: projectTuple +: permissionsFromDefaults
+                        val permissionRelevantAssertionsForProperty: Seq[(IRI, IRI)] = ownerTuple +: projectTuple +: permissionsFromDefaults
 
-                        // For each value submitted for the property, make a Future that creates the value. Don't update
-                        // the resource's lastModificationDate in these Futures, because the operations might be
-                        // run concurrently, and it is not safe to update a resource in multiple concurrent operations.
-                        // (Multiple operations could simultaneously find that the resource has no lastModificationDate,
-                        // and they could all add it, giving the resource multiple lastModificationDate triples.)
-                        val valueCreationResponsesForProperty: Seq[Future[UnverifiedValueV1]] = valuesWithComments.map {
-                            valueV1WithComment: CreateValueV1WithComment => createValueV1AfterChecks(
-                                projectIri = createMultipleValuesRequest.projectIri,
-                                resourceIri = createMultipleValuesRequest.resourceIri,
-                                propertyIri = propertyIri,
-                                value = valueV1WithComment.updateValueV1,
-                                comment = valueV1WithComment.comment,
-                                permissionRelevantAssertions = permissionRelevantAssertionsForNewValue,
-                                updateResourceLastModificationDate = false,
-                                userProfile = createMultipleValuesRequest.userProfile
-                            )
+                        // For each property, construct a SparqlGenerationResultForProperty containing WHERE clause statements, INSERT clause statements, and UnverifiedValueV1s.
+                        val sparqlGenerationResultForProperty: SparqlGenerationResultForProperty = valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
+                            case (propertyAcc: SparqlGenerationResultForProperty, valueToCreate: NumberedValueToCreate) =>
+                                val updateValueV1 = valueToCreate.createValueV1WithComment.updateValueV1
+                                val newValueIri = knoraIriUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
+
+                                // How we generate the SPARQL depends on whether we're creating a link or an ordinary value.
+                                val (whereSparql: String, insertSparql: String) = valueToCreate.createValueV1WithComment.updateValueV1 match {
+                                    case linkUpdateV1: LinkUpdateV1 =>
+                                        // We're creating a link.
+
+                                        // Construct a SparqlTemplateLinkUpdate to tell the SPARQL templates how to create
+                                        // the link and its LinkValue.
+                                        val sparqlTemplateLinkUpdate = SparqlTemplateLinkUpdate(
+                                            linkPropertyIri = propertyIri,
+                                            directLinkExists = false,
+                                            insertDirectLink = true,
+                                            deleteDirectLink = false,
+                                            linkValueExists = false,
+                                            newLinkValueIri = newValueIri,
+                                            linkTargetIri = linkUpdateV1.targetResourceIri,
+                                            currentReferenceCount = 0,
+                                            newReferenceCount = 1,
+                                            permissionRelevantAssertions = permissionRelevantAssertionsForProperty
+                                        )
+
+                                        // Generate WHERE clause statements for the link.
+                                        val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateLink(
+                                            valueIndex = valueToCreate.valueIndex,
+                                            resourceIri = createMultipleValuesRequest.resourceIri,
+                                            linkUpdate = sparqlTemplateLinkUpdate,
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                        ).toString()
+
+                                        // Generate INSERT clause statements for the link.
+                                        val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateLink(
+                                            valueIndex = valueToCreate.valueIndex,
+                                            linkUpdate = sparqlTemplateLinkUpdate,
+                                            maybeComment = valueToCreate.createValueV1WithComment.comment
+                                        ).toString()
+
+                                        (whereSparql, insertSparql)
+
+                                    case ordinaryValue =>
+                                        // We're creating an ordinary value.
+
+                                        // Generate WHERE clause statements for the value.
+                                        val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateValue(
+                                            valueIndex = valueToCreate.valueIndex,
+                                            resourceIri = createMultipleValuesRequest.resourceIri,
+                                            propertyIri = propertyIri,
+                                            newValueIri = newValueIri,
+                                            valueTypeIri = updateValueV1.valueTypeIri,
+                                            linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately below.
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                        ).toString()
+
+                                        // Generate INSERT clause statements for the value.
+                                        val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateValue(
+                                            valueIndex = valueToCreate.valueIndex,
+                                            propertyIri = propertyIri,
+                                            value = updateValueV1,
+                                            linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately below.
+                                            maybeComment = valueToCreate.createValueV1WithComment.comment,
+                                            permissionRelevantAssertions = permissionRelevantAssertionsForProperty
+                                        ).toString()
+
+                                        (whereSparql, insertSparql)
+                                }
+
+                                // For each value of the property, accumulate the generated SPARQL and an UnverifiedValueV1
+                                // in the SparqlGenerationResultForProperty.
+                                propertyAcc.copy(
+                                    whereSparql = propertyAcc.whereSparql :+ whereSparql,
+                                    insertSparql = propertyAcc.insertSparql :+ insertSparql,
+                                    valuesToVerify = propertyAcc.valuesToVerify :+ UnverifiedValueV1(newValueIri = newValueIri, value = updateValueV1)
+                                )
                         }
 
-                        propertyIri -> Future.sequence(valueCreationResponsesForProperty)
+                        acc + (propertyIri -> sparqlGenerationResultForProperty)
                 }
 
-                // Convert our Map full of Futures into one Future, which will provide a Map of all the results
-                // when they're available.
-                valueCreationResponses <- ActorUtil.sequenceFuturesInMap(valueCreationFutures)
+                // Concatenate all the generated SPARQL into one string for the WHERE clause and one string for the INSERT clause.
+                resultsForAllProperties: Iterable[SparqlGenerationResultForProperty] = sparqlGenerationResults.values
+                allWhereSparql: String = resultsForAllProperties.flatMap(_.whereSparql).mkString("\n\n")
+                allInsertSparql: String = (resultsForAllProperties.flatMap(_.insertSparql).toVector :+ standoffLinkInsertSparql).mkString("\n\n")
 
-                // TODO: generate SPARQL for statements in the INSERT clause for the the SparqlTemplateLinkUpdates.
+                // Collect all the UnverifiedValueV1s for each property.
+                allUnverifiedValues: Map[IRI, Seq[UnverifiedValueV1]] = sparqlGenerationResults.map {
+                    case (propertyIri, results) => propertyIri -> results.valuesToVerify
+                }
+
             } yield GenerateSparqlToCreateMultipleValuesResponseV1(
-                whereSparql = "",
-                insertSparql = "",
-                unverifiedValues = valueCreationResponses
+                whereSparql = allWhereSparql,
+                insertSparql = allInsertSparql,
+                unverifiedValues = allUnverifiedValues
             )
         }
 
@@ -426,7 +540,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 // if resource has no existing file values, throw an exception
                 _ = if (fileValues.isEmpty) {
-                    BadRequestException(s"File values for ${resourceIri} should be updated, but resource has no existing file values")
+                    BadRequestException(s"File values for $resourceIri should be updated, but resource has no existing file values")
                 }
 
                 // the message to be sent to Sipi responder
@@ -450,7 +564,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         // we deal with hasStillImageFileValue, so there need to be two file values:
                         // one for the full and one for the thumb
                         if (fileValues.size != 2) {
-                            throw InconsistentTriplestoreDataException(s"Expected 2 file values for ${resourceIri}, but ${fileValues.size} given.")
+                            throw InconsistentTriplestoreDataException(s"Expected 2 file values for $resourceIri, but ${fileValues.size} given.")
                         }
 
                         // make sure that we have quality information for the existing file values
@@ -485,7 +599,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         }
 
 
-                    case otherFileType => throw NotImplementedException(s"File type ${otherFileType} not yet supported")
+                    case otherFileType => throw NotImplementedException(s"File type $otherFileType not yet supported")
                 }
 
                 // turn a sequence of Futures of messages into a sequence of messages
@@ -1555,7 +1669,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 sourceResourceIri = resourceIri,
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = targetResourceIri,
-                                permissionRelevantAssertions = permissionRelevantAssertions, // TODO: How should we create permissions for a LinkValue for standoff links?
+                                permissionRelevantAssertions = permissionRelevantAssertions, // TODO: How should we create permissions for a LinkValue for standoff links (issue 88)?
                                 userProfile = userProfile
                             )
                         }

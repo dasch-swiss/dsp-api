@@ -32,7 +32,8 @@
  * @param projectIri the project the new resource should belong to.
  * @param ownerIri the owner of the new resource.
  * @param permissions the permissions (tuples containing permission predicate and group) that the new resource should grant.
- *
+ * @param whereStatementsForValues statements to be included in the WHERE clause for creating the resource's initial values.
+ * @param insertStatementsForValues statements to be included in the INSERT clause for creating the resource's initial values.
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
@@ -41,7 +42,9 @@
   label: String,
   projectIri: IRI,
   ownerIri: IRI,
-  permissions: Seq[(IRI, IRI)])
+  permissions: Seq[(IRI, IRI)],
+  whereStatementsForValues: String,
+  insertStatementsForValues: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -50,7 +53,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 INSERT {
     GRAPH ?dataNamedGraph {
-        ?resourceIri rdf:type ?resourceClassIri ;
+        ?resource rdf:type ?resourceClass ;
             knora-base:attachedToUser ?ownerIri ;
             knora-base:attachedToProject ?projectIri ;
             rdfs:label ?label ;
@@ -61,6 +64,8 @@ INSERT {
             }
 
             knora-base:creationDate ?currentTime .
+
+        @insertStatementsForValues
     }
 }
 @*
@@ -79,10 +84,12 @@ explicit statements in the WHERE clause here.
 }
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
-    BIND(IRI("@resourceIri") AS ?resourceIri)
-    BIND(IRI("@resourceClassIri") AS ?resourceClassIri)
+    BIND(IRI("@resourceIri") AS ?resource)
+    BIND(IRI("@resourceClassIri") AS ?resourceClass)
     BIND(IRI("@ownerIri") AS ?ownerIri)
     BIND(IRI("@projectIri") AS ?projectIri)
     BIND(str("@label") AS ?label)
     BIND(NOW() AS ?currentTime)
+
+    @whereStatementsForValues
 }

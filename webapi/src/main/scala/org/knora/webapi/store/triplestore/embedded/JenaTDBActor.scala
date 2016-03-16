@@ -268,7 +268,7 @@ class JenaTDBActor extends Actor with ActorLogging {
             insertResult <- Future(insertDataIntoTriplestore(rdfDataObjects))
 
             // manually rebuild the Lucene index
-            indexUpdateResult <- Future(updateIndex)
+            indexUpdateResult <- Future(updateIndex())
 
             // any errors throwing exceptions until now are already covered so we can ACK the request
             result = ResetTriplestoreContentACK()
@@ -368,16 +368,16 @@ class JenaTDBActor extends Actor with ActorLogging {
       * Used to manually refresh the Lucene index after changing data in the triplestore.
       * @return a [[Boolean]] denoting if the update was successful
       */
-    private def updateIndex: Boolean = {
+    private def updateIndex(): Boolean = {
 
         this.dataset.begin(ReadWrite.WRITE)
         try {
             // get index.
             val dgt: DatasetGraphText = dataset.asDatasetGraph().asInstanceOf[DatasetGraphText]
-            val textIndex = dgt.getTextIndex()
+            val textIndex = dgt.getTextIndex
 
             // get entity definitions from index
-            val entityDefinition = textIndex.getDocDef()
+            val entityDefinition = textIndex.getDocDef
 
             // get the indexed fields
             val fields: List[String] = entityDefinition.fields().toList

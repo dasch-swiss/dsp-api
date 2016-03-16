@@ -176,8 +176,7 @@
 
         @* Insert direct links and LinkValues for resource references. *@
         @{
-            queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(valueIndex = 0,
-                                                                          linkUpdates = linkUpdates)
+            queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(linkUpdates = linkUpdates)
         }
 
         @* Attach the value to the resource. *@

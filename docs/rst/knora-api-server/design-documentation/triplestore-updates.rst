@@ -202,17 +202,6 @@ statements to the SPARQL update that creates the resource. This ensures that
 the resource and its values are created in a single SPARQL update operation,
 and hence in a single triplestore transaction.
 
-.. Transaction management for SPARQL updates over HTTP is currently commented out because of
-   issue <https://github.com/dhlab-basel/Knora/issues/85>.
-
-   When a new resource is created with its initial values,
-   ``ResourcesResponderV1`` is also responsible for using ``TransactionUtil`` to
-   manage the update transaction that will be used to create both the resource
-   and its values (see :ref:`transaction-management`). First,
-   ``ResourcesResponderV1`` creates an empty resource. Then, while still holding
-   a write lock on the resource, it sends a ``CreateMultipleValuesRequestV1``
-   message to ``ValuesResponderV1``, asking it to create the initial values. Once
-   it receives a reply from ``ValuesResponderV1``, it releases the lock.
 
 Application-level Locking
 ^^^^^^^^^^^^^^^^^^^^^^^^^

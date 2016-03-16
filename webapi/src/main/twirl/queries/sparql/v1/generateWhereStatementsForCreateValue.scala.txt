@@ -69,7 +69,13 @@
 
     @*
 
-    Check the state of any LinkValues to be updated for resource references.
+    If this template is being used to create a single text value, there may be existing LinkValues that need to be updated
+    for standoff links in the text. In that case, check the state of those LinkValues. For each existing LinkValue,
+    bind a SPARQL variable ?linkValueN, where N is an index in the sequence linkUpdates. This is necessary so that
+    a new version of the LinkValue can be inserted and point to the previous one.
+
+    If this template is being used to create multiple values in an empty resource, linkUpdates will be empty, so there
+    is nothing to check here and no SPARQL variables to bind.
 
     *@
 
@@ -82,15 +88,15 @@
 
             *@
 
-            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@{valueIndex}_@{linkValueIndex} .
+            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex .
 
             MINUS {
                 <@linkUpdate.linkTargetIri> knora-base:isDeleted true .
             }
 
-            ?linkTargetClass@{valueIndex}_@{linkValueIndex} rdfs:subClassOf+ knora-base:Resource .
-            <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@{valueIndex}_@{linkValueIndex} .
-            ?linkTargetClass@{valueIndex}_@{linkValueIndex} rdfs:subClassOf* ?expectedTargetClass@{valueIndex}_@{linkValueIndex} .
+            ?linkTargetClass@linkValueIndex rdfs:subClassOf+ knora-base:Resource .
+            <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
+            ?linkTargetClass@linkValueIndex rdfs:subClassOf* ?expectedTargetClass@linkValueIndex .
         }
 
         @if(linkUpdate.directLinkExists) {
@@ -110,27 +116,27 @@
             between the source and target resources, and has the correct reference count.
 
             *@
-            ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@{valueIndex}_@{linkValueIndex} .
-            ?linkValue@{valueIndex}_@{linkValueIndex} rdf:type knora-base:LinkValue ;
+            ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+            ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
                 rdf:subject ?resource ;
                 rdf:predicate <@linkUpdate.linkPropertyIri> ;
                 rdf:object <@linkUpdate.linkTargetIri> ;
                 knora-base:valueHasRefCount @linkUpdate.currentReferenceCount .
 
             MINUS {
-                ?linkValue@{valueIndex}_@{linkValueIndex} knora-base:isDeleted true .
+                ?linkValue@linkValueIndex knora-base:isDeleted true .
             }
         } else {
             @* Make sure there is no such knora-base:LinkValue. *@
             MINUS {
-                ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@{valueIndex}_@{linkValueIndex} .
-                ?linkValue@{valueIndex}_@{linkValueIndex} rdf:type knora-base:LinkValue ;
+                ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+                ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
                     rdf:subject ?resource ;
                     rdf:predicate <@linkUpdate.linkPropertyIri> ;
                     rdf:object <@linkUpdate.linkTargetIri> .
 
                 MINUS {
-                  ?linkValue@{valueIndex}_@{linkValueIndex} knora-base:isDeleted true .
+                  ?linkValue@linkValueIndex knora-base:isDeleted true .
                 }
             }
         }
@@ -138,10 +144,15 @@
 
     @*
 
-    Bind a variable for knora-base:valueHasOrder for the new value. If we were given a value for this variable, use that.
-    Otherwise, if the property already has one or more (non-deleted) values in the resource, find the one with the
-    highest order, add 1 to its order, and give the resulting order to the new value. Otherwise, give the new value an
-    order of 0.
+    Bind a variable for knora-base:valueHasOrder for the new value.
+
+    If this template is being used to create a single value, maybeValueHasOrder will be None, and we have to do a subquery
+    to determine the next available knora-base:valueHasOrder. This works as follows: if the property already has one or more
+    (non-deleted) values in the resource, find the one with the highest order, add 1 to its order, and give the resulting
+    order to the new value. Otherwise, give the new value an order of 0.
+
+    If this template is being used to create multiple values in an empty resource, there are no existing values to query in
+    the resource, so maybeValueHasOrder will contain the knora-base:valueHasOrder to be used.
 
     *@
 
