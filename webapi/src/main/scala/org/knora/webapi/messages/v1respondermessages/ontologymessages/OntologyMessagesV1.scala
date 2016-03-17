@@ -46,6 +46,7 @@ case class EntityInfoGetRequestV1(resourceClassIris: Set[IRI] = Set.empty[IRI], 
 
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
+  *
   * @param resourceEntityInfoMap a [[Map]] of resource entity IRIs to [[ResourceEntityInfoV1]] objects.
   * @param propertyEntityInfoMap a [[Map]] of property entity IRIs to [[PropertyEntityInfoV1]] objects.
   */
@@ -55,6 +56,7 @@ case class EntityInfoGetResponseV1(resourceEntityInfoMap: Map[IRI, ResourceEntit
 /**
   * Requests information about a resource type and its possible properties. A successful response will be a
   * [[ResourceTypeResponseV1]].
+  *
   * @param resourceTypeIri the IRI of the resource type to be queried.
   * @param userProfile the profile of the user making the request.
   */
@@ -62,7 +64,9 @@ case class ResourceTypeGetRequestV1(resourceTypeIri: IRI, userProfile: UserProfi
 
 /**
   * Represents the Knora API v1 JSON response to a request for information about a resource type.
+  *
   * @param restype_info basic information about the resource type.
+  * @param userdata      information about the user that made the request.
   */
 case class ResourceTypeResponseV1(restype_info: ResTypeInfoV1,
                                   userdata: UserDataV1) extends KnoraResponseV1 {
@@ -85,11 +89,50 @@ case class CheckSubClassRequestV1(subClassIri: IRI, superClassIri: IRI) extends 
   */
 case class CheckSubClassResponseV1(isSubClass: Boolean)
 
+/**
+  * Requests all existing named graphs.
+  * This corresponds to the concept of vocabularies in the SALSAH prototype.
+  *
+  * @param userProfile the profile of the user making the request.
+  *
+  */
+case class NamedGraphsGetRequestV1(userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
+/**
+  * Represents the Knora API V1 response to a [[NamedGraphsGetRequestV1]].
+  * It contains all the existing named graphs.
+  *
+  * @param vocabularies all the existing named graphs.
+  * @param userdata    information about the user that made the request.
+  */
+case class NamedGraphsResponseV1(vocabularies: Vector[NamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = ResourceTypeV1JsonProtocol.namedGraphsResponseV1Format.write(this)
+}
+
+/**
+  * Requests all resource classes that are defined in the given named graph.
+  *
+  * @param namedGraph the named graph for which the resource classes shall be returned.
+  */
+case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
+/**
+  * Represents the Knora API V1 response to a [[ResourceTypesForNamedGraphGetRequestV1]].
+  * It contains all the resource classes for a named graph.
+  *
+  * @param resourcetypes the resource classes for the queried named graph.
+  * @param userdata information about the user that made the request.
+  */
+case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Vector[ResourceTypeV1], userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = ResourceTypeV1JsonProtocol.resourceTypesForNamedGraphResponseV1Format.write(this)
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
 /**
   * Represents a predicate that is asserted about a given ontology entity, and the objects of that predicate.
+  *
   * @param ontologyIri the IRI of the ontology in which the assertions occur.
   * @param objects the objects of the predicate.
   */
@@ -107,6 +150,7 @@ object Cardinality extends Enumeration {
     /**
       * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
       * [[InconsistentTriplestoreDataException]].
+      *
       * @param name the name of the value.
       * @return the requested value.
       */
@@ -119,6 +163,7 @@ object Cardinality extends Enumeration {
 
     /**
       * Converts information about an OWL cardinality restriction to a [[Value]] of this enumeration.
+      *
       * @param propertyIri the IRI of the property that the OWL cardinality applies to.
       * @param owlCardinalityIri the IRI of the OWL cardinality, which must be a member of the set
       *                          [[OntologyConstants.Owl.cardinalityOWLRestrictions]]. Qualified and unqualified
@@ -160,6 +205,7 @@ sealed trait EntityInfoV1 {
 
     /**
       * Returns the first object specified for a given predicate.
+      *
       * @param predicateIri the IRI of the predicate.
       * @return the predicate's first object, or [[None]] if this entity doesn't have the specified predicate, or
       *         if the predicate has no objects.
@@ -174,6 +220,7 @@ sealed trait EntityInfoV1 {
 
     /**
       * Returns all the objects specified for a given predicate.
+      *
       * @param predicateIri the IRI of the predicate.
       * @return the predicate's objects, or an empty set if this entity doesn't have the specified predicate.
       */
@@ -189,6 +236,7 @@ sealed trait EntityInfoV1 {
 
 /**
   * Represents the assertions about a given resource entity.
+  *
   * @param resourceIri the IRI of the queried entity.
   * @param predicates a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
   * @param cardinalities a [[Map]] of predicates representing cardinalities to [[Cardinality.Value]] objects.
@@ -207,6 +255,7 @@ case class ResourceEntityInfoV1(resourceIri: IRI,
 
 /**
   * Represents the assertions about a given property entity.
+  *
   * @param propertyIri the Iri of the queried property entity.
   * @param isLinkProp `true` if the property is a subproperty of `knora-base:hasLinkTo`.
   * @param predicates a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
@@ -214,6 +263,17 @@ case class ResourceEntityInfoV1(resourceIri: IRI,
 case class PropertyEntityInfoV1(propertyIri: IRI,
                                 isLinkProp: Boolean,
                                 predicates: Map[IRI, PredicateInfoV1]) extends EntityInfoV1
+
+/**
+  * Represents the assertions about a given named graph entity.
+  *
+  * @param namedGraphIri the Iri of the named graph.
+  * @param resourceClasses the resource classes defined in the named graph.
+  * @param propertyIris the properties defined in the named graph.
+  */
+case class NamedGraphEntityInfoV1(namedGraphIri: IRI,
+                                  resourceClasses: Vector[IRI],
+                                  propertyIris: Vector[IRI])
 
 /**
   * Represents information about a resource type.
@@ -254,6 +314,35 @@ case class PropertyDefinitionV1(id: IRI,
                                 attributes: Option[String],
                                 gui_name: Option[String])
 
+/**
+  * Represents a named graph (correspons to a vocabulary in the SALSAH prototype).
+  *
+  * @param id the id of the named graph.
+  * @param shortname the short name of the named graph.
+  * @param longname the full name of the named graph.
+  * @param description a description of the named graph.
+  * @param project_id the project belonging to the named graph.
+  * @param uri the Iri of the named graph.
+  * @param active indicates if this is named graph the user's project belongs to.
+  */
+case class NamedGraphV1(id: IRI,
+                        shortname: String,
+                        longname: String,
+                        description: String,
+                        project_id: IRI,
+                        uri: IRI,
+                        active: Boolean) {
+    def toJsValue = ResourceTypeV1JsonProtocol.namedGraphV1Format.write(this)
+}
+
+case class ResourceTypeV1(id: IRI, label: String, properties: Vector[PropertyTypeV1]) {
+    def toJsValue = ResourceTypeV1JsonProtocol.resourceTypeV1Format.write(this)
+}
+
+case class PropertyTypeV1(id: IRI, label: String) {
+    def toJsValue = ResourceTypeV1JsonProtocol.propertyTypeV1Format.write(this)
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
@@ -267,4 +356,9 @@ object ResourceTypeV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
     implicit val propertyDefinitionV1Format: JsonFormat[PropertyDefinitionV1] = jsonFormat9(PropertyDefinitionV1)
     implicit val resTypeInfoV1Format: JsonFormat[ResTypeInfoV1] = jsonFormat5(ResTypeInfoV1)
     implicit val resourceTypeResponseV1Format: RootJsonFormat[ResourceTypeResponseV1] = jsonFormat2(ResourceTypeResponseV1)
+    implicit val namedGraphV1Format: RootJsonFormat[NamedGraphV1] = jsonFormat7(NamedGraphV1)
+    implicit val namedGraphsResponseV1Format: RootJsonFormat[NamedGraphsResponseV1] = jsonFormat2(NamedGraphsResponseV1)
+    implicit val propertyTypeV1Format: RootJsonFormat[PropertyTypeV1] = jsonFormat2(PropertyTypeV1)
+    implicit val resourceTypeV1Format: RootJsonFormat[ResourceTypeV1] = jsonFormat3(ResourceTypeV1)
+    implicit val resourceTypesForNamedGraphResponseV1Format: RootJsonFormat[ResourceTypesForNamedGraphResponseV1] = jsonFormat2(ResourceTypesForNamedGraphResponseV1)
 }

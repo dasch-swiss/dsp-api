@@ -118,6 +118,10 @@ class SettingsImpl(config: Config) extends Extension {
     lazy val projectNamedGraphs: Map[IRI, ProjectNamedGraphs] = {
         config.getConfigList("app.project-named-graphs").map(new ProjectNamedGraphs(_)).map(elem => (elem.project, elem)).toMap
     }
+
+    lazy val namedGraphs: Vector[ProjectNamedGraphs] = {
+        config.getConfigList("app.project-named-graphs").map(new ProjectNamedGraphs(_)).toVector
+    }
 }
 
 class ProjectNamedGraphs(params: Config) {

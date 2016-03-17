@@ -114,6 +114,31 @@ class OntologyResponderV1 extends ResponderV1 {
             override def toString: String = s"PropertyEntityInfoKey($propertyIri, $preferredLanguage)"
         }
 
+        /**
+          * The type of ontology cache keys for instances of [[NamedGraphEntityInfoV1]].
+          *
+          * @param namedGraphIri the Iri of the named graph.
+          */
+        class NamedGraphInfoKey(val namedGraphIri: IRI) extends Ordered[NamedGraphInfoKey] {
+            def compare(that: NamedGraphInfoKey): Int = {
+                (this.namedGraphIri) compare(that.namedGraphIri)
+            }
+
+            override def equals(that: Any): Boolean = {
+                that match {
+                    case otherEntityInfoKey: NamedGraphInfoKey =>
+                        this.namedGraphIri == otherEntityInfoKey.namedGraphIri
+                    case _ => false
+                }
+            }
+
+            override def hashCode(): Int = {
+                new HashCodeBuilder(21, 41).append(namedGraphIri).toHashCode
+            }
+
+            override def toString: String = s"NamedGraphInfoKey($namedGraphIri)"
+        }
+
     }
 
     /**
@@ -125,6 +150,8 @@ class OntologyResponderV1 extends ResponderV1 {
         case EntityInfoGetRequestV1(resourceIris, propertyIris, userProfile) => future2Message(sender(), getEntityInfoResponseV1(resourceIris, propertyIris, userProfile), log)
         case ResourceTypeGetRequestV1(resourceTypeIri, userProfile) => future2Message(sender(), getResourceTypeResponseV1(resourceTypeIri, userProfile), log)
         case checkSubClassRequest: CheckSubClassRequestV1 => future2Message(sender(), checkSubClass(checkSubClassRequest), log)
+        case NamedGraphsGetRequestV1(userProfile) => future2Message(sender(), getNamedGraphs(userProfile), log)
+        case ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getResourceTypesForNamedGraph(namedGraphIri, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -462,4 +489,120 @@ class OntologyResponderV1 extends ResponderV1 {
 
         } yield CheckSubClassResponseV1(isSubClass = queryResponse.results.bindings.nonEmpty)
     }
+
+    /**
+      * Returns all the existing named graphs.
+      *
+      * @param userProfile the profile of the user making the request.
+      * @return a [[NamedGraphsResponseV1]]
+      */
+    private def getNamedGraphs(userProfile: UserProfileV1): Future[NamedGraphsResponseV1] = {
+        val namedGraphs: Vector[NamedGraphV1] = settings.namedGraphs.map {
+            (namedGraph: ProjectNamedGraphs) =>
+                NamedGraphV1(
+                    id = namedGraph.ontology,
+                    shortname = namedGraph.ontology,
+                    longname = namedGraph.ontology,
+                    description = namedGraph.ontology,
+                    project_id = namedGraph.project,
+                    uri =  namedGraph.ontology,
+                    active = false
+                )
+        }
+
+        Future(NamedGraphsResponseV1(
+            vocabularies = namedGraphs,
+            userdata = userProfile.userData
+        ))
+    }
+
+    /**
+      * Gets a [[]] a named graph
+      *
+      * @param namedGraphIri
+      * @param userProfile
+      * @return
+      */
+    private def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
+
+        def queryNamedGraphEntityV1(namedGraphIri: IRI): Future[Map[OntologyCacheKeys.NamedGraphInfoKey, NamedGraphEntityInfoV1]] = {
+
+            for {
+                resourceTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getResourceTypesForNamedGraph(namedGraphIri).toString())
+                resourceTypesInNamedGraphResponse <- (storeManager ? SparqlSelectRequest(resourceTypesInNamedGraphSparql)).mapTo[SparqlSelectResponse]
+
+                resourceClassIrisInNamedGraph = resourceTypesInNamedGraphResponse.results.bindings.map {
+                    (row) => row.rowMap("class")
+                }.toVector
+
+                propertyTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getPropertyTypesForNamedGraph(namedGraphIri).toString())
+                propertyTypesInNamedGraphResponse <- (storeManager ? SparqlSelectRequest(propertyTypesInNamedGraphSparql)).mapTo[SparqlSelectResponse]
+
+                propertyTypeIrisInNamedGraph = propertyTypesInNamedGraphResponse.results.bindings.map {
+                    (row) => row.rowMap("property")
+                }.toVector
+
+
+                // cache these results
+                namedGraphEntity: (OntologyCacheKeys.NamedGraphInfoKey, NamedGraphEntityInfoV1) = new OntologyCacheKeys.NamedGraphInfoKey(namedGraphIri) -> NamedGraphEntityInfoV1(
+                    namedGraphIri = namedGraphIri,
+                    propertyIris = propertyTypeIrisInNamedGraph,
+                    resourceClasses = resourceClassIrisInNamedGraph
+                )
+
+            } yield new ErrorHandlingMap(Map(namedGraphEntity), { key: OntologyCacheKeys.NamedGraphInfoKey => s"Ontology entity $key not found" })
+
+        }
+
+        for {
+
+            cacheKeyForNamedGraph <- Future(new OntologyCacheKeys.NamedGraphInfoKey(namedGraphIri))
+
+            namedGraphCacheResultMap <- CacheUtil.getOrCacheItem(
+                cacheName = OntologyCacheName,
+                cacheKey = cacheKeyForNamedGraph,
+                queryFun = () => queryNamedGraphEntityV1(namedGraphIri) // wrap actual function call in a lambda because queryFun does not take params
+            )
+        } yield namedGraphCacheResultMap(cacheKeyForNamedGraph)
+
+
+
+    }
+
+    private def getResourceTypesForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[ResourceTypesForNamedGraphResponseV1] = {
+
+
+        for {
+
+            /*
+
+            // get resinfo for each resource class
+                resInfosForNamedGraphFuture: Seq[Future[(String, ResourceTypeResponseV1)]] = resourceClassIrisInNamedGraph.map {
+                    (resClassIri) =>
+                        for {
+                            resInfo <- getResourceTypeResponseV1(resClassIri, userProfile)
+                        } yield (resClassIri, resInfo)
+                }
+
+                resInfosForNamedGraph: Seq[(String, ResourceTypeResponseV1)] <- Future.sequence(resInfosForNamedGraphFuture)
+                resInfosForNamedGraphMap = resInfosForNamedGraph.toMap
+
+                _ = println(ScalaPrettyPrinter.prettyPrint(resInfosForNamedGraphMap))
+
+
+
+             */
+
+
+            namedGraphEntityInfo: NamedGraphEntityInfoV1 <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
+
+            //_ = println(ScalaPrettyPrinter.prettyPrint(namedGraphEntityInfo))
+
+            //getResourceTypeResponseV1
+
+            //_ = println(resourceClassIris)
+
+        } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = Vector.empty[ResourceTypeV1], userdata = userProfile.userData)
+    }
+
 }

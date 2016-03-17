@@ -22,7 +22,7 @@ package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import org.knora.webapi.messages.v1respondermessages.ontologymessages.{OntologyResponderRequestV1, ResourceTypeGetRequestV1}
+import org.knora.webapi.messages.v1respondermessages.ontologymessages.{ResourceTypesForNamedGraphGetRequestV1, NamedGraphsGetRequestV1, OntologyResponderRequestV1, ResourceTypeGetRequestV1}
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
@@ -65,6 +65,44 @@ object ResourceTypesRouteV1 extends Authenticator {
                         log
                     )
             }
+        } ~ path("v1" / "resourcetypes") {
+            get {
+                requestContext =>
+                    val requestMessageTry = Try {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val params = requestContext.request.uri.query.toMap
+
+                        val vocabulary = params.getOrElse("vocabulary", throw BadRequestException("Required param vocabulary is missing"))
+                        val namedGraphIri = InputValidation.toIri(vocabulary, () => throw BadRequestException(s"Invalid vocabulary IRI: $vocabulary"))
+                        ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile)
+                    }
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+
+            }
+        } ~ path("v1" / "vocabularies") {
+            get {
+                requestContext =>
+                    val requestMessageTry = Try {
+                        val userProfile = getUserProfileV1(requestContext)
+                        NamedGraphsGetRequestV1(userProfile)
+                    }
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+
+            }
         }
+
+
     }
 }
