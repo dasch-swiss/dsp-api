@@ -128,6 +128,8 @@ class ProjectNamedGraphs(params: Config) {
     val project: String = params.getString("project")
     val ontology: IRI = params.getString("ontology")
     val data: IRI = params.getString("data")
+    val name: String = params.getString("name")
+    val visibleInGUI = params.getBoolean("visibleInGUI")
 }
 
 object Settings extends ExtensionId[SettingsImpl] with ExtensionIdProvider {

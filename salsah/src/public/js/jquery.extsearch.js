@@ -472,7 +472,7 @@
 							else {
 								alert(data.errormsg);
 							}
-						}, 'json');
+						}, 'json'); // TODO: remove datatype because this is processed as an argumgent in SALSAH.ApiGet
 					}
 					else {
 						SALSAH.ApiGet('vocabularies', localdata.settings.limit_sel_to_project, function(data)

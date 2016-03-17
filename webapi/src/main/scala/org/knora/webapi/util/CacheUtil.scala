@@ -225,7 +225,7 @@ object CacheUtil {
     def getOrCacheItem[K <: Ordered[K], V](cacheName: String, cacheKey: K, queryFun: () => Future[V])(implicit executionContext: ExecutionContext): Future[V] = {
         def queryItem(keySet: Set[K]): Future[Map[K, V]] = {
             for {
-                value <- queryFun()
+                value <- queryFun() // TODO: refactor this so queryFun accepts a parameter (see Ontology Responder's method getNamedGraphEntityInfoV1ForNamedGraph)
             } yield Map(keySet.head -> value)
         }
 

@@ -97,11 +97,15 @@ object SettingsSpec {
                     project = "http://data.knora.org/projects/77275339"
                     ontology = "http://www.knora.org/ontology/incunabula"
                     data = "http://www.knora.org/data/incunabula"
+                    name = "Incunabula"
+                    visibleInGUI = true
                 }
                 {
                     project = "http://data.knora.org/projects/b83b99ca01"
                     ontology = "http://www.knora.org/ontology/dokubib"
                     data = "http://www.knora.org/data/dokubib"
+                    name = "Dokubib"
+                    visibleInGUI = true
                 }
             ]
 

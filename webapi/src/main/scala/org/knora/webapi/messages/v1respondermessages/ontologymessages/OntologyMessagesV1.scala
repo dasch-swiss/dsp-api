@@ -114,7 +114,7 @@ case class NamedGraphsResponseV1(vocabularies: Vector[NamedGraphV1], userdata: U
   *
   * @param namedGraph the named graph for which the resource classes shall be returned.
   */
-case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
 
 /**
   * Represents the Knora API V1 response to a [[ResourceTypesForNamedGraphGetRequestV1]].

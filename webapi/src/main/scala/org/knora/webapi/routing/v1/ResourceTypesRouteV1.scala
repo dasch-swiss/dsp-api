@@ -72,8 +72,13 @@ object ResourceTypesRouteV1 extends Authenticator {
                         val userProfile = getUserProfileV1(requestContext)
                         val params = requestContext.request.uri.query.toMap
 
-                        val vocabulary = params.getOrElse("vocabulary", throw BadRequestException("Required param vocabulary is missing"))
-                        val namedGraphIri = InputValidation.toIri(vocabulary, () => throw BadRequestException(s"Invalid vocabulary IRI: $vocabulary"))
+                        val vocabularyId = params.getOrElse("vocabulary", throw BadRequestException("Required param vocabulary is missing"))
+
+                        val namedGraphIri = vocabularyId match {
+                            case "0" => None // if param vocabulary is set to 0, query all named graphs
+                            case other => Some(InputValidation.toIri(vocabularyId, () => throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")))
+                        }
+
                         ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile)
                     }
                     RouteUtilV1.runJsonRoute(
