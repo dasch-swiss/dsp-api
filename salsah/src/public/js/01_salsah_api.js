@@ -36,9 +36,11 @@ SALSAH.ApiGet = function() {
 	var error_cb;
 	var value;
 
+	//console.log(arguments)
+
 	for (n in arguments) {
 		//console.log("n: " + arguments[n] + " and type " + typeof arguments[n]);
-		if (send_params === undefined) {
+		if (send_params === undefined) { // first run in for loop
 			var data_type = 'json';
 			var content_type = 'application/json';
 			var method = arguments[n];
@@ -69,7 +71,7 @@ SALSAH.ApiGet = function() {
 				}
 			}
 			else {
-				send_params.data = arguments[n];
+				send_params.data = arguments[n]; // assign the whole object to the data params
 			}
 		}
 		else if (typeof arguments[n] == 'function') {

@@ -30,14 +30,16 @@
 
 
 	$.extsearch.perform_search = function(result_ele, params) {
-		var progvalfile = 'prog_' + Math.floor(Math.random()*1000000.0).toString() + '.salsah';
+		//var progvalfile = 'prog_' + Math.floor(Math.random()*1000000.0).toString() + '.salsah';
 
 		result_ele.empty(); // clean previous searches if present
-		result_ele.append(progbar = $('<div>').css({position: 'absolute', left: 10, height: 20, right: 10}).pgbar({show_numbers: true, cancel: function(){
+		/*result_ele.append(progbar = $('<div>').css({position: 'absolute', left: 10, height: 20, right: 10}).pgbar({show_numbers: true, cancel: function(){
 			window.clearInterval(progvaltimer);
 			xhr.abort();
 			result_ele.empty();
-		}}));
+		}}));*/
+
+		//console.log(params);
 
 		var searchparams = {
 			searchtype: 'extended',
@@ -45,9 +47,18 @@
 			compop: params.compop,
 			searchval: params.searchval,
 			show_nrows: (params.show_nrows === undefined) ? -1 : params.show_nrows,
-			start_at: (params.start_at === undefined) ? 0 : params.start_at,
-			progvalfile: progvalfile
+			start_at: (params.start_at === undefined) ? 0 : params.start_at//,
+			//progvalfile: progvalfile
 		};
+
+		// check if property_id is ["0"] which is the default when no property is selected
+		if (searchparams.property_id.length == 1 && searchparams.property_id[0] == "0") {
+			// no property_id is selected, remove all of it
+			delete searchparams.property_id;
+			delete searchparams.compop;
+			delete searchparams.searchval;
+		}
+
 		if (params.filter_by_restype !== undefined) {
 			searchparams.filter_by_restype = params.filter_by_restype;
 		}
@@ -58,9 +69,12 @@
 			searchparams.filter_by_owner = params.filter_by_owner;
 		}
 
-		SALSAH.ApiGet('search', searchparams, function(data) {
+		//console.log("search params: ")
+		//console.log(searchparams)
+
+		SALSAH.ApiGet('search/', searchparams, function(data) {
 			if (data.status == ApiErrors.OK) {
-				window.clearInterval(progvaltimer);
+				//window.clearInterval(progvaltimer);
 				var ele = result_ele;
 				var pele;
 				//
@@ -95,7 +109,7 @@
 			}
 		});
 
-		var progvaltimer = window.setInterval(function() {
+		/*var progvaltimer = window.setInterval(function() {
 			SALSAH.ApiGet('search', {progvalfile: progvalfile}, function(data) {
 				if (data.status == ApiErrors.OK) {
 					var val = data.progress.split(':');
@@ -105,7 +119,7 @@
 					window.status = ' ERROR: ' + data.errormsg;
 				}
 			});
-		}, 1000);
+		}, 1000);*/
 
 	};
 
@@ -177,7 +191,7 @@
 
 				var get_properties = function(ele, restype) {
 					var param = {};
-					if (restype > 0) {
+					if (restype != 0) { // if restype does not equal 0, a restype Iri is requested
 						param.restype = restype;
 					}
 					else {
@@ -211,7 +225,8 @@
 					var valfield = ele.find('span[name="valfield"].extsearch').empty();
 
 					if (prop_id == 0) return;
-					var datatype = parseInt(properties[prop_id].valuetype_id); // must use parseInt() !!
+					var datatype = properties[prop_id].valuetype_id; // it is an Iri
+					//console.log("prop changed to: " + prop_id + " and datatype = " + datatype);
 					switch (datatype) {
 						case VALTYPE_RICHTEXT:
 						case VALTYPE_TEXT: { // we use gui_element = "text"
@@ -681,7 +696,14 @@
 								break;
 							}
 							case 'date': {
-								searchval.push($(searchval_ele[index]).dateobj('value'));
+								var dateObj = $(searchval_ele[index]).dateobj('value');
+								// Knora expects a searchval string: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
+								var dateStr = dateObj.calendar + ":" + dateObj.dateval1;
+								if (dateObj.dateval2 !== undefined) {
+									// period
+									dateStr += ":" + dateObj.dateval2;
+								}
+								searchval.push(dateStr);
 								break;
 							}
 							case 'pulldown': {
@@ -730,13 +752,13 @@
 						start_at: localdata.settings.start_at,
 						display_type: disptype
 					};
-					if (restype_id > 0) {
+					if (restype_id != 0) {
 						searchparams.filter_by_restype = restype_id;
 					}
-					if (projfilt.val() > 0) {
+					if (projfilt.val() != 0) {
 						searchparams.filter_by_project = projfilt.val();
 					}
-					if (ownerfilt.val() > 0) {
+					if (ownerfilt.val() != 0) {
 						searchparams.filter_by_owner = ownerfilt.val();
 					}
 					if (typeof localdata.settings.onSearchAction === 'function') {
