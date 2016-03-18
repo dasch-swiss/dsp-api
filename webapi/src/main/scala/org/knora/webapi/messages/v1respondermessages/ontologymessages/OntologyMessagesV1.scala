@@ -113,6 +113,7 @@ case class NamedGraphsResponseV1(vocabularies: Vector[NamedGraphV1], userdata: U
   * Requests all resource classes that are defined in the given named graph.
   *
   * @param namedGraph the named graph for which the resource classes shall be returned.
+  * @param userProfile the profile of the user making the request.
   */
 case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
 
@@ -125,6 +126,45 @@ case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userP
   */
 case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Vector[ResourceTypeV1], userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.resourceTypesForNamedGraphResponseV1Format.write(this)
+}
+
+/**
+  * Requests all property types that are defined in the given named graph.
+  * If the named graph is not set, the property types of all named graphs are requested.
+  *
+  * @param namedGraph the named graph to query for or None if all the named graphs should be queried.
+  * @param userProfile the profile of the user making the request.
+  */
+case class PropertyTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
+/**
+  * Represents the Knora API V1 response to a [[PropertyTypesForNamedGraphGetRequestV1]].
+  * It contains all property types for the requested named graph.
+  *
+  * @param properties the property types for the requested named graph.
+  * @param userdata information about the user that made the request.
+  */
+case class PropertyTypesForNamedGraphResponseV1(properties: Vector[PropertyDefinitionV1], userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = ResourceTypeV1JsonProtocol.propertyTypesForNamedGraphResponseV1Format.write(this)
+}
+
+/**
+  * Gets all property types that are defined for the given resource class.
+  *
+  * @param resourceClassIri the Iri of the resource class to query for.
+  * @param userProfile the profile of the user making the request.
+  */
+case class PropertyTypesForResourceTypeGetRequestV1(resourceClassIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
+/**
+  * Represents the Knora API V1 response to a [[PropertyTypesForResourceTypeGetRequestV1]].
+  * It contains all the property types for the requested resource class.
+  *
+  * @param properties the property types for the requested resource class.
+  * @param userdata information about the user that made the request.
+  */
+case class PropertyTypesForResourceTypeResponseV1(properties: Vector[PropertyDefinitionV1], userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = ResourceTypeV1JsonProtocol.propertyTypesForResourceTypeResponseV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -361,4 +401,6 @@ object ResourceTypeV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
     implicit val propertyTypeV1Format: RootJsonFormat[PropertyTypeV1] = jsonFormat2(PropertyTypeV1)
     implicit val resourceTypeV1Format: RootJsonFormat[ResourceTypeV1] = jsonFormat3(ResourceTypeV1)
     implicit val resourceTypesForNamedGraphResponseV1Format: RootJsonFormat[ResourceTypesForNamedGraphResponseV1] = jsonFormat2(ResourceTypesForNamedGraphResponseV1)
+    implicit val propertyTypesForNamedGraphResponseV1Format: RootJsonFormat[PropertyTypesForNamedGraphResponseV1] = jsonFormat2(PropertyTypesForNamedGraphResponseV1)
+    implicit val propertyTypesForResourceTypeResponseV1Format: RootJsonFormat[PropertyTypesForResourceTypeResponseV1] = jsonFormat2(PropertyTypesForResourceTypeResponseV1)
 }

@@ -551,7 +551,7 @@
 				gui_ele.append(strings._owner_filter + ': ').append(ownerfilt).append($('<br>'));
 				var pers_of_project = {};
 				if (localdata.settings.limit_sel_to_project !== undefined) pers_of_project = {project: localdata.settings.limit_sel_to_project};
-				SALSAH.ApiGet('persons', pers_of_project, function(data) {
+				/*SALSAH.ApiGet('persons', pers_of_project, function(data) {
 					if (data.status == ApiErrors.OK)
 					{
 						for (var i in data.persons)
@@ -567,7 +567,7 @@
 					else {
 						alert(data.errormsg);
 					}
-				}, 'json');
+				}, 'json');*/
 			}
 			else {
 				ownerfilt = $('<input>').attr({type: 'hidden', name: 'owner_filter'}).val(0).addClass('extsearch');
