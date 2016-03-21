@@ -18,11 +18,11 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages.projectmessages
+package org.knora.webapi.messages.v1respondermessages.groupmessages
 
 import org.knora.webapi.messages.v1respondermessages._
 import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.responders.v1.ProjectsResponderV1
+import org.knora.webapi.responders.v1.GroupsResponderV1
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
@@ -30,68 +30,69 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 // Messages
 
 /**
-  * An abstract trait representing a request message that can be sent to [[ProjectsResponderV1]].
+  * An abstract trait representing a request message that can be sent to [[GroupsResponderV1]].
   */
-sealed trait ProjectsResponderRequestV1 extends KnoraRequestV1
+sealed trait GroupsResponderRequestV1 extends KnoraRequestV1
 
 // Requests
 /**
-  * Get all information about all projects.
+  * Get all information about all groups.
   * @param userProfile the profile of the user making the request.
   */
-case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class GroupsGetRequestV1(userProfile: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 
 /**
-  * Get everything about a single project identified through it's IRI.
-  * @param iri Iri of the project.
-  * @param requestType is the type of the project information: full or short.
+  * Get everything about a single group identified through it's IRI.
+  * @param iri Iri of the group.
+  * @param requestType is the type of the group information: full or short.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class ProjectInfoByIRIGetRequest(iri: IRI, requestType: ProjectInfoType.Value, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class GroupInfoByIRIGetRequest(iri: IRI, requestType: GroupInfoType.Value, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 
 /**
-  * Find everything about a single project identified through it's shortname.
-  * @param shortname of the project.
+  * Find everything about a single group identified through it's shortname.
+  * @param name of the group.
   * @param requestType is the type of the project information.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class ProjectInfoByShortnameGetRequest(shortname: String, requestType: ProjectInfoType.Value, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class GroupInfoByNameGetRequest(name: String, requestType: GroupInfoType.Value, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 
 // Responses
 /**
-  * Represents the Knora API v1 JSON response to a request for information about all projects.
-  * @param projects information about all existing projects.
+  * Represents the Knora API v1 JSON response to a request for information about all groups.
+  * @param groups information about all existing groups.
   * @param userdata information about the user that made the request.
   */
-case class ProjectsResponseV1(projects: Seq[ProjectInfoV1], userdata: Option[UserDataV1]) extends KnoraResponseV1 {
-    def toJsValue = ProjectV1JsonProtocol.projectsResponseV1Format.write(this)
+case class GroupsResponseV1(groups: Seq[GroupInfoV1], userdata: Option[UserDataV1]) extends KnoraResponseV1 {
+    def toJsValue = GroupV1JsonProtocol.groupsResponseV1Format.write(this)
 }
 
 /**
-  * Represents the Knora API v1 JSON response to a request for information about a single project.
-  * @param project_info all information about the project.
+  * Represents the Knora API v1 JSON response to a request for information about a single group.
+  * @param group_info all information about the group.
   * @param userdata information about the user that made the request.
   */
-case class ProjectInfoResponseV1(project_info: ProjectInfoV1, userdata: Option[UserDataV1]) extends KnoraResponseV1 {
-    def toJsValue = ProjectV1JsonProtocol.projectInfoResponseV1Format.write(this)
+case class GroupInfoResponseV1(group_info: GroupInfoV1, userdata: Option[UserDataV1]) extends KnoraResponseV1 {
+    def toJsValue = GroupV1JsonProtocol.groupInfoResponseV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
-case class ProjectInfoV1(id: IRI,
-                         shortname: String,
-                         longname: Option[String] = None,
-                         description: Option[String] = None,
-                         keywords: Option[String] = None,
-                         logo: Option[String] = None,
-                         basepath: Option[String] = None,
-                         rights: Option[Int] = None)
+/**
+  * The information describing a group.
+  * @param id the IRI if the group.
+  * @param name the name of the group.
+  * @param description the description of the group.
+  */
+case class GroupInfoV1(id: IRI,
+                       name: String,
+                       description: Option[String] = None)
 
-object ProjectInfoType extends Enumeration {
+object GroupInfoType extends Enumeration {
     val SHORT = Value(0, "short")
     val FULL = Value(1, "full")
 
@@ -115,17 +116,17 @@ object ProjectInfoType extends Enumeration {
 // JSON formating
 
 /**
-  * A spray-json protocol for generating Knora API v1 JSON providing data about projects.
+  * A spray-json protocol for generating Knora API v1 JSON providing data about groups.
   */
-object ProjectV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
+object GroupV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
     import org.knora.webapi.messages.v1respondermessages.usermessages.UserV1JsonProtocol._
 
-    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat8(ProjectInfoV1)
+    implicit val groupInfoV1Format: JsonFormat[GroupInfoV1] = jsonFormat3(GroupInfoV1)
     // we have to use lazyFormat here because `UserV1JsonProtocol` contains an import statement for this object.
     // this results in recursive import statements
     // rootFormat makes it return the expected type again.
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
-    implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectsResponseV1)))
-    implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectInfoResponseV1)))
+    implicit val groupsResponseV1Format: RootJsonFormat[GroupsResponseV1] = rootFormat(lazyFormat(jsonFormat2(GroupsResponseV1)))
+    implicit val groupInfoResponseV1Format: RootJsonFormat[GroupInfoResponseV1] = rootFormat(lazyFormat(jsonFormat2(GroupInfoResponseV1)))
 }
