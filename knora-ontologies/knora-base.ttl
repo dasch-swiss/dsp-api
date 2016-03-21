@@ -602,6 +602,15 @@
                 
                 rdfs:subPropertyOf :hasLinkTo .
 
+###  http://www.knora.org/ontology/knora-base#isAnnotationOfValue
+
+:isAnnotationOfValue rdf:type owl:ObjectProperty ;
+
+               :objectClassConstraint :LinkValue ;
+
+               :subjectClassConstraint :Annotation ;
+
+               rdfs:subPropertyOf :hasLinkToValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#isInGroup
@@ -1514,7 +1523,12 @@
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :isAnnotationOf ;
                               owl:minCardinality "1"^^xsd:nonNegativeInteger
-                            ] ;
+                            ] ,
+                            [ rdf:type owl:Restriction ;
+                              owl:onProperty :isAnnotationOfValue ;
+                              owl:minCardinality "1"^^xsd:nonNegativeInteger
+                            ]
+                            ;
             
             rdfs:comment "A generic class for representing annotations"@en .
 
