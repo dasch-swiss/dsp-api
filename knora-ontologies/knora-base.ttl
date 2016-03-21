@@ -251,7 +251,9 @@
 ###  http://www.knora.org/ontology/knora-base#hasExtResValue
 
 :hasExtResValue rdf:type owl:ObjectProperty ;
-                
+
+                :objectClassConstraint :ExternalResValue ;
+
                 :subjectClassConstraint :ExternalResource ;
                 
                 rdfs:subPropertyOf :hasValue .

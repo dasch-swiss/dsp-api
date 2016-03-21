@@ -30,8 +30,24 @@
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
-select ?property where {
-    graph <@namedGraph> {
-        ?property rdf:type owl:ObjectProperty .
+SELECT ?property WHERE {
+    {
+        GRAPH <@namedGraph> {
+            ?property rdf:type owl:ObjectProperty .
+        }
+
+        ?property rdfs:subPropertyOf+ knora-base:hasValue .
+
+        MINUS {
+            ?property rdfs:subPropertyOf* knora-base:hasLinkToValue .
+        }
+    }
+    UNION
+    {
+        GRAPH <@namedGraph> {
+            ?property rdf:type owl:ObjectProperty .
+        }
+
+        ?property rdfs:subPropertyOf* knora-base:hasLinkTo .
     }
 }
