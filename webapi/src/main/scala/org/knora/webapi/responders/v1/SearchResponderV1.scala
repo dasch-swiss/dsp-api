@@ -503,15 +503,20 @@ class SearchResponderV1 extends ResponderV1 {
                             }
                     }
 
+                    val resourceClassIconURL = resourceClassIcon match {
+                        case Some(resClassIcon) => Some(valueUtilV1.makeResourceClassIconURL(resourceClassIri, resClassIcon))
+                        case _ => None
+                    }
+
                     SearchResultRowV1(
                         obj_id = resourceIri,
                         preview_path = row.rowMap.get("previewPath") match {
                             case Some(path) => Some(valueUtilV1.makeSipiImagePreviewGetUrlFromFilename(path))
                             case None =>
                                 // If there is no preview image, use the resource class icon from the ontology.
-                                resourceClassIcon
+                                resourceClassIconURL
                         },
-                        iconsrc = resourceClassIcon,
+                        iconsrc = resourceClassIconURL,
                         icontitle = resourceClassLabel,
                         iconlabel = resourceClassLabel,
                         valuetype_id = OntologyConstants.Rdfs.Label +: valueTypeIDs,
