@@ -162,33 +162,21 @@
 
 :attachedToUser rdf:type owl:ObjectProperty ;
                 
-                rdfs:comment "Connects a Resource or a Value to a user"@en ;
+                rdfs:comment "Connects a Resource or Value to a user"@en ;
                 
                 :objectClassConstraint :User .
 
 
 
-###  http://www.knora.org/ontology/knora-base#belongsTo
+###  http://www.knora.org/ontology/knora-base#hasParentListNode
 
-:belongsTo rdf:type owl:ObjectProperty ;
-           
-           rdfs:comment "Indicates which Institution a knoraProject belongs to"@en ;
-           
-           :objectClassConstraint :Institution ;
-           
-           :subjectClassConstraint :knoraProject .
+:hasParentListNode rdf:type owl:ObjectProperty ;
 
+                   :subjectClassConstraint :ListNode ;
 
+                   :objectClassConstraint :ListNode ;
 
-###  http://www.knora.org/ontology/knora-base#currentproject
-
-:currentproject rdf:type owl:ObjectProperty ;
-                
-                rdfs:comment "This property indicates, which is the \"current project\" of a given user. A user can be part of any number of projects, but only one can be the active project."@en ;
-                
-                :subjectClassConstraint :User ;
-                
-                :objectClassConstraint :knoraProject .
+                   owl:inverseOf :hasSubListNode .
 
 
 
@@ -602,34 +590,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#isInGroup
-
-:isInGroup rdf:type owl:ObjectProperty ;
-           
-           rdfs:comment "The given User is part of the given UserGroup"@en ;
-           
-           :subjectClassConstraint :User ;
-           
-           :objectClassConstraint :UserGroup ;
-           
-           rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> .
-
-
-
-###  http://www.knora.org/ontology/knora-base#isInProject
-
-:isInProject rdf:type owl:ObjectProperty ;
-             
-             rdfs:comment "The given User is part of the given knoraProject"@en ;
-             
-             :subjectClassConstraint :User ;
-             
-             :objectClassConstraint :knoraProject ;
-             
-             rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#isPartOf
 
 :isPartOf rdf:type owl:ObjectProperty ;
@@ -737,6 +697,172 @@
 
 
 
+###
+### User Object Properties
+###
+
+###  http://www.knora.org/ontology/knora-base#isInProject
+
+:isInProject rdf:type owl:ObjectProperty ;
+
+             rdfs:comment "The given User is part of the given knoraProject"@en ;
+
+             :subjectClassConstraint :User ;
+
+             :objectClassConstraint :knoraProject ;
+
+             rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> .
+
+
+
+###  http://www.knora.org/ontology/knora-base#isProjectOwner
+
+:isProjectOwner rdf:type owl:ObjectProperty ;
+
+                rdfs:comment "Connects a User to a Project and implies ownership"@en ;
+
+                :subjectClassConstraint :User ;
+
+                :objectClassConstraint :knoraProject ;
+
+                owl:inverseOf :hasProjectOwner .
+
+
+
+###  http://www.knora.org/ontology/knora-base#isProjectAdmin
+
+:isProjectAdmin rdf:type owl:ObjectProperty ;
+
+                rdfs:comment "Connects a User to a Project and implies administrative privileges"@en ;
+
+                :subjectClassConstraint :User ;
+
+                :objectClassConstraint :knoraProject ;
+
+                owl:inverseOf :hasProjectAdmin .
+
+
+
+###  http://www.knora.org/ontology/knora-base#isInGroup
+
+:isInGroup rdf:type owl:ObjectProperty ;
+
+           rdfs:comment "The given User is part of the given UserGroup"@en ;
+
+           :subjectClassConstraint :User ;
+
+           :objectClassConstraint :UserGroup ;
+
+           rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> .
+
+
+
+###  http://www.knora.org/ontology/knora-base#isGroupOwner
+
+:isGroupOwner rdf:type owl:ObjectProperty ;
+
+              rdfs:comment "Connects a User to a Group and implies ownership"@en ;
+
+              :subjectClassConstraint :User ;
+
+              :objectClassConstraint :UserGroup ;
+
+              owl:inverseOf :hasGroupOwner .
+
+
+
+###  http://www.knora.org/ontology/knora-base#isGroupAdmin
+
+:isGroupAdmin rdf:type owl:ObjectProperty ;
+
+                rdfs:comment "Connects a User to a Group and implies administrative privileges"@en ;
+
+                :subjectClassConstraint :User ;
+
+                :objectClassConstraint :knoraProject ;
+
+                owl:inverseOf :hasGroupAdmin .
+
+
+
+###  http://www.knora.org/ontology/knora-base#currentproject
+
+:currentproject rdf:type owl:ObjectProperty ;
+
+                rdfs:comment "This property indicates, which is the \"current project\" of a given user. A user can be part of any number of projects, but only one can be the active project."@en ;
+
+                :subjectClassConstraint :User ;
+
+                :objectClassConstraint :knoraProject .
+
+
+
+###
+### Project Object Properties
+###
+
+###  http://www.knora.org/ontology/knora-base#hasProjectOwner
+
+:hasProjectOwner rdf:type owl:ObjectProperty ;
+
+                rdfs:comment "Connects a Project to a User and implies ownership"@en ;
+
+                :subjectClassConstraint :knoraProject
+
+                :objectClassConstraint :User .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasProjectAdmin
+
+:hasProjectAdmin rdf:type owl:ObjectProperty ;
+
+                rdfs:comment "Implies granting project administrative privileges to the connected user"@en ;
+
+                :subjectClassConstraint :knoraProject
+
+                :objectClassConstraint :User .
+
+
+
+###  http://www.knora.org/ontology/knora-base#belongsTo
+
+:belongsTo rdf:type owl:ObjectProperty ;
+
+           rdfs:comment "Indicates which Institution a knoraProject belongs to"@en ;
+
+           :subjectClassConstraint :knoraProject ;
+
+           :objectClassConstraint :Institution .
+
+
+
+###
+### Group Object Properties
+###
+
+###  http://www.knora.org/ontology/knora-base#hasGroupOwner
+
+:hasGroupOwner rdf:type owl:ObjectProperty ;
+
+                rdfs:comment "Connects a Group to a User and implies ownership"@en ;
+
+                :subjectClassConstraint :UserGroup
+
+                :objectClassConstraint :User .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasGroupAdmin
+
+:hasGroupAdmin rdf:type owl:ObjectProperty ;
+
+                rdfs:comment "Implies granting group administrative privileges to the connected user"@en ;
+
+                :subjectClassConstraint :UserGroup
+
+                :objectClassConstraint :User .
+
 
 
 #################################################################
@@ -744,28 +870,6 @@
 #    Datatype properties
 #
 #################################################################
-
-
-###  http://www.knora.org/ontology/knora-base#address
-
-:address rdf:type owl:DatatypeProperty ;
-
-         :objectDatatypeConstraint xsd:string ;
-         
-         rdfs:comment "Address of a person or an institution"@en .
-
-
-
-###  http://www.knora.org/ontology/knora-base#projectBasepath
-
-:projectBasepath rdf:type owl:DatatypeProperty ;
-          
-          rdfs:comment "Basepath for digital objects which belong to this project"@en ;
-          
-          :subjectClassConstraint :knoraProject ;
-
-          :objectDatatypeConstraint xsd:string .
- 
 
 
 ###  http://www.knora.org/ontology/knora-base#creationDate
@@ -797,18 +901,6 @@
 :description rdf:type owl:DatatypeProperty ;
              
              rdfs:comment "A description of a resource class or a property class"@en ;
-
-             :objectDatatypeConstraint xsd:string .
-
-
-
-###  http://www.knora.org/ontology/knora-base#projectDescription
-
-:projectDescription rdf:type owl:DatatypeProperty ;
-
-             rdfs:comment "A description of a Knora project"@en ;
-
-             :subjectClassConstraint :knoraProject ;
 
              :objectDatatypeConstraint xsd:string .
 
@@ -847,16 +939,6 @@
           :subjectClassConstraint :FileValue ;
           
           :objectDatatypeConstraint xsd:float .
-
-
-
-###  http://www.knora.org/ontology/knora-base#email
-
-:email rdf:type owl:DatatypeProperty ;
-       
-       rdfs:comment "The email address of a person or institution"@en ;
-       
-       :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1044,50 +1126,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#password
-
-:password rdf:type owl:DatatypeProperty ;
-          
-          rdfs:comment "An encrypted credential for access"@en ;
-          
-          :subjectClassConstraint <http://xmlns.com/foaf/0.1/Person> ;
-
-          :objectDatatypeConstraint xsd:string .
-
-
-
-###  http://www.knora.org/ontology/knora-base#passwordSalt
-
-:passwordSalt rdf:type owl:DatatypeProperty ;
-
-          rdfs:comment "The salt used in creating the encrypted credential"@en ;
-
-          :subjectClassConstraint <http://xmlns.com/foaf/0.1/Person> ;
-
-          :objectDatatypeConstraint xsd:string .
-
-
-
-###  http://www.knora.org/ontology/knora-base#phone
-
-:phone rdf:type owl:DatatypeProperty ;
-       
-       rdfs:comment "Phone number of a person, institution, etc."@en ;
-
-       :objectDatatypeConstraint xsd:string .
-
-
-
-###  http://www.knora.org/ontology/knora-base#preferredLanguage
-
-:preferredLanguage rdf:type owl:DatatypeProperty ;
-                   
-                   rdfs:comment "Language (\"en\", \"de\", \"fr\", \"it\", \"gr\", etc.)"@en ;
-
-                   :objectDatatypeConstraint xsd:string .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#protocol
 
 :protocol rdf:type owl:DatatypeProperty ;
@@ -1115,52 +1153,6 @@
 :seqnum rdf:type owl:DatatypeProperty ;
               
         :objectDatatypeConstraint xsd:integer .
-
-
-
-###  http://www.knora.org/ontology/knora-base#projectShortname
-
-:projectShortname rdf:type owl:DatatypeProperty ;
-
-           :subjectClassConstraint :knoraProject ;
-           
-           :objectDatatypeConstraint xsd:string ;
-           
-           rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> .
-
-
-
-###  http://www.knora.org/ontology/knora-base#projectLongname
-
-:projectLongname rdf:type owl:DatatypeProperty ;
-
-           :subjectClassConstraint :knoraProject ;
-
-           :objectDatatypeConstraint xsd:string ;
-
-           rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> .
-
-
-
-###  http://www.knora.org/ontology/knora-base#projectKeyword
-
-:projectKeyword rdf:type owl:DatatypeProperty ;
-
-           rdfs:comment "A comma-delimited list of keywords describing a project"@en ;
-
-           :subjectClassConstraint :knoraProject ;
-
-           :objectDatatypeConstraint xsd:string .
-
-
-
-###  http://www.knora.org/ontology/knora-base#projectLogo
-
-:projectLogo rdf:type owl:DatatypeProperty ;
-
-           :subjectClassConstraint :knoraProject ;
-
-           :objectDatatypeConstraint xsd:string .
 
 
 
@@ -1201,20 +1193,6 @@
                   :subjectClassConstraint :Standoff ;
                   
                   :objectDatatypeConstraint xsd:integer .
-
-
-
-###  http://www.knora.org/ontology/knora-base#userid
-
-:userid rdf:type owl:DatatypeProperty ;
-        
-        rdfs:comment "The login name of a user of Knora"@en ;
-        
-        :subjectClassConstraint :User ;
-        
-        :objectDatatypeConstraint xsd:string ;
-        
-        rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/accountName> .
 
 
 
@@ -1501,6 +1479,252 @@
 
 <http://xmlns.com/foaf/0.1/name> rdf:type owl:DatatypeProperty .
 
+
+
+###
+### User Datatype Properties
+###
+
+###  http://www.knora.org/ontology/knora-base#userid
+
+:userid rdf:type owl:DatatypeProperty ;
+
+        rdfs:comment "The login name of a user of Knora"@en ;
+
+        :subjectClassConstraint :User ;
+
+        :objectDatatypeConstraint xsd:string ;
+
+        rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/accountName> .
+
+
+
+###  http://www.knora.org/ontology/knora-base#password
+
+:password rdf:type owl:DatatypeProperty ;
+
+          rdfs:comment "An encrypted credential for access"@en ;
+
+          :subjectClassConstraint <http://xmlns.com/foaf/0.1/Person> ;
+
+          :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#passwordSalt
+
+:passwordSalt rdf:type owl:DatatypeProperty ;
+
+          rdfs:comment "The salt used in creating the encrypted credential"@en ;
+
+          :subjectClassConstraint <http://xmlns.com/foaf/0.1/Person> ;
+
+          :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#address
+
+:address rdf:type owl:DatatypeProperty ;
+
+         :objectDatatypeConstraint xsd:string ;
+
+         rdfs:comment "Address of a person or an institution"@en .
+
+
+
+###  http://www.knora.org/ontology/knora-base#email
+
+:email rdf:type owl:DatatypeProperty ;
+
+       rdfs:comment "The email address of a person or institution"@en ;
+
+       :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#phone
+
+:phone rdf:type owl:DatatypeProperty ;
+
+       rdfs:comment "Phone number of a person, institution, etc."@en ;
+
+       :objectDatatypeConstraint xsd:string .
+
+
+
+
+###  http://www.knora.org/ontology/knora-base#preferredLanguage
+
+:preferredLanguage rdf:type owl:DatatypeProperty ;
+
+                   rdfs:comment "Language (\"en\", \"de\", \"fr\", \"it\", \"gr\", etc.)"@en ;
+
+                   :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#isActiveUser
+
+:isActiveUser rdf:type owl:DatatypeProperty ;
+
+              rdfs:comment "Exists and is false if the user has been deactivated (deleted)"@en ;
+
+              :subjectDatatypeConstraint :User
+
+              :objectDatatypeConstraint xsd:boolean .
+
+
+
+###
+### Project Datatype Properties
+###
+
+###  http://www.knora.org/ontology/knora-base#projectShortname
+
+:projectShortname rdf:type owl:DatatypeProperty ;
+
+           :subjectClassConstraint :knoraProject ;
+
+           :objectDatatypeConstraint xsd:string ;
+
+           rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectLongname
+
+:projectLongname rdf:type owl:DatatypeProperty ;
+
+           :subjectClassConstraint :knoraProject ;
+
+           :objectDatatypeConstraint xsd:string ;
+
+           rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectDescription
+
+:projectDescription rdf:type owl:DatatypeProperty ;
+
+             rdfs:comment "A description of a Knora project"@en ;
+
+             rdfs:subPropertyOf :description ;
+
+             :subjectClassConstraint :knoraProject ;
+
+             :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectKeyword
+
+:projectKeyword rdf:type owl:DatatypeProperty ;
+
+           rdfs:comment "A comma-delimited list of keywords describing a project"@en ;
+
+           :subjectClassConstraint :knoraProject ;
+
+           :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectLogo
+
+:projectLogo rdf:type owl:DatatypeProperty ;
+
+           :subjectClassConstraint :knoraProject ;
+
+           :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectBasepath
+
+:projectBasepath rdf:type owl:DatatypeProperty ;
+
+          rdfs:comment "Basepath for digital objects which belong to this project"@en ;
+
+          :subjectClassConstraint :knoraProject ;
+
+          :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectOntologyGraph
+
+:projectOntologyGraph rdf:type owl:DatatypeProperty ;
+
+                      rdfs:comment "The name of the named graph where the project specific ontology is stored"@en ;
+
+                      :subjectClassConstraint :knoraProject ;
+
+                      :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectDataGraph
+
+:projectDataGraph rdf:type owl:DatatypeProperty ;
+
+                  rdfs:comment "The name of the named graph where the project data is stored"@en ;
+
+                  :subjectClassConstraint :knoraProject ;
+
+                  :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#isActiveProject
+
+:isActiveProject rdf:type owl:DatatypeProperty ;
+
+                 rdfs:comment "Exists and is false if the project has been deactivated (deleted)"@en ;
+
+                 :subjectDatatypeConstraint :knoraProject
+
+                 :objectDatatypeConstraint xsd:boolean .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasSelfAssignmentEnabled
+
+:hasSelfAssignmentEnabled rdf:type owl:DatatypeProperty ;
+
+                          rdfs:comment "Exists and is true if users can add themselves to the project or group"@en ;
+
+                          :objectDatatypeConstraint xsd:boolean .
+
+
+
+###
+### Group Datatype Properties
+###
+
+###  http://www.knora.org/ontology/knora-base#groupDescription
+
+:groupDescription rdf:type owl:DatatypeProperty ;
+
+             rdfs:comment "A description of a user group"@en ;
+
+             rdfs:subPropertyOf :description ;
+
+             :subjectClassConstraint :UserGroup ;
+
+             :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#isActiveProject
+
+:isActiveGroup rdf:type owl:DatatypeProperty ;
+
+               rdfs:comment "Exists and is false if the group has been deactivated (deleted)"@en ;
+
+               :subjectDatatypeConstraint :UserGroup
+
+               :objectDatatypeConstraint xsd:boolean .
 
 
 
@@ -2241,6 +2465,39 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#Value
+
+:Value rdf:type owl:Class ;
+
+       rdfs:subClassOf [ rdf:type owl:Restriction ;
+                         owl:onProperty :valueCreationDate ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :attachedToUser ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :attachedToProject ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :valueHasOrder ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :isDeleted ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :previousValue ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ;
+
+       rdfs:comment "The base class of classes representing Knora values"@en .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#User
 
 :User rdf:type owl:Class ;
@@ -2271,11 +2528,51 @@
                         owl:cardinality "1"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
+                        owl:onProperty :isActiveUser ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ] ,
+                      [ rdf:type owl:Restriction ;
+                        owl:onProperty :isSystemAdmin ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ] ,
+                      [ rdf:type owl:Restriction ;
+                        owl:onProperty :isInProject ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [ rdf:type owl:Restriction ;
+                        owl:onProperty :isProjectOwner ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [ rdf:type owl:Restriction ;
+                        owl:onProperty :isProjectAdmin ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [ rdf:type owl:Restriction ;
                         owl:onProperty :isInGroup ;
                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
-                        owl:onProperty :isInProject ;
+                        owl:onProperty :isGroupOwner ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [ rdf:type owl:Restriction ;
+                        owl:onProperty :isGroupAdmin ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [ rdf:type owl:Restriction ;
+                        owl:onProperty :hasDefaultRestrictedViewPermission ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [ rdf:type owl:Restriction ;
+                        owl:onProperty :hasDefaultViewPermission ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [ rdf:type owl:Restriction ;
+                        owl:onProperty :hasDefaultModifyPermission ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [ rdf:type owl:Restriction ;
+                        owl:onProperty :hasDefaultDeletePermission ;
                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ;
       
@@ -2283,60 +2580,10 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#UserGroup
-
-:UserGroup rdf:type owl:Class ;
-           
-           rdfs:subClassOf <http://xmlns.com/foaf/0.1/Group> ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty <http://xmlns.com/foaf/0.1/name> ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :description ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                           ] ;
-           
-           rdfs:comment "A group of Knora users"@en .
-
-
-
-###  http://www.knora.org/ontology/knora-base#Value
-
-:Value rdf:type owl:Class ;
-       
-       rdfs:subClassOf [ rdf:type owl:Restriction ;
-                         owl:onProperty :valueCreationDate ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger
-                       ] ,
-                       [ rdf:type owl:Restriction ;
-                         owl:onProperty :attachedToUser ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger
-                       ] ,
-                       [ rdf:type owl:Restriction ;
-                         owl:onProperty :attachedToProject ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                       ] ,
-                       [ rdf:type owl:Restriction ;
-                         owl:onProperty :valueHasOrder ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                       ] ,
-                       [ rdf:type owl:Restriction ;
-                         owl:onProperty :isDeleted ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                       ] ,
-                       [ rdf:type owl:Restriction ;
-                         owl:onProperty :previousValue ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                       ] ;
-       
-       rdfs:comment "The base class of classes representing Knora values"@en .
-
-
 ###  http://www.knora.org/ontology/knora-base#knoraProject
 
 :knoraProject rdf:type owl:Class ;
-              
+
               rdfs:subClassOf <http://xmlns.com/foaf/0.1/Project> ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectShortname ;
@@ -2368,6 +2615,24 @@
                               ] ;
 
               rdfs:comment "Represents a project that uses Knora"@en .
+
+
+
+###  http://www.knora.org/ontology/knora-base#UserGroup
+
+:UserGroup rdf:type owl:Class ;
+           
+           rdfs:subClassOf <http://xmlns.com/foaf/0.1/Group> ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty groupName ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :groupDescription ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ] ;
+           
+           rdfs:comment "A group of Knora users"@en .
 
 
 
@@ -2436,4 +2701,31 @@
 :UnknownUser rdf:type :UserGroup ,
                       owl:NamedIndividual ;
              
+             <http://xmlns.com/foaf/0.1/name> "unknown user" .
+
+
+
+###  http://www.knora.org/ontology/knora-base#SystemAdmin
+
+:SystemAdmin rdf:type :UserGroup ,
+                      owl:NamedIndividual ;
+
+             <http://xmlns.com/foaf/0.1/name> "system admin" .
+
+
+
+###  http://www.knora.org/ontology/knora-base#ProjectAdmin
+
+:ProjectAdmin rdf:type :UserGroup ,
+                      owl:NamedIndividual ;
+
+             <http://xmlns.com/foaf/0.1/name> "project admin" .
+
+
+
+###  http://www.knora.org/ontology/knora-base#GroupAdmin
+
+:UnknownUser rdf:type :UserGroup ,
+                      owl:NamedIndividual ;
+
              <http://xmlns.com/foaf/0.1/name> "unknown user" .
