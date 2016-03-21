@@ -82,10 +82,10 @@ special property attached to the user.
   or ``GroupOwner`` of the group.
 
 **ProjectOwner**:
-  Membership is implicitly given to project owners defined by the following triple: ``<Project-IRI> knora-base:projectHasOwner <User-IRI>``
+  Membership is implicitly given to project owners defined by the following triple: ``<Project-IRI> knora-base:hasProjectOwner <User-IRI>``
 
 **GroupOwner**:
-  Membership is implicitly given to group owners defined by the following triple: ``<Group-IRI> knora-base:groupHasOwner <User-IRI>``
+  Membership is implicitly given to group owners defined by the following triple: ``<Group-IRI> knora-base:hasGroupOwner <User-IRI>``
 
 
 The access control matrix defines what operations a *subject* (i.e. User), being a member of a special group
@@ -114,7 +114,7 @@ operation abbreviations used are defined as follows:
 +-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
 | **GroupAdmin**    |         | R U     | group add/remove                  |                        |                        |
 +-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
-| **KnownUser**     | C       | C       | C R U (D) himself                 | C                      | C                      |
+| **KnownUser**     | C       | C       | C R U (D) himself                 | C                      | C ()                   |
 +-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
 | **Owner**         | R U D   | R U D   | add/remove to/from project/group  | R U D                  | R U D                  |
 +-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
@@ -265,17 +265,19 @@ Example User Information stored in admin graph:
        knora-base:email "test@test.ch" ;
        knora-base:phone "123456" ;
        knora-base:preferredLanguage "de" ;
-       knora-base:isActiveUser "true"^^xsd:boolean
+       knora-base:isActiveUser "true"^^xsd:boolean ;
+       knora-base:isSystemAdmin "true"^^xsd:boolean ;
+       knora-base:isProjectOwner <Project-IRI> ;
+       knora-base:isProjectAdmin <http://data.knora.org/projects/[UUID]> ;
        knora-base:isInProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:isGroupOwner <Group-IRI> ;
+       knora-base:isGroupAdmin <http://data.knora.org/groups/[UUID]> ;
        knora-base:isInGroup <http://data.knora.org/groups/[UUID]> ;
-       knora-base:hasProjectAdminPermissions <http://data.knora.org/projects/[UUID]> ;
-       knora-base:hasGroupAdminPermissions <http://data.knora.org/groups/[UUID]> ;
-       knora-base:hasSystemAdminPermissions "true"^^xsd:boolean ;
        knora-base:hasDefaultRestrictedViewPermission <http://data.knora.org/groups/[UUID]> ;
        knora-base:hasDefaultViewPermission <http://data.knora.org/groups/[UUID]> ,
                                            <http://data.knora.org/groups/KnownUser> ;
        knora-base:hasDefaultModifyPermission <http://data.knora.org/groups/[UUID]> ;
-       knora-base:hasDefaultDeletePermission <http://data.knora.org/groups/[UUID]> ;
+       knora-base:hasDefaultDeletePermission <http://data.knora.org/groups/[UUID]> .
 
 
 Projects Endpoint
@@ -319,12 +321,15 @@ Example Project Information stored in admin named graph:
         knora-base:projectShortname "images" ;
         knora-base:projectOntolgyGraph "http://www.knora.org/ontology/images" ;
         knora-base:projectDataGraph "http://www.knora.org/data/images" ;
+        knora-base:isActiveProject "true"^^xsd:boolean ;
+        knora-base:hasSelfAssignmentEnabled "false"^^xsd:boolean ;
+        knora-base:hasProjectOwner <User-IRI> ;
+        knora-base:hasProjectAdmin <User-IRI>
         knora-base:hasDefaultRestrictedViewPermission <http://data.knora.org/groups/[UUID]> ;
         knora-base:hasDefaultViewPermission <http://data.knora.org/groups/[UUID]> ,
                                             <http://data.knora.org/groups/KnownUser> ;
         knora-base:hasDefaultModifyPermission <http://data.knora.org/groups/[UUID]> ;
-        knora-base:hasDefaultDeletePermission <http://data.knora.org/groups/[UUID]> ;
-        knora-base:hasSelfAssignmentEnabled "false"^^xsd:boolean .
+        knora-base:hasDefaultDeletePermission <http://data.knora.org/groups/[UUID]> .
 
 
 Groups Endpoint
@@ -351,8 +356,11 @@ Example Group Information stored in admin named graph:
 ::
 
    <http://data.knora.org/groups/[UUID]> rdf:type knora-base:UserGroup ;
-        <http://xmlns.com/foaf/0.1/name> "group name" ;
-        knora-base:description "A description of the group" ;
-        knora-base:hasSelfAssignmentEnabled "false"^^xsd:boolean .
+        <http://xmlns.com/foaf/0.1/name> "Name of the group" ;
+        knora-base:groupDescription "A description of the group" ;
+        knora-base:isActiveGroup "true"^^xsd:boolean ;
+        knora-base:hasSelfAssignmentEnabled "false"^^xsd:boolean ;
+        knora-base:hasGroupOwner <User-IRI> ;
+        knora-base:hasGroupAdmin <User-IRI> .
 
 
