@@ -275,13 +275,20 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#ListValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasListNode <@searchCriterion.searchValue> .
+                        @*
+
+                        Get all the subnodes of the given node, including the given node (operator *)
+
+                        *@
+
+                        ?valueObjectIri@index knora-base:valueHasListNode ?listNode .
+                        <@searchCriterion.searchValue> knora-base:hasSubListNode* ?listNode .
 
                         MINUS {
                             ?valueObjectIri@index knora-base:isDeleted true .
                         }
 
-                        <@searchCriterion.searchValue> rdfs:label ?listNodeLabel .
+                        ?listNode rdfs:label ?listNodeLabel .
                         BIND(?listNodeLabel AS ?anyLiteral@index)
 
                     }
