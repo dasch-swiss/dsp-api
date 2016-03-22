@@ -273,6 +273,19 @@ WHERE {
                         }
                     }
 
+                    case "http://www.knora.org/ontology/knora-base#ListValue" => {
+
+                        ?valueObjectIri@index knora-base:valueHasListNode <@searchCriterion.searchValue> .
+
+                        MINUS {
+                            ?valueObjectIri@index knora-base:isDeleted true .
+                        }
+
+                        <@searchCriterion.searchValue> rdfs:label ?listNodeLabel .
+                        BIND(?listNodeLabel AS ?anyLiteral@index)
+
+                    }
+
                     case other => {
                         @{throw SparqlGenerationException(s"Value type $other is not supported with comparison operator ${searchCriterion.comparisonOperator}"); ()}
                     }

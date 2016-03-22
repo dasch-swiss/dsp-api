@@ -227,6 +227,7 @@
 					if (prop_id == 0) return;
 					var datatype = properties[prop_id].valuetype_id; // it is an Iri
 					//console.log("prop changed to: " + prop_id + " and datatype = " + datatype);
+					//console.log("attrs: " + properties[prop_id].attributes);
 					switch (datatype) {
 						case VALTYPE_RICHTEXT:
 						case VALTYPE_TEXT: { // we use gui_element = "text"
@@ -344,13 +345,16 @@
 							compop.append($('<option>', {'value': 'EXISTS', 'title': 'Exists'}).append('&exist;'));
 
 							var selection_id;
-							var attrs = properties[prop_id].attributes.split(';');
-							$.each(attrs, function() {
+							var attrs = properties[prop_id].attributes;//.split(';');
+							selection_id = attrs.split("=")[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
+
+							//console.log(selection_id)
+							/*$.each(attrs, function() {
 								var attr = this.split('=');
 								if (attr[0] == 'selection') {
 									selection_id = attr[1];
 								}
-							});
+							});*/
 							// var tmpele = $('<span>', {name: 'searchval'}).addClass('propval').data('gui_element', 'pulldown').appendTo(valfield);
 							// tmpele.selection('edit', {selection_id: selection_id});
 							$('<span>', {name: 'searchval'})
@@ -392,14 +396,17 @@
 							compop.append($('<option>', {'value': 'EQ', 'title': 'equal'}).append('='));
 							compop.append($('<option>', {'value': 'EXISTS', 'title': 'Exists'}).append('&exist;'));
 
-							var selection_id;
-							var attrs = properties[prop_id].attributes.split(';');
+							var hlist_id;
+							var attrs = properties[prop_id].attributes;//.split(';');
+							hlist_id = attrs.split("=")[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
+
+							/*var attrs = properties[prop_id].attributes.split(';');
 							$.each(attrs, function() {
 								var attr = this.split('=');
 								if (attr[0] == 'hlist') {
 									hlist_id = attr[1];
 								}
-							});
+							});*/
 							$('<span>', {name: 'searchval'})
 								.addClass('propval')
 								.data('gui_element', 'hlist')

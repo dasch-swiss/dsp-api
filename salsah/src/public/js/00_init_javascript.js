@@ -58,6 +58,7 @@ var VALTYPE_INTERVAL = "http://www.knora.org/ontology/knora-base#IntervalValue";
 var VALTYPE_GEOMETRY = "http://www.knora.org/ontology/knora-base#GeomValue";
 var VALTYPE_COLOR = "http://www.knora.org/ontology/knora-base#ColorValue";
 var VALTYPE_HLIST = "http://www.knora.org/ontology/knora-base#ListValue";
+var VALTYPE_SELECTION = "http://www.knora.org/ontology/knora-base#ListValue";
 var VALTYPE_ICONCLASS = 13;
 var VALTYPE_RICHTEXT = 14;
 var VALTYPE_GEONAME = 15;

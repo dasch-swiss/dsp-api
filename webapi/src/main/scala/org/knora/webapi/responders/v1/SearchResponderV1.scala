@@ -90,7 +90,7 @@ class SearchResponderV1 extends ResponderV1 {
         ),
         OntologyConstants.KnoraBase.ListValue -> Set(
             SearchComparisonOperatorV1.EQ,
-            SearchComparisonOperatorV1.NOT_EQ
+            SearchComparisonOperatorV1.EXISTS
         )
     )
 
