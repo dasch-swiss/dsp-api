@@ -62,7 +62,7 @@ SALSAH.ApiGet = function() {
 		else if (typeof arguments[n] == 'string' && arguments[n] != 'json') { // ignore arg when it is 'json' because this is meant to be the datatype of the async request
 			// this is the value/id, because it's a string
 			value = encodeURIComponent(arguments[n]);
-			console.log('ApiGet method: ' + method + ' value:' + value)
+			//console.log('ApiGet method: ' + method + ' value:' + value)
 		}
 		else if (typeof arguments[n] == 'object') {
 			if ((arguments[n].username !== undefined) && (arguments[n].password !== undefined)) {

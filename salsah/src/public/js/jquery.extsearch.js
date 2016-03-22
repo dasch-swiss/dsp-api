@@ -340,7 +340,8 @@
 							}
 							break;
 						}
-						case VALTYPE_SELECTION: { // we use gui_element = "pulldown"
+						// VALTYPE_SELECTION can be treated like a hierarchical list
+						/*case VALTYPE_SELECTION: { // we use gui_element = "pulldown"
 							compop.append($('<option>', {'value': 'EQ', 'title': 'equal'}).append('='));
 							compop.append($('<option>', {'value': 'EXISTS', 'title': 'Exists'}).append('&exist;'));
 
@@ -349,12 +350,12 @@
 							selection_id = attrs.split("=")[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 
 							//console.log(selection_id)
-							/*$.each(attrs, function() {
+							$.each(attrs, function() {
 								var attr = this.split('=');
 								if (attr[0] == 'selection') {
 									selection_id = attr[1];
 								}
-							});*/
+							});
 							// var tmpele = $('<span>', {name: 'searchval'}).addClass('propval').data('gui_element', 'pulldown').appendTo(valfield);
 							// tmpele.selection('edit', {selection_id: selection_id});
 							$('<span>', {name: 'searchval'})
@@ -363,7 +364,7 @@
 								.selection('edit', {selection_id: selection_id})
 								.appendTo(valfield);
 							break;
-						}
+						}*/
 						case VALTYPE_TIME: { // we use gui_element = "text"
 							compop.append($('<option>', {'value': 'EQ'}).append('='));
 							compop.append($('<option>', {'value': 'GT', 'title': 'greater than'}).append('&gt;'));
@@ -397,7 +398,7 @@
 							compop.append($('<option>', {'value': 'EXISTS', 'title': 'Exists'}).append('&exist;'));
 
 							var hlist_id;
-							var attrs = properties[prop_id].attributes;//.split(';');
+							var attrs = properties[prop_id].attributes; // "hlist=<http://data.knora.org/lists/73d0ec0302>" -> hlist's root node
 							hlist_id = attrs.split("=")[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 
 							/*var attrs = properties[prop_id].attributes.split(';');
