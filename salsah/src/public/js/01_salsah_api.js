@@ -112,6 +112,9 @@ SALSAH.ApiGet = function() {
 		}
 	}
 
+	// do note use square brackets in params serialization
+	send_params.traditional = true;
+
 	return $.ajax(send_params);
 };
 

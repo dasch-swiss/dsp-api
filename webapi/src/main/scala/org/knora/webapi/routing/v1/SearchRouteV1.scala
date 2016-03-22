@@ -80,7 +80,7 @@ object SearchRouteV1 extends Authenticator {
         // the params with multiple values have angle brackets appended: param name[]
         //
         // here, also multiple values can be given
-        val propertyIri: Seq[IRI] = params.get("property_id[]") match {
+        val propertyIri: Seq[IRI] = params.get("property_id") match {
             case Some(propertyList: Seq[IRI]) => propertyList.map(
                 prop => InputValidation.toIri(prop, () => throw BadRequestException(s"Unexpected param 'property_id' for extended search: $prop"))
             )
@@ -89,7 +89,7 @@ object SearchRouteV1 extends Authenticator {
 
         // here, also multiple values can be given
         // convert string to enum (SearchComparisonOperatorV1), throw error if unknown
-        val compop: Seq[SearchComparisonOperatorV1.Value] = params.get("compop[]") match {
+        val compop: Seq[SearchComparisonOperatorV1.Value] = params.get("compop") match {
             case Some(compopList: Seq[String]) => compopList.map(
                 (compop: String) => {
                     SearchComparisonOperatorV1.lookup(compop)
@@ -99,7 +99,7 @@ object SearchRouteV1 extends Authenticator {
         }
 
         // here, also multiple values can be given
-        val searchval: Seq[String] = params.get("searchval[]") match {
+        val searchval: Seq[String] = params.get("searchval") match {
             case Some(searchvalList: Seq[String]) => searchvalList // Attention: searchval cannot be processed (escaped) here because we do not know its value type yet
             case other => Nil
         }

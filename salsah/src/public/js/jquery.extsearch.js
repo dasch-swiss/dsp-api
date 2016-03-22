@@ -19,6 +19,8 @@
  */
 
  (function( $ ) {
+	 'use strict';
+
 	 $.extsearch = {};
 
 	var add_icon = new Image();
@@ -27,7 +29,7 @@
 	var delete_icon = new Image();
 	delete_icon.src = SITE_URL + '/app/icons/16x16/delete.png';
 
-
+	var properties;
 
 	$.extsearch.perform_search = function(result_ele, params) {
 		//var progvalfile = 'prog_' + Math.floor(Math.random()*1000000.0).toString() + '.salsah';
@@ -279,6 +281,8 @@
 							compop.append('NOT YET IMPLEMENTED!');
 							break;
 						}
+						// there is no valtype resptr as valuetype_id now contains the resource class of the resources pointed to by the property
+						/*
 						case VALTYPE_RESPTR: {
 							//
 							// first we determine the guielement given for this property
@@ -339,7 +343,7 @@
 								}
 							}
 							break;
-						}
+						}*/
 						// VALTYPE_SELECTION can be treated like a hierarchical list
 						/*case VALTYPE_SELECTION: { // we use gui_element = "pulldown"
 							compop.append($('<option>', {'value': 'EQ', 'title': 'equal'}).append('='));
@@ -434,6 +438,42 @@
 							break;
 						}
 						default: {
+							// no valtype matched, assume that we deal with respointer and datatype is the resource class pointed to
+							compop.append($('<option>', {'value': 'EQ', 'title': 'equal'}).append('='));
+							compop.append($('<option>', {'value': 'EXISTS', 'title': 'Exists'}).append('&exist;'));
+							//
+							// first we determine if we are able to restrict the selection to a certain resource type,
+							// and the number of properties to show
+							//
+							var restype_id = datatype;
+							var numprops = 2;
+							/*if ((properties[prop_id].attributes !== undefined) && (properties[prop_id].attributes != null) && (properties[prop_id].attributes.length > 0)) {
+								var pattributes = properties[prop_id].attributes.split(';');
+								for (var i in pattributes) {
+									var arr = pattributes[i].split('=');
+									switch (arr[0]) {
+										case 'restypeid': restype_id = arr[1]; break;
+										case 'numprops': numprops = arr[1]; break;
+									}
+									if (arr[0] == 'restypeid') {
+										restype_id = arr[1];
+									}
+								}
+							}*/
+
+							var tmpele;
+							valfield.append(tmpele = $('<input>', {'type': 'text', name: 'searchval', size: 16, maxlength: 32}).addClass('propval').data('gui_element', 'searchbox'));
+
+							tmpele.searchbox({
+								restype_id: restype_id,
+								numprops: numprops,
+								newEntryAllowed: false,
+								clickCB: function(res_id, ele) {
+									tmpele.val($(ele).text());
+								}
+							});
+
+							break;
 						}
 					}
 
