@@ -30,9 +30,9 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileByIRIGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1respondermessages.usermessages._
 import org.knora.webapi.store._
-import org.knora.webapi.{CoreSpec, IRI, LiveActorMaker, NotFoundException}
+import org.knora.webapi._
 
 import scala.concurrent.duration._
 import akka.actor.Status.Failure
@@ -67,15 +67,18 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     val username = Some(requested_username_existing)
     val firstname = Some("Administrator")
     val lastname = Some("Admin")
-    val email = Some("test@test.ch")
+    val email = Some("administrator.admin@example.com")
     val password = None
+    val passwordSalt = None
     val projects = List[IRI]("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images")
 
-    val rootUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password), Vector.empty[IRI], projects)
+    val rootUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password, passwordSalt), Vector.empty[IRI], Vector.empty[IRI])
 
     val actorUnderTest = TestActorRef[UsersResponderV1]
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
+    val defaultUser = UserProfileV1(UserDataV1("en"))
+    val newNonUniqueUser = NewUserDataV1("root", "", "", "", "", "")
 
     val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
@@ -84,7 +87,8 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/all_data/admin-data.ttl", name = "http://www.knora.org/data/admin")
     )
 
     "Load test data" in {
@@ -112,6 +116,15 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             "return 'None' when the user is unknown " in {
                 actorUnderTest ! UserProfileByUsernameGetRequestV1(requested_username_not_existing, true)
                 expectMsg(Failure(NotFoundException(s"User '$requested_username_not_existing' not found")))
+            }
+        }
+        "asked to create a new user " should {
+            "create the user and return it's profile if the supplied username is unique " in {
+
+            }
+            "return a 'DuplicateValueException' if the supplied username is not unique " in {
+                actorUnderTest ! UserCreateRequestV1(newNonUniqueUser, defaultUser)
+                expectMsg(Failure(DuplicateValueException(s"User with the username: '${newNonUniqueUser.username}' already exists")))
             }
         }
     }

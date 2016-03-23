@@ -26,9 +26,6 @@ import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1
 object ResourcesResponderV1SpecContextData {
     val expectedBookResourceContextResponse = ResourceContextResponseV1(
         userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
-            activeProject = None,
             password = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
@@ -5318,9 +5315,6 @@ object ResourcesResponderV1SpecContextData {
 
     val expectedPageResourceContextResponse = ResourceContextResponseV1(
         userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
-            activeProject = None,
             password = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
