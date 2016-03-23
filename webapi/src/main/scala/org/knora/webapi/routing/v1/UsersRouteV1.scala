@@ -76,8 +76,7 @@ object UsersRouteV1 extends Authenticator {
                             apiRequest.familyName,
                             apiRequest.email,
                             apiRequest.password,
-                            apiRequest.lang,
-                            apiRequest.projects)
+                            apiRequest.lang)
 
                         UserCreateRequestV1(newUserData, userProfile)
                     }

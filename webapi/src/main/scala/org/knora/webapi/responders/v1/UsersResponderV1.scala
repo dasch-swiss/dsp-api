@@ -90,7 +90,7 @@ class UsersResponderV1 extends ResponderV1 {
                 case None => Vector.empty[IRI]
             }
 
-            //_ = log.debug(s"RAW: ${groupedUserData.toString}")
+            _ = log.debug(s"RAW: ${groupedUserData.toString}")
 
             userProfileV1 = {
                 if (groupedUserData.isEmpty) {
@@ -143,15 +143,6 @@ class UsersResponderV1 extends ResponderV1 {
                 case None => Vector.empty[IRI]
             }
 
-            /*
-            projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
-                projectIri => (responderManager ? ProjectInfoByIRIGetRequest(projectIri, ProjectInfoType.SHORT, None)).mapTo[ProjectInfoResponseV1] map (_.project_info)
-            }
-
-
-            projectInfos <- Future.sequence(projectInfoFutures)
-            */
-
 
             userDataV1 = UserDataV1(
                 lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
@@ -188,10 +179,7 @@ class UsersResponderV1 extends ResponderV1 {
 
     /**
       * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
-      * is allowed to create the new user. If the projects list is not empty, then credentials need to be supplied, so
-      * that the requesting user can be checked if he has the needed rights to add the new user to the listed projects.
-      * If projects are listed, and the requesting user does not have the needed rights, then the user is still created
-      * and only the adding-to-projects part is skipped.
+      * is allowed to create the new user.
       *
       * Referenced Websites:
       *                     - https://crackstation.net/hashing-security.htm
@@ -203,16 +191,32 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def createNewUserV1(newUserData: NewUserDataV1, userProfile: UserProfileV1): Future[UserOperationResponseV1] = {
         // self-registration allowed, so no checking if the user has the right to create a new user
-        // check if the supplied username and email address for the new user are unique
-        // create the user
 
-        // if projects list is not empty, check if the requesting user has the right to add the newly created user to
-        // these projects. If so, then add. If not, then still return successfully but add message saying that
-        // adding-to-group did fail.
 
-        val newUserProfile = UserProfileV1(UserDataV1(lang = "de", username = Some(newUserData.username), email = Some(newUserData.email)))
+        for {
+            // check if the supplied username for the new user is unique, i.e. not already registered
+            sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(newUserData.username).toString())
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
-        Future.successful(UserOperationResponseV1(newUserProfile, userProfile.userData))
+            _ = log.debug(MessageUtil.toSource(userDataQueryResponse))
+
+            _ = if (userDataQueryResponse.results.bindings.nonEmpty) {
+                throw DuplicateValueException(s"User with the username: '${newUserData.username}' already exists")
+            }
+
+            // create the user
+            newUserProfile = UserProfileV1(
+                UserDataV1(
+                    lang = newUserData.lang,
+                    username = Some(newUserData.username),
+                    firstname = Some(newUserData.givenName),
+                    lastname = Some(newUserData.familyName),
+                    email = Some(newUserData.email)
+                )
+            )
+            userOperationResponseV1 = UserOperationResponseV1(newUserProfile, userProfile.userData)
+        } yield userOperationResponseV1
+
     }
 
     /**

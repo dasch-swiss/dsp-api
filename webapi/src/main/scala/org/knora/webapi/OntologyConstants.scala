@@ -179,14 +179,11 @@ object OntologyConstants {
         val PasswordSalt = KNORA_BASE_PREFIX + "passwordSalt"
         val UsersActiveProject = KNORA_BASE_PREFIX + "currentproject"
         val IsActiveUser = KNORA_BASE_PREFIX + "isActiveUser"
-        val IsInProject = KNORA_BASE_PREFIX + "isInProject"
-        val IsInGroup = KNORA_BASE_PREFIX + "isInGroup"
-        val IsProjectOwner = KNORA_BASE_PREFIX + "isProjectOwner"
-        val IsGroupOwner = KNORA_BASE_PREFIX + "isGroupOwner"
         val IsSystemAdmin = KNORA_BASE_PREFIX + "isSystemAdmin"
+        val IsInProject = KNORA_BASE_PREFIX + "isInProject"
         val IsProjectAdmin = KNORA_BASE_PREFIX + "isProjectAdmin"
+        val IsInGroup = KNORA_BASE_PREFIX + "isInGroup"
         val IsGroupAdmin = KNORA_BASE_PREFIX + "isGroupAdmin"
-
 
         /* Project */
         val ProjectShortname = KNORA_BASE_PREFIX + "projectShortname"
@@ -199,13 +196,12 @@ object OntologyConstants {
         val ProjectDataGraph = KNORA_BASE_PREFIX + "projectDataGraph"
         val IsActiveProject = KNORA_BASE_PREFIX + "isActiveProject"
         val HasSelfAssignmentEnabled = KNORA_BASE_PREFIX + "hasSelfAssignmentEnabled"
-        val HasProjectOwner = KNORA_BASE_PREFIX + "hasProjectOwner"
         val HasProjectAdmin = KNORA_BASE_PREFIX + "hasProjectAdmin"
 
         /* Group */
+        val GroupName = KNORA_BASE_PREFIX + "groupName"
         val GroupDescription = KNORA_BASE_PREFIX + "groupDescription"
         val IsActiveGroup = KNORA_BASE_PREFIX + "isActiveGroup"
-        val HasGroupOwner = KNORA_BASE_PREFIX + "hasGroupOwner"
         val HasGroupAdmin = KNORA_BASE_PREFIX + "hasGroupAdmin"
 
     }

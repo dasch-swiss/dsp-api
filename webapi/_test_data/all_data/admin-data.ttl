@@ -1,0 +1,206 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+
+##########################################################
+#
+# SYSTEM USER
+#
+##########################################################
+
+
+<http://data.knora.org/users/91e19f1e01> rdf:type knora-base:User ;
+
+                                         knora-base:userid "root" ;
+
+                                         foaf:givenName "Administrator" ;
+
+                                         foaf:familyName "Admin" ;
+
+                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+
+                                         knora-base:passwordSalt "0" ;
+
+                                         knora-base:email "administrator.admin@example.com" ;
+
+                                         knora-base:phone "123456" ;
+
+                                         knora-base:preferredLanguage "de" .
+
+
+<http://data.knora.org/users/sesysadmin> rdf:type knora-base:User ;
+
+                                         knora-base:userid "sesysadmin" ;
+
+                                         foaf:givenName "Second" ;
+
+                                         foaf:familyName "Sysadmin" ;
+
+                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+
+                                         knora-base:passwordSalt "0" ;
+
+                                         knora-base:email "second.sysadmin@example.com" ;
+
+                                         knora-base:phone "123456" ;
+
+                                         knora-base:preferredLanguage "de" ;
+
+                                         knora-base:isSystemAdmin "true" .
+
+
+
+##########################################################
+#
+# IMAGES DEMO PROJECT / USERS / GROUPS
+#
+##########################################################
+
+
+<http://data.knora.org/projects/images> rdf:type knora-base:knoraProject ;
+
+                                        knora-base:projectBasepath "/imldata/SALSAH-TEST-01/images" ;
+
+                                        knora-base:projectLongname "Image Collection Demo" ;
+
+                                        knora-base:projectShortname "images" ;
+
+                                        knora-base:projectOntolgyGraph "http://www.knora.org/ontology/images" ;
+
+                                        knora-base:projectDataGraph "http://www.knora.org/data/images" ;
+
+                                        knora-base:isActiveProject "true"^^xsd:boolean ;
+
+                                        knora-base:hasSelfAssignmentEnabled "false"^^xsd:boolean ;
+
+                                        knora-base:hasProjectAdmin <http://data.knora.org/users/c266a56709> .
+
+
+<http://data.knora.org/users/c266a56709> rdf:type knora-base:User ;
+
+                                         knora-base:userid "user01" ;
+
+                                         foaf:givenName "User01" ;
+
+                                         foaf:familyName "User" ;
+
+                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+
+                                         knora-base:passwordSalt "0" ;
+
+                                         knora-base:email "user01.user1@example.com" ;
+
+                                         knora-base:preferredLanguage "de" ;
+
+                                         knora-base:isActiveUser "true"^^xsd:boolean ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/images> ;
+
+                                         knora-base:isProjectAdmin <http://data.knora.org/projects/images> ;
+
+                                         knora-base:isInGroup <http://data.knora.org/groups/imgcontri> ;
+
+                                         knora-base:isGroupAdmin <http://data.knora.org/groups/imgcontri> .
+
+
+<http://data.knora.org/users/97cec4000f> rdf:type knora-base:User ;
+
+                                         knora-base:userid "user02" ;
+
+                                         foaf:givenName "User02" ;
+
+                                         foaf:familyName "User" ;
+
+                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+
+                                         knora-base:passwordSalt "0" ;
+
+                                         knora-base:email "user02.user@example.com" ;
+
+                                         knora-base:preferredLanguage "de" ;
+
+                                         knora-base:isActiveUser "true"^^xsd:boolean ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/images> ;
+
+                                         knora-base:isInGroup <http://data.knora.org/groups/imgcontri> .
+
+
+<http://data.knora.org/groups/imgcontri> rdf:type knora-base:UserGroup ;
+
+                                         knora-base:groupName "Images-Demo-Project External Contributors" ;
+
+                                         knora-base:groupDescription "This group contains contributing users external to the Image-Collection-Demo project" ;
+
+                                         knora-base:isActiveGroup "true"^^xsd:boolean ;
+
+                                         knora-base:hasSelfAssignmentEnabled "false"^^xsd:boolean ;
+
+                                         knora-base:hasGroupAdmin <http://data.knora.org/users/c266a56709> .
+
+
+
+
+
+##########################################################
+#
+# INCUNABULA PROJECT / USERS / GROUPS
+#
+##########################################################
+
+### ###########################################
+### <http://data.knora.org/projects/77275339>
+
+<http://data.knora.org/projects/77275339> rdf:type knora-base:knoraProject ;
+
+                                          knora-base:projectBasepath "/imldata/SALSAH-TEST-01/Incunabula" ;
+
+                                          knora-base:projectLongname "Bilderfolgen Basler Frühdrucke" ;
+
+                                          knora-base:projectShortname "incunabula" ;
+
+                                          knora-base:projectDescription """<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.
+</p>
+<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).
+</p>
+<p>
+Das Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.
+</p>
+Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.
+</p>""" ;
+
+                                          knora-base:projectKeyword """Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images""" ;
+
+                                          knora-base:projectLogo "incunabula_logo.png" .
+
+
+### ###########################################
+### <http://data.knora.org/users/b83acc5f05>
+
+<http://data.knora.org/users/b83acc5f05> rdf:type knora-base:User ;
+
+                                         knora-base:userid "testuser" ;
+
+                                         foaf:givenName "User" ;
+
+                                         foaf:familyName "Test" ;
+
+                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+
+                                         knora-base:passwordSalt "0" ;
+
+                                         knora-base:email "user.test@example.com" ;
+
+                                         knora-base:preferredLanguage "de" ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/77275339> .
+
+
+
+
+

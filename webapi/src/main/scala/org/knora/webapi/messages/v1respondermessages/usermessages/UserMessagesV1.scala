@@ -218,8 +218,7 @@ case class NewUserDataV1(username: String,
                          familyName: String,
                          email: String,
                          password: String,
-                         lang: String,
-                         projects: Seq[IRI] = Vector.empty[IRI])
+                         lang: String)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -231,7 +230,7 @@ object UserV1JsonProtocol extends DefaultJsonProtocol with NullOptions with Spra
 
     implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat9(UserDataV1)
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat3(UserProfileV1)
-    implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat7(NewUserDataV1)
+    implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat6(NewUserDataV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
     implicit val userCreateResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat3(UserOperationResponseV1)
 }
