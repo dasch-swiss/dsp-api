@@ -60,6 +60,7 @@ A user becomes implicitly a member of such a group by satisfying some condition.
     When checking a user’s permissions on an object, the user is automatically assigned to this group if he is
     the owner of the object.
 
+
 Access Controll Matrix
 -----------------------
 Some changes require administrative permissions. These permissions are given to a user by being a member of a smart
@@ -73,19 +74,13 @@ special property attached to the user.
 
 **ProjectAdmin**:
   This group gives a single user the administrative permissions for a specific *project*. Membership is received by
-  setting ``knora-base:hasProjectAdminPermissions`` pointing to the project. Can be assigned to a user by
-  ``SystemAdmin`` or ``ProjectOwner`` of the project.
+  adding the property ``knora-base:isProjectAdmin`` to the user and by pointing it to the project. Can be assigned to
+  a user by ``SystemAdmin`` or other ``ProjectAdmin``. Received automatically by creating the project.
 
 **GroupAdmin**:
-  This role gives a single user the administrative permissions for a specific *group*. Membership is received by
-  setting ``knora-base:hasGroupAdminPermissions`` pointing to the group. Can be assigned to a user by ``SystemAdmin``
-  or ``GroupOwner`` of the group.
-
-**ProjectOwner**:
-  Membership is implicitly given to project owners defined by the following triple: ``<Project-IRI> knora-base:hasProjectOwner <User-IRI>``
-
-**GroupOwner**:
-  Membership is implicitly given to group owners defined by the following triple: ``<Group-IRI> knora-base:hasGroupOwner <User-IRI>``
+  This group gives a single user the administrative permissions for a specific *group*. Membership is received by
+  setting the property ``knora-base:isGroupAdmin`` to the user and by pointing to the group. Can be assigned to a user
+  by ``SystemAdmin`` of other ``GroupAdmin``. Received automatically by creating the group.
 
 
 The access control matrix defines what operations a *subject* (i.e. User), being a member of a special group
@@ -114,9 +109,9 @@ operation abbreviations used are defined as follows:
 +-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
 | **GroupAdmin**    |         | R U     | group add/remove                  |                        |                        |
 +-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
-| **KnownUser**     | C       | C       | C R U (D) himself                 | C                      | C ()                   |
+| **KnownUser**     | C       | C       | C R U (D) himself                 | C                      | C (if allowed)         |
 +-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
-| **Owner**         | R U D   | R U D   | add/remove to/from project/group  | R U D                  | R U D                  |
+| **Owner**         | -       | -       | -                                 | R U D                  | R U D                  |
 +-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
 
 Default Permissions
@@ -214,32 +209,8 @@ Users Endpoint
 **Enable/Disable user (delete user)**:
   - Required permission: SystemAdmin / User
   - Effects property: ``knora-base:isActiveUser`` with value ``true`` or ``false``
-
-
-**Add/remove user to/from project**:
-  - Required permission: SystemAdmin / ProjectOwner / ProjectAdmin / User (if project self-assignment is enabled)
-  - Required information: project IRI, user IRI
-  - Effects: ``knora-base:isInProject``
-
-
-**Add/remove user to/from group**:
-  - Required permission: SystemAdmin / ProjectOwner / GroupAdmin / User (if group self-assignment is enabled)
-  - Required information: group IRI, user IRI
-  - Effects: ``knora-base:isInGroup``
-
-
-**Add/remove ProjectAdmin status**:
-  - Required permission: SystemAdmin / ProjectOwner
-  - Required information: project IRI, user IRI
-  - Effects: ``knora-base:hasProjectAdminPermissions``
-
-
-**Add/remove GroupAdmin status**:
-  - Required permission: SystemAdmin / GroupOwner
-  - Required information: group IRI, user IRI
-  - Effects: ``knora-base:hasGroupAdminPermissions``
-
-
+  
+  
 **Add/remove SystemAdmin status**:
   - Required permission: ``root``
   - Required information: user IRI
@@ -267,12 +238,10 @@ Example User Information stored in admin graph:
        knora-base:preferredLanguage "de" ;
        knora-base:isActiveUser "true"^^xsd:boolean ;
        knora-base:isSystemAdmin "true"^^xsd:boolean ;
-       knora-base:isProjectOwner <Project-IRI> ;
-       knora-base:isProjectAdmin <http://data.knora.org/projects/[UUID]> ;
        knora-base:isInProject <http://data.knora.org/projects/[UUID]> ;
-       knora-base:isGroupOwner <Group-IRI> ;
-       knora-base:isGroupAdmin <http://data.knora.org/groups/[UUID]> ;
+       knora-base:isProjectAdmin <http://data.knora.org/projects/[UUID]> ;
        knora-base:isInGroup <http://data.knora.org/groups/[UUID]> ;
+       knora-base:isGroupAdmin <http://data.knora.org/groups/[UUID]> ;
        knora-base:hasDefaultRestrictedViewPermission <http://data.knora.org/groups/[UUID]> ;
        knora-base:hasDefaultViewPermission <http://data.knora.org/groups/[UUID]> ,
                                            <http://data.knora.org/groups/KnownUser> ;
@@ -290,24 +259,33 @@ Projects Endpoint
 
 
 **Update project information**:
-  - Required permission: SystemAdmin / ProjectOwner
+  - Required permission: SystemAdmin / ProjectAdmin
   - Changeable information: longname, description
   - Effects property: ``knora-base:projectLongname``, ``knora-base:description``
 
 
+**Add/remove user to/from project**:
+  - Required permission: SystemAdmin / ProjectAdmin / User (if project self-assignment is enabled)
+  - Required information: project IRI, user IRI
+  - Optional information: admin status
+  - Effects: ``knora-base:isInProject``
+  
+
+**Add/remove user as ProjectAdmin**:
+  - Required permission: SystemAdmin / ProjectAdmin
+  - Required information: project IRI, user IRI
+  - Effects: ``knora-base:hasProjectAdminPermissions``
+
+
 **Update/Set default permissions for new resources / values**:
-  - Required permission: SystemAdmin / ProjectOwner / ProjectAdmin
+  - Required permission: SystemAdmin / ProjectAdmin
   - Required information: ``knora-base:hasDefaultRestrictedViewPermission``, ``knora-base:hasDefaultViewPermission``,
     ``knora-base:hasDefaultModifyPermission``, ``knora-base:hasDefaultDeletePermission``. Each property needs to point
     to a list of ``UserGroups`` or if nothing is specified, then to an empty list.
 
 
-**Update project owner**:
-  - Required role: SystemAdmin / ProjectOwner
-
-
 **Enable/disable self-assignment**:
-  - Required permission: SystemAdmin / ProjectOwner / ProjectAdmin
+  - Required permission: SystemAdmin / ProjectAdmin
   - Effects property: ``knora-base:hasSelfAssignmentEnabled`` with value ``true`` or ``false``
 
 
@@ -317,14 +295,13 @@ Example Project Information stored in admin named graph:
    <http://data.knora.org/projects/[UUID]>
         rdf:type knora-base:knoraProject ;
         knora-base:projectBasepath "/imldata/SALSAH-TEST-01/images" ;
-        <http://xmlns.com/foaf/0.1/name> "Images Collection Demo" ;
         knora-base:projectShortname "images" ;
+        knora-base:projectLongname "Images Collection Demo" ;
         knora-base:projectOntolgyGraph "http://www.knora.org/ontology/images" ;
         knora-base:projectDataGraph "http://www.knora.org/data/images" ;
         knora-base:isActiveProject "true"^^xsd:boolean ;
         knora-base:hasSelfAssignmentEnabled "false"^^xsd:boolean ;
-        knora-base:hasProjectOwner <User-IRI> ;
-        knora-base:hasProjectAdmin <User-IRI>
+        knora-base:hasProjectAdmin <User-IRI> ;
         knora-base:hasDefaultRestrictedViewPermission <http://data.knora.org/groups/[UUID]> ;
         knora-base:hasDefaultViewPermission <http://data.knora.org/groups/[UUID]> ,
                                             <http://data.knora.org/groups/KnownUser> ;
@@ -343,24 +320,36 @@ Groups Endpoint
 
 
 **Update group information**:
-  - Required permission: SystemAdmin / GroupOwner / GroupAdmin
-  - Changeable information: name, description
-  - Effects property: ``<http://xmlns.com/foaf/0.1/name>``, ``knora-base:description``
+  - Required permission: SystemAdmin / GroupAdmin
+  - Changeable information: name, group description
+  - Effects property: ``<http://xmlns.com/foaf/0.1/name>``, ``knora-base:groupDescription``
+
+
+**Add/remove user to/from group**:
+  - Required permission: SystemAdmin / GroupAdmin / User (if group self-assignment is enabled)
+  - Required information: group IRI, user IRI
+  - Optional information: admin status
+  - Effects: ``knora-base:isInGroup``
+
+
+**Add/remove user as GroupAdmin **:
+  - Required permission: SystemAdmin / GroupAdmin
+  - Required information: group IRI, user IRI
+  - Effects: ``knora-base:hasGroupAdminPermissions``
 
 
 **Enable/disable self-assignment**:
-  - Required permission: SystemAdmin / GroupOwner / GroupAdmin
+  - Required permission: SystemAdmin / GroupAdmin
   - Effects property: ``knora-base:hasSelfAssignmentEnabled`` with value ``true`` or ``false``
 
 Example Group Information stored in admin named graph:
 ::
 
    <http://data.knora.org/groups/[UUID]> rdf:type knora-base:UserGroup ;
-        <http://xmlns.com/foaf/0.1/name> "Name of the group" ;
+        knora-base:groupName "Name of the group" ;
         knora-base:groupDescription "A description of the group" ;
         knora-base:isActiveGroup "true"^^xsd:boolean ;
         knora-base:hasSelfAssignmentEnabled "false"^^xsd:boolean ;
-        knora-base:hasGroupOwner <User-IRI> ;
         knora-base:hasGroupAdmin <User-IRI> .
 
 
