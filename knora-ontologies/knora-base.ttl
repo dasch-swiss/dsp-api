@@ -715,20 +715,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#isProjectOwner
-
-:isProjectOwner rdf:type owl:ObjectProperty ;
-
-                rdfs:comment "Connects a User to a Project and implies ownership"@en ;
-
-                :subjectClassConstraint :User ;
-
-                :objectClassConstraint :knoraProject ;
-
-                owl:inverseOf :hasProjectOwner .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#isProjectAdmin
 
 :isProjectAdmin rdf:type owl:ObjectProperty ;
@@ -754,20 +740,6 @@
            :objectClassConstraint :UserGroup ;
 
            rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> .
-
-
-
-###  http://www.knora.org/ontology/knora-base#isGroupOwner
-
-:isGroupOwner rdf:type owl:ObjectProperty ;
-
-              rdfs:comment "Connects a User to a Group and implies ownership"@en ;
-
-              :subjectClassConstraint :User ;
-
-              :objectClassConstraint :UserGroup ;
-
-              owl:inverseOf :hasGroupOwner .
 
 
 
@@ -801,25 +773,13 @@
 ### Project Object Properties
 ###
 
-###  http://www.knora.org/ontology/knora-base#hasProjectOwner
-
-:hasProjectOwner rdf:type owl:ObjectProperty ;
-
-                rdfs:comment "Connects a Project to a User and implies ownership"@en ;
-
-                :subjectClassConstraint :knoraProject
-
-                :objectClassConstraint :User .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#hasProjectAdmin
 
 :hasProjectAdmin rdf:type owl:ObjectProperty ;
 
                 rdfs:comment "Implies granting project administrative privileges to the connected user"@en ;
 
-                :subjectClassConstraint :knoraProject
+                :subjectClassConstraint :knoraProject ;
 
                 :objectClassConstraint :User .
 
@@ -841,25 +801,13 @@
 ### Group Object Properties
 ###
 
-###  http://www.knora.org/ontology/knora-base#hasGroupOwner
-
-:hasGroupOwner rdf:type owl:ObjectProperty ;
-
-                rdfs:comment "Connects a Group to a User and implies ownership"@en ;
-
-                :subjectClassConstraint :UserGroup
-
-                :objectClassConstraint :User .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#hasGroupAdmin
 
 :hasGroupAdmin rdf:type owl:ObjectProperty ;
 
                 rdfs:comment "Implies granting group administrative privileges to the connected user"@en ;
 
-                :subjectClassConstraint :UserGroup
+                :subjectClassConstraint :UserGroup ;
 
                 :objectClassConstraint :User .
 
@@ -1570,7 +1518,7 @@
 
               rdfs:comment "Exists and is false if the user has been deactivated (deleted)"@en ;
 
-              :subjectDatatypeConstraint :User
+              :subjectDatatypeConstraint :User ;
 
               :objectDatatypeConstraint xsd:boolean .
 
@@ -1682,7 +1630,7 @@
 
                  rdfs:comment "Exists and is false if the project has been deactivated (deleted)"@en ;
 
-                 :subjectDatatypeConstraint :knoraProject
+                 :subjectDatatypeConstraint :knoraProject ;
 
                  :objectDatatypeConstraint xsd:boolean .
 
@@ -1701,6 +1649,20 @@
 ###
 ### Group Datatype Properties
 ###
+
+###  http://www.knora.org/ontology/knora-base#groupName
+
+:groupName rdf:type owl:DatatypeProperty ;
+
+             rdfs:comment "The group's name"@en ;
+
+             :subjectClassConstraint :UserGroup ;
+
+             :objectDatatypeConstraint xsd:string ;
+
+             rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> .
+
+
 
 ###  http://www.knora.org/ontology/knora-base#groupDescription
 
@@ -1722,7 +1684,7 @@
 
                rdfs:comment "Exists and is false if the group has been deactivated (deleted)"@en ;
 
-               :subjectDatatypeConstraint :UserGroup
+               :subjectDatatypeConstraint :UserGroup ;
 
                :objectDatatypeConstraint xsd:boolean .
 
@@ -2540,19 +2502,11 @@
                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
-                        owl:onProperty :isProjectOwner ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [ rdf:type owl:Restriction ;
                         owl:onProperty :isProjectAdmin ;
                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
                         owl:onProperty :isInGroup ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [ rdf:type owl:Restriction ;
-                        owl:onProperty :isGroupOwner ;
                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
@@ -2612,6 +2566,10 @@
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLogo ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :hasProjectAdmin ;
+                                owl:minCardinality "0"^^xsd:nonNegativeInteger
                               ] ;
 
               rdfs:comment "Represents a project that uses Knora"@en .
@@ -2624,12 +2582,16 @@
            
            rdfs:subClassOf <http://xmlns.com/foaf/0.1/Group> ,
                            [ rdf:type owl:Restriction ;
-                             owl:onProperty groupName ;
+                             owl:onProperty :groupName ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :groupDescription ;
                              owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :hasGroupAdmin ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger
                            ] ;
            
            rdfs:comment "A group of Knora users"@en .
