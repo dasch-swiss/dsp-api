@@ -520,7 +520,10 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 resourceIri <- Future(changeFileValueRequest.resourceIri)
 
-                getFileValuesSparql = queries.sparql.v1.txt.getFileValuesForResource(resourceIri = resourceIri).toString()
+                getFileValuesSparql = queries.sparql.v1.txt.getFileValuesForResource(
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceIri
+                ).toString()
                 //_ = print(getFileValuesSparql)
                 getFileValuesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(getFileValuesSparql)).mapTo[SparqlSelectResponse]
                 // _ <- Future(println(getFileValuesResponse))
@@ -984,7 +987,10 @@ class ValuesResponderV1 extends ResponderV1 {
             sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
             // Check whether the update succeeded.
-            sparqlQuery = queries.sparql.v1.txt.checkDeletion(newValueIri).toString()
+            sparqlQuery = queries.sparql.v1.txt.checkDeletion(
+                triplestore = settings.triplestoreType,
+                valueIri = newValueIri
+            ).toString()
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = sparqlSelectResponse.results.bindings
 
@@ -1048,6 +1054,7 @@ class ValuesResponderV1 extends ResponderV1 {
             sparqlQuery <- Future {
                 // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
                 queries.sparql.v1.txt.getVersionHistory(
+                    triplestore = settings.triplestoreType,
                     resourceIri = versionHistoryRequest.resourceIri,
                     propertyIri = versionHistoryRequest.propertyIri,
                     currentValueIri = versionHistoryRequest.currentValueIri
@@ -1207,7 +1214,10 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     private def findValue(valueIri: IRI, userProfile: UserProfileV1): Future[Option[ValueQueryResult]] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getValue(valueIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getValue(
+                triplestore = settings.triplestoreType,
+                valueIri = valueIri
+            ).toString())
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows: Seq[VariableResultsRow] = response.results.bindings
 
@@ -1234,6 +1244,7 @@ class ValuesResponderV1 extends ResponderV1 {
         for {
             sparqlQuery <- Future {
                 queries.sparql.v1.txt.findLinkValueByIri(
+                    triplestore = settings.triplestoreType,
                     subjectIri = subjectIri,
                     predicateIri = predicateIri,
                     maybeObjectIri = objectIri,
@@ -1261,6 +1272,7 @@ class ValuesResponderV1 extends ResponderV1 {
         for {
             sparqlQuery <- Future {
                 queries.sparql.v1.txt.findLinkValueByObject(
+                    triplestore = settings.triplestoreType,
                     subjectIri = subjectIri,
                     predicateIri = predicateIri,
                     objectIri = objectIri
@@ -1379,6 +1391,7 @@ class ValuesResponderV1 extends ResponderV1 {
             sparqlQuery <- Future {
                 // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
                 queries.sparql.v1.txt.findValueInVersions(
+                    triplestore = settings.triplestoreType,
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
                     searchValueIri = searchValueIri
@@ -1514,7 +1527,10 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     private def findResourceWithValue(valueIri: IRI): Future[FindResourceWithValueResult] = {
         for {
-            findResourceSparqlQuery <- Future(queries.sparql.v1.txt.findResourceWithValue(valueIri).toString())
+            findResourceSparqlQuery <- Future(queries.sparql.v1.txt.findResourceWithValue(
+                triplestore = settings.triplestoreType,
+                searchValueIri = valueIri
+            ).toString())
             findResourceResponse <- (storeManager ? SparqlSelectRequest(findResourceSparqlQuery)).mapTo[SparqlSelectResponse]
 
             _ = if (findResourceResponse.results.bindings.isEmpty) {

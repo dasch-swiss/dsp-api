@@ -24,7 +24,8 @@
 
 @**
  * Generates statements to be added to the WHERE clause of a SPARQL update when creating a new value of a resource
- * property (as opposed to a new version of an existing value).
+ * property (as opposed to a new version of an existing value). This template is used in two contexts: when creating a
+ * single value in an existing resource, and when creating a new resource with its initial values.
  *
  * @param valueIndex the index of the value in the sequence of values that are being created in the transaction (can
  *                   be 0 if only one value is being created). This index will be used to make SPARQL variable names
@@ -69,12 +70,12 @@
 
     @*
 
-    If this template is being used to create a single text value, there may be existing LinkValues that need to be updated
-    for standoff links in the text. In that case, check the state of those LinkValues. For each existing LinkValue,
-    bind a SPARQL variable ?linkValueN, where N is an index in the sequence linkUpdates. This is necessary so that
-    a new version of the LinkValue can be inserted and point to the previous one.
+    If this template is being used to create a single text value in an existing resource, there may be existing
+    LinkValues that need to be updated for standoff links in the text. In that case, check the state of those
+    LinkValues. For each existing LinkValue, bind a SPARQL variable ?linkValue@linkValueIndex. This is necessary so
+    that a new version of the LinkValue can be inserted and point to the previous one.
 
-    If this template is being used to create multiple values in an empty resource, linkUpdates will be empty, so there
+    If this template is being used to create a new resource with its initial values, linkUpdates will be empty, so there
     is nothing to check here and no SPARQL variables to bind.
 
     *@
@@ -151,8 +152,8 @@
     (non-deleted) values in the resource, find the one with the highest order, add 1 to its order, and give the resulting
     order to the new value. Otherwise, give the new value an order of 0.
 
-    If this template is being used to create multiple values in an empty resource, there are no existing values to query in
-    the resource, so maybeValueHasOrder will contain the knora-base:valueHasOrder to be used.
+    If this template is being used to create a new resource with its initial values, there are no existing values to query in
+    the resource, and maybeValueHasOrder will contain the knora-base:valueHasOrder to be used.
 
     *@
 

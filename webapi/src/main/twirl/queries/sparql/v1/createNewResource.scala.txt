@@ -25,8 +25,7 @@
  * Creates a new resource of the given type.
  *
  * @param dataNamedGraph the named graph in which the project stores its data.
- * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
-                      results from the WHERE clause of the update.
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the Iri of the new resource
  * @param resourceClassIri the IRI of the OWL class that the new resource should belong to.
  * @param projectIri the project the new resource should belong to.
@@ -35,8 +34,8 @@
  * @param whereStatementsForValues statements to be included in the WHERE clause for creating the resource's initial values.
  * @param insertStatementsForValues statements to be included in the INSERT clause for creating the resource's initial values.
  *@
-@(dataNamedGraph: IRI,
-  triplestore: String,
+@(triplestore: String,
+  dataNamedGraph: IRI,
   resourceIri: IRI,
   resourceClassIri: IRI,
   label: String,
@@ -68,19 +67,9 @@ INSERT {
         @insertStatementsForValues
     }
 }
-@*
-
-GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
-in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
-explicit statements in the WHERE clause here.
-
-*@
-@triplestore match {
-    case "graphdb" | "graphdb-free" => {
-        USING <http://www.ontotext.com/explicit>
-    }
-
-    case other => {}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
 }
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)

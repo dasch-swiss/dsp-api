@@ -299,16 +299,13 @@ Consistency: cardinality_1_not_less
     i p j
 
 // Check that if a resource has a subproperty of knora-base:hasValue, the resource class has
-// some cardinality for that property (or for a subproperty of that property). This is the
-// only way we check owl:minCardinality 0.
+// some cardinality for that property. This is the only way we check owl:minCardinality 0.
 Consistency: cardinality_any
     i <knora-base:hasValue> j
-    i p j [Constraint p != <knora-base:hasValue>]
     ------------------------------------
-    q <rdfs:subPropertyOf> p
-    i q j
+    i p j
     i <rdf:type> r
-    r <owl:onProperty> q
+    r <owl:onProperty> p
 
 // knora-base:subjectClassConstraint
 Consistency: subject_class_constraint

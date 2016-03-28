@@ -23,16 +23,22 @@
 @**
  * Gets all resources of a certain type inside a certain project.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param projectIri the IRI of the project to query.
  * @param resType the IRI of the resource class to query.
  *@
-@(projectIri: IRI,
+@(triplestore: String,
+  projectIri: IRI,
   resType: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?s
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@projectIri") as ?projectIri)
     BIND(IRI("@resType") as ?resType)

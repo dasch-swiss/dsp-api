@@ -26,10 +26,9 @@
 @**
  * Performs an extended search.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param countResults if true, just returns a count of the number of results.
  * @param searchCriteria a list of maps containing search criteria, each of which contains:
- * @param triplestore the name of the triplestore being used. The template uses this value to generate the correct
- *                    full-text search query syntax.
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
  * @param projectIri if filtering by project is desired, the IRI of the project to search.
@@ -38,9 +37,9 @@
  * @param offset the offset at which to start returning search results.
  * @param limit the maximum number of search results to return.
  *@
-@(countResults: Boolean,
+@(triplestore: String,
+  countResults: Boolean,
   searchCriteria: Seq[SearchCriterion],
-  triplestore: String,
   preferredLanguage: String,
   fallbackLanguage: String,
   projectIriOption: Option[IRI],
@@ -86,6 +85,10 @@ SELECT DISTINCT
         (SAMPLE(?anyLiteral@index) AS ?literal@index)
     }
     (GROUP_CONCAT(DISTINCT(?permissionAssertion); separator=";") AS ?permissionAssertions)
+}
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
     BIND(STR("@preferredLanguage") AS ?preferredLanguage)

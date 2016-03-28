@@ -26,8 +26,7 @@
  * Inserts a new value of a resource property (as opposed to a new version of an existing value).
  *
  * @param dataNamedGraph the named graph in which the project stores its data.
- * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
-                      results from the WHERE clause of the update.
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource to update.
  * @param propertyIri the resource property to update.
  * @param newValueIri the new value IRI.
@@ -94,19 +93,9 @@ DELETE {
         }
     }
 }
-@*
-
-GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
-in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
-explicit statements in the WHERE clause here.
-
-*@
-@triplestore match {
-    case "graphdb" | "graphdb-free" => {
-        USING <http://www.ontotext.com/explicit>
-    }
-
-    case other => {}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
 }
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)

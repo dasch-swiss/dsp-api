@@ -69,7 +69,10 @@ class SipiResponderV1 extends ResponderV1 {
       */
     private def getFileInfoForSipiV1(filename: IRI, userProfile: UserProfileV1): Future[SipiFileInfoGetResponseV1] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getFileValue(filename).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getFileValue(
+                triplestore = settings.triplestoreType,
+                filename = filename
+            ).toString())
             queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = queryResponse.results.bindings
             // check if rows were found for the given filename

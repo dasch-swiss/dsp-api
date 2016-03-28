@@ -24,22 +24,21 @@
 @*
  * Performs a search for resources matching the given criteria.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param phrase the search phrase (e.g. "Reise ins").
  * @param lastTerm the last search term (e.g. "Heili").
  * @param resourceTypeIri if set, restrict search to this resource type.
  * @param numberOfProps the amount of describing properties to be returned for each found resource (e.g if set to two, for an incunabula book its title and creator would be returned).
  * @param limitOfResults limits number of resources to be returned.
- * @param triplestore the name of the triplestore being used. The template uses this value to generate the correct
- *                    full-text search query syntax.
  * @param separator The separater to be used when concatenating the value strings.
  *
  *@
-@(phrase: Option[String],
+@(triplestore: String,
+  phrase: Option[String],
   lastTerm: String,
   resourceTypeIri: Option[IRI],
   numberOfProps: Int,
   limitOfResults: Int,
-  triplestore: String,
   separator: Char)
 
 
@@ -50,6 +49,10 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT DISTINCT ?resourceIri ?firstProp ?attachedToUser ?attachedToProject (GROUP_CONCAT(?permissionAssertion; separator=";") AS ?permissionAssertions)
 @if(numberOfProps > 1) {
     (GROUP_CONCAT(?valueString; separator="@separator") AS ?values) (GROUP_CONCAT(?guiOrder; separator=";") AS ?guiOrders) (GROUP_CONCAT(?valueOrder; separator=";") AS ?valueOrders)
+}
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
 

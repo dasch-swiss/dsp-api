@@ -194,6 +194,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private def getLastModificationDate(resourceIri: IRI): Option[String] = {
         val lastModSparqlQuery = queries.sparql.v1.txt.getLastModificationDate(
+            triplestore = settings.triplestoreType,
             resourceIri = resourceIri
         ).toString()
 
@@ -748,6 +749,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri
@@ -827,6 +829,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri
@@ -899,6 +902,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri
@@ -959,6 +963,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri
@@ -1021,6 +1026,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
@@ -1042,7 +1048,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "recreate the hasStandoffLinkTo direct link when the reference count of the corresponding LinkValue is incremented from 0 to 1" in {
+        "recreate the hasStandoffLinkTo direct link when a new standoff resource reference is added" in {
             val textValueWithResourceRef = TextValueV1(
                 utf8str = "This updated comment refers again to another resource",
                 textattr = Map(
@@ -1096,6 +1102,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri
@@ -1222,6 +1229,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // The new LinkValue should have no previous version, and there should be a direct link between the resources.
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/cb1a74e3e2f6",
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri
@@ -1299,6 +1307,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // The old LinkValue should be deleted now, and the old direct link should have been removed.
 
             val oldLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
@@ -1319,6 +1328,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // The new LinkValue should have no previous version, and there should be a direct link between the resources.
 
             val newLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
                 objectIri = linkTargetIri
@@ -1360,6 +1370,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
             val deletedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
                 objectIri = linkTargetIri,

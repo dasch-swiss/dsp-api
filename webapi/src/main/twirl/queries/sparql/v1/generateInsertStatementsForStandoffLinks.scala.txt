@@ -25,6 +25,8 @@
 @**
  * Generates statements to be added to the INSERT clause of a SPARQL update to insert direct links and LinkValues
  * for Standoff resource references, when creating new values (as opposed to new versions of existing values).
+ * This template is used in two contexts: when creating a single text value in an existing resource, and when
+ * creating a new resource with its initial values.
  *
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values.
@@ -55,16 +57,16 @@
 
             If this template is being used to create a single text value containing standoff links, the new LinkValue
             we are creating may be a new version of an existing LinkValue (linkUpdate.linkValueExists will be true).
-            In that case, the WHERE clause will have already bound a SPARQL variable ?linkValueN, containing the IRI
-            of the existing LinkValue, where N is an index in the sequence linkUpdates. In that case, add a triple
-            indicating that the new LinkValue is a new version of the existing one.
+            In that case, the WHERE clause will have already bound a SPARQL variable ?linkValue@linkValueIndex,
+            containing the IRI of the existing LinkValue. In that case, add a triple indicating that the new LinkValue
+            is a new version of the existing one.
 
-            If this template is being used in the context of creating multiple new values in an empty resource,
-            there won't be any existing LinkValues for standoff links, so linkUpdate.linkValueExists will be false.
+            If this template is being used to create a new resource with its initial values, there won't be any existing
+            LinkValues for standoff links, so linkUpdate.linkValueExists will be false.
 
             *@
             @if(linkUpdate.linkValueExists) {
-                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@{linkValueIndex} .
+                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex .
             }
 
             @* Attach the new LinkValue to its containing resource. *@

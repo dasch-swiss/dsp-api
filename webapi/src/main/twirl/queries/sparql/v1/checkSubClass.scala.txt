@@ -24,15 +24,21 @@
  * Checks whether an OWL class is a subclass of (or identical to) another OWL class.
  *
  * @param subClassIri the IRI of the subclass.
+ * @param triplestore the name of the triplestore being used.
  * @param superClassIri the IRI of the superclass.
  *@
-@(subClassIri: IRI,
+@(triplestore: String,
+  subClassIri: IRI,
   superClassIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT ?isSubClass
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@subClassIri") AS ?subClass)
     BIND(IRI("@superClassIri") AS ?superClass)

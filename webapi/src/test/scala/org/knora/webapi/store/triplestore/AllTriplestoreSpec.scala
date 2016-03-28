@@ -20,8 +20,6 @@
 
 package org.knora.webapi.store.triplestore
 
-import java.util.UUID
-
 import akka.actor.Props
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
@@ -34,7 +32,7 @@ import scala.concurrent.duration._
 
 object AllTriplestoreSpec {
 
-    val config = ConfigFactory.parseString(
+    private val config = ConfigFactory.parseString(
         """
          # akka.loglevel = "DEBUG"
          # akka.stdout-loglevel = "DEBUG"
@@ -54,7 +52,7 @@ object AllTriplestoreSpec {
  */
 class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with ImplicitSender {
 
-    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), STORE_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), STORE_MANAGER_ACTOR_NAME)
 
     private val timeout = 30.seconds
     private val tsType = settings.triplestoreType
