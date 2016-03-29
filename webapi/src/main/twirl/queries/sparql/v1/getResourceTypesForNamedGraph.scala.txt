@@ -34,4 +34,5 @@ select ?class where {
     graph <@namedGraph> {
         ?class rdf:type owl:Class .
     }
+    ?class rdfs:subClassOf* knora-base:Resource .
 }
