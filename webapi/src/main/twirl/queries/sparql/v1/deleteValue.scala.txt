@@ -53,8 +53,8 @@ DELETE {
     ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
 } INSERT {
     @* Copy the contents of the current version of the value into the new version, and mark it as deleted. *@
-    ?newValue ?valuePred ?valueObj .
-    ?newValue knora-base:isDeleted true ;
+    ?newValue ?valuePred ?valueObj ;
+        knora-base:isDeleted "true"^^xsd:boolean ;
         @maybeComment match {
             case Some(comment) => {
                 knora-base:valueHasComment """@comment""" ;

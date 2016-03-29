@@ -55,6 +55,7 @@ DELETE {
     ?newValue ?valuePred ?valueObj .
     ?newValue knora-base:valueHasComment """@comment""" ;
         knora-base:previousValue ?currentValue ;
+        knora-base:isDeleted "false"^^xsd:boolean ;
         knora-base:valueCreationDate ?currentTime .
     ?resource ?property ?newValue .
 

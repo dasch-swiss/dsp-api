@@ -35,7 +35,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
 
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    (msg.contains("Consistency check cardinality_1_not_less_0 failed") &&
+                    (msg.contains(s"${GraphDBConsistencyCheckingSpec.CONSISTENCY_CHECK_ERROR} content_prop_cardinality_1_not_less") &&
                         msg.trim.endsWith("http://data.knora.org/missingPartOf http://www.knora.org/ontology/incunabula#partOfValue *")) should ===(true)
             }
         }
@@ -45,7 +45,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
 
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    (msg.contains("Consistency check min_cardinality_1_0 failed") &&
+                    (msg.contains(s"${GraphDBConsistencyCheckingSpec.CONSISTENCY_CHECK_ERROR} content_prop_min_cardinality_1") &&
                         msg.trim.endsWith("http://data.knora.org/missingFileValue http://www.knora.org/ontology/knora-base#hasFileValue *")) should ===(true)
             }
         }
@@ -55,25 +55,27 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
 
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    (msg.contains("Consistency check max_cardinality_1_0 failed") &&
-                        msg.trim.endsWith("http://data.knora.org/tooManyPublocs http://www.knora.org/ontology/incunabula#publoc http://data.knora.org/tooManyPublocs/values/1ryBgY4MSn2Y8K8QAPiJBw1\nhttp://data.knora.org/tooManyPublocs http://www.knora.org/ontology/incunabula#publoc http://data.knora.org/tooManyPublocs/values/1ryBgY4MSn2Y8K8QAPiJBw0")) should ===(true)
+                    msg.contains(s"${GraphDBConsistencyCheckingSpec.CONSISTENCY_CHECK_ERROR} content_prop_max_cardinality_1") should ===(true)
             }
         }
 
-        "not create a new resource with a value a property that has no cardinality" in {
-            storeManager ! SparqlUpdateRequest(GraphDBConsistencyCheckingSpec.propertyWithNoCardinality)
+        "not create a new resource with more than one lastModificationDate" in {
+            storeManager ! SparqlUpdateRequest(GraphDBConsistencyCheckingSpec.tooManyLastModificationDates)
 
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    (msg.contains("Consistency cardinality_any_0 failed")) should ===(true)
+                    msg.contains(s"${GraphDBConsistencyCheckingSpec.CONSISTENCY_CHECK_ERROR} system_prop_max_cardinality_1") should ===(true)
             }
         }
+
     } else {
         s"Not running GraphDBConsistencyCheckingSpec with triplestore type ${settings.triplestoreType}" in {}
     }
 }
 
 object GraphDBConsistencyCheckingSpec {
+    private val CONSISTENCY_CHECK_ERROR = "Consistency check"
+
     private val config = ConfigFactory.parseString(
         """
          # akka.loglevel = "DEBUG"
@@ -91,6 +93,7 @@ object GraphDBConsistencyCheckingSpec {
           |INSERT {
           |    GRAPH ?dataNamedGraph {
           |        ?resource rdf:type ?resourceClass ;
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
           |            knora-base:attachedToUser ?ownerIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
@@ -114,7 +117,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#pagenum
           |
           |
-          |        ?newValue1 rdf:type ?valueType1 .
+          |        ?newValue1 rdf:type ?valueType1 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -164,7 +168,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/knora-base#hasStillImageFileValue
           |
           |
-          |        ?newValue2 rdf:type ?valueType2 .
+          |        ?newValue2 rdf:type ?valueType2 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |                ?newValue2 knora-base:originalFilename "test.jpg" ;
@@ -212,7 +217,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/knora-base#hasStillImageFileValue
           |
           |
-          |        ?newValue3 rdf:type ?valueType3 .
+          |        ?newValue3 rdf:type ?valueType3 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |                ?newValue3 knora-base:originalFilename "test.jpg" ;
@@ -268,6 +274,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newLinkValue4 rdf:type knora-base:LinkValue ;
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
           |            rdf:subject ?resource ;
           |            rdf:predicate ?linkProperty4 ;
           |            rdf:object ?linkTarget4 ;
@@ -298,7 +305,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#origname
           |
           |
-          |        ?newValue5 rdf:type ?valueType5 .
+          |        ?newValue5 rdf:type ?valueType5 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -348,7 +356,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#seqnum
           |
           |
-          |        ?newValue6 rdf:type ?valueType6 .
+          |        ?newValue6 rdf:type ?valueType6 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -627,6 +636,7 @@ object GraphDBConsistencyCheckingSpec {
           |INSERT {
           |    GRAPH ?dataNamedGraph {
           |        ?resource rdf:type ?resourceClass ;
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
           |            knora-base:attachedToUser ?ownerIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
@@ -656,6 +666,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newLinkValue0 rdf:type knora-base:LinkValue ;
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
           |            rdf:subject ?resource ;
           |            rdf:predicate ?linkProperty0 ;
           |            rdf:object ?linkTarget0 ;
@@ -688,7 +699,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#pagenum
           |
           |
-          |        ?newValue1 rdf:type ?valueType1 .
+          |        ?newValue1 rdf:type ?valueType1 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -744,6 +756,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newLinkValue4 rdf:type knora-base:LinkValue ;
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
           |            rdf:subject ?resource ;
           |            rdf:predicate ?linkProperty4 ;
           |            rdf:object ?linkTarget4 ;
@@ -774,7 +787,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#origname
           |
           |
-          |        ?newValue5 rdf:type ?valueType5 .
+          |        ?newValue5 rdf:type ?valueType5 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -824,7 +838,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#seqnum
           |
           |
-          |        ?newValue6 rdf:type ?valueType6 .
+          |        ?newValue6 rdf:type ?valueType6 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -1082,6 +1097,7 @@ object GraphDBConsistencyCheckingSpec {
           |INSERT {
           |    GRAPH ?dataNamedGraph {
           |        ?resource rdf:type ?resourceClass ;
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
           |            knora-base:attachedToUser ?ownerIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
@@ -1105,7 +1121,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#title
           |
           |
-          |        ?newValue0 rdf:type ?valueType0 .
+          |        ?newValue0 rdf:type ?valueType0 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -1155,7 +1172,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#pubdate
           |
           |
-          |        ?newValue1 rdf:type ?valueType1 .
+          |        ?newValue1 rdf:type ?valueType1 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -1207,7 +1225,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#citation
           |
           |
-          |        ?newValue2 rdf:type ?valueType2 .
+          |        ?newValue2 rdf:type ?valueType2 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -1257,7 +1276,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#citation
           |
           |
-          |        ?newValue3 rdf:type ?valueType3 .
+          |        ?newValue3 rdf:type ?valueType3 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -1307,7 +1327,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#citation
           |
           |
-          |        ?newValue4 rdf:type ?valueType4 .
+          |        ?newValue4 rdf:type ?valueType4 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -1357,7 +1378,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#citation
           |
           |
-          |        ?newValue5 rdf:type ?valueType5 .
+          |        ?newValue5 rdf:type ?valueType5 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -1432,7 +1454,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#publoc
           |
           |
-          |        ?newValue6 rdf:type ?valueType6 .
+          |        ?newValue6 rdf:type ?valueType6 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -1482,7 +1505,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#publoc
           |
           |
-          |        ?newValue7 rdf:type ?valueType7 .
+          |        ?newValue7 rdf:type ?valueType7 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -1799,8 +1823,8 @@ object GraphDBConsistencyCheckingSpec {
           |}
         """.stripMargin
 
-    // Tries to create an incunabula:book with a property (hasSpaghetti) that has no cardinality.
-    private val propertyWithNoCardinality =
+
+    private val tooManyLastModificationDates =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1810,6 +1834,9 @@ object GraphDBConsistencyCheckingSpec {
           |INSERT {
           |    GRAPH ?dataNamedGraph {
           |        ?resource rdf:type ?resourceClass ;
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:lastModificationDate "2016-01-23T11:31:24Z"^^xsd:dateTimeStamp ;
+          |			   knora-base:lastModificationDate ?currentTime ;
           |            knora-base:attachedToUser ?ownerIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
@@ -1833,7 +1860,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#title
           |
           |
-          |        ?newValue0 rdf:type ?valueType0 .
+          |        ?newValue0 rdf:type ?valueType0 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -1883,7 +1911,8 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#pubdate
           |
           |
-          |        ?newValue1 rdf:type ?valueType1 .
+          |        ?newValue1 rdf:type ?valueType1 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -1926,241 +1955,12 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |        ?resource ?property1 ?newValue1 .
-          |
-          |
-          |
-          |
-          |        # Value 2
-          |        # Property: http://www.knora.org/ontology/incunabula#citation
-          |
-          |
-          |        ?newValue2 rdf:type ?valueType2 .
-          |
-          |
-          |
-          |                ?newValue2 knora-base:valueHasString "noch ein letztes" .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
-          |
-          |
-          |        ?newValue2 knora-base:valueHasOrder ?nextOrder2 ;
-          |                             knora-base:valueCreationDate ?currentTime .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |        ?resource ?property2 ?newValue2 .
-          |
-          |
-          |
-          |
-          |        # Value 3
-          |        # Property: http://www.knora.org/ontology/incunabula#citation
-          |
-          |
-          |        ?newValue3 rdf:type ?valueType3 .
-          |
-          |
-          |
-          |                ?newValue3 knora-base:valueHasString "ein Zitat" .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
-          |
-          |
-          |        ?newValue3 knora-base:valueHasOrder ?nextOrder3 ;
-          |                             knora-base:valueCreationDate ?currentTime .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |        ?resource ?property3 ?newValue3 .
-          |
-          |
-          |
-          |
-          |        # Value 4
-          |        # Property: http://www.knora.org/ontology/incunabula#citation
-          |
-          |
-          |        ?newValue4 rdf:type ?valueType4 .
-          |
-          |
-          |
-          |                ?newValue4 knora-base:valueHasString "und noch eines" .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |            ?newValue4 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue4 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue4 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue4 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue4 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue4 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
-          |
-          |
-          |        ?newValue4 knora-base:valueHasOrder ?nextOrder4 ;
-          |                             knora-base:valueCreationDate ?currentTime .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |        ?resource ?property4 ?newValue4 .
-          |
-          |
-          |
-          |
-          |        # Value 5
-          |        # Property: http://www.knora.org/ontology/incunabula#citation
-          |
-          |
-          |        ?newValue5 rdf:type ?valueType5 .
-          |
-          |
-          |
-          |                ?newValue5 knora-base:valueHasString "This citation refers to another resource" .
-          |
-          |
-          |
-          |
-          |                    ?newValue5 knora-base:valueHasStandoff
-          |                        [
-          |
-          |
-          |                                    rdf:type knora-base:StandoffVisualAttribute ;
-          |                                    knora-base:standoffHasAttribute "bold" ;
-          |
-          |
-          |                            knora-base:standoffHasStart 5 ;
-          |                            knora-base:standoffHasEnd 13
-          |                        ] .
-          |
-          |                    ?newValue5 knora-base:valueHasStandoff
-          |                        [
-          |
-          |
-          |                                    rdf:type knora-base:StandoffLink ;
-          |                                    knora-base:standoffHasAttribute "_link" ;
-          |                                    knora-base:standoffHasLink <http://data.knora.org/c5058f3a> ;
-          |
-          |
-          |                            knora-base:standoffHasStart 32 ;
-          |                            knora-base:standoffHasEnd 40
-          |                        ] .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
-          |
-          |
-          |        ?newValue5 knora-base:valueHasOrder ?nextOrder5 ;
-          |                             knora-base:valueCreationDate ?currentTime .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |        ?resource ?property5 ?newValue5 .
-          |
-          |
-          |
-          |
           |        # Value 6
           |        # Property: http://www.knora.org/ontology/incunabula#publoc
           |
           |
-          |        ?newValue6 rdf:type ?valueType6 .
+          |        ?newValue6 rdf:type ?valueType6 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
@@ -2203,55 +2003,6 @@ object GraphDBConsistencyCheckingSpec {
           |
           |        ?resource ?property6 ?newValue6 .
           |
-          |
-          |
-          |        # Value 7
-          |        # Property: http://www.knora.org/ontology/incunabula#hasSpaghetti
-          |
-          |
-          |        ?newValue7 rdf:type ?valueType7 .
-          |
-          |
-          |
-          |                ?newValue7 knora-base:valueHasString "Bolognese" .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
-          |
-          |
-          |        ?newValue7 knora-base:valueHasOrder ?nextOrder7 ;
-          |                             knora-base:valueCreationDate ?currentTime .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |        ?resource ?property7 ?newValue7 .
-          |
           |    }
           |}
           |
@@ -2260,7 +2011,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
-          |    BIND(IRI("http://data.knora.org/propertyWithNoCardinality") AS ?resource)
+          |    BIND(IRI("http://data.knora.org/tooManyLastModificationDates") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
           |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?ownerIri)
           |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
@@ -2273,7 +2024,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/incunabula#title
           |
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#title") AS ?property0)
-          |    BIND(IRI("http://data.knora.org/propertyWithNoCardinality/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
+          |    BIND(IRI("http://data.knora.org/tooManyLastModificationDates/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0)
           |
           |
@@ -2306,7 +2057,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/incunabula#pubdate
           |
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#pubdate") AS ?property1)
-          |    BIND(IRI("http://data.knora.org/propertyWithNoCardinality/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
+          |    BIND(IRI("http://data.knora.org/tooManyLastModificationDates/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#DateValue") AS ?valueType1)
           |
           |
@@ -2333,145 +2084,12 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |
-          |
-          |    # Value 2
-          |    # Property: http://www.knora.org/ontology/incunabula#citation
-          |
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#citation") AS ?property2)
-          |    BIND(IRI("http://data.knora.org/propertyWithNoCardinality/values/oTvvcMRgR_CC-Os-61I-Qw") AS ?newValue2)
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType2)
-          |
-          |
-          |
-          |    ?property2 knora-base:objectClassConstraint ?propertyRange2 .
-          |    ?valueType2 rdfs:subClassOf* ?propertyRange2 .
-          |
-          |
-          |
-          |    ?resourceClass rdfs:subClassOf* ?restriction2 .
-          |    ?restriction2 a owl:Restriction .
-          |    ?restriction2 owl:onProperty ?property2 .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |            BIND(0 AS ?nextOrder2)
-          |
-          |
-          |
-          |
-          |
-          |
-          |    # Value 3
-          |    # Property: http://www.knora.org/ontology/incunabula#citation
-          |
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#citation") AS ?property3)
-          |    BIND(IRI("http://data.knora.org/propertyWithNoCardinality/values/Jvcncu3iSr2_fWdWdOfn-w") AS ?newValue3)
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType3)
-          |
-          |
-          |
-          |    ?property3 knora-base:objectClassConstraint ?propertyRange3 .
-          |    ?valueType3 rdfs:subClassOf* ?propertyRange3 .
-          |
-          |
-          |
-          |    ?resourceClass rdfs:subClassOf* ?restriction3 .
-          |    ?restriction3 a owl:Restriction .
-          |    ?restriction3 owl:onProperty ?property3 .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |            BIND(1 AS ?nextOrder3)
-          |
-          |
-          |
-          |
-          |
-          |
-          |    # Value 4
-          |    # Property: http://www.knora.org/ontology/incunabula#citation
-          |
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#citation") AS ?property4)
-          |    BIND(IRI("http://data.knora.org/propertyWithNoCardinality/values/7wJJcQLtS2mG_tyPKCe1Ig") AS ?newValue4)
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType4)
-          |
-          |
-          |
-          |    ?property4 knora-base:objectClassConstraint ?propertyRange4 .
-          |    ?valueType4 rdfs:subClassOf* ?propertyRange4 .
-          |
-          |
-          |
-          |    ?resourceClass rdfs:subClassOf* ?restriction4 .
-          |    ?restriction4 a owl:Restriction .
-          |    ?restriction4 owl:onProperty ?property4 .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |            BIND(2 AS ?nextOrder4)
-          |
-          |
-          |
-          |
-          |
-          |
-          |    # Value 5
-          |    # Property: http://www.knora.org/ontology/incunabula#citation
-          |
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#citation") AS ?property5)
-          |    BIND(IRI("http://data.knora.org/propertyWithNoCardinality/values/y7zDf5oNSE6-9GNNgXSbwA") AS ?newValue5)
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType5)
-          |
-          |
-          |
-          |    ?property5 knora-base:objectClassConstraint ?propertyRange5 .
-          |    ?valueType5 rdfs:subClassOf* ?propertyRange5 .
-          |
-          |
-          |
-          |    ?resourceClass rdfs:subClassOf* ?restriction5 .
-          |    ?restriction5 a owl:Restriction .
-          |    ?restriction5 owl:onProperty ?property5 .
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |
-          |            BIND(3 AS ?nextOrder5)
-          |
-          |
-          |
-          |
-          |
-          |
+          |            
           |    # Value 6
           |    # Property: http://www.knora.org/ontology/incunabula#publoc
           |
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#publoc") AS ?property6)
-          |    BIND(IRI("http://data.knora.org/propertyWithNoCardinality/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
+          |    BIND(IRI("http://data.knora.org/tooManyLastModificationDates/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType6)
           |
           |
@@ -2494,19 +2112,6 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            BIND(0 AS ?nextOrder6)
-          |
-          |
-          |
-          |    # Value 7
-          |    # Property: http://www.knora.org/ontology/incunabula#hasSpaghetti
-          |
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#hasSpaghetti") AS ?property7)
-          |    BIND(IRI("http://data.knora.org/propertyWithNoCardinality/values/spaghetti") AS ?newValue7)
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType7)
-          |
-          |
-          |
-          |            BIND(0 AS ?nextOrder7)
           |
           |
           |

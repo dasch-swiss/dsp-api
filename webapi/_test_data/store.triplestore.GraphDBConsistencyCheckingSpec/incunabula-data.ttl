@@ -50,7 +50,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a> rdf:type incunabula:book ;
 
-                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                  knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -91,7 +91,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/c3295339> rdf:type knora-base:TextValue ;
 
-                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                  knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -114,7 +114,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/8653a672> rdf:type knora-base:TextValue ;
 
-                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                  knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -137,7 +137,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/497df9ab> rdf:type knora-base:TextValue ;
 
-                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                  knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -160,7 +160,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/0ca74ce5> rdf:type knora-base:TextValue ;
 
-                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                  knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -182,7 +182,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/cfd09f1e01> rdf:type knora-base:DateValue ;
 
-                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -215,7 +215,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/92faf25701> rdf:type knora-base:TextValue ;
 
-                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -237,7 +237,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/10e00c7acc2704> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -259,7 +259,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/5524469101> rdf:type knora-base:TextValue ;
 
-                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -282,7 +282,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/184e99ca01> rdf:type knora-base:TextValue ;
 
-                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -305,7 +305,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/db77ec0302> rdf:type knora-base:TextValue ;
 
-                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -328,7 +328,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/9ea13f3d02> rdf:type knora-base:TextValue ;
 
-                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -351,7 +351,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/482a33d65c36> rdf:type incunabula:Sideband ;
 
-                                     knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+                                     knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
                                      knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -377,7 +377,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ### ###########################################
 ### <http://data.knora.org/482a33d65c36/values/25279d8dcd8e01>
 
-<http://data.knora.org/482a33d65c36/values/25279d8dcd8e01> knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+<http://data.knora.org/482a33d65c36/values/25279d8dcd8e01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
                                                            knora-base:valueHasString """l_1a""" ;
 
@@ -397,7 +397,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ### ###########################################
 ### <http://data.knora.org/482a33d65c36/values/a4167701aa4d03>
 
-<http://data.knora.org/482a33d65c36/values/a4167701aa4d03> knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+<http://data.knora.org/482a33d65c36/values/a4167701aa4d03> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
                                                            knora-base:valueHasString """213610""" ;
 
@@ -435,7 +435,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                        knora-base:valueCreationDate "2015-05-19T22:39:12Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
                                                        rdf:type knora-base:StillImageFileValue ;
 
@@ -470,7 +470,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                        knora-base:valueCreationDate "2015-05-19T22:39:12Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
                                                        rdf:type knora-base:StillImageFileValue ;
 

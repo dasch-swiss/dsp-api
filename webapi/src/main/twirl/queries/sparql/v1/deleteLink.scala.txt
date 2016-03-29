@@ -82,7 +82,7 @@ INSERT {
                 case None => {}
             }
             @if(linkUpdate.newReferenceCount == 0) {
-                knora-base:isDeleted true .
+                knora-base:isDeleted "true"^^xsd:boolean .
             } else {
                 @{throw SparqlGenerationException(s"linkUpdate.newReferenceCount must be 0 in this SPARQL template"); ()}
             }

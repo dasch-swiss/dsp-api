@@ -106,6 +106,7 @@ INSERT {
             }
             knora-base:valueHasRefCount @linkUpdateForNewLink.newReferenceCount ;
             knora-base:valueHasOrder ?order ;
+            knora-base:isDeleted "false"^^xsd:boolean ;
             knora-base:valueCreationDate ?currentTime .
 
         @for(assertion <- linkUpdateForNewLink.permissionRelevantAssertions) {

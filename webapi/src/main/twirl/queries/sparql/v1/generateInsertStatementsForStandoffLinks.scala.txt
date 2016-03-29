@@ -47,6 +47,7 @@
                 rdf:predicate <@linkUpdate.linkPropertyIri> ;
                 rdf:object <@linkUpdate.linkTargetIri> ;
                 knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
+                knora-base:isDeleted "false"^^xsd:boolean ;
                 knora-base:valueCreationDate ?currentTime .
 
             @for(assertion <- linkUpdate.permissionRelevantAssertions) {

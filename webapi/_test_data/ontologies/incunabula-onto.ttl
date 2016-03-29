@@ -834,31 +834,6 @@
                            knora-base:hasDefaultDeletePermission knora-base:Owner .
 
 
-### ###########################################
-### incunabula:hasSpaghetti
-
-:hasSpaghetti rdf:type owl:ObjectProperty ;
-
-               rdfs:subPropertyOf knora-base:hasValue ;
-
-               rdfs:label "Spaghetti"@de ;
-
-               rdfs:comment """Spaghetti"""@de ;
-
-               knora-base:objectClassConstraint knora-base:TextValue ;
-
-               salsah-gui:guiOrder "20"^^xsd:integer ;
-
-               salsah-gui:guiElement salsah-gui:Richtext ;
-
-               knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                                   knora-base:UnknownUser ;
-
-               knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-               knora-base:hasDefaultDeletePermission knora-base:Owner .
-
-
 ##########################################################
 #
 # RESOURCES

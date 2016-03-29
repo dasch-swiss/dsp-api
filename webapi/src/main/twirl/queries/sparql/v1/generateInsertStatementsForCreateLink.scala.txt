@@ -64,6 +64,7 @@
                 case None => {}
             }
             knora-base:valueHasOrder ?nextOrder@valueIndex ;
+            knora-base:isDeleted "false"^^xsd:boolean ;
             knora-base:valueCreationDate ?currentTime .
 
         @for(assertion <- linkUpdate.permissionRelevantAssertions) {

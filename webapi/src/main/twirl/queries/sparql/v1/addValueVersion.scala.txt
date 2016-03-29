@@ -82,7 +82,8 @@ DELETE {
 } INSERT {
     GRAPH ?dataNamedGraph {
         @* Construct the new value version. *@
-        ?newValue rdf:type ?valueType .
+        ?newValue rdf:type ?valueType ;
+            knora-base:isDeleted "false"^^xsd:boolean .
 
         @value match {
             case textValue: TextValueV1 => {
@@ -223,6 +224,8 @@ DELETE {
                 knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
                 @if(linkUpdate.newReferenceCount == 0) {
                     knora-base:isDeleted true ;
+                } else {
+                    knora-base:isDeleted false ;
                 }
                 knora-base:valueCreationDate ?currentTime .
 
