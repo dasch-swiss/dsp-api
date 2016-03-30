@@ -20,6 +20,8 @@
 
 package org.knora.webapi.routing.v1
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import org.apache.commons.validator.routines.UrlValidator
@@ -78,7 +80,11 @@ object UsersRouteV1 extends Authenticator {
                             apiRequest.password,
                             apiRequest.lang)
 
-                        UserCreateRequestV1(newUserData, userProfile)
+                        UserCreateRequestV1(
+                            newUserData,
+                            userProfile,
+                            apiRequestID = UUID.randomUUID
+                        )
                     }
 
                     RouteUtilV1.runJsonRoute(

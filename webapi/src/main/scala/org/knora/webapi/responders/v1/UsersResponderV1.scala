@@ -20,20 +20,30 @@
 
 package org.knora.webapi.responders.v1
 
+import java.util.UUID
+
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
+import org.knora.webapi.messages.v1respondermessages.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
+import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.messages.v1respondermessages.usermessages._
+import org.knora.webapi.messages.v1respondermessages.valuemessages.{CreateMultipleValuesRequestV1, CreateMultipleValuesResponseV1}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.MessageUtil
+import org.knora.webapi.util.KnoraIriUtil
 
 import scala.concurrent.Future
+
+import org.mindrot.jbcrypt.BCrypt
 
 /**
   * Provides information about Knora users to other responders.
   */
 class UsersResponderV1 extends ResponderV1 {
+
+    // Creates IRIs for new Knora user objects.
+    val knoraIriUtil = new KnoraIriUtil
 
     /**
       * Receives a message extending [[UsersResponderRequestV1]], and returns a message of type [[UserProfileV1]]
@@ -43,7 +53,7 @@ class UsersResponderV1 extends ResponderV1 {
     def receive = {
         case UserProfileByIRIGetRequestV1(userIri, clean) => future2Message(sender(), getUserProfileByIRIV1(userIri, clean), log)
         case UserProfileByUsernameGetRequestV1(username, clean) => future2Message(sender(), getUserProfileByUsernameV1(username, clean), log)
-        case UserCreateRequestV1(newUserData, userProfile) => future2Message(sender(), createNewUserV1(newUserData, userProfile), log)
+        case UserCreateRequestV1(newUserData, userProfile, apiRequestID) => future2Message(sender(), createNewUserV1(newUserData, userProfile, apiRequestID), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -53,60 +63,20 @@ class UsersResponderV1 extends ResponderV1 {
       * @param userIri the IRI of the user.
       * @return a [[Option[UserProfileV1]] describing the user.
       */
-    private def getUserProfileByIRIV1(userIri: IRI, clean: Boolean): Future[Option[UserProfileV1]] = {
+    private def getUserProfileByIRIV1(userIri: IRI, clean: Boolean): Future[UserProfileV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getUser(userIri).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            _ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
             _ = if (userDataQueryResponse.results.bindings.isEmpty) {
                 throw NotFoundException(s"User '$userIri' not found")
             }
 
-            groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-            }
+            userProfileV1 = userDataQueryResponse2UserProfile(userDataQueryResponse, clean)
 
-            userDataV1 = UserDataV1(
-                lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
-                    case Some(langList) => langList.head
-                    case None => settings.fallbackLanguage
-                },
-                user_id = Some(userIri),
-                username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
-                firstname = groupedUserData.get(OntologyConstants.Foaf.GivenName).map(_.head),
-                lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
-                email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
-                password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-                passwordSalt = groupedUserData.get(OntologyConstants.KnoraBase.PasswordSalt).map(_.head)
-            )
-
-            groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
-                case Some(groups) => groups
-                case None => Vector.empty[IRI]
-            }
-
-            projectIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
-                case Some(projects) => projects
-                case None => Vector.empty[IRI]
-            }
-
-            _ = log.debug(s"RAW: ${groupedUserData.toString}")
-
-            userProfileV1 = {
-                if (groupedUserData.isEmpty) {
-                    None
-                } else {
-                    if (clean) {
-                        Some(UserProfileV1(userDataV1, groupIris, projectIris).getCleanUserProfileV1)
-                    } else {
-                        Some(UserProfileV1(userDataV1, groupIris, projectIris))
-                    }
-                }
-            }
-
-        //_ = log.debug(s"${userProfileV1.toString}")
-
-        } yield userProfileV1
+        } yield userProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
     }
 
     /**
@@ -115,66 +85,19 @@ class UsersResponderV1 extends ResponderV1 {
       * @param username the username of the user.
       * @return a [[Option[UserProfileV1]] describing the user.
       */
-    private def getUserProfileByUsernameV1(username: String, clean: Boolean): Future[Option[UserProfileV1]] = {
+    private def getUserProfileByUsernameV1(username: String, clean: Boolean): Future[UserProfileV1] = {
         log.debug(s"getUserProfileByUsernameV1('$username', '$clean') called")
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(username).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
-            _ = log.debug(MessageUtil.toSource(userDataQueryResponse))
-
             _ = if (userDataQueryResponse.results.bindings.isEmpty) {
                 throw NotFoundException(s"User '$username' not found")
             }
 
-            userIri = userDataQueryResponse.getFirstRow.rowMap("s")
+            userProfileV1 = userDataQueryResponse2UserProfile(userDataQueryResponse, clean)
 
-            groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-            }
-
-            groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
-                case Some(groups) => groups
-                case None => Vector.empty[IRI]
-            }
-
-            projectIris: Seq[String] = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
-                case Some(projects) => projects
-                case None => Vector.empty[IRI]
-            }
-
-
-            userDataV1 = UserDataV1(
-                lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
-                    case Some(langList) => langList.head
-                    case None => settings.fallbackLanguage
-                },
-                user_id = Some(userIri),
-                username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
-                firstname = groupedUserData.get(OntologyConstants.Foaf.GivenName).map(_.head),
-                lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
-                email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
-                password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-                passwordSalt = groupedUserData.get(OntologyConstants.KnoraBase.PasswordSalt).map(_.head)
-            )
-
-            _ = log.debug(s"RAW: ${groupedUserData.toString}")
-
-            userProfileV1 = {
-                if (groupedUserData.isEmpty) {
-                    None
-                } else {
-                    if (clean) {
-                        Some(UserProfileV1(userDataV1, groupIris, projectIris).getCleanUserProfileV1)
-                    } else {
-                        Some(UserProfileV1(userDataV1, groupIris, projectIris))
-                    }
-                }
-            }
-
-            _ = log.debug(s"${userProfileV1.toString}")
-
-        } yield userProfileV1 // Some(UserProfileV1(userDataV1, groupIris, projectIris))
+        } yield userProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
     }
 
     /**
@@ -189,9 +112,13 @@ class UsersResponderV1 extends ResponderV1 {
       * @param userProfile a [[UserProfileV1]] object containing information about the requesting user.
       * @return a future containing the [[UserOperationResponseV1]].
       */
-    private def createNewUserV1(newUserData: NewUserDataV1, userProfile: UserProfileV1): Future[UserOperationResponseV1] = {
+    private def createNewUserV1(newUserData: NewUserDataV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
         // self-registration allowed, so no checking if the user has the right to create a new user
 
+        // check if username is not empty
+        if (newUserData.username.isEmpty) throw BadRequestException("Username cannot be empty")
+
+        if (newUserData.password.isEmpty) throw BadRequestException("Password cannot be empty")
 
         for {
             // check if the supplied username for the new user is unique, i.e. not already registered
@@ -204,17 +131,45 @@ class UsersResponderV1 extends ResponderV1 {
                 throw DuplicateValueException(s"User with the username: '${newUserData.username}' already exists")
             }
 
-            // create the user
-            newUserProfile = UserProfileV1(
-                UserDataV1(
-                    lang = newUserData.lang,
-                    username = Some(newUserData.username),
-                    firstname = Some(newUserData.givenName),
-                    lastname = Some(newUserData.familyName),
-                    email = Some(newUserData.email)
-                )
-            )
+            userIri = knoraIriUtil.makeRandomPersonIri
+
+            hashedPassword = BCrypt.hashpw(newUserData.password, BCrypt.gensalt())
+
+            createResourceResponse <- TransactionUtil.runInUpdateTransaction({
+                apiRequestID =>
+                    for {
+                        // Create the user.
+                        createNewUserSparql <- Future(queries.sparql.v1.txt.createNewUser(
+                            adminNamedGraphIri = "http://www.knora.org/data/admin",
+                            triplestore = settings.triplestoreType,
+                            userIri = userIri,
+                            userClassIri = OntologyConstants.KnoraBase.User,
+                            username = newUserData.username,
+                            password = hashedPassword,
+                            givenName = newUserData.givenName,
+                            familyName = newUserData.familyName,
+                            email = newUserData.email,
+                            preferredLanguage = newUserData.lang).toString)
+                        _ = println(createNewUserSparql)
+                        createResourceResponse <- (storeManager ? SparqlUpdateRequest(apiRequestID, createNewUserSparql)).mapTo[SparqlUpdateResponse]
+                    } yield createResourceResponse
+            }, storeManager)
+
+            // Verify that the user was created.
+
+            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(userIri = userIri).toString())
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            _ = if (userDataQueryResponse.results.bindings.isEmpty) {
+                throw UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug.")
+            }
+
+            // create the user profile
+            newUserProfile = userDataQueryResponse2UserProfile(userDataQueryResponse, true)
+
+            // create the user operation response
             userOperationResponseV1 = UserOperationResponseV1(newUserProfile, userProfile.userData)
+
         } yield userOperationResponseV1
 
     }
@@ -227,4 +182,53 @@ class UsersResponderV1 extends ResponderV1 {
       * @return
       */
     private def addUserToGroupV1(user: IRI, groups: Vector[IRI], userProfile: UserProfileV1): Future[UserOperationResponseV1] = ???
+
+    private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, clean: Boolean): UserProfileV1 = {
+
+        log.debug(MessageUtil.toSource(userDataQueryResponse))
+
+        val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
+
+        val groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
+            case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+        }
+
+        log.debug(s"RAW: ${groupedUserData.toString}")
+
+        val userDataV1 = UserDataV1(
+            lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
+                case Some(langList) => langList.head
+                case None => settings.fallbackLanguage
+            },
+            user_id = Some(returnedUserIri),
+            username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
+            firstname = groupedUserData.get(OntologyConstants.Foaf.GivenName).map(_.head),
+            lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
+            email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
+            hashedpassword = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head)
+        )
+
+        val groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
+            case Some(groups) => groups
+            case None => Vector.empty[IRI]
+        }
+
+        val projectIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
+            case Some(projects) => projects
+            case None => Vector.empty[IRI]
+        }
+
+        val userProfileV1 = {
+            if (clean) {
+                UserProfileV1(userDataV1, groupIris, projectIris).getCleanUserProfileV1
+            } else {
+                UserProfileV1(userDataV1, groupIris, projectIris)
+            }
+        }
+
+        log.debug(s"${userProfileV1.toString}")
+
+        userProfileV1
+    }
+
 }

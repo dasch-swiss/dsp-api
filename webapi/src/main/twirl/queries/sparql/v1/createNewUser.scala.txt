@@ -1,0 +1,98 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@*
+ * Creates a new user.
+ *
+ * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
+                      results from the WHERE clause of the update.
+ * @param userIri the Iri of the new user
+ * @param userClassIri the IRI of the OWL class that the new user should belong to.
+ * @param username the new user's username.
+ * @param password the new user's password.
+ * @param passwordSalt the new user's password salt used for hashing. Is unique per user.
+ * @param givenName the new user's given name.
+ * @param familyName the new user's family name.
+ * @param email the new user's email address.
+ * @param preferredLanguage the new user's preferred language.
+ *
+ *@
+@(adminNamedGraphIri: IRI,
+  triplestore: String,
+  userIri: IRI,
+  userClassIri: IRI,
+  username: String,
+  password: String,
+  givenName: String,
+  familyName: String,
+  email: String,
+  preferredLanguage: String)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+INSERT {
+    GRAPH ?adminNamedGraphIri {
+        ?userIri rdf:type ?userClassIri ;
+
+            knora-base:userid ?username ;
+
+            knora-base:password ?password ;
+
+            @if(givenName.nonEmpty) {
+                foaf:givenName ?givenName ;
+            }
+
+            @if(familyName.nonEmpty) {
+                foaf:familyName ?familyName ;
+            }
+
+            @if(email.nonEmpty) {
+                knora-base:email ?email ;
+            }
+
+            knora-base:preferredLanguage ?preferredLanguage .
+    }
+}
+@*
+
+GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
+in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
+explicit statements in the WHERE clause here.
+
+*@
+@triplestore match {
+    case "graphdb" | "graphdb-free" => {
+        USING <http://www.ontotext.com/explicit>
+    }
+
+    case other => {}
+}
+WHERE {
+    BIND(IRI("@adminNamedGraphIri") AS ?adminNamedGraphIri)
+    BIND(IRI("@userIri") AS ?userIri)
+    BIND(IRI("@userClassIri") AS ?userClassIri)
+    BIND(NOW() AS ?currentTime)
+}

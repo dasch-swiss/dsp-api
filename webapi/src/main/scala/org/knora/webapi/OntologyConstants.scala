@@ -173,6 +173,7 @@ object OntologyConstants {
 
 
         /* User */
+        val User = KNORA_BASE_PREFIX + "User"
         val Username = KNORA_BASE_PREFIX + "userid"
         val Email = KNORA_BASE_PREFIX + "email"
         val Password = KNORA_BASE_PREFIX + "password"
@@ -186,6 +187,7 @@ object OntologyConstants {
         val IsGroupAdmin = KNORA_BASE_PREFIX + "isGroupAdmin"
 
         /* Project */
+        val Project = KNORA_BASE_PREFIX + "Project"
         val ProjectShortname = KNORA_BASE_PREFIX + "projectShortname"
         val ProjectLongname = KNORA_BASE_PREFIX + "projectLongname"
         val ProjectDescription = KNORA_BASE_PREFIX + "projectDescription"
@@ -199,10 +201,14 @@ object OntologyConstants {
         val HasProjectAdmin = KNORA_BASE_PREFIX + "hasProjectAdmin"
 
         /* Group */
+        val Group = KNORA_BASE_PREFIX + "Group"
         val GroupName = KNORA_BASE_PREFIX + "groupName"
         val GroupDescription = KNORA_BASE_PREFIX + "groupDescription"
         val IsActiveGroup = KNORA_BASE_PREFIX + "isActiveGroup"
         val HasGroupAdmin = KNORA_BASE_PREFIX + "hasGroupAdmin"
+
+        /* Institution */
+        val Institution = KNORA_BASE_PREFIX + "Institution"
 
     }
 

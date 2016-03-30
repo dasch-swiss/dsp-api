@@ -20,6 +20,8 @@
 
 package org.knora.webapi.messages.v1respondermessages.usermessages
 
+import java.util.UUID
+
 import org.knora.webapi._
 import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
 import spray.httpx.SprayJsonSupport
@@ -81,11 +83,11 @@ case class UserProfileByUsernameGetRequestV1(username: String,
 /**
   * Requests the creation of a new user.
   *
-  * @param newUserData the [[NewUserDataV1]] information for creating the new user.
-  * @param userProfile the user profile of the user creating the new user.
+  * @param newUserData  the [[NewUserDataV1]] information for creating the new user.
+  * @param userProfile  the user profile of the user creating the new user.
+  * @param apiRequestID the ID of the API request.
   */
-case class UserCreateRequestV1(newUserData: NewUserDataV1,
-                               userProfile: UserProfileV1) extends UsersResponderRequestV1
+case class UserCreateRequestV1(newUserData: NewUserDataV1, userProfile: UserProfileV1, apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
   * Describes the answer to an user creating/modifying operation.
@@ -111,16 +113,23 @@ case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDat
 case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects: Seq[IRI] = Nil) {
 
     /**
-      * Check password.
+      * Check password using either SHA-1 or BCrypt. The BCrypt password always starts with '$2a$'
       *
       * @param password the password to check.
       * @return true if password matches and false if password doesn't match.
       */
     def passwordMatch(password: String): Boolean = {
-        userData.passwordSalt match {
-            case Some(salt) if salt.isEmpty => passwordMatchSha1(password)
-            case Some(salt) => passwordMatchBCrypt(password, salt)
-            case None => passwordMatchSha1(password)
+        userData.hashedpassword.exists {
+            hashedpassword => hashedpassword match {
+                case hp if hp.startsWith("$2a$") => {
+                    import org.mindrot.jbcrypt.BCrypt
+                    BCrypt.checkpw(password, hp)
+                }
+                case hp => {
+                    val md = java.security.MessageDigest.getInstance("SHA-1")
+                    md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hp)
+                }
+            }
         }
     }
 
@@ -132,7 +141,7 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
       */
     private def passwordMatchSha1(password: String): Boolean = {
         val md = java.security.MessageDigest.getInstance("SHA-1")
-        userData.password.exists { hashedPassword =>
+        userData.hashedpassword.exists { hashedPassword =>
             md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hashedPassword)
         }
     }
@@ -141,13 +150,12 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
       * Check password hashed using BCrypt.
       *
       * @param password the password to check
-      * @param salt the stored unique user's password salt
       * @return true if password matches and false if password doesn't match.
       */
-    private def passwordMatchBCrypt(password: String, salt: String): Boolean = {
+    private def passwordMatchBCrypt(password: String): Boolean = {
         import org.mindrot.jbcrypt.BCrypt
-        userData.password.exists {
-            hashedPassword => BCrypt.checkpw(salt + password, hashedPassword)
+        userData.hashedpassword.exists {
+            hashedPassword => BCrypt.checkpw(password, hashedPassword)
         }
     }
 
@@ -167,8 +175,7 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
             olduserdata.firstname,
             olduserdata.lastname,
             olduserdata.email,
-            None, // remove password
-            None // remove password salt
+            None // remove hashed password
         )
 
         UserProfileV1(newuserdata, groups, projects)
@@ -182,15 +189,14 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
 /**
   * Represents basic information about a user.
   *
-  * @param lang         the ISO 639-1 code of the user's preferred language.
-  * @param user_id      the user's IRI.
-  * @param token        the user's API token used as credentials.
-  * @param username     the user's username.
-  * @param firstname    the user's given name.
-  * @param lastname     the user's surname.
-  * @param email        the user's email address.
-  * @param password     the user's hashed password.
-  * @param passwordSalt the user's unique salt used in hashing the password.
+  * @param lang           the ISO 639-1 code of the user's preferred language.
+  * @param user_id        the user's IRI.
+  * @param token          the user's API token used as credentials.
+  * @param username       the user's username.
+  * @param firstname      the user's given name.
+  * @param lastname       the user's surname.
+  * @param email          the user's email address.
+  * @param hashedpassword the user's hashed password.
   */
 case class UserDataV1(lang: String,
                       user_id: Option[IRI] = None,
@@ -199,8 +205,7 @@ case class UserDataV1(lang: String,
                       firstname: Option[String] = None,
                       lastname: Option[String] = None,
                       email: Option[String] = None,
-                      password: Option[String] = None,
-                      passwordSalt: Option[String] = None)
+                      hashedpassword: Option[String] = None)
 
 
 /**
@@ -228,7 +233,7 @@ case class NewUserDataV1(username: String,
   */
 object UserV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
-    implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat9(UserDataV1)
+    implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat8(UserDataV1)
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat3(UserProfileV1)
     implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat6(NewUserDataV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)

@@ -24,8 +24,6 @@
 
                                          knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 
-                                         knora-base:passwordSalt "0" ;
-
                                          knora-base:email "administrator.admin@example.com" ;
 
                                          knora-base:phone "123456" ;
@@ -42,8 +40,6 @@
                                          foaf:familyName "Sysadmin" ;
 
                                          knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
-
-                                         knora-base:passwordSalt "0" ;
 
                                          knora-base:email "second.sysadmin@example.com" ;
 
@@ -91,8 +87,6 @@
 
                                          knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 
-                                         knora-base:passwordSalt "0" ;
-
                                          knora-base:email "user01.user1@example.com" ;
 
                                          knora-base:preferredLanguage "de" ;
@@ -117,8 +111,6 @@
                                          foaf:familyName "User" ;
 
                                          knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
-
-                                         knora-base:passwordSalt "0" ;
 
                                          knora-base:email "user02.user@example.com" ;
 
@@ -191,8 +183,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                          foaf:familyName "Test" ;
 
                                          knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
-
-                                         knora-base:passwordSalt "0" ;
 
                                          knora-base:email "user.test@example.com" ;
 

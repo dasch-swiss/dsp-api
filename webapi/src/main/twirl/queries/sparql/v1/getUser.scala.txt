@@ -27,9 +27,8 @@
  *@
 @(userIri: IRI)
 
-SELECT ?p ?o
+SELECT ?s ?p ?o
 WHERE {
-    BIND(IRI("@userIri") as ?user)
-
-    ?user ?p ?o .
+    BIND(IRI("@userIri") as ?s)
+    ?s ?p ?o .
 }
