@@ -1529,6 +1529,11 @@
                               owl:minCardinality "1"^^xsd:nonNegativeInteger
                             ]
                             ;
+
+            rdfs:label "Annotation"@de ,
+                       "Annotation"@en ,
+                       "Annotation"@fr ,
+                       "Annotation"@it ;
             
             rdfs:comment "A generic class for representing annotations"@en .
 
@@ -1561,6 +1566,11 @@
                                   owl:onProperty :hasAudioFileValue ;
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
+
+                     rdfs:label "Repräsentation (Audio)"@de ,
+                                "Representation (Audio)"@en ,
+                                "Répresentation (Audio)"@fr ,
+                                "Rappresentazione (Audio)"@it ;
                      
                      rdfs:comment "Represents a file containing audio data"@en .
 
@@ -1607,7 +1617,12 @@
                                   owl:onProperty :hasDDDFileValue ;
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
-                   
+
+                   rdfs:label "Repräsentation (3D)"@de ,
+                                              "Representation (3D)"@en ,
+                                              "Répresentation (3D)"@fr ,
+                                              "Rappresentazione (3D)"@it ;
+
                    rdfs:comment "Represents a file containg 3D data"@en .
 
 
@@ -1657,6 +1672,11 @@
 ###  http://www.knora.org/ontology/knora-base#DocumentRepresentation
 
 :DocumentRepresentation rdf:type owl:Class ;
+
+                        rdfs:label "Repräsentation (Dokument)"@de ,
+                                   "Representation (Document)"@en ,
+                                   "Répresentation (Document)"@fr ,
+                                   "Rappresentazione (Documento)"@it ;
                         
                         rdfs:subClassOf :Representation ,
                                 [ rdf:type owl:Restriction ;
@@ -1695,6 +1715,11 @@
                                     owl:onProperty :hasExtResValue ;
                                     owl:cardinality "1"^^xsd:nonNegativeInteger
                                   ] ;
+
+                  rdfs:label "Externe Ressource"@de ,
+                             "External Resource"@en ,
+                             "Ressource Externe"@fr ,
+                             "Risorsa esterna"@it ;
                   
                   rdfs:comment "Represents a proxy for an object stored by an external provider"@en .
 
@@ -1874,7 +1899,7 @@
                          ] ;
          
          :resourceIcon "link.gif"^^xsd:string ;
-         
+
          rdfs:comment "Verknüpfung mehrerer Resourcen"@de ,
                       "Represents a generic link object"@en .
 
@@ -1995,6 +2020,11 @@
                                   owl:onProperty :hasMovingImageFileValue ;
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
+
+                           rdfs:label "Repräsentation (Video)"@de ,
+                                      "Representation (Movie)"@en ,
+                                      "Répresentation (Film)"@fr ,
+                                      "Rappresentazione (Film)"@it ;
                            
                            rdfs:comment "A resource containing moving image data"@en .
 
@@ -2046,6 +2076,11 @@
                                   owl:onProperty :hasFileValue ;
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
+
+                rdfs:label "Repräsentation"@de ,
+                           "Representation"@en ,
+                           "Répresentation"@fr ,
+                           "Rappresentazione"@it ;
                 
                 rdfs:comment "A resource that can store one or more FileValues"@en .
 
@@ -2091,6 +2126,11 @@
                             owl:onProperty :deleteDate ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
+
+          rdfs:label "Ressource"@de ,
+                     "Resource"@en ,
+                     "Ressource"@fr ,
+                     "Risorsa"@it ;
           
           rdfs:comment "Represents something in the world, or an abstract thing"@en .
 
@@ -2112,7 +2152,7 @@
                             owl:onProperty :standoffHasAttribute ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
-          
+
           rdfs:comment "Represents a standoff markup attribute in a TextValue"@en .
 
 
@@ -2184,7 +2224,12 @@
                                   owl:onProperty :hasStillImageFileValue ;
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
-                          
+
+                          rdfs:label "Repräsentation (Bild)"@de ,
+                                     "Representation (Image)"@en ,
+                                     "Répresentation (Image)"@fr ,
+                                     "Rappresentazione (Imagine)"@it ;
+
                           rdfs:comment "A resource that can contain two-dimensional still image files"@en .
 
 
@@ -2208,6 +2253,11 @@
 :TextRepresentation rdf:type owl:Class ;
                     
                     rdfs:subClassOf :Representation ;
+
+                    rdfs:label "Repräsentation (Text)"@de ,
+                                               "Representation (Text)"@en ,
+                                               "Répresentation (Texte)"@fr ,
+                                               "Rappresentazione (testo)"@it ;
                     
                     rdfs:comment "A resource containing text files"@en .
 
