@@ -197,7 +197,7 @@ object RouteUtilV1 {
                     HttpResponse(
                         status = StatusCodes.OK,
                         entity = HttpEntity(
-                            MediaTypes.`application/json`,
+                            ContentType(MediaTypes.`application/json`, HttpCharsets.`UTF-8`),
                             jsonResponseWithStatus.compactPrint
                         )
                     )
@@ -239,7 +239,7 @@ object RouteUtilV1 {
                     HttpResponse(
                         status = StatusCodes.OK,
                         entity = HttpEntity(
-                            MediaTypes.`text/html`,
+                            ContentType(MediaTypes.`text/html`, HttpCharsets.`UTF-8`),
                             viewHandler(responderReply, responderManager)
                         )
                     )
@@ -286,7 +286,7 @@ object RouteUtilV1 {
 
         HttpResponse(
             status = httpStatus,
-            entity = HttpEntity(MediaTypes.`application/json`, JsObject(responseFields).compactPrint)
+            entity = HttpEntity(ContentType(MediaTypes.`application/json`, HttpCharsets.`UTF-8`), JsObject(responseFields).compactPrint)
         )
     }
 
