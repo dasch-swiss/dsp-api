@@ -1459,18 +1459,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#passwordSalt
-
-:passwordSalt rdf:type owl:DatatypeProperty ;
-
-          rdfs:comment "The salt used in creating the encrypted credential"@en ;
-
-          :subjectClassConstraint <http://xmlns.com/foaf/0.1/Person> ;
-
-          :objectDatatypeConstraint xsd:string .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#address
 
 :address rdf:type owl:DatatypeProperty ;
@@ -2483,10 +2471,6 @@
                       ] ,
                       [ rdf:type owl:Restriction ;
                         owl:onProperty :password ;
-                        owl:cardinality "1"^^xsd:nonNegativeInteger
-                      ] ,
-                      [ rdf:type owl:Restriction ;
-                        owl:onProperty :passwordSalt ;
                         owl:cardinality "1"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
