@@ -340,8 +340,8 @@ Consistency: content_prop_max_cardinality_1
     p <rdfs:subPropertyOf> <knora-base:hasContent>
     i p j
     i p k [Constraint j != k]
-    j <knora-base:isDeleted> "false"^^xsd:boolean
-    k <knora-base:isDeleted> "false"^^xsd:boolean
+    /* j <knora-base:isDeleted> "false"^^xsd:boolean // Commented out because it's very slow
+    k <knora-base:isDeleted> "false"^^xsd:boolean */
     ------------------------------------
 
 // owl:minCardinality 1 (check that the property has an object)
@@ -353,7 +353,7 @@ Consistency: content_prop_min_cardinality_1
     p <rdfs:subPropertyOf> <knora-base:hasContent>
     ------------------------------------
     i p j
-    /* j <knora-base:isDeleted> "false"^^xsd:boolean */ // This line has no effect.
+    /* j <knora-base:isDeleted> "false"^^xsd:boolean */ // Commented out because of GraphDB issue OWLIM-2937 (Consistency rules with multiple consequents do not trigger)
 
 // owl:cardinality 1 (check that the property has no more than one non-deleted object)
 Consistency: cardinality_1_not_greater_content_prop
@@ -363,8 +363,8 @@ Consistency: cardinality_1_not_greater_content_prop
     p <rdfs:subPropertyOf> <knora-base:hasContent>
     i p j
     i p k [Constraint j != k]
-    j <knora-base:isDeleted> "false"^^xsd:boolean
-    k <knora-base:isDeleted> "false"^^xsd:boolean
+    /* j <knora-base:isDeleted> "false"^^xsd:boolean // Commented out because it's very slow
+    k <knora-base:isDeleted> "false"^^xsd:boolean */
     ------------------------------------
 
 // owl:cardinality 1 (check that the property has an object)
@@ -376,11 +376,11 @@ Consistency: content_prop_cardinality_1_not_less
     p <rdfs:subPropertyOf> <knora-base:hasContent>
     ------------------------------------
     i p j
-    /* j <knora-base:isDeleted> "false"^^xsd:boolean */ // This line has no effect.
+    /* j <knora-base:isDeleted> "false"^^xsd:boolean */ // Commented out because of GraphDB issue OWLIM-2937 (Consistency rules with multiple consequents do not trigger)
 
 // Check that if a resource has a content property, the resource class has
 // some cardinality for that property.
-// This check is commented out because it doesn't work (has no effect).
+// Commented out because of GraphDB issue OWLIM-2937 (Consistency rules with multiple consequents do not trigger)
 /*
 Consistency: content_prop_cardinality_any
     i <knora-base:hasContent> j

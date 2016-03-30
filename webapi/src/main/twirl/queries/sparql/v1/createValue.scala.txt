@@ -52,10 +52,11 @@
   maybeComment: Option[String],
   permissionRelevantAssertions: Seq[(IRI, IRI)])
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix owl: <http://www.w3.org/2002/07/owl#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?dataNamedGraph {
