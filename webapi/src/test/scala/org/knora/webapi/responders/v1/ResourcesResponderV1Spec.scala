@@ -206,7 +206,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             rights = Some(6)
         )),
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
             firstname = Some("User"),
@@ -224,7 +224,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             rights = Some(6)
         )),
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
             firstname = Some("User"),

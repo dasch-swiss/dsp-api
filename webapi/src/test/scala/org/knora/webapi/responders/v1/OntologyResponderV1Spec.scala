@@ -80,7 +80,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val page = ResourceTypeResponseV1(
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
             firstname = Some("User"),
@@ -480,7 +480,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val linkObject = ResourceTypeResponseV1(
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("test"),
             firstname = Some("User"),

@@ -24,6 +24,8 @@
   */
 package org.knora.webapi.responders.v1
 
+import java.util.UUID
+
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import akka.util.Timeout
@@ -52,8 +54,8 @@ object UsersResponderV1Spec {
   */
 class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with ImplicitSender {
 
-    implicit val timeout: Timeout = Duration(5, SECONDS)
     implicit val executionContext = system.dispatcher
+    private val timeout = 5.seconds
 
     val requested_user_id_existing: IRI = "http://data.knora.org/users/91e19f1e01"
     val requested_user_id_not_existing: IRI = "http://data.knora.org/users/notexisting"
@@ -72,13 +74,14 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     val passwordSalt = None
     val projects = List[IRI]("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images")
 
-    val rootUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password, passwordSalt), Vector.empty[IRI], Vector.empty[IRI])
+    val rootUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password), Vector.empty[IRI], Vector.empty[IRI])
 
     val actorUnderTest = TestActorRef[UsersResponderV1]
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val defaultUser = UserProfileV1(UserDataV1("en"))
-    val newNonUniqueUser = NewUserDataV1("root", "", "", "", "", "")
+    val newNonUniqueUser = NewUserDataV1("root", "", "", "", "123456", "")
+    val newUniqueUser = NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "123456", "en")
 
     val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
@@ -100,9 +103,9 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         "asked about an user identified by 'iri' " should {
             "return a profile if the user is known " in {
                 actorUnderTest ! UserProfileByIRIGetRequestV1(requested_user_id_existing, true)
-                expectMsg(Some(rootUserProfileV1))
+                expectMsg(rootUserProfileV1)
             }
-            "return 'None' when the user is unknown " in {
+            "return 'NotFoundException' when the user is unknown " in {
                 actorUnderTest ! UserProfileByIRIGetRequestV1(requested_user_id_not_existing, true)
                 expectMsg(Failure(NotFoundException(s"User '$requested_user_id_not_existing' not found")))
             }
@@ -110,20 +113,26 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         "asked about an user identified by 'username' " should {
             "return a profile if the user is known " in {
                 actorUnderTest ! UserProfileByUsernameGetRequestV1(requested_username_existing, true)
-                expectMsg(Some(rootUserProfileV1))
+                expectMsg(rootUserProfileV1)
             }
 
-            "return 'None' when the user is unknown " in {
+            "return 'NotFoundException' when the user is unknown " in {
                 actorUnderTest ! UserProfileByUsernameGetRequestV1(requested_username_not_existing, true)
                 expectMsg(Failure(NotFoundException(s"User '$requested_username_not_existing' not found")))
             }
         }
         "asked to create a new user " should {
             "create the user and return it's profile if the supplied username is unique " in {
-
+                actorUnderTest ! UserCreateRequestV1(newUniqueUser, defaultUser, UUID.randomUUID)
+                expectMsgPF(timeout) {
+                    case UserOperationResponseV1(newUserProfile, requestingUserData, message) => {
+                        assert(newUserProfile.userData.username.get.equals("dduck"))
+                        assert(newUserProfile.passwordMatch("123456"))
+                    }
+                }
             }
             "return a 'DuplicateValueException' if the supplied username is not unique " in {
-                actorUnderTest ! UserCreateRequestV1(newNonUniqueUser, defaultUser)
+                actorUnderTest ! UserCreateRequestV1(newNonUniqueUser, defaultUser, UUID.randomUUID)
                 expectMsg(Failure(DuplicateValueException(s"User with the username: '${newNonUniqueUser.username}' already exists")))
             }
         }
