@@ -526,16 +526,18 @@ class OntologyResponderV1 extends ResponderV1 {
       */
     private def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
 
-        def queryNamedGraphEntityV1(namedGraphIri: IRI): Future[Map[OntologyCacheKeys.NamedGraphInfoKey, NamedGraphEntityInfoV1]] = {
+        def queryNamedGraphEntityV1(namedGraphInfoKey: OntologyCacheKeys.NamedGraphInfoKey): Future[NamedGraphEntityInfoV1] = {
+            val namedGraphIriToQuery = namedGraphInfoKey.namedGraphIri
+
             for {
-                resourceTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getResourceTypesForNamedGraph(namedGraphIri).toString())
+                resourceTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getResourceTypesForNamedGraph(namedGraphIriToQuery).toString())
                 resourceTypesInNamedGraphResponse <- (storeManager ? SparqlSelectRequest(resourceTypesInNamedGraphSparql)).mapTo[SparqlSelectResponse]
 
                 resourceClassIrisInNamedGraph = resourceTypesInNamedGraphResponse.results.bindings.map {
                     (row) => row.rowMap("class")
                 }.toVector
 
-                propertyTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getPropertyTypesForNamedGraph(namedGraphIri).toString())
+                propertyTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getPropertyTypesForNamedGraph(namedGraphIriToQuery).toString())
                 propertyTypesInNamedGraphResponse <- (storeManager ? SparqlSelectRequest(propertyTypesInNamedGraphSparql)).mapTo[SparqlSelectResponse]
 
                 propertyTypeIrisInNamedGraph = propertyTypesInNamedGraphResponse.results.bindings.map {
@@ -544,27 +546,24 @@ class OntologyResponderV1 extends ResponderV1 {
 
 
                 // cache these results
-                namedGraphEntity: (OntologyCacheKeys.NamedGraphInfoKey, NamedGraphEntityInfoV1) = new OntologyCacheKeys.NamedGraphInfoKey(namedGraphIri) -> NamedGraphEntityInfoV1(
-                    namedGraphIri = namedGraphIri,
+                namedGraphEntity = NamedGraphEntityInfoV1(
+                    namedGraphIri = namedGraphIriToQuery,
                     propertyIris = propertyTypeIrisInNamedGraph,
                     resourceClasses = resourceClassIrisInNamedGraph
                 )
-
-
-            } yield new ErrorHandlingMap(Map(namedGraphEntity), { key: OntologyCacheKeys.NamedGraphInfoKey => s"Ontology entity $key not found" })
-            // TODO: Why do we need a Map here?
+            } yield namedGraphEntity
         }
 
         for {
 
             cacheKeyForNamedGraph <- Future(new OntologyCacheKeys.NamedGraphInfoKey(namedGraphIri))
 
-            namedGraphCacheResultMap <- CacheUtil.getOrCacheItem(
+            namedGraphCacheResult <- CacheUtil.getOrCacheItem(
                 cacheName = OntologyCacheName,
                 cacheKey = cacheKeyForNamedGraph,
-                queryFun = () => queryNamedGraphEntityV1(namedGraphIri) // wrap actual function call in a lambda because queryFun does not take params
+                queryFun = queryNamedGraphEntityV1
             )
-        } yield namedGraphCacheResultMap(cacheKeyForNamedGraph)
+        } yield namedGraphCacheResult
 
 
     }
@@ -623,18 +622,15 @@ class OntologyResponderV1 extends ResponderV1 {
                 } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes, userdata = userProfile.userData)
 
             case None => // map over all named graphs and collect the resource types
-                val resourceTypesFuture: Future[Vector[ResourceTypeV1]] = settings.namedGraphs.filter(_.visibleInGUI).foldLeft(Future(Vector.empty[ResourceTypeV1])) {
-                    case (acc: Future[Vector[ResourceTypeV1]], namedGraph: ProjectNamedGraphs) =>
-                        for {
-                            accTmp <- acc // TODO: is this an ugly style?
-                            resourceTypes: Vector[ResourceTypeV1] <- getResourceTypes(namedGraph.ontology)
-
-                        } yield accTmp ++ resourceTypes // append resource types
+                val resourceTypesFuture: Vector[Future[Vector[ResourceTypeV1]]] = settings.namedGraphs.filter(_.visibleInGUI).map {
+                    namedGraphs: ProjectNamedGraphs => getResourceTypes(namedGraphs.ontology)
                 }
 
+                val sequencedFuture = Future.sequence(resourceTypesFuture)
+
                 for {
-                    resourceTypes <- resourceTypesFuture
-                } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes, userdata = userProfile.userData)
+                    resourceTypes <- sequencedFuture
+                } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes.flatten, userdata = userProfile.userData)
         }
 
     }
@@ -684,18 +680,15 @@ class OntologyResponderV1 extends ResponderV1 {
 
                 } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes, userdata = userProfile.userData)
             case None => // get the property types for all named graphs (collect them by mapping over all named graphs)
-                val propertyTypesFuture = settings.namedGraphs.filter(_.visibleInGUI).foldLeft(Future(Vector.empty[PropertyDefinitionV1])) {
-                    case (acc, namedGraph: ProjectNamedGraphs) =>
-                        for {
-                            accTmp <- acc // TODO: is this an ugly style?
-                            propertyTypes: Vector[PropertyDefinitionV1] <- getPropertiesForNamedGraph(namedGraph.ontology, userProfile)
-
-                        } yield accTmp ++ propertyTypes // append resource types
+                val propertyTypesFutures: Vector[Future[Vector[PropertyDefinitionV1]]] = settings.namedGraphs.filter(_.visibleInGUI).map {
+                    namedGraphs: ProjectNamedGraphs => getPropertiesForNamedGraph(namedGraphs.ontology, userProfile)
                 }
 
+                val sequencedFuture: Future[Vector[Vector[PropertyDefinitionV1]]] = Future.sequence(propertyTypesFutures)
+
                 for {
-                    propertyTypes <- propertyTypesFuture
-                } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes, userdata = userProfile.userData)
+                    propertyTypes <- sequencedFuture
+                } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes.flatten, userdata = userProfile.userData)
         }
 
     }
