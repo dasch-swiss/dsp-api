@@ -206,18 +206,18 @@ Users Endpoint
   - Changeable information: username, given name, family name, email, password, phone
 
 
-**Enable/Disable user (delete user)**:
+**Delete user (-> update user)**:
   - Required permission: SystemAdmin / User
   - Effects property: ``knora-base:isActiveUser`` with value ``true`` or ``false``
   
   
-**Add/remove SystemAdmin status**:
+**Add/remove SystemAdmin status (-> update user)**:
   - Required permission: ``root``
   - Required information: user IRI
   - Effects: ``knora-base:hasSystemAdminPermissions`` with value ``true`` or ``false``
 
 
-**Update/Set default permissions for new resources / values**:
+**Add/Update/Remove default permissions for new resources / values (-> update user)**:
   - Required permission: SystemAdmin / User
   - Required information: ``knora-base:hasDefaultRestrictedViewPermission``, ``knora-base:hasDefaultViewPermission``,
     ``knora-base:hasDefaultModifyPermission``, ``knora-base:hasDefaultDeletePermission``. Each property needs to point
