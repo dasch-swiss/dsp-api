@@ -57,23 +57,23 @@ INSERT {
     GRAPH ?adminNamedGraphIri {
         ?userIri rdf:type ?userClassIri ;
 
-            knora-base:userid ?username ;
+            knora-base:userid "@username" ;
 
-            knora-base:password ?password ;
+            knora-base:password "@password" ;
 
             @if(givenName.nonEmpty) {
-                foaf:givenName ?givenName ;
+                foaf:givenName "@givenName" ;
             }
 
             @if(familyName.nonEmpty) {
-                foaf:familyName ?familyName ;
+                foaf:familyName "@familyName" ;
             }
 
             @if(email.nonEmpty) {
-                knora-base:email ?email ;
+                knora-base:email "@email" ;
             }
 
-            knora-base:preferredLanguage ?preferredLanguage .
+            knora-base:preferredLanguage "@preferredLanguage" .
     }
 }
 @*
@@ -94,5 +94,4 @@ WHERE {
     BIND(IRI("@adminNamedGraphIri") AS ?adminNamedGraphIri)
     BIND(IRI("@userIri") AS ?userIri)
     BIND(IRI("@userClassIri") AS ?userClassIri)
-    BIND(NOW() AS ?currentTime)
 }

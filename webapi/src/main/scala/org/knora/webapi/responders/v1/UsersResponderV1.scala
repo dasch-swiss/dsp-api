@@ -68,7 +68,7 @@ class UsersResponderV1 extends ResponderV1 {
             sparqlQuery <- Future(queries.sparql.v1.txt.getUser(userIri).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
-            _ = log.debug(MessageUtil.toSource(userDataQueryResponse))
+            //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
             _ = if (userDataQueryResponse.results.bindings.isEmpty) {
                 throw NotFoundException(s"User '$userIri' not found")
@@ -90,6 +90,8 @@ class UsersResponderV1 extends ResponderV1 {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(username).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
             _ = if (userDataQueryResponse.results.bindings.isEmpty) {
                 throw NotFoundException(s"User '$username' not found")
@@ -125,7 +127,7 @@ class UsersResponderV1 extends ResponderV1 {
             sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(newUserData.username).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
-            _ = log.debug(MessageUtil.toSource(userDataQueryResponse))
+            //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
             _ = if (userDataQueryResponse.results.bindings.nonEmpty) {
                 throw DuplicateValueException(s"User with the username: '${newUserData.username}' already exists")
@@ -150,7 +152,7 @@ class UsersResponderV1 extends ResponderV1 {
                             familyName = newUserData.familyName,
                             email = newUserData.email,
                             preferredLanguage = newUserData.lang).toString)
-                        _ = println(createNewUserSparql)
+                        // _ = println(createNewUserSparql)
                         createResourceResponse <- (storeManager ? SparqlUpdateRequest(apiRequestID, createNewUserSparql)).mapTo[SparqlUpdateResponse]
                     } yield createResourceResponse
             }, storeManager)
@@ -176,6 +178,7 @@ class UsersResponderV1 extends ResponderV1 {
 
     /**
       *
+      *
       * @param user
       * @param groups
       * @param userProfile
@@ -183,9 +186,16 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def addUserToGroupV1(user: IRI, groups: Vector[IRI], userProfile: UserProfileV1): Future[UserOperationResponseV1] = ???
 
+    /**
+      * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResponse]] containing user data.
+      *
+      * @param userDataQueryResponse a [[SparqlSelectResponse]] containing user data.
+      * @param clean a flag denoting if sensitive information should be stripped from the returned [[UserProfileV1]]
+      * @return a [[UserProfileV1]] containing the user's data.
+      */
     private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, clean: Boolean): UserProfileV1 = {
 
-        log.debug(MessageUtil.toSource(userDataQueryResponse))
+        //log.debug(MessageUtil.toSource(userDataQueryResponse))
 
         val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
 
@@ -193,7 +203,7 @@ class UsersResponderV1 extends ResponderV1 {
             case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
         }
 
-        log.debug(s"RAW: ${groupedUserData.toString}")
+        //log.debug(s"RAW: ${groupedUserData.toString}")
 
         val userDataV1 = UserDataV1(
             lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
@@ -226,7 +236,7 @@ class UsersResponderV1 extends ResponderV1 {
             }
         }
 
-        log.debug(s"${userProfileV1.toString}")
+        log.debug(s"UserProfileV1: ${userProfileV1.toString}")
 
         userProfileV1
     }
