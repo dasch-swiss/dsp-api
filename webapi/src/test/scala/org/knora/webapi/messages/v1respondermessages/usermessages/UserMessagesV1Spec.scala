@@ -21,6 +21,7 @@
 package org.knora.webapi.messages.v1respondermessages.usermessages
 
 import org.knora.webapi._
+import org.mindrot.jbcrypt.BCrypt
 import org.scalatest.{Matchers, WordSpecLike}
 
 /**
@@ -28,24 +29,34 @@ import org.scalatest.{Matchers, WordSpecLike}
   */
 class UserMessagesV1Spec extends WordSpecLike with Matchers {
 
+    val lang = "de"
+    val user_id = Some("http://data.knora.org/users/91e19f1e01")
+    val token = Some("123456")
+    val username = Some("root")
+    val firstname = Some("Administrator")
+    val lastname = Some("Admin")
+    val email = Some("test@test.ch")
+    val password = Some("123456")
+    val projects = List[IRI]("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images")
 
     "The UserProfileV1 case class " should {
         "return a clean UserProfileV1 when requested " in {
 
-            val lang = "de"
-            val user_id = Some("http://data.knora.org/users/91e19f1e01")
-            val token = Some("123456")
-            val username = Some("root")
-            val firstname = Some("Administrator")
-            val lastname = Some("Admin")
-            val email = Some("test@test.ch")
-            val password = Some("123456")
-            val projects = List[IRI]("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images")
 
             val rootUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password), Vector.empty[IRI], projects)
             val rootUserProfileV1Clean = UserProfileV1(UserDataV1(lang, user_id, None, username, firstname, lastname, email, None), Vector.empty[IRI], projects)
 
             assert(rootUserProfileV1.getCleanUserProfileV1 === rootUserProfileV1Clean)
+        }
+        "allow checking the password " in {
+            val hp = BCrypt.hashpw("123456", BCrypt.gensalt())
+            val up = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, Some(hp)), Vector.empty[IRI], projects)
+
+            // test BCrypt
+            assert(BCrypt.checkpw("123456", BCrypt.hashpw("123456", BCrypt.gensalt())))
+
+            // test UserProfileV1 BCrypt usage
+            assert(up.passwordMatch("123456"))
         }
     }
 }

@@ -38,6 +38,7 @@ import org.knora.webapi._
 
 import scala.concurrent.duration._
 import akka.actor.Status.Failure
+import org.mindrot.jbcrypt.BCrypt
 
 
 object UsersResponderV1Spec {
@@ -127,7 +128,10 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsgPF(timeout) {
                     case UserOperationResponseV1(newUserProfile, requestingUserData, message) => {
                         assert(newUserProfile.userData.username.get.equals("dduck"))
-                        assert(newUserProfile.passwordMatch("123456"))
+                        assert(newUserProfile.userData.firstname.get.equals("Donald"))
+                        assert(newUserProfile.userData.lastname.get.equals("Duck"))
+                        assert(newUserProfile.userData.email.get.equals("donald.duck@example.com"))
+                        assert(newUserProfile.userData.lang.equals("en"))
                     }
                 }
             }
