@@ -230,7 +230,7 @@ trait Authenticator {
         val hardCodedUser: IRI = "http://data.knora.org/users/b83acc5f05" // testuser
         if (settings.skipAuthentication) {
             // skip authentication and return hardCodedUser
-            getUserProfileByIri(hardCodedUser).getOrElse(UserProfileV1(UserDataV1(settings.fallbackLanguage))).getCleanUserProfileV1
+            getUserProfileByIri(hardCodedUser).getOrElse(UserProfileV1(UserDataV1(lang = settings.fallbackLanguage))).getCleanUserProfileV1
         }
         else {
             // let us first try to get the user profile through the session id from the cookie
@@ -262,7 +262,7 @@ trait Authenticator {
                             }
                         case None =>
                             log.debug("No credentials found, returning default UserProfileV1!")
-                            UserProfileV1(UserDataV1(settings.fallbackLanguage))
+                            UserProfileV1(UserDataV1(lang = settings.fallbackLanguage))
                     }
                 }
             }

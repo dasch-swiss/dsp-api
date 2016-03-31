@@ -24,18 +24,16 @@ import java.util.UUID
 
 import akka.actor.Status
 import akka.pattern._
+import org.knora.webapi
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.messages.v1respondermessages.usermessages._
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{CreateMultipleValuesRequestV1, CreateMultipleValuesResponseV1}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.MessageUtil
 import org.knora.webapi.util.KnoraIriUtil
+import org.mindrot.jbcrypt.BCrypt
 
 import scala.concurrent.Future
 
-import org.mindrot.jbcrypt.BCrypt
 
 /**
   * Provides information about Knora users to other responders.
@@ -54,6 +52,7 @@ class UsersResponderV1 extends ResponderV1 {
         case UserProfileByIRIGetRequestV1(userIri, clean) => future2Message(sender(), getUserProfileByIRIV1(userIri, clean), log)
         case UserProfileByUsernameGetRequestV1(username, clean) => future2Message(sender(), getUserProfileByUsernameV1(username, clean), log)
         case UserCreateRequestV1(newUserData, userProfile, apiRequestID) => future2Message(sender(), createNewUserV1(newUserData, userProfile, apiRequestID), log)
+        case UserUpdateRequestV1(userIri, updatedUserData, userProfile, apiRequestID) => future2Message(sender(), updateUserV1(userIri, updatedUserData, userProfile, apiRequestID), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -176,15 +175,44 @@ class UsersResponderV1 extends ResponderV1 {
 
     }
 
-    /**
-      *
-      *
-      * @param user
-      * @param groups
-      * @param userProfile
-      * @return
-      */
-    private def addUserToGroupV1(user: IRI, groups: Vector[IRI], userProfile: UserProfileV1): Future[UserOperationResponseV1] = ???
+
+    private def updateUserV1(userIri: webapi.IRI, updatedUserData: UpdatedUserDataV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+
+        // check if necessary information is present
+        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+
+        // check if the requesting user is allowed to perform updates
+        if (userProfile.userData.user_id.getOrElse("") != userIri || userProfile.userData.isSystemAdmin.getOrElse(false) != true) {
+            // not the user and not a system admin
+            throw ForbiddenException("User data can only be changed by the user itself or a system administrator")
+        }
+        if (updatedUserData.isSystemAdmin.getOrElse(false) == true && userProfile.userData.isSystemAdmin.getOrElse(false) != true ) {
+            // the operation of promoting to system admin is only allowed by another system admin
+            throw ForbiddenException("Giving an user system admin rights can only be performed by another system admin")
+        }
+
+        // remove old user profile from cache!
+
+        for {
+
+            // Verify that the user was updated.
+            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(userIri = userIri).toString())
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            // create the user profile
+            updatedUserProfile = userDataQueryResponse2UserProfile(userDataQueryResponse, true)
+
+            // TODO: check somehow if what we wanted to update actually got updated
+
+            // create the user operation response
+            userOperationResponseV1 = if (userIri == userProfile.userData.user_id.get) {
+                UserOperationResponseV1(updatedUserProfile, updatedUserProfile.userData)
+            } else {
+                UserOperationResponseV1(updatedUserProfile, userProfile.userData)
+            }
+        } yield userOperationResponseV1
+
+    }
 
     /**
       * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResponse]] containing user data.

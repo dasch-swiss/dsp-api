@@ -29,6 +29,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserV1JsonProtocol._
 import org.knora.webapi.messages.v1respondermessages.usermessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.util.InputValidation
 import spray.routing.Directives._
 import spray.routing._
 
@@ -73,12 +74,14 @@ object UsersRouteV1 extends Authenticator {
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
 
-                        val newUserData = NewUserDataV1(apiRequest.username,
-                            apiRequest.givenName,
-                            apiRequest.familyName,
-                            apiRequest.email,
-                            apiRequest.password,
-                            apiRequest.lang)
+                        val newUserData = NewUserDataV1(
+                            username = apiRequest.username,
+                            givenName = apiRequest.givenName,
+                            familyName = apiRequest.familyName,
+                            email = apiRequest.email,
+                            password = apiRequest.password,
+                            isSystemAdmin = apiRequest.isSystemAdmin,
+                            lang = apiRequest.lang)
 
                         UserCreateRequestV1(
                             newUserData,
@@ -87,6 +90,39 @@ object UsersRouteV1 extends Authenticator {
                         )
                     }
 
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            } ~ put {
+                /* update an existing user */
+                entity(as[UpdateUserApiRequestV1]) { apiRequest => requestContext =>
+                    val requestMessageTry = Try {
+                        val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        val dataToUpdate = UpdatedUserDataV1(
+                            username = apiRequest.username,
+                            givenName = apiRequest.givenName,
+                            familyName = apiRequest.familyName,
+                            email = apiRequest.email,
+                            password = apiRequest.password,
+                            isActiveUser = apiRequest.isActiveUser,
+                            isSystemAdmin = apiRequest.isSystemAdmin,
+                            lang = apiRequest.lang
+                        )
+
+                        UserUpdateRequestV1(
+                            userIri = userIri,
+                            updatedUserData = dataToUpdate,
+                            userProfile,
+                            apiRequestID = UUID.randomUUID
+                        )
+                    }
                     RouteUtilV1.runJsonRoute(
                         requestMessageTry,
                         requestContext,

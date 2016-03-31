@@ -99,7 +99,7 @@ object ResourceHtmlView {
     private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorSelection): String = {
 
 
-        val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, UserProfileV1(UserDataV1("en")))
+        val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, UserProfileV1(UserDataV1(lang = "en")))
         val nodePath = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
 
         nodePath.nodelist.foldLeft("") { (z, i) =>

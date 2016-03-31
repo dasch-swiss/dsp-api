@@ -14,41 +14,59 @@
 ##########################################################
 
 
-<http://data.knora.org/users/91e19f1e01> rdf:type knora-base:User ;
+<http://data.knora.org/users/root> rdf:type knora-base:User ;
 
-                                         knora-base:userid "root" ;
+                                   knora-base:userid "root" ;
 
-                                         foaf:givenName "Administrator" ;
+                                   foaf:givenName "System" ;
 
-                                         foaf:familyName "Admin" ;
+                                   foaf:familyName "Administrator" ;
+
+                                   knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+
+                                   knora-base:email "root@example.com" ;
+
+                                   knora-base:phone "123456" ;
+
+                                   knora-base:preferredLanguage "de" .
+
+
+<http://data.knora.org/users/superuser> rdf:type knora-base:User ;
+
+                                        knora-base:userid "superuser" ;
+
+                                        foaf:givenName "Super" ;
+
+                                        foaf:familyName "User" ;
+
+                                        knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+
+                                        knora-base:email "super.user@example.com" ;
+
+                                        knora-base:phone "123456" ;
+
+                                        knora-base:preferredLanguage "de" ;
+
+                                        knora-base:isSystemAdmin "true" .
+
+
+<http://data.knora.org/users/normaluser> rdf:type knora-base:User ;
+
+                                         knora-base:userid "normaluser" ;
+
+                                         foaf:givenName "Normal" ;
+
+                                         foaf:familyName "User" ;
 
                                          knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 
-                                         knora-base:email "administrator.admin@example.com" ;
-
-                                         knora-base:phone "123456" ;
-
-                                         knora-base:preferredLanguage "de" .
-
-
-<http://data.knora.org/users/sesysadmin> rdf:type knora-base:User ;
-
-                                         knora-base:userid "sesysadmin" ;
-
-                                         foaf:givenName "Second" ;
-
-                                         foaf:familyName "Sysadmin" ;
-
-                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
-
-                                         knora-base:email "second.sysadmin@example.com" ;
+                                         knora-base:email "normal.user@example.com" ;
 
                                          knora-base:phone "123456" ;
 
                                          knora-base:preferredLanguage "de" ;
 
-                                         knora-base:isSystemAdmin "true" .
-
+                                         knora-base:isSystemAdmin "false" .
 
 
 ##########################################################

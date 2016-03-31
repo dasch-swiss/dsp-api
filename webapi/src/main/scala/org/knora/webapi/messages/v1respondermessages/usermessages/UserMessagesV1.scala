@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v1respondermessages.usermessages
 
 import java.util.UUID
 
+import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
 import spray.httpx.SprayJsonSupport
@@ -33,25 +34,48 @@ import spray.json._
 /**
   * Represents an API request payload that asks the Knora API server to create a new user.
   *
-  * @param username   the username of the user to be created.
-  * @param givenName  the given name of the user to be created.
-  * @param familyName the family name of the user to be created
-  * @param email      the email of the user to be created.
-  * @param password   the password of the user to be created.
-  * @param lang       the default language of the user to be created.
+  * @param username      the username of the user to be created.
+  * @param givenName     the given name of the user to be created.
+  * @param familyName    the family name of the user to be created
+  * @param email         the email of the user to be created.
+  * @param password      the password of the user to be created.
+  * @param isSystemAdmin the system admin status of the user to be created.
+  * @param lang          the default language of the user to be created.
   */
 case class CreateUserApiRequestV1(username: String,
                                   givenName: String,
                                   familyName: String,
                                   email: String,
                                   password: String,
-                                  lang: String,
-                                  projects: Seq[IRI] = Vector.empty[IRI]) {
+                                  isSystemAdmin: Boolean,
+                                  lang: String) {
 
     def toJsValue = UserV1JsonProtocol.createUserApiRequestV1Format.write(this)
 
 }
 
+/**
+  * Represents an API request payload that asks the Knora API server to update an existing user.
+  *
+  * @param username      the new username of the user to be updated.
+  * @param givenName     the new given name of the user to be updated.
+  * @param familyName    the new family name of the user to be updated.
+  * @param email         the new email address of the user to be updated.
+  * @param password      the new password of the user to be updated.
+  * @param isSystemAdmin the new system admin status of the user to be updated.
+  * @param lang          the new default language of the user to be updated.
+  */
+case class UpdateUserApiRequestV1(username: Option[String],
+                                  givenName: Option[String],
+                                  familyName: Option[String],
+                                  email: Option[String],
+                                  password: Option[String],
+                                  isActiveUser: Option[Boolean],
+                                  isSystemAdmin: Option[Boolean],
+                                  lang: Option[String]) {
+
+    def toJsValue = UserV1JsonProtocol.updateUserApiRequestV1Format.write(this)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -87,7 +111,22 @@ case class UserProfileByUsernameGetRequestV1(username: String,
   * @param userProfile  the user profile of the user creating the new user.
   * @param apiRequestID the ID of the API request.
   */
-case class UserCreateRequestV1(newUserData: NewUserDataV1, userProfile: UserProfileV1, apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserCreateRequestV1(newUserData: NewUserDataV1,
+                               userProfile: UserProfileV1,
+                               apiRequestID: UUID) extends UsersResponderRequestV1
+
+/**
+  * Request updating of an existing user.
+  *
+  * @param userIri the IRI of the user to be updated.
+  * @param updatedUserData a [[UpdatedUserDataV1]] containing only information that needs to be updated.
+  * @param userProfile the user profile of the user requesting the update.
+  * @param apiRequestID the ID of the API request.
+  */
+case class UserUpdateRequestV1(userIri: webapi.IRI,
+                               updatedUserData: UpdatedUserDataV1,
+                               userProfile: UserProfileV1,
+                               apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
   * Describes the answer to an user creating/modifying operation.
@@ -110,7 +149,11 @@ case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDat
   * @param groups   the groups that the user belongs to.
   * @param projects the projects that the user belongs to.
   */
-case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects: Seq[IRI] = Nil) {
+case class UserProfileV1(userData: UserDataV1,
+                         groups: Seq[IRI] = Nil,
+                         projects: Seq[IRI] = Nil,
+                         isGroupAdminFor: Seq[IRI] = Nil,
+                         isProjectAdminFor: Seq[IRI] = Nil) {
 
     /**
       * Check password using either SHA-1 or BCrypt. The BCrypt password always starts with '$2a$'
@@ -168,17 +211,24 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
 
         val olduserdata = userData
         val newuserdata = UserDataV1(
-            olduserdata.lang,
-            olduserdata.user_id,
-            None, // remove token
-            olduserdata.username,
-            olduserdata.firstname,
-            olduserdata.lastname,
-            olduserdata.email,
-            None // remove hashed password
+            user_id = olduserdata.user_id,
+            username = olduserdata.username,
+            firstname = olduserdata.firstname,
+            lastname = olduserdata.lastname,
+            email = olduserdata.email,
+            hashedpassword = None, // remove hashed password
+            token = None, // remove token
+            isSystemAdmin = None, // remove system admin status
+            lang = olduserdata.lang
         )
 
-        UserProfileV1(newuserdata, groups, projects)
+        UserProfileV1(
+            userData = newuserdata,
+            groups = groups,
+            projects = projects,
+            isGroupAdminFor = Nil, // remove group admin information
+            isProjectAdminFor = Nil // remove project admin information
+        )
     }
 }
 
@@ -189,23 +239,25 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
 /**
   * Represents basic information about a user.
   *
-  * @param lang           the ISO 639-1 code of the user's preferred language.
   * @param user_id        the user's IRI.
-  * @param token          the user's API token used as credentials.
   * @param username       the user's username.
   * @param firstname      the user's given name.
   * @param lastname       the user's surname.
   * @param email          the user's email address.
   * @param hashedpassword the user's hashed password.
+  * @param token          the user's API token used as credentials.
+  * @param isSystemAdmin  the user's system admin status.
+  * @param lang           the ISO 639-1 code of the user's preferred language.
   */
-case class UserDataV1(lang: String,
-                      user_id: Option[IRI] = None,
-                      token: Option[String] = None,
+case class UserDataV1(user_id: Option[IRI] = None,
                       username: Option[String] = None,
                       firstname: Option[String] = None,
                       lastname: Option[String] = None,
                       email: Option[String] = None,
-                      hashedpassword: Option[String] = None)
+                      hashedpassword: Option[String] = None,
+                      token: Option[String] = None,
+                      isSystemAdmin: Option[Boolean] = None,
+                      lang: String)
 
 
 /**
@@ -223,8 +275,29 @@ case class NewUserDataV1(username: String,
                          familyName: String,
                          email: String,
                          password: String,
+                         isSystemAdmin: Boolean,
                          lang: String)
 
+/**
+  * Represents information about the user that need to be updated.
+  *
+  * @param username the new username of the user to be updated.
+  * @param givenName the new given name of the user to be updated.
+  * @param familyName the new family name of the user to be updated.
+  * @param email the new email address of the user to be updated.
+  * @param password the new password of the user to be updated.
+  * @param isActiveUser the new status of the user to be updated.
+  * @param isSystemAdmin the new system admin status of the user to be
+  * @param lang the new default language of the user to be updated.
+  */
+case class UpdatedUserDataV1(username: Option[String],
+                             givenName: Option[String],
+                             familyName: Option[String],
+                             email: Option[String],
+                             password: Option[String],
+                             isActiveUser: Option[Boolean],
+                             isSystemAdmin: Option[Boolean],
+                             lang: Option[String])
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
@@ -233,9 +306,10 @@ case class NewUserDataV1(username: String,
   */
 object UserV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
-    implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat8(UserDataV1)
-    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat3(UserProfileV1)
-    implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat6(NewUserDataV1)
+    implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat9(UserDataV1)
+    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat5(UserProfileV1)
+    implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat7(NewUserDataV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
+    implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat8(UpdateUserApiRequestV1)
     implicit val userCreateResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat3(UserOperationResponseV1)
 }
