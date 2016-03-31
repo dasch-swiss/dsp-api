@@ -74,7 +74,16 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     val email = Some("test@test.ch")
     val password = Some(passwordCorrectHashed)
 
-    val mockUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password), Nil, Nil)
+    val mockUserProfileV1 = UserProfileV1(
+        UserDataV1(
+            user_id = user_id,
+            username = username,
+            firstname = firstname,
+            lastname = lastname,
+            email = email,
+            hashedpassword = password,
+            lang = lang
+        ), Nil, Nil, Nil, Nil)
 
     val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
         become {

@@ -20,12 +20,10 @@
 
 package org.knora.webapi.util
 
-import akka.actor.ActorDSL._
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.v1respondermessages.usermessages._
-import org.knora.webapi.routing.Authenticator
 
 object CacheUtilSpec {
     val config = ConfigFactory.parseString(
@@ -36,50 +34,22 @@ object CacheUtilSpec {
         """.stripMargin)
 }
 
-/*
- *  This test needs a running http layer, so that different api access authentication schemes can be tested
- *  - Browser basic auth
- *  - Basic auth over API
- *  - Username/password over API
- *  - API Key based authentication
- */
 
-class CacheUtilSpec extends CoreSpec("CachingTestSystem") with ImplicitSender with Authenticator {
+class CacheUtilSpec extends CoreSpec("CachingTestSystem") with ImplicitSender {
 
     implicit val executionContext = system.dispatcher
 
-    val usernameCorrect = "isubotic"
-    val usernameWrong = "usernamewrong"
-    val usernameEmpty = ""
-
-    val passUnhashed = "123456"
-    // gensalt's log_rounds parameter determines the complexity
-    // the work factor is 2**log_rounds, and the default is 10
-    val passHashed = "7c4a8d09ca3762af61e59520943dc26494f8941b"
-    val passEmpty = ""
-
-    val lang = "en"
-    val user_id = Some("http://data.knora.org/users/b83acc5f05")
-    val token = None
-    val username = Some(usernameCorrect)
-    val firstname = Some("Ivan")
-    val lastname = Some("Subotic")
-    val email = Some("ivan.subotic@unibas.ch")
-    val password = Some(passHashed)
-
-    val mockUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password), Nil, Nil)
-
-    val mockUsersActor = actor("responderManager")(new Act {
-        become {
-            case UserProfileByUsernameGetRequestV1(username, clean) => {
-                if (username == usernameCorrect) {
-                    sender ! Some(mockUserProfileV1)
-                } else {
-                    sender ! None
-                }
-            }
-        }
-    })
+    val mockUserProfileV1 = UserProfileV1(
+        UserDataV1(
+            user_id = Some("http://data.knora.org/users/b83acc5f05"),
+            username = Some("dduck"),
+            firstname = Some("Donald"),
+            lastname = Some("Duck"),
+            email = Some("donald.duck@example.com"),
+            hashedpassword = Some("7c4a8d09ca3762af61e59520943dc26494f8941b"),
+            token = None,
+            lang = "en"
+        ), Nil, Nil, Nil, Nil)
 
     val cacheName = "authenticationCache"
     val sessionId = System.currentTimeMillis().toString

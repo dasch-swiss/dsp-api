@@ -41,16 +41,48 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
 
     "The UserProfileV1 case class " should {
         "return a clean UserProfileV1 when requested " in {
-
-
-            val rootUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password), Vector.empty[IRI], projects)
-            val rootUserProfileV1Clean = UserProfileV1(UserDataV1(lang, user_id, None, username, firstname, lastname, email, None), Vector.empty[IRI], projects)
+            val rootUserProfileV1 = UserProfileV1(
+                UserDataV1(
+                    user_id = user_id,
+                    username = username,
+                    firstname = firstname,
+                    lastname = lastname,
+                    email = email,
+                    hashedpassword = password,
+                    token = token,
+                    lang = lang
+                ),
+                Vector.empty[IRI],
+                projects,
+                Vector.empty[IRI],
+                Vector.empty[IRI]
+            )
+            val rootUserProfileV1Clean = UserProfileV1(
+                UserDataV1(
+                    user_id = user_id,
+                    username = username,
+                    firstname = firstname,
+                    lastname = lastname,
+                    email = email,
+                    hashedpassword = None,
+                    token = None,
+                    lang = lang
+                    ),
+                    Vector.empty[IRI],
+                    projects,
+                    Vector.empty[IRI],
+                    Vector.empty[IRI]
+                )
 
             assert(rootUserProfileV1.getCleanUserProfileV1 === rootUserProfileV1Clean)
         }
         "allow checking the password " in {
             val hp = BCrypt.hashpw("123456", BCrypt.gensalt())
-            val up = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, Some(hp)), Vector.empty[IRI], projects)
+            val up = UserProfileV1(
+                UserDataV1(
+                    hashedpassword = Some(hp),
+                    lang = lang
+                ))
 
             // test BCrypt
             assert(BCrypt.checkpw("123456", BCrypt.hashpw("123456", BCrypt.gensalt())))
