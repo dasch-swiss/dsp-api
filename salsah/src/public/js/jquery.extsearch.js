@@ -206,7 +206,7 @@
 								var properties_sel = ele.find('select[name=selprop]').empty().append($('<option>', {value: 0}).text('-'));
 								properties = [];
 								for (var i in data.properties) {
-									properties_sel.append($('<option>').attr({value: data.properties[i].id, title: data.properties[i].longname}).text(data.properties[i].label + ' [' + data.properties[i].shortname + ']'));
+									properties_sel.append($('<option>').attr({value: data.properties[i].id, title: data.properties[i].longname}).text(data.properties[i].label));
 									properties[data.properties[i].id] = data.properties[i];
 								}
 								ele.find('select[name="compop"].extsearch').empty();

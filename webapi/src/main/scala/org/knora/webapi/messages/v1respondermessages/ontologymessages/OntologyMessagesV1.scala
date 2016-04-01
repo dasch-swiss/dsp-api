@@ -355,7 +355,7 @@ case class PropertyDefinitionV1(id: IRI,
                                 gui_name: Option[String])
 
 /**
-  * Represents a named graph (correspons to a vocabulary in the SALSAH prototype).
+  * Represents a named graph (corresponds to a vocabulary in the SALSAH prototype).
   *
   * @param id the id of the named graph.
   * @param shortname the short name of the named graph.
@@ -375,10 +375,23 @@ case class NamedGraphV1(id: IRI,
     def toJsValue = ResourceTypeV1JsonProtocol.namedGraphV1Format.write(this)
 }
 
+/**
+  * Represents a resource class and its properties.
+  *
+  * @param id the IRI of the resource class.
+  * @param label the label of the resource class.
+  * @param properties the properties of the resource class.
+  */
 case class ResourceTypeV1(id: IRI, label: String, properties: Vector[PropertyTypeV1]) {
     def toJsValue = ResourceTypeV1JsonProtocol.resourceTypeV1Format.write(this)
 }
 
+/**
+  * Represents a property type.
+  *
+  * @param id the IRI of the property type.
+  * @param label the label of the property type.
+  */
 case class PropertyTypeV1(id: IRI, label: String) {
     def toJsValue = ResourceTypeV1JsonProtocol.propertyTypeV1Format.write(this)
 }

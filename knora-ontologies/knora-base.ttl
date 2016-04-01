@@ -252,6 +252,11 @@
 
 :hasExtResValue rdf:type owl:ObjectProperty ;
 
+                rdfs:label "hat externen Wert"@de ,
+                           "has external Value"@en ,
+                           "a valeur externe"@fr ,
+                           "ha valore esterno"@it ;
+
                 :objectClassConstraint :ExternalResValue ;
 
                 :subjectClassConstraint :ExternalResource ;
@@ -264,6 +269,11 @@
 :hasFileValue rdf:type owl:ObjectProperty ;
               
               :objectClassConstraint :FileValue ;
+
+              rdfs:label "hat Repräsentation (Datei)"@de ,
+                         "has Representation (File)"@en ,
+                         "a Répresentation (File)"@fr ,
+                         "ha Rappresentazione (File)"@it ;
               
               :subjectClassConstraint :Representation ;
               
@@ -274,6 +284,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasStillImageFileValue
 
 :hasStillImageFileValue rdf:type owl:ObjectProperty ;
+
+              rdfs:label "hat Repräsentation (Bild)"@de ,
+                         "has Representation (Image)"@en ,
+                         "a Répresentation (image)"@fr ,
+                         "ha Rappresentazione (imagine)"@it ;
               
               :objectClassConstraint :StillImageFileValue ;
               
@@ -286,6 +301,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasMovingImageFileValue
 
 :hasMovingImageFileValue rdf:type owl:ObjectProperty ;
+
+              rdfs:label "hat Repräsentation (Film)"@de ,
+                         "has Representation (Movie)"@en ,
+                         "a Répresentation (film)"@fr ,
+                         "ha Rappresentazione (film)"@it ;
               
               :objectClassConstraint :MovingImageFileValue ;
               
@@ -298,7 +318,12 @@
 ###  http://www.knora.org/ontology/knora-base#hasAudioFileValue
 
 :hasAudioFileValue rdf:type owl:ObjectProperty ;
-              
+
+              rdfs:label "hat Repräsentation (Audio)"@de ,
+                         "has Representation (Audio)"@en ,
+                         "a Répresentation (Audio)"@fr ,
+                         "ha Rappresentazione (Audio)"@it ;
+
               :objectClassConstraint :AudioFileValue ;
               
               :subjectClassConstraint :AudioRepresentation ;
@@ -310,6 +335,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasDDDFileValue
 
 :hasDDDFileValue rdf:type owl:ObjectProperty ;
+
+              rdfs:label "hat Repräsentation (3D)"@de ,
+                         "has Representation (3D)"@en ,
+                         "a Répresentation (3D)"@fr ,
+                         "ha Rappresentazione (3D)"@it ;
               
               :objectClassConstraint :DDDFileValue ;
               
@@ -322,6 +352,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasTextFileValue
 
 :hasTextFileValue rdf:type owl:ObjectProperty ;
+
+              rdfs:label "hat Repräsentation (Text)"@de ,
+                         "has Representation (Text)"@en ,
+                         "a Répresentation (Texte)"@fr ,
+                         "ha Rappresentazione (Testo)"@it ;
               
               :objectClassConstraint :TextFileValue ;
               
@@ -334,6 +369,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasDocumentFileValue
 
 :hasDocumentFileValue rdf:type owl:ObjectProperty ;
+
+              rdfs:label "hat Repräsentation (Dokument)"@de ,
+                         "has Representation (Document)"@en ,
+                         "a Répresentation (Document)"@fr ,
+                         "ha Rappresentazione (Documento)"@it ;
               
               :objectClassConstraint :DocumentFileValue ;
               
@@ -367,6 +407,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasLinkTo
 
 :hasLinkTo rdf:type owl:ObjectProperty ;
+
+           rdfs:label "hat Link zu"@de ,
+                      "has Link to"@en ,
+                      "a lien vers"@fr ,
+                      "ha Link verso"@it ;
            
            rdfs:comment "Represents a direct connection between two resources"@en ;
            
@@ -415,6 +460,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasPart
 
 :hasPart rdf:type owl:ObjectProperty ;
+
+         rdfs:label "hat Teil"@de ,
+                       "has Part"@en ,
+                       "a Part"@fr ,
+                       "ha Parte"@it ;
          
          rdfs:comment "Indicates that another resource is part of this resource"@en ;
          
@@ -465,6 +515,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasProvider
 
 :hasProvider rdf:type owl:ObjectProperty ;
+
+             rdfs:label "hat Provider"@de ,
+                        "has Provider"@en ,
+                        "a Provider"@fr ,
+                        "ha Provider"@it ;
              
              :objectClassConstraint :ExternalResValue ;
              
@@ -479,6 +534,11 @@
 :hasRegion rdf:type owl:ObjectProperty ;
            
            rdfs:comment "Points to a region of the resource"@en ;
+
+           rdfs:label "hat Region"@de ,
+                      "has Region"@en ,
+                      "a Région"@fr ,
+                      "ha Regione"@it ;
            
            :objectClassConstraint :Region ;
            
@@ -505,7 +565,12 @@
 ###  http://www.knora.org/ontology/knora-base#hasRepresentation
 
 :hasRepresentation rdf:type owl:ObjectProperty ;
-                   
+
+                   rdfs:label "hat Repräsentation"@de ,
+                              "has Representation"@en ,
+                              "a Répresentation"@fr ,
+                              "ha Rappresentazione"@it ;
+
                    rdfs:comment "References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."@en ;
                    
                    :objectClassConstraint :Representation ;
@@ -541,6 +606,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasStandoffLinkTo
 
 :hasStandoffLinkTo rdf:type owl:ObjectProperty ;
+
+                   rdfs:label "hat Standoff Link zu"@de ,
+                              "has Standoff Link to"@en ,
+                              "a standoff lien vers"@fr ,
+                              "ha standoff link verso"@it ;
                    
                    :objectClassConstraint :Resource ;
                    
@@ -595,6 +665,11 @@
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOf
 
 :isAnnotationOf rdf:type owl:ObjectProperty ;
+
+                rdfs:label "ist Annotation von"@de ,
+                           "is Annotation of"@en ,
+                           "est Annotation de"@fr ,
+                           "è Annotation di"@it ;
                 
                 :subjectClassConstraint :Annotation ;
                 
@@ -644,6 +719,11 @@
 ###  http://www.knora.org/ontology/knora-base#isPartOf
 
 :isPartOf rdf:type owl:ObjectProperty ;
+
+          rdfs:label "ist Teil von"@de ,
+                     "is part of"@en ,
+                     "fait partie de"@fr ,
+                     "fa parte di"@it ;
           
           rdfs:comment "Indicates that this resource is part of another resource"@en ;
           
@@ -672,6 +752,11 @@
 :isRegionOf rdf:type owl:ObjectProperty ;
             
             rdfs:comment "Region of interest within a digital object (e.g. an image)"@en ;
+
+            rdfs:label "is Region von"@de ,
+                       "is Region of"@en ,
+                       "est Région de"@fr ,
+                       "e Region di"@it ;
             
             :subjectClassConstraint :Region ;
             
