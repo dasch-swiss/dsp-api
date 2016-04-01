@@ -208,7 +208,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     occurrence = "1-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = None,
-                    label = None,
+                    label = Some("hat Repräsentation (Bild)"),
                     name = "http://www.knora.org/ontology/knora-base#hasStillImageFileValue",
                     id = "http://www.knora.org/ontology/knora-base#hasStillImageFileValue"
                 ),
@@ -219,7 +219,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = Some("References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."),
-                    label = None,
+                    label = Some("hat Repräsentation"),
                     name = "http://www.knora.org/ontology/knora-base#hasRepresentation",
                     id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
                 )
@@ -375,7 +375,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = Some("References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."),
-                    label = None,
+                    label = Some("hat Repräsentation"),
                     name = "http://www.knora.org/ontology/knora-base#hasRepresentation",
                     id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
                 ),
@@ -443,7 +443,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     occurrence = "1",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = Some("Region of interest within a digital object (e.g. an image)"),
-                    label = None,
+                    label = Some("is Region von"),
                     name = "http://www.knora.org/ontology/knora-base#isRegionOf",
                     id = "http://www.knora.org/ontology/knora-base#isRegionOf"
                 ),
@@ -454,7 +454,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = Some("References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."),
-                    label = None,
+                    label = Some("hat Repräsentation"),
                     name = "http://www.knora.org/ontology/knora-base#hasRepresentation",
                     id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
                 ),
@@ -498,7 +498,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     occurrence = "1-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = Some("Represents a direct connection between two resources"),
-                    label = None,
+                    label = Some("hat Link zu"),
                     name = "http://www.knora.org/ontology/knora-base#hasLinkTo",
                     id = "http://www.knora.org/ontology/knora-base#hasLinkTo"
                 ),
@@ -520,7 +520,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = Some("References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."),
-                    label = None,
+                    label = Some("hat Repräsentation"),
                     name = "http://www.knora.org/ontology/knora-base#hasRepresentation",
                     id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
                 ),
