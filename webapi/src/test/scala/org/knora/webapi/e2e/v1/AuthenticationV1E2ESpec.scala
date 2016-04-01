@@ -69,8 +69,8 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
 
     override def testConfigSource =
         """
-         # akka.loglevel = "DEBUG"
-         # akka.stdout-loglevel = "DEBUG"
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
     import JsonSessionResponseProtocol._
@@ -92,7 +92,8 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/all_data/admin-data.ttl", name = "http://www.knora.org/data/admin")
     )
 
     "Load test data" in {
@@ -102,13 +103,20 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
         "succeed with authentication and correct username / correct password " in {
             /* Correct username and password */
             Get("/v1/authenticate?username=root&password=test") ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
+                log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
             }
         }
         "fail with authentication and correct username / wrong password " in {
             /* Correct username / wrong password */
             Get("/v1/authenticate?username=root&password=wrong") ~> authenticatePath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.Unauthorized)
+            }
+        }
+        "fail with authentication if the user is set as 'not active' " in {
+            /* User not active */
+            Get("/v1/authenticate?username=inactiveuser&password=test") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.Unauthorized)
             }

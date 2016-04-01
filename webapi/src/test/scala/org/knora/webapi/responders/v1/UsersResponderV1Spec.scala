@@ -61,23 +61,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     val imagesProjectIri = "http://data.knora.org/projects/images"
     val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
 
-    val rootUserProfileV1 = UserProfileV1(
-        UserDataV1(
-            user_id = Some("http://data.knora.org/users/91e19f1e01"),
-            username = Some("root"),
-            firstname = Some("Administrator"),
-            lastname = Some("Admin"),
-            email = Some("administrator.admin@example.com"),
-            hashedpassword = None,
-            token = None,
-            isSystemAdmin = Some(true),
-            lang = "de"
-        ),
-        Vector.empty[IRI],
-        Vector.empty[IRI],
-        Vector.empty[IRI],
-        Vector.empty[IRI]
-    )
+    val rootUserProfileV1 = SharedTestData.rootUserProfileV1
 
     val actorUnderTest = TestActorRef[UsersResponderV1]
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
@@ -101,8 +85,8 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     "The UsersResponder " when {
         "asked about an user identified by 'iri' " should {
             "return a profile if the user is known " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/91e19f1e01", true)
-                expectMsg(rootUserProfileV1)
+                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/root", true)
+                expectMsg(rootUserProfileV1.getCleanUserProfileV1)
             }
             "return 'NotFoundException' when the user is unknown " in {
                 actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", true)
@@ -112,7 +96,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         "asked about an user identified by 'username' " should {
             "return a profile if the user is known " in {
                 actorUnderTest ! UserProfileByUsernameGetRequestV1("root", true)
-                expectMsg(rootUserProfileV1)
+                expectMsg(rootUserProfileV1.getCleanUserProfileV1)
             }
 
             "return 'NotFoundException' when the user is unknown " in {
@@ -123,7 +107,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         "asked to create a new user " should {
             "create the user and return it's profile if the supplied username is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "123456", false, "en"),
+                    NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "test", false, "en"),
                     UserProfileV1(UserDataV1(lang = "en")),
                     UUID.randomUUID
                 )
@@ -139,22 +123,108 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             }
             "return a 'DuplicateValueException' if the supplied username is not unique " in {
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("root", "", "", "", "123456", false, ""),
+                    NewUserDataV1("root", "", "", "", "test", false, ""),
                     UserProfileV1(UserDataV1(lang = "en")),
                     UUID.randomUUID
                 )
                 expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
             }
+            "return 'BadRequestException' if username or password are missing" in {
+
+                /* missing username */
+                actorUnderTest ! UserCreateRequestV1(
+                    NewUserDataV1("", "", "", "", "test", false, ""),
+                    UserProfileV1(UserDataV1(lang = "en")),
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException("Username cannot be empty")))
+
+                /* missing password */
+                actorUnderTest ! UserCreateRequestV1(
+                    NewUserDataV1("dduck", "", "", "", "", false, ""),
+                    UserProfileV1(UserDataV1(lang = "en")),
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException("Password cannot be empty")))
+            }
         }
         "asked to update a user " should {
             "update the user " in {
 
+                /* User information is updated by the user */
+                actorUnderTest ! UserUpdateRequestV1(
+                    "http://data.knora.org/users/normaluser",
+                    UpdatedUserDataV1(
+                        givenName = Some("Donald")
+                    ),
+                    UserProfileV1(UserDataV1(user_id = Some("http://data.knora.org/users/normaluser"), lang = ("en"))),
+                    UUID.randomUUID
+                )
+                expectMsgPF(timeout) {
+                    case UserOperationResponseV1(newUserProfile, requestingUserData, message) => {
+                        // check if information was changed
+                        assert(newUserProfile.userData.firstname.contains("Donald"))
+
+                        // check if correct and updated userdata is returned
+                        assert(requestingUserData.firstname.contains("Donald"))
+                    }
+                }
+
+                /* User information is updated by a system admin */
+                actorUnderTest ! UserUpdateRequestV1(
+                    "http://data.knora.org/users/normaluser",
+                    UpdatedUserDataV1(
+                        familyName = Some("Duck")
+                    ),
+                    UserProfileV1(UserDataV1(user_id = Some("http://data.knora.org/users/superuser"), lang = ("en"))),
+                    UUID.randomUUID
+                )
+                expectMsgPF(timeout) {
+                    case UserOperationResponseV1(newUserProfile, requestingUserData, message) => {
+                        // check if information was changed
+                        assert(newUserProfile.userData.lastname.contains("Duck"))
+
+                        // check if the correct userdata is returned
+                        assert(requestingUserData.user_id.contains("http://data.knora.org/users/superuser"))
+                    }
+                }
             }
             "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin " in {
 
+                /* User information is updated by someone random */
+                actorUnderTest ! UserUpdateRequestV1(
+                    "http://data.knora.org/users/superuser",
+                    UpdatedUserDataV1(
+                        givenName = Some("Donald")
+                    ),
+                    UserProfileV1(UserDataV1(user_id = Some("http://data.knora.org/users/normaluser"), lang = ("en"))),
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(ForbiddenException("User data can only be changed by the user itself or a system administrator")))
+
+                /* User information is updated by anonymous */
+                actorUnderTest ! UserUpdateRequestV1(
+                    "http://data.knora.org/users/superuser",
+                    UpdatedUserDataV1(
+                        givenName = Some("Donald")
+                    ),
+                    UserProfileV1(UserDataV1(lang = ("en"))),
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(ForbiddenException("User data can only be changed by the user itself or a system administrator")))
+
             }
             "return a 'ForbiddenException' if the update gives SA rights but the user requesting the update is not SA " in {
-
+                /* User information is updated by the user */
+                actorUnderTest ! UserUpdateRequestV1(
+                    "http://data.knora.org/users/normaluser",
+                    UpdatedUserDataV1(
+                        isSystemAdmin = Some(true)
+                    ),
+                    UserProfileV1(UserDataV1(user_id = Some("http://data.knora.org/users/normaluser"), lang = ("en"))),
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(ForbiddenException("Giving an user system admin rights can only be performed by another system admin")))
             }
         }
     }

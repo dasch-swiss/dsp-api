@@ -26,8 +26,8 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1respondermessages.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
-import org.knora.webapi.routing.Authenticator.{INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED, INVALID_CREDENTIALS_NON_FOUND, INVALID_CREDENTIALS_USERNAME_OR_PASSWORD}
-import org.knora.webapi.{InvalidCredentialsException, CoreSpec}
+import org.knora.webapi.routing.Authenticator.{INVALID_CREDENTIALS_NON_FOUND, INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED, INVALID_CREDENTIALS_USERNAME_OR_PASSWORD}
+import org.knora.webapi.{CoreSpec, InvalidCredentialsException, SharedTestData}
 import org.scalatest.PrivateMethodTester
 
 import scala.concurrent.duration._
@@ -55,35 +55,16 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     implicit val executionContext = system.dispatcher
     implicit val timeout: Timeout = Duration(5, SECONDS)
 
-    val usernameCorrect = "root"
+    val usernameCorrect = SharedTestData.rootUserProfileV1.userData.username.get
     val usernameWrong = "wrong"
     val usernameEmpty = ""
 
     val passwordCorrect = "test"
-    val passwordCorrectHashed = "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" // hashed with sha-1
+    val passwordCorrectHashed = SharedTestData.rootUserProfileV1.userData.hashedpassword.get
     val passwordWrong = "wrong"
     val passwordEmpty = ""
 
-
-    val lang = "en"
-    val user_id = Some("http://data.knora.org/users/91e19f1e01")
-    val token = None
-    val username = Some(usernameCorrect)
-    val firstname = Some("Administrator")
-    val lastname = Some("Admin")
-    val email = Some("test@test.ch")
-    val password = Some(passwordCorrectHashed)
-
-    val mockUserProfileV1 = UserProfileV1(
-        UserDataV1(
-            user_id = user_id,
-            username = username,
-            firstname = firstname,
-            lastname = lastname,
-            email = email,
-            hashedpassword = password,
-            lang = lang
-        ), Nil, Nil, Nil, Nil)
+    val mockUserProfileV1 = SharedTestData.rootUserProfileV1
 
     val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
         become {
