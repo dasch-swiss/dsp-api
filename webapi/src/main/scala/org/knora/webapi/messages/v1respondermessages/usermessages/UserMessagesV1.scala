@@ -39,6 +39,7 @@ import spray.json._
   * @param familyName    the family name of the user to be created
   * @param email         the email of the user to be created.
   * @param password      the password of the user to be created.
+  * @param isActiveUser  the status of the user to be created.
   * @param isSystemAdmin the system admin status of the user to be created.
   * @param lang          the default language of the user to be created.
   */
@@ -47,6 +48,7 @@ case class CreateUserApiRequestV1(username: String,
                                   familyName: String,
                                   email: String,
                                   password: String,
+                                  isActiveUser: Boolean,
                                   isSystemAdmin: Boolean,
                                   lang: String) {
 
@@ -218,6 +220,7 @@ case class UserProfileV1(userData: UserDataV1,
             email = olduserdata.email,
             hashedpassword = None, // remove hashed password
             token = None, // remove token
+            isActiveUser = olduserdata.isActiveUser,
             isSystemAdmin = None, // remove system admin status
             lang = olduserdata.lang
         )
@@ -246,6 +249,7 @@ case class UserProfileV1(userData: UserDataV1,
   * @param email          the user's email address.
   * @param hashedpassword the user's hashed password.
   * @param token          the user's API token used as credentials.
+  * @param isActiveUser   the user's status.
   * @param isSystemAdmin  the user's system admin status.
   * @param lang           the ISO 639-1 code of the user's preferred language.
   */
@@ -256,6 +260,7 @@ case class UserDataV1(user_id: Option[IRI] = None,
                       email: Option[String] = None,
                       hashedpassword: Option[String] = None,
                       token: Option[String] = None,
+                      isActiveUser: Option[Boolean] = None,
                       isSystemAdmin: Option[Boolean] = None,
                       lang: String)
 
@@ -290,14 +295,14 @@ case class NewUserDataV1(username: String,
   * @param isSystemAdmin the new system admin status of the user to be
   * @param lang the new default language of the user to be updated.
   */
-case class UpdatedUserDataV1(username: Option[String],
-                             givenName: Option[String],
-                             familyName: Option[String],
-                             email: Option[String],
-                             password: Option[String],
-                             isActiveUser: Option[Boolean],
-                             isSystemAdmin: Option[Boolean],
-                             lang: Option[String])
+case class UpdatedUserDataV1(username: Option[String] = None,
+                             givenName: Option[String] = None,
+                             familyName: Option[String] = None,
+                             email: Option[String] = None,
+                             password: Option[String] = None,
+                             isActiveUser: Option[Boolean] = None,
+                             isSystemAdmin: Option[Boolean] = None,
+                             lang: Option[String] = None)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
@@ -306,10 +311,10 @@ case class UpdatedUserDataV1(username: Option[String],
   */
 object UserV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
-    implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat9(UserDataV1)
+    implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat10(UserDataV1)
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat5(UserProfileV1)
     implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat7(NewUserDataV1)
-    implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
+    implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat8(CreateUserApiRequestV1)
     implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat8(UpdateUserApiRequestV1)
     implicit val userCreateResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat3(UserOperationResponseV1)
 }

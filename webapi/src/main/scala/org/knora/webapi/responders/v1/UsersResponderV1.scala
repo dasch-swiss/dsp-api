@@ -114,14 +114,13 @@ class UsersResponderV1 extends ResponderV1 {
       * @return a future containing the [[UserOperationResponseV1]].
       */
     private def createNewUserV1(newUserData: NewUserDataV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-        // self-registration allowed, so no checking if the user has the right to create a new user
-
-        // check if username is not empty
-        if (newUserData.username.isEmpty) throw BadRequestException("Username cannot be empty")
-
-        if (newUserData.password.isEmpty) throw BadRequestException("Password cannot be empty")
-
         for {
+            a <- Future("")
+
+            // check if username or password are not empty
+            _ = if (newUserData.username.isEmpty) throw BadRequestException("Username cannot be empty")
+            _ = if (newUserData.password.isEmpty) throw BadRequestException("Password cannot be empty")
+
             // check if the supplied username for the new user is unique, i.e. not already registered
             sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(newUserData.username).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
@@ -177,25 +176,26 @@ class UsersResponderV1 extends ResponderV1 {
 
 
     private def updateUserV1(userIri: webapi.IRI, updatedUserData: UpdatedUserDataV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
-        // check if necessary information is present
-        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-        // check if the requesting user is allowed to perform updates
-        if (userProfile.userData.user_id.getOrElse("") != userIri || userProfile.userData.isSystemAdmin.getOrElse(false) != true) {
-            // not the user and not a system admin
-            throw ForbiddenException("User data can only be changed by the user itself or a system administrator")
-        }
-        if (updatedUserData.isSystemAdmin.getOrElse(false) == true && userProfile.userData.isSystemAdmin.getOrElse(false) != true ) {
-            // the operation of promoting to system admin is only allowed by another system admin
-            throw ForbiddenException("Giving an user system admin rights can only be performed by another system admin")
-        }
-
-        // remove old user profile from cache!
-
         for {
+            a <- Future("")
 
-            // Verify that the user was updated.
+            // check if necessary information is present
+            _ = if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+
+            // check if the requesting user is allowed to perform updates
+            _ = if (!userProfile.userData.user_id.contains(userIri) && !userProfile.userData.isSystemAdmin.contains(true)) {
+                // not the user and not a system admin
+                throw ForbiddenException("User data can only be changed by the user itself or a system administrator")
+            }
+            _ = if (updatedUserData.isSystemAdmin.contains(true) && !userProfile.userData.isSystemAdmin.contains(true) ) {
+                // the operation of promoting to system admin is only allowed by another system admin
+                throw ForbiddenException("Giving an user system admin rights can only be performed by another system admin")
+            }
+
+            // remove old user profile from cache!
+
+
+           // Verify that the user was updated.
             sparqlQuery <- Future(queries.sparql.v1.txt.getUser(userIri = userIri).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
@@ -211,7 +211,6 @@ class UsersResponderV1 extends ResponderV1 {
                 UserOperationResponseV1(updatedUserProfile, userProfile.userData)
             }
         } yield userOperationResponseV1
-
     }
 
     /**
@@ -234,16 +233,18 @@ class UsersResponderV1 extends ResponderV1 {
         //log.debug(s"RAW: ${groupedUserData.toString}")
 
         val userDataV1 = UserDataV1(
-            lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
-                case Some(langList) => langList.head
-                case None => settings.fallbackLanguage
-            },
             user_id = Some(returnedUserIri),
             username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
             firstname = groupedUserData.get(OntologyConstants.Foaf.GivenName).map(_.head),
             lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
             email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
-            hashedpassword = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head)
+            hashedpassword = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
+            isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.IsActiveUser).map(_.head.toBoolean),
+            isSystemAdmin = groupedUserData.get(OntologyConstants.KnoraBase.IsSystemAdmin).map(_.head.toBoolean),
+            lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
+                case Some(langList) => langList.head
+                case None => settings.fallbackLanguage
+            }
         )
 
         val groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
@@ -256,17 +257,30 @@ class UsersResponderV1 extends ResponderV1 {
             case None => Vector.empty[IRI]
         }
 
-        val userProfileV1 = {
-            if (clean) {
-                UserProfileV1(userDataV1, groupIris, projectIris).getCleanUserProfileV1
-            } else {
-                UserProfileV1(userDataV1, groupIris, projectIris)
-            }
+        val isGroupAdminForIris = groupedUserData.get(OntologyConstants.KnoraBase.IsGroupAdmin) match {
+            case Some(groups) => groups
+            case None => Vector.empty[IRI]
         }
 
-        log.debug(s"UserProfileV1: ${userProfileV1.toString}")
+        val isProjectAdminForIris = groupedUserData.get(OntologyConstants.KnoraBase.IsProjectAdmin) match {
+            case Some(projects) => projects
+            case None => Vector.empty[IRI]
+        }
 
-        userProfileV1
+        val up = UserProfileV1(
+            userData = userDataV1,
+            groups = groupIris,
+            projects = projectIris,
+            isGroupAdminFor = isGroupAdminForIris,
+            isProjectAdminFor = isProjectAdminForIris
+        )
+        log.debug(s"UserProfileV1: ${up.toString}")
+
+        if (clean) {
+            up.getCleanUserProfileV1
+        } else {
+            up
+        }
     }
 
 }

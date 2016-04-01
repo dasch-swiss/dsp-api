@@ -327,13 +327,14 @@ object Authenticator {
     private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem): Try[String] = {
         Try {
             getUserProfileByUsername(username) match {
-                case Success(userProfileV1: UserProfileV1) => {
-                    if (userProfileV1.passwordMatch(password)) {
+                case Success(userProfile: UserProfileV1) => {
+                    // password needs to match AND user needs to be active
+                    if (userProfile.passwordMatch(password) && !userProfile.userData.isActiveUser.getOrElse(false)) {
                         // create session id and cache user profile under this id
                         log.debug("password matched")
                         if (session) {
                             val sId = System.currentTimeMillis().toString
-                            CacheUtil.put(cacheName, sId, userProfileV1)
+                            CacheUtil.put(cacheName, sId, userProfile)
                             sId
                         } else {
                             "0"
