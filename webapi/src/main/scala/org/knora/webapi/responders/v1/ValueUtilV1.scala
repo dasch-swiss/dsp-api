@@ -531,6 +531,32 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             referenceCount = predicates(OntologyConstants.KnoraBase.ValueHasRefCount).literals.head.toInt
         )
     }
+
+    /** Creates an attribute segment for the Salsah GUI from the given resource class.
+      * Example: if incunabula:book is given, the function returns "restypeid=incunabula:book".
+      *
+      * @param resourceClass the resource class.
+      * @return an attribute string to be included in the attributes for the GUI
+      */
+    def makeAttributeRestype(resourceClass: IRI) = {
+        OntologyConstants.SalsahGui.attributeNames.resourceClass + OntologyConstants.SalsahGui.attributeNames.assignmentOperator + resourceClass
+    }
+
+    /**
+      * Given a set of attribute segments representing assertions about the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property,
+      * combines the attributes into a string for use in an API v1 response.
+      *
+      * @param attributes the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property.
+      * @return a semicolon-delimited string containing the attributes, or [[None]] if no attributes were found.
+      */
+    def makeAttributeString(attributes: Set[String]): Option[String] = {
+        if (attributes.isEmpty) {
+            None
+        } else {
+            Some(attributes.mkString(";"))
+        }
+    }
+
 }
 
 /**

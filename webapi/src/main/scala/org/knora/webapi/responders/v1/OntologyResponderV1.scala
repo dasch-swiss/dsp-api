@@ -44,6 +44,7 @@ class OntologyResponderV1 extends ResponderV1 {
 
     private val OntologyCacheName = "ontologyCache"
     private val knoraIriUtil = new KnoraIriUtil
+    private val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
       * This was used to query the named graphs in SPARQL. In the future, we may need it again.
@@ -407,20 +408,6 @@ class OntologyResponderV1 extends ResponderV1 {
       * @return a [[ResourceTypeResponseV1]].
       */
     private def getResourceTypeResponseV1(resourceTypeIri: String, userProfile: UserProfileV1): Future[ResourceTypeResponseV1] = {
-        /**
-          * Given a [[PredicateInfoV1]] representing assertions about the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property,
-          * combines the attributes into a string for use in an API v1 response.
-          *
-          * @param attributes the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property.
-          * @return a semicolon-delimited string containing the attributes, or [[None]] if no attributes were found.
-          */
-        def makeAttributeString(attributes: Set[String]): Option[String] = {
-            if (attributes.isEmpty) {
-                None
-            } else {
-                Some(attributes.mkString(";"))
-            }
-        }
 
         for {
         // Get all information about the resource type, including its property cardinalities.
@@ -438,18 +425,39 @@ class OntologyResponderV1 extends ResponderV1 {
             }.map {
                 case (propertyIri: IRI, cardinality: Cardinality.Value) =>
                     propertyInfo.propertyEntityInfoMap.get(propertyIri) match {
-                        case Some(entityInfo) =>
-                            PropertyDefinitionV1(
-                                id = propertyIri,
-                                name = propertyIri,
-                                label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
-                                description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
-                                vocabulary = entityInfo.predicates.values.head.ontologyIri,
-                                occurrence = cardinality.toString,
-                                valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
-                                attributes = makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute)),
-                                gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
-                            )
+                        case Some(entityInfo: PropertyEntityInfoV1) =>
+
+                            if (entityInfo.isLinkProp) {
+                                // It is a linking prop: its valuetype_id is knora-base:LinkValue.
+                                // It is restricted to the resource class that is given for knora-base:objectClassConstraint
+                                // for the given property which goes in the attributes that will be read by the GUI.
+
+                                PropertyDefinitionV1(
+                                    id = propertyIri,
+                                    name = propertyIri,
+                                    label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
+                                    description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
+                                    vocabulary = entityInfo.predicates.values.head.ontologyIri,
+                                    occurrence = cardinality.toString,
+                                    valuetype_id = OntologyConstants.KnoraBase.LinkValue,
+                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
+                                    gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                                )
+
+                            } else {
+
+                                PropertyDefinitionV1(
+                                    id = propertyIri,
+                                    name = propertyIri,
+                                    label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
+                                    description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
+                                    vocabulary = entityInfo.predicates.values.head.ontologyIri,
+                                    occurrence = cardinality.toString,
+                                    valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
+                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute)),
+                                    gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                                )
+                            }
                         case None =>
                             throw new InconsistentTriplestoreDataException(s"Resource type $resourceTypeIri is defined as having property $propertyIri, which doesn't exist")
                     }
@@ -652,22 +660,39 @@ class OntologyResponderV1 extends ResponderV1 {
                 propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1] = entities.propertyEntityInfoMap
 
                 propertyDefinitions: Vector[PropertyDefinitionV1] = propertyEntityInfoMap.map {
-                    case (propertyIri, entityInfo) =>
-                        PropertyDefinitionV1(
-                            id = propertyIri,
-                            name = propertyIri,
-                            label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
-                            description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
-                            vocabulary = entityInfo.predicates.values.head.ontologyIri,
-                            occurrence = "",
-                            valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
-                            attributes = if (entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute).isEmpty) {
-                                None
-                            } else {
-                                Some(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute).mkString(";"))
-                            },
-                            gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
-                        )
+                    case (propertyIri: IRI, entityInfo: PropertyEntityInfoV1) =>
+
+                        if (entityInfo.isLinkProp) {
+                            // It is a linking prop: its valuetype_id is knora-base:LinkValue.
+                            // It is restricted to the resource class that is given for knora-base:objectClassConstraint
+                            // for the given property which goes in the attributes that will be read by the GUI.
+
+                            PropertyDefinitionV1(
+                                id = propertyIri,
+                                name = propertyIri,
+                                label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
+                                description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
+                                vocabulary = entityInfo.predicates.values.head.ontologyIri,
+                                occurrence = "",
+                                valuetype_id = OntologyConstants.KnoraBase.LinkValue,
+                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
+                                gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                            )
+
+                        } else {
+                            PropertyDefinitionV1(
+                                id = propertyIri,
+                                name = propertyIri,
+                                label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
+                                description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
+                                vocabulary = entityInfo.predicates.values.head.ontologyIri,
+                                occurrence = "",
+                                valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
+                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute)),
+                                gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                            )
+
+                        }
 
                 }.toVector
             } yield propertyDefinitions
