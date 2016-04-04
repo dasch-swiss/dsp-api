@@ -107,6 +107,74 @@ class StandoffUtil {
     }
 
     /**
+      * Represents the state of the conversion of XML text to standoff.
+      * @param currentPos the current position in the text.
+      * @param parentId the ID of the parent [[StandoffTag]] for which standoff ranges are being generated, or [[None]]
+      *                 if the root tag is being generated.
+      * @param nextId the next available standoff tag ID.
+      * @param standoffRanges the standoff ranges generated so far.
+      */
+    private case class Xml2StandoffState(currentPos: Int = 0,
+                                         parentId: Option[Int] = None,
+                                         nextId: Int = 0,
+                                         standoffRanges: Vector[StandoffRange] = Vector.empty[StandoffRange])
+
+    /**
+      * Recursively converts XML nodes to standoff.
+      * @param nodes a sequence of sibling XML nodes to be converted.
+      * @param startState the current state of the conversion.
+      * @return the resulting conversion state.
+      */
+    private def xmlNodes2StandoffRanges(nodes: NodeSeq, startState: Xml2StandoffState): Xml2StandoffState = {
+        // Process sibling nodes.
+        nodes.foldLeft(startState) {
+            case (acc: Xml2StandoffState, elem: Elem) =>
+                // We got an XML element. Generate a StandoffTag for it.
+
+                // println(s"got Elem <${elem.label}>")
+                val standoffTagId = acc.nextId
+
+                val standoffTag = StandoffTag(
+                    tagName = elem.label,
+                    attributes = elem.attributes.asAttrMap,
+                    startPosition = acc.currentPos,
+                    endPosition = acc.currentPos + elem.text.length,
+                    id = standoffTagId,
+                    parentId = startState.parentId
+                )
+
+                // Process the element's child nodes.
+                xmlNodes2StandoffRanges(
+                    nodes = elem.child,
+                    Xml2StandoffState(
+                        currentPos = acc.currentPos,
+                        parentId = Some(standoffTagId),
+                        nextId = standoffTagId + 1,
+                        standoffRanges = acc.standoffRanges :+ standoffTag
+                    )
+                )
+
+            case (acc, text: Text) =>
+                // We got an XML text node. Generate a TextRange for it.
+                val textRange = TextRange(
+                    startPosition = acc.currentPos,
+                    endPosition = acc.currentPos + text.data.length,
+                    parentId = startState.parentId
+                )
+
+                acc.copy(
+                    currentPos = textRange.endPosition,
+                    parentId = startState.parentId,
+                    nextId = acc.nextId,
+                    standoffRanges = acc.standoffRanges :+ textRange
+                )
+
+            case (acc, other) =>
+                throw new Exception(s"Got unexpected XML node class ${other.getClass.getName}")
+        }
+    }
+
+    /**
       * Recursively generates XML text representing [[StandoffRange]] objects, starting with those that have a particular parent tag.
       * @param text the text that has been marked up.
       * @param parentId the ID of the parent tag.
@@ -157,68 +225,6 @@ class StandoffUtil {
                 case textRange: TextRange =>
                     xmlString.append(text.substring(textRange.startPosition, textRange.endPosition))
             }
-        }
-    }
-
-    /**
-      * Represents the state of the conversion of XML text to standoff.
-      * @param currentPos the current position in the text.
-      * @param parentId the ID of the parent [[StandoffTag]] for which standoff ranges are being generated, or [[None]]
-      *                 if the root tag is being generated.
-      * @param nextId the next available standoff tag ID.
-      * @param standoffRanges the standoff ranges generated so far.
-      */
-    private case class Xml2StandoffState(currentPos: Int = 0,
-                                         parentId: Option[Int] = None,
-                                         nextId: Int = 0,
-                                         standoffRanges: Vector[StandoffRange] = Vector.empty[StandoffRange])
-
-    private def xmlNodes2StandoffRanges(nodes: NodeSeq, startState: Xml2StandoffState): Xml2StandoffState = {
-        // Process sibling nodes.
-        nodes.foldLeft(startState) {
-            case (acc: Xml2StandoffState, elem: Elem) =>
-                // We got an XML element. Generate a StandoffTag for it.
-
-                // println(s"got Elem <${elem.label}>")
-                val standoffTagId = acc.nextId
-
-                val standoffTag = StandoffTag(
-                    tagName = elem.label,
-                    attributes = elem.attributes.asAttrMap,
-                    startPosition = acc.currentPos,
-                    endPosition = acc.currentPos + elem.text.length,
-                    id = standoffTagId,
-                    parentId = startState.parentId
-                )
-
-                // Process the element's child nodes.
-                xmlNodes2StandoffRanges(
-                    nodes = elem.child,
-                    Xml2StandoffState(
-                        currentPos = acc.currentPos,
-                        parentId = Some(standoffTagId),
-                        nextId = standoffTagId + 1,
-                        standoffRanges = acc.standoffRanges :+ standoffTag
-                    )
-                )
-
-            case (acc, text: Text) =>
-                // We got an XML text node. Generate a TextRange for it.
-                val textRange = TextRange(
-                    startPosition = acc.currentPos,
-                    endPosition = acc.currentPos + text.data.length,
-                    parentId = startState.parentId
-                )
-
-                acc.copy(
-                    currentPos = textRange.endPosition,
-                    parentId = startState.parentId,
-                    nextId = acc.nextId,
-                    standoffRanges = acc.standoffRanges :+ textRange
-                )
-
-            case (acc, other) =>
-                throw new Exception(s"Got unexpected XML node class ${other.getClass.getName}")
         }
     }
 }
