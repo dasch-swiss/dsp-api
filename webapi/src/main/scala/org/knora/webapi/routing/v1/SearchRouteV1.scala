@@ -76,9 +76,6 @@ object SearchRouteV1 extends Authenticator {
             case other => None
         }
 
-        //
-        // the params with multiple values have angle brackets appended: param name[]
-        //
         // here, also multiple values can be given
         val propertyIri: Seq[IRI] = params.get("property_id") match {
             case Some(propertyList: Seq[IRI]) => propertyList.map(

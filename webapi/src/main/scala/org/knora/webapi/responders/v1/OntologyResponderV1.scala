@@ -608,13 +608,13 @@ class OntologyResponderV1 extends ResponderV1 {
                         val properties = resInfo.restype_info.properties.map {
                             (prop) => PropertyTypeV1(
                                 id = prop.id,
-                                label = prop.label.getOrElse("")
+                                label = prop.label.getOrElse(throw InconsistentTriplestoreDataException(s"No label given for ${prop.id}"))
                             )
                         }.toVector
 
                         ResourceTypeV1(
                             id = resClassIri,
-                            label = resInfo.restype_info.label.getOrElse(""),
+                            label = resInfo.restype_info.label.getOrElse(throw InconsistentTriplestoreDataException(s"No label given for ${resClassIri}")),
                             properties = properties
                         )
                 }.toVector
@@ -652,14 +652,14 @@ class OntologyResponderV1 extends ResponderV1 {
       */
     private def getPropertyTypesForNamedGraph(namedGraphIriOption: Option[IRI], userProfile: UserProfileV1): Future[PropertyTypesForNamedGraphResponseV1] = {
 
-        def getPropertiesForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[Vector[PropertyDefinitionV1]] = {
+        def getPropertiesForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[Vector[PropertyDefinitionInNamedGraphV1]] = {
             for {
                 namedGraphEntityInfo <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
                 propertyIris: Vector[IRI] = namedGraphEntityInfo.propertyIris
                 entities: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = propertyIris.toSet, userProfile = userProfile)
                 propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1] = entities.propertyEntityInfoMap
 
-                propertyDefinitions: Vector[PropertyDefinitionV1] = propertyEntityInfoMap.map {
+                propertyDefinitions: Vector[PropertyDefinitionInNamedGraphV1] = propertyEntityInfoMap.map {
                     case (propertyIri: IRI, entityInfo: PropertyEntityInfoV1) =>
 
                         if (entityInfo.isLinkProp) {
@@ -667,26 +667,24 @@ class OntologyResponderV1 extends ResponderV1 {
                             // It is restricted to the resource class that is given for knora-base:objectClassConstraint
                             // for the given property which goes in the attributes that will be read by the GUI.
 
-                            PropertyDefinitionV1(
+                            PropertyDefinitionInNamedGraphV1(
                                 id = propertyIri,
                                 name = propertyIri,
                                 label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
                                 description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
                                 vocabulary = entityInfo.predicates.values.head.ontologyIri,
-                                occurrence = "",
                                 valuetype_id = OntologyConstants.KnoraBase.LinkValue,
                                 attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
                                 gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
                             )
 
                         } else {
-                            PropertyDefinitionV1(
+                            PropertyDefinitionInNamedGraphV1(
                                 id = propertyIri,
                                 name = propertyIri,
                                 label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
                                 description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
                                 vocabulary = entityInfo.predicates.values.head.ontologyIri,
-                                occurrence = "",
                                 valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
                                 attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute)),
                                 gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
@@ -705,11 +703,11 @@ class OntologyResponderV1 extends ResponderV1 {
 
                 } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes, userdata = userProfile.userData)
             case None => // get the property types for all named graphs (collect them by mapping over all named graphs)
-                val propertyTypesFutures: Vector[Future[Vector[PropertyDefinitionV1]]] = settings.namedGraphs.filter(_.visibleInGUI).map {
+                val propertyTypesFutures: Vector[Future[Vector[PropertyDefinitionInNamedGraphV1]]] = settings.namedGraphs.filter(_.visibleInGUI).map {
                     namedGraphs: ProjectNamedGraphs => getPropertiesForNamedGraph(namedGraphs.ontology, userProfile)
                 }
 
-                val sequencedFuture: Future[Vector[Vector[PropertyDefinitionV1]]] = Future.sequence(propertyTypesFutures)
+                val sequencedFuture: Future[Vector[Vector[PropertyDefinitionInNamedGraphV1]]] = Future.sequence(propertyTypesFutures)
 
                 for {
                     propertyTypes <- sequencedFuture

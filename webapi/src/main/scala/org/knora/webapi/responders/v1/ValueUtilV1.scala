@@ -125,6 +125,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * To the base path, the icon name is appended. In case of a region with the icon name "region.gif",
       * "http://salsahapp:port/project-icons-basepath/knora-base/region.gif" is returned.
       *
+      * This method requires the Iri segment before the last slash to be a unique identifier for all the ontologies used with Knora..
+      *
       * @param resourceClassIri the Iri of the resource class in question.
       * @param iconsSrc the name of the icon file.
       */
@@ -533,7 +535,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     /** Creates an attribute segment for the Salsah GUI from the given resource class.
-      * Example: if incunabula:book is given, the function returns "restypeid=incunabula:book".
+      * Example: if "http://www.knora.org/ontology/incunabula#book" is given, the function returns "restypeid=http://www.knora.org/ontology/incunabula#book".
       *
       * @param resourceClass the resource class.
       * @return an attribute string to be included in the attributes for the GUI

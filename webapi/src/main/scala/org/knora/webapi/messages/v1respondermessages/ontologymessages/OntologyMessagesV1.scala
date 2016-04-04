@@ -144,7 +144,7 @@ case class PropertyTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userP
   * @param properties the property types for the requested named graph.
   * @param userdata information about the user that made the request.
   */
-case class PropertyTypesForNamedGraphResponseV1(properties: Vector[PropertyDefinitionV1], userdata: UserDataV1) extends KnoraResponseV1 {
+case class PropertyTypesForNamedGraphResponseV1(properties: Vector[PropertyDefinitionInNamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.propertyTypesForNamedGraphResponseV1Format.write(this)
 }
 
@@ -331,7 +331,22 @@ case class ResTypeInfoV1(name: IRI,
                          properties: Set[PropertyDefinitionV1])
 
 /**
-  * Describes a property that resources of some particular type can have.
+  * Represents information about a property type. It is extended by [[PropertyDefinitionV1]]
+  * and [[PropertyDefinitionInNamedGraphV1]].
+  */
+trait PropertyDefinitionBaseV1 {
+    val id: IRI
+    val name: IRI
+    val label: Option[String]
+    val description: Option[String]
+    val vocabulary: IRI
+    val valuetype_id: IRI
+    val attributes: Option[String]
+    val gui_name: Option[String]
+}
+
+/**
+  * Describes a property type that resources of some particular type can have.
   *
   * @param id the IRI of the property definition.
   * @param name the IRI of the property definition.
@@ -352,7 +367,30 @@ case class PropertyDefinitionV1(id: IRI,
                                 occurrence: String,
                                 valuetype_id: IRI,
                                 attributes: Option[String],
-                                gui_name: Option[String])
+                                gui_name: Option[String]) extends PropertyDefinitionBaseV1
+
+/**
+  * Describes a property type that a named graph contains.
+  *
+  * @param id the IRI of the property definition.
+  * @param name the IRI of the property definition.
+  * @param label the label of the property definition.
+  * @param description a description of the property definition.
+  * @param vocabulary the IRI of the vocabulary (i.e. the named graph) that the property definition belongs to.
+  * @param valuetype_id the IRI of a subclass of `knora-base:Value`, representing the type of value that this property contains.
+  * @param attributes HTML attributes to be used with the property's GUI element.
+  * @param gui_name the IRI of a named individual of type `salsah-gui:Guielement`, representing the type of GUI element
+  *                 that should be used for inputting values for this property.
+  */
+case class PropertyDefinitionInNamedGraphV1(id: IRI,
+                                name: IRI,
+                                label: Option[String],
+                                description: Option[String],
+                                vocabulary: IRI,
+                                valuetype_id: IRI,
+                                attributes: Option[String],
+                                gui_name: Option[String]) extends PropertyDefinitionBaseV1
+
 
 /**
   * Represents a named graph (corresponds to a vocabulary in the SALSAH prototype).
@@ -407,6 +445,7 @@ object ResourceTypeV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
     import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
 
     implicit val propertyDefinitionV1Format: JsonFormat[PropertyDefinitionV1] = jsonFormat9(PropertyDefinitionV1)
+    implicit val propertyDefinitionInNamedGraphV1Format: JsonFormat[PropertyDefinitionInNamedGraphV1] = jsonFormat8(PropertyDefinitionInNamedGraphV1)
     implicit val resTypeInfoV1Format: JsonFormat[ResTypeInfoV1] = jsonFormat5(ResTypeInfoV1)
     implicit val resourceTypeResponseV1Format: RootJsonFormat[ResourceTypeResponseV1] = jsonFormat2(ResourceTypeResponseV1)
     implicit val namedGraphV1Format: RootJsonFormat[NamedGraphV1] = jsonFormat7(NamedGraphV1)
