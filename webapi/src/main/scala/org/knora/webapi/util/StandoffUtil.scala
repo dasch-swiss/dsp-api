@@ -283,7 +283,9 @@ object StandoffUtilTest extends App {
 
     println()
     println(delimiter)
-    println("Generated standoff tags:\n\n")
+    println("Extracted text:\n\n")
+    println(textWithStandoff.text)
+    println("\n\nGenerated standoff tags:\n\n")
     println(MessageUtil.toSource(textWithStandoff.standoff))
 
     // Convert the standoff back to XML.
