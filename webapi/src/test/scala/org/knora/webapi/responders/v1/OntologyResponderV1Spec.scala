@@ -93,8 +93,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             properties = Set(
                 PropertyDefinitionV1(
                     gui_name = Some("searchbox"),
-                    attributes = Some("restypeid=53;numprops=1"),
-                    valuetype_id = "http://www.knora.org/ontology/incunabula#Sideband",
+                    attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/incunabula#Sideband"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-1",
                     vocabulary = "http://www.knora.org/ontology/incunabula",
                     description = Some("Verweis auf einen Randleistentyp"),
@@ -126,8 +126,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 PropertyDefinitionV1(
                     gui_name = Some("searchbox"),
-                    attributes = None,
-                    valuetype_id = "http://www.knora.org/ontology/incunabula#book",
+                    attributes = Some("restypeid=http://www.knora.org/ontology/incunabula#book"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "1",
                     vocabulary = "http://www.knora.org/ontology/incunabula",
                     description = Some("Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."),
@@ -170,8 +170,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 PropertyDefinitionV1(
                     gui_name = Some("searchbox"),
-                    attributes = Some("restypeid=53;numprops=1"),
-                    valuetype_id = "http://www.knora.org/ontology/incunabula#Sideband",
+                    attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/incunabula#Sideband"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-1",
                     vocabulary = "http://www.knora.org/ontology/incunabula",
                     description = Some("Verweis auf einen Randleistentyp"),
@@ -208,18 +208,18 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     occurrence = "1-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = None,
-                    label = None,
+                    label = Some("hat Repräsentation (Bild)"),
                     name = "http://www.knora.org/ontology/knora-base#hasStillImageFileValue",
                     id = "http://www.knora.org/ontology/knora-base#hasStillImageFileValue"
                 ),
                 PropertyDefinitionV1(
                     gui_name = None,
-                    attributes = None,
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#Representation",
+                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Representation"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = Some("References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."),
-                    label = None,
+                    label = Some("hat Repräsentation"),
                     name = "http://www.knora.org/ontology/knora-base#hasRepresentation",
                     id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
                 )
@@ -370,12 +370,12 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 PropertyDefinitionV1(
                     gui_name = None,
-                    attributes = None,
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#Representation",
+                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Representation"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = Some("References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."),
-                    label = None,
+                    label = Some("hat Repräsentation"),
                     name = "http://www.knora.org/ontology/knora-base#hasRepresentation",
                     id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
                 ),
@@ -438,23 +438,23 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 PropertyDefinitionV1(
                     gui_name = None,
-                    attributes = None,
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#Representation",
+                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Representation"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "1",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = Some("Region of interest within a digital object (e.g. an image)"),
-                    label = None,
+                    label = Some("is Region von"),
                     name = "http://www.knora.org/ontology/knora-base#isRegionOf",
                     id = "http://www.knora.org/ontology/knora-base#isRegionOf"
                 ),
                 PropertyDefinitionV1(
                     gui_name = None,
-                    attributes = None,
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#Representation",
+                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Representation"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = Some("References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."),
-                    label = None,
+                    label = Some("hat Repräsentation"),
                     name = "http://www.knora.org/ontology/knora-base#hasRepresentation",
                     id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
                 ),
@@ -493,12 +493,12 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             properties = Set(
                 PropertyDefinitionV1(
                     gui_name = None,
-                    attributes = None,
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#Resource",
+                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Resource"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "1-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = Some("Represents a direct connection between two resources"),
-                    label = None,
+                    label = Some("hat Link zu"),
                     name = "http://www.knora.org/ontology/knora-base#hasLinkTo",
                     id = "http://www.knora.org/ontology/knora-base#hasLinkTo"
                 ),
@@ -515,12 +515,12 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 PropertyDefinitionV1(
                     gui_name = None,
-                    attributes = None,
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#Representation",
+                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Representation"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = Some("References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."),
-                    label = None,
+                    label = Some("hat Repräsentation"),
                     name = "http://www.knora.org/ontology/knora-base#hasRepresentation",
                     id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
                 ),

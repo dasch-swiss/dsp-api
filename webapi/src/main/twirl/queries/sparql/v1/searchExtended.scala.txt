@@ -273,6 +273,26 @@ WHERE {
                         }
                     }
 
+                    case "http://www.knora.org/ontology/knora-base#ListValue" => {
+
+                        @*
+
+                        Get all the subnodes of the given node, including the given node (operator *)
+
+                        *@
+
+                        ?valueObjectIri@index knora-base:valueHasListNode ?listNode .
+                        <@searchCriterion.searchValue> knora-base:hasSubListNode* ?listNode .
+
+                        MINUS {
+                            ?valueObjectIri@index knora-base:isDeleted true .
+                        }
+
+                        ?listNode rdfs:label ?listNodeLabel .
+                        BIND(?listNodeLabel AS ?anyLiteral@index)
+
+                    }
+
                     case other => {
                         @{throw SparqlGenerationException(s"Value type $other is not supported with comparison operator ${searchCriterion.comparisonOperator}"); ()}
                     }

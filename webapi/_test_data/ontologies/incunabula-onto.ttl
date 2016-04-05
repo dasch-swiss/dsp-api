@@ -590,10 +590,7 @@
 
                       salsah-gui:guiOrder "10"^^xsd:integer ;
 
-                      salsah-gui:guiElement salsah-gui:Searchbox ;
-
-                      salsah-gui:guiAttribute "restypeid=53" ,
-                                              "numprops=1" .
+                      salsah-gui:guiElement salsah-gui:Searchbox .
 
 
 ### ###########################################
@@ -615,8 +612,7 @@
 
                  salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                 salsah-gui:guiAttribute "restypeid=53" ,
-                                         "numprops=1" ;
+                 salsah-gui:guiAttribute "numprops=1" ;
 
                  knora-base:hasDefaultViewPermission knora-base:KnownUser ;
 
@@ -642,11 +638,7 @@
 
                        salsah-gui:guiOrder "11"^^xsd:integer ;
 
-                       salsah-gui:guiElement salsah-gui:Searchbox ;
-
-                       salsah-gui:guiAttribute "restypeid=53" ,
-                                               "numprops=1" .
-
+                       salsah-gui:guiElement salsah-gui:Searchbox .
 
 ### ###########################################
 ### incunabula:hasRightSideband
@@ -667,8 +659,7 @@
 
                   salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                  salsah-gui:guiAttribute "restypeid=53" ,
-                                          "numprops=1" ;
+                  salsah-gui:guiAttribute "numprops=1" ;
 
                   knora-base:hasDefaultViewPermission knora-base:KnownUser ;
 
