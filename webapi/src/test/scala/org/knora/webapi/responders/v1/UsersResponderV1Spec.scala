@@ -108,7 +108,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             "create the user and return it's profile if the supplied username is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
                     NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "test", false, "en"),
-                    UserProfileV1(UserDataV1(lang = "en")),
+                    SharedTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
@@ -124,7 +124,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             "return a 'DuplicateValueException' if the supplied username is not unique " in {
                 actorUnderTest ! UserCreateRequestV1(
                     NewUserDataV1("root", "", "", "", "test", false, ""),
-                    UserProfileV1(UserDataV1(lang = "en")),
+                    SharedTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
@@ -134,7 +134,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* missing username */
                 actorUnderTest ! UserCreateRequestV1(
                     NewUserDataV1("", "", "", "", "test", false, ""),
-                    UserProfileV1(UserDataV1(lang = "en")),
+                    SharedTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Username cannot be empty")))
@@ -142,7 +142,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* missing password */
                 actorUnderTest ! UserCreateRequestV1(
                     NewUserDataV1("dduck", "", "", "", "", false, ""),
-                    UserProfileV1(UserDataV1(lang = "en")),
+                    SharedTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Password cannot be empty")))
@@ -153,17 +153,16 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
                 /* User information is updated by the user */
                 actorUnderTest ! UserUpdateRequestV1(
-                    "http://data.knora.org/users/normaluser",
-                    UpdatedUserDataV1(
-                        givenName = Some("Donald")
-                    ),
-                    UserProfileV1(UserDataV1(user_id = Some("http://data.knora.org/users/normaluser"), lang = ("en"))),
+                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.Foaf.GivenName,
+                    newValue = "Donald",
+                    userProfile = SharedTestData.normaluserUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(newUserProfile, requestingUserData, message) => {
+                    case UserOperationResponseV1(updatedUserProfile, requestingUserData, message) => {
                         // check if information was changed
-                        assert(newUserProfile.userData.firstname.contains("Donald"))
+                        assert(updatedUserProfile.userData.firstname.contains("Donald"))
 
                         // check if correct and updated userdata is returned
                         assert(requestingUserData.firstname.contains("Donald"))
@@ -172,59 +171,88 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
                 /* User information is updated by a system admin */
                 actorUnderTest ! UserUpdateRequestV1(
-                    "http://data.knora.org/users/normaluser",
-                    UpdatedUserDataV1(
-                        familyName = Some("Duck")
-                    ),
-                    UserProfileV1(UserDataV1(user_id = Some("http://data.knora.org/users/superuser"), lang = ("en"))),
+                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.Foaf.FamilyName,
+                    newValue = "Duck",
+                    userProfile = SharedTestData.superuserUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(newUserProfile, requestingUserData, message) => {
+                    case UserOperationResponseV1(updatedUserProfile, requestingUserData, message) => {
                         // check if information was changed
-                        assert(newUserProfile.userData.lastname.contains("Duck"))
+                        assert(updatedUserProfile.userData.lastname.contains("Duck"))
 
                         // check if the correct userdata is returned
-                        assert(requestingUserData.user_id.contains("http://data.knora.org/users/superuser"))
+                        assert(requestingUserData.user_id.contains(SharedTestData.superuserUserProfileV1.userData.user_id.get))
                     }
                 }
+
             }
             "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin " in {
 
-                /* User information is updated by someone random */
+                /* User information is updated by other normal user */
                 actorUnderTest ! UserUpdateRequestV1(
-                    "http://data.knora.org/users/superuser",
-                    UpdatedUserDataV1(
-                        givenName = Some("Donald")
-                    ),
-                    UserProfileV1(UserDataV1(user_id = Some("http://data.knora.org/users/normaluser"), lang = ("en"))),
+                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.Foaf.GivenName,
+                    newValue = "Donald",
+                    userProfile = SharedTestData.normaluserUserProfileV1,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(ForbiddenException("User data can only be changed by the user itself or a system administrator")))
+                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
 
                 /* User information is updated by anonymous */
                 actorUnderTest ! UserUpdateRequestV1(
-                    "http://data.knora.org/users/superuser",
-                    UpdatedUserDataV1(
-                        givenName = Some("Donald")
-                    ),
-                    UserProfileV1(UserDataV1(lang = ("en"))),
+                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.Foaf.GivenName,
+                    newValue = ("Donald"),
+                    userProfile = SharedTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(ForbiddenException("User data can only be changed by the user itself or a system administrator")))
+                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
 
             }
             "return a 'ForbiddenException' if the update gives SA rights but the user requesting the update is not SA " in {
                 /* User information is updated by the user */
                 actorUnderTest ! UserUpdateRequestV1(
-                    "http://data.knora.org/users/normaluser",
-                    UpdatedUserDataV1(
-                        isSystemAdmin = Some(true)
-                    ),
-                    UserProfileV1(UserDataV1(user_id = Some("http://data.knora.org/users/normaluser"), lang = ("en"))),
+                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.KnoraBase.IsSystemAdmin,
+                    newValue = true,
+                    userProfile = SharedTestData.normaluserUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(ForbiddenException("Giving an user system admin rights can only be performed by another system admin")))
+            }
+            "update the user, giving him SA rights " in {
+                actorUnderTest ! UserUpdateRequestV1(
+                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.KnoraBase.IsSystemAdmin,
+                    newValue = true,
+                    userProfile = SharedTestData.superuserUserProfileV1,
+                    UUID.randomUUID
+                )
+                expectMsgPF(timeout) {
+                    case UserOperationResponseV1(updatedUserProfile, requestingUserData, message) => {
+                        // check if information was changed
+                        // canot actually check as the system admin status is striped
+                        assert(updatedUserProfile.userData.isSystemAdmin.equals(None))
+                    }
+                }
+            }
+            "update the user, (deleting) making him inactive " in {
+                actorUnderTest ! UserUpdateRequestV1(
+                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.KnoraBase.IsActiveUser,
+                    newValue = false,
+                    userProfile = SharedTestData.superuserUserProfileV1,
+                    UUID.randomUUID
+                )
+                expectMsgPF(timeout) {
+                    case UserOperationResponseV1(updatedUserProfile, requestingUserData, message) => {
+                        // check if information was changed
+                        assert(updatedUserProfile.userData.isActiveUser.contains(false))
+                    }
+                }
+
             }
         }
     }

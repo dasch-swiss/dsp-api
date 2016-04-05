@@ -56,15 +56,15 @@ class CacheUtilSpec extends CoreSpec("CachingTestSystem") with ImplicitSender {
 
     "Caching " should {
         "allow to set and get the value " in {
-            CacheUtil.put(cacheName, sessionId, mockUserProfileV1)
-            CacheUtil.get(cacheName, sessionId) should be(Some(mockUserProfileV1))
+            CacheUtil.put[UserProfileV1](cacheName, sessionId, mockUserProfileV1)
+            CacheUtil.get[UserProfileV1](cacheName, sessionId) should be(Some(mockUserProfileV1))
         }
         "return none if key is not found " in {
-            CacheUtil.get(cacheName, 213.toString) should be(None)
+            CacheUtil.get[UserProfileV1](cacheName, 213.toString) should be(None)
         }
         "allow to delete a set value " in {
             CacheUtil.remove(cacheName, sessionId)
-            CacheUtil.get(cacheName, sessionId) should be(None)
+            CacheUtil.get[UserProfileV1](cacheName, sessionId) should be(None)
         }
     }
 

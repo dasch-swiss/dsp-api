@@ -87,6 +87,16 @@ object SharedTestData {
         Vector.empty[IRI]
     )
 
+    /* represents an anonymous user */
+    val anonymousUserProfileV1 = UserProfileV1(
+        UserDataV1(
+            lang = "de"
+        ),
+        Vector.empty[IRI],
+        Vector.empty[IRI],
+        Vector.empty[IRI],
+        Vector.empty[IRI]
+    )
 
 
 }
