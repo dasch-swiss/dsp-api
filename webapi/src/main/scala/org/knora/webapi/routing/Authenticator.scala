@@ -289,7 +289,7 @@ object Authenticator {
     implicit val timeout: Timeout = Duration(5, SECONDS)
     val log = Logger(LoggerFactory.getLogger("org.knora.webapi.util.authentication"))
 
-    private val cacheName = "authenticationCache"
+    val cacheName = "authenticationCache"
 
     /**
       * Tries to extract and then authenticate the credentials.
@@ -333,8 +333,8 @@ object Authenticator {
                         // create session id and cache user profile under this id
                         log.debug("password matched")
                         if (session) {
-                            val sId = System.currentTimeMillis().toString
-                            CacheUtil.put(cacheName, sId, userProfile)
+                            val sId = userProfile.getDigest
+                            CacheUtil.put[UserProfileV1](cacheName, sId, userProfile)
                             sId
                         } else {
                             "0"

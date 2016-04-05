@@ -105,20 +105,10 @@ object UsersRouteV1 extends Authenticator {
                         val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
                         val userProfile = getUserProfileV1(requestContext)
 
-                        val dataToUpdate = UpdatedUserDataV1(
-                            username = apiRequest.username,
-                            givenName = apiRequest.givenName,
-                            familyName = apiRequest.familyName,
-                            email = apiRequest.email,
-                            password = apiRequest.password,
-                            isActiveUser = apiRequest.isActiveUser,
-                            isSystemAdmin = apiRequest.isSystemAdmin,
-                            lang = apiRequest.lang
-                        )
-
                         UserUpdateRequestV1(
                             userIri = userIri,
-                            updatedUserData = dataToUpdate,
+                            propertyIri = apiRequest.propertyIri,
+                            newValue = apiRequest.newValue,
                             userProfile,
                             apiRequestID = UUID.randomUUID
                         )

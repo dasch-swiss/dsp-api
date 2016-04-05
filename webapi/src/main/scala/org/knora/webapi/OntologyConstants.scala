@@ -177,7 +177,6 @@ object OntologyConstants {
         val Username = KNORA_BASE_PREFIX + "userid"
         val Email = KNORA_BASE_PREFIX + "email"
         val Password = KNORA_BASE_PREFIX + "password"
-        val PasswordSalt = KNORA_BASE_PREFIX + "passwordSalt"
         val UsersActiveProject = KNORA_BASE_PREFIX + "currentproject"
         val IsActiveUser = KNORA_BASE_PREFIX + "isActiveUser"
         val IsSystemAdmin = KNORA_BASE_PREFIX + "isSystemAdmin"

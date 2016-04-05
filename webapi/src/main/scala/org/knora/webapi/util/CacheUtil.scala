@@ -295,7 +295,6 @@ object CacheUtil {
         }
     }
 
-
 }
 
 class MyCacheEventListener(log: Logger) extends CacheEventListener {

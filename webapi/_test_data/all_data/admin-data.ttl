@@ -28,9 +28,9 @@
 
                                    knora-base:phone "123456" ;
 
-                                   knora-base:isActiveUser "true" ;
+                                   knora-base:isActiveUser "true"^^xsd:boolean ;
 
-                                   knora-base:isSystemAdmin "true" ;
+                                   knora-base:isSystemAdmin "true"^^xsd:boolean ;
 
                                    knora-base:preferredLanguage "de" .
 
@@ -49,9 +49,9 @@
 
                                         knora-base:phone "123456" ;
 
-                                        knora-base:isActiveUser "true" ;
+                                        knora-base:isActiveUser "true"^^xsd:boolean ;
 
-                                        knora-base:isSystemAdmin "true" ;
+                                        knora-base:isSystemAdmin "true"^^xsd:boolean ;
 
                                         knora-base:preferredLanguage "de" .
 
@@ -70,9 +70,9 @@
 
                                          knora-base:phone "123456" ;
 
-                                         knora-base:isActiveUser "true" ;
+                                         knora-base:isActiveUser "true"^^xsd:boolean ;
 
-                                         knora-base:isSystemAdmin "false" ;
+                                         knora-base:isSystemAdmin "false"^^xsd:boolean ;
 
                                          knora-base:preferredLanguage "de" .
 
@@ -91,9 +91,9 @@
 
                                            knora-base:phone "123456" ;
 
-                                           knora-base:isActiveUser "false" ;
+                                           knora-base:isActiveUser "false"^^xsd:boolean ;
 
-                                           knora-base:isSystemAdmin "false" ;
+                                           knora-base:isSystemAdmin "false"^^xsd:boolean ;
 
                                            knora-base:preferredLanguage "de" .
 
@@ -235,7 +235,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:preferredLanguage "de" ;
 
-                                         knora-base:isActiveUser "true" ;
+                                         knora-base:isActiveUser "true"^^xsd:boolean ;
 
                                          knora-base:isInProject <http://data.knora.org/projects/77275339> .
 

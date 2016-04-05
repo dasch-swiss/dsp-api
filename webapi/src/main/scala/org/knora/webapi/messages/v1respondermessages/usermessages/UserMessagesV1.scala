@@ -57,24 +57,13 @@ case class CreateUserApiRequestV1(username: String,
 }
 
 /**
-  * Represents an API request payload that asks the Knora API server to update an existing user.
+  * Represents an API request payload that asks the Knora API server to update one property of an existing user.
   *
-  * @param username      the new username of the user to be updated.
-  * @param givenName     the new given name of the user to be updated.
-  * @param familyName    the new family name of the user to be updated.
-  * @param email         the new email address of the user to be updated.
-  * @param password      the new password of the user to be updated.
-  * @param isSystemAdmin the new system admin status of the user to be updated.
-  * @param lang          the new default language of the user to be updated.
+  * @param propertyIri  the property of the user to be updated.
+  * @param newValue     the new value for the property of the user to be updated.
   */
-case class UpdateUserApiRequestV1(username: Option[String],
-                                  givenName: Option[String],
-                                  familyName: Option[String],
-                                  email: Option[String],
-                                  password: Option[String],
-                                  isActiveUser: Option[Boolean],
-                                  isSystemAdmin: Option[Boolean],
-                                  lang: Option[String]) {
+case class UpdateUserApiRequestV1(propertyIri: String,
+                                  newValue: String) {
 
     def toJsValue = UserV1JsonProtocol.updateUserApiRequestV1Format.write(this)
 }
@@ -121,12 +110,14 @@ case class UserCreateRequestV1(newUserData: NewUserDataV1,
   * Request updating of an existing user.
   *
   * @param userIri the IRI of the user to be updated.
-  * @param updatedUserData a [[UpdatedUserDataV1]] containing only information that needs to be updated.
+  * @param propertyIri the IRI of the property to be updated.
+  * @param newValue the new value for the property.
   * @param userProfile the user profile of the user requesting the update.
   * @param apiRequestID the ID of the API request.
   */
 case class UserUpdateRequestV1(userIri: webapi.IRI,
-                               updatedUserData: UpdatedUserDataV1,
+                               propertyIri: webapi.IRI,
+                               newValue: Any,
                                userProfile: UserProfileV1,
                                apiRequestID: UUID) extends UsersResponderRequestV1
 
@@ -150,12 +141,16 @@ case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDat
   * @param userData basic information about the user.
   * @param groups   the groups that the user belongs to.
   * @param projects the projects that the user belongs to.
+  * @param isGroupAdminFor the groups for which the user has administrative privileges.
+  * @param isProjectAdminFor the projects for which the user has administrative privileges.
+  * @param sessionId the sessionId,.
   */
 case class UserProfileV1(userData: UserDataV1,
                          groups: Seq[IRI] = Nil,
                          projects: Seq[IRI] = Nil,
                          isGroupAdminFor: Seq[IRI] = Nil,
-                         isProjectAdminFor: Seq[IRI] = Nil) {
+                         isProjectAdminFor: Seq[IRI] = Nil,
+                         sessionId: Option[String] = None) {
 
     /**
       * Check password using either SHA-1 or BCrypt. The BCrypt password always starts with '$2a$'
@@ -230,7 +225,26 @@ case class UserProfileV1(userData: UserDataV1,
             groups = groups,
             projects = projects,
             isGroupAdminFor = Nil, // remove group admin information
-            isProjectAdminFor = Nil // remove project admin information
+            isProjectAdminFor = Nil, // remove project admin information
+            sessionId = None // remove session id
+        )
+    }
+
+    def getDigest: String = {
+        val md = java.security.MessageDigest.getInstance("SHA-1")
+        val time = System.currentTimeMillis().toString
+        val value = (time + userData.toString)getBytes("UTF-8")
+        md.digest(value).map("%02x".format(_)).mkString
+    }
+
+    def setSessionId(sessionId: String): UserProfileV1 = {
+        UserProfileV1(
+            userData = userData,
+            groups = groups,
+            projects = projects,
+            isGroupAdminFor = isGroupAdminFor,
+            isProjectAdminFor = isProjectAdminFor,
+            sessionId = Some(sessionId)
         )
     }
 }
@@ -312,9 +326,9 @@ case class UpdatedUserDataV1(username: Option[String] = None,
 object UserV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
     implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat10(UserDataV1)
-    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat5(UserProfileV1)
+    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
     implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat7(NewUserDataV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat8(CreateUserApiRequestV1)
-    implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat8(UpdateUserApiRequestV1)
+    implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat2(UpdateUserApiRequestV1)
     implicit val userCreateResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat3(UserOperationResponseV1)
 }
