@@ -257,7 +257,7 @@ case class SipiFileInfoGetResponseV1(permissionCode: Option[Int],
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
 object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
-    import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1respondermessages.usermessages.UserV1JsonProtocol._
 
     implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat3(SipiFileInfoGetResponseV1)
     implicit val sipiErrorConversionResponseFormat = jsonFormat2(SipiErrorConversionResponse)

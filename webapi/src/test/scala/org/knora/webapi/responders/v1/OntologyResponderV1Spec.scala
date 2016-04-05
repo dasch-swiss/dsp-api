@@ -582,7 +582,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val resourceTypesForNamedGraphIncunabula = ResourceTypesForNamedGraphResponseV1(
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("test"),
             firstname = Some("User"),
@@ -745,7 +745,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 false)
         ),
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("test"),
             firstname = Some("User"),
@@ -989,7 +989,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 Some("cols=60;wrap=soft;rows=3"),
                 Some("textarea"))),
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("test"),
             firstname = Some("User"),
