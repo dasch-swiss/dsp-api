@@ -233,8 +233,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsgPF(timeout) {
                     case UserOperationResponseV1(updatedUserProfile, requestingUserData, message) => {
                         // check if information was changed
-                        // canot actually check as the system admin status is striped
-                        assert(updatedUserProfile.userData.isSystemAdmin.equals(None))
+                        assert(updatedUserProfile.userData.isSystemAdmin.contains(true))
                     }
                 }
             }

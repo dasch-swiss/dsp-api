@@ -216,7 +216,7 @@ case class UserProfileV1(userData: UserDataV1,
             hashedpassword = None, // remove hashed password
             token = None, // remove token
             isActiveUser = olduserdata.isActiveUser,
-            isSystemAdmin = None, // remove system admin status
+            isSystemAdmin = olduserdata.isSystemAdmin,
             lang = olduserdata.lang
         )
 
@@ -224,8 +224,8 @@ case class UserProfileV1(userData: UserDataV1,
             userData = newuserdata,
             groups = groups,
             projects = projects,
-            isGroupAdminFor = Nil, // remove group admin information
-            isProjectAdminFor = Nil, // remove project admin information
+            isGroupAdminFor = isGroupAdminFor,
+            isProjectAdminFor = isProjectAdminFor,
             sessionId = None // remove session id
         )
     }
