@@ -9,7 +9,7 @@ import org.knora.webapi.store._
 import scala.concurrent.duration._
 
 /**
-  * Created by benjamingeer on 28/03/16.
+  * Tests the GraphDB triplestore consistency checking rules in webapi/scripts/KnoraRules.pie.
   */
 class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyCheckingSpec.config) with ImplicitSender {
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), STORE_MANAGER_ACTOR_NAME)
@@ -91,6 +91,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
 }
 
 object GraphDBConsistencyCheckingSpec {
+    // A string that's found in all consistency check error messages from GraphDB.
     private val CONSISTENCY_CHECK_ERROR = "Consistency check"
 
     private val config = ConfigFactory.parseString(
