@@ -120,6 +120,26 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     /**
+      * Creates a URL pointing to the given resource class icon. From the resource class Iri it gets the ontology specific path, i.e. the ontology name.
+      * If the resource class Iri is "http://www.knora.org/ontology/knora-base#Region", the ontology name would be "knora-base".
+      * To the base path, the icon name is appended. In case of a region with the icon name "region.gif",
+      * "http://salsahapp:port/project-icons-basepath/knora-base/region.gif" is returned.
+      *
+      * This method requires the Iri segment before the last slash to be a unique identifier for all the ontologies used with Knora..
+      *
+      * @param resourceClassIri the Iri of the resource class in question.
+      * @param iconsSrc the name of the icon file.
+      */
+    def makeResourceClassIconURL(resourceClassIri: IRI, iconsSrc: String): IRI = {
+        // get ontology name, e.g. "knora-base" from "http://www.knora.org/ontology/knora-base#Region"
+        // add +1 to ignore the slash
+        val ontologyName = resourceClassIri.substring(resourceClassIri.lastIndexOf('/') + 1, resourceClassIri.lastIndexOf('#'))
+
+        // create URL: combine salsah-address and port, project icons base path, ontology name, icon name
+        settings.baseSALSAHUrl + settings.projectIconsBasePath + ontologyName + '/' + iconsSrc
+    }
+
+    /**
       * Creates [[ValueProps]] from a List of [[VariableResultsRow]] representing a value object
       * (the triples where the given value object is the subject in).
       *
@@ -513,6 +533,32 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             referenceCount = predicates(OntologyConstants.KnoraBase.ValueHasRefCount).literals.head.toInt
         )
     }
+
+    /** Creates an attribute segment for the Salsah GUI from the given resource class.
+      * Example: if "http://www.knora.org/ontology/incunabula#book" is given, the function returns "restypeid=http://www.knora.org/ontology/incunabula#book".
+      *
+      * @param resourceClass the resource class.
+      * @return an attribute string to be included in the attributes for the GUI
+      */
+    def makeAttributeRestype(resourceClass: IRI) = {
+        OntologyConstants.SalsahGui.attributeNames.resourceClass + OntologyConstants.SalsahGui.attributeNames.assignmentOperator + resourceClass
+    }
+
+    /**
+      * Given a set of attribute segments representing assertions about the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property,
+      * combines the attributes into a string for use in an API v1 response.
+      *
+      * @param attributes the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property.
+      * @return a semicolon-delimited string containing the attributes, or [[None]] if no attributes were found.
+      */
+    def makeAttributeString(attributes: Set[String]): Option[String] = {
+        if (attributes.isEmpty) {
+            None
+        } else {
+            Some(attributes.mkString(";"))
+        }
+    }
+
 }
 
 /**

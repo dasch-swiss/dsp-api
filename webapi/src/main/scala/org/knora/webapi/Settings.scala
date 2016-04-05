@@ -37,6 +37,8 @@ import scala.concurrent.duration._
   */
 class SettingsImpl(config: Config) extends Extension {
     val baseApiUrl = config.getString("app.http.base-api-url")
+    val baseSALSAHUrl = config.getString("app.http.base-salsah-url")
+    val projectIconsBasePath = config.getString("app.http.project-icons-basepath")
     val httpInterface = config.getString("app.http.interface")
     val tmpDataDir = config.getString("app.tmp-datadir")
     val dataDir = config.getString("app.datadir")
@@ -116,12 +118,18 @@ class SettingsImpl(config: Config) extends Extension {
     lazy val projectNamedGraphs: Map[IRI, ProjectNamedGraphs] = {
         config.getConfigList("app.project-named-graphs").map(new ProjectNamedGraphs(_)).map(elem => (elem.project, elem)).toMap
     }
+
+    lazy val namedGraphs: Vector[ProjectNamedGraphs] = {
+        config.getConfigList("app.project-named-graphs").map(new ProjectNamedGraphs(_)).toVector
+    }
 }
 
 class ProjectNamedGraphs(params: Config) {
     val project: String = params.getString("project")
     val ontology: IRI = params.getString("ontology")
     val data: IRI = params.getString("data")
+    val name: String = params.getString("name")
+    val visibleInGUI = params.getBoolean("visibleInGUI")
 }
 
 object Settings extends ExtensionId[SettingsImpl] with ExtensionIdProvider {

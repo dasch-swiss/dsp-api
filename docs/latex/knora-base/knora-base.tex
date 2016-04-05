@@ -79,7 +79,7 @@
 \title{The Knora Base Ontology}
 \author{Lukas Rosenthaler, Benjamin Geer, Tobias Schweizer, Ivan Subotic\\Digital Humanities Lab, University of Basel}
 
-\date{26 January 2016}
+\date{11 March 2016}
 
 \begin{document}
 
@@ -225,7 +225,11 @@ Resources and values are associated with a project by means of the \texttt{kb:at
 
 \label{subsec:resources}
 
-Each project using the Knora base ontology defines its own OWL classes, derived from \texttt{kb:Resource}, to represent the types of data it deals with. Each project-specific resource class definition must use OWL cardinality restrictions to specify the properties that a given type of resource can have (see Section~\ref{subsec:cardinalities} for details). Properties that point to Knora values (see Section~\ref{subsec:values}) must be derived from \texttt{kb:hasValue}, and properties that point to other resources must be derived from \texttt{kb:hasLinkTo}. A few such properties are defined in the Knora base ontology, but projects typically need to define many of their own properties. Each property definition must specify the types that its subjects and objects must belong to (see Section~\ref{subsec:property-restrictions} for details).
+All the content produced by a project (e.g. digitised primary source materials or research data) must be stored in objects that belong to subclasses of \texttt{kb:Resource}, so that the Knora API server can query and update that content. Each project using the Knora base ontology must define its own OWL classes, derived from \texttt{kb:Resource}, to represent the types of data it deals with.
+
+Resources have properties that point to different parts of the content they contain. For example, a resource representing a book could have a property called \texttt{hasAuthor}, pointing to the author of the book. There are two possible kinds of content in a Knora resource: Knora values (see Section~\ref{subsec:values}) or links to other resources (see Section~\ref{sec:links}). Properties that point to Knora values must be subproperties of \texttt{kb:hasValue}, and properties that point to other resources must be subproperties of \texttt{kb:hasLinkTo}. \todo{Add a list of the Knora properties that projects are, and are not, allowed to use directly, and explain why.} Each property definition must specify the types that its subjects and objects must belong to (see Section~\ref{subsec:property-restrictions} for details).
+
+Each project-specific resource class definition must use OWL cardinality restrictions to specify the properties that resources of that class can have (see Section~\ref{subsec:cardinalities} for details).
 
 Resources are not versioned; only their values are versioned (see Section~\ref{subsec:values}). A resource can be marked as deleted. It then remains in the repository, but becomes invisible to ordinary queries. It cannot be undeleted, because even though resources are not versioned, it is necessary to be able to find out when a resource was deleted. If desired, a new resource can be created by copying data from a deleted resource.
 
@@ -274,11 +278,11 @@ The more flexible approach, which is allowed by the Knora base ontology and will
 
 The Knora base ontology defines a set of OWL classes that are derived from \texttt{kb:Value} and represent different types of structured values found in humanities data. This set of classes may not be extended by project-specific ontologies.
 
-A value is always part of one particular resource, which points to it using some property derived from \texttt{hasValue}. For example, a project-specific ontology could specify a \texttt{Book} class with a property \texttt{hasSummary} (derived from \texttt{hasValue}), and that property could have a \texttt{knora-base:objectClassConstraint} of \texttt{TextValue}. This would mean that the summary of each book is represented as a \texttt{TextValue}.
+A value is always part of one particular resource, which points to it using some property derived from \texttt{hasValue}. For example, a project-specific ontology could specify a \texttt{Book} class with a property \texttt{hasSummary} (derived from \texttt{hasValue}), and that property could have a \texttt{knora-base:object\-Class\-Constraint} of \texttt{TextValue}. This would mean that the summary of each book is represented as a \texttt{TextValue}.
 
 Knora values are versioned. Existing values are not modified. Instead, a new version of an existing value is created. The new version is linked to the old version via the \texttt{previousValue} property.
 
-\enquote{Deleting} a value means creating a new version, marked with \texttt{kb:isDeleted} and pointing to the previous version. A triple then points from the containing resource to this new, deleted version of the value, which remains in the repository but is invisible to ordinary queries. To simplify the enforcement of ontology constraints, and for consistency with resource updates, no new versions of a deleted value can be made; it is not possible to undelete. Instead, if desired, a new value can be created by copying data from a deleted value.
+\enquote{Deleting} a value means creating a new version, marked with \texttt{kb:is\-Deleted} and pointing to the previous version. A triple then points from the containing resource to this new, deleted version of the value, which remains in the repository but is invisible to ordinary queries. To simplify the enforcement of ontology constraints, and for consistency with resource updates, no new versions of a deleted value can be made; it is not possible to undelete. Instead, if desired, a new value can be created by copying data from a deleted value.
 
 \subsubsection{Properties of Value}
 

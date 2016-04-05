@@ -239,7 +239,14 @@
 ###  http://www.knora.org/ontology/knora-base#hasExtResValue
 
 :hasExtResValue rdf:type owl:ObjectProperty ;
-                
+
+                rdfs:label "hat externen Wert"@de ,
+                           "has external Value"@en ,
+                           "a valeur externe"@fr ,
+                           "ha valore esterno"@it ;
+
+                :objectClassConstraint :ExternalResValue ;
+
                 :subjectClassConstraint :ExternalResource ;
                 
                 rdfs:subPropertyOf :hasValue .
@@ -250,6 +257,11 @@
 :hasFileValue rdf:type owl:ObjectProperty ;
               
               :objectClassConstraint :FileValue ;
+
+              rdfs:label "hat Repräsentation (Datei)"@de ,
+                         "has Representation (File)"@en ,
+                         "a Répresentation (File)"@fr ,
+                         "ha Rappresentazione (File)"@it ;
               
               :subjectClassConstraint :Representation ;
               
@@ -260,6 +272,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasStillImageFileValue
 
 :hasStillImageFileValue rdf:type owl:ObjectProperty ;
+
+              rdfs:label "hat Repräsentation (Bild)"@de ,
+                         "has Representation (Image)"@en ,
+                         "a Répresentation (image)"@fr ,
+                         "ha Rappresentazione (imagine)"@it ;
               
               :objectClassConstraint :StillImageFileValue ;
               
@@ -272,6 +289,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasMovingImageFileValue
 
 :hasMovingImageFileValue rdf:type owl:ObjectProperty ;
+
+              rdfs:label "hat Repräsentation (Film)"@de ,
+                         "has Representation (Movie)"@en ,
+                         "a Répresentation (film)"@fr ,
+                         "ha Rappresentazione (film)"@it ;
               
               :objectClassConstraint :MovingImageFileValue ;
               
@@ -284,7 +306,12 @@
 ###  http://www.knora.org/ontology/knora-base#hasAudioFileValue
 
 :hasAudioFileValue rdf:type owl:ObjectProperty ;
-              
+
+              rdfs:label "hat Repräsentation (Audio)"@de ,
+                         "has Representation (Audio)"@en ,
+                         "a Répresentation (Audio)"@fr ,
+                         "ha Rappresentazione (Audio)"@it ;
+
               :objectClassConstraint :AudioFileValue ;
               
               :subjectClassConstraint :AudioRepresentation ;
@@ -296,6 +323,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasDDDFileValue
 
 :hasDDDFileValue rdf:type owl:ObjectProperty ;
+
+              rdfs:label "hat Repräsentation (3D)"@de ,
+                         "has Representation (3D)"@en ,
+                         "a Répresentation (3D)"@fr ,
+                         "ha Rappresentazione (3D)"@it ;
               
               :objectClassConstraint :DDDFileValue ;
               
@@ -308,6 +340,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasTextFileValue
 
 :hasTextFileValue rdf:type owl:ObjectProperty ;
+
+              rdfs:label "hat Repräsentation (Text)"@de ,
+                         "has Representation (Text)"@en ,
+                         "a Répresentation (Texte)"@fr ,
+                         "ha Rappresentazione (Testo)"@it ;
               
               :objectClassConstraint :TextFileValue ;
               
@@ -320,6 +357,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasDocumentFileValue
 
 :hasDocumentFileValue rdf:type owl:ObjectProperty ;
+
+              rdfs:label "hat Repräsentation (Dokument)"@de ,
+                         "has Representation (Document)"@en ,
+                         "a Répresentation (Document)"@fr ,
+                         "ha Rappresentazione (Documento)"@it ;
               
               :objectClassConstraint :DocumentFileValue ;
               
@@ -353,6 +395,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasLinkTo
 
 :hasLinkTo rdf:type owl:ObjectProperty ;
+
+           rdfs:label "hat Link zu"@de ,
+                      "has Link to"@en ,
+                      "a lien vers"@fr ,
+                      "ha Link verso"@it ;
            
            rdfs:comment "Represents a direct connection between two resources"@en ;
            
@@ -401,6 +448,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasPart
 
 :hasPart rdf:type owl:ObjectProperty ;
+
+         rdfs:label "hat Teil"@de ,
+                       "has Part"@en ,
+                       "a Part"@fr ,
+                       "ha Parte"@it ;
          
          rdfs:comment "Indicates that another resource is part of this resource"@en ;
          
@@ -451,6 +503,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasProvider
 
 :hasProvider rdf:type owl:ObjectProperty ;
+
+             rdfs:label "hat Provider"@de ,
+                        "has Provider"@en ,
+                        "a Provider"@fr ,
+                        "ha Provider"@it ;
              
              :objectClassConstraint :ExternalResValue ;
              
@@ -465,6 +522,11 @@
 :hasRegion rdf:type owl:ObjectProperty ;
            
            rdfs:comment "Points to a region of the resource"@en ;
+
+           rdfs:label "hat Region"@de ,
+                      "has Region"@en ,
+                      "a Région"@fr ,
+                      "ha Regione"@it ;
            
            :objectClassConstraint :Region ;
            
@@ -491,7 +553,12 @@
 ###  http://www.knora.org/ontology/knora-base#hasRepresentation
 
 :hasRepresentation rdf:type owl:ObjectProperty ;
-                   
+
+                   rdfs:label "hat Repräsentation"@de ,
+                              "has Representation"@en ,
+                              "a Répresentation"@fr ,
+                              "ha Rappresentazione"@it ;
+
                    rdfs:comment "References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."@en ;
                    
                    :objectClassConstraint :Representation ;
@@ -527,6 +594,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasStandoffLinkTo
 
 :hasStandoffLinkTo rdf:type owl:ObjectProperty ;
+
+                   rdfs:label "hat Standoff Link zu"@de ,
+                              "has Standoff Link to"@en ,
+                              "a standoff lien vers"@fr ,
+                              "ha standoff link verso"@it ;
                    
                    :objectClassConstraint :Resource ;
                    
@@ -581,6 +653,11 @@
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOf
 
 :isAnnotationOf rdf:type owl:ObjectProperty ;
+
+                rdfs:label "ist Annotation von"@de ,
+                           "is Annotation of"@en ,
+                           "est Annotation de"@fr ,
+                           "è Annotation di"@it ;
                 
                 :subjectClassConstraint :Annotation ;
                 
@@ -588,11 +665,25 @@
                 
                 rdfs:subPropertyOf :hasLinkTo .
 
+###  http://www.knora.org/ontology/knora-base#isAnnotationOfValue
+
+:isAnnotationOfValue rdf:type owl:ObjectProperty ;
+
+               :objectClassConstraint :LinkValue ;
+
+               :subjectClassConstraint :Annotation ;
+
+               rdfs:subPropertyOf :hasLinkToValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#isPartOf
 
 :isPartOf rdf:type owl:ObjectProperty ;
+
+          rdfs:label "ist Teil von"@de ,
+                     "is part of"@en ,
+                     "fait partie de"@fr ,
+                     "fa parte di"@it ;
           
           rdfs:comment "Indicates that this resource is part of another resource"@en ;
           
@@ -621,6 +712,11 @@
 :isRegionOf rdf:type owl:ObjectProperty ;
             
             rdfs:comment "Region of interest within a digital object (e.g. an image)"@en ;
+
+            rdfs:label "is Region von"@de ,
+                       "is Region of"@en ,
+                       "est Région de"@fr ,
+                       "e Region di"@it ;
             
             :subjectClassConstraint :Region ;
             
@@ -1698,7 +1794,17 @@
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :isAnnotationOf ;
                               owl:minCardinality "1"^^xsd:nonNegativeInteger
-                            ] ;
+                            ] ,
+                            [ rdf:type owl:Restriction ;
+                              owl:onProperty :isAnnotationOfValue ;
+                              owl:minCardinality "1"^^xsd:nonNegativeInteger
+                            ]
+                            ;
+
+            rdfs:label "Annotation"@de ,
+                       "Annotation"@en ,
+                       "Annotation"@fr ,
+                       "Annotation"@it ;
             
             rdfs:comment "A generic class for representing annotations"@en .
 
@@ -1731,6 +1837,11 @@
                                   owl:onProperty :hasAudioFileValue ;
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
+
+                     rdfs:label "Repräsentation (Audio)"@de ,
+                                "Representation (Audio)"@en ,
+                                "Répresentation (Audio)"@fr ,
+                                "Rappresentazione (Audio)"@it ;
                      
                      rdfs:comment "Represents a file containing audio data"@en .
 
@@ -1777,7 +1888,12 @@
                                   owl:onProperty :hasDDDFileValue ;
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
-                   
+
+                   rdfs:label "Repräsentation (3D)"@de ,
+                                              "Representation (3D)"@en ,
+                                              "Répresentation (3D)"@fr ,
+                                              "Rappresentazione (3D)"@it ;
+
                    rdfs:comment "Represents a file containg 3D data"@en .
 
 
@@ -1827,6 +1943,11 @@
 ###  http://www.knora.org/ontology/knora-base#DocumentRepresentation
 
 :DocumentRepresentation rdf:type owl:Class ;
+
+                        rdfs:label "Repräsentation (Dokument)"@de ,
+                                   "Representation (Document)"@en ,
+                                   "Répresentation (Document)"@fr ,
+                                   "Rappresentazione (Documento)"@it ;
                         
                         rdfs:subClassOf :Representation ,
                                 [ rdf:type owl:Restriction ;
@@ -1865,6 +1986,11 @@
                                     owl:onProperty :hasExtResValue ;
                                     owl:cardinality "1"^^xsd:nonNegativeInteger
                                   ] ;
+
+                  rdfs:label "Externe Ressource"@de ,
+                             "External Resource"@en ,
+                             "Ressource Externe"@fr ,
+                             "Risorsa esterna"@it ;
                   
                   rdfs:comment "Represents a proxy for an object stored by an external provider"@en .
 
@@ -2044,7 +2170,7 @@
                          ] ;
          
          :resourceIcon "link.gif"^^xsd:string ;
-         
+
          rdfs:comment "Verknüpfung mehrerer Resourcen"@de ,
                       "Represents a generic link object"@en .
 
@@ -2165,6 +2291,11 @@
                                   owl:onProperty :hasMovingImageFileValue ;
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
+
+                           rdfs:label "Repräsentation (Video)"@de ,
+                                      "Representation (Movie)"@en ,
+                                      "Répresentation (Film)"@fr ,
+                                      "Rappresentazione (Film)"@it ;
                            
                            rdfs:comment "A resource containing moving image data"@en .
 
@@ -2216,6 +2347,11 @@
                                   owl:onProperty :hasFileValue ;
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
+
+                rdfs:label "Repräsentation"@de ,
+                           "Representation"@en ,
+                           "Répresentation"@fr ,
+                           "Rappresentazione"@it ;
                 
                 rdfs:comment "A resource that can store one or more FileValues"@en .
 
@@ -2261,6 +2397,11 @@
                             owl:onProperty :deleteDate ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
+
+          rdfs:label "Ressource"@de ,
+                     "Resource"@en ,
+                     "Ressource"@fr ,
+                     "Risorsa"@it ;
           
           rdfs:comment "Represents something in the world, or an abstract thing"@en .
 
@@ -2282,7 +2423,7 @@
                             owl:onProperty :standoffHasAttribute ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
-          
+
           rdfs:comment "Represents a standoff markup attribute in a TextValue"@en .
 
 
@@ -2354,7 +2495,12 @@
                                   owl:onProperty :hasStillImageFileValue ;
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
-                          
+
+                          rdfs:label "Repräsentation (Bild)"@de ,
+                                     "Representation (Image)"@en ,
+                                     "Répresentation (Image)"@fr ,
+                                     "Rappresentazione (Imagine)"@it ;
+
                           rdfs:comment "A resource that can contain two-dimensional still image files"@en .
 
 
@@ -2378,6 +2524,11 @@
 :TextRepresentation rdf:type owl:Class ;
                     
                     rdfs:subClassOf :Representation ;
+
+                    rdfs:label "Repräsentation (Text)"@de ,
+                                               "Representation (Text)"@en ,
+                                               "Répresentation (Texte)"@fr ,
+                                               "Rappresentazione (testo)"@it ;
                     
                     rdfs:comment "A resource containing text files"@en .
 

@@ -179,6 +179,31 @@
 
             SALSAH.ApiPost('session', {username: $('#user_id').val(), password: $('#password').val()}, authorization, function(data) {
 				if (data.status == ApiErrors.OK) {
+
+					// The login to Knora is successful.
+					// Now do a request to Sipi providing the Knora session id.
+					// When retrieving a file from Sipi (e.g. an IIIF URL), Sipi can send the session id to Knora with the request,
+					// identifying the user that is making the request to Knora.
+					$.ajax({
+						url: SIPI_URL + SIPI_LOGIN_ROUTE,
+						type: "POST",
+						data: {
+							sid: data.sid
+						},
+						xhrFields: {
+							withCredentials: true
+						},
+						success: function(data) {
+							if (data.status != ApiErrors.OK) {
+								// request to Sipi was not successful
+								alert(data.message)
+							}
+						},
+						error: function() {
+							alert("Call to Sipi failed")
+						}
+					});
+
 					$('#dologin').simpledialog('loginbox', 'close');
 					SALSAH.reload_css();
 					$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userdata.username)
@@ -197,6 +222,25 @@
 		$('#logout_button').on('click', function() {
             SALSAH.ApiDelete('session', function(data) {
 				if (data.status == ApiErrors.OK) {
+
+					// invalidate cookie obtained from Sipi when logging in to Knora
+					$.ajax({
+						url: SIPI_URL + SIPI_LOGOUT_ROUTE,
+						type: "POST",
+						xhrFields: {
+							withCredentials: true
+						},
+						success: function(data) {
+							if (data.status != ApiErrors.OK) {
+								// request to Sipi was not successful
+								alert("Invalidating Sipi cookie failed")
+							}
+						},
+						error: function() {
+							alert("Call to Sipi failed")
+						}
+					});
+
 					$('#dologut').simpledialog('logoutbox', 'close');
 					SALSAH.reload_css();
 					$('#userctrl').empty().append($('<img>').attr({id: 'dologin', src: 'app/icons/24x24/user.png', title: s_('_login')})

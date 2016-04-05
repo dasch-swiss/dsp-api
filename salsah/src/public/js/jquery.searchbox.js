@@ -141,7 +141,8 @@
 						numprops: 1,
 						clickCB: undefined,
 						newEntryAllowed: true,
-						newEntrySelectedCB: undefined
+						newEntrySelectedCB: undefined,
+						minimumChars: 3 // minimum length of search string
 					};
 					localdata.ele = {};
 
@@ -224,6 +225,13 @@
 							$this.css({cursor: 'text'});
 						}
 						var searchstr = $(this).val();
+
+						if (searchstr.length < localdata.settings.minimumChars) {
+							// search string is not long enough
+							localdata.ele.sel.empty();
+							return;
+						}
+
 						$this.css({cursor: 'wait'});
 
 						window.status =  localdata.settings.restype_id + ' ' + searchstr;

@@ -15,7 +15,9 @@
  */
 
 var API_URL = 'http://localhost:3333';
-
+var SIPI_URL = 'http://localhost:1024';
+var SIPI_LOGIN_ROUTE = '/Knora_login';
+var SIPI_LOGOUT_ROUTE = '/Knora_logout';
 
 /*
  * let's find the SITE_URL...
@@ -46,16 +48,17 @@ var extendedsearch_window_title = "Erweiterte Suche";
 var addresource_window_title = "addresource";
 
 var VALTYPE_TEXT = "http://www.knora.org/ontology/knora-base#TextValue";
-var VALTYPE_INTEGER = 2;
-var VALTYPE_FLOAT = 3;
+var VALTYPE_INTEGER = "http://www.knora.org/ontology/knora-base#IntValue";
+var VALTYPE_FLOAT = "http://www.knora.org/ontology/knora-base#FloatValue";
 var VALTYPE_DATE = "http://www.knora.org/ontology/knora-base#DateValue";
 var VALTYPE_PERIOD = 5;
-var VALTYPE_RESPTR = "http://www.knora.org/ontology/knora-base#Resource";
-var VALTYPE_TIME = 8;
-var VALTYPE_INTERVAL = 9;
-var VALTYPE_GEOMETRY = 10;
-var VALTYPE_COLOR = 11;
+var VALTYPE_RESPTR = "http://www.knora.org/ontology/knora-base#LinkValue";
+var VALTYPE_TIME = "http://www.knora.org/ontology/knora-base#TimeValue";
+var VALTYPE_INTERVAL = "http://www.knora.org/ontology/knora-base#IntervalValue";
+var VALTYPE_GEOMETRY = "http://www.knora.org/ontology/knora-base#GeomValue";
+var VALTYPE_COLOR = "http://www.knora.org/ontology/knora-base#ColorValue";
 var VALTYPE_HLIST = "http://www.knora.org/ontology/knora-base#ListValue";
+//var VALTYPE_SELECTION = "http://www.knora.org/ontology/knora-base#ListValue"; // VALTYPE_SELECTION can be treated like a hierarchical list
 var VALTYPE_ICONCLASS = 13;
 var VALTYPE_RICHTEXT = 14;
 var VALTYPE_GEONAME = 15;
