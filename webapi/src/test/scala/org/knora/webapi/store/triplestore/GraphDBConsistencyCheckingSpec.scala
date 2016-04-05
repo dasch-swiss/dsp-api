@@ -68,6 +68,23 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
             }
         }
 
+        "not create a new resource with a property that cannot have a resource as a subject" in {
+            storeManager ! SparqlUpdateRequest(GraphDBConsistencyCheckingSpec.wrongSubjectClass)
+
+            expectMsgPF(timeout) {
+                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+                    msg.contains(s"${GraphDBConsistencyCheckingSpec.CONSISTENCY_CHECK_ERROR} subject_class_constraint") should ===(true)
+            }
+        }
+
+        "not create a new resource with properties whose objects have the wrong types" in {
+            storeManager ! SparqlUpdateRequest(GraphDBConsistencyCheckingSpec.wrongObjectClass)
+
+            expectMsgPF(timeout) {
+                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+                    msg.contains(s"${GraphDBConsistencyCheckingSpec.CONSISTENCY_CHECK_ERROR} object_class_constraint") should ===(true)
+            }
+        }
     } else {
         s"Not running GraphDBConsistencyCheckingSpec with triplestore type ${settings.triplestoreType}" in {}
     }
@@ -1951,6 +1968,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
+          |        ?resource ?property1 ?newValue1 .
           |
           |
           |
@@ -2117,4 +2135,597 @@ object GraphDBConsistencyCheckingSpec {
           |
           |}
         """.stripMargin
+
+
+    private val wrongSubjectClass =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |INSERT {
+          |    GRAPH ?dataNamedGraph {
+          |        ?resource rdf:type ?resourceClass ;
+          |            knora-base:valueHasString "A resource is not allowed to have a valueHasString property" ;
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |			   knora-base:lastModificationDate ?currentTime ;
+          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToProject ?projectIri ;
+          |            rdfs:label ?label ;
+          |
+          |
+          |
+          |                <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> ;
+          |
+          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#Owner> ;
+          |
+          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> ;
+          |
+          |                <http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> ;
+          |
+          |
+          |            knora-base:creationDate ?currentTime .
+          |
+          |
+          |
+          |        # Value 0
+          |        # Property: http://www.knora.org/ontology/incunabula#title
+          |
+          |
+          |        ?newValue0 rdf:type ?valueType0 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |
+          |
+          |
+          |                ?newValue0 knora-base:valueHasString "A beautiful book" .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
+          |
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
+          |
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
+          |
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
+          |
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
+          |
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |
+          |
+          |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
+          |                             knora-base:valueCreationDate ?currentTime .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |        ?resource ?property0 ?newValue0 .
+          |
+          |
+          |
+          |
+          |        # Value 1
+          |        # Property: http://www.knora.org/ontology/incunabula#pubdate
+          |
+          |
+          |        ?newValue1 rdf:type ?valueType1 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |
+          |
+          |
+          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
+          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                                     knora-base:valueHasStartPrecision "DAY" ;
+          |                                     knora-base:valueHasEndPrecision "DAY" ;
+          |                                     knora-base:valueHasCalendar "GREGORIAN" ;
+          |                                     knora-base:valueHasString "2015-12-03" .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
+          |
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
+          |
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
+          |
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
+          |
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
+          |
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |
+          |
+          |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
+          |                             knora-base:valueCreationDate ?currentTime .
+          |
+          |
+          |
+          |
+          |        ?resource ?property1 ?newValue1 .
+          |
+          |
+          |
+          |
+          |        # Value 6
+          |        # Property: http://www.knora.org/ontology/incunabula#publoc
+          |
+          |
+          |        ?newValue6 rdf:type ?valueType6 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |
+          |
+          |
+          |                ?newValue6 knora-base:valueHasString "Entenhausen" .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
+          |
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
+          |
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
+          |
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
+          |
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
+          |
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |
+          |
+          |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
+          |                             knora-base:valueCreationDate ?currentTime .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |        ?resource ?property6 ?newValue6 .
+          |
+          |
+          |    }
+          |}
+          |
+          |
+          |    USING <http://www.ontotext.com/explicit>
+          |
+          |WHERE {
+          |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
+          |    BIND(IRI("http://data.knora.org/wrongSubjectClass") AS ?resource)
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
+          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
+          |    BIND(str("Test-Book") AS ?label)
+          |    BIND(NOW() AS ?currentTime)
+          |
+          |
+          |
+          |    # Value 0
+          |    # Property: http://www.knora.org/ontology/incunabula#title
+          |
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#title") AS ?property0)
+          |    BIND(IRI("http://data.knora.org/wrongSubjectClass/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0)
+          |
+          |
+          |
+          |    ?property0 knora-base:objectClassConstraint ?propertyRange0 .
+          |    ?valueType0 rdfs:subClassOf* ?propertyRange0 .
+          |
+          |
+          |
+          |    ?resourceClass rdfs:subClassOf* ?restriction0 .
+          |    ?restriction0 a owl:Restriction .
+          |    ?restriction0 owl:onProperty ?property0 .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |            BIND(0 AS ?nextOrder0)
+          |
+          |
+          |
+          |
+          |
+          |
+          |    # Value 1
+          |    # Property: http://www.knora.org/ontology/incunabula#pubdate
+          |
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#pubdate") AS ?property1)
+          |    BIND(IRI("http://data.knora.org/wrongSubjectClass/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#DateValue") AS ?valueType1)
+          |
+          |
+          |
+          |    ?property1 knora-base:objectClassConstraint ?propertyRange1 .
+          |    ?valueType1 rdfs:subClassOf* ?propertyRange1 .
+          |
+          |
+          |
+          |    ?resourceClass rdfs:subClassOf* ?restriction1 .
+          |    ?restriction1 a owl:Restriction .
+          |    ?restriction1 owl:onProperty ?property1 .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |            BIND(0 AS ?nextOrder1)
+          |
+          |
+          |
+          |
+          |
+          |    # Value 6
+          |    # Property: http://www.knora.org/ontology/incunabula#publoc
+          |
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#publoc") AS ?property6)
+          |    BIND(IRI("http://data.knora.org/wrongSubjectClass/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType6)
+          |
+          |
+          |
+          |    ?property6 knora-base:objectClassConstraint ?propertyRange6 .
+          |    ?valueType6 rdfs:subClassOf* ?propertyRange6 .
+          |
+          |
+          |
+          |    ?resourceClass rdfs:subClassOf* ?restriction6 .
+          |    ?restriction6 a owl:Restriction .
+          |    ?restriction6 owl:onProperty ?property6 .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |            BIND(0 AS ?nextOrder6)
+          |
+          |
+          |
+          |}
+        """.stripMargin
+
+
+    private val wrongObjectClass =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |INSERT {
+          |    GRAPH ?dataNamedGraph {
+          |        ?resource rdf:type ?resourceClass ;
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |			   knora-base:lastModificationDate ?currentTime ;
+          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToProject ?projectIri ;
+          |            rdfs:label ?label ;
+          |
+          |
+          |
+          |                <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> ;
+          |
+          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#Owner> ;
+          |
+          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> ;
+          |
+          |                <http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> ;
+          |
+          |
+          |            knora-base:creationDate ?currentTime .
+          |
+          |
+          |
+          |        # Value 0
+          |        # Property: http://www.knora.org/ontology/incunabula#title
+          |
+          |
+          |        ?newValue0 rdf:type ?valueType0 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |
+          |
+          |
+          |                ?newValue0 knora-base:valueHasString "A beautiful book" .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
+          |
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
+          |
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
+          |
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
+          |
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
+          |
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |
+          |
+          |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
+          |                             knora-base:valueCreationDate ?currentTime .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |        ?resource ?property1 ?newValue0 .
+          |
+          |
+          |
+          |
+          |        # Value 1
+          |        # Property: http://www.knora.org/ontology/incunabula#pubdate
+          |
+          |
+          |        ?newValue1 rdf:type ?valueType1 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |
+          |
+          |
+          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
+          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                                     knora-base:valueHasStartPrecision "DAY" ;
+          |                                     knora-base:valueHasEndPrecision "DAY" ;
+          |                                     knora-base:valueHasCalendar "GREGORIAN" ;
+          |                                     knora-base:valueHasString "2015-12-03" .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
+          |
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
+          |
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
+          |
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
+          |
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
+          |
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |
+          |
+          |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
+          |                             knora-base:valueCreationDate ?currentTime .
+          |
+          |
+          |
+          |
+          |        ?resource ?property0 ?newValue1 .
+          |
+          |
+          |
+          |
+          |        # Value 6
+          |        # Property: http://www.knora.org/ontology/incunabula#publoc
+          |
+          |
+          |        ?newValue6 rdf:type ?valueType6 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |
+          |
+          |
+          |                ?newValue6 knora-base:valueHasString "Entenhausen" .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
+          |
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
+          |
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
+          |
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
+          |
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
+          |
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |
+          |
+          |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
+          |                             knora-base:valueCreationDate ?currentTime .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |        ?resource ?property6 ?newValue6 .
+          |
+          |    }
+          |}
+          |
+          |
+          |    USING <http://www.ontotext.com/explicit>
+          |
+          |WHERE {
+          |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
+          |    BIND(IRI("http://data.knora.org/wrongObjectClass") AS ?resource)
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
+          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
+          |    BIND(str("Test-Book") AS ?label)
+          |    BIND(NOW() AS ?currentTime)
+          |
+          |
+          |
+          |    # Value 0
+          |    # Property: http://www.knora.org/ontology/incunabula#title
+          |
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#title") AS ?property0)
+          |    BIND(IRI("http://data.knora.org/wrongObjectClass/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0)
+          |
+          |
+          |
+          |    ?property0 knora-base:objectClassConstraint ?propertyRange0 .
+          |    ?valueType0 rdfs:subClassOf* ?propertyRange0 .
+          |
+          |
+          |
+          |    ?resourceClass rdfs:subClassOf* ?restriction0 .
+          |    ?restriction0 a owl:Restriction .
+          |    ?restriction0 owl:onProperty ?property0 .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |            BIND(0 AS ?nextOrder0)
+          |
+          |
+          |
+          |
+          |
+          |
+          |    # Value 1
+          |    # Property: http://www.knora.org/ontology/incunabula#pubdate
+          |
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#pubdate") AS ?property1)
+          |    BIND(IRI("http://data.knora.org/wrongObjectClass/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#DateValue") AS ?valueType1)
+          |
+          |
+          |
+          |    ?property1 knora-base:objectClassConstraint ?propertyRange1 .
+          |    ?valueType1 rdfs:subClassOf* ?propertyRange1 .
+          |
+          |
+          |
+          |    ?resourceClass rdfs:subClassOf* ?restriction1 .
+          |    ?restriction1 a owl:Restriction .
+          |    ?restriction1 owl:onProperty ?property1 .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |            BIND(0 AS ?nextOrder1)
+          |
+          |
+          |
+          |
+          |
+          |    # Value 6
+          |    # Property: http://www.knora.org/ontology/incunabula#publoc
+          |
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#publoc") AS ?property6)
+          |    BIND(IRI("http://data.knora.org/wrongObjectClass/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType6)
+          |
+          |
+          |
+          |    ?property6 knora-base:objectClassConstraint ?propertyRange6 .
+          |    ?valueType6 rdfs:subClassOf* ?propertyRange6 .
+          |
+          |
+          |
+          |    ?resourceClass rdfs:subClassOf* ?restriction6 .
+          |    ?restriction6 a owl:Restriction .
+          |    ?restriction6 owl:onProperty ?property6 .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |            BIND(0 AS ?nextOrder6)
+          |
+          |
+          |
+          |}
+        """.stripMargin
+
 }
