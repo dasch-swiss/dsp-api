@@ -32,7 +32,6 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
 import scala.collection.breakOut
-import scala.collection.immutable.Iterable
 import scala.concurrent.Future
 
 /**
@@ -45,6 +44,7 @@ class OntologyResponderV1 extends ResponderV1 {
 
     private val OntologyCacheName = "ontologyCache"
     private val knoraIriUtil = new KnoraIriUtil
+    private val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
       * This was used to query the named graphs in SPARQL. In the future, we may need it again.
@@ -65,7 +65,7 @@ class OntologyResponderV1 extends ResponderV1 {
         /**
           * The type of ontology cache keys for instances of [[ResourceEntityInfoV1]].
           *
-          * @param resourceClassIri the IRI of the resource class described.
+          * @param resourceClassIri  the IRI of the resource class described.
           * @param preferredLanguage the user's preferred language, which the key's value will use if it was available.
           */
         class ResourceEntityInfoKey(val resourceClassIri: IRI, val preferredLanguage: String) extends Ordered[ResourceEntityInfoKey] {
@@ -91,7 +91,7 @@ class OntologyResponderV1 extends ResponderV1 {
         /**
           * The type of ontology cache keys for instances of [[PropertyEntityInfoV1]].
           *
-          * @param propertyIri the IRI of the property described.
+          * @param propertyIri       the IRI of the property described.
           * @param preferredLanguage the user's preferred language, which the key's value will use if it was available.
           */
         class PropertyEntityInfoKey(val propertyIri: IRI, val preferredLanguage: String) extends Ordered[PropertyEntityInfoKey] {
@@ -114,6 +114,31 @@ class OntologyResponderV1 extends ResponderV1 {
             override def toString: String = s"PropertyEntityInfoKey($propertyIri, $preferredLanguage)"
         }
 
+        /**
+          * The type of ontology cache keys for instances of [[NamedGraphEntityInfoV1]].
+          *
+          * @param namedGraphIri the Iri of the named graph.
+          */
+        class NamedGraphInfoKey(val namedGraphIri: IRI) extends Ordered[NamedGraphInfoKey] {
+            def compare(that: NamedGraphInfoKey): Int = {
+                (this.namedGraphIri) compare (that.namedGraphIri)
+            }
+
+            override def equals(that: Any): Boolean = {
+                that match {
+                    case otherEntityInfoKey: NamedGraphInfoKey =>
+                        this.namedGraphIri == otherEntityInfoKey.namedGraphIri
+                    case _ => false
+                }
+            }
+
+            override def hashCode(): Int = {
+                new HashCodeBuilder(21, 41).append(namedGraphIri).toHashCode
+            }
+
+            override def toString: String = s"NamedGraphInfoKey($namedGraphIri)"
+        }
+
     }
 
     /**
@@ -125,6 +150,10 @@ class OntologyResponderV1 extends ResponderV1 {
         case EntityInfoGetRequestV1(resourceIris, propertyIris, userProfile) => future2Message(sender(), getEntityInfoResponseV1(resourceIris, propertyIris, userProfile), log)
         case ResourceTypeGetRequestV1(resourceTypeIri, userProfile) => future2Message(sender(), getResourceTypeResponseV1(resourceTypeIri, userProfile), log)
         case checkSubClassRequest: CheckSubClassRequestV1 => future2Message(sender(), checkSubClass(checkSubClassRequest), log)
+        case NamedGraphsGetRequestV1(userProfile) => future2Message(sender(), getNamedGraphs(userProfile), log)
+        case ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getResourceTypesForNamedGraph(namedGraphIri, userProfile), log)
+        case PropertyTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getPropertyTypesForNamedGraph(namedGraphIri, userProfile), log)
+        case PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile) => future2Message(sender(), getPropertyTypesForResourceType(restypeId, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -388,20 +417,6 @@ class OntologyResponderV1 extends ResponderV1 {
       * @return a [[ResourceTypeResponseV1]].
       */
     private def getResourceTypeResponseV1(resourceTypeIri: String, userProfile: UserProfileV1): Future[ResourceTypeResponseV1] = {
-        /**
-          * Given a [[PredicateInfoV1]] representing assertions about the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property,
-          * combines the attributes into a string for use in an API v1 response.
-          *
-          * @param attributes the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property.
-          * @return a semicolon-delimited string containing the attributes, or [[None]] if no attributes were found.
-          */
-        def makeAttributeString(attributes: Set[String]): Option[String] = {
-            if (attributes.isEmpty) {
-                None
-            } else {
-                Some(attributes.mkString(";"))
-            }
-        }
 
         for {
         // Get all information about the resource type, including its property cardinalities.
@@ -419,18 +434,39 @@ class OntologyResponderV1 extends ResponderV1 {
             }.map {
                 case (propertyIri: IRI, cardinality: Cardinality.Value) =>
                     propertyInfo.propertyEntityInfoMap.get(propertyIri) match {
-                        case Some(entityInfo) =>
-                            PropertyDefinitionV1(
-                                id = propertyIri,
-                                name = propertyIri,
-                                label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
-                                description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
-                                vocabulary = entityInfo.predicates.values.head.ontologyIri,
-                                occurrence = cardinality.toString,
-                                valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
-                                attributes = makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute)),
-                                gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
-                            )
+                        case Some(entityInfo: PropertyEntityInfoV1) =>
+
+                            if (entityInfo.isLinkProp) {
+                                // It is a linking prop: its valuetype_id is knora-base:LinkValue.
+                                // It is restricted to the resource class that is given for knora-base:objectClassConstraint
+                                // for the given property which goes in the attributes that will be read by the GUI.
+
+                                PropertyDefinitionV1(
+                                    id = propertyIri,
+                                    name = propertyIri,
+                                    label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
+                                    description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
+                                    vocabulary = entityInfo.predicates.values.head.ontologyIri,
+                                    occurrence = cardinality.toString,
+                                    valuetype_id = OntologyConstants.KnoraBase.LinkValue,
+                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
+                                    gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                                )
+
+                            } else {
+
+                                PropertyDefinitionV1(
+                                    id = propertyIri,
+                                    name = propertyIri,
+                                    label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
+                                    description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
+                                    vocabulary = entityInfo.predicates.values.head.ontologyIri,
+                                    occurrence = cardinality.toString,
+                                    valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
+                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute)),
+                                    gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                                )
+                            }
                         case None =>
                             throw new InconsistentTriplestoreDataException(s"Resource type $resourceTypeIri is defined as having property $propertyIri, which doesn't exist")
                     }
@@ -472,4 +508,244 @@ class OntologyResponderV1 extends ResponderV1 {
 
         } yield CheckSubClassResponseV1(isSubClass = queryResponse.results.bindings.nonEmpty)
     }
+
+    /**
+      * Returns all the existing named graphs as a [[NamedGraphsResponseV1]].
+      *
+      * @param userProfile the profile of the user making the request.
+      * @return a [[NamedGraphsResponseV1]].
+      */
+    private def getNamedGraphs(userProfile: UserProfileV1): Future[NamedGraphsResponseV1] = {
+        val namedGraphs: Vector[NamedGraphV1] = settings.namedGraphs.filter(_.visibleInGUI).map {
+            (namedGraph: ProjectNamedGraphs) =>
+                NamedGraphV1(
+                    id = namedGraph.ontology,
+                    shortname = namedGraph.name,
+                    longname = namedGraph.name,
+                    description = namedGraph.name,
+                    project_id = namedGraph.project,
+                    uri = namedGraph.ontology,
+                    active = false
+                )
+        }
+
+        Future(NamedGraphsResponseV1(
+            vocabularies = namedGraphs,
+            userdata = userProfile.userData
+        ))
+    }
+
+    /**
+      * Gets the [[NamedGraphEntityInfoV1]] for a named graph
+      *
+      * @param namedGraphIri the Iri of the named graph to query
+      * @param userProfile   the profile of the user making the request.
+      * @return a [[NamedGraphEntityInfoV1]].
+      */
+    private def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
+
+        def queryNamedGraphEntityV1(namedGraphInfoKey: OntologyCacheKeys.NamedGraphInfoKey): Future[NamedGraphEntityInfoV1] = {
+            val namedGraphIriToQuery = namedGraphInfoKey.namedGraphIri
+
+            for {
+                resourceTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getResourceTypesForNamedGraph(
+                    namedGraph = namedGraphIriToQuery,
+                    triplestore = settings.triplestoreType
+                ).toString())
+                resourceTypesInNamedGraphResponse <- (storeManager ? SparqlSelectRequest(resourceTypesInNamedGraphSparql)).mapTo[SparqlSelectResponse]
+
+                resourceClassIrisInNamedGraph = resourceTypesInNamedGraphResponse.results.bindings.map {
+                    (row) => row.rowMap("class")
+                }.toVector
+
+                propertyTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getPropertyTypesForNamedGraph(
+                    namedGraph = namedGraphIriToQuery,
+                    triplestore = settings.triplestoreType
+                ).toString())
+                propertyTypesInNamedGraphResponse <- (storeManager ? SparqlSelectRequest(propertyTypesInNamedGraphSparql)).mapTo[SparqlSelectResponse]
+
+                propertyTypeIrisInNamedGraph = propertyTypesInNamedGraphResponse.results.bindings.map {
+                    (row) => row.rowMap("property")
+                }.toVector
+
+
+                // cache these results
+                namedGraphEntity = NamedGraphEntityInfoV1(
+                    namedGraphIri = namedGraphIriToQuery,
+                    propertyIris = propertyTypeIrisInNamedGraph,
+                    resourceClasses = resourceClassIrisInNamedGraph
+                )
+            } yield namedGraphEntity
+        }
+
+        for {
+
+            cacheKeyForNamedGraph <- Future(new OntologyCacheKeys.NamedGraphInfoKey(namedGraphIri))
+
+            namedGraphCacheResult <- CacheUtil.getOrCacheItem(
+                cacheName = OntologyCacheName,
+                cacheKey = cacheKeyForNamedGraph,
+                queryFun = queryNamedGraphEntityV1
+            )
+        } yield namedGraphCacheResult
+
+
+    }
+
+    /**
+      * Gets all the resource classes and their properties for a named graph.
+      *
+      * @param namedGraphIriOption the Iri of the named graph or None if all the named graphs should be queried.
+      * @param userProfile         the profile of the user making the request.
+      * @return [[ResourceTypesForNamedGraphResponseV1]].
+      */
+    private def getResourceTypesForNamedGraph(namedGraphIriOption: Option[IRI], userProfile: UserProfileV1): Future[ResourceTypesForNamedGraphResponseV1] = {
+
+        // get the resource types for a named graph
+        def getResourceTypes(namedGraphIri: IRI): Future[Vector[ResourceTypeV1]] = {
+            for {
+
+            // get NamedGraphEntityInfoV1 for the given named graph
+                namedGraphEntityInfo: NamedGraphEntityInfoV1 <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
+
+                // get resinfo for each resource class in namedGraphEntityInfo
+                resInfosForNamedGraphFuture: Seq[Future[(String, ResourceTypeResponseV1)]] = namedGraphEntityInfo.resourceClasses.map {
+                    (resClassIri) =>
+                        for {
+                            resInfo <- getResourceTypeResponseV1(resClassIri, userProfile)
+                        } yield (resClassIri, resInfo)
+                }
+
+                resInfosForNamedGraph <- Future.sequence(resInfosForNamedGraphFuture)
+
+                resourceTypes: Vector[ResourceTypeV1] = resInfosForNamedGraph.map {
+                    case (resClassIri, resInfo) =>
+
+                        val properties = resInfo.restype_info.properties.map {
+                            (prop) => PropertyTypeV1(
+                                id = prop.id,
+                                label = prop.label.getOrElse(throw InconsistentTriplestoreDataException(s"No label given for ${prop.id}"))
+                            )
+                        }.toVector
+
+                        ResourceTypeV1(
+                            id = resClassIri,
+                            label = resInfo.restype_info.label.getOrElse(throw InconsistentTriplestoreDataException(s"No label given for ${resClassIri}")),
+                            properties = properties
+                        )
+                }.toVector
+
+            } yield resourceTypes
+        }
+
+        // get resource types for named graph depending on given Iri-Option
+        namedGraphIriOption match {
+            case Some(namedGraphIri) => // get the resource types for the given named graph
+                for {
+                    resourceTypes <- getResourceTypes(namedGraphIri)
+                } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes, userdata = userProfile.userData)
+
+            case None => // map over all named graphs and collect the resource types
+                val resourceTypesFuture: Vector[Future[Vector[ResourceTypeV1]]] = settings.namedGraphs.filter(_.visibleInGUI).map {
+                    namedGraphs: ProjectNamedGraphs => getResourceTypes(namedGraphs.ontology)
+                }
+
+                val sequencedFuture = Future.sequence(resourceTypesFuture)
+
+                for {
+                    resourceTypes <- sequencedFuture
+                } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes.flatten, userdata = userProfile.userData)
+        }
+
+    }
+
+    /**
+      * Gets the property types defined in the given named graph. If there is no named graph defined, get property types for all existing named graphs.
+      *
+      * @param namedGraphIriOption the Iri of the named graph or None if all the named graphs should be queried.
+      * @param userProfile         the profile of the user making the request.
+      * @return a [[PropertyTypesForNamedGraphResponseV1]].
+      */
+    private def getPropertyTypesForNamedGraph(namedGraphIriOption: Option[IRI], userProfile: UserProfileV1): Future[PropertyTypesForNamedGraphResponseV1] = {
+
+        def getPropertiesForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[Vector[PropertyDefinitionInNamedGraphV1]] = {
+            for {
+                namedGraphEntityInfo <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
+                propertyIris: Vector[IRI] = namedGraphEntityInfo.propertyIris
+                entities: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = propertyIris.toSet, userProfile = userProfile)
+                propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1] = entities.propertyEntityInfoMap
+
+                propertyDefinitions: Vector[PropertyDefinitionInNamedGraphV1] = propertyEntityInfoMap.map {
+                    case (propertyIri: IRI, entityInfo: PropertyEntityInfoV1) =>
+
+                        if (entityInfo.isLinkProp) {
+                            // It is a linking prop: its valuetype_id is knora-base:LinkValue.
+                            // It is restricted to the resource class that is given for knora-base:objectClassConstraint
+                            // for the given property which goes in the attributes that will be read by the GUI.
+
+                            PropertyDefinitionInNamedGraphV1(
+                                id = propertyIri,
+                                name = propertyIri,
+                                label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
+                                description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
+                                vocabulary = entityInfo.predicates.values.head.ontologyIri,
+                                valuetype_id = OntologyConstants.KnoraBase.LinkValue,
+                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
+                                gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                            )
+
+                        } else {
+                            PropertyDefinitionInNamedGraphV1(
+                                id = propertyIri,
+                                name = propertyIri,
+                                label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
+                                description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
+                                vocabulary = entityInfo.predicates.values.head.ontologyIri,
+                                valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
+                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute)),
+                                gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                            )
+
+                        }
+
+                }.toVector
+            } yield propertyDefinitions
+        }
+
+        namedGraphIriOption match {
+            case Some(namedGraphIri) => // get all the property types for the given named graph
+                for {
+                    propertyTypes <- getPropertiesForNamedGraph(namedGraphIri, userProfile)
+
+                } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes, userdata = userProfile.userData)
+            case None => // get the property types for all named graphs (collect them by mapping over all named graphs)
+                val propertyTypesFutures: Vector[Future[Vector[PropertyDefinitionInNamedGraphV1]]] = settings.namedGraphs.filter(_.visibleInGUI).map {
+                    namedGraphs: ProjectNamedGraphs => getPropertiesForNamedGraph(namedGraphs.ontology, userProfile)
+                }
+
+                val sequencedFuture: Future[Vector[Vector[PropertyDefinitionInNamedGraphV1]]] = Future.sequence(propertyTypesFutures)
+
+                for {
+                    propertyTypes <- sequencedFuture
+                } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes.flatten, userdata = userProfile.userData)
+        }
+
+    }
+
+    /**
+      * Gets the property types defined for the given resource class.
+      *
+      * @param resourceClassIri the Iri of the resource class to query for.
+      * @param userProfile      the profile of the user making the request.
+      * @return a [[PropertyTypesForResourceTypeResponseV1]].
+      */
+    private def getPropertyTypesForResourceType(resourceClassIri: IRI, userProfile: UserProfileV1): Future[PropertyTypesForResourceTypeResponseV1] = {
+        for {
+            resInfo: ResourceTypeResponseV1 <- getResourceTypeResponseV1(resourceClassIri, userProfile)
+            propertyTypes = resInfo.restype_info.properties.toVector
+
+        } yield PropertyTypesForResourceTypeResponseV1(properties = propertyTypes, userdata = userProfile.userData)
+
+    }
+
 }

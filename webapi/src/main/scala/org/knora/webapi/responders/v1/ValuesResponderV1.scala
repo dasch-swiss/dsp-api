@@ -498,6 +498,24 @@ class ValuesResponderV1 extends ResponderV1 {
     private def changeFileValueV1(changeFileValueRequest: ChangeFileValueRequestV1): Future[ChangeFileValueResponseV1] = {
 
         /**
+          * Temporary structure to represent existing file values of a resource.
+          *
+          * @param property       the property Iri (e.g., hasStillImageFileValueRepresentation)
+          * @param valueObjectIri the Iri of the value object.
+          * @param quality        the quality of the file value
+          */
+        case class CurrentFileValue(property: IRI, valueObjectIri: IRI, quality: Option[Int])
+
+        def changeFileValue(oldFileValue: CurrentFileValue, newFileValue: FileValueV1): Future[ChangeValueResponseV1] = {
+            changeValueV1(ChangeValueRequestV1(
+                valueIri = oldFileValue.valueObjectIri,
+                value = newFileValue,
+                userProfile = changeFileValueRequest.userProfile,
+                apiRequestID = changeFileValueRequest.apiRequestID // re-use the same id
+            ))
+        }
+
+        /**
           * Preprocesses a file value change request by calling the Sipi responder to create a new file
           * and calls [[changeValueV1]] to actually change the file value in Knora.
           *
@@ -505,15 +523,6 @@ class ValuesResponderV1 extends ResponderV1 {
           * @return a [[ChangeFileValueResponseV1]] representing all the changed file values.
           */
         def makeTaskFuture(changeFileValueRequest: ChangeFileValueRequestV1): Future[ChangeFileValueResponseV1] = {
-
-            /**
-              * Temporary structure to represent existing file values of a resource.
-              *
-              * @param property       the property Iri (e.g., hasStillImageFileValueRepresentation)
-              * @param valueObjectIri the Iri of the value object.
-              * @param quality        the quality of the file value
-              */
-            case class CurrentFileValue(property: IRI, valueObjectIri: IRI, quality: Option[Int])
 
             // get the Iris of the current file value(s)
             val resultFuture = for {
@@ -527,7 +536,6 @@ class ValuesResponderV1 extends ResponderV1 {
                 //_ = print(getFileValuesSparql)
                 getFileValuesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(getFileValuesSparql)).mapTo[SparqlSelectResponse]
                 // _ <- Future(println(getFileValuesResponse))
-
 
                 // get the property Iris, file value Iris and qualities attached to the resource
                 fileValues: Seq[CurrentFileValue] = getFileValuesResponse.results.bindings.map {
@@ -566,7 +574,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 //
 
                 // create the apt case class depending on the file type returned by Sipi
-                changedFileValuesFuture: Vector[Future[ChangeValueResponseV1]] = sipiResponse.file_type match {
+                changedFileValues: Vector[ChangeValueResponseV1] <- sipiResponse.file_type match {
                     case SipiConstants.FileType.IMAGE =>
                         // we deal with hasStillImageFileValue, so there need to be two file values:
                         // one for the full and one for the thumb
@@ -587,30 +595,21 @@ class ValuesResponderV1 extends ResponderV1 {
                             case otherFileValue: FileValueV1 => throw SipiException(s"Sipi returned a wrong file value type: ${otherFileValue.valueTypeIri}")
                         }
 
-                        //
-                        // now request to change all the values
-                        //
-                        newFileValuesSorted.zip(oldFileValuesSorted).map {
-                            case (newFileValue: StillImageFileValueV1, oldFileValue: CurrentFileValue) =>
-                                // create ChangeValueRequest
-                                val changeImageFileValueRequest: ChangeValueRequestV1 = ChangeValueRequestV1(
-                                    valueIri = oldFileValue.valueObjectIri,
-                                    value = newFileValue,
-                                    userProfile = changeFileValueRequest.userProfile,
-                                    apiRequestID = changeFileValueRequest.apiRequestID // re-use the same id
-                                )
+                        val valuesToChange = oldFileValuesSorted.zip(newFileValuesSorted)
+                        val (firstOldValue, firstNewValue) = valuesToChange.head
+                        val (secondOldValue, secondNewValue) = valuesToChange(1)
 
-                                // do change request
-                                changeValueV1(changeImageFileValueRequest)
-                            case _ => throw SipiException("Sipi created a wrong file value type (not a StillImageFileValueV1)")
-                        }
+                        //
+                        // Change the file values sequentially (because concurrent SPARQL updates could interfere with each other).
+                        //
+                        for {
+                            firstResult <- changeFileValue(firstOldValue, firstNewValue)
+                            secondResult <- changeFileValue(secondOldValue, secondNewValue)
+                        } yield Vector(firstResult, secondResult)
 
 
                     case otherFileType => throw NotImplementedException(s"File type $otherFileType not yet supported")
                 }
-
-                // turn a sequence of Futures of messages into a sequence of messages
-                changedFileValues: Vector[ChangeValueResponseV1] <- Future.sequence(changedFileValuesFuture)
 
             } yield ChangeFileValueResponseV1(// return the response(s) of the call(s) of changeValueV1
                 changedFilesValues = changedFileValues,

@@ -36,8 +36,11 @@ SALSAH.ApiGet = function() {
 	var error_cb;
 	var value;
 
+	//console.log(arguments)
+
 	for (n in arguments) {
-		if (send_params === undefined) {
+		//console.log("n: " + arguments[n] + " and type " + typeof arguments[n]);
+		if (send_params === undefined) { // first run in for loop
 			var data_type = 'json';
 			var content_type = 'application/json';
 			var method = arguments[n];
@@ -56,9 +59,10 @@ SALSAH.ApiGet = function() {
                 }
 			};
 		}
-		else if (typeof arguments[n] == 'string') { // this is the value/id, because it's a string
+		else if (typeof arguments[n] == 'string' && arguments[n] != 'json') { // ignore arg when it is 'json' because this is meant to be the datatype of the async request
+			// this is the value/id, because it's a string
 			value = encodeURIComponent(arguments[n]);
-			console.log('ApiGet method: ' + method + ' value:' + value)
+			//console.log('ApiGet method: ' + method + ' value:' + value)
 		}
 		else if (typeof arguments[n] == 'object') {
 			if ((arguments[n].username !== undefined) && (arguments[n].password !== undefined)) {
@@ -67,7 +71,7 @@ SALSAH.ApiGet = function() {
 				}
 			}
 			else {
-				send_params.data = arguments[n];
+				send_params.data = arguments[n]; // assign the whole object to the data params
 			}
 		}
 		else if (typeof arguments[n] == 'function') {
@@ -107,6 +111,9 @@ SALSAH.ApiGet = function() {
 			alert(textStatus + "\n" + errorThrown + "\n" + jqXHR.responseText);
 		}
 	}
+
+	// do note use square brackets in params serialization
+	send_params.traditional = true;
 
 	return $.ajax(send_params);
 };

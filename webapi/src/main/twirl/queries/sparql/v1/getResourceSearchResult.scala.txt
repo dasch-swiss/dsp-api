@@ -46,7 +46,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT DISTINCT ?resourceIri ?firstProp ?attachedToUser ?attachedToProject (GROUP_CONCAT(?permissionAssertion; separator=";") AS ?permissionAssertions)
+SELECT DISTINCT ?resourceIri ?firstProp ?attachedToUser ?attachedToProject (GROUP_CONCAT(DISTINCT(?permissionAssertion); separator=";") AS ?permissionAssertions)
 @if(numberOfProps > 1) {
     (GROUP_CONCAT(?valueString; separator="@separator") AS ?values) (GROUP_CONCAT(?guiOrder; separator=";") AS ?guiOrders) (GROUP_CONCAT(?valueOrder; separator=";") AS ?valueOrders)
 }

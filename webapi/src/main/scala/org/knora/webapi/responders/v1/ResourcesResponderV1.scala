@@ -509,18 +509,38 @@ class ResourcesResponderV1 extends ResponderV1 {
             // Create a PropertyV1 for each of those properties.
             emptyProps: Set[PropertyV1] = emptyPropsIris.map {
                 case propertyIri =>
-                    val propertyEntityInfo = emptyPropsInfoResponse.propertyEntityInfoMap(propertyIri)
+                    val propertyEntityInfo: PropertyEntityInfoV1 = emptyPropsInfoResponse.propertyEntityInfoMap(propertyIri)
 
-                    PropertyV1(
-                        pid = propertyIri,
-                        valuetype_id = propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint),
-                        guiorder = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt),
-                        guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
-                        label = propertyEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
-                        occurrence = Some(propsAndCardinalities(propertyIri).toString),
-                        attributes = propertyEntityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute).mkString(";"),
-                        value_rights = Nil
-                    )
+                    if (propertyEntityInfo.isLinkProp) {
+                        // It is a linking prop: its valuetype_id is knora-base:LinkValue.
+                        // It is restricted to the resource class that is given for knora-base:objectClassConstraint
+                        // for the given property which goes in the attributes that will be read by the GUI.
+
+                        PropertyV1(
+                            pid = propertyIri,
+                            valuetype_id = Some(OntologyConstants.KnoraBase.LinkValue),
+                            guiorder = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt),
+                            guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
+                            label = propertyEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
+                            occurrence = Some(propsAndCardinalities(propertyIri).toString),
+                            attributes = (propertyEntityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))).mkString(";"),
+                            value_rights = Nil
+                        )
+
+                    } else {
+
+
+                        PropertyV1(
+                            pid = propertyIri,
+                            valuetype_id = propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint),
+                            guiorder = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt),
+                            guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
+                            label = propertyEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
+                            occurrence = Some(propsAndCardinalities(propertyIri).toString),
+                            attributes = propertyEntityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute).mkString(";"),
+                            value_rights = Nil
+                        )
+                    }
             }
 
             // Add a fake property `__location__` if the resource has FileValues.
@@ -1453,15 +1473,26 @@ class ResourcesResponderV1 extends ResponderV1 {
         def makePropertyV1(propertyIri: IRI, propertyCardinality: Option[Cardinality.Value], propertyEntityInfo: Option[PropertyEntityInfoV1], valueObjects: Seq[ValueObjectV1]): PropertyV1 = {
             PropertyV1(
                 pid = propertyIri,
-                valuetype_id = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)),
+                valuetype_id = propertyEntityInfo.flatMap{
+                    row =>
+                        if (row.isLinkProp) {
+                            // it is a linking property
+                            Some(OntologyConstants.KnoraBase.LinkValue)
+                        } else {
+                            row.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
+                        }
+                },
                 guiorder = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)),
                 guielement = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri))),
                 label = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.Rdfs.Label)),
                 occurrence = propertyCardinality.map(_.toString),
                 attributes = propertyEntityInfo match {
                     case Some(entityInfo) =>
-                        entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute).mkString(";")
-
+                        if (entityInfo.isLinkProp) {
+                            (entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))).mkString(";")
+                        } else {
+                            entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute).mkString(";")
+                        }
                     case None => ""
                 },
                 value_rights = valueObjects.map(_.valuePermission),
@@ -1553,11 +1584,14 @@ class ResourcesResponderV1 extends ResponderV1 {
                         val referencedResType = predicates(OntologyConstants.Rdf.Type).literals.head
 
                         // Get info about that resource class, if available.
-                        // Use reource entity infos to do so.
-                        val (maybeResourceClassLabel, maybeResourceClassIcon) = resourceEntityInfoMap.get(referencedResType) match {
+                        // Use resource entity infos to do so.
+                        val (maybeResourceClassLabel: Option[String], maybeResourceClassIcon: Option[String]) = resourceEntityInfoMap.get(referencedResType) match {
                             case Some(referencedResTypeEntityInfo) =>
-                                Some(referencedResTypeEntityInfo.getPredicateObjects(OntologyConstants.Rdfs.Label).head) ->
-                                    Some(referencedResTypeEntityInfo.getPredicateObjects(OntologyConstants.KnoraBase.ResourceIcon).head)
+
+                                val labelOption: Option[String] = referencedResTypeEntityInfo.getPredicateObjects(OntologyConstants.Rdfs.Label).headOption
+                                val resIconOption: Option[String] = referencedResTypeEntityInfo.getPredicateObjects(OntologyConstants.KnoraBase.ResourceIcon).headOption
+
+                                (labelOption, resIconOption)
 
                             case None => (None, None)
                         }

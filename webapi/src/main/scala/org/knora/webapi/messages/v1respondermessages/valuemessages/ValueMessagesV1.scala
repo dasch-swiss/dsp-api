@@ -591,7 +591,7 @@ case class TextValueV1(utf8str: String,
         })
 
         JsObject(
-            "uft8str" -> JsString(utf8str),
+            "utf8str" -> JsString(utf8str),
             "textattr" -> JsString(textattrAsJsValue.compactPrint), // textattr is expected to be a stringified JSON
             "resource_reference" -> resource_reference.toJson
         )
