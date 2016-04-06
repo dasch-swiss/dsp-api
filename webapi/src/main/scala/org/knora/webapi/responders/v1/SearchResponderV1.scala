@@ -23,7 +23,7 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
+import org.knora.webapi.messages.v1respondermessages.ontologymessages.{ResourceEntityInfoV1, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1respondermessages.searchmessages._
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.messages.v1respondermessages.valuemessages.KnoraCalendarV1
@@ -90,7 +90,7 @@ class SearchResponderV1 extends ResponderV1 {
         ),
         OntologyConstants.KnoraBase.ListValue -> Set(
             SearchComparisonOperatorV1.EQ,
-            SearchComparisonOperatorV1.NOT_EQ
+            SearchComparisonOperatorV1.EXISTS
         )
     )
 
@@ -104,6 +104,7 @@ class SearchResponderV1 extends ResponderV1 {
 
     /**
       * Performs a fulltext search (simple search) and returns a [[SearchGetResponseV1]] in Knora API v1 format.
+      *
       * @param searchGetRequest the user search request.
       * @return a [[SearchGetResponseV1]] containing the search results.
       */
@@ -233,22 +234,28 @@ class SearchResponderV1 extends ResponderV1 {
             // Add that information to the search results.
 
             subjects = searchResultRowsWithEntityIris.map {
-                searchResultRowWithEntityIris =>
-                    val searchResultRow = searchResultRowWithEntityIris.searchResultRow
-                    val resourceEntityInfoMap = entityInfoResponse.resourceEntityInfoMap(searchResultRowWithEntityIris.resourceClassIri)
+                (searchResultRowWithEntityIris: SearchResultRowWithEntityIris) =>
+                    val searchResultRow: SearchResultRowV1 = searchResultRowWithEntityIris.searchResultRow
+                    val resourceEntityInfoMap: ResourceEntityInfoV1 = entityInfoResponse.resourceEntityInfoMap(searchResultRowWithEntityIris.resourceClassIri)
                     val resourceClassLabel = resourceEntityInfoMap.getPredicateObject(OntologyConstants.Rdfs.Label)
                     val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) // TODO: make a Sipi URL.
+                    val resourceClassIri = searchResultRowWithEntityIris.resourceClassIri
+
+                    val resourceClassIconURL = resourceClassIcon match {
+                        case Some(resClassIcon) => Some(valueUtilV1.makeResourceClassIconURL(resourceClassIri, resClassIcon))
+                        case _ => None
+                    }
 
                     searchResultRow.copy(
                         preview_path = searchResultRow.preview_path match {
                             case Some(path) => Some(path)
                             case None =>
                                 // If there is no preview image, use the resource class icon from the ontology.
-                                resourceClassIcon
+                                resourceClassIconURL
                         },
                         icontitle = resourceClassLabel,
                         iconlabel = resourceClassLabel,
-                        iconsrc = resourceClassIcon,
+                        iconsrc = resourceClassIconURL,
                         valuelabel = searchResultRow.valuelabel ++ searchResultRowWithEntityIris.propertyIri.flatMap {
                             iri =>
                                 // If the search result contained a property IRI, add its label here.
@@ -496,15 +503,20 @@ class SearchResponderV1 extends ResponderV1 {
                             }
                     }
 
+                    val resourceClassIconURL = resourceClassIcon match {
+                        case Some(resClassIcon) => Some(valueUtilV1.makeResourceClassIconURL(resourceClassIri, resClassIcon))
+                        case _ => None
+                    }
+
                     SearchResultRowV1(
                         obj_id = resourceIri,
                         preview_path = row.rowMap.get("previewPath") match {
                             case Some(path) => Some(valueUtilV1.makeSipiImagePreviewGetUrlFromFilename(path))
                             case None =>
                                 // If there is no preview image, use the resource class icon from the ontology.
-                                resourceClassIcon
+                                resourceClassIconURL
                         },
-                        iconsrc = resourceClassIcon,
+                        iconsrc = resourceClassIconURL,
                         icontitle = resourceClassLabel,
                         iconlabel = resourceClassLabel,
                         valuetype_id = OntologyConstants.Rdfs.Label +: valueTypeIDs,
@@ -536,6 +548,7 @@ class SearchResponderV1 extends ResponderV1 {
 
     /**
       * Creates a list of available search result pages.
+      *
       * @param offset the requested result offset.
       * @param limit the maximum number of results per page.
       * @param resultCount the total number of results found.
@@ -562,6 +575,7 @@ class SearchResponderV1 extends ResponderV1 {
 
     /**
       * Checks the requested search result limit to ensure it's within acceptable bounds.
+      *
       * @return the corrected search result limit.
       */
     private def checkLimit(limit: Int): Int = {
@@ -574,6 +588,7 @@ class SearchResponderV1 extends ResponderV1 {
 
     /**
       * Given a list of search results, finds the maximum X and Y dimensions of their preview images.
+      *
       * @param subjects a list of search results.
       * @return the maximum X and Y dimensions of the preview images of the search results.
       */
