@@ -16,13 +16,16 @@
 
 SALSAH.showval = function(value_container, prop, value_index, options)
 {
+
+	//console.log("in showval: valtype is " + prop.valuetype_id);
 	switch (prop.valuetype_id) {
-		case VALTYPE_TEXT: {
+		// this value type is mot used anymore: every text is a richtext now
+		/*case VALTYPE_TEXT: {
 			var reg = new RegExp('(http://[^<>\\s]+[\\w\\d])', 'g');     // replace URL's with anchor tags
 			//value_container.append(prop.values[value_index].replace(reg, '<a href="$1" target="_blank">$1</a>'));
 			value_container.append(prop.values[value_index]);
 			break;
-		}
+		}*/
 		case VALTYPE_INTEGER: {
 			value_container.append(prop.values[value_index]);
 			break;
@@ -67,17 +70,18 @@ SALSAH.showval = function(value_container, prop, value_index, options)
 			// add handlers to SALSAH Links here
 			//
 			value_container.find('a.salsah-link').off('mouseover').on('mouseover', function(event) {
-				var last_slash = $(this).attr('href').lastIndexOf('/');
-				var resid = $(this).attr('href').substring(last_slash+1);
+				//var last_slash = $(this).attr('href').lastIndexOf('/');
+				var path = API_URL + API_V1_SEGMENT + API_RESOURCES_SEGMENT + '/';
+				var resid = decodeURIComponent($(this).attr('href').substring(path.length));
 
 				load_infowin(event, resid, this);
 
 			}).off('click').on('click', function(event) {
 				event.preventDefault();
 
-				var last_slash = $(this).attr('href').lastIndexOf('/');
-				var resid = $(this).attr('href').substring(last_slash+1);
-				
+				var path = API_URL + API_V1_SEGMENT + API_RESOURCES_SEGMENT + '/';
+				var resid = decodeURIComponent($(this).attr('href').substring(path.length));
+
 				RESVIEW.new_resource_editor(resid, 'Linked Resource');
 				
 			});

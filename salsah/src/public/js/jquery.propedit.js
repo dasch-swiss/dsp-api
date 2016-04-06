@@ -57,7 +57,7 @@
     var comment_icon = new Image();
     comment_icon.src = SITE_URL + '/app/icons/16x16/comment.png';
 
-	$.fn.propedit = function(resdata, propinfo, optpar) {
+	$.fn.propedit = function(resdata, propinfo, project_id, optpar) {
 		var $that = this;
 
 		var res_id = resdata.res_id;
@@ -298,6 +298,15 @@
 
 			var postdata = [];
 
+			var init_value_structure = function() {
+				if (!propinfo[active.prop].values) propinfo[active.prop].values = Array();
+				if (!propinfo[active.prop].value_ids) propinfo[active.prop].value_ids = Array();
+				if (!propinfo[active.prop].value_rights) propinfo[active.prop].value_rights = Array();
+				if (!propinfo[active.prop].value_iconsrcs) propinfo[active.prop].value_iconsrcs = Array();
+				if (!propinfo[active.prop].value_firstprops) propinfo[active.prop].value_firstprops = Array();
+				if (!propinfo[active.prop].value_restype) propinfo[active.prop].value_restype = Array();
+			};
+
 			postdata[VALTYPE_TEXT] = function(value_container, prop, value_index, value, is_new_value) {
 				var data = {};
 				if (is_new_value) {
@@ -369,15 +378,76 @@
 				}
 			};
 
-			postdata[VALTYPE_INTEGER] = postdata[VALTYPE_TEXT];
+			postdata[VALTYPE_INTEGER] = function(value_container, prop, value_index, value, is_new_value) {
+				var data = {};
+				if (is_new_value) {
+					data.int_value = parseInt(value); // it is an integer
+					data.res_id = res_id;
+					data.prop = prop;
+					data.project_id = project_id;
+					SALSAH.ApiPost('values', data, function(data) {
+						if (data.status == ApiErrors.OK) {
+
+							init_value_structure();
+
+							propinfo[active.prop].values[active.value_index] = data.value;
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+							propinfo[active.prop].value_rights[active.value_index] = data.rights;
+							propinfo[active.prop].value_iconsrcs[active.value_index] = null;
+							propinfo[active.prop].value_firstprops[active.value_index] = null;
+							propinfo[active.prop].value_restype[active.value_index] = null;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				} else {
+					data.int_value = parseInt(value); // it is an integer
+					data.project_id = project_id;
+					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
+						if (data.status == ApiErrors.OK) {
+							propinfo[active.prop].values[active.value_index] = data.value;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+
+							// set new value Iri
+							propinfo[prop].value_ids[value_index] = data.id;
+
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				}
+			};
+
 			postdata[VALTYPE_FLOAT] = postdata[VALTYPE_TEXT];
 
 			postdata[VALTYPE_RICHTEXT] = function(value_container, prop, value_index, value, is_new_value) {
 				var data = {};
 				if (is_new_value) {
-					data.value = value;
+					data.richtext_value = value;
 					data.res_id = res_id;
 					data.prop = prop;
+					data.project_id = project_id;
 					SALSAH.ApiPost('values', data, function(data) {
 						if (data.status == ApiErrors.OK) {
 							// data.value has the following members:
@@ -418,8 +488,9 @@
 					});
 				}
 				else {
-					data.value = value;
-					SALSAH.ApiPut('values/' + propinfo[prop].value_ids[value_index], data, function(data) {
+					data.richtext_value = value;
+					data.project_id = project_id;
+					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
 						if (data.status == ApiErrors.OK) {
 							propinfo[active.prop].values[active.value_index] = data.value;
 
@@ -429,6 +500,9 @@
 								var prop_container = active.value_container.parent();
 								make_add_button(prop_container, active.prop);
 							}
+
+							// set new value Iri
+							propinfo[prop].value_ids[value_index] = data.id;
 						}
 						else {
 							alert(status.errormsg);

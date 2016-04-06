@@ -380,7 +380,7 @@ $(function() {
 					metadataAreaDomCreate(content_ele, data2, {winid: winid, tabid: tabid});
 				});
 
-				$('.datafield_' + tabid + '.winid_' + winid).propedit(data2.resdata, data2.props);
+				$('.datafield_' + tabid + '.winid_' + winid).propedit(data2.resdata, data2.props, data2.resinfo.project_id);
 				var tabele = metadata_area_tabs.tabs('contentElement', 'image_data');
 				tabele.addClass('propedit_frame');
 				sectionsetup(tabele, winid);
@@ -454,7 +454,7 @@ $(function() {
 */
 				/* sequence-ele.append(........) */
 
-				$('.datafield_' + tabid + '.winid_' + winid).propedit(data2.resdata, data2.props);
+				$('.datafield_' + tabid + '.winid_' + winid).propedit(data2.resdata, data2.props, data2.resinfo.project_id);
 
 				var tabele = metadata_area_tabs.tabs('contentElement', 'movie_data');
 				tabele.addClass('propedit_frame');
@@ -1397,7 +1397,7 @@ $(function() {
 							}
 						}
 					);
-					$('.datafield.winid_' + window_html.win('getId')).propedit(data.resdata, data.props);
+					$('.datafield.winid_' + window_html.win('getId')).propedit(data.resdata, data.props, data.resinfo.project_id);
 					sectionsetup(window_html.win('contentElement'), window_html.win('getId'));
 					window_html.win('unsetBusy');
 				}
@@ -2653,7 +2653,7 @@ $(function() {
 						//metadataAreaDomCreate(regmeta_area[regdata.regnum], winid, undefined, rr, regdata);
 						metadataAreaDomCreate(regmeta_area[rr], regdata, {winid: winid, regnum: rr});
 						regmeta_area[rr].find('.datafield.regnum_' + rr).propedit(
-							regdata.resdata, regdata.props, {
+							regdata.resdata, regdata.props, regdata.resinfo.project_id, {
 								'canvas': canvas,
 								viewer: viewer
 							}
@@ -3057,7 +3057,7 @@ $(function() {
 					metadata_area_tabs.tabs('setTab', 'compound_data', label, function(topele) {
 						metadataAreaDomCreate(topele, data, {winid: winid, tabid: 1});
 					});
-					$('.datafield_1.winid_' + winid).propedit(data.resdata, data.props);
+					$('.datafield_1.winid_' + winid).propedit(data.resdata, data.props, data.resinfo.project_id);
 					var tabele = metadata_area_tabs.tabs('contentElement', 'compound_data');
 					tabele.addClass('propedit_frame');
 

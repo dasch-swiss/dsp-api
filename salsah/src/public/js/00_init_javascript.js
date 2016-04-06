@@ -15,6 +15,8 @@
  */
 
 var API_URL = 'http://localhost:3333';
+var API_V1_SEGMENT = "/v1";
+var API_RESOURCES_SEGMENT = "/resources";
 var SIPI_URL = 'http://localhost:1024';
 var SIPI_LOGIN_ROUTE = '/Knora_login';
 var SIPI_LOGOUT_ROUTE = '/Knora_logout';
@@ -47,7 +49,7 @@ var searchresult_window_title = "searchresult";
 var extendedsearch_window_title = "Erweiterte Suche";
 var addresource_window_title = "addresource";
 
-var VALTYPE_TEXT = "http://www.knora.org/ontology/knora-base#TextValue";
+var VALTYPE_TEXT = "-"; // obsolete, there is only richtext now
 var VALTYPE_INTEGER = "http://www.knora.org/ontology/knora-base#IntValue";
 var VALTYPE_FLOAT = "http://www.knora.org/ontology/knora-base#FloatValue";
 var VALTYPE_DATE = "http://www.knora.org/ontology/knora-base#DateValue";
@@ -58,9 +60,9 @@ var VALTYPE_INTERVAL = "http://www.knora.org/ontology/knora-base#IntervalValue";
 var VALTYPE_GEOMETRY = "http://www.knora.org/ontology/knora-base#GeomValue";
 var VALTYPE_COLOR = "http://www.knora.org/ontology/knora-base#ColorValue";
 var VALTYPE_HLIST = "http://www.knora.org/ontology/knora-base#ListValue";
-//var VALTYPE_SELECTION = "http://www.knora.org/ontology/knora-base#ListValue"; // VALTYPE_SELECTION can be treated like a hierarchical list
+var VALTYPE_SELECTION = "http://www.knora.org/ontology/knora-base#ListValue"; // VALTYPE_SELECTION can be treated like a hierarchical list
 var VALTYPE_ICONCLASS = 13;
-var VALTYPE_RICHTEXT = 14;
+var VALTYPE_RICHTEXT = "http://www.knora.org/ontology/knora-base#TextValue";
 var VALTYPE_GEONAME = 15;
 
 var RESOURCE_CONTEXT_NONE = 0;
