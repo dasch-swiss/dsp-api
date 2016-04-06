@@ -23,39 +23,49 @@ object StandoffUtil {
         def endPosition: Int
 
         /**
-          * The ID of the standoff tag that is the parent of the range.
+          * The index of this range. Indexes are numbered from 0 within the context of a particular text.
           */
-        def parentId: Option[Int]
+        def index: Int
+
+        /**
+          * The index of the standoff tag that is the parent of the range.
+          */
+        def parentIndex: Option[Int]
     }
 
     /**
       * Represents a range of characters containing no standoff tags.
+      *
       * @param startPosition the start position of the range.
       * @param endPosition the end position of the range.
-      * @param parentId the ID of the [[StandoffTag]] that is the parent of the range.
+      * @param index he index of this range. Indexes are numbered from 0 within the context of a particular text.
+      * @param parentIndex the index of the [[StandoffTag]] that is the parent of the range.
       */
     case class TextRange(startPosition: Int,
                          endPosition: Int,
-                         parentId: Option[Int]) extends StandoffRange
+                         index: Int,
+                         parentIndex: Option[Int]) extends StandoffRange
 
     /**
       * Represents a range of characters that have been marked up with a standoff tag.
+ *
       * @param tagName the name of the tag.
       * @param attributes the attributes attached to this tag.
       * @param startPosition the start position of the range of characters marked up with this tag.
       * @param endPosition the end position of the range of characters marked up with this tag.
-      * @param id the ID of this tag. IDs are numbered from 0 within the context of a particular text.
-      * @param parentId the ID of the [[StandoffTag]] that is the parent of this tag.
+      * @param index the index of this tag. IDs are numbered from 0 within the context of a particular text.
+      * @param parentIndex the index of the [[StandoffTag]] that is the parent of this tag.
       */
     case class StandoffTag(tagName: String,
                            attributes: Map[String, String],
                            startPosition: Int,
                            endPosition: Int,
-                           id: Int,
-                           parentId: Option[Int]) extends StandoffRange
+                           index: Int,
+                           parentIndex: Option[Int]) extends StandoffRange
 
     /**
       * Represents a text and its standoff markup.
+      *
       * @param text the text that has been marked up with standoff.
       * @param standoff the standoff markup.
       */
@@ -70,6 +80,7 @@ class StandoffUtil {
 
     /**
       * Converts an XML document to an equivalent [[TextWithStandoff]].
+      *
       * @param xmlStr the XML document to be converted.
       * @return a [[TextWithStandoff]].
       */
@@ -89,11 +100,12 @@ class StandoffUtil {
 
     /**
       * Converts a [[TextWithStandoff]] to an equivalent XML document.
+      *
       * @param textWithStandoff the [[TextWithStandoff]] to be converted.
       * @return an XML document.
       */
     def standoff2Xml(textWithStandoff: TextWithStandoff): String = {
-        val groupedRanges: Map[Option[Int], Seq[StandoffRange]] = textWithStandoff.standoff.groupBy(_.parentId)
+        val groupedRanges: Map[Option[Int], Seq[StandoffRange]] = textWithStandoff.standoff.groupBy(_.parentIndex)
         val stringBuilder = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
 
         standoffRanges2XmlString(
@@ -108,19 +120,21 @@ class StandoffUtil {
 
     /**
       * Represents the state of the conversion of XML text to standoff.
+      *
       * @param currentPos the current position in the text.
       * @param parentId the ID of the parent [[StandoffTag]] for which standoff ranges are being generated, or [[None]]
       *                 if the root tag is being generated.
-      * @param nextId the next available standoff tag ID.
+      * @param nextIndex the next available standoff range index.
       * @param standoffRanges the standoff ranges generated so far.
       */
     private case class Xml2StandoffState(currentPos: Int = 0,
                                          parentId: Option[Int] = None,
-                                         nextId: Int = 0,
+                                         nextIndex: Int = 0,
                                          standoffRanges: Vector[StandoffRange] = Vector.empty[StandoffRange])
 
     /**
       * Recursively converts XML nodes to standoff.
+      *
       * @param nodes a sequence of sibling XML nodes to be converted.
       * @param startState the current state of the conversion.
       * @return the resulting conversion state.
@@ -132,15 +146,15 @@ class StandoffUtil {
                 // We got an XML element. Generate a StandoffTag for it.
 
                 // println(s"got Elem <${elem.label}>")
-                val standoffTagId = acc.nextId
+                val standoffTagIndex = acc.nextIndex
 
                 val standoffTag = StandoffTag(
                     tagName = elem.label,
                     attributes = elem.attributes.asAttrMap,
                     startPosition = acc.currentPos,
                     endPosition = acc.currentPos + elem.text.length,
-                    id = standoffTagId,
-                    parentId = startState.parentId
+                    index = acc.nextIndex,
+                    parentIndex = startState.parentId
                 )
 
                 // Process the element's child nodes.
@@ -148,8 +162,8 @@ class StandoffUtil {
                     nodes = elem.child,
                     Xml2StandoffState(
                         currentPos = acc.currentPos,
-                        parentId = Some(standoffTagId),
-                        nextId = standoffTagId + 1,
+                        parentId = Some(standoffTagIndex),
+                        nextIndex = acc.nextIndex + 1,
                         standoffRanges = acc.standoffRanges :+ standoffTag
                     )
                 )
@@ -159,13 +173,14 @@ class StandoffUtil {
                 val textRange = TextRange(
                     startPosition = acc.currentPos,
                     endPosition = acc.currentPos + text.data.length,
-                    parentId = startState.parentId
+                    index = acc.nextIndex,
+                    parentIndex = startState.parentId
                 )
 
                 acc.copy(
                     currentPos = textRange.endPosition,
                     parentId = startState.parentId,
-                    nextId = acc.nextId,
+                    nextIndex = acc.nextIndex + 1,
                     standoffRanges = acc.standoffRanges :+ textRange
                 )
 
@@ -176,6 +191,7 @@ class StandoffUtil {
 
     /**
       * Recursively generates XML text representing [[StandoffRange]] objects, starting with those that have a particular parent tag.
+      *
       * @param text the text that has been marked up.
       * @param parentId the ID of the parent tag.
       * @param groupedRanges a [[Map]] of all the [[StandoffRange]] objects that refer to the text, grouped by parent tag ID.
@@ -190,10 +206,10 @@ class StandoffUtil {
 
         val children = groupedRanges(parentId)
 
-        for (child <- children.sortBy(_.startPosition)) {
+        for (child <- children.sortBy(_.index)) {
             child match {
                 case standoffTag: StandoffTag =>
-                    if (groupedRanges.contains(Some(standoffTag.id))) {
+                    if (groupedRanges.contains(Some(standoffTag.index))) {
                         // Non-empty tag
                         xmlString.append(s"<${standoffTag.tagName}")
 
@@ -205,7 +221,7 @@ class StandoffUtil {
 
                         standoffRanges2XmlString(
                             text = text,
-                            parentId = Some(standoffTag.id),
+                            parentId = Some(standoffTag.index),
                             groupedRanges = groupedRanges,
                             xmlString = xmlString
                         )
@@ -269,6 +285,8 @@ object StandoffUtilTest extends App {
           |    <paragraph>
           |        <person id="6789">Einstein</person> originally proposed it in
           |        <date calendar="gregorian" value="1905">1905</date> in <citation id="einstein_1905a" />.
+          |
+          |        Here is a sentence with a sequence of empty tags: <foo /><bar /><baz />.
           |    </paragraph>
           |</article>""".stripMargin
 
