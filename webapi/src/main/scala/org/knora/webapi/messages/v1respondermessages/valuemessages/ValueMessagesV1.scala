@@ -956,11 +956,25 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
         def read(jsonVal: JsValue) = {
             jsonVal match {
                 case JsObject(fields) =>
-                    val (start, end, resid, href) = (fields.get("start"), fields.get("end"), fields.get("resid"), fields.get("href")) match {
-                        case (Some(JsNumber(startVal)), Some(JsNumber(endVal)), maybeResid, maybeHref) =>
-                            (startVal.toInt, endVal.toInt, maybeResid.map(_.toString()), maybeHref.map(_.toString()))
-
+                    val (start, end) = (fields.get("start"), fields.get("end")) match {
+                        case (Some(JsNumber(startVal)), Some(JsNumber(endVal))) => (startVal.toInt, endVal.toInt)
                         case _ => throw BadRequestException(s"Invalid standoff position in JSON: $jsonVal")
+                    }
+
+                    val maybeResId = fields.get("resid")
+
+                    val resid: Option[String] = maybeResId match {
+                        case Some(residJsStr: JsString) => Some(residJsStr.value)
+                        case Some(other) => throw BadRequestException(s"Invalid resid in JSON: $other")
+                        case None => None
+                    }
+
+                    val maybeHref = fields.get("href")
+
+                    val href: Option[String] = maybeHref match {
+                        case Some(hrefJsStr: JsString) => Some(hrefJsStr.value)
+                        case Some(other) => throw BadRequestException(s"Invalid href in JSON: $other")
+                        case None => None
                     }
 
                     StandoffPositionV1(
