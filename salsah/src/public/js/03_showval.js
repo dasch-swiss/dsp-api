@@ -35,6 +35,7 @@ SALSAH.showval = function(value_container, prop, value_index, options)
 			break;
 		}
 		case VALTYPE_DATE: {
+			console.log(prop.values[value_index]);
 			value_container.dateobj('init', prop.values[value_index]);
 			break;
 		}

@@ -275,5 +275,20 @@ SALSAH.timecode2seconds = function(tc){
 	secs += parseFloat(tc.substr(3, 2)) * 60.0;
 	secs += parseFloat(tc.substr(6, 6));
 	return secs;
-}
+};
+
+// helper functions for differences between the old and the new API
+
+var SALSAH_API_LEGACY = {
+	make_date_string: function(dateObj) {
+		// Knora expects a searchval string: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
+		var dateStr = dateObj.calendar + ":" + dateObj.dateval1;
+		if (dateObj.dateval2 !== undefined) {
+			// period
+			dateStr += ":" + dateObj.dateval2;
+		}
+		return dateStr;
+	}
+
+};
 
