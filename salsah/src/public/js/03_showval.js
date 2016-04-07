@@ -70,17 +70,14 @@ SALSAH.showval = function(value_container, prop, value_index, options)
 			// add handlers to SALSAH Links here
 			//
 			value_container.find('a.salsah-link').off('mouseover').on('mouseover', function(event) {
-				//var last_slash = $(this).attr('href').lastIndexOf('/');
-				var path = API_URL + API_V1_SEGMENT + API_RESOURCES_SEGMENT + '/';
-				var resid = decodeURIComponent($(this).attr('href').substring(path.length));
 
+				var resid = $(this).attr('href');
 				load_infowin(event, resid, this);
 
 			}).off('click').on('click', function(event) {
 				event.preventDefault();
 
-				var path = API_URL + API_V1_SEGMENT + API_RESOURCES_SEGMENT + '/';
-				var resid = decodeURIComponent($(this).attr('href').substring(path.length));
+				var resid = $(this).attr('href');
 
 				RESVIEW.new_resource_editor(resid, 'Linked Resource');
 				

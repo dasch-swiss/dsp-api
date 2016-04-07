@@ -15,8 +15,6 @@
  */
 
 var API_URL = 'http://localhost:3333';
-var API_V1_SEGMENT = "/v1";
-var API_RESOURCES_SEGMENT = "/resources";
 var SIPI_URL = 'http://localhost:1024';
 var SIPI_LOGIN_ROUTE = '/Knora_login';
 var SIPI_LOGOUT_ROUTE = '/Knora_logout';

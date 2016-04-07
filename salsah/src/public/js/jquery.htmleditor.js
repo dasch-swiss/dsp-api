@@ -106,9 +106,8 @@
 
 						// check if it is a SALSAH-link
 						if (cur_node.getAttribute('class') == 'salsah-link') {
-							var path = API_URL + API_V1_SEGMENT + API_RESOURCES_SEGMENT + '/';
-							//var last_slash = cur_node.getAttribute('href').lastIndexOf(API_URL + API_V1_SEGMENT + API_RESOURCES_SEGMENT + '/');
-							props[localdata.settings.matching[cur_node.nodeName.toLowerCase()]][index].resid = decodeURIComponent(cur_node.getAttribute('href').substring(path.length));
+							props[localdata.settings.matching[cur_node.nodeName.toLowerCase()]][index].resid = cur_node.getAttribute('href');
+
 						}
 
 					} else {
@@ -305,7 +304,7 @@
 							if (href === undefined && proparr[i][j].resid !== undefined) {
 								// backwards compatibility
 								// before, no href was set
-								href = 'http://www.salsah.org/api/resources/' + proparr[i][j].resid;
+								href = proparr[i][j].resid;
 							} 
 							html += '<' + matching_inv[proparr[i][j].propname] + ' href="' + href;
 							if (proparr[i][j].resid !== undefined) {
@@ -549,8 +548,8 @@
 							//div.dragndrop('makeDropable', function(ev, data, instance) {
                                 
 //                                console.log('drop');
-                                
-								var attributes = {'href': API_URL + API_V1_SEGMENT + API_RESOURCES_SEGMENT + '/' + encodeURIComponent(data.resid), 'class': 'salsah-link'};
+								
+								var attributes = {'href': data.resid, 'class': 'salsah-link'};
 								var style = new CKEDITOR.style( { element : 'a', attributes : attributes } );
 								style.type = CKEDITOR.STYLE_INLINE;
 								style.apply(event.editor.document);
