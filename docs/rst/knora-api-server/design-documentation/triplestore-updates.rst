@@ -270,8 +270,8 @@ transaction respects the consistency constraints, as described in the section
 `Consistency checks`_ of the GraphDB documentation. This makes it possible to
 catch consistency constraint violations caused by bugs in Knora, and it also
 checks data that is uploaded directly into the triplestore without going
-through the Knora API. However, this feature is not yet enabled, because of
-problems described in `issue 33`_.
+through the Knora API. However, this feature is only partly enabled, because
+of problems described in `issue 33`_.
 
 GraphDB's consistency checker requires the repository to be created with
 reasoning enabled. GraphDB's reasoning rules are defined in rule files with
