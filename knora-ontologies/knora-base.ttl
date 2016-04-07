@@ -27,6 +27,22 @@
 <http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology .
 
 
+
+#################################################################
+#
+#    Base property for Knora system properties
+#
+#################################################################
+
+
+###  http://www.knora.org/ontology/knora-base#systemProperty
+
+:systemProperty rdf:type rdf:Property ;
+
+                rdfs:comment "The base property of Knora system properties, i.e. properties that do not point to Knora resources or values"@en .
+
+
+
 #################################################################
 #
 #    Annotation properties
@@ -45,9 +61,9 @@
 ###  http://www.knora.org/ontology/knora-base#hasDefaultChangeRightsPermission
 
 :hasDefaultChangeRightsPermission rdf:type owl:AnnotationProperty ;
-                                  
+
                                   :objectClassConstraint :UserGroup ;
-                                  
+
                                   rdfs:subPropertyOf :hasDefaultDeletePermission .
 
 
@@ -55,9 +71,9 @@
 ###  http://www.knora.org/ontology/knora-base#hasDefaultDeletePermission
 
 :hasDefaultDeletePermission rdf:type owl:AnnotationProperty ;
-                            
+
                             :objectClassConstraint :UserGroup ;
-                            
+
                             rdfs:subPropertyOf :hasDefaultModifyPermission .
 
 
@@ -65,9 +81,9 @@
 ###  http://www.knora.org/ontology/knora-base#hasDefaultModifyPermission
 
 :hasDefaultModifyPermission rdf:type owl:AnnotationProperty ;
-                            
+
                             :objectClassConstraint :UserGroup ;
-                            
+
                             rdfs:subPropertyOf :hasDefaultViewPermission .
 
 
@@ -81,9 +97,9 @@
 ###  http://www.knora.org/ontology/knora-base#hasDefaultRestrictedViewPermission
 
 :hasDefaultRestrictedViewPermission rdf:type owl:AnnotationProperty ;
-                                    
+
                                     :objectClassConstraint :UserGroup ;
-                                    
+
                                     rdfs:subPropertyOf :hasDefaultPermission .
 
 
@@ -91,7 +107,7 @@
 ###  http://www.knora.org/ontology/knora-base#hasDefaultViewPermission
 
 :hasDefaultViewPermission rdf:type owl:AnnotationProperty ;
-                          
+
                           rdfs:subPropertyOf :hasDefaultRestrictedViewPermission .
 
 
@@ -99,7 +115,7 @@
 ###  http://www.knora.org/ontology/knora-base#resourceIcon
 
 :resourceIcon rdf:type owl:AnnotationProperty ;
-              
+
               :subjectClassConstraint owl:Class ;
 
               :objectDatatypeConstraint xsd:string .
@@ -132,6 +148,17 @@
 #################################################################
 
 
+
+###  http://www.knora.org/ontology/knora-base#hasContent
+
+:hasContent rdf:type owl:ObjectProperty ;
+
+          rdfs:comment "The base property of properties that point to Knora resources and values"@en ;
+
+          :subjectClassConstraint :Resource .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#subjectClassConstraint
 
 :subjectClassConstraint rdf:type owl:ObjectProperty ;
@@ -151,9 +178,11 @@
 ###  http://www.knora.org/ontology/knora-base#attachedToProject
 
 :attachedToProject rdf:type owl:ObjectProperty ;
-                   
+
+                   rdfs:subPropertyOf :systemProperty ;
+
                    rdfs:comment "Connects a Resource or a Value to a project"@en ;
-                   
+
                    :objectClassConstraint :knoraProject .
 
 
@@ -161,9 +190,11 @@
 ###  http://www.knora.org/ontology/knora-base#attachedToUser
 
 :attachedToUser rdf:type owl:ObjectProperty ;
-                
+
+                rdfs:subPropertyOf :systemProperty ;
+
                 rdfs:comment "Connects a Resource or a Value to a user"@en ;
-                
+
                 :objectClassConstraint :User .
 
 
@@ -171,11 +202,13 @@
 ###  http://www.knora.org/ontology/knora-base#belongsTo
 
 :belongsTo rdf:type owl:ObjectProperty ;
-           
+
+           rdfs:subPropertyOf :systemProperty ;
+
            rdfs:comment "Indicates which Institution a knoraProject belongs to"@en ;
-           
+
            :objectClassConstraint :Institution ;
-           
+
            :subjectClassConstraint :knoraProject .
 
 
@@ -183,11 +216,13 @@
 ###  http://www.knora.org/ontology/knora-base#currentproject
 
 :currentproject rdf:type owl:ObjectProperty ;
-                
+
+                rdfs:subPropertyOf :systemProperty ;
+
                 rdfs:comment "This property indicates, which is the \"current project\" of a given user. A user can be part of any number of projects, but only one can be the active project."@en ;
-                
+
                 :subjectClassConstraint :User ;
-                
+
                 :objectClassConstraint :knoraProject .
 
 
@@ -195,9 +230,9 @@
 ###  http://www.knora.org/ontology/knora-base#hasChangeRightsPermission
 
 :hasChangeRightsPermission rdf:type owl:ObjectProperty ;
-                           
+
                            :objectClassConstraint :UserGroup ;
-                           
+
                            rdfs:subPropertyOf :hasDeletePermission .
 
 
@@ -205,20 +240,20 @@
 ###  http://www.knora.org/ontology/knora-base#hasColor
 
 :hasColor rdf:type owl:ObjectProperty ;
-          
+
           rdfs:label "Farbe"@de ,
                      "Color"@en ,
                      "Couleur"@fr ,
                      "Colore"@it ;
-          
+
           <http://www.knora.org/ontology/salsah-gui#guiAttribute> "ncolors=8"^^xsd:string ;
-          
+
           :objectClassConstraint :ColorValue ;
-          
+
           :subjectClassConstraint :Region ;
-          
+
           rdfs:subPropertyOf :hasValue ;
-          
+
           <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Colorpicker> .
 
 
@@ -226,14 +261,14 @@
 ###  http://www.knora.org/ontology/knora-base#hasComment
 
 :hasComment rdf:type owl:ObjectProperty ;
-            
+
             rdfs:label "Kommentar"@de ,
                        "Comment"@en ,
                        "Commentaire"@fr ,
                        "Commento"@it ;
-            
+
             :objectClassConstraint :TextValue ;
-            
+
             rdfs:subPropertyOf :hasValue .
 
 
@@ -241,9 +276,9 @@
 ###  http://www.knora.org/ontology/knora-base#hasDeletePermission
 
 :hasDeletePermission rdf:type owl:ObjectProperty ;
-                     
+
                      :objectClassConstraint :UserGroup ;
-                     
+
                      rdfs:subPropertyOf :hasModifyPermission .
 
 
@@ -260,14 +295,14 @@
                 :objectClassConstraint :ExternalResValue ;
 
                 :subjectClassConstraint :ExternalResource ;
-                
+
                 rdfs:subPropertyOf :hasValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasFileValue
 
 :hasFileValue rdf:type owl:ObjectProperty ;
-              
+
               :objectClassConstraint :FileValue ;
 
               rdfs:label "hat Repräsentation (Datei)"@de ,
@@ -276,7 +311,7 @@
                          "ha Rappresentazione (File)"@it ;
               
               :subjectClassConstraint :Representation ;
-              
+
               rdfs:subPropertyOf :hasValue .
 
 
@@ -291,9 +326,9 @@
                          "ha Rappresentazione (imagine)"@it ;
               
               :objectClassConstraint :StillImageFileValue ;
-              
+
               :subjectClassConstraint :StillImageRepresentation ;
-              
+
               rdfs:subPropertyOf :hasFileValue .
 
 
@@ -308,9 +343,9 @@
                          "ha Rappresentazione (film)"@it ;
               
               :objectClassConstraint :MovingImageFileValue ;
-              
+
               :subjectClassConstraint :MovingImageRepresentation ;
-              
+
               rdfs:subPropertyOf :hasFileValue .
 
 
@@ -325,9 +360,9 @@
                          "ha Rappresentazione (Audio)"@it ;
 
               :objectClassConstraint :AudioFileValue ;
-              
+
               :subjectClassConstraint :AudioRepresentation ;
-              
+
               rdfs:subPropertyOf :hasFileValue .
 
 
@@ -342,9 +377,9 @@
                          "ha Rappresentazione (3D)"@it ;
               
               :objectClassConstraint :DDDFileValue ;
-              
+
               :subjectClassConstraint :DDDRepresentation ;
-              
+
               rdfs:subPropertyOf :hasFileValue .
 
 
@@ -359,9 +394,9 @@
                          "ha Rappresentazione (Testo)"@it ;
               
               :objectClassConstraint :TextFileValue ;
-              
+
               :subjectClassConstraint :TextRepresentation ;
-              
+
               rdfs:subPropertyOf :hasFileValue .
 
 
@@ -376,30 +411,30 @@
                          "ha Rappresentazione (Documento)"@it ;
               
               :objectClassConstraint :DocumentFileValue ;
-              
+
               :subjectClassConstraint :DocumentRepresentation ;
 
               rdfs:subPropertyOf :hasFileValue .
 
-              
+
 
 ###  http://www.knora.org/ontology/knora-base#hasGeometry
 
 :hasGeometry rdf:type owl:ObjectProperty ;
-             
+
              rdfs:label "Geometrie"@de ,
                         "Geometry"@en ,
                         "Géometrie"@fr ,
                         "Geometria"@it ;
-             
+
              <http://www.knora.org/ontology/salsah-gui#guiAttribute> "width=95%;rows=4;wrap=soft"^^xsd:string ;
-             
+
              :objectClassConstraint :GeomValue ;
-             
+
              :subjectClassConstraint :Region ;
-             
+
              rdfs:subPropertyOf :hasValue ;
-             
+
              <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Geometry> .
 
 
@@ -408,15 +443,17 @@
 
 :hasLinkTo rdf:type owl:ObjectProperty ;
 
+           rdfs:subPropertyOf :hasContent ;
+
            rdfs:label "hat Link zu"@de ,
                       "has Link to"@en ,
                       "a lien vers"@fr ,
                       "ha Link verso"@it ;
            
            rdfs:comment "Represents a direct connection between two resources"@en ;
-           
+
            :objectClassConstraint :Resource ;
-           
+
            :subjectClassConstraint :Resource .
 
 
@@ -426,11 +463,11 @@
 :hasLinkToValue rdf:type owl:ObjectProperty ;
 
                 rdfs:comment "Points to a LinkValue reification describing a link between two resources"@en ;
-                
+
                 :objectClassConstraint :LinkValue ;
-                
+
                 :subjectClassConstraint :Resource ;
-                
+
                 rdfs:subPropertyOf :hasValue .
 
 
@@ -438,9 +475,9 @@
 ###  http://www.knora.org/ontology/knora-base#hasModifyPermission
 
 :hasModifyPermission rdf:type owl:ObjectProperty ;
-                     
+
                      :objectClassConstraint :UserGroup ;
-                     
+
                      rdfs:subPropertyOf :hasViewPermission .
 
 
@@ -448,11 +485,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasParentListNode
 
 :hasParentListNode rdf:type owl:ObjectProperty ;
-                   
+
                    :subjectClassConstraint :ListNode ;
-                   
+
                    :objectClassConstraint :ListNode ;
-                   
+
                    owl:inverseOf :hasSubListNode .
 
 
@@ -467,13 +504,13 @@
                        "ha Parte"@it ;
          
          rdfs:comment "Indicates that another resource is part of this resource"@en ;
-         
+
          :subjectClassConstraint :Resource ;
-         
+
          :objectClassConstraint :Resource ;
-         
+
          rdfs:subPropertyOf :hasLinkTo ;
-         
+
          owl:inverseOf :isPartOf .
 
 
@@ -481,11 +518,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasPartValue
 
 :hasPartValue rdf:type owl:ObjectProperty ;
-              
+
               :objectClassConstraint :LinkValue ;
-              
+
               :subjectClassConstraint :Resource ;
-              
+
               rdfs:subPropertyOf :hasLinkToValue .
 
 
@@ -493,7 +530,7 @@
 ###  http://www.knora.org/ontology/knora-base#hasPermission
 
 :hasPermission rdf:type owl:ObjectProperty ;
-               
+
                :objectClassConstraint :UserGroup .
 
 
@@ -501,13 +538,13 @@
 ###  http://www.knora.org/ontology/knora-base#hasProject
 
 :hasProject rdf:type owl:ObjectProperty ;
-            
+
             rdfs:comment "The given Institution is responsible for the given knoraProject"@en ;
-            
+
             :subjectClassConstraint :Institution ;
-            
+
             owl:inverseOf :belongsTo ;
-            
+
             :objectClassConstraint :knoraProject .
 
 
@@ -522,9 +559,9 @@
                         "ha Provider"@it ;
              
              :objectClassConstraint :ExternalResValue ;
-             
+
              :subjectClassConstraint :ExternalResource ;
-             
+
              rdfs:subPropertyOf :hasValue .
 
 
@@ -532,7 +569,7 @@
 ###  http://www.knora.org/ontology/knora-base#hasRegion
 
 :hasRegion rdf:type owl:ObjectProperty ;
-           
+
            rdfs:comment "Points to a region of the resource"@en ;
 
            rdfs:label "hat Region"@de ,
@@ -541,11 +578,11 @@
                       "ha Regione"@it ;
            
            :objectClassConstraint :Region ;
-           
+
            :subjectClassConstraint :Representation ;
-           
+
            rdfs:subPropertyOf :hasLinkTo ;
-           
+
            owl:inverseOf :isRegionOf .
 
 
@@ -553,11 +590,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasRegionValue
 
 :hasRegionValue rdf:type owl:ObjectProperty ;
-                
+
                 :objectClassConstraint :LinkValue ;
-                
+
                 :subjectClassConstraint :Resource ;
-                
+
                 rdfs:subPropertyOf :hasLinkToValue .
 
 
@@ -572,11 +609,11 @@
                               "ha Rappresentazione"@it ;
 
                    rdfs:comment "References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."@en ;
-                   
+
                    :objectClassConstraint :Representation ;
-                   
+
                    :subjectClassConstraint :Resource ;
-                   
+
                    rdfs:subPropertyOf :hasLinkTo .
 
 
@@ -584,11 +621,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasRepresentationValue
 
 :hasRepresentationValue rdf:type owl:ObjectProperty ;
-                        
+
                         :objectClassConstraint :LinkValue ;
-                        
+
                         :subjectClassConstraint :Resource ;
-                        
+
                         rdfs:subPropertyOf :hasLinkToValue .
 
 
@@ -596,9 +633,9 @@
 ###  http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission
 
 :hasRestrictedViewPermission rdf:type owl:ObjectProperty ;
-                             
+
                              :objectClassConstraint :UserGroup ;
-                             
+
                              rdfs:subPropertyOf :hasPermission .
 
 
@@ -613,9 +650,9 @@
                               "ha standoff link verso"@it ;
                    
                    :objectClassConstraint :Resource ;
-                   
+
                    :subjectClassConstraint :Resource ;
-                   
+
                    rdfs:subPropertyOf :hasLinkTo .
 
 
@@ -623,11 +660,11 @@
 ###  http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue
 
 :hasStandoffLinkToValue rdf:type owl:ObjectProperty ;
-                        
+
                         :objectClassConstraint :LinkValue ;
-                        
+
                         :subjectClassConstraint :Resource ;
-                        
+
                         rdfs:subPropertyOf :hasLinkToValue .
 
 
@@ -635,11 +672,13 @@
 ###  http://www.knora.org/ontology/knora-base#hasSubListNode
 
 :hasSubListNode rdf:type owl:ObjectProperty ;
-                
+
                 rdfs:comment "A hierarchical list is formed using the \"hasSubListNode\"-property"@en ;
-                
+
+                rdfs:subPropertyOf :systemProperty ;
+
                 :objectClassConstraint :ListNode ;
-                
+
                 :subjectClassConstraint :ListNode .
 
 
@@ -647,17 +686,21 @@
 ###  http://www.knora.org/ontology/knora-base#hasValue
 
 :hasValue rdf:type owl:ObjectProperty ;
-          
-          :subjectClassConstraint :Resource .
+
+          rdfs:subPropertyOf :hasContent ;
+
+          :subjectClassConstraint :Resource ;
+
+          :objectClassConstraint :Value .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#hasViewPermission
 
 :hasViewPermission rdf:type owl:ObjectProperty ;
-                   
+
                    :objectClassConstraint :UserGroup ;
-                   
+
                    rdfs:subPropertyOf :hasRestrictedViewPermission .
 
 
@@ -672,9 +715,9 @@
                            "è Annotation di"@it ;
                 
                 :subjectClassConstraint :Annotation ;
-                
+
                 :objectClassConstraint :Resource ;
-                
+
                 rdfs:subPropertyOf :hasLinkTo .
 
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOfValue
@@ -691,13 +734,15 @@
 ###  http://www.knora.org/ontology/knora-base#isInGroup
 
 :isInGroup rdf:type owl:ObjectProperty ;
-           
+
+           rdfs:subPropertyOf :systemProperty ;
+
            rdfs:comment "The given User is part of the given UserGroup"@en ;
-           
+
            :subjectClassConstraint :User ;
-           
+
            :objectClassConstraint :UserGroup ;
-           
+
            rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> .
 
 
@@ -705,13 +750,15 @@
 ###  http://www.knora.org/ontology/knora-base#isInProject
 
 :isInProject rdf:type owl:ObjectProperty ;
-             
+
+             rdfs:subPropertyOf :systemProperty ;
+
              rdfs:comment "The given User is part of the given knoraProject"@en ;
-             
+
              :subjectClassConstraint :User ;
-             
+
              :objectClassConstraint :knoraProject ;
-             
+
              rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> .
 
 
@@ -726,11 +773,11 @@
                      "fa parte di"@it ;
           
           rdfs:comment "Indicates that this resource is part of another resource"@en ;
-          
+
           :subjectClassConstraint :Resource ;
-          
+
           :objectClassConstraint :Resource ;
-          
+
           rdfs:subPropertyOf :hasLinkTo .
 
 
@@ -738,11 +785,11 @@
 ###  http://www.knora.org/ontology/knora-base#isPartOfValue
 
 :isPartOfValue rdf:type owl:ObjectProperty ;
-               
+
                :objectClassConstraint :LinkValue ;
-               
+
                :subjectClassConstraint :Resource ;
-               
+
                rdfs:subPropertyOf :hasLinkToValue .
 
 
@@ -750,7 +797,7 @@
 ###  http://www.knora.org/ontology/knora-base#isRegionOf
 
 :isRegionOf rdf:type owl:ObjectProperty ;
-            
+
             rdfs:comment "Region of interest within a digital object (e.g. an image)"@en ;
 
             rdfs:label "is Region von"@de ,
@@ -759,9 +806,9 @@
                        "e Region di"@it ;
             
             :subjectClassConstraint :Region ;
-            
+
             :objectClassConstraint :Representation ;
-            
+
             rdfs:subPropertyOf :hasLinkTo .
 
 
@@ -769,11 +816,11 @@
 ###  http://www.knora.org/ontology/knora-base#isRegionOfValue
 
 :isRegionOfValue rdf:type owl:ObjectProperty ;
-                 
+
                  :objectClassConstraint :LinkValue ;
-                 
+
                  :subjectClassConstraint :Region ;
-                 
+
                  rdfs:subPropertyOf :hasLinkToValue .
 
 
@@ -781,11 +828,13 @@
 ###  http://www.knora.org/ontology/knora-base#previousValue
 
 :previousValue rdf:type owl:ObjectProperty ;
-               
+
+               rdfs:subPropertyOf :systemProperty ;
+
                rdfs:comment "Points to the previous verson of a value"@en ;
-               
+
                :subjectClassConstraint :Value ;
-               
+
                :objectClassConstraint :Value .
 
 
@@ -793,16 +842,16 @@
 ###  http://www.knora.org/ontology/knora-base#seqnum
 
 :seqnum rdf:type owl:ObjectProperty ;
-        
+
         :objectClassConstraint :IntValue ;
-        
+
         rdfs:subPropertyOf :hasValue ;
 
         rdfs:label "Sequenznummer"@de ,
                    "Sequence number"@en ,
                    "Numéro de séquence"@fr ,
                    "Numero di sequenza"@it ;
-        
+
         rdfs:comment "Indicates the position of a resource within a sequence"@en .
 
 
@@ -810,9 +859,11 @@
 ###  http://www.knora.org/ontology/knora-base#standoffHasLink
 
 :standoffHasLink rdf:type owl:ObjectProperty ;
-                 
+
+                 rdfs:subPropertyOf :systemProperty ;
+
                  :objectClassConstraint :Resource ;
-                 
+
                  :subjectClassConstraint :StandoffLink .
 
 
@@ -820,9 +871,11 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasStandoff
 
 :valueHasStandoff rdf:type owl:ObjectProperty ;
-                  
+
+                  rdfs:subPropertyOf :systemProperty ;
+
                   :objectClassConstraint :Standoff ;
-                  
+
                   :subjectClassConstraint :TextValue .
 
 
@@ -846,8 +899,10 @@
 
 :address rdf:type owl:DatatypeProperty ;
 
+         rdfs:subPropertyOf :systemProperty ;
+
          :objectDatatypeConstraint xsd:string ;
-         
+
          rdfs:comment "Address of a person or an institution"@en .
 
 
@@ -855,21 +910,25 @@
 ###  http://www.knora.org/ontology/knora-base#projectBasepath
 
 :projectBasepath rdf:type owl:DatatypeProperty ;
-          
+
+          rdfs:subPropertyOf :systemProperty ;
+
           rdfs:comment "Basepath for digital objects which belong to this project"@en ;
-          
+
           :subjectClassConstraint :knoraProject ;
 
           :objectDatatypeConstraint xsd:string .
- 
+
 
 
 ###  http://www.knora.org/ontology/knora-base#creationDate
 
 :creationDate rdf:type owl:DatatypeProperty ;
-              
+
+              rdfs:subPropertyOf :systemProperty ;
+
               rdfs:comment "Indicates when a resource was created"@en ;
-              
+
               :subjectClassConstraint :Resource ;
 
               :objectDatatypeConstraint xsd:dateTimeStamp .
@@ -880,8 +939,10 @@
 
 :deleteDate rdf:type owl:DatatypeProperty ;
 
+            rdfs:subPropertyOf :systemProperty ;
+
             rdfs:comment "Indicates when a resource was deleted"@en ;
-              
+
             :subjectClassConstraint :Resource ;
 
             :objectDatatypeConstraint xsd:dateTimeStamp .
@@ -891,7 +952,9 @@
 ###  http://www.knora.org/ontology/knora-base#description
 
 :description rdf:type owl:DatatypeProperty ;
-             
+
+             rdfs:subPropertyOf :systemProperty ;
+
              rdfs:comment "A description of a resource class or a property class"@en ;
 
              :objectDatatypeConstraint xsd:string .
@@ -901,6 +964,8 @@
 ###  http://www.knora.org/ontology/knora-base#projectDescription
 
 :projectDescription rdf:type owl:DatatypeProperty ;
+
+             rdfs:subPropertyOf :systemProperty ;
 
              rdfs:comment "A description of a Knora project"@en ;
 
@@ -913,9 +978,9 @@
 ###  http://www.knora.org/ontology/knora-base#dimX
 
 :dimX rdf:type owl:DatatypeProperty ;
-      
+
       :subjectClassConstraint :FileValue ;
-      
+
       rdfs:subPropertyOf :valueHas ;
 
       :objectDatatypeConstraint xsd:integer .
@@ -925,11 +990,11 @@
 ###  http://www.knora.org/ontology/knora-base#dimY
 
 :dimY rdf:type owl:DatatypeProperty ;
-      
+
       :subjectClassConstraint :FileValue ;
-      
+
       rdfs:subPropertyOf :valueHas ;
-      
+
       :objectDatatypeConstraint xsd:integer .
 
 
@@ -937,11 +1002,11 @@
 ###  http://www.knora.org/ontology/knora-base#duration
 
 :duration rdf:type owl:DatatypeProperty ;
-          
+
           rdfs:subPropertyOf :valueHas ;
-          
+
           :subjectClassConstraint :FileValue ;
-          
+
           :objectDatatypeConstraint xsd:float .
 
 
@@ -949,9 +1014,11 @@
 ###  http://www.knora.org/ontology/knora-base#email
 
 :email rdf:type owl:DatatypeProperty ;
-       
+
+       rdfs:subPropertyOf :systemProperty ;
+
        rdfs:comment "The email address of a person or institution"@en ;
-       
+
        :objectDatatypeConstraint xsd:string .
 
 
@@ -959,13 +1026,13 @@
 ###  http://www.knora.org/ontology/knora-base#extResAccessInfo
 
 :extResAccessInfo rdf:type owl:DatatypeProperty ;
-                  
+
                   rdfs:comment "Information (URL etc.) for accessing an external resource"@en ;
-                  
+
                   rdfs:subPropertyOf :valueHas ;
-                  
+
                   :subjectClassConstraint :ExternalResValue ;
-                  
+
                   :objectDatatypeConstraint xsd:string .
 
 
@@ -973,13 +1040,13 @@
 ###  http://www.knora.org/ontology/knora-base#extResId
 
 :extResId rdf:type owl:DatatypeProperty ;
-          
+
           rdfs:comment "The ID of the external resource. The form of the ID is dependent on the provider."@en ;
-          
+
           rdfs:subPropertyOf :valueHas ;
-          
+
           :subjectClassConstraint :ExternalResValue ;
-          
+
           :objectDatatypeConstraint xsd:string .
 
 
@@ -987,13 +1054,13 @@
 ###  http://www.knora.org/ontology/knora-base#extResProvider
 
 :extResProvider rdf:type owl:DatatypeProperty ;
-                
+
                 rdfs:comment "The name of the external provider of the resource"@en ;
-                
+
                 rdfs:subPropertyOf :valueHas ;
-                
+
                 :subjectClassConstraint :ExternalResValue ;
-                
+
                 :objectDatatypeConstraint xsd:string .
 
 
@@ -1001,11 +1068,11 @@
 ###  http://www.knora.org/ontology/knora-base#filename
 
 :filename rdf:type owl:DatatypeProperty ;
-          
+
           rdfs:subPropertyOf :valueHas ;
-          
+
           :subjectClassConstraint :Representation ;
-          
+
           :objectDatatypeConstraint xsd:string .
 
 
@@ -1013,11 +1080,11 @@
 ###  http://www.knora.org/ontology/knora-base#fps
 
 :fps rdf:type owl:DatatypeProperty ;
-     
+
      rdfs:subPropertyOf :valueHas ;
-     
+
      :subjectClassConstraint :MovingImageFileValue ;
-     
+
      :objectDatatypeConstraint xsd:float .
 
 
@@ -1025,11 +1092,11 @@
 ###  http://www.knora.org/ontology/knora-base#internalFilename
 
 :internalFilename rdf:type owl:DatatypeProperty ;
-                  
+
                   rdfs:subPropertyOf :valueHas ;
-                  
+
                   :subjectClassConstraint :FileValue ;
-                  
+
                   :objectDatatypeConstraint xsd:string .
 
 
@@ -1037,11 +1104,11 @@
 ###  http://www.knora.org/ontology/knora-base#internalMimeType
 
 :internalMimeType rdf:type owl:DatatypeProperty ;
-                  
+
                   rdfs:subPropertyOf :valueHas ;
-                  
+
                   :subjectClassConstraint :FileValue ;
-                  
+
                   :objectDatatypeConstraint xsd:string .
 
 
@@ -1049,7 +1116,9 @@
 ###  http://www.knora.org/ontology/knora-base#isDeleted
 
 :isDeleted rdf:type owl:DatatypeProperty ;
-           
+
+           rdfs:subPropertyOf :systemProperty ;
+
            rdfs:comment "Exists and is true if the resource has been deleted"@en ;
 
            :objectDatatypeConstraint xsd:boolean .
@@ -1059,11 +1128,11 @@
 ###  http://www.knora.org/ontology/knora-base#isPreview
 
 :isPreview rdf:type owl:DatatypeProperty ;
-           
+
            rdfs:subPropertyOf :valueHas ;
-           
+
            :subjectClassConstraint :FileValue ;
-           
+
            :objectDatatypeConstraint xsd:boolean .
 
 
@@ -1071,9 +1140,11 @@
 ###  http://www.knora.org/ontology/knora-base#isRootNode
 
 :isRootNode rdf:type owl:DatatypeProperty ;
-            
+
+           rdfs:subPropertyOf :systemProperty ;
+
             :subjectClassConstraint :ListNode ;
-            
+
             :objectDatatypeConstraint xsd:boolean .
 
 
@@ -1081,9 +1152,11 @@
 ###  http://www.knora.org/ontology/knora-base#lastModificationDate
 
 :lastModificationDate rdf:type owl:DatatypeProperty ;
-                      
+
+                      rdfs:subPropertyOf :systemProperty ;
+
                       :subjectClassConstraint :Resource ;
-                      
+
                       :objectDatatypeConstraint xsd:dateTimeStamp .
 
 
@@ -1091,9 +1164,11 @@
 ###  http://www.knora.org/ontology/knora-base#listNodePosition
 
 :listNodePosition rdf:type owl:DatatypeProperty ;
-                  
+
+                 rdfs:subPropertyOf :systemProperty ;
+
                   :subjectClassConstraint :ListNode ;
-                  
+
                   :objectDatatypeConstraint xsd:integer .
 
 
@@ -1101,9 +1176,11 @@
 ###  http://www.knora.org/ontology/knora-base#listNodeName
 
 :listNodeName rdf:type owl:DatatypeProperty ;
-               
+
+               rdfs:subPropertyOf :systemProperty ;
+
                :subjectClassConstraint :ListNode ;
-               
+
                :objectDatatypeConstraint xsd:string .
 
 
@@ -1111,7 +1188,9 @@
 ###  http://www.knora.org/ontology/knora-base#name
 
 :name rdf:type owl:DatatypeProperty ;
-               
+
+      rdfs:subPropertyOf :systemProperty ;
+
       :objectDatatypeConstraint xsd:string .
 
 
@@ -1119,11 +1198,11 @@
 ###  http://www.knora.org/ontology/knora-base#originalFilename
 
 :originalFilename rdf:type owl:DatatypeProperty ;
-                  
+
                   rdfs:subPropertyOf :valueHas ;
-                  
+
                   :subjectClassConstraint :FileValue ;
-                  
+
                   :objectDatatypeConstraint xsd:string .
 
 
@@ -1131,11 +1210,11 @@
 ###  http://www.knora.org/ontology/knora-base#originalMimeType
 
 :originalMimeType rdf:type owl:DatatypeProperty ;
-                  
+
                   rdfs:subPropertyOf :valueHas ;
-                  
+
                   :subjectClassConstraint :FileValue ;
-                  
+
                   :objectDatatypeConstraint xsd:string .
 
 
@@ -1143,19 +1222,23 @@
 ###  http://www.knora.org/ontology/knora-base#password
 
 :password rdf:type owl:DatatypeProperty ;
-          
+
+          rdfs:subPropertyOf :systemProperty ;
+
           rdfs:comment "An encrypted credential for access"@en ;
-          
+
           :subjectClassConstraint <http://xmlns.com/foaf/0.1/Person> ;
 
           :objectDatatypeConstraint xsd:string .
-          
+
 
 
 ###  http://www.knora.org/ontology/knora-base#phone
 
 :phone rdf:type owl:DatatypeProperty ;
-       
+
+       rdfs:subPropertyOf :systemProperty ;
+
        rdfs:comment "Phone number of a person, institution, etc."@en ;
 
        :objectDatatypeConstraint xsd:string .
@@ -1165,7 +1248,9 @@
 ###  http://www.knora.org/ontology/knora-base#preferredLanguage
 
 :preferredLanguage rdf:type owl:DatatypeProperty ;
-                   
+
+                   rdfs:subPropertyOf :systemProperty ;
+
                    rdfs:comment "Language (\"en\", \"de\", \"fr\", \"it\", \"gr\", etc.)"@en ;
 
                    :objectDatatypeConstraint xsd:string .
@@ -1176,6 +1261,8 @@
 
 :protocol rdf:type owl:DatatypeProperty ;
 
+          rdfs:subPropertyOf :systemProperty ;
+
           rdfs:comment "An Internet protocol (\"http\", \"https\", etc.)"@en ;
 
           :objectDatatypeConstraint xsd:string .
@@ -1185,20 +1272,12 @@
 ###  http://www.knora.org/ontology/knora-base#qualityLevel
 
 :qualityLevel rdf:type owl:DatatypeProperty ;
-              
+
               rdfs:subPropertyOf :valueHas ;
-              
+
               :subjectClassConstraint :FileValue ;
-              
+
               :objectDatatypeConstraint xsd:integer .
-
-
-
-###  http://www.knora.org/ontology/knora-base#seqnum
-
-:seqnum rdf:type owl:DatatypeProperty ;
-              
-        :objectDatatypeConstraint xsd:integer .
 
 
 
@@ -1207,10 +1286,10 @@
 :projectShortname rdf:type owl:DatatypeProperty ;
 
            :subjectClassConstraint :knoraProject ;
-           
+
            :objectDatatypeConstraint xsd:string ;
-           
-           rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> .
+
+           rdfs:subPropertyOf :systemProperty .
 
 
 
@@ -1222,7 +1301,7 @@
 
            :objectDatatypeConstraint xsd:string ;
 
-           rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> .
+           rdfs:subPropertyOf :systemProperty .
 
 
 
@@ -1231,6 +1310,8 @@
 :projectKeyword rdf:type owl:DatatypeProperty ;
 
            rdfs:comment "A comma-delimited list of keywords describing a project"@en ;
+
+           rdfs:subPropertyOf :systemProperty ;
 
            :subjectClassConstraint :knoraProject ;
 
@@ -1242,6 +1323,8 @@
 
 :projectLogo rdf:type owl:DatatypeProperty ;
 
+           rdfs:subPropertyOf :systemProperty ;
+
            :subjectClassConstraint :knoraProject ;
 
            :objectDatatypeConstraint xsd:string .
@@ -1251,9 +1334,11 @@
 ###  http://www.knora.org/ontology/knora-base#standoffHasAttribute
 
 :standoffHasAttribute rdf:type owl:DatatypeProperty ;
-                      
+
+                      rdfs:subPropertyOf :systemProperty ;
+
                       :subjectClassConstraint :Standoff ;
-                      
+
                       :objectDatatypeConstraint xsd:string .
 
 
@@ -1261,9 +1346,11 @@
 ###  http://www.knora.org/ontology/knora-base#standoffHasEnd
 
 :standoffHasEnd rdf:type owl:DatatypeProperty ;
-                
+
+                rdfs:subPropertyOf :systemProperty ;
+
                 :subjectClassConstraint :Standoff ;
-                
+
                 :objectDatatypeConstraint xsd:integer .
 
 
@@ -1271,9 +1358,11 @@
 ###  http://www.knora.org/ontology/knora-base#standoffHasHref
 
 :standoffHasHref rdf:type owl:DatatypeProperty ;
-                 
+
+                 rdfs:subPropertyOf :systemProperty ;
+
                  :subjectClassConstraint :StandoffHref ;
-                 
+
                  :objectDatatypeConstraint xsd:anyURI .
 
 
@@ -1281,9 +1370,11 @@
 ###  http://www.knora.org/ontology/knora-base#standoffHasStart
 
 :standoffHasStart rdf:type owl:DatatypeProperty ;
-                  
+
+                  rdfs:subPropertyOf :systemProperty ;
+
                   :subjectClassConstraint :Standoff ;
-                  
+
                   :objectDatatypeConstraint xsd:integer .
 
 
@@ -1291,27 +1382,27 @@
 ###  http://www.knora.org/ontology/knora-base#userid
 
 :userid rdf:type owl:DatatypeProperty ;
-        
+
         rdfs:comment "The login name of a user of Knora"@en ;
-        
+
         :subjectClassConstraint :User ;
-        
+
         :objectDatatypeConstraint xsd:string ;
-        
-        rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/accountName> .
+
+        rdfs:subPropertyOf :systemProperty .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#valueHasComment
 
 :valueHasComment rdf:type owl:DatatypeProperty ;
-              
+
               rdfs:comment "A comment on a value"@en ;
-              
+
               rdfs:subPropertyOf :valueHas ;
-              
+
               :subjectClassConstraint :Value ;
-              
+
               :objectDatatypeConstraint xsd:string .
 
 
@@ -1319,11 +1410,11 @@
 ###  http://www.knora.org/ontology/knora-base#valueCreationDate
 
 :valueCreationDate rdf:type owl:DatatypeProperty ;
-                   
+
                    :subjectClassConstraint :Value ;
-                   
+
                    rdfs:subPropertyOf :valueHas ;
-                   
+
                    :objectDatatypeConstraint xsd:dateTimeStamp .
 
 
@@ -1331,7 +1422,9 @@
 ###  http://www.knora.org/ontology/knora-base#valueHas
 
 :valueHas rdf:type owl:DatatypeProperty ;
-          
+
+          rdfs:subPropertyOf :systemProperty ;
+
           :subjectClassConstraint :Value .
 
 
@@ -1339,13 +1432,13 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasCalendar
 
 :valueHasCalendar rdf:type owl:DatatypeProperty ;
-                  
+
                   rdfs:comment "Name of the calendar to be used. Allowed values currently are \"GREGORIAN\", \"JULIAN\", \"JEWISH\", \"REVOLUTIONARY\". This list may be expanded in the future."@en ;
-                  
+
                   rdfs:subPropertyOf :valueHas ;
-                  
+
                   :subjectClassConstraint :DateValue ;
-                  
+
                   :objectDatatypeConstraint xsd:string .
 
 
@@ -1353,13 +1446,13 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasColor
 
 :valueHasColor rdf:type owl:DatatypeProperty ;
-               
+
                rdfs:comment "Color in the form of #rrggbb (as defining web colors)"@en ;
-               
+
                rdfs:subPropertyOf :valueHas ;
-               
+
                :subjectClassConstraint :ColorValue ;
-               
+
                :objectDatatypeConstraint xsd:string .
 
 
@@ -1367,13 +1460,13 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasEndJDC
 
 :valueHasEndJDC rdf:type owl:DatatypeProperty ;
-                
+
                 rdfs:comment "Contains the end of a date as \"Julian day count\" (JDC)"@en ;
-                
+
                 rdfs:subPropertyOf :valueHas ;
-                
+
                 :subjectClassConstraint :DateValue ;
-                
+
                 :objectDatatypeConstraint xsd:integer .
 
 
@@ -1381,13 +1474,13 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasEndPrecision
 
 :valueHasEndPrecision rdf:type owl:DatatypeProperty ;
-                      
+
                       rdfs:comment "Precision of knowledge about the end of the date. Allowed are \"DAY\", \"MONTH\" or \"YEAR\"."@en ;
-                      
+
                       rdfs:subPropertyOf :valueHas ;
-                      
+
                       :subjectClassConstraint :DateValue ;
-                      
+
                       :objectDatatypeConstraint xsd:string .
 
 
@@ -1395,11 +1488,11 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasFloat
 
 :valueHasFloat rdf:type owl:DatatypeProperty ;
-               
+
                rdfs:subPropertyOf :valueHas ;
-               
+
                :subjectClassConstraint :FloatValue ;
-               
+
                :objectDatatypeConstraint xsd:float .
 
 
@@ -1407,13 +1500,13 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasGeometry
 
 :valueHasGeometry rdf:type owl:DatatypeProperty ;
-                  
+
                   rdfs:comment "JSON string describing a geometry (e.g. a region). Currently geometries are limited to 2D unions of primitive objects like circles, squartes and polygons."@en ;
-                  
+
                   rdfs:subPropertyOf :valueHas ;
-                  
+
                   :subjectClassConstraint :GeomValue ;
-                  
+
                   :objectDatatypeConstraint xsd:string .
 
 
@@ -1421,11 +1514,11 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasGeonameCode
 
 :valueHasGeonameCode rdf:type owl:DatatypeProperty ;
-                     
+
                      rdfs:subPropertyOf :valueHas ;
-                     
+
                      :subjectClassConstraint :GeonameValue ;
-                     
+
                      :objectDatatypeConstraint xsd:string .
 
 
@@ -1433,11 +1526,11 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasInteger
 
 :valueHasInteger rdf:type owl:DatatypeProperty ;
-                 
+
                  rdfs:subPropertyOf :valueHas ;
-                 
+
                  :subjectClassConstraint :IntValue ;
-                 
+
                  :objectDatatypeConstraint xsd:integer .
 
 
@@ -1445,11 +1538,11 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasIntervalEnd
 
 :valueHasIntervalEnd rdf:type owl:DatatypeProperty ;
-                     
+
                      rdfs:subPropertyOf :valueHas ;
-                     
+
                      :subjectClassConstraint :IntervalValue ;
-                     
+
                      :objectDatatypeConstraint xsd:float .
 
 
@@ -1457,11 +1550,11 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasIntervalStart
 
 :valueHasIntervalStart rdf:type owl:DatatypeProperty ;
-                       
+
                        rdfs:subPropertyOf :valueHas ;
-                       
+
                        :subjectClassConstraint :IntervalValue ;
-                       
+
                        :objectDatatypeConstraint xsd:float .
 
 
@@ -1469,11 +1562,11 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasListNode
 
 :valueHasListNode rdf:type owl:DatatypeProperty ;
-                  
+
                   rdfs:subPropertyOf :valueHas ;
-                  
+
                   :subjectClassConstraint :ListValue ;
-                  
+
                   :objectDatatypeConstraint :ListNode .
 
 
@@ -1481,22 +1574,22 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasOrder
 
 :valueHasOrder rdf:type owl:DatatypeProperty ;
-               
+
                rdfs:subPropertyOf :valueHas ;
-               
+
                :subjectClassConstraint :Value ;
-               
+
                :objectDatatypeConstraint xsd:integer .
 
 
 ###  http://www.knora.org/ontology/knora-base#valueHasRefCount
 
 :valueHasRefCount rdf:type owl:DatatypeProperty ;
-                  
+
                   rdfs:subPropertyOf :valueHas ;
-                  
+
                   :subjectClassConstraint :LinkValue ;
-                  
+
                   :objectDatatypeConstraint xsd:integer .
 
 
@@ -1504,13 +1597,13 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasStartJDC
 
 :valueHasStartJDC rdf:type owl:DatatypeProperty ;
-                  
+
                   rdfs:comment "Contains the start of a date as \"Julian day count\" (JDC)"@en ;
-                  
+
                   rdfs:subPropertyOf :valueHas ;
-                  
+
                   :subjectClassConstraint :DateValue ;
-                  
+
                   :objectDatatypeConstraint xsd:integer .
 
 
@@ -1518,13 +1611,13 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasStartPrecision
 
 :valueHasStartPrecision rdf:type owl:DatatypeProperty ;
-                        
+
                         rdfs:comment "The precision the start of a date. Allowed values are \"DAY\", \"MONTH\", or \"YEAR\"."@en ;
-                        
+
                         rdfs:subPropertyOf :valueHas ;
-                        
+
                         :subjectClassConstraint :DateValue ;
-                        
+
                         :objectDatatypeConstraint xsd:string .
 
 
@@ -1532,11 +1625,11 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasString
 
 :valueHasString rdf:type owl:DatatypeProperty ;
-                
+
                 rdfs:subPropertyOf :valueHas ;
-                
+
                 :subjectClassConstraint :Value ;
-                
+
                 :objectDatatypeConstraint xsd:string .
 
 
@@ -1544,11 +1637,11 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasTime
 
 :valueHasTime rdf:type owl:DatatypeProperty ;
-              
+
               rdfs:subPropertyOf :valueHas ;
-              
+
               :subjectClassConstraint :TimeValue ;
-              
+
               :objectDatatypeConstraint xsd:float .
 
 
@@ -1556,11 +1649,11 @@
 ###  http://www.knora.org/ontology/knora-base#valueHasURI
 
 :valueHasURI rdf:type owl:DatatypeProperty ;
-             
+
              rdfs:subPropertyOf :valueHas ;
-             
+
              :subjectClassConstraint :Value ;
-             
+
              :objectDatatypeConstraint xsd:anyURI .
 
 
@@ -1568,16 +1661,12 @@
 ###  http://www.knora.org/ontology/knora-base#website
 
 :website rdf:type owl:DatatypeProperty ;
-         
+
+         rdfs:subPropertyOf :systemProperty ;
+
          rdfs:comment "The URL of a web site"@en ;
-         
+
          :objectDatatypeConstraint xsd:anyURI .
-
-
-
-###  http://xmlns.com/foaf/0.1/accountName
-
-<http://xmlns.com/foaf/0.1/accountName> rdf:type owl:DatatypeProperty .
 
 
 
@@ -1599,7 +1688,7 @@
 ###  http://www.knora.org/ontology/knora-base#Annotation
 
 :Annotation rdf:type owl:Class ;
-            
+
             rdfs:subClassOf :Resource ,
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :hasComment ;
@@ -1612,8 +1701,7 @@
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :isAnnotationOfValue ;
                               owl:minCardinality "1"^^xsd:nonNegativeInteger
-                            ]
-                            ;
+                            ] ;
 
             rdfs:label "Annotation"@de ,
                        "Annotation"@en ,
@@ -1627,7 +1715,7 @@
 ###  http://www.knora.org/ontology/knora-base#AudioFileValue
 
 :AudioFileValue rdf:type owl:Class ;
-                
+
                 rdfs:subClassOf :FileValue ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :duration ;
@@ -1637,7 +1725,7 @@
                                   owl:onProperty :hasComment ;
                                   owl:minCardinality "0"^^xsd:nonNegativeInteger
                                 ] ;
-                
+
                 rdfs:comment "Represents an audio file"@en .
 
 
@@ -1645,7 +1733,7 @@
 ###  http://www.knora.org/ontology/knora-base#AudioRepresentation
 
 :AudioRepresentation rdf:type owl:Class ;
-                     
+
                      rdfs:subClassOf :Representation  ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :hasAudioFileValue ;
@@ -1664,7 +1752,7 @@
 ###  http://www.knora.org/ontology/knora-base#ColorValue
 
 :ColorValue rdf:type owl:Class ;
-            
+
             rdfs:subClassOf :Value ,
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :valueHasColor ;
@@ -1674,7 +1762,7 @@
                               owl:onProperty :valueHasString ;
                               owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ;
-            
+
             rdfs:comment "Represents a color in HTML format, e.g. \"#33eeff\""@en .
 
 
@@ -1682,13 +1770,13 @@
 ###  http://www.knora.org/ontology/knora-base#DDDFileValue
 
 :DDDFileValue rdf:type owl:Class ;
-              
+
               rdfs:subClassOf :FileValue ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :hasComment ;
                                 owl:minCardinality "0"^^xsd:nonNegativeInteger
                               ] ;
-              
+
               rdfs:comment "This represents some 3D-object with mesh data, point cloud, etc."@en .
 
 
@@ -1696,7 +1784,7 @@
 ###  http://www.knora.org/ontology/knora-base#DDDrepresentation
 
 :DDDrepresentation rdf:type owl:Class ;
-                   
+
                    rdfs:subClassOf :Representation  ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :hasDDDFileValue ;
@@ -1715,7 +1803,7 @@
 ###  http://www.knora.org/ontology/knora-base#DateValue
 
 :DateValue rdf:type owl:Class ;
-           
+
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasCalendar ;
@@ -1741,7 +1829,7 @@
                              owl:onProperty :valueHasString ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ;
-           
+
            rdfs:comment "Represents a Knora date value"@en .
 
 
@@ -1749,7 +1837,7 @@
 ###  http://www.knora.org/ontology/knora-base#DocumentFileValue
 
 :DocumentFileValue rdf:type owl:Class ;
-                   
+
                    rdfs:subClassOf :FileValue .
 
 
@@ -1774,7 +1862,7 @@
 ###  http://www.knora.org/ontology/knora-base#ExternalResValue
 
 :ExternalResValue rdf:type owl:Class ;
-                  
+
                   rdfs:subClassOf :Value ,
                                   [ rdf:type owl:Restriction ;
                                     owl:onProperty :extResId ;
@@ -1794,7 +1882,7 @@
 ###  http://www.knora.org/ontology/knora-base#ExternalResource
 
 :ExternalResource rdf:type owl:Class ;
-                  
+
                   rdfs:subClassOf :Resource ,
                                   [ rdf:type owl:Restriction ;
                                     owl:onProperty :hasExtResValue ;
@@ -1813,7 +1901,7 @@
 ###  http://www.knora.org/ontology/knora-base#FileValue
 
 :FileValue rdf:type owl:Class ;
-           
+
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :isPreview ;
@@ -1841,7 +1929,7 @@
 ###  http://www.knora.org/ontology/knora-base#FloatValue
 
 :FloatValue rdf:type owl:Class ;
-            
+
             rdfs:subClassOf :Value ,
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :valueHasFloat ;
@@ -1851,7 +1939,7 @@
                               owl:onProperty :valueHasString ;
                               owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ;
-            
+
             rdfs:comment "Represents a float/double value"@en .
 
 
@@ -1859,13 +1947,13 @@
 ###  http://www.knora.org/ontology/knora-base#GeomValue
 
 :GeomValue rdf:type owl:Class ;
-           
+
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasGeometry ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ;
-           
+
            rdfs:comment "Represents a geometrical objects as JSON string"@en .
 
 
@@ -1873,7 +1961,7 @@
 ###  http://www.knora.org/ontology/knora-base#GeonameValue
 
 :GeonameValue rdf:type owl:Class ;
-              
+
               rdfs:subClassOf :Value ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :valueHasGeonameCode ;
@@ -1889,7 +1977,7 @@
 ###  http://www.knora.org/ontology/knora-base#Institution
 
 :Institution rdf:type owl:Class ;
-             
+
              rdfs:subClassOf <http://xmlns.com/foaf/0.1/Organization> ,
                              [ rdf:type owl:Restriction ;
                                owl:onProperty :website ;
@@ -1915,7 +2003,7 @@
                                owl:onProperty :description ;
                                owl:minCardinality "0"^^xsd:nonNegativeInteger
                              ] ;
-             
+
              rdfs:comment "An institution that has data in Knora"@en .
 
 
@@ -1923,7 +2011,7 @@
 ###  http://www.knora.org/ontology/knora-base#IntValue
 
 :IntValue rdf:type owl:Class ;
-          
+
           rdfs:subClassOf :Value ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :valueHasInteger ;
@@ -1933,7 +2021,7 @@
                             owl:onProperty :valueHasString ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ;
-          
+
           rdfs:comment "Represents an integer value"@en .
 
 
@@ -1941,7 +2029,7 @@
 ###  http://www.knora.org/ontology/knora-base#IntervalValue
 
 :IntervalValue rdf:type owl:Class ;
-               
+
                rdfs:subClassOf :Value ,
                                [ rdf:type owl:Restriction ;
                                  owl:onProperty :valueHasIntervalEnd ;
@@ -1955,7 +2043,7 @@
                                  owl:onProperty :valueHasString ;
                                  owl:cardinality "1"^^xsd:nonNegativeInteger
                                ] ;
-               
+
                rdfs:comment "Represents a time interval, e.g. in an audio recording"@en .
 
 
@@ -1963,12 +2051,12 @@
 ###  http://www.knora.org/ontology/knora-base#LinkObj
 
 :LinkObj rdf:type owl:Class ;
-         
+
          rdfs:label "Verknüpfungsobjekt"@de ,
                     "Link Object"@en ,
                     "Objet de lien"@fr ,
                     "Oggetto di connessione"@it ;
-         
+
          rdfs:subClassOf :Resource ,
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasComment ;
@@ -1982,7 +2070,7 @@
                            owl:onProperty :hasLinkToValue ;
                            owl:minCardinality "1"^^xsd:nonNegativeInteger
                          ] ;
-         
+
          :resourceIcon "link.gif"^^xsd:string ;
 
          rdfs:comment "Verknüpfung mehrerer Resourcen"@de ,
@@ -1993,7 +2081,7 @@
 ###  http://www.knora.org/ontology/knora-base#LinkValue
 
 :LinkValue rdf:type owl:Class ;
-           
+
            rdfs:subClassOf :Value ,
                            rdf:Statement ,
                            [ rdf:type owl:Restriction ;
@@ -2012,7 +2100,7 @@
                              owl:onProperty rdf:object ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ;
-           
+
            rdfs:comment "A reification node that describes direct links between resources"@en .
 
 
@@ -2020,7 +2108,7 @@
 ###  http://www.knora.org/ontology/knora-base#ListNode
 
 :ListNode rdf:type owl:Class ;
-          
+
           rdfs:subClassOf [ rdf:type owl:Restriction ;
                             owl:onProperty :hasSubListNode ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger
@@ -2041,7 +2129,7 @@
                             owl:onProperty :hasRootNode ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
-          
+
           rdfs:comment "Represents a flat or hierarchical list"@en .
 
 
@@ -2049,7 +2137,7 @@
 ###  http://www.knora.org/ontology/knora-base#ListValue
 
 :ListValue rdf:type owl:Class ;
-           
+
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasListNode ;
@@ -2065,7 +2153,7 @@
 ###  http://www.knora.org/ontology/knora-base#MovingImageFileValue
 
 :MovingImageFileValue rdf:type owl:Class ;
-                      
+
                       rdfs:subClassOf :FileValue ,
                                       [ rdf:type owl:Restriction ;
                                         owl:onProperty :dimX ;
@@ -2091,7 +2179,7 @@
                                         owl:onProperty :duration ;
                                         owl:cardinality "1"^^xsd:nonNegativeInteger
                                       ] ;
-                      
+
                       rdfs:comment "Represents a moving image file"@en .
 
 
@@ -2099,7 +2187,7 @@
 ###  http://www.knora.org/ontology/knora-base#MovingImageRepresentation
 
 :MovingImageRepresentation rdf:type owl:Class ;
-                           
+
                            rdfs:subClassOf :Representation  ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :hasMovingImageFileValue ;
@@ -2118,12 +2206,12 @@
 ###  http://www.knora.org/ontology/knora-base#Region
 
 :Region rdf:type owl:Class ;
-        
+
         rdfs:label "Region"@de ,
                    "Region"@en ,
                    "Région"@fr ,
                    "Regione"@it ;
-        
+
         rdfs:subClassOf :Resource ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasColor ;
@@ -2145,9 +2233,9 @@
                           owl:onProperty :hasComment ;
                           owl:minCardinality "1"^^xsd:nonNegativeInteger
                         ] ;
-        
+
         :resourceIcon "region.gif"^^xsd:string ;
-        
+
         rdfs:comment "Represents a geometric region of a resource. The geometry is represented currently as JSON string."@en .
 
 
@@ -2155,7 +2243,7 @@
 ###  http://www.knora.org/ontology/knora-base#Representation
 
 :Representation rdf:type owl:Class ;
-                
+
                 rdfs:subClassOf :Resource ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :hasFileValue ;
@@ -2174,10 +2262,10 @@
 ###  http://www.knora.org/ontology/knora-base#Resource
 
 :Resource rdf:type owl:Class ;
-          
+
           rdfs:subClassOf [ rdf:type owl:Restriction ;
                             owl:onProperty :isDeleted ;
-                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :hasRepresentation ;
@@ -2224,7 +2312,7 @@
 ###  http://www.knora.org/ontology/knora-base#Standoff
 
 :Standoff rdf:type owl:Class ;
-          
+
           rdfs:subClassOf [ rdf:type owl:Restriction ;
                             owl:onProperty :standoffHasStart ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
@@ -2245,7 +2333,7 @@
 ###  http://www.knora.org/ontology/knora-base#StandoffHref
 
 :StandoffHref rdf:type owl:Class ;
-              
+
               rdfs:subClassOf :Standoff ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :standoffHasHref ;
@@ -2257,7 +2345,7 @@
 ###  http://www.knora.org/ontology/knora-base#StandoffLink
 
 :StandoffLink rdf:type owl:Class ;
-              
+
               rdfs:subClassOf :Standoff ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :standoffHasLink ;
@@ -2269,7 +2357,7 @@
 ###  http://www.knora.org/ontology/knora-base#StandoffVisualAttribute
 
 :StandoffVisualAttribute rdf:type owl:Class ;
-                         
+
                          rdfs:subClassOf :Standoff .
 
 
@@ -2277,7 +2365,7 @@
 ###  http://www.knora.org/ontology/knora-base#StillImageFileValue
 
 :StillImageFileValue rdf:type owl:Class ;
-                     
+
                      rdfs:subClassOf :FileValue ,
                                      [ rdf:type owl:Restriction ;
                                        owl:onProperty :hasComment ;
@@ -2295,7 +2383,7 @@
                                        owl:onProperty :dimX ;
                                        owl:cardinality "1"^^xsd:nonNegativeInteger
                                      ] ;
-                     
+
                      rdfs:comment "A file containing a two-dimensional still image"@en .
 
 
@@ -2303,7 +2391,7 @@
 ###  http://www.knora.org/ontology/knora-base#StillImageRepresentation
 
 :StillImageRepresentation rdf:type owl:Class ;
-                          
+
                           rdfs:subClassOf :Representation  ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :hasStillImageFileValue ;
@@ -2322,13 +2410,13 @@
 ###  http://www.knora.org/ontology/knora-base#TextFileValue
 
 :TextFileValue rdf:type owl:Class ;
-               
+
                rdfs:subClassOf :FileValue ,
                                [ rdf:type owl:Restriction ;
                                  owl:onProperty :hasComment ;
                                  owl:minCardinality "0"^^xsd:nonNegativeInteger
                                ] ;
-               
+
                rdfs:comment "A text file such as plain Unicode text, LaTeX, TEI/XML, etc."@en .
 
 
@@ -2336,7 +2424,7 @@
 ###  http://www.knora.org/ontology/knora-base#TextRepresentation
 
 :TextRepresentation rdf:type owl:Class ;
-                    
+
                     rdfs:subClassOf :Representation ;
 
                     rdfs:label "Repräsentation (Text)"@de ,
@@ -2351,7 +2439,7 @@
 ###  http://www.knora.org/ontology/knora-base#TextValue
 
 :TextValue rdf:type owl:Class ;
-           
+
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasStandoff ;
@@ -2367,7 +2455,7 @@
 ###  http://www.knora.org/ontology/knora-base#TimeValue
 
 :TimeValue rdf:type owl:Class ;
-           
+
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasTime ;
@@ -2383,7 +2471,7 @@
 ###  http://www.knora.org/ontology/knora-base#User
 
 :User rdf:type owl:Class ;
-      
+
       rdfs:subClassOf <http://xmlns.com/foaf/0.1/Person> ,
                       [ rdf:type owl:Restriction ;
                         owl:onProperty <http://xmlns.com/foaf/0.1/familyName> ;
@@ -2413,7 +2501,7 @@
                         owl:onProperty :isInProject ;
                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ;
-      
+
       rdfs:comment "Represents a Knora user"@en .
 
 
@@ -2421,7 +2509,7 @@
 ###  http://www.knora.org/ontology/knora-base#UserGroup
 
 :UserGroup rdf:type owl:Class ;
-           
+
            rdfs:subClassOf <http://xmlns.com/foaf/0.1/Group> ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty <http://xmlns.com/foaf/0.1/name> ;
@@ -2431,7 +2519,7 @@
                              owl:onProperty :description ;
                              owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ] ;
-           
+
            rdfs:comment "A group of Knora users"@en .
 
 
@@ -2439,7 +2527,7 @@
 ###  http://www.knora.org/ontology/knora-base#Value
 
 :Value rdf:type owl:Class ;
-       
+
        rdfs:subClassOf [ rdf:type owl:Restriction ;
                          owl:onProperty :valueCreationDate ;
                          owl:cardinality "1"^^xsd:nonNegativeInteger
@@ -2458,7 +2546,7 @@
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :isDeleted ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                         owl:cardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :previousValue ;

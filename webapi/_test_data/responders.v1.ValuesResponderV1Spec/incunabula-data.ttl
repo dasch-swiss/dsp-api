@@ -50,7 +50,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a> rdf:type incunabula:book ;
 
-                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                  knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -91,7 +91,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/c3295339> rdf:type knora-base:TextValue ;
 
-                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                  knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -114,7 +114,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/8653a672> rdf:type knora-base:TextValue ;
 
-                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                  knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -137,7 +137,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/497df9ab> rdf:type knora-base:TextValue ;
 
-                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                  knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -160,7 +160,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/0ca74ce5> rdf:type knora-base:TextValue ;
 
-                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                  knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -182,7 +182,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/cfd09f1e01> rdf:type knora-base:DateValue ;
 
-                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -215,7 +215,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/92faf25701> rdf:type knora-base:TextValue ;
 
-                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -237,7 +237,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/10e00c7acc2704> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -259,7 +259,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/5524469101> rdf:type knora-base:TextValue ;
 
-                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -282,7 +282,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/184e99ca01> rdf:type knora-base:TextValue ;
 
-                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -305,7 +305,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/db77ec0302> rdf:type knora-base:TextValue ;
 
-                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -328,7 +328,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/c5058f3a/values/9ea13f3d02> rdf:type knora-base:TextValue ;
 
-                                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -350,7 +350,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/cb1a74e3e2f6> rdf:type knora-base:LinkObj ;
 
-                                     knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                     knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                      knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -375,7 +375,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ### ###########################################
 ### <http://data.knora.org/cb1a74e3e2f6/values/dfe0ce1e099e04>
 
-<http://data.knora.org/cb1a74e3e2f6/values/dfe0ce1e099e04> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/cb1a74e3e2f6/values/dfe0ce1e099e04> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                            knora-base:valueHasString """Diese drei Texte sind in einem Band zusammengebunden.""" ;
 
@@ -415,7 +415,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                                                  knora-base:hasDeletePermission knora-base:Owner ;
 
-                                                                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                                                  knora-base:valueHasString """404""" .
 
@@ -427,7 +427,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/8a0b1e75> rdf:type incunabula:page ;
 
-                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                  knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -461,7 +461,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ### ###########################################
 ### <http://data.knora.org/8a0b1e75/values/61cb927602>
 
-<http://data.knora.org/8a0b1e75/values/61cb927602> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/8a0b1e75/values/61cb927602> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:valueHasString """a1r, Titelblatt""" ;
 
@@ -484,7 +484,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ### ###########################################
 ### <http://data.knora.org/8a0b1e75/values/3e3d4dc0e922>
 
-<http://data.knora.org/8a0b1e75/values/3e3d4dc0e922> knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+<http://data.knora.org/8a0b1e75/values/3e3d4dc0e922> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
                                                      knora-base:valueHasString """Titel: \"Das andechtig zitglo(e)gglyn | des lebens vnd lide(n)s christi nach | den xxiiij stunden vßgeteilt.\"
 Holzschnitt: Schlaguhr mit Zifferblatt für 24 Stunden, auf deren oberem Rand zu beiden Seiten einer Glocke die Verkündigungsszene mit Maria (links) und dem Engel (rechts) zu sehen ist.
@@ -509,7 +509,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/8a0b1e75/values/e80b2d895f23>
 
-<http://data.knora.org/8a0b1e75/values/e80b2d895f23> knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+<http://data.knora.org/8a0b1e75/values/e80b2d895f23> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
                                                      knora-base:valueHasString """Schramm, Bd. 21, Abb. 601.""" ;
 
@@ -529,7 +529,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/8a0b1e75/values/aa488c2203>
 
-<http://data.knora.org/8a0b1e75/values/aa488c2203> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/8a0b1e75/values/aa488c2203> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:valueHasString """ad+s167_druck1=0001.tif""" ;
 
@@ -560,7 +560,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                knora-base:valueCreationDate "2012-11-21T16:49:35Z"^^xsd:dateTimeStamp ;
 
-                                               knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                               knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                rdf:type knora-base:StillImageFileValue ;
 
@@ -595,7 +595,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                knora-base:valueCreationDate "2012-11-21T16:49:36Z"^^xsd:dateTimeStamp ;
 
-                                               knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                               knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                rdf:type knora-base:StillImageFileValue ;
 
@@ -634,7 +634,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                                              knora-base:hasDeletePermission knora-base:Owner ;
 
-                                                                             knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                                             knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                                              knora-base:valueHasString """1""" .
 
@@ -644,7 +644,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/5e51519c4407> rdf:type knora-base:Region ;
 
-                                     knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+                                     knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
                                      knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -674,7 +674,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/5e51519c4407/values/59b04e21ed2a>
 
-<http://data.knora.org/5e51519c4407/values/59b04e21ed2a> knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+<http://data.knora.org/5e51519c4407/values/59b04e21ed2a> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
                                                          knora-base:valueHasString """#ff3333""" ;
 
@@ -698,7 +698,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/5e51519c4407/values/d35ca8aeec2a>
 
-<http://data.knora.org/5e51519c4407/values/d35ca8aeec2a> knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+<http://data.knora.org/5e51519c4407/values/d35ca8aeec2a> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
                                                          knora-base:valueHasString """Defekter Druckstock""" ;
 
@@ -719,7 +719,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/5e51519c4407/values/9686fbe7ec2a>
 
-<http://data.knora.org/5e51519c4407/values/9686fbe7ec2a> knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+<http://data.knora.org/5e51519c4407/values/9686fbe7ec2a> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
                                                          knora-base:valueHasString """{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}""" ;
 
@@ -761,7 +761,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                                                  knora-base:hasDeletePermission knora-base:Owner ;
 
-                                                                                 knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+                                                                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
                                                                                  knora-base:valueHasString """2130""" .
 
@@ -771,7 +771,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/4f11adaf> rdf:type incunabula:page ;
 
-                                 knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                 knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                  knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -805,7 +805,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/4f11adaf/values/6d72df5b03>
 
-<http://data.knora.org/4f11adaf/values/6d72df5b03> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/4f11adaf/values/6d72df5b03> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:valueHasString """a1v, Titelblatt, Rückseite""" ;
 
@@ -826,7 +826,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/4f11adaf/values/f3c585ce03>
 
-<http://data.knora.org/4f11adaf/values/f3c585ce03> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/4f11adaf/values/f3c585ce03> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:valueHasString """2""" ;
 
@@ -848,7 +848,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/4f11adaf/values/0167a0f9e922>
 
-<http://data.knora.org/4f11adaf/values/0167a0f9e922> knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+<http://data.knora.org/4f11adaf/values/0167a0f9e922> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
                                                      knora-base:valueHasString """Stempel (rund, blau): Wappen der Stadt Köln mit umlaufender Inschrift \"BIBLIOTHEK . DER. STADT . KOELN *\"""" ;
 
@@ -869,7 +869,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/4f11adaf/values/b6efd80704>
 
-<http://data.knora.org/4f11adaf/values/b6efd80704> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/4f11adaf/values/b6efd80704> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                    knora-base:valueHasString """ad+s167_druck1=0002.tif""" ;
 
@@ -900,7 +900,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                knora-base:valueCreationDate "2012-11-21T16:49:35Z"^^xsd:dateTimeStamp ;
 
-                                               knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                               knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                rdf:type knora-base:StillImageFileValue ;
 
@@ -935,7 +935,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                knora-base:valueCreationDate "2012-11-21T16:49:36Z"^^xsd:dateTimeStamp ;
 
-                                               knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                               knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                rdf:type knora-base:StillImageFileValue ;
 
@@ -974,7 +974,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                                              knora-base:hasDeletePermission knora-base:Owner ;
 
-                                                                             knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                                             knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                                              knora-base:valueHasString """1""" .
 
@@ -985,7 +985,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c> rdf:type incunabula:book ;
 
-                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1029,7 +1029,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/391cf1886a01> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1052,7 +1052,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/fc4544c26a01> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1075,7 +1075,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/bf6f97fb6a01> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1098,7 +1098,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/8299ea346b01> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1121,7 +1121,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/45c33d6e6b01> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1143,7 +1143,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/08ed90a76b01> rdf:type knora-base:DateValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1176,7 +1176,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/cb16e4e06b01> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1196,7 +1196,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/10102f00089e04> rdf:type knora-base:TextValue ;
 
-                                                         knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                         knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                          knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1218,7 +1218,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/8e40371a6c01> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1241,7 +1241,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/d3398239089e04> rdf:type knora-base:TextValue ;
 
-                                                         knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                         knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                          knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1271,7 +1271,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/516a8a536c01> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1294,7 +1294,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/1494dd8c6c01> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1317,7 +1317,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/82db62ef0123> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1340,7 +1340,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162> rdf:type incunabula:book ;
 
-                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1381,7 +1381,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162/values/f76660458201> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1406,7 +1406,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162/values/22222222> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1428,7 +1428,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162/values/11111111> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1450,7 +1450,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162/values/ba90b37e8201> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1473,7 +1473,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162/values/7dba06b88201> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1496,7 +1496,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162/values/40e459f18201> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1518,7 +1518,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162/values/c63700648301> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1540,7 +1540,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162/values/8abc888d079e04> rdf:type knora-base:TextValue ;
 
-                                                         knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                         knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                          knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1562,7 +1562,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162/values/8961539d8301> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1585,7 +1585,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162/values/4de6dbc6079e04> rdf:type knora-base:TextValue ;
 
-                                                         knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                         knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                          knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1608,7 +1608,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162/values/4c8ba6d68301> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1631,7 +1631,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162/values/0fb5f90f8401> rdf:type knora-base:TextValue ;
 
-                                                       knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                       knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1654,7 +1654,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/21abac2162/values/c7923554079e04> rdf:type knora-base:TextValue ;
 
-                                                         knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                                         knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                          knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1701,7 +1701,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/9935159f67/values/e6e02fe39801>
 
-<http://data.knora.org/9935159f67/values/e6e02fe39801> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/9935159f67/values/e6e02fe39801> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)""" ;
 
@@ -1724,7 +1724,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/c3f913666f> rdf:type incunabula:book ;
 
-                                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                   knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
@@ -1793,7 +1793,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/8ab7aa3cb801>
 
-<http://data.knora.org/c3f913666f/values/8ab7aa3cb801> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/8ab7aa3cb801> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """De generatione Christi""" ;
 
@@ -1814,7 +1814,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/4de1fd75b801>
 
-<http://data.knora.org/c3f913666f/values/4de1fd75b801> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/4de1fd75b801> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae""" ;
 
@@ -1835,7 +1835,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/100b51afb801>
 
-<http://data.knora.org/c3f913666f/values/100b51afb801> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/100b51afb801> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Franciscus de Retza""" ;
 
@@ -1855,7 +1855,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/d334a4e8b801>
 
-<http://data.knora.org/c3f913666f/values/d334a4e8b801> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/d334a4e8b801> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Lienhart Ysenhut""" ;
 
@@ -1876,7 +1876,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/965ef721b901>
 
-<http://data.knora.org/c3f913666f/values/965ef721b901> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/965ef721b901> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Basel""" ;
 
@@ -1896,7 +1896,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/59884a5bb901>
 
-<http://data.knora.org/c3f913666f/values/59884a5bb901> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/59884a5bb901> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """1487-01-01 - 1490-12-31""" ;
 
@@ -1927,7 +1927,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/1cb29d94b901>
 
-<http://data.knora.org/c3f913666f/values/1cb29d94b901> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/1cb29d94b901> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Basel UB, Sign: FP VII2 5:4""" ;
 
@@ -1947,7 +1947,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/dfdbf0cdb901>
 
-<http://data.knora.org/c3f913666f/values/dfdbf0cdb901> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/dfdbf0cdb901> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002237546""" ;
 
@@ -1967,7 +1967,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/a2054407ba01>
 
-<http://data.knora.org/c3f913666f/values/a2054407ba01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/a2054407ba01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Extent: [30] Bl.; Other physical details: Ill. (53 Holzschnitte); Dimensions: 23 cm (4°)""" ;
 
@@ -1988,7 +1988,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/652f9740ba01>
 
-<http://data.knora.org/c3f913666f/values/652f9740ba01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/652f9740ba01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Titel nach Parallelexemplar""" ;
 
@@ -2009,7 +2009,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/2859ea79ba01>
 
-<http://data.knora.org/c3f913666f/values/2859ea79ba01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/2859ea79ba01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Datierung: Sack(Freiburg) datiert 1487/88 mit der Begründung, dass drei der vier Wasserzeichen in diesen Jahren auch in anderen Basler Archivalien und Drucken nachzuweisen sind (Piccard, Ochsenkopf I 261, X 283 und 506); Hieronymus datiert 1490, da teilweise gleiche Holzstöcke wie in Ysenhuts \"Itinerarium\" von 1489 jedoch in abgenutzterem Zustand (Oberrhein.Buchill. I,35); ISTC und GW datieren zwischen 1487-1500""" ;
 
@@ -2030,7 +2030,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/eb823db3ba01>
 
-<http://data.knora.org/c3f913666f/values/eb823db3ba01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/eb823db3ba01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Text lateinisch-deutsch""" ;
 
@@ -2051,7 +2051,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/aeac90ecba01>
 
-<http://data.knora.org/c3f913666f/values/aeac90ecba01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/aeac90ecba01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Woodcuts""" ;
 
@@ -2072,7 +2072,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/71d6e325bb01>
 
-<http://data.knora.org/c3f913666f/values/71d6e325bb01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/71d6e325bb01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Keine Bogensignaturen (3 8er-Bogen und 1 6er-Bogen)""" ;
 
@@ -2093,7 +2093,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/3400375fbb01>
 
-<http://data.knora.org/c3f913666f/values/3400375fbb01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/3400375fbb01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Titel fehlt, Bl. 1 leer (vgl. GW Anm. 2 von GW 10275)""" ;
 
@@ -2114,7 +2114,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/f7298a98bb01>
 
-<http://data.knora.org/c3f913666f/values/f7298a98bb01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/f7298a98bb01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Rubr. mit Unterstreichungen""" ;
 
@@ -2135,7 +2135,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/ba53ddd1bb01>
 
-<http://data.knora.org/c3f913666f/values/ba53ddd1bb01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/ba53ddd1bb01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Holzschnitte koloriert""" ;
 
@@ -2156,7 +2156,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/7d7d300bbc01>
 
-<http://data.knora.org/c3f913666f/values/7d7d300bbc01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/7d7d300bbc01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Besitzvermerk der Kartause, aus dem Besitz von Johannes de Lapide""" ;
 
@@ -2177,7 +2177,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/40a78344bc01>
 
-<http://data.knora.org/c3f913666f/values/40a78344bc01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/40a78344bc01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Zusammengebunden mit 10 weiteren Drucken""" ;
 
@@ -2198,7 +2198,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/03d1d67dbc01>
 
-<http://data.knora.org/c3f913666f/values/03d1d67dbc01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/03d1d67dbc01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Van der Haegen I: 25,1""" ;
 
@@ -2219,7 +2219,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/c6fa29b7bc01>
 
-<http://data.knora.org/c3f913666f/values/c6fa29b7bc01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/c6fa29b7bc01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Goff R153""" ;
 
@@ -2240,7 +2240,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/89247df0bc01>
 
-<http://data.knora.org/c3f913666f/values/89247df0bc01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/89247df0bc01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """HC 6086*""" ;
 
@@ -2261,7 +2261,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/4c4ed029bd01>
 
-<http://data.knora.org/c3f913666f/values/4c4ed029bd01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/4c4ed029bd01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """GfT 1015""" ;
 
@@ -2282,7 +2282,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/0f782363bd01>
 
-<http://data.knora.org/c3f913666f/values/0f782363bd01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/0f782363bd01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Oberrhein.Buchill. I,35""" ;
 
@@ -2303,7 +2303,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/d2a1769cbd01>
 
-<http://data.knora.org/c3f913666f/values/d2a1769cbd01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/d2a1769cbd01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """TFS 1903gg""" ;
 
@@ -2324,7 +2324,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/95cbc9d5bd01>
 
-<http://data.knora.org/c3f913666f/values/95cbc9d5bd01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/95cbc9d5bd01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Schr 4047""" ;
 
@@ -2345,7 +2345,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/58f51c0fbe01>
 
-<http://data.knora.org/c3f913666f/values/58f51c0fbe01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/58f51c0fbe01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Schramm XXII p.42""" ;
 
@@ -2366,7 +2366,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/1b1f7048be01>
 
-<http://data.knora.org/c3f913666f/values/1b1f7048be01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/1b1f7048be01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Pell 4923""" ;
 
@@ -2387,7 +2387,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/de48c381be01>
 
-<http://data.knora.org/c3f913666f/values/de48c381be01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/de48c381be01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Torchet 807""" ;
 
@@ -2408,7 +2408,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/a17216bbbe01>
 
-<http://data.knora.org/c3f913666f/values/a17216bbbe01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/a17216bbbe01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Polain(B) 1518""" ;
 
@@ -2429,7 +2429,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/649c69f4be01>
 
-<http://data.knora.org/c3f913666f/values/649c69f4be01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/649c69f4be01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """IDL 1860""" ;
 
@@ -2450,7 +2450,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/27c6bc2dbf01>
 
-<http://data.knora.org/c3f913666f/values/27c6bc2dbf01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/27c6bc2dbf01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Sajó-Soltész 1358""" ;
 
@@ -2471,7 +2471,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/eaef0f67bf01>
 
-<http://data.knora.org/c3f913666f/values/eaef0f67bf01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/eaef0f67bf01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Madsen 3485""" ;
 
@@ -2492,7 +2492,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/ad1963a0bf01>
 
-<http://data.knora.org/c3f913666f/values/ad1963a0bf01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/ad1963a0bf01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Voull(B) 556""" ;
 
@@ -2513,7 +2513,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/7043b6d9bf01>
 
-<http://data.knora.org/c3f913666f/values/7043b6d9bf01> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/7043b6d9bf01> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Sack(Freiburg) 1479""" ;
 
@@ -2534,7 +2534,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/336d0913c001>
 
-<http://data.knora.org/c3f913666f/values/336d0913c001> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/336d0913c001> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Sheppard 2508""" ;
 
@@ -2555,7 +2555,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/f6965c4cc001>
 
-<http://data.knora.org/c3f913666f/values/f6965c4cc001> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/f6965c4cc001> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """Pr 7717""" ;
 
@@ -2576,7 +2576,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/b9c0af85c001>
 
-<http://data.knora.org/c3f913666f/values/b9c0af85c001> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/b9c0af85c001> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """BMC III 780""" ;
 
@@ -2597,7 +2597,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/7cea02bfc001>
 
-<http://data.knora.org/c3f913666f/values/7cea02bfc001> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/7cea02bfc001> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """BSB-Ink F-253""" ;
 
@@ -2618,7 +2618,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 ### ###########################################
 ### <http://data.knora.org/c3f913666f/values/3f1456f8c001>
 
-<http://data.knora.org/c3f913666f/values/3f1456f8c001> knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+<http://data.knora.org/c3f913666f/values/3f1456f8c001> knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                                        knora-base:valueHasString """GW 10275""" ;
 
@@ -2642,7 +2642,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/miscResource> rdf:type incunabula:misc ;
 
-                                     knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+                                     knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
                                      knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 

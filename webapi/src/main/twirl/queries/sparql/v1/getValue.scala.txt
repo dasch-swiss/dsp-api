@@ -23,15 +23,21 @@
 @**
  * Queries a knora-base:Value.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param iri the IRI of the Value.
  *@
-@(valueIri: IRI)
+@(triplestore: String,
+  valueIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?objPred ?objObj ?predStandoff ?objStandoff
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@valueIri") AS ?obj)
 

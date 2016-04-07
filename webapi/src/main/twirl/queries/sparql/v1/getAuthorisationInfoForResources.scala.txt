@@ -23,15 +23,21 @@
 @**
  * Gets the permission-relevant assertions (i.e. permissions plus owner and project) about a set of resources.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIris a list of IRIs of resources to query.
  *@
-@(resourceIris: Seq[IRI])
+@(triplestore: String,
+  resourceIris: Seq[IRI])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?resource ?p ?o
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     @for((resourceIri, index) <- resourceIris.zipWithIndex) {
         @if(index > 0) {

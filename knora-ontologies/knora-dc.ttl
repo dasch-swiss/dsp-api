@@ -302,11 +302,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#hasValue
-
-knora-base:hasValue rdf:type owl:ObjectProperty .
-
-
 
 
 

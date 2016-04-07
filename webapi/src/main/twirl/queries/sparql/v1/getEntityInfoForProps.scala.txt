@@ -23,9 +23,11 @@
 @**
  * Gets information about OWL entities.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param entityIris a list of IRIs of OWL entities to get information about.
  *@
-@(entityIris: Seq[IRI])
+@(triplestore: String,
+  entityIris: Seq[IRI])
 
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -34,7 +36,10 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?s ?isLinkProp ?p ?o ?lang
-
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     @for((entityIri, index) <- entityIris.zipWithIndex) {
         @if(index > 0) {

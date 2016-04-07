@@ -129,10 +129,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
       */
     def receive = {
         case SparqlSelectRequest(sparql) => future2Message(sender(), sparqlHttpSelect(sparql), log)
-        case BeginUpdateTransaction() => future2Message(sender(), beginUpdateTransaction(), log)
-        case CommitUpdateTransaction(transactionID) => future2Message(sender(), commitUpdateTransaction(transactionID), log)
-        case RollbackUpdateTransaction(transactionID) => future2Message(sender(), rollbackUpdateTransaction(transactionID), log)
-        case SparqlUpdateRequest(transactionID, sparql) => future2Message(sender(), sparqlHttpUpdate(transactionID, sparql), log)
+        case SparqlUpdateRequest(sparql) => future2Message(sender(), sparqlHttpUpdate(sparql), log)
         case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
         case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
@@ -172,38 +169,14 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
     }
 
     /**
-      * Begins a SPARQL Update transaction.
-      * @return an [[UpdateTransactionBegun]].
-      */
-    private def beginUpdateTransaction(): Future[UpdateTransactionBegun] = {
-        // Create a transaction ID for the transaction and return it.
-        Future(UpdateTransactionBegun(UUID.randomUUID()))
-    }
-
-    /**
-      * Enters a SPARQL update operation as part of an update transaction.
+      * Performs a SPARQL update operation.
       * @param sparqlUpdate the SPARQL update.
       * @return a [[SparqlUpdateResponse]].
       */
-    private def sparqlHttpUpdate(transactionID: UUID, sparqlUpdate: String): Future[SparqlUpdateResponse] = {
+    private def sparqlHttpUpdate(sparqlUpdate: String): Future[SparqlUpdateResponse] = {
+        // println(logDelimiter + sparqlUpdate)
+
         for {
-            _ <- Future(HttpTriplestoreTransactionManager.addUpdateToTransaction(transactionID, sparqlUpdate))
-        } yield SparqlUpdateResponse(transactionID)
-    }
-
-    /**
-      * Commits a SPARQL update transaction.
-      * @param transactionID the transaction ID.
-      * @return an [[UpdateTransactionCommitted]].
-      */
-    private def commitUpdateTransaction(transactionID: UUID): Future[UpdateTransactionCommitted] = {
-        for {
-            // Get the SPARQL update operations that were submitted for the transaction, concatenated
-            // into a single request.
-            sparqlUpdate <- Future(HttpTriplestoreTransactionManager.concatenateAndForgetUpdates(transactionID))
-
-            // _ = println(sparqlUpdate)
-
             // Send the request to the triplestore.
             _ <- getTriplestoreHttpResponse(sparqlUpdate, update = true)
 
@@ -216,18 +189,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
                     """
                 getTriplestoreHttpResponse(indexUpdateSparqlString, update = true)
             }
-        } yield UpdateTransactionCommitted(transactionID)
-    }
-
-    /**
-      * Rolls back a SPARQL update transaction.
-      * @param transactionID the transaction ID.
-      * @return an [[UpdateTransactionRolledBack]].
-      */
-    private def rollbackUpdateTransaction(transactionID: UUID): Future[UpdateTransactionRolledBack] = {
-        for {
-            _ <- Future(HttpTriplestoreTransactionManager.forgetUpdates(transactionID))
-        } yield UpdateTransactionRolledBack(transactionID)
+        } yield SparqlUpdateResponse()
     }
 
     /**

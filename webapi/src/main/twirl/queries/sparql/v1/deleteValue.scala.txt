@@ -25,8 +25,7 @@
  * of the previous version.
  *
  * @param dataNamedGraph the named graph to update.
- * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
-                      results from the WHERE clause of the update.
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource containing the value.
  * @param propertyIri the IRI of the property that points from the resource to the value.
  * @param currentValueIri the IRI of the current version of the value.
@@ -41,9 +40,11 @@
   newValueIri: IRI,
   maybeComment: Option[String])
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 WITH <@dataNamedGraph>
 DELETE {
@@ -54,8 +55,8 @@ DELETE {
     ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
 } INSERT {
     @* Copy the contents of the current version of the value into the new version, and mark it as deleted. *@
-    ?newValue ?valuePred ?valueObj .
-    ?newValue knora-base:isDeleted true ;
+    ?newValue ?valuePred ?valueObj ;
+        knora-base:isDeleted "true"^^xsd:boolean ;
         @maybeComment match {
             case Some(comment) => {
                 knora-base:valueHasComment """@comment""" ;
@@ -72,19 +73,9 @@ DELETE {
     @* Update the resource's last modification date. *@
     ?resource knora-base:lastModificationDate ?currentTime .
 }
-@*
-
-GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
-in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
-explicit statements in the WHERE clause here.
-
-*@
-@triplestore match {
-    case "graphdb" | "graphdb-free" => {
-        USING <http://www.ontotext.com/explicit>
-    }
-
-    case other => {}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
 }
 WHERE {
     BIND(IRI("@resourceIri") AS ?resource)

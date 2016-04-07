@@ -26,165 +26,71 @@
  * Inserts a new link between resources.
  *
  * @param dataNamedGraph the named graph in which the project stores its data.
- * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
-                      results from the WHERE clause of the update.
- * @param linkSourceIri the resource that is the source of the link.
+ * @param triplestore the name of the triplestore being used.
+ * @param resourceIri the resource that is the source of the link.
  * @param linkUpdate a [[LinkUpdate]] object describing the link to insert.
  * @param maybeComment an optional comment on the link.
- * @param updateResourceLastModificationDate if true, update the resource's knora-base:lastModificationDate.
  *
  * To find out whether the update succeeded, the application must query the link.
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
-  linkSourceIri: IRI,
+  resourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
-  maybeComment: Option[String],
-  updateResourceLastModificationDate: Boolean)
+  maybeComment: Option[String])
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix owl: <http://www.w3.org/2002/07/owl#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?dataNamedGraph {
-        @if(updateResourceLastModificationDate) {
-            @* Delete the link source's last modification date so we can update it. *@
-            ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
-
-            @* If an existing LinkValue needs to be updated, detach it from the link source. *@
-            @if(linkUpdate.linkValueExists) {
-                ?linkSource ?linkValueProperty ?existingLinkValue .
-            }
-        }
+        @* Delete the link source's last modification date so we can update it. *@
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
     }
 } INSERT {
     GRAPH ?dataNamedGraph {
-        @* Insert a direct link between the source and target resources. *@
-        @if(linkUpdate.insertDirectLink) {
-            ?linkSource ?linkProperty ?linkTarget .
-        } else {
-            @{throw SparqlGenerationException(s"LinkUpdate.insertDirectLink must be true in this SPARQL template"); ()}
+        @* Update the link source's last modification date. *@
+        ?resource knora-base:lastModificationDate ?currentTime .
+
+        @{
+            queries.sparql.v1.txt.generateInsertStatementsForCreateLink(valueIndex = 0,
+                                                                        linkUpdate = linkUpdate,
+                                                                        maybeComment = maybeComment)
         }
 
-        @* Insert a LinkValue describing the link. *@
-        ?newLinkValue rdf:type knora-base:LinkValue ;
-            rdf:subject ?linkSource ;
-            rdf:predicate ?linkProperty ;
-            rdf:object ?linkTarget ;
-            knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
-            @maybeComment match {
-                case Some(comment) => {
-                    knora-base:valueHasComment """@comment""" ;
-                }
-
-                case None => {}
-            }
-            knora-base:valueHasOrder ?nextOrder ;
-            knora-base:valueCreationDate ?currentTime .
-
-        @for(assertion <- linkUpdate.permissionRelevantAssertions) {
-            ?newLinkValue <@assertion._1> <@assertion._2> .
-        }
-
-        @* Attach the new LinkValue to its containing resource. *@
-        ?linkSource ?linkValueProperty ?newLinkValue .
-
-        @if(updateResourceLastModificationDate) {
-            @* Update the link source's last modification date. *@
-            ?linkSource knora-base:lastModificationDate ?currentTime .
-        }
     }
 }
-@*
-
-GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
-in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
-explicit statements in the WHERE clause here.
-
-*@
-@triplestore match {
-    case "graphdb" | "graphdb-free" => {
-        USING <http://www.ontotext.com/explicit>
-    }
-
-    case other => {}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
 }
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
-    BIND(IRI("@linkSourceIri") AS ?linkSource)
-    BIND(IRI("@linkUpdate.linkPropertyIri") AS ?linkProperty)
-    BIND(IRI("@{linkUpdate.linkPropertyIri}Value") AS ?linkValueProperty)
-    BIND(IRI("@linkUpdate.newLinkValueIri") AS ?newLinkValue)
-    BIND(IRI("@linkUpdate.linkTargetIri") AS ?linkTarget)
+    BIND(IRI("@resourceIri") AS ?resource)
     BIND(NOW() AS ?currentTime)
 
-    @* Make sure the link source and target are actually resources. *@
+    @* Do nothing if the resource doesn't exist, is marked as deleted, or isn't actually a resource. *@
 
-    ?linkSource rdf:type ?linkSourceClass .
-    ?linkTarget rdf:type ?linkTargetClass .
-
-    ?linkSourceClass rdfs:subClassOf+ knora-base:Resource .
-    ?linkTargetClass rdfs:subClassOf+ knora-base:Resource .
-
-    @* Do nothing if the target resource belongs to the wrong OWL class. *@
-
-    ?linkProperty knora-base:objectClassConstraint ?expectedTargetClass .
-    ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
-
-    @* Do nothing if the source or target resource doesn't exist or is marked as deleted. *@
+    ?resource rdf:type ?resourceClass .
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
 
     MINUS {
-        ?linkSource knora-base:isDeleted true .
+        ?resource knora-base:isDeleted true .
     }
 
-    MINUS {
-        ?linkTarget knora-base:isDeleted true .
+    @* Get the link source's last modification date, if it has one, so we can update it. *@
+
+    OPTIONAL {
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
     }
 
-    @* Do nothing if the source resource's OWL class has no cardinality for the link property. *@
-
-    ?linkSourceClass rdfs:subClassOf* ?restriction .
-    ?restriction a owl:Restriction .
-    ?restriction owl:onProperty ?linkProperty .
-
-    @if(linkUpdate.directLinkExists) {
-        @{throw SparqlGenerationException(s"linkUpdate.directLinkExists must be false in this SPARQL template"); ()}
-    }
-
-    @if(linkUpdate.linkValueExists) {
-        @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be false in this SPARQL template"); ()}
-    }
-
-    @*
-
-    Generate knora-base:valueHasOrder for the new LinkValue. If the link value property already has one or more
-    (non-deleted) LinkValues in the resource, find the one with the highest order, add 1 to its order, and give
-    the resulting order to the new LinkValue. Otherwise, give the new LinkValue an order of 0.
-
-    *@
-
-    {
-        SELECT ((MAX(?order)) AS ?maxOrder) (IF(BOUND(?maxOrder), ?maxOrder + 1, 0) AS ?nextOrder)
-        WHERE {
-            BIND(IRI("@linkSourceIri") AS ?linkSource)
-            BIND(IRI("@{linkUpdate.linkPropertyIri}Value") AS ?linkValueProperty)
-
-            ?linkSource ?linkValueProperty ?otherLinkValue .
-            ?otherLinkValue knora-base:valueHasOrder ?order .
-
-            MINUS {
-                ?otherLinkValue knora-base:isDeleted true .
-            }
-        }
-    }
-
-    @if(updateResourceLastModificationDate) {
-        @* Get the link source's last modification date, if it has one, so we can update it. *@
-
-        OPTIONAL {
-            ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
-        }
+    @{
+        queries.sparql.v1.txt.generateWhereStatementsForCreateLink(valueIndex = 0,
+                                                                   resourceIri = resourceIri,
+                                                                   linkUpdate = linkUpdate,
+                                                                   maybeValueHasOrder = None)
     }
 }

@@ -77,6 +77,13 @@ case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
     }, "An empty string is not allowed as a variable name or value in a VariableResultsRow")
 }
 
+/*
+ * Transaction management for SPARQL updates over HTTP is currently commented out because of
+ * issue <https://github.com/dhlab-basel/Knora/issues/85>.
+ */
+
+/*
+
 /**
   * Starts a new SPARQL update transaction.
   */
@@ -124,6 +131,19 @@ case class SparqlUpdateRequest(transactionID: UUID, sparql: String) extends Trip
   * @param transactionID the transaction ID.
   */
 case class SparqlUpdateResponse(transactionID: UUID)
+
+*/
+
+/**
+  * Represents a SPARQL Update operation to be performed.
+  * @param sparql the SPARQL string.
+  */
+case class SparqlUpdateRequest(sparql: String) extends TriplestoreRequest
+
+/**
+  * Indicates that the requested SPARQL Update was executed and returned no errors..
+  */
+case class SparqlUpdateResponse()
 
 /**
   * Message for resetting the contents of the triplestore and loading a fresh set of data. The data needs to be

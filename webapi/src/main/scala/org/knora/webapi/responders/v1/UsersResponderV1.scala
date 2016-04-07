@@ -53,7 +53,10 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def getUserProfileV1(userIri: IRI): Future[Option[UserProfileV1]] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(userIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(
+                triplestore = settings.triplestoreType,
+                userIri = userIri
+            ).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
@@ -103,7 +106,10 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def getUserProfileByUsernameV1(username: String): Future[Option[UserProfileV1]] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(username).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(
+                triplestore = settings.triplestoreType,
+                username = username
+            ).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             //_ = println(MessageUtil.toSource(userDataQueryResponse))

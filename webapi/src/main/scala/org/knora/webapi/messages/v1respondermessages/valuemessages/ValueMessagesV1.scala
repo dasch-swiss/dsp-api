@@ -242,24 +242,25 @@ case class CreateValueResponseV1(value: ApiValueV1,
 }
 
 /**
-  * Represents a value that should have been created in response to a [[CreateMultipleValuesRequestV1]].
-  * To verify that the value was in fact created, send a [[VerifyMultipleValueCreationRequestV1]].
+  * Represents a value that should have been created using the SPARQL returned in a
+  * [[GenerateSparqlToCreateMultipleValuesResponseV1]]. To verify that the value was in fact created, send a
+  * [[VerifyMultipleValueCreationRequestV1]].
   *
   * @param newValueIri the IRI of the value that should have been created.
-  * @param value       the [[UpdateValueV1]] that was used to request the creation of the value.
+  * @param value       an [[UpdateValueV1]] representing the value that should have been created.
   */
-case class UnverifiedCreateValueResponseV1(newValueIri: IRI, value: UpdateValueV1)
+case class UnverifiedValueV1(newValueIri: IRI, value: UpdateValueV1)
 
 /**
   * Requests verification that new values were created.
   *
   * @param resourceIri      the IRI of the resource in which the values should have been created.
-  * @param unverifiedValues a [[Map]] of property IRIs to [[UnverifiedCreateValueResponseV1]] objects
+  * @param unverifiedValues a [[Map]] of property IRIs to [[UnverifiedValueV1]] objects
   *                         describing the values that should have been created for each property.
   * @param userProfile      the profile of the user making the request.
   */
 case class VerifyMultipleValueCreationRequestV1(resourceIri: IRI,
-                                                unverifiedValues: Map[IRI, Seq[UnverifiedCreateValueResponseV1]],
+                                                unverifiedValues: Map[IRI, Seq[UnverifiedValueV1]],
                                                 userProfile: UserProfileV1) extends ValuesResponderRequestV1
 
 /**
@@ -279,17 +280,17 @@ case class VerifyMultipleValueCreationResponseV1(verifiedValues: Map[IRI, Seq[Cr
 case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Option[String] = None)
 
 /**
-  * Creates multiple values in a new, empty resource, using an existing transaction. The resource ''must'' be a new,
-  * empty resource, i.e. it must have no values. This message is used only internally by Knora, and is not part of the
-  * Knora v1 API. All pre-update checks must already have been performed before this message is sent. Specifically, the
+  * Requests SPARQL for creating multiple values in a new, empty resource. The resource ''must'' be a new, empty
+  * resource, i.e. it must have no values. This message is used only internally by Knora, and is not part of the Knora
+  * v1 API. All pre-update checks must already have been performed before this message is sent. Specifically, the
   * sender must ensure that:
   *
   * - The requesting user has permission to add values to the resource.
-  * - Each submitted value is consistent with the `knora-base:objectClassConstraint` of the property that is supposed to point to it.
+  * - Each submitted value is consistent with the `knora-base:objectClassConstraint` of the property that is supposed
+  *   to point to it.
   * - The resource class has a suitable cardinality for each submitted value.
   * - All required values are provided.
   *
-  * @param transactionID    the ID of the transaction in which the values should be created.
   * @param projectIri       the project the values belong to.
   * @param resourceIri      the resource the values will be attached to.
   * @param resourceClassIri the IRI of the resource's OWL class.
@@ -297,22 +298,35 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * @param userProfile      the user that is creating the values.
   * @param apiRequestID     the ID of this API request.
   */
-case class CreateMultipleValuesRequestV1(transactionID: UUID,
-                                         projectIri: IRI,
-                                         resourceIri: IRI,
-                                         resourceClassIri: IRI,
-                                         values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                         userProfile: UserProfileV1,
-                                         apiRequestID: UUID) extends ValuesResponderRequestV1
+case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
+                                                         resourceIri: IRI,
+                                                         resourceClassIri: IRI,
+                                                         values: Map[IRI, Seq[CreateValueV1WithComment]],
+                                                         userProfile: UserProfileV1,
+                                                         apiRequestID: UUID) extends ValuesResponderRequestV1
 
 /**
-  * Represents a response to a [[CreateMultipleValuesRequestV1]]. The receiver can check whether the values
-  * were actually created by sending a [[VerifyMultipleValueCreationRequestV1]].
+  * Represents a response to a [[GenerateSparqlToCreateMultipleValuesRequestV1]], providing strings that can be included
+  * in the `WHERE` and `INSERT` clauses of a SPARQL update operation to create the requested values. The `WHERE` clause must
+  * also bind the following SPARQL variables:
   *
-  * @param unverifiedValues a map of property IRIs to [[UnverifiedCreateValueResponseV1]] objects describing
+  * - `?resource`: the IRI of the resource in which the values are being created.
+  * - `?resourceClass`: the IRI of the OWL class of that resource.
+  * - `?currentTime`: the return value of the SPARQL function `NOW()`.
+  *
+  * After executing the SPARQL update, the receiver can check whether the values were actually created by sending a
+  * [[VerifyMultipleValueCreationRequestV1]].
+  *
+  * @param whereSparql a string containing statements that must be inserted into the WHERE clause of the SPARQL
+  *                    update that will create the values.
+  * @param insertSparql a string containing statements that must be inserted into the INSERT clause of the SPARQL
+  *                     update that will create the values.
+  * @param unverifiedValues a map of property IRIs to [[UnverifiedValueV1]] objects describing
   *                         the values that should have been created.
   */
-case class CreateMultipleValuesResponseV1(unverifiedValues: Map[IRI, Seq[UnverifiedCreateValueResponseV1]])
+case class GenerateSparqlToCreateMultipleValuesResponseV1(whereSparql: String,
+                                                          insertSparql: String,
+                                                          unverifiedValues: Map[IRI, Seq[UnverifiedValueV1]])
 
 
 /**
