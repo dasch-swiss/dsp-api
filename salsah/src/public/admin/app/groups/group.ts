@@ -18,9 +18,7 @@
  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export class GroupService {
-    getGroups() : string[] {
-
-        return ["group1", "group2", "group3"];
-    }
+export interface Group {
+    groupName: String;
+    groupDescription: String;
 }
