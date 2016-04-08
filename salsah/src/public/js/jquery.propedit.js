@@ -629,19 +629,18 @@
 							*
 							* */
 
+							//tmpobj.dateval1 = datestr_to_jdc(data.value.calendar, data.value.dateval1);
+							//tmpobj.dateval2 = datestr_to_jdc(data.value.calendar, data.value.dateval2);
+							//tmpobj.calendar = SALSAH.calendarnames[data.value.calendar];
 
-							tmpobj.dateval1 = datestr_to_jdc(data.value.calendar, data.value.dateval1);
-							tmpobj.dateval2 = datestr_to_jdc(data.value.calendar, data.value.dateval2);
-							tmpobj.calendar = SALSAH.calendarnames[data.value.calendar];
-							tmpobj.dateprecision1 = precisionnames[data.value.dateprecision1];
-							tmpobj.dateprecision2 = precisionnames[data.value.dateprecision2];
+							tmpobj.dateval1 = data.value.dateval1;
+							tmpobj.dateval2 = data.value.dateval2;
+							tmpobj.calendar = data.value.calendar;
 
-							if (!propinfo[active.prop].values) propinfo[active.prop].values = Array();
-							if (!propinfo[active.prop].value_ids) propinfo[active.prop].value_ids = Array();
-							if (!propinfo[active.prop].value_rights) propinfo[active.prop].value_rights = Array();
-							if (!propinfo[prop].value_iconsrcs) propinfo[prop].value_iconsrcs = Array();
-							if (!propinfo[prop].value_firstprops) propinfo[prop].value_firstprops = Array();
-							if (!propinfo[prop].value_restype) propinfo[prop].value_restype = Array();
+							//tmpobj.dateprecision1 = precisionnames[data.value.dateprecision1];
+							//tmpobj.dateprecision2 = precisionnames[data.value.dateprecision2];
+
+							init_value_structure();
 							propinfo[active.prop].values[active.value_index] = tmpobj;
 							propinfo[active.prop].value_ids[active.value_index] = data.id;
 							propinfo[active.prop].value_rights[active.value_index] = data.rights;
@@ -649,11 +648,14 @@
 							propinfo[active.prop].value_firstprops[active.value_index] = null;
 							propinfo[active.prop].value_restype[active.value_index] = null;
 
+							//console.log(propinfo[active.prop].values[active.value_index]);
+
 							active.value_container.empty();
 							reset_value(active.value_container, active.prop, active.value_index);
 
 							var prop_container = value_container.parent();
 							make_add_button(prop_container, active.prop);
+
 						}
 						else {
 							alert(data.errormsg);
@@ -667,7 +669,7 @@
 				else {
 					data.date_value = SALSAH_API_LEGACY.make_date_string(value);
 					data.project_id = project_id;
-					SALSAH.ApiPut('values/' + propinfo[prop].value_ids[value_index], data, function(data) {
+					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
 						if (data.status == ApiErrors.OK) {
 							// data.value has the following members:
 							//   data.value.calendar
@@ -680,16 +682,24 @@
 							//   [{"dateval1":"2267168","dateval2":"2267168","calendar":"JULIAN","dateprecision1":"DAY","dateprecision2":"DAY"}]
 							//
 							var tmpobj = {};
-							tmpobj.dateval1 = datestr_to_jdc(data.value.calendar, data.value.dateval1);
+							/*tmpobj.dateval1 = datestr_to_jdc(data.value.calendar, data.value.dateval1);
 							tmpobj.dateval2 = datestr_to_jdc(data.value.calendar, data.value.dateval2);
 							tmpobj.calendar = SALSAH.calendarnames[data.value.calendar];
 							tmpobj.dateprecision1 = precisionnames[data.value.dateprecision1];
-							tmpobj.dateprecision2 = precisionnames[data.value.dateprecision2];
+							tmpobj.dateprecision2 = precisionnames[data.value.dateprecision2];*/
+
+							tmpobj.dateval1 = data.value.dateval1;
+							tmpobj.dateval2 = data.value.dateval2;
+							tmpobj.calendar = data.value.calendar;
+
 
 							propinfo[active.prop].values[active.value_index] = tmpobj; // HIER IST DER FEHLER!!!!!!!!!
 
 							active.value_container.empty();
 							reset_value(active.value_container, active.prop, active.value_index);
+
+							// set new value Iri
+							propinfo[prop].value_ids[value_index] = data.id;
 						}
 						else {
 							alert(data.errormsg);
