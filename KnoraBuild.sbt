@@ -151,6 +151,7 @@ lazy val webApiLibs = Seq(
     // testing
     "com.typesafe.akka" %% "akka-testkit" % "2.4.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.scalatest" %% "scalatest" % "2.2.6" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
+    "org.seleniumhq.selenium" % "selenium-java" % "2.35.0" % "test",
     "io.spray" %% "spray-testkit" % "1.3.3" % "test, fuseki, fuseki-tomcat, graphdb, tdb"
 )
 

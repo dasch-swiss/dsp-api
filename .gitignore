@@ -31,4 +31,4 @@ webapi/src/main/resources/query-log/
 *.tdo
 *.toc
 .sbtrc
-
+webapi/lib/chromedriver
