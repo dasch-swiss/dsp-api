@@ -1,9 +1,10 @@
 package org.knora.webapi.e2e.browser
 
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{WebDriver, WebElement}
 import org.openqa.selenium.chrome.ChromeDriver
 import org.scalatest._
 import org.scalatest.concurrent.Eventually._
+
 import scala.concurrent.duration._
 
 /**
@@ -39,22 +40,22 @@ class ExampleSalsahSpec extends WordSpecLike with ShouldMatchers {
 
         "do a simple search" in {
 
-            val searchField = SalsahPage.getSimpleSearchField
+            val searchField: WebElement = SalsahPage.getSimpleSearchField
             searchField.clear()
             searchField.sendKeys("Zeitglöcklein\n")
 
             // Use 'eventually' to test results that may take time to appear.
-            val resultDiv = eventually {
+            val resultDiv: WebElement = eventually {
                 SalsahPage.getSearchResultDiv
             }
 
-            val resultHeader = eventually {
+            val resultHeader: String = eventually {
                 SalsahPage.getSearchResultHeader(resultDiv)
             }
 
             assert(resultHeader.contains("Total of 3 hits"))
 
-            val firstResult = eventually {
+            val firstResult: String = eventually {
                 SalsahPage.getFirstSearchResult(resultDiv)
             }
 
