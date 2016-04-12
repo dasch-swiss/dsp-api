@@ -32,7 +32,7 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 
-SELECT ?seqnum ?sourceObject ?sourceObjectAttachedToUser ?sourceObjectAttachedToProject (GROUP_CONCAT(DISTINCT(?sourceObjectPermissionAssertion); separator=";") AS ?sourceObjectPermissionAssertions) ?firstprop ?preview ?internalFilename ?internalMimeType ?originalFilename ?dimX ?dimY ?qualityLevel (GROUP_CONCAT(DISTINCT(?previewPermissionAssertion); separator=";") AS ?previewPermissionAssertions) ?previewAttachedToUser ?previewAttachedToProject
+SELECT ?seqnum ?sourceObject ?sourceObjectAttachedToUser ?sourceObjectAttachedToProject (GROUP_CONCAT(DISTINCT(?sourceObjectPermissionAssertion); separator=";") AS ?sourceObjectPermissionAssertions) ?firstprop ?fileValue ?isPreview ?internalFilename ?internalMimeType ?originalFilename ?dimX ?dimY ?qualityLevel (GROUP_CONCAT(DISTINCT(?fileValuePermissionAssertion); separator=";") AS ?fileValuePermissionAssertions) ?fileValueAttachedToUser ?fileValueAttachedToProject
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
@@ -64,29 +64,32 @@ WHERE {
 
     OPTIONAL {
         ?fileValueProp rdfs:subPropertyOf* knora-base:hasFileValue .
-        ?sourceObject ?fileValueProp ?preview .
+        ?sourceObject ?fileValueProp ?fileValue .
 
-        ?preview a knora-base:StillImageFileValue .
-        ?preview knora-base:isPreview true .
+        ?fileValue a knora-base:StillImageFileValue .
 
-        MINUS {
-            ?preview knora-base:isDeleted true .
+        OPTIONAL {
+            ?fileValue knora-base:isPreview ?isPreview .
         }
 
-        ?preview knora-base:internalMimeType ?internalMimeType ;
+        MINUS {
+            ?fileValue knora-base:isDeleted true .
+        }
+
+        ?fileValue knora-base:internalMimeType ?internalMimeType ;
                  knora-base:originalFilename ?originalFilename ;
                  knora-base:internalFilename ?internalFilename ;
                  knora-base:dimX ?dimX ;
                  knora-base:dimY ?dimY ;
                  knora-base:qualityLevel ?qualityLevel .
 
-        ?preview ?permission ?previewPermissionGroup .
-        BIND(CONCAT(STR(?permission), ",", STR(?previewPermissionGroup)) as ?previewPermissionAssertion)
+        ?fileValue ?permission ?fileValuePermissionGroup .
+        BIND(CONCAT(STR(?permission), ",", STR(?fileValuePermissionGroup)) as ?fileValuePermissionAssertion)
 
-        ?preview knora-base:attachedToUser ?previewAttachedToUser .
+        ?fileValue knora-base:attachedToUser ?fileValueAttachedToUser .
 
         OPTIONAL {
-            ?preview knora-base:attachedToProject ?previewAttachedToProject .
+            ?fileValue knora-base:attachedToProject ?fileValueAttachedToProject .
         }
 
     }
@@ -102,15 +105,16 @@ GROUP BY
     ?sourceObjectAttachedToUser
     ?sourceObjectAttachedToProject
     ?firstprop
-    ?preview
+    ?fileValue
     ?internalFilename
     ?internalMimeType
     ?originalFilename
     ?dimX
     ?dimY
     ?qualityLevel
-    ?previewAttachedToUser
-    ?previewAttachedToProject
+    ?fileValueAttachedToUser
+    ?fileValueAttachedToProject
+    ?isPreview
 
 
-ORDER BY ?seqnum ?sourceObject
+ORDER BY ?seqnum ?isPreview

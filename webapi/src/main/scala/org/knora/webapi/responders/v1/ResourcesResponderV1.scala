@@ -584,6 +584,90 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @return a [[ResourceContextResponseV1]] describing the context of the resource.
       */
     private def getContextResponseV1(resourceIri: IRI, userProfile: UserProfileV1, resinfo: Boolean): Future[ResourceContextResponseV1] = {
+
+        /**
+          * Represents a source object (e.g. a page of a book).
+          *
+          * @param id IRI of the source Object.
+          * @param firstprop first property of the source object.
+          * @param seqnum sequence number of the source object.
+          * @param permissions the current user's permissions on the source object.
+          * @param fileValues the file values belonging to the source object.
+          */
+        case class SourceObject(id: IRI,
+                                firstprop: Option[String],
+                                seqnum: Int,
+                                permissions: Option[Int],
+                                fileValues: Vector[StillImageFileValue] = Vector.empty[StillImageFileValue])
+
+        /**
+          * Represents a still image file value belonging to a source object (e.g., an image representation of a page).
+          *
+          * @param id the file value IRI
+          * @param permissions the current user's permissions on the file value.
+          * @param image a [[StillImageFileValueV1]]
+          */
+        case class StillImageFileValue(id: IRI,
+                             permissions: Option[Int],
+                             image: StillImageFileValueV1)
+
+
+        /**
+          * Creates a [[StillImageFileValue]] from a [[VariableResultsRow]].
+          *
+          * @param row a [[VariableResultsRow]] representing a [[StillImageFileValueV1]]
+          * @return a [[StillImageFileValue]].
+          */
+        def createStillImageFileValueFromResultRow(row: VariableResultsRow): Vector[StillImageFileValue] = {
+            // if the file value has no project, get the project from the source object
+            val fileValueProject = row.rowMap.get("fileValueAttachedToProject") match {
+                case Some(fileValueProjectIri) => fileValueProjectIri
+                case None => row.rowMap("sourceObjectAttachedToProject")
+            }
+
+            val fileValueIri = row.rowMap("fileValue")
+            val authorizationAssertionsForFileValue = PermissionUtilV1.parsePermissions(row.rowMap("fileValuePermissionAssertions"), row.rowMap("fileValueAttachedToUser"), fileValueProject)
+            val fileValuePermissions = PermissionUtilV1.getUserPermissionV1(fileValueIri, authorizationAssertionsForFileValue, userProfile)
+
+            row.rowMap.get("fileValue") match {
+
+                case Some(fileValueIri) => Vector(StillImageFileValue(
+                    id = fileValueIri,
+                    permissions = fileValuePermissions,
+                    image = StillImageFileValueV1(
+                        internalMimeType = row.rowMap("internalMimeType"),
+                        internalFilename = row.rowMap("internalFilename"),
+                        originalFilename = row.rowMap("originalFilename"),
+                        dimX = row.rowMap("dimX").toInt,
+                        dimY = row.rowMap("dimY").toInt,
+                        qualityLevel = row.rowMap("qualityLevel").toInt,
+                        isPreview = InputValidation.optionStringToBoolean(row.rowMap.get("isPreview"))
+                    ))
+                )
+                case None => Vector.empty[StillImageFileValue]
+            }
+        }
+
+        /**
+          * Creates a [[SourceObject]] from a [[VariableResultsRow]].
+          *
+          * @param acc the accumalatur used in the fold left construct.
+          * @param row a [[VariableResultsRow]] representing a [[SourceObject]].
+          * @return a [[SourceObject]].
+          */
+        def createSourceObjectFromResultRow(acc: Vector[SourceObject], row: VariableResultsRow) = {
+            val sourceObjectIri = row.rowMap("sourceObject")
+            val authorizationAssertionsForsourceObject = PermissionUtilV1.parsePermissions(row.rowMap("sourceObjectPermissionAssertions"), row.rowMap("sourceObjectAttachedToUser"), row.rowMap("sourceObjectAttachedToProject"))
+            val sourceObjectPermissions = PermissionUtilV1.getUserPermissionV1(sourceObjectIri, authorizationAssertionsForsourceObject, userProfile)
+
+            acc :+ SourceObject(id = row.rowMap("sourceObject"),
+                firstprop = row.rowMap.get("firstprop"),
+                seqnum = row.rowMap("seqnum").toInt,
+                permissions = sourceObjectPermissions,
+                fileValues = createStillImageFileValueFromResultRow(row)
+            )
+        }
+
         // If the API request asked for a ResourceInfoV1, query for that.
         val resInfoV1Future = if (resinfo) {
             for {
@@ -633,78 +717,65 @@ class ResourcesResponderV1 extends ResponderV1 {
                     contextQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(contextSparqlQuery)).mapTo[SparqlSelectResponse]
                     rows = contextQueryResponse.results.bindings
 
-                    // Filter the component resources by eliminating the ones that the user doesn't have permission to see.
-                    filteredRowsForResourcePermissions = rows.filter {
-                        row =>
-                            val componentIri = row.rowMap("sourceObject")
-                            val authorizationAssertionsForResource = PermissionUtilV1.parsePermissions(row.rowMap("sourceObjectPermissionAssertions"), row.rowMap("sourceObjectAttachedToUser"), row.rowMap("sourceObjectAttachedToProject"))
-                            PermissionUtilV1.getUserPermissionV1(componentIri, authorizationAssertionsForResource, userProfile).nonEmpty
-                    }
+                    //
+                    // Use fold left to iterate over the results
+                    //
+                    // Every source object may have one or more file values:
+                    // All the file values belonging to the same source object have to be assigned to the same source object case class
+                    //
+                    sourceObjects: Vector[SourceObject] = rows.foldLeft(Vector.empty[SourceObject]) {
+                        case (acc: Vector[SourceObject], row) =>
+                            if (acc.isEmpty) {
+                                // first run, create a source object containing a still image file value
+                                createSourceObjectFromResultRow(acc, row)
+                            } else {
+                                // get the reference to the last source object
+                                val lastSourceObj = acc.last
 
-                    // Sort them by the ordering knora-base:seqnum (e.g. the order of pages in a book).
-                    orderedBySeqNum: Seq[VariableResultsRow] = filteredRowsForResourcePermissions.sortWith {
-                        case (firstRow, secondRow) =>
-                            firstRow.rowMap("seqnum").toInt < secondRow.rowMap("seqnum").toInt
-                    }
-
-                    // Filter out the preview images that the user doesn't have permission to see.
-                    rowMapsWithFilteredPreviews: Seq[Map[String, String]] = orderedBySeqNum.map {
-                        row =>
-
-                            row.rowMap.get("preview") match {
-                                case Some(fileValueIri) =>
-                                    // Allow the user to see the preview if they have any permissions on it (because the lowest permission
-                                    // is restricted view permission).
-
-                                    // if the file value has no project, get the project from the source object
-                                    val previewProject = row.rowMap.get("previewAttachedToProject") match {
-                                        case Some(previewProjectIri) => previewProjectIri
-                                        case None => row.rowMap("sourceObjectAttachedToProject")
-                                    }
-
-                                    val authorizationAssertionsForFileValue = PermissionUtilV1.parsePermissions(row.rowMap("previewPermissionAssertions"), row.rowMap("previewAttachedToUser"), previewProject)
-                                    val permissions = PermissionUtilV1.getUserPermissionV1(fileValueIri, authorizationAssertionsForFileValue, userProfile)
-
-                                    // If the user doesn't have permission to see the preview, just remove the preview's IRI
-                                    // from the results.
-                                    if (permissions.nonEmpty) {
-                                        row.rowMap
-                                    } else {
-                                        row.rowMap - "preview"
-                                    }
-                                case None => row.rowMap
+                                if (lastSourceObj.seqnum == row.rowMap("seqnum").toInt) {
+                                    // processing at least the second still image file value belonging to the same source object
+                                    // add the still image file value to the file values list of the source object
+                                    acc.dropRight(1) :+ lastSourceObj.copy(fileValues = lastSourceObj.fileValues ++ createStillImageFileValueFromResultRow(row))
+                                } else {
+                                    // dealing with a new source object, create a source object containing a still image file value (like in the first run of this fold left)
+                                    createSourceObjectFromResultRow(acc, row)
+                                }
                             }
                     }
 
-                    // For each resource, construct a ResourceContextItemV1.
-                    contexts: Seq[ResourceContextItemV1] = rowMapsWithFilteredPreviews.map {
-                        rowMap =>
-                            val sourceObject = rowMap("sourceObject")
+                    // Filter the source objects by eliminating the ones that the user doesn't have permission to see.
+                    sourceObjectsWithPermissions = sourceObjects.filter(sourceObj => sourceObj.permissions.nonEmpty)
 
-                            val preview: Option[LocationV1] = rowMap.get("preview") match {
-                                case Some(previewIri) =>
-                                    val stillImageFileValueV1 = StillImageFileValueV1(
-                                        internalMimeType = rowMap("internalMimeType"),
-                                        internalFilename = rowMap("internalFilename"),
-                                        originalFilename = rowMap("originalFilename"),
-                                        dimX = rowMap("dimX").toInt,
-                                        dimY = rowMap("dimY").toInt,
-                                        qualityLevel = rowMap("qualityLevel").toInt,
-                                        isPreview = true
-                                    )
+                    //_ = println(ScalaPrettyPrinter.prettyPrint(sourceObjectsWithPermissions))
 
-                                    Some(valueUtilV1.fileValueV12LocationV1(stillImageFileValueV1))
+                    contextItems = sourceObjectsWithPermissions.map {
+                        (sourceObj: SourceObject) =>
+
+                            val preview: Option[LocationV1] = sourceObj.fileValues.filter(fileVal => fileVal.permissions.nonEmpty && fileVal.image.isPreview).headOption match {
+                                case Some(preview: StillImageFileValue) =>
+                                    Some(valueUtilV1.fileValueV12LocationV1(preview.image))
                                 case None => None
                             }
 
+                            val locations: Seq[LocationV1] = sourceObj.fileValues.filter(fileVal => fileVal.permissions.nonEmpty && !fileVal.image.isPreview).headOption match {
+                                case Some(full: StillImageFileValue) =>
+                                    val fileVals = createMultipleImageResolutions(full.image)
+                                    fileVals.map(valueUtilV1.fileValueV12LocationV1(_))
+
+                                case None => Vector.empty[LocationV1]
+                            }
+
                             ResourceContextItemV1(
-                                res_id = sourceObject,
+                                res_id = sourceObj.id,
                                 preview = preview,
-                                firstprop = rowMap.get("firstprop")
+                                firstprop = sourceObj.firstprop
                             )
                     }
 
-                } yield contexts
+                    //_ = println(ScalaPrettyPrinter.prettyPrint(contextItems))
+
+
+                } yield contextItems
             } else {
                 Future(Nil)
             }

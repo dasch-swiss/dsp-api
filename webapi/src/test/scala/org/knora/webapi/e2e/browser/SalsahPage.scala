@@ -8,8 +8,9 @@ import org.openqa.selenium.{By, WebDriver, WebElement}
   * here instead of doing their own queries, tests can be more readable, and can be protected from future changes
   * in the structure of the HTML.
   *
-  * You need to download the Selenium driver for Chrome and put it in `webapi/lib`.
-  **
+  * You need to download the [[https://sites.google.com/a/chromium.org/chromedriver/downloads Selenium driver for Chrome]]
+  * and put it in `webapi/lib`.
+  *
   * See [[https://selenium.googlecode.com/git/docs/api/java/index.html?org/openqa/selenium/WebDriver.html WebDriver]]
   * for more documentation.
   */
