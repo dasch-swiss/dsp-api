@@ -1,84 +1,96 @@
-package org.knora.webapi.util
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.knora.webapi.util.standoff
 
 import javax.xml.parsers.SAXParserFactory
 
 import scala.xml._
-import org.xmlunit.builder.{DiffBuilder, Input}
 
 /**
-  * Provides generic data structures representing standoff markup.
+  * Represents a range of characters in a text.
   */
-object StandoffUtil {
+trait StandoffRange {
     /**
-      * Represents a range of characters in a text.
+      * The start position of the range.
       */
-    trait StandoffRange {
-        /**
-          * The start position of the range.
-          */
-        def startPosition: Int
-
-        /**
-          * The end position of the range.
-          */
-        def endPosition: Int
-
-        /**
-          * The index of this range. Indexes are numbered from 0 within the context of a particular text.
-          */
-        def index: Int
-
-        /**
-          * The index of the standoff tag that is the parent of the range.
-          */
-        def parentIndex: Option[Int]
-    }
+    def startPosition: Int
 
     /**
-      * Represents a range of characters containing no standoff tags.
-      *
-      * @param startPosition the start position of the range.
-      * @param endPosition the end position of the range.
-      * @param index he index of this range. Indexes are numbered from 0 within the context of a particular text.
-      * @param parentIndex the index of the [[StandoffTag]] that is the parent of the range.
+      * The end position of the range.
       */
-    case class TextRange(startPosition: Int,
-                         endPosition: Int,
-                         index: Int,
-                         parentIndex: Option[Int]) extends StandoffRange
+    def endPosition: Int
 
     /**
-      * Represents a range of characters that have been marked up with a standoff tag.
-      *
-      * @param tagName the name of the tag.
-      * @param attributes the attributes attached to this tag.
-      * @param startPosition the start position of the range of characters marked up with this tag.
-      * @param endPosition the end position of the range of characters marked up with this tag.
-      * @param index the index of this tag. IDs are numbered from 0 within the context of a particular text.
-      * @param parentIndex the index of the [[StandoffTag]] that is the parent of this tag.
+      * The index of this range. Indexes are numbered from 0 within the context of a particular text.
       */
-    case class StandoffTag(tagName: String,
-                           attributes: Map[String, String],
-                           startPosition: Int,
-                           endPosition: Int,
-                           index: Int,
-                           parentIndex: Option[Int]) extends StandoffRange
+    def index: Int
 
     /**
-      * Represents a text and its standoff markup.
-      *
-      * @param text the text that has been marked up with standoff.
-      * @param standoff the standoff markup.
+      * The index of the standoff tag that is the parent of the range.
       */
-    case class TextWithStandoff(text: String, standoff: Seq[StandoffRange])
+    def parentIndex: Option[Int]
 }
+
+/**
+  * Represents a range of characters containing no standoff tags.
+  *
+  * @param startPosition the start position of the range.
+  * @param endPosition   the end position of the range.
+  * @param index         he index of this range. Indexes are numbered from 0 within the context of a particular text.
+  * @param parentIndex   the index of the [[StandoffTag]] that is the parent of the range.
+  */
+case class TextRange(startPosition: Int,
+                     endPosition: Int,
+                     index: Int,
+                     parentIndex: Option[Int]) extends StandoffRange
+
+/**
+  * Represents a range of characters that have been marked up with a standoff tag.
+  *
+  * @param tagName       the name of the tag.
+  * @param attributes    the attributes attached to this tag.
+  * @param startPosition the start position of the range of characters marked up with this tag.
+  * @param endPosition   the end position of the range of characters marked up with this tag.
+  * @param index         the index of this tag. IDs are numbered from 0 within the context of a particular text.
+  * @param parentIndex   the index of the [[StandoffTag]] that is the parent of this tag.
+  */
+case class StandoffTag(tagName: String,
+                       attributes: Map[String, String],
+                       startPosition: Int,
+                       endPosition: Int,
+                       index: Int,
+                       parentIndex: Option[Int]) extends StandoffRange
+
+/**
+  * Represents a text and its standoff markup.
+  *
+  * @param text     the text that has been marked up with standoff.
+  * @param standoff the standoff markup.
+  */
+case class TextWithStandoff(text: String, standoff: Seq[StandoffRange])
 
 /**
   * Converts XML documents to standoff markup and back again.
   */
 class StandoffUtil {
-    import StandoffUtil._
-
     /**
       * Converts an XML document to an equivalent [[TextWithStandoff]].
       *
@@ -122,10 +134,10 @@ class StandoffUtil {
     /**
       * Represents the state of the conversion of XML text to standoff.
       *
-      * @param currentPos the current position in the text.
-      * @param parentId the ID of the parent [[StandoffTag]] for which standoff ranges are being generated, or [[None]]
-      *                 if the root tag is being generated.
-      * @param nextIndex the next available standoff range index.
+      * @param currentPos     the current position in the text.
+      * @param parentId       the ID of the parent [[StandoffTag]] for which standoff ranges are being generated, or [[None]]
+      *                       if the root tag is being generated.
+      * @param nextIndex      the next available standoff range index.
       * @param standoffRanges the standoff ranges generated so far.
       */
     private case class Xml2StandoffState(currentPos: Int = 0,
@@ -136,7 +148,7 @@ class StandoffUtil {
     /**
       * Recursively converts XML nodes to standoff.
       *
-      * @param nodes a sequence of sibling XML nodes to be converted.
+      * @param nodes      a sequence of sibling XML nodes to be converted.
       * @param startState the current state of the conversion.
       * @return the resulting conversion state.
       */
@@ -193,10 +205,10 @@ class StandoffUtil {
     /**
       * Recursively generates XML text representing [[StandoffRange]] objects, starting with those that have a particular parent tag.
       *
-      * @param text the text that has been marked up.
-      * @param parentId the ID of the parent tag.
+      * @param text          the text that has been marked up.
+      * @param parentId      the ID of the parent tag.
       * @param groupedRanges a [[Map]] of all the [[StandoffRange]] objects that refer to the text, grouped by parent tag ID.
-      * @param xmlString the resulting XML text.
+      * @param xmlString     the resulting XML text.
       */
     private def standoffRanges2XmlString(text: String, parentId: Option[Int], groupedRanges: Map[Option[Int], Seq[StandoffRange]], xmlString: StringBuilder): Unit = {
         def attributes2Xml(standoffTag: StandoffTag): Unit = {
@@ -258,65 +270,4 @@ object SecureXml {
         val saxParser = spf.newSAXParser()
         XML.withSAXParser(saxParser).loadString(xml)
     }
-}
-
-object StandoffUtilTest extends App {
-    import StandoffUtil._
-
-    val delimiter = "\n==================================================================================================\n"
-
-    val simpleXmlDoc =
-        """<?xml version="1.0" encoding="UTF-8"?>
-          |<article>
-          |    <title>Special Relativity</title>
-          |
-          |    <paragraph>
-          |        In physics, special relativity is the generally accepted and experimentally well confirmed physical
-          |        theory regarding the relationship between space and time. In <person id="6789">Albert Einstein</person>'s
-          |        original pedagogical treatment, it is based on two postulates:
-          |
-          |        <orderedList>
-          |            <listItem>that the laws of physics are invariant (i.e. identical) in all inertial systems
-          |                (non-accelerating frames of reference).</listItem>
-          |            <listItem>that the speed of light in a vacuum is the same for all observers, regardless of the
-          |                motion of the light source.</listItem>
-          |        </orderedList>
-          |    </paragraph>
-          |
-          |    <paragraph>
-          |        <person id="6789">Einstein</person> originally proposed it in
-          |        <date value="1905" calendar="gregorian">1905</date> in <citation
-          |        id="einstein_1905a"/>.
-          |
-          |        Here is a sentence with a sequence of empty tags: <foo /><bar /><baz />.
-          |    </paragraph>
-          |</article>""".stripMargin
-
-    val standoffUtil = new StandoffUtil
-
-    println(delimiter)
-    println("Original XML document:\n\n")
-    println(simpleXmlDoc)
-
-    // Convert the XML document to standoff.
-    val textWithStandoff: TextWithStandoff = standoffUtil.xml2Standoff(simpleXmlDoc)
-
-    println()
-    println(delimiter)
-    println("Extracted text:\n\n")
-    println(textWithStandoff.text)
-    println("\n\nGenerated standoff tags:\n\n")
-    println(MessageUtil.toSource(textWithStandoff.standoff))
-
-    // Convert the standoff back to XML.
-    val backToXml = standoffUtil.standoff2Xml(textWithStandoff)
-
-    println()
-    println(delimiter)
-    println(s"Converted standoff back to XML:\n\n")
-    println(backToXml)
-
-    val diff = DiffBuilder.compare(Input.fromString(simpleXmlDoc)).withTest(Input.fromString(backToXml)).build()
-
-    println(s"\n\nGenerated XML document is identical to original XML document: ${!diff.hasDifferences}")
 }
