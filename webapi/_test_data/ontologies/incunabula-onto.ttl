@@ -3,17 +3,15 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix foaf: <http://xmln.com/foaf/0.1/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix dc: <http://www.knora.org/ontology/dc#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @base <http://www.knora.org/ontology/incunabula> .
 
-@prefix incunabula: <http://www.knora.org/ontology/incunabula#> .
 @prefix : <http://www.knora.org/ontology/incunabula#> .
 
-<http://www.knora.org/ontology/incunabula> rdf:type owl:Ontology ;
-                                           owl:imports <http://www.knora.org/ontology/knora-base> .
+<http://www.knora.org/ontology/incunabula> rdf:type owl:Ontology .
 
 ##########################################################
 #
@@ -34,9 +32,9 @@
                   "Titolo"@it ,
                   "Title"@en ;
 
-       rdfs:domain :book ;
+       knora-base:subjectClassConstraint :book ;
 
-       rdfs:range knora-base:TextValue ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
 
        salsah-gui:guiOrder "1"^^xsd:integer ;
 
@@ -62,9 +60,9 @@
 
            rdfs:label "Creator"@de ;
 
-           rdfs:domain :book ;
+           knora-base:subjectClassConstraint :book ;
 
-           rdfs:range knora-base:TextValue ;
+           knora-base:objectClassConstraint knora-base:TextValue ;
 
            salsah-gui:guiOrder "2"^^xsd:integer ;
 
@@ -96,9 +94,9 @@
                         """Une maison d’édition est une entreprise ou une association dont l’activité principale est la production et la diffusion de livres. L’activité est donc liée à l’édition de documents. Trois formes d'entreprise dominent la profession : SA, SARL et entreprise personnelle. (Wikipedia http://fr.wikipedia.org/wiki/Maison_d%27édition)"""@fr ,
                         """Publishing is the process of production and dissemination of literature or information – the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)"""@en ;
 
-           rdfs:domain :book ;
+           knora-base:subjectClassConstraint :book ;
 
-           rdfs:range knora-base:TextValue ;
+           knora-base:objectClassConstraint knora-base:TextValue ;
 
            salsah-gui:guiOrder "3"^^xsd:integer ;
 
@@ -127,9 +125,9 @@
 
         rdfs:comment """Ort der Herausgabe"""@de ;
 
-        rdfs:domain :book ;
+        knora-base:subjectClassConstraint :book ;
 
-        rdfs:range knora-base:TextValue ;
+        knora-base:objectClassConstraint knora-base:TextValue ;
 
         salsah-gui:guiOrder "4"^^xsd:integer ;
 
@@ -154,9 +152,9 @@
 
          rdfs:label "Datum der Herausgabe"@de ;
 
-         rdfs:domain :book ;
+         knora-base:subjectClassConstraint :book ;
 
-         rdfs:range knora-base:DateValue ;
+         knora-base:objectClassConstraint knora-base:DateValue ;
 
          salsah-gui:guiOrder "5"^^xsd:integer ;
 
@@ -187,9 +185,9 @@
 
           rdfs:comment """Der Ort wo sich das physische Original befindet"""@de ;
 
-          rdfs:domain :book ;
+          knora-base:subjectClassConstraint :book ;
 
-          rdfs:range knora-base:TextValue ;
+          knora-base:objectClassConstraint knora-base:TextValue ;
 
           salsah-gui:guiOrder "6"^^xsd:integer ;
 
@@ -221,9 +219,9 @@
                   """Uniform Resource Identifier"""@it ,
                   """Uniform Resource Identifier"""@en ;
 
-     rdfs:domain :book ;
+     knora-base:subjectClassConstraint :book ;
 
-     rdfs:range knora-base:TextValue ;
+     knora-base:objectClassConstraint knora-base:TextValue ;
 
      salsah-gui:guiOrder "7"^^xsd:integer ;
 
@@ -250,9 +248,9 @@
 
              rdfs:comment """Beschreibung"""@de ;
 
-             rdfs:domain :Sideband ;
+             knora-base:subjectClassConstraint knora-base:Resource ;
 
-             rdfs:range knora-base:TextValue ;
+             knora-base:objectClassConstraint knora-base:TextValue ;
 
              salsah-gui:guiOrder "2"^^xsd:integer ;
 
@@ -277,9 +275,9 @@
 
                rdfs:comment """Generelle physische Beschreibung des Objektes wie Material, Grösse etc."""@de ;
 
-               rdfs:domain :book ;
+               knora-base:subjectClassConstraint :book ;
 
-               rdfs:range knora-base:TextValue ;
+               knora-base:objectClassConstraint knora-base:TextValue ;
 
                salsah-gui:guiOrder "9"^^xsd:integer ;
 
@@ -310,9 +308,9 @@
       rdfs:comment """Eine Anmerkung zum Objekt"""@de ,
                    """A note concerning the object"""@en ;
 
-      rdfs:domain :book ;
+      knora-base:subjectClassConstraint :book ;
 
-      rdfs:range knora-base:TextValue ;
+      knora-base:objectClassConstraint knora-base:TextValue ;
 
       salsah-gui:guiOrder "10"^^xsd:integer ;
 
@@ -340,9 +338,9 @@
           rdfs:label "Verweis"@de ,
                      "Citation/reference"@en ;
 
-          rdfs:domain :page ;
+          knora-base:subjectClassConstraint knora-base:Resource ;
 
-          rdfs:range knora-base:TextValue ;
+          knora-base:objectClassConstraint knora-base:TextValue ;
 
           salsah-gui:guiOrder "5"^^xsd:integer ;
 
@@ -374,9 +372,9 @@
 
               rdfs:comment """Unstrukturierte Bemerkungen zu einem Objekt"""@de ;
 
-              rdfs:domain :book ;
+              knora-base:subjectClassConstraint :book ;
 
-              rdfs:range knora-base:TextValue ;
+              knora-base:objectClassConstraint knora-base:TextValue ;
 
               salsah-gui:guiOrder "12"^^xsd:integer ;
 
@@ -408,9 +406,9 @@
          rdfs:comment """Eine eindeutige numerische Bezeichnung einer Buchseite"""@de ,
                       """A distinct identification of a book page"""@en ;
 
-         rdfs:domain :page ;
+         knora-base:subjectClassConstraint :page ;
 
-         rdfs:range knora-base:TextValue ;
+         knora-base:objectClassConstraint knora-base:TextValue ;
 
          salsah-gui:guiOrder "1"^^xsd:integer ;
 
@@ -434,7 +432,7 @@
 
              rdfs:subPropertyOf knora-base:isPartOfValue ;
 
-             rdfs:range knora-base:LinkValue ;
+             knora-base:objectClassConstraint knora-base:LinkValue ;
 
              rdfs:label "ist ein Teil von"@de ,
                         "est un part de"@fr ,
@@ -443,7 +441,7 @@
 
              rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
 
-             rdfs:domain :page ;
+             knora-base:subjectClassConstraint :page ;
 
              salsah-gui:guiOrder "2"^^xsd:integer ;
 
@@ -464,9 +462,9 @@
 
         rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
 
-        rdfs:domain :page ;
+        knora-base:subjectClassConstraint :page ;
 
-        rdfs:range :book ;
+        knora-base:objectClassConstraint :book ;
 
         salsah-gui:guiOrder "2"^^xsd:integer ;
 
@@ -495,9 +493,9 @@
                      """Cette \"property\" dénote la position dans un séquence."""@fr ,
                      """This property stands for the position within a set of rdered items (resoucres)"""@en ;
 
-        rdfs:domain :page ;
+        knora-base:subjectClassConstraint :page ;
 
-        rdfs:range knora-base:IntValue ;
+        knora-base:objectClassConstraint knora-base:IntValue ;
 
         salsah-gui:guiOrder "3"^^xsd:integer ;
 
@@ -527,9 +525,9 @@
 
               rdfs:comment """Unstrukturierte Bemerkungen zu einem Objekt"""@de ;
 
-              rdfs:domain :page ;
+              knora-base:subjectClassConstraint :page ;
 
-              rdfs:range knora-base:TextValue ;
+              knora-base:objectClassConstraint knora-base:TextValue ;
 
               salsah-gui:guiOrder "6"^^xsd:integer ;
 
@@ -558,9 +556,9 @@
 
           rdfs:comment """Der originale Dateiname"""@de ;
 
-          rdfs:domain :page ;
+          knora-base:subjectClassConstraint :page ;
 
-          rdfs:range knora-base:TextValue ;
+          knora-base:objectClassConstraint knora-base:TextValue ;
 
           salsah-gui:guiOrder "7"^^xsd:integer ;
 
@@ -582,20 +580,17 @@
 
                       rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-                      rdfs:range knora-base:LinkValue ;
+                      knora-base:objectClassConstraint knora-base:LinkValue ;
 
                       rdfs:label "Randleistentyp links"@de ;
 
                       rdfs:comment """Verweis auf einen Randleistentyp"""@de ;
 
-                      rdfs:domain :page ;
+                      knora-base:subjectClassConstraint :page ;
 
                       salsah-gui:guiOrder "10"^^xsd:integer ;
 
-                      salsah-gui:guiElement salsah-gui:Searchbox ;
-
-                      salsah-gui:guiAttribute "restypeid=53" ,
-                                              "numprops=1" .
+                      salsah-gui:guiElement salsah-gui:Searchbox .
 
 
 ### ###########################################
@@ -609,16 +604,15 @@
 
                  rdfs:comment """Verweis auf einen Randleistentyp"""@de ;
 
-                 rdfs:domain :page ;
+                 knora-base:subjectClassConstraint :page ;
 
-                 rdfs:range :Sideband ;
+                 knora-base:objectClassConstraint :Sideband ;
 
                  salsah-gui:guiOrder "10"^^xsd:integer ;
 
                  salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                 salsah-gui:guiAttribute "restypeid=53" ,
-                                         "numprops=1" ;
+                 salsah-gui:guiAttribute "numprops=1" ;
 
                  knora-base:hasDefaultViewPermission knora-base:KnownUser ;
 
@@ -634,21 +628,17 @@
 
                        rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-                       rdfs:range knora-base:LinkValue ;
+                       knora-base:objectClassConstraint knora-base:LinkValue ;
 
                        rdfs:label "Randleistentyp rechts"@de ;
 
                        rdfs:comment """Verweis auf einen Randleistentyp"""@de ;
 
-                       rdfs:domain :page ;
+                       knora-base:subjectClassConstraint :page ;
 
                        salsah-gui:guiOrder "11"^^xsd:integer ;
 
-                       salsah-gui:guiElement salsah-gui:Searchbox ;
-
-                       salsah-gui:guiAttribute "restypeid=53" ,
-                                               "numprops=1" .
-
+                       salsah-gui:guiElement salsah-gui:Searchbox .
 
 ### ###########################################
 ### incunabula:hasRightSideband
@@ -661,16 +651,15 @@
 
                   rdfs:comment """Verweis auf einen Randleistentyp"""@de ;
 
-                  rdfs:domain :page ;
+                  knora-base:subjectClassConstraint :page ;
 
-                  rdfs:range :Sideband ;
+                  knora-base:objectClassConstraint :Sideband ;
 
                   salsah-gui:guiOrder "11"^^xsd:integer ;
 
                   salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                  salsah-gui:guiAttribute "restypeid=53" ,
-                                          "numprops=1" ;
+                  salsah-gui:guiAttribute "numprops=1" ;
 
                   knora-base:hasDefaultViewPermission knora-base:KnownUser ;
 
@@ -690,9 +679,9 @@
 
                rdfs:comment """Transkription"""@de ;
 
-               rdfs:domain :page ;
+               knora-base:subjectClassConstraint :page ;
 
-               rdfs:range knora-base:TextValue ;
+               knora-base:objectClassConstraint knora-base:TextValue ;
 
                salsah-gui:guiOrder "12"^^xsd:integer ;
 
@@ -720,9 +709,9 @@
                     "Titolo"@it ,
                     "Title"@en ;
 
-         rdfs:domain :Sideband ;
+         knora-base:subjectClassConstraint :Sideband ;
 
-         rdfs:range knora-base:TextValue ;
+         knora-base:objectClassConstraint knora-base:TextValue ;
 
          salsah-gui:guiOrder "1"^^xsd:integer ;
 
@@ -749,9 +738,9 @@
 
                   rdfs:comment """Unstrukturierte Bemerkungen zu einem Objekt"""@de ;
 
-                  rdfs:domain :Sideband ;
+                  knora-base:subjectClassConstraint :Sideband ;
 
-                  rdfs:range knora-base:TextValue ;
+                  knora-base:objectClassConstraint knora-base:TextValue ;
 
                   salsah-gui:guiOrder "3"^^xsd:integer ;
 
@@ -762,6 +751,79 @@
                   knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
                   knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### incunabula:miscHasColor
+
+:miscHasColor rdf:type owl:ObjectProperty ;
+
+                        rdfs:subPropertyOf knora-base:hasValue ;
+
+                        rdfs:label "Farbe"@de ;
+
+                        knora-base:subjectClassConstraint :misc ;
+
+                        knora-base:objectClassConstraint knora-base:ColorValue ;
+
+                        salsah-gui:guiOrder "1"^^xsd:integer ;
+
+                        salsah-gui:guiElement salsah-gui:Colorpicker ;
+
+                        knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+                        knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                        knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### incunabula:miscHasGeometry
+
+:miscHasGeometry rdf:type owl:ObjectProperty ;
+
+                           rdfs:subPropertyOf knora-base:hasValue ;
+
+                           rdfs:label "Geometrie"@de ;
+
+                           knora-base:subjectClassConstraint :misc ;
+
+                           knora-base:objectClassConstraint knora-base:GeomValue ;
+
+                           salsah-gui:guiOrder "2"^^xsd:integer ;
+
+                           salsah-gui:guiElement salsah-gui:Geometry ;
+
+                           knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+                           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                           knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### incunabula:miscHasBook
+
+:miscHasBook rdf:type owl:ObjectProperty ;
+
+                           rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                           rdfs:label "Verbindung mit einem Buch"@de ;
+
+                           knora-base:subjectClassConstraint :misc ;
+
+                           knora-base:objectClassConstraint :book ;
+
+                           salsah-gui:guiOrder "3"^^xsd:integer ;
+
+                           salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                           knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+                           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                           knora-base:hasDefaultDeletePermission knora-base:Owner .
+
 
 ##########################################################
 #
@@ -779,7 +841,7 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :title ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasAuthor ;
@@ -787,11 +849,11 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :publisher ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :publoc ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :pubdate ;
@@ -851,7 +913,7 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :pagenum ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :partOfValue ;
@@ -863,7 +925,7 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :seqnum ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :description ;
@@ -932,7 +994,7 @@
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :description ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger                          ] ,
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                          ] ,
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :sideband_comment ;
@@ -948,3 +1010,35 @@
 
           knora-base:hasDefaultDeletePermission knora-base:Owner .
 
+
+### ###########################################
+### incunabula:misc
+
+:misc rdf:type owl:Class ;
+
+      rdfs:subClassOf knora-base:Resource,
+                      [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :miscHasColor ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :miscHasGeometry ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ],
+                      [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :misHasBook ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ] ;
+
+      rdfs:label "Sonstiges"@de ;
+
+      rdfs:comment "A fake resource class that only has optional properties"@en;
+
+      knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+      knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+      knora-base:hasDefaultDeletePermission knora-base:Owner .

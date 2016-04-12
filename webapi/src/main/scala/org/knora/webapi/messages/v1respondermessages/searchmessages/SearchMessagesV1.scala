@@ -140,7 +140,7 @@ case class SearchPreviewDimensionsV1(nx: Int, ny: Int)
   * @param value (text) value of the first property.
   */
 case class SearchResultRowV1(obj_id: IRI,
-                             preview_path: String,
+                             preview_path: Option[String],
                              iconsrc: Option[String],
                              icontitle: Option[String],
                              iconlabel: Option[String],

@@ -36,74 +36,10 @@ import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
 import scala.concurrent.{ExecutionContext, Future}
 
 
-
 /**
   * Converts data from SPARQL query results into [[ApiValueV1]] objects.
   */
 class ValueUtilV1(private val settings: SettingsImpl) {
-    //val log = Logger(LoggerFactory.getLogger("org.knora.webapi.responders.v1.ValueUtilV1"))
-
-    /**
-      * Create a [[FileValueV1]] from an API requests [[CreateFileV1]].
-      *
-      * @param file the file value to be created.
-      * @return a [[FileValueV1]]
-      */
-    def makeFileValueV1FromCreateFileV1(file: CreateFileV1): Vector[FileValueV1] = {
-
-        /**
-          * Handle image file value types.
-          *
-          * @param file the image file value to be created.
-          * @return a list of [[StillImageFileValueV1]] (full and thumbnail).
-          */
-        def handleImageMimeType(file: CreateFileV1): Vector[StillImageFileValueV1] = {
-
-            // TODO: copy image to def. location and delete from temporary location.
-
-            // TODO: should input validation happen in the router?
-
-            val fullImage = StillImageFileValueV1(
-                originalFilename = InputValidation.toSparqlEncodedString(file.originalFilename),
-                originalMimeType = Some(InputValidation.toSparqlEncodedString(InputValidation.toSparqlEncodedString(file.originalMimeType))),
-                internalMimeType = InputValidation.toSparqlEncodedString(file.originalMimeType),
-                dimX = file.full.dimX.getOrElse(throw BadRequestException(s"DimX was not set for image.")),
-                dimY = file.full.dimY.getOrElse(throw BadRequestException(s"DimY was not set for image.")),
-                qualityName = Some("full"),
-                qualityLevel = 100,
-                internalFilename = InputValidation.toSparqlEncodedString(file.full.path) // TODO: do be adapted to final location
-            )
-
-            val thumb = StillImageFileValueV1(
-                originalFilename = InputValidation.toSparqlEncodedString(file.originalFilename),
-                originalMimeType = Some(InputValidation.toSparqlEncodedString(file.originalMimeType)),
-                internalMimeType = InputValidation.toSparqlEncodedString(file.originalMimeType),
-                dimX = file.preview.getOrElse(throw BadRequestException("Preview is not set for image file."))
-                    .dimX.getOrElse(throw BadRequestException("DimX is not set for preview.")),
-                dimY = file.preview.getOrElse(throw BadRequestException("Preview is not set for image file."))
-                    .dimY.getOrElse(throw BadRequestException("DimY is not set for preview.")),
-                qualityName = Some("thumbnail"),
-                qualityLevel = 10,
-                internalFilename = InputValidation.toSparqlEncodedString(file
-                    .preview.getOrElse(throw BadRequestException("Preview is not set for image file.")).path) // TODO: do be adapted to final location
-            )
-
-            Vector(fullImage, thumb)
-        }
-
-        // Create a Vector of Tuples of handlers and a Vector of appropriate mime types.
-        val handlers = Vector(
-            (handleImageMimeType: (CreateFileV1) => Vector[StillImageFileValueV1], settings.imageMimeTypes)
-        )
-
-        // Turn the `handlers` into a Map of mime type (key) -> handler (value)
-        val mimeTypes2Handlers: ErrorHandlingMap[String, (CreateFileV1) => Vector[FileValueV1]] = new ErrorHandlingMap(handlers.flatMap {
-            case (handler, mimeTypes) => mimeTypes.map(mimeType => mimeType -> handler)
-        }.toMap, { key: IRI => s"Unknown value type: $key" }) // TODO: accessing a non existing key in the map makes the application crash.
-
-        mimeTypes2Handlers(file.originalMimeType)(file)
-
-    }
 
     /**
       * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
@@ -118,13 +54,25 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         valueFunction(valueProps)
     }
 
+    def makeSipiImagePreviewGetUrlFromFilename(filename: String): String = {
+        s"${settings.sipiIIIFGetUrl}/${filename}/full/full/0/default.jpg"
+    }
+
     /**
-      * Creates a URL for accessing a file via Sipi. // TODO: implement this correctly.
-      * @param fileValueV1 the file value that the URL will point to.
+      * Creates a IIIF URL for accessing an image file via Sipi.
+      *
+      * @param imageFileValueV1 the image file value representing the image.
       * @return a Sipi URL.
       */
-    def makeSipiFileGetUrl(fileValueV1: FileValueV1): String = {
-        s"${settings.sipiURL}:${settings.sipiPort}/${fileValueV1.internalFilename}"
+    def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String = {
+        if (!imageFileValueV1.isPreview) {
+            // not a thumbnail
+            // calculate the correct size from the source image depending on the given dimensions
+            s"${settings.sipiIIIFGetUrl}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
+        } else {
+            // thumbnail
+            makeSipiImagePreviewGetUrlFromFilename(imageFileValueV1.internalFilename)
+        }
     }
 
     // A Map of MIME types to Knora API v1 binary format name.
@@ -153,6 +101,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     /**
       * Converts a [[FileValueV1]] (which is used internally by the Knora API server) to a [[LocationV1]] (which is
       * used in certain API responses).
+      *
       * @param fileValueV1 a [[FileValueV1]].
       * @return a [[LocationV1]].
       */
@@ -164,9 +113,30 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                     origname = stillImageFileValueV1.originalFilename,
                     nx = Some(stillImageFileValueV1.dimX),
                     ny = Some(stillImageFileValueV1.dimY),
-                    path = makeSipiFileGetUrl(fileValueV1)
+                    path = makeSipiImageGetUrlFromFilename(stillImageFileValueV1)
                 )
+            case otherType => throw NotImplementedException(s"Type not yet implemented: ${otherType.valueTypeIri}")
         }
+    }
+
+    /**
+      * Creates a URL pointing to the given resource class icon. From the resource class Iri it gets the ontology specific path, i.e. the ontology name.
+      * If the resource class Iri is "http://www.knora.org/ontology/knora-base#Region", the ontology name would be "knora-base".
+      * To the base path, the icon name is appended. In case of a region with the icon name "region.gif",
+      * "http://salsahapp:port/project-icons-basepath/knora-base/region.gif" is returned.
+      *
+      * This method requires the Iri segment before the last slash to be a unique identifier for all the ontologies used with Knora..
+      *
+      * @param resourceClassIri the Iri of the resource class in question.
+      * @param iconsSrc the name of the icon file.
+      */
+    def makeResourceClassIconURL(resourceClassIri: IRI, iconsSrc: String): IRI = {
+        // get ontology name, e.g. "knora-base" from "http://www.knora.org/ontology/knora-base#Region"
+        // add +1 to ignore the slash
+        val ontologyName = resourceClassIri.substring(resourceClassIri.lastIndexOf('/') + 1, resourceClassIri.lastIndexOf('#'))
+
+        // create URL: combine salsah-address and port, project icons base path, ontology name, icon name
+        settings.baseSALSAHUrl + settings.projectIconsBasePath + ontologyName + '/' + iconsSrc
     }
 
     /**
@@ -187,7 +157,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * - objStandoff: the string representation of the value assigned to predStandoff
       *
       * @param valueIri the IRI of the value that was queried.
-      * @param objRows SPARQL results.
+      * @param objRows  SPARQL results.
       * @return a [[ValueProps]] representing the SPARQL results.
       */
     def createValueProps(valueIri: IRI, objRows: Seq[VariableResultsRow]): ValueProps = {
@@ -208,8 +178,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * The remaining members are identical to those documented in [[createValueProps]].
       *
       * @param rowsWithOrdinaryValues SPARQL result rows describing properties that point to ordinary values (not link values).
-      * @param rowsWithLinkValues SPARQL result rows describing properties that point link values (reifications of links to resources).
-      * @param rowsWithLinks SPARQL result rows describing properties that point to resources.
+      * @param rowsWithLinkValues     SPARQL result rows describing properties that point link values (reifications of links to resources).
+      * @param rowsWithLinks          SPARQL result rows describing properties that point to resources.
       * @return a [[GroupedPropertiesByType]] representing the SPARQL results.
       */
     def createGroupedPropsByType(rowsWithOrdinaryValues: Seq[VariableResultsRow],
@@ -223,30 +193,30 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     /**
-      * Checks that a value type is valid for the `rdfs:range` of a property.
+      * Checks that a value type is valid for the `knora-base:objectClassConstraint` of a property.
       *
       * @param propertyIri the IRI of the property.
       * @param valueType the IRI of the value type.
-      * @param propertyRange the IRI of the property range.
+      * @param propertyObjectClassConstraint the IRI of the property's `knora-base:objectClassConstraint`.
       * @param responderManager a reference to the Knora API Server responder manager.
       * @return A future containing Unit on success, or a failed future if the value type is not valid for the property's range.
       */
-    def checkValueTypeForPropertyRange(propertyIri: IRI,
-                                       valueType: IRI,
-                                       propertyRange: IRI,
-                                       responderManager: ActorSelection)
-                                      (implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] = {
-        if (propertyRange == valueType) {
+    def checkValueTypeForPropertyObjectClassConstraint(propertyIri: IRI,
+                                                       valueType: IRI,
+                                                       propertyObjectClassConstraint: IRI,
+                                                       responderManager: ActorSelection)
+                                                      (implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] = {
+        if (propertyObjectClassConstraint == valueType) {
             Future.successful(())
         } else {
             for {
                 checkSubClassResponse <- (responderManager ? CheckSubClassRequestV1(
                     subClassIri = valueType,
-                    superClassIri = propertyRange
+                    superClassIri = propertyObjectClassConstraint
                 )).mapTo[CheckSubClassResponseV1]
 
                 _ = if (!checkSubClassResponse.isSubClass) {
-                    throw OntologyConstraintException(s"Property $propertyIri requires a value of type $propertyRange")
+                    throw OntologyConstraintException(s"Property $propertyIri requires a value of type $propertyObjectClassConstraint")
                 }
             } yield ()
         }
@@ -563,6 +533,32 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             referenceCount = predicates(OntologyConstants.KnoraBase.ValueHasRefCount).literals.head.toInt
         )
     }
+
+    /** Creates an attribute segment for the Salsah GUI from the given resource class.
+      * Example: if "http://www.knora.org/ontology/incunabula#book" is given, the function returns "restypeid=http://www.knora.org/ontology/incunabula#book".
+      *
+      * @param resourceClass the resource class.
+      * @return an attribute string to be included in the attributes for the GUI
+      */
+    def makeAttributeRestype(resourceClass: IRI) = {
+        OntologyConstants.SalsahGui.attributeNames.resourceClass + OntologyConstants.SalsahGui.attributeNames.assignmentOperator + resourceClass
+    }
+
+    /**
+      * Given a set of attribute segments representing assertions about the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property,
+      * combines the attributes into a string for use in an API v1 response.
+      *
+      * @param attributes the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property.
+      * @return a semicolon-delimited string containing the attributes, or [[None]] if no attributes were found.
+      */
+    def makeAttributeString(attributes: Set[String]): Option[String] = {
+        if (attributes.isEmpty) {
+            None
+        } else {
+            Some(attributes.mkString(";"))
+        }
+    }
+
 }
 
 /**
@@ -574,8 +570,8 @@ object GroupedProps {
       * Contains the three types of [[GroupedProperties]] returned by a SPARQL query.
       *
       * @param groupedOrdinaryValueProperties properties pointing to ordinary Knora values (i.e. not link values).
-      * @param groupedLinkValueProperties properties pointing to link value objects (reifications of links to resources).
-      * @param groupedLinkProperties properties pointing to resources.
+      * @param groupedLinkValueProperties     properties pointing to link value objects (reifications of links to resources).
+      * @param groupedLinkProperties          properties pointing to resources.
       */
     case class GroupedPropertiesByType(groupedOrdinaryValueProperties: GroupedProperties, groupedLinkValueProperties: GroupedProperties, groupedLinkProperties: GroupedProperties)
 
@@ -597,7 +593,7 @@ object GroupedProps {
       * Represents the object properties belonging to a value object
       *
       * @param literalData The value properties: The Map's keys (IRI) consist of value object properties (e.g. http://www.knora.org/ontology/knora-base#valueHasString).
-      * @param standoff Each Map in the List stands for one standoff node, its keys consist of standoff properties (e.g. http://www.knora.org/ontology/knora-base#standoffHasStart
+      * @param standoff    Each Map in the List stands for one standoff node, its keys consist of standoff properties (e.g. http://www.knora.org/ontology/knora-base#standoffHasStart
       */
     case class ValueProps(literalData: Map[IRI, ValueLiterals], standoff: Seq[Map[IRI, String]] = Vector.empty[Map[IRI, String]])
 

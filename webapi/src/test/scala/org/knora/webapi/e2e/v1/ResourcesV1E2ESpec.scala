@@ -20,17 +20,21 @@
 
 package org.knora.webapi.e2e.v1
 
+import java.io.File
+
 import akka.actor.{ActorSystem, Props}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.LiveActorMaker
 import org.knora.webapi.e2e.E2ESpec
+import org.knora.webapi.messages.v1respondermessages.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.v1respondermessages.valuemessages.{CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.ResourcesRouteV1
 import org.knora.webapi.store._
-import spray.http.StatusCodes
+import spray.http._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -54,7 +58,10 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
     implicit val timeout: Timeout = 300.seconds
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(5).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
+
+    val user = "root"
+    val password = "test"
 
     val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
@@ -70,33 +77,22 @@ class ResourcesV1E2ESpec extends E2ESpec {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
     }
 
+
     "The Resources Endpoint" should {
         "provide a HTML representation of the resource properties " in {
-            /* Dokubib resource */
-            /* Dokubib data is commented out for now because it takes too long to load.
-                       Get("/v1/resources.html/http%3A%2F%2Fdata.knora.org%2F0871f7678dbf?noresedit=true&reqtype=properties") ~> resourcesPath ~> check {
-                           //log.debug("==>> " + responseAs[String])
-                           assert(status === StatusCodes.OK)
-                           assert(responseAs[String] contains("preview"))
-                           assert(responseAs[String] contains("Title"))
-                           assert(responseAs[String] contains("Season"))
-                           assert(responseAs[String] contains("Picture"))
-                           assert(responseAs[String] contains("Description"))
-                       } */
-
             /* Incunabula resource*/
             Get("/v1/resources.html/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?noresedit=true&reqtype=properties") ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
-                assert(responseAs[String] contains ("preview"))
-                assert(responseAs[String] contains ("Phyiscal description"))
-                assert(responseAs[String] contains ("Location"))
-                assert(responseAs[String] contains ("Publication location"))
-                assert(responseAs[String] contains ("URI"))
-                assert(responseAs[String] contains ("Title"))
-                assert(responseAs[String] contains ("Datum der Herausgabe"))
-                assert(responseAs[String] contains ("Citation/reference"))
-                assert(responseAs[String] contains ("Publisher"))
+                assert(responseAs[String] contains "preview")
+                assert(responseAs[String] contains "Phyiscal description")
+                assert(responseAs[String] contains "Location")
+                assert(responseAs[String] contains "Publication location")
+                assert(responseAs[String] contains "URI")
+                assert(responseAs[String] contains "Title")
+                assert(responseAs[String] contains "Datum der Herausgabe")
+                assert(responseAs[String] contains "Citation/reference")
+                assert(responseAs[String] contains "Publisher")
             }
         }
 

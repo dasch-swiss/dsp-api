@@ -79,7 +79,7 @@
 \title{The Knora Base Ontology}
 \author{Lukas Rosenthaler, Benjamin Geer, Tobias Schweizer, Ivan Subotic\\Digital Humanities Lab, University of Basel}
 
-\date{26 January 2016}
+\date{11 March 2016}
 
 \begin{document}
 
@@ -162,20 +162,6 @@ edge [<-,cyan!60!blue] node[text style,above]{ex:pagename} (page);
 \label{fig:rdf-graph-with-prefix-labels}
 \end{figure}
 
-\section{Projects}
-
-In Knora, each item of data belongs to some particular project. Each project using Knora must define a \texttt{kb:knoraProject}, which has these properties (cardinalities are indicated in parentheses after each property name):
-
-\begin{description}
-	\item[shortname (1)] A short name that can be used to identify the project in configuration files and the like.
-	\item[basepath (1)] The filesystem path of the directory where the project's files are stored. \issue{290}{Should this be in the triplestore?}
-	\item[foaf:name (0-1)] The name of the project.
-	\item[description (0-1)] A description of the project.
-	\item[belongsTo (0-1)] The \texttt{kb:Institution} that the project belongs to.
-\end{description}
-
-Resources and values are associated with a project by means of the \texttt{kb:attached\-To\-Project} property, as described in Section~\ref{sec:data-model}. Users are associated with a project by means of the \texttt{kb:is\-In\-Project} property, as described in Section~\ref{sec:authorization}.
-
 \section{The Knora Data Model}
 
 \label{sec:data-model}
@@ -221,9 +207,29 @@ edge [<-,cyan!60!green] node[text style,above]{kb:valueHasEndJDC} (pubdate);
 \label{fig:structured-values}
 \end{figure}
 
+\subsection{Projects}
+
+In Knora, each item of data belongs to some particular project. Each project using Knora must define a \texttt{kb:knoraProject}, which has these properties (cardinalities are indicated in parentheses after each property name):
+
+\begin{description}
+	\item[shortname (1)] A short name that can be used to identify the project in configuration files and the like.
+	\item[basepath (1)] The filesystem path of the directory where the project's files are stored. \issue{290}{Should this be in the triplestore?}
+	\item[foaf:name (0-1)] The name of the project.
+	\item[description (0-1)] A description of the project.
+	\item[belongsTo (0-1)] The \texttt{kb:Institution} that the project belongs to.
+\end{description}
+
+Resources and values are associated with a project by means of the \texttt{kb:attached\-To\-Project} property, as described in Section~\ref{sec:data-model}. Users are associated with a project by means of the \texttt{kb:is\-In\-Project} property, as described in Section~\ref{sec:authorization}.
+
 \subsection{Resources}
 
-Each project using the Knora base ontology defines its own OWL classes, derived from \texttt{kb:Resource}, to represent the types of data it deals with. Each project-specific resource class definition must use OWL cardinality restrictions to specify the properties that a given type of resource can have. Properties that point to Knora values (see Section~\ref{subsec:values}) must be derived from \texttt{kb:hasValue}, and properties that point to other resources must be derived from \texttt{kb:hasLinkTo}. A few such properties are defined in the Knora base ontology, but projects typically need to define many of their own properties.
+\label{subsec:resources}
+
+All the content produced by a project (e.g. digitised primary source materials or research data) must be stored in objects that belong to subclasses of \texttt{kb:Resource}, so that the Knora API server can query and update that content. Each project using the Knora base ontology must define its own OWL classes, derived from \texttt{kb:Resource}, to represent the types of data it deals with.
+
+Resources have properties that point to different parts of the content they contain. For example, a resource representing a book could have a property called \texttt{hasAuthor}, pointing to the author of the book. There are two possible kinds of content in a Knora resource: Knora values (see Section~\ref{subsec:values}) or links to other resources (see Section~\ref{sec:links}). Properties that point to Knora values must be subproperties of \texttt{kb:hasValue}, and properties that point to other resources must be subproperties of \texttt{kb:hasLinkTo}. \todo{Add a list of the Knora properties that projects are, and are not, allowed to use directly, and explain why.} Each property definition must specify the types that its subjects and objects must belong to (see Section~\ref{subsec:property-restrictions} for details).
+
+Each project-specific resource class definition must use OWL cardinality restrictions to specify the properties that resources of that class can have (see Section~\ref{subsec:cardinalities} for details).
 
 Resources are not versioned; only their values are versioned (see Section~\ref{subsec:values}). A resource can be marked as deleted. It then remains in the repository, but becomes invisible to ordinary queries. It cannot be undeleted, because even though resources are not versioned, it is necessary to be able to find out when a resource was deleted. If desired, a new resource can be created by copying data from a deleted resource.
 
@@ -272,11 +278,11 @@ The more flexible approach, which is allowed by the Knora base ontology and will
 
 The Knora base ontology defines a set of OWL classes that are derived from \texttt{kb:Value} and represent different types of structured values found in humanities data. This set of classes may not be extended by project-specific ontologies.
 
-A value is always part of one particular resource, which points to it using some property derived from \texttt{hasValue}. For example, a project-specific ontology could specify a \texttt{Book} class with a property \texttt{hasSummary} (derived from \texttt{hasValue}), and that property could have an \texttt{rdfs:range} of \texttt{TextValue}. This would mean that the summary of each book is represented as a \texttt{TextValue}.
+A value is always part of one particular resource, which points to it using some property derived from \texttt{hasValue}. For example, a project-specific ontology could specify a \texttt{Book} class with a property \texttt{hasSummary} (derived from \texttt{hasValue}), and that property could have a \texttt{knora-base:object\-Class\-Constraint} of \texttt{TextValue}. This would mean that the summary of each book is represented as a \texttt{TextValue}.
 
 Knora values are versioned. Existing values are not modified. Instead, a new version of an existing value is created. The new version is linked to the old version via the \texttt{previousValue} property.
 
-\enquote{Deleting} a value means creating a new version, marked with \texttt{kb:isDeleted} and pointing to the previous version. A triple then points from the containing resource to this new, deleted version of the value, which remains in the repository but is invisible to ordinary queries. To simplify the enforcement of ontology constraints, and for consistency with resource updates, no new versions of a deleted value can be made; it is not possible to undelete. Instead, if desired, a new value can be created by copying data from a deleted value.
+\enquote{Deleting} a value means creating a new version, marked with \texttt{kb:is\-Deleted} and pointing to the previous version. A triple then points from the containing resource to this new, deleted version of the value, which remains in the repository but is invisible to ordinary queries. To simplify the enforcement of ontology constraints, and for consistency with resource updates, no new versions of a deleted value can be made; it is not possible to undelete. Instead, if desired, a new value can be created by copying data from a deleted value.
 
 \subsubsection{Properties of Value}
 
@@ -458,9 +464,15 @@ For example, suppose a project describes paintings that belong to collections. T
             owl:onProperty :hasName ;
             owl:cardinality 1 ] ,
         [ rdf:type owl:Restriction ;
-                owl:onProperty :title ;
-                owl:cardinality 1 ] .
-          
+              owl:onProperty :title ;
+              owl:cardinality 1 ] ;
+        [ rdf:type owl:Restriction ;
+              owl:onProperty :isInCollection ;
+              owl:minCardinality 1 ] ;
+        [ rdf:type owl:Restriction ;
+              owl:onProperty :isInCollectionValue ;
+              owl:minCardinality 1 ] .
+
 :Collection rdf:type owl:Class ;
     rdfs:subClassOf kb:Resource ,
         [ rdf:type owl:Restriction ;
@@ -469,18 +481,18 @@ For example, suppose a project describes paintings that belong to collections. T
             
 :hasName rdf:type owl:ObjectProperty ;
     rdfs:label "Name of artist" ;
-    rdfs:domain :Painting ;
-    rdfs:range kb:TextValue .
+    kb:subjectClassConstraint :Painting ;
+    kb:objectClassConstraint kb:TextValue .
             
 :title rdf:type owl:ObjectProperty ;
     rdfs:label "Title of painting"
-    rdfs:domain :Painting ;
-    rdfs:range kb:TextValue .
+    kb:subjectClassConstraint :Painting ;
+    kb:objectClassConstraint kb:TextValue .
 
 :hasName rdf:type owl:ObjectProperty ;
     rdfs:label "Name of collection" ;
-    rdfs:domain :Collection ;
-    rdfs:range kb:TextValue .
+    kb:subjectClassConstraint :Collection ;
+    kb:objectClassConstraint kb:TextValue .
 \end{verbatim}
 
 To link the paintings to the collection, we must add a \enquote{link property} to the ontology. In this case, the link property will point from a painting to the collection it belongs to. Every link property must be a subproperty of \texttt{hasLinkTo}.
@@ -488,17 +500,17 @@ To link the paintings to the collection, we must add a \enquote{link property} t
 \begin{verbatim}
 :isInCollection rdf:type owl:ObjectProperty ;
     rdfs:subPropertyOf kb:hasLinkTo ;
-    rdfs:domain :Painting ;
-    rdfs:range :Collection .
+    kb:subjectClassConstraint :Painting ;
+    kb:objectClassConstraint :Collection .
 \end{verbatim}
 
-We must then add a \enquote{link value property}, which will point from a painting to a \texttt{LinkValue} (described in Section~\ref{subsubsec:linkvalue}), which will contain metadata about the link between the property and the collection. The name of the link value property is constructed using a simple naming convention: the word \texttt{Value} is appended to the name of the link property. In this case, since our link property is called \texttt{isInCollectionValue}, the link value property must be called \texttt{ex:isOnPageValue}. Every link value property must be a subproperty of \texttt{kb:hasLinkToValue}.
+We must then add a \enquote{link value property}, which will point from a painting to a \texttt{LinkValue} (described in Section~\ref{subsubsec:linkvalue}), which will contain metadata about the link between the property and the collection. In particular, the link value specifies the owner of the link, the date when it was created, and the permissions that determine who can view or modify it. The name of the link value property is constructed using a simple naming convention: the word \texttt{Value} is appended to the name of the link property. In this case, since our link property is called \texttt{isInCollectionValue}, the link value property must be called \texttt{ex:isOnPageValue}. Every link value property must be a subproperty of \texttt{kb:hasLinkToValue}.
 
 \begin{verbatim}
 :isInCollectionValue rdf:type owl:ObjectProperty ;
     rdfs:subPropertyOf kb:hasLinkToValue ;
-    rdfs:domain :painting ;
-    rdf:range kb:LinkValue .                     
+    kb:subjectClassConstraint :painting ;
+    kb:objectClassConstraint kb:LinkValue .
 \end{verbatim}
 
 Given this ontology, we can create some RDF data describing a painting and a collection:
@@ -534,7 +546,7 @@ data:value_D rdf:type kb:LinkValue ;
     rdf:subject data:dali_4587 ;
     rdf:predicate paintings:isInCollection ;
     rdf:object data:pompidou ;
-    kb:valueHasRefCount 1 ;
+    kb:valueHasRefCount 1 .
 \end{verbatim}
 
 This creates a link (\texttt{isInCollection}) between the painting and the collection, along with a reification containing metadata about the link. We can visualise the result as the graph shown in Figure~\ref{fig:basic-link-graph}.
@@ -758,6 +770,67 @@ Each permission in the above list implies all lower-numbered permissions. A user
     \item From the resulting list, select the highest-level permission.
     \item If the result is that she would have no permissions, give her whatever permission \texttt{UnknownUser} would have.
 \end{enumerate}
+
+\section{Consistency Checking}
+
+Knora tries to enforce repository consistency by checking constraints that are specified in the Knora base ontology and in project-specific ontologies. Two types of constraints are enforced:
+
+\begin{itemize}
+	\item Cardinalities in OWL class definitions.
+	\item Constraints on the types of the subjects and objects of OWL object properties.
+\end{itemize}
+
+The implementation of consistency checking is partly triplestore-dependent; Knora may be able to provide stricter checks with some triplestores than with others.
+
+\subsection{OWL Cardinalities}
+
+\label{subsec:cardinalities}
+
+As noted in Section~\ref{subsec:resources}, each subclass of \texttt{Resource} must use OWL cardinality restrictions to specify the properties it can have. More specifically, a resource is allowed to have a property that is a subproperty of \texttt{kb:hasValue} only if the resource's class has some cardinality for that property. In addition, Knora supports, and attempts to enforce, the following cardinality constraints:
+ 
+\begin{description}
+	\item[owl:cardinality 1] A resource of this class must have exactly one instance of the specified property.
+	\item[owl:minCardinality 1] A resource of this class must have at least one instance of the specified property.
+	\item[owl:maxCardinality 1] A resource of this class may have zero or one instance of the specified property.
+	\item[owl:minCardinality 0] A resource of this class may have zero or more instances of the specified property.
+\end{description}
+
+For more information about OWL cardinalities, see~\cite[§2.1, Object Property Restrictions]{OWL_2_Quick_Reference_Guide}.
+
+\subsection{Constraints on the Types of Property Subjects and Objects}
+
+\label{subsec:property-restrictions}
+
+When a project-specific ontology defines a property, it must indicate the types that are allowed as subjects and objects of the property. This is done using the following Knora-specific properties:
+
+\begin{description}
+	\item[subjectClassConstraint] Specifies the class that subjects of the property must belong to. Knora will attempt to enforce this constraint.
+	\item[objectClassConstraint] If the property is an object property, specifies the class that objects of the property must belong to. Knora will attempt to enforce this constraint.
+	\item[objectDatatypeConstraint] If the property is a datatype property, specifies the type of literals that can be objects of the property. Knora will not attempt to enforce this constraint, but it is useful for documentation purposes.
+\end{description}
+
+\subsection{Consistency Constraint Example}
+
+A project-specific ontology could define consistency constraints as in this simplified example:
+
+\begin{verbatim}
+:book rdf:type owl:Class ;
+    rdfs:subClassOf knora-base:Resource ,
+        [ rdf:type owl:Restriction ;
+          owl:onProperty :hasTitle ;
+          owl:cardinality "1"^^xsd:nonNegativeInteger ] ,
+        [ rdf:type owl:Restriction ;
+          owl:onProperty :hasAuthor ;
+          owl:minCardinality "0"^^xsd:nonNegativeInteger ] .
+
+:hasTitle rdf:type owl:ObjectProperty ;
+    knora-base:subjectClassConstraint :book ;
+    knora-base:objectClassConstraint knora-base:TextValue .
+
+:hasAuthor rdf:type owl:ObjectProperty ;
+    knora-base:subjectClassConstraint :book ;
+    knora-base:objectClassConstraint knora-base:TextValue .
+\end{verbatim}
 
 \section{Open Questions}
 

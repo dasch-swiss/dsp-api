@@ -24,7 +24,8 @@ import akka.actor.{Actor, ActorLogging, Props}
 import akka.testkit.TestProbe
 
 /**
-  * Created by subotic on 05.03.14.
+  * This trait is part of the cake pattern used in the creation of actors. This trait provides an implementation of the
+  * makeActor method that creates an actor as a [[TestProbe]], which can than be used in testing.
   */
 trait TestProbeMaker extends ActorMaker {
     this: Actor with ActorLogging =>

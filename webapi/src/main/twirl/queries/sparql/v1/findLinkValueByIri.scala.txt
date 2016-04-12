@@ -24,12 +24,14 @@
  * Looks for a `knora-base:LinkValue` given its IRI, returns all information about it, and checks whether the
  * corresponding direct link also exists.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param subjectIri the IRI of the resource that is the source of the link.
  * @param predicateIri the IRI of the property that links the two resources.
  * @param maybeObjectIRI if provided, the IRI of the target resource.
  * @param linkValueIri the IRI of the `LinkValue`.
  *@
-@(subjectIri: IRI,
+@(triplestore: String,
+  subjectIri: IRI,
   predicateIri: IRI,
   maybeObjectIri: Option[IRI],
   linkValueIri: IRI)
@@ -39,6 +41,10 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?linkValue ?directLinkExists ?targetResourceClass ?objPred ?objObj
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@subjectIri") AS ?subject)
     BIND(IRI("@predicateIri") AS ?predicate)

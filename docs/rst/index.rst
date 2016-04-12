@@ -16,13 +16,6 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-##############################################################
-Knora (Knowledge Organization, Representation, and Annotation)
-##############################################################
-
-Knora (Knowledge Organization, Representation, and Annotation) is a software
-framework for storing, sharing, and working with sources and information in the
-humanities.
 
 .. toctree::
     :maxdepth: 2
@@ -30,11 +23,21 @@ humanities.
     introduction/index
     knora-ontologies/index
     knora-api-server/index
-    sipi/index    
+    sipi/index
 
+###################
 Indices and tables
-==================
+###################
 
+********************
+List of TODOs
+********************
+
+.. todolist::
+
+********************
+Other Indices
+********************
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`

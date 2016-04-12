@@ -55,16 +55,18 @@ object SipiResponderV1Spec {
         This file value has not project Iri attached, it has to be retrieved from the resource.
      */
     private val fileValueResponseFull = SipiFileInfoGetResponseV1(
-        path = Some("http://localhost:1024/incunabula_0000000002.jp2"),
-        permissionCode = Some(6)
+        filepath = Some("incunabula_0000000002.jp2"),
+        permissionCode = Some(6),
+        userdata = SipiResponderV1Spec.userData
     )
 
     /*
         This file value is attached to the test project 666
      */
     private val fileValueResponsePreview = SipiFileInfoGetResponseV1(
-        path = Some("http://localhost:1024/incunabula_0000000002.jpg"),
-        permissionCode = Some(2) // the user is not member of the file value's project.
+        filepath = Some("incunabula_0000000002.jpg"),
+        permissionCode = Some(2), // the user is not member of the file value's project.
+        userdata = SipiResponderV1Spec.userData
     )
 }
 
@@ -93,24 +95,24 @@ class SipiResponderV1Spec extends CoreSpec() with ImplicitSender {
         expectMsg(300.seconds, ResetTriplestoreContentACK())
     }
 
-    "The representations responder" should {
+    "The Sipi responder" should {
         "return details of a full quality file value (project IRI has to be retrieved from resource because it is not given for file value)" in {
             // http://localhost:3333/v1/files/http%3A%2F%2Fdata.knora.org%2F8a0b1e75%2Freps%2F7e4ba672
             actorUnderTest ! SipiFileInfoGetRequestV1(
                 userProfile = SipiResponderV1Spec.userProfile,
-                fileValueIri = "http://data.knora.org/8a0b1e75/reps/7e4ba672"
+                filename = "incunabula_0000000002.jp2"
             )
 
             expectMsg(timeout, SipiResponderV1Spec.fileValueResponseFull)
         }
     }
 
-    "The representations responder" should {
+    "The Sipi responder" should {
         "return details of a preview file value (a test project Iri is directly attached to file value: the current user is member of the resource's project, not of the one of the file value)" in {
             // http://localhost:3333/v1/files/http%3A%2F%2Fdata.knora.org%2F8a0b1e75%2Freps%2Fbf255339
             actorUnderTest ! SipiFileInfoGetRequestV1(
                 userProfile = SipiResponderV1Spec.userProfile,
-                fileValueIri = "http://data.knora.org/8a0b1e75/reps/bf255339"
+                filename = "incunabula_0000000002.jpg"
             )
 
             expectMsg(timeout, SipiResponderV1Spec.fileValueResponsePreview)

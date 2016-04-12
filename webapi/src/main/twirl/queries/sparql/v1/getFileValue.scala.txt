@@ -21,19 +21,26 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets information about a file value.
+ * Given a knora:base:internalFilename, retrieves the file value and information attached to it.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param fileValueIri the IRI of the file value.
  *@
-@(fileValueIri: IRI)
+@(triplestore: String,
+  filename: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?objPred ?objObj
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
-    BIND(IRI("@fileValueIri") AS ?fileValue)
+
+    ?fileValue knora-base:internalFilename "@filename"
 
     {
         ?fileValue ?objPred ?objObj .

@@ -28,7 +28,7 @@ import akka.util.Timeout
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
 import org.knora.webapi.store._
-import org.knora.webapi.store.triplestore.embedded.{JenaGraphDBActor, JenaTDBActor}
+import org.knora.webapi.store.triplestore.embedded.{JenaTDBActor}
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreActor
 import org.knora.webapi.util.FakeTriplestore
 import org.knora.webapi.{ActorMaker, Settings, UnsuportedTriplestoreException}
@@ -76,7 +76,6 @@ class TriplestoreManagerActor extends Actor with ActorLogging {
             case HTTP_FUSEKI_TS_TYPE => httpBased = true; makeActor(FromConfig.props(Props[HttpTriplestoreActor]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
             case HTTP_SESAME_TS_TYPE => httpBased = true; makeActor(FromConfig.props(Props[HttpTriplestoreActor]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
             case EMBEDDED_JENA_TDB_TS_TYPE => httpBased = false; makeActor(Props[JenaTDBActor], name = EMBEDDED_JENA_ACTOR_NAME)
-            case EMBEDDED_GRAPH_DB_TS_TYPE => httpBased = false; makeActor(Props[JenaGraphDBActor], name = EMBEDDED_GRAPH_DB_ACTOR_NAME)
             case unknownType => throw UnsuportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
         }
 

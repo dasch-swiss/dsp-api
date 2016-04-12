@@ -46,6 +46,8 @@ $ ./env/bin/pip freeze > requirements.txt
 
 ## 3 Generating Documentation ##
 
+### 3.1 Bulding the Documentation ###
+
 Inside the docs folder type for the html documentation type
 
 ```
@@ -63,3 +65,18 @@ for generating a PDF. If there are errors during the latex compilation, skip the
 few times, so that the index is properly generated.
 
 The generated documentation can be found under  ```_build/latex```
+
+### Problems with Locales ###
+
+Error message when trying to generate the documentation:
+
+```
+ValueError: unknown locale: UTF-8
+```
+
+Set the locales as environment variables (e.g. in ~/.bash_profile):
+
+```
+export LC_ALL=de_CH.UTF-8
+export LANG=de_CH.UTF-8
+```

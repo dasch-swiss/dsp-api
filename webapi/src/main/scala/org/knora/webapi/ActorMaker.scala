@@ -23,7 +23,8 @@ package org.knora.webapi
 import akka.actor.{Actor, ActorRef, Props}
 
 /**
-  * TODO: document this.
+  * This trait is part of the cake pattern used in the creation of actors. Here we only define the method, and with
+  * the forward declaration we make sure that it can only be attached to an actor.
   */
 trait ActorMaker {
     this: Actor =>

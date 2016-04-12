@@ -37,6 +37,8 @@ import scala.concurrent.duration._
   */
 class SettingsImpl(config: Config) extends Extension {
     val baseApiUrl = config.getString("app.http.base-api-url")
+    val baseSALSAHUrl = config.getString("app.http.base-salsah-url")
+    val projectIconsBasePath = config.getString("app.http.project-icons-basepath")
     val httpInterface = config.getString("app.http.interface")
     val tmpDataDir = config.getString("app.tmp-datadir")
     val dataDir = config.getString("app.datadir")
@@ -44,9 +46,13 @@ class SettingsImpl(config: Config) extends Extension {
         (mType: ConfigValue) => mType.unwrapped.toString
     }.toVector
 
-    val sipiURL = config.getString("app.sipi.url")
+    val sipiBaseUrl = config.getString("app.sipi.url")
     val sipiPort = config.getString("app.sipi.port")
-    val sipiConversionRoute = config.getString("app.sipi.conversion-route")
+    val sipiPrefix = config.getString("app.sipi.prefix")
+    val sipiIIIFGetUrl = s"$sipiBaseUrl:$sipiPort/$sipiPrefix"
+    val sipiImageConversionUrl = s"$sipiBaseUrl:$sipiPort"
+    val sipiPathConversionRoute = config.getString("app.sipi.path-conversion-route")
+    val sipiFileConversionRoute = config.getString("app.sipi.file-conversion-route")
     val httpPort = config.getInt("app.http.port")
     val caches = config.getList("app.caches").iterator.map {
         (cacheConfigItem: ConfigValue) =>
@@ -105,8 +111,6 @@ class SettingsImpl(config: Config) extends Extension {
 
     val skipAuthentication = config.getBoolean("app.skip-authentication")
 
-    val imageServerUrl = config.getString("app.image-server.url")
-
     val fallbackLanguage = config.getString("user.default-language")
 
     // Project specific named graphs stored in a map
@@ -114,12 +118,18 @@ class SettingsImpl(config: Config) extends Extension {
     lazy val projectNamedGraphs: Map[IRI, ProjectNamedGraphs] = {
         config.getConfigList("app.project-named-graphs").map(new ProjectNamedGraphs(_)).map(elem => (elem.project, elem)).toMap
     }
+
+    lazy val namedGraphs: Vector[ProjectNamedGraphs] = {
+        config.getConfigList("app.project-named-graphs").map(new ProjectNamedGraphs(_)).toVector
+    }
 }
 
 class ProjectNamedGraphs(params: Config) {
     val project: String = params.getString("project")
     val ontology: IRI = params.getString("ontology")
     val data: IRI = params.getString("data")
+    val name: String = params.getString("name")
+    val visibleInGUI = params.getBoolean("visibleInGUI")
 }
 
 object Settings extends ExtensionId[SettingsImpl] with ExtensionIdProvider {

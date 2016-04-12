@@ -1,0 +1,1327 @@
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * This file is part of Knora.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/******************************************************************************
+ * Generic definitions
+ * ===================
+ */
+/*-----------------------------------------------------------------------------
+ * Browser reset
+ */
+* {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  /* margin:0; */
+  /* padding:0; */
+  border-width: 0;
+}
+/*-----------------------------------------------------------------------------
+ * body definitions
+ */
+body {
+  background-image: url("less/images/main/background.gif");
+  background-position: center;
+  background-repeat: repeat-y;
+  /* just a test for dokubib!! */
+  /*	overflow: hidden; */
+}
+.event_catcher {
+  display: none;
+  /*
+      filter:alpha(opacity=0);
+      -moz-opacity:0.0;
+      -khtml-opacity: 0.0;
+      -webkit-opacity: 0.0;
+      opacity: 0.0;
+      */
+  background-color: transparent;
+}
+.loginbox {
+  border-radius: 10px;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -khtml-border-radius: 10px;
+  -moz-box-shadow: 5px 5px 5px #222;
+  -webkit-box-shadow: 5px 5px 5px #222;
+  -khtml-box-shadow: 5px 5px 5px #222;
+  box-shadow: 5px 5px 5px #222;
+  background-color: #000;
+  color: #ffffff;
+  opacity: 0.75;
+  filter: 'alpha(opacity=75)';
+  border: 10px;
+  padding: 10px;
+}
+/*-----------------------------------------------------------------------------
+ * ERROR MESSAGES
+ */
+.errormsg {
+  color: #ff0;
+  background-color: #00f;
+}
+div.errormsg {
+  border: 3px outset #f00;
+  margin: 3px 3px 3px 3px;
+  padding: 2px 2px 2px 2px;
+  font-weight: bold;
+}
+/******************************************************************************
+ * FORMS
+ */
+table.roryform {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  border-width: 0px;
+  border-spacing: 2px;
+}
+.roryform {
+  font-family: 'Verdana';
+  font-size: 14px;
+  color: #000;
+}
+td.roryform {
+  vertical-align: top;
+  padding: 2px 2px 2px 2px;
+}
+h1.roryform {
+  font-weight: bold;
+  font-size: 18px;
+}
+h2.roryform {
+  font-size: 14px;
+}
+.loginlayer {
+  background: #000;
+}
+.blacklayer {
+  visibility: hidden;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  margin: 0px;
+  opacity: 0.75;
+}
+.admin {
+  margin-left: auto;
+  margin-right: auto;
+}
+/*-----------------------------------------------------------------------------
+ * ADMIN FORMS
+ */
+table.admin th {
+  border-style: none;
+  padding: 3px;
+  margin: 0px;
+  /*background-image: url('<?php echo SITE_URL; ?>/libs/images/bg_blau.png'); !!!!!!!!!!!!!!!!!!*/
+}
+table.admin td {
+  border-style: none;
+  padding: 3px;
+  margin: 0px;
+}
+/******************************************************************************
+ * LOGIN WINDOW
+ */
+table.loginwin {
+  margin-left: auto;
+  margin-right: auto;
+  width: 40%;
+  text-align: center;
+}
+/*IFRAMES*/
+.transparent {
+  filter: alpha(opacity=50);
+  -moz-opacity: 0.5;
+  -khtml-opacity: 0.5;
+  -webkit-opacity: 0.5;
+  opacity: 0.5;
+}
+.embedded_iframe {
+  seamless: true;
+  border: none;
+  width: 100%;
+  height: 100%;
+}
+.within_iframe {
+  background-image: none;
+  background-color: #FFFFFF;
+  padding: 5px;
+}
+/******************************************************************************
+ * GENERIC DEFINITIONS
+ */
+#buttons {
+  background: #e5eaff;
+  font-family: 'Verdana';
+  font-size: 12px;
+  color: #FFCC00;
+}
+input[type=button] {
+  cursor: pointer;
+  outline-style: outset;
+  outline-width: medium;
+  outline-color: grey;
+  margin: 5px;
+}
+input[type=button]:hover {
+  color: blue;
+  text-decoration: underline;
+}
+input[type=button]:active {
+  outline-style: inset;
+}
+input[type=submit] {
+  cursor: pointer;
+  outline-style: outset;
+  outline-width: medium;
+  outline-color: grey;
+  margin: 5px;
+}
+input[type=submit]:hover {
+  color: blue;
+  text-decoration: underline;
+}
+input[type=submit]:active {
+  outline-style: inset;
+}
+select {
+  background-color: #eeeeee;
+  border-width: 1px;
+  border-color: #bbbbbb;
+  border-style: solid;
+  margin: 1px;
+}
+select.in_header {
+  background-color: #ffffff;
+  border-color: #ffaa00;
+}
+button {
+  cursor: pointer;
+  outline-style: outset;
+  outline-width: medium;
+  outline-color: grey;
+  margin: 5px;
+}
+button:hover {
+  color: blue;
+  text-decoration: underline;
+}
+button:active {
+  outline-style: inset;
+}
+textarea {
+  background-color: #eeeeee;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #bbbbbb;
+  margin: 1px;
+}
+input[type=text] {
+  background-color: #eeeeee;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #bbbbbb;
+  margin: 1px;
+}
+input[type=text].in_header {
+  vertical-align: middle;
+  background-color: #ffffff;
+  border-color: #ffaa00;
+}
+.hlist {
+  list-style: none;
+}
+/*-----------------------------------------------------------------------------
+ * Other unknown stuff ;-)
+ */
+.link {
+  border: 0px;
+  vertical-align: middle;
+}
+* + html input {
+  margin: -1px 0;
+}
+* html input {
+  margin: -1px 0;
+}
+.center {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+.textleft {
+  text-align: left;
+}
+.textright {
+  text-align: right;
+}
+.mainwin_toolbar_ele {
+  display: inline-block;
+}
+body {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+}
+.workwin_header {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  top: 0px;
+  background: none repeat-x 0 0;
+  background-color: #eeeeee;
+  height: 34px;
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-top: 3px;
+  padding-bottom: 3;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-bottom-color: #aaaaaa;
+}
+.workwin_logo {
+  position: absolute;
+  background: url("less/images/workwin/logo-salsah.png");
+  background-color: transparent;
+  width: 154px;
+  height: 40px;
+  top: 0px;
+}
+.workwin_footer {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  color: #000000;
+  background: none repeat-x 0 0;
+  background-color: #dddddd;
+  height: 11px;
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #aaaaaa;
+}
+.workwin_footer span {
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  height: 11px;
+  font-size: 11px;
+  line-height: 100%;
+}
+.workwin_content,
+.workwin_eventcatcher {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  top: 41px;
+  bottom: 16px;
+  overflow: auto;
+}
+.workwin_header_element {
+  padding: 7px;
+  float: right;
+  vertical-align: middle;
+}
+/******************************************************************************
+ * Tabs in workwindow
+ */
+.workwin_content .tabLabel {
+  border-left-style: solid;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-width: 1px;
+  border-color: black;
+  -moz-border-radius-topleft: 5px;
+  -moz-border-radius-topright: 5px;
+  -webkit-border-top-left-radius: 5px;
+  -webkit-border-top-right-radius: 5px;
+  -khtml-border-top-left-radius: 5px;
+  -khtml-border-top-right-radius: 5px;
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+  padding: 1px;
+  margin: 2px 2px -1px 2px;
+  cursor: pointer;
+}
+.workwin_content .tabVisible {
+  background-color: #fff;
+  color: #000;
+  opacity: 1.0;
+  filter: alpha(opacity=100);
+}
+.workwin_content .tabInvisible {
+  background-color: #aaa;
+  color: #555;
+  opacity: 0.8;
+  filter: alpha(opacity=80);
+}
+.workwin_content .tabContent {
+  overflow: hidden;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+.workwin_content .tabContainer {
+  background-color: #cccccc;
+  border-bottom: 1px solid #999999;
+}
+/* TITLEBAR */
+/* TASKBAR */
+/* TABCONTAINER */
+/* GENERAL DEFINITIONS */
+[draggable=true] {
+  -khtml-user-drag: element;
+  -webkit-user-drag: element;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+}
+.links div {
+  cursor: pointer;
+}
+/*Dragging Function*/
+.inactive {
+  filter: alpha(opacity=30);
+  -moz-opacity: 0.3;
+  -khtml-opacity: 0.3;
+  -webkit-opacity: 0.3;
+  opacity: 0.3;
+}
+.win {
+  /*	overflow: hidden; SAFARI BUG */
+  background-color: #eeeeee;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #000000;
+  -moz-border-radius: 7px;
+  -webkit-border-radius: 7px;
+  -khtml-border-radius: 7px;
+  border-radius: 7px;
+  /*	border-bottom-right-radius: 0; */
+  -moz-box-shadow: 5px 5px 5px #999999;
+  -webkit-box-shadow: 5px 5px 5px #999999;
+  -khtml-box-shadow: 5px 5px 5px #999999;
+  box-shadow: 5px 5px 5px #999999;
+}
+.win .titlebar {
+  /*	font-family: Fraktur; */
+  color: #000000;
+  background: none repeat-x 0 0;
+  background-color: #cccccc;
+  border-bottom: 1px solid #000000;
+  padding: TITLEBAR_PADDING;
+  height: 19px;
+  -moz-border-radius-topleft: 7px;
+  -moz-border-radius-topright: 7px;
+  -webkit-border-top-left-radius: 7px;
+  -webkit-border-top-right-radius: 7px;
+  -khtml-border-radius-topleft: 7px;
+  -khtml-border-radius-topright: 7px;
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
+}
+/* definition of the div containing the window control elements */
+/* distance between the control elements*/
+.win .controls div {
+  margin-left: 2px;
+}
+/* definition of the close bg */
+.win .controls .close {
+  background: url("less/images/win/window_close_up.png") no-repeat 0 0;
+  height: 16px;
+  width: 16px;
+}
+.win .controls .close:hover {
+  background: url("less/images/win/window_close_down.png") no-repeat 0 0;
+}
+/* definition of the toggle bg */
+.win .controls .toggle {
+  background: url("less/images/win/window_minimize_up.png") no-repeat 0 0;
+  height: 16px;
+  width: 16px;
+}
+.win .controls .toggle:hover {
+  background: url("less/images/win/window_minimize_down.png") no-repeat 0 0;
+}
+/* definition of the maximize bg */
+.win .controls .maximize {
+  background: url("less/images/win/window_maximize_up.png") no-repeat 0 0;
+  height: 16px;
+  width: 16px;
+}
+.win .controls .maximize:hover {
+  background: url("less/images/win/window_maximize_down.png") no-repeat 0 0;
+}
+.win .taskbar {
+  top: 24px;
+  height: 23px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #000000;
+  padding: 2px;
+}
+.focus .taskbar {
+  background-color: #eeeeee;
+}
+.win .content {
+  top: 24px;
+  -moz-border-radius-bottomleft: 7px;
+  -moz-border-radius-bottomright: 7px;
+  -webkit-border-bottom-left-radius: 7px;
+  -webkit-border-bottom-right-radius: 7px;
+  -khtml-border-radius-bottomleft: 7px;
+  -khtml-border-radius-bottomright: 7px;
+  border-bottom-left-radius: 7px;
+  border-bottom-right-radius: 7px;
+}
+.win .overlay {
+  top: 24px;
+  -moz-border-radius-bottomleft: 7px;
+  -moz-border-radius-bottomright: 7px;
+  -webkit-border-bottom-left-radius: 7px;
+  -webkit-border-bottom-right-radius: 7px;
+  -khtml-border-radius-bottomleft: 7px;
+  -khtml-border-radius-bottomright: 7px;
+  border-bottom-left-radius: 7px;
+  border-bottom-right-radius: 7px;
+}
+.win .contentWithTaskbar {
+  top: 52px;
+}
+.win .resize {
+  width: 10px;
+  height: 10px;
+  background-color: #777;
+  -moz-border-radius-bottomright: 7px;
+  -webkit-border-bottom-right-radius: 7px;
+  -khtml-border-radius-bottomright: 7px;
+  border-bottom-right-radius: 7px;
+  opacity: 0.5;
+  filter: alpha(opacity=50);
+  /*for Internet Explorer 6/7*/
+}
+/* in case resize is deactivated */
+.win .inactive {
+  display: none;
+}
+/* //////////////////////////////////////////////////////////////////////////*/
+.focus .titlebar {
+  color: #ffffff;
+  background: none repeat-x 0 0;
+  background-color: #555555;
+}
+.win.focus {
+  -moz-box-shadow: 5px 5px 5px #222222;
+  -webkit-box-shadow: 5px 5px 5px #222222;
+  -khtml-box-shadow: 5px 5px 5px #222222;
+  box-shadow: 5px 5px 5px #222222;
+}
+.win .tabContainer {
+  border: 1px solid #666666;
+  background-color: #ffffff;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+/* OTHER ELEMENTS */
+.searchbox {
+  position: absolute;
+  -moz-box-shadow: 5px 5px 5px #222;
+  -webkit-box-shadow: 5px 5px 5px #222;
+  -khtml-box-shadow: 5px 5px 5px #222;
+  box-shadow: 5px 5px 5px #222;
+}
+.searchboxItem {
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+}
+/******************************************************************************
+ * Tables for displaying search results
+ */
+table.searchres {
+  width: 100%;
+  margin: 0px;
+  border-collapse: collapse;
+  -webkit-border-vertical-spacing: 0px;
+  -webkit-border-horizontal-spacing: 0px;
+  -moz-border-vertical-spacing: 0px;
+  -moz-border-horizontal-spacing: 0px;
+  -khtml-border-vertical-spacing: 0px;
+  -khtml-border-horizontal-spacing: 0px;
+  border-vertical-spacing: 0px;
+  border-horizontal-spacing: 0px;
+}
+table.searchres th {
+  background-color: #ffffff;
+  padding: 1px 3px 1px 3px;
+  margin: 0px;
+  border-style: none;
+  text-align: left;
+}
+.focus table.searchres th {
+  background-color: #ffffff;
+}
+table.searchres tr:nth-child(odd) {
+  background-color: #eeeeee;
+  margin: 0px;
+}
+table.searchres tr:nth-child(even) {
+  background-color: transparent;
+  margin: 0px;
+}
+table.searchres tr:hover {
+  background-color: #eeccaa;
+  cursor: pointer;
+}
+table.searchres td {
+  margin: 0px;
+  padding: 1px 3px 1px 3px;
+  border-style: none;
+  -webkit-border-vertical-spacing: 0px;
+  -webkit-border-horizontal-spacing: 0px;
+  -moz-border-vertical-spacing: 0px;
+  -moz-border-horizontal-spacing: 0px;
+  -khtml-border-vertical-spacing: 0px;
+  -khtml-border-horizontal-spacing: 0px;
+  border-vertical-spacing: 0px;
+  border-horizontal-spacing: 0px;
+}
+.searchres_highlight {
+  font-weight: bold;
+  background-color: #ffff55;
+}
+.searchinfowin {
+  background-color: #000;
+  opacity: 0.85;
+  filter: alpha(opacity=85);
+  color: #fff;
+  border-style: solid;
+  border-color: #000;
+  border-width: 2px;
+  border-radius: 10px;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -khtml-border-radius: 10px;
+  -moz-box-shadow: 5px 5px 5px #222;
+  -webkit-box-shadow: 5px 5px 5px #222;
+  -khtml-box-shadow: 5px 5px 5px #222;
+  box-shadow: 5px 5px 5px #222;
+}
+/*////////////////////////////////////////////////////////////////////////////*/
+.mainpage_simplesearch {
+  border-width: 0;
+  background-color: #ffffff;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  -khtml-border-radius: 6px;
+  border-radius: 6px;
+  position: relative;
+  /*!!!!!!!!!!!!!!!*/
+  bottom: 2px;
+  /*!!!!!!!!!!!!!!!*/
+}
+.workpage_simplesearch {
+  border-width: 0;
+  background-color: #ffffff;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  -khtml-border-radius: 6px;
+  border-radius: 6px;
+  position: relative;
+  /*!!!!!!!!!!!!!!!*/
+  bottom: 2px;
+  /*!!!!!!!!!!!!!!!*/
+}
+.workwin_simplesearch {
+  border-width: 0;
+  background-color: #ffffff;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  -khtml-border-radius: 6px;
+  border-radius: 6px;
+  position: relative;
+  /*!!!!!!!!!!!!!!!*/
+  bottom: 2px;
+  /*!!!!!!!!!!!!!!!*/
+}
+.extsearch input,
+.extsearch select {
+  background-color: #ddd;
+  border-width: 1px;
+  border-style: solid;
+  margin-top: 5px;
+  margin-bottom: 2px;
+}
+select.extsearch {
+  background-color: #eee;
+  border-width: 1px;
+  border-style: solid;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+hr.extsearch {
+  border-width: 1px;
+}
+select.extsearch {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+/* matrix/viewbox for extended search */
+/*
+.extsearch .viewbox .thumbframe {
+    float: left;
+    margin: 7px 7px 0 0;
+    width: 90px;
+    height: 125px;
+    border: 1px solid #000000;
+}
+*/
+/* DOES NOT WORK.....!
+.extsearch {
+    float: left;
+    margin: 7px 7px 0 0;
+    width: 90px;
+    height: 125px;
+}
+*/
+/*
+.thumbframe {
+   float: left;
+    margin: 7px 7px 0 0;
+    width: 90px;
+    height: 125px;
+}
+*/
+.paging_active {
+  color: #f00;
+}
+.viewbox {
+  float: left;
+  position: static;
+  width: 100%;
+  background-color: #999;
+}
+.thumbframe {
+  float: left;
+  width: 200px;
+  height: 210px;
+  background-color: #333;
+  padding: 5px;
+  border-style: solid;
+  border-width: 5px;
+  color: #fff;
+  margin: 5px;
+  text-align: center;
+  border-color: #333;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px;
+  -moz-box-shadow: 5px 5px 5px #000;
+  -webkit-box-shadow: 5px 5px 5px #000;
+  -khtml-box-shadow: 5px 5px 5px #000;
+  box-shadow: 5px 5px 5px #000;
+}
+input.disp_list,
+input.disp_lightbox,
+input.disp_tableedit,
+input.disp_csv {
+  border: none;
+  height: 24px;
+  margin: 6px 2px 0 2px;
+  cursor: pointer;
+}
+input.disp_list {
+  background: url('../icons/sets/view/list_bullets_icon&16.png') no-repeat top left;
+}
+input.disp_lightbox {
+  background: url('../icons/sets/view/2x2_grid_icon&16.png') no-repeat top left;
+}
+input.disp_tableedit {
+  background: url('../icons/sets/view/3x3_grid_icon&16.png') no-repeat top left;
+}
+input.disp_csv {
+  background: url('../icons/sets/view/csv_icon&16.png') no-repeat top left;
+}
+.dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 25px;
+}
+.dock > div {
+  float: left;
+  color: #000000;
+  background-color: #dddddd;
+  height: 23px;
+  border: 1px solid #aaaaaa;
+  padding-left: 3px;
+  padding-right: 3px;
+  overflow: hidden;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  -khtml-border-radius: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.dock > div.toggled {
+  color: #ffffff;
+  background-color: #333333;
+}
+.dock > div:hover {
+  border-color: #ff0000;
+}
+.fader {
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+  position: relative;
+  filter: alpha(opacity=50);
+  -moz-opacity: 0.5;
+  -khtml-opacity: 0.5;
+  -webkit-opacity: 0.5;
+  opacity: 0.5;
+}
+.admin .tabLabel {
+  border-left-style: solid;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-width: 1px;
+  border-color: black;
+  -moz-border-radius-topleft: 5px;
+  -moz-border-radius-topright: 5px;
+  -webkit-border-top-left-radius: 5px;
+  -webkit-border-top-right-radius: 5px;
+  -khtml-border-top-left-radius: 5px;
+  -khtml-border-top-right-radius: 5px;
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+  padding: 1px;
+  margin: 2px 2px -1px 2px;
+  cursor: pointer;
+}
+.admin .tabVisible {
+  background-color: #fff;
+  color: #000;
+  opacity: 1.0;
+  filter: alpha(opacity=100);
+}
+.admin .tabInvisible {
+  background-color: #aaa;
+  color: #555;
+  opacity: 0.8;
+  filter: alpha(opacity=80);
+}
+.admin .tabContent {
+  overflow-y: auto;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+.admin .tabContainer {
+  background-color: #ffffff;
+  border-bottom: 1px solid #000;
+}
+/*
+ ********************************************************************
+ */
+.imageBase .leftArea {
+  border: none;
+  /* background-color: #ccccff; */
+}
+.imageBase .topArea {
+  border: none;
+}
+.imageBase .bottomArea {
+  border: none;
+}
+.imageBase .rightArea {
+  border: none;
+  /* background-color: #ffcccc; */
+}
+/*
+ * vertical separator
+ */
+.imageBase .separatorArea {
+  border: none;
+  width: 7px;
+  background-color: #aaaaaa;
+  cursor: ew-resize;
+}
+.imageBase.focus .separatorArea {
+  background-color: #999999;
+}
+/*
+ * horizontal separator
+ */
+.imageBase .hseparatorArea {
+  border: none;
+  height: 7px;
+  background-color: #aaaaaa;
+  cursor: ns-resize;
+}
+.imageBase.focus .hseparatorArea {
+  background-color: #999999;
+}
+.imageBase .controlArea {
+  border: none;
+  background-color: #d1f4ff;
+  overflow: visible;
+  height: 16px;
+}
+.imageBase .il_clickhandle {
+  top: 30px;
+  background-color: white;
+  border-top-style: solid;
+  border-left-style: solid;
+  border-bottom-style: solid;
+  border-width: 1px;
+  border-color: black;
+  -moz-border-radius-topleft: 5px;
+  -moz-border-radius-bottomleft: 5px;
+  -webkit-border-top-left-radius: 5px;
+  -webkit-border-bottom-left-radius: 5px;
+  -khtml-border-top-left-radius: 5px;
+  -khtml-border-bottom-left-radius: 5px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  padding: 3px;
+  vertical-align: middle;
+}
+.imageBase .ir_clickhandle {
+  top: 30px;
+  background-color: white;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-bottom-style: solid;
+  border-width: 1px;
+  border-color: black;
+  -moz-border-radius-topright: 5px;
+  -moz-border-radius-bottomright: 5px;
+  -webkit-border-top-right-radius: 5px;
+  -webkit-border-bottom-right-radius: 5px;
+  -khtml-border-top-right-radius: 5px;
+  -khtml-border-bottom-right-radius: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  padding: 3px;
+  vertical-align: middle;
+}
+/* image- (aka movie-) area top */
+.imageBase .it_clickhandle {
+  left: 30px;
+  background-color: white;
+  border-top-style: solid;
+  border-left-style: solid;
+  border-right-style: solid;
+  border-width: 1px;
+  border-color: black;
+  -moz-border-radius-topleft: 5px;
+  -moz-border-radius-topright: 5px;
+  -webkit-border-top-left-radius: 5px;
+  -webkit-border-top-right-radius: 5px;
+  -khtml-border-top-left-radius: 5px;
+  -khtml-border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  padding: 3px;
+  vertical-align: middle;
+}
+.imageBase .navigatorArea {
+  left: 25px;
+  bottom: 25px;
+  width: 148px;
+  height: 143px;
+  border-style: solid;
+  background-color: rgba(50, 50, 50, 0.5);
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  -khtml-border-radius: 4px;
+  border-radius: 4px;
+  border-width: 1px;
+}
+.imageBase .navigatorHandle {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  height: 10px;
+  border-bottom-style: solid;
+  border-width: 1px;
+  background-color: rgba(50, 50, 50, 0.9);
+}
+.navigatorMinimize {
+  background-color: blue;
+  background: url("less/imagebase/window_close_small.png");
+  background-position: center center;
+  height: 10px;
+  width: 10px;
+}
+.navigatorShow {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: none;
+  border-style: solid;
+  background-color: rgba(50, 50, 50, 0.5);
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  -khtml-border-radius: 4px;
+  border-radius: 4px;
+  border-width: 1px;
+  background: url("less/imagebase/radar-fx-10.png");
+  background-position: center center;
+  height: 16px;
+  width: 16px;
+}
+.imageBase .navigatorArea .slider {
+  background: url("less/imagebase/slider-background-vertical.png") repeat-y;
+  background-position: bottom;
+  width: 16px;
+}
+.imageBase .navigatorArea .sliderButton {
+  background-color: transparent;
+  background: url("less/imagebase/point-left-small.png");
+  width: 16px;
+  height: 16px;
+}
+.imageBase .navigatorArea .sliderBalloon {
+  background-color: yellow;
+  border-style: solid;
+  border-width: 1px;
+  border-color: black;
+}
+.imageBase .navigatorArea .mapRect {
+  background-color: transparent;
+  border-style: solid;
+  border-width: 1px;
+  border-color: red;
+}
+.imageBase .imageSlider .sliderButton {
+  background-color: transparent;
+  background: url("less/imagebase/point-up.png");
+  background-position: center center;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.imageBase .controlArea .prevImage {
+  background-color: transparent;
+  background: url("less/imagebase/point-left.png");
+  background-position: center center;
+  width: 16px;
+  height: 16px;
+}
+.imageBase .controlArea .nextImage {
+  background-color: transparent;
+  background: url("less/imagebase/point-right.png");
+  background-position: center center;
+  width: 16px;
+  height: 16px;
+}
+.imageBase .controlArea .sliderBalloon {
+  padding: 2px;
+  background-color: yellow;
+  border-style: solid;
+  border-width: 1px;
+  border-color: black;
+}
+.imageBase .tabLabel {
+  border-left-style: solid;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-width: 1px;
+  border-color: black;
+  -moz-border-radius-topleft: 5px;
+  -moz-border-radius-topright: 5px;
+  -webkit-border-top-left-radius: 5px;
+  -webkit-border-top-right-radius: 5px;
+  -khtml-border-top-left-radius: 5px;
+  -khtml-border-top-right-radius: 5px;
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+  padding: 1px;
+  margin: 2px 2px -1px 2px;
+  cursor: pointer;
+}
+.imageBase .tabVisible {
+  background-color: #fff;
+  color: #000;
+  opacity: 1.0;
+  filter: alpha(opacity=100);
+}
+.imageBase .tabInvisible {
+  background-color: #aaa;
+  color: #777;
+  opacity: 0.6;
+  filter: alpha(opacity=60);
+}
+.imageBase .tabContent {
+  overflow-y: auto;
+}
+.imageBase .tabContainer {
+  background-color: #ffffff;
+  border-bottom: 1px solid #000;
+}
+/* css configuration for transcription */
+.imageBase .tabContent.transcr {
+  background-color: #DDDDDD;
+}
+.imageBase .transcriptionField > div {
+  white-space: nowrap;
+  overflow: auto;
+}
+.imageBase .transcriptionField * {
+  font-size: inherit;
+  line-height: inherit;
+}
+.imageBase .transcriptionField > div:focus {
+  background-color: #FFFFFF;
+}
+.textareaControls button {
+  font-size: 14px;
+  vertical-align: baseline;
+}
+.textareaControls button.active {
+  color: red;
+}
+/*.imageBase .transcriptionTabContainer .transcriptionField * {}*/
+/* the following classes are assigned by jquery.texteditor.js */
+.textareaControls .bold,
+.imageBase .transcriptionField .bold {
+  font-weight: bold;
+}
+.textareaControls .underline,
+.imageBase .transcriptionField .underline {
+  text-decoration: underline;
+}
+.textareaControls .italic,
+.imageBase .transcriptionField .italic {
+  font-style: italic;
+}
+.textareaControls ._link,
+.imageBase .transcriptionField ._link {
+  background-color: red;
+}
+.textareaControls .strike,
+.imageBase .transcriptionField .strike {
+  text-decoration: line-through;
+}
+.textareaControls .super,
+.imageBase .transcriptionField .super {
+  vertical-align: super;
+}
+.textareaControls .sub,
+.imageBase .transcriptionField .sub {
+  vertical-align: sub;
+}
+.imageBase .transcriptionField .red_tc,
+.value_container .red_tc {
+  color: red;
+}
+.imageBase .transcriptionField .blue_tc,
+.value_container .blue_tc {
+  color: blue;
+}
+.imageBase .transcriptionField .yellow_tc,
+.value_container .yellow_tc {
+  color: yellow;
+}
+.imageBase .transcriptionField .green_tc,
+.value_container .green_tc {
+  color: green;
+}
+.imageBase .transcriptionField .red_bg,
+.value_container .red_bg {
+  background-color: red;
+}
+.imageBase .transcriptionField .blue_bg,
+.value_container .blue_bg {
+  background-color: blue;
+}
+.imageBase .transcriptionField .yellow_bg,
+.value_container .yellow_bg {
+  background-color: yellow;
+}
+.imageBase .transcriptionField .green_bg,
+.value_container .green_bg {
+  background-color: green;
+}
+.imageBase .transcriptionField .Arial,
+.value_container .Arial {
+  font-family: Arial;
+}
+.imageBase .transcriptionField .Verdana,
+.value_container .Verdana {
+  font-family: Verdana;
+}
+/* chartable */
+table.chartable {
+  background-color: #ffffff;
+}
+table.chartable,
+table.chartable td {
+  border: 1px solid #000000;
+}
+.propedit,
+.propedit * {
+  font-size: 14px;
+}
+.propedit.sectiontitle {
+  background: none repeat-x 0 0;
+  background-color: #cccccc;
+  padding-top: 2px;
+  padding-left: 5px;
+  font-weight: bold;
+}
+table.propedit tr td {
+  vertical-align: top;
+}
+.propedit.sectionheader {
+  background-color: #eeeeee;
+  margin-left: 2px;
+  margin-right: 2px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  padding: 2px;
+  outline: #888888 outset 2px;
+  vertical-align: middle;
+}
+.focus .propedit.sectionheader {
+  background-color: #bbbbbb;
+  outline: #888888 outset 2px;
+}
+.propedit.section {
+  margin: 2px;
+  padding: 2px;
+}
+.propedit.label {
+  background-color: #ffff99;
+  text-align: right;
+}
+div.daysel {
+  background-color: #fff;
+  padding: 5px;
+  border-style: solid;
+  border-width: 2px;
+  border-color: '#000';
+  position: absolute;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px;
+  -moz-box-shadow: 4px 4px 4px #333;
+  -webkit-box-shadow: 4px 4px 4px #333;
+  -khtml-box-shadow: 4px 4px 4px #333;
+  box-shadow: 4px 4px 4px #333;
+}
+div.daysel td {
+  cursor: pointer;
+  text-align: center;
+}
+div.daysel td.highlight {
+  background-color: #aaf;
+}
+.searchbox {
+  border-style: solid;
+  border-width: 1px;
+  padding: 3px;
+  background-color: #fff;
+}
+.searchboxItem:hover {
+  background-color: #ffff99;
+  cursor: pointer;
+}
+/* css for texteditor */
+.texteditor {
+  border: 1px solid #000;
+}
+/* the following classes are assigned by jquery.texteditor.js */
+.propedit .textareaControls button {
+  font-size: 14px;
+  vertical-align: baseline;
+}
+button.active {
+  color: red;
+}
+.propedit .bold {
+  font-weight: bold;
+}
+.propedit .underline {
+  text-decoration: underline;
+}
+.propedit .italic {
+  font-style: italic;
+}
+.propedit ._link {
+  cursor: pointer;
+  background-color: red;
+}
+.propedit .strike {
+  text-decoration: line-through;
+}
+.propedit .super {
+  vertical-align: super;
+}
+.propedit .sub {
+  vertical-align: sub;
+}
+.propedit .red_tc {
+  color: red;
+}
+.propedit .blue_tc {
+  color: blue;
+}
+.propedit .yellow_tc {
+  color: yellow;
+}
+.propedit .green_tc {
+  color: green;
+}
+.propedit .red_bg {
+  background-color: red;
+}
+.propedit .blue_bg {
+  background-color: blue;
+}
+.propedit .yellow_bg {
+  background-color: yellow;
+}
+.propedit .green_bg {
+  background-color: green;
+}
+.value_comment {
+  background-color: #e8e8e8;
+  padding: 5px;
+  border-style: solid;
+  border-width: 2px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px;
+}

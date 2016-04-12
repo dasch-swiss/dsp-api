@@ -24,6 +24,7 @@
  * Creates a new version of a value, with identical content except for a new comment.
  *
  * @param dataNamedGraph the named graph to update.
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource containing the value.
  * @param propertyIri the IRI of the property that points from the resource to the value.
  * @param currentValueIri the IRI of the current version of the value.
@@ -31,26 +32,43 @@
  * @param comment the new comment on the value.
  *@
 @(dataNamedGraph: IRI,
+  triplestore: String,
   resourceIri: IRI,
   propertyIri: IRI,
   currentValueIri: IRI,
   newValueIri: IRI,
   comment: String)
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 WITH <@dataNamedGraph>
 DELETE {
+    @* Detach the current version of the value from the resource. *@
     ?resource ?property ?currentValue .
+
+    @* Delete the resource's last modification date so we can update it. *@
+    ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
 } INSERT {
+    @* Copy the contents of the current version of the value into the new version, along with the new comment. *@
     ?newValue ?valuePred ?valueObj .
     ?newValue knora-base:valueHasComment """@comment""" ;
         knora-base:previousValue ?currentValue ;
+        knora-base:isDeleted "false"^^xsd:boolean ;
         knora-base:valueCreationDate ?currentTime .
     ?resource ?property ?newValue .
-} WHERE {
+
+    @* Update the resource's last modification date. *@
+    ?resource knora-base:lastModificationDate ?currentTime .
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
     BIND(IRI("@resourceIri") AS ?resource)
     BIND(IRI("@propertyIri") AS ?property)
     BIND(IRI("@currentValueIri") AS ?currentValue)
@@ -65,4 +83,10 @@ DELETE {
     }
 
     FILTER(!(?valuePred = knora-base:previousValue || ?valuePred = knora-base:valueCreationDate || ?valuePred = knora-base:valueHasComment))
+
+    @* Get the resource's last modification date, if it has one, so we can update it. *@
+
+    OPTIONAL {
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+    }
 }

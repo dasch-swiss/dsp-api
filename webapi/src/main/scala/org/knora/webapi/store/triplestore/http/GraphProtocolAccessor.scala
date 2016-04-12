@@ -124,7 +124,7 @@ object GraphProtocolAccessor {
             responseStatusCode = response.getStatusCode
             responseCodeCategory = responseStatusCode / 100
             _ = if (!(responseCodeCategory == 2 || responseCodeCategory == 3)) {
-                throw TriplestoreResponseException(s"Triplestore responded with HTTP code ${response.getStatusCode}: $responseBodyString")
+                throw TriplestoreResponseException(s"Unable to load file $filepath; triplestore responded with HTTP code ${response.getStatusCode}: $responseBodyString")
             }
             responseMessage = responseStatusCode.toString
         } yield responseMessage

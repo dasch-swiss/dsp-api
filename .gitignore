@@ -30,3 +30,5 @@ webapi/src/main/resources/query-log/
 *.synctex.gz
 *.tdo
 *.toc
+.sbtrc
+

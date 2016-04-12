@@ -1,9 +1,28 @@
+# Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+# Tobias Schweizer, André Kilchenmann, and André Fatton.
+#
+# This file is part of Knora.
+#
+# Knora is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Knora is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public
+# License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+
 @prefix : <http://www.knora.org/ontology/dc#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @base <http://www.knora.org/ontology/dc> .
 
 <http://www.knora.org/ontology/dc> rdf:type owl:Ontology .
@@ -41,9 +60,9 @@
              
              :dctermsDescription "Examples of a Contributor include a person, an organization, or a service. Typically, the name of a Contributor should be used to indicate the entity."@en ;
              
-             rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+             knora-base:subjectClassConstraint knora-base:Resource ;
              
-             rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+             rdfs:subPropertyOf knora-base:hasValue .
 
 
 
@@ -57,9 +76,9 @@
           
           rdfs:comment "The spatial or temporal topic of the resource, the spatial applicability of the resource, or the jurisdiction under which the resource is relevant."@en ;
           
-          rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+          knora-base:subjectClassConstraint knora-base:Resource ;
           
-          rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+          rdfs:subPropertyOf knora-base:hasValue .
 
 
 
@@ -73,9 +92,9 @@
          
          :dctermsDescription "Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity."@en ;
          
-         rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+         knora-base:subjectClassConstraint knora-base:Resource ;
          
-         rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+         rdfs:subPropertyOf knora-base:hasValue .
 
 
 
@@ -89,11 +108,11 @@
       
       rdfs:comment "Date may be used to express temporal information at any level of granularity.  Recommended best practice is to use an encoding scheme, such as the W3CDTF profile of ISO 8601 [W3CDTF]."@en ;
       
-      rdfs:range <http://www.knora.org/ontology/knora-base#DateValue> ;
+      knora-base:objectClassConstraint knora-base:DateValue ;
       
-      rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+      knora-base:subjectClassConstraint knora-base:Resource ;
       
-      rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+      rdfs:subPropertyOf knora-base:hasValue .
 
 
 
@@ -107,11 +126,11 @@
              
              :dctermsDescription "Description may include but is not limited to: an abstract, a table of contents, a graphical representation, or a free-text account of the resource"@en ;
              
-             rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+             knora-base:subjectClassConstraint knora-base:Resource ;
              
-             rdfs:range <http://www.knora.org/ontology/knora-base#TextValue> ;
+             knora-base:objectClassConstraint knora-base:TextValue ;
              
-             rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+             rdfs:subPropertyOf knora-base:hasValue .
 
 
 
@@ -125,9 +144,9 @@
         
         rdfs:comment "The file format, physical medium, or dimensions of the resource."@en ;
         
-        rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+        knora-base:subjectClassConstraint knora-base:Resource ;
         
-        rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+        rdfs:subPropertyOf knora-base:hasValue .
 
 
 
@@ -141,11 +160,11 @@
             
             :dctermsDescription "Recommended best practice is to identify the resource by means of a string conforming to a formal identification system."@en ;
             
-            rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+            knora-base:subjectClassConstraint knora-base:Resource ;
             
-            rdfs:range <http://www.knora.org/ontology/knora-base#TextValue> ;
+            knora-base:objectClassConstraint knora-base:TextValue ;
             
-            rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+            rdfs:subPropertyOf knora-base:hasValue .
 
 
 
@@ -159,9 +178,9 @@
           
           :dctermsDescription "Recommended best practice is to use a controlled vocabulary such as RFC 4646 [RFC4646]."@en ;
           
-          rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+          knora-base:subjectClassConstraint knora-base:Resource ;
           
-          rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+          rdfs:subPropertyOf knora-base:hasValue .
 
 
 
@@ -175,9 +194,9 @@
            
            :dctermsDescription "Examples of a Publisher include a person, an organization, or a service. Typically, the name of a Publisher should be used to indicate the entity."@en ;
            
-           rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+           knora-base:subjectClassConstraint knora-base:Resource ;
            
-           rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+           rdfs:subPropertyOf knora-base:hasValue .
 
 
 
@@ -191,9 +210,9 @@
           
           :dctermsDescription "Recommended best practice is to identify the related resource by means of a string conforming to a formal identification system."@en ;
           
-          rdfs:range <http://www.knora.org/ontology/knora-base#Resource> ;
+          knora-base:objectClassConstraint knora-base:Resource ;
           
-          rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> .
+          knora-base:subjectClassConstraint knora-base:Resource .
 
 
 
@@ -207,9 +226,9 @@
         
         :dctermsDescription "Typically, rights information includes a statement about various property rights associated with the resource, including intellectual property rights."@en ;
         
-        rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+        knora-base:subjectClassConstraint knora-base:Resource ;
         
-        rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+        rdfs:subPropertyOf knora-base:hasValue .
 
 
 
@@ -223,9 +242,9 @@
         
         :dctermsDescription "The described resource may be derived from the related resource in whole or in part. Recommended best practice is to identify the related resource by means of a string conforming to a formal identification system."@en ;
         
-        rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+        knora-base:subjectClassConstraint knora-base:Resource ;
         
-        rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+        rdfs:subPropertyOf knora-base:hasValue .
 
 
 
@@ -239,11 +258,11 @@
          
          :dctermsDescription "Typically, the subject will be represented using keywords, key phrases, or classification codes. Recommended best practice is to use a controlled vocabulary."@en ;
          
-         rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+         knora-base:subjectClassConstraint knora-base:Resource ;
          
-         rdfs:range <http://www.knora.org/ontology/knora-base#TextValue> ;
+         knora-base:objectClassConstraint knora-base:TextValue ;
          
-         rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+         rdfs:subPropertyOf knora-base:hasValue .
 
 
 
@@ -257,11 +276,11 @@
        
        rdfs:comment "Typically, a Title will be a name by which the resource is formally known."@en ;
        
-       rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+       knora-base:subjectClassConstraint knora-base:Resource ;
        
-       rdfs:range <http://www.knora.org/ontology/knora-base#TextValue> ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
        
-       rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+       rdfs:subPropertyOf knora-base:hasValue .
 
 
 
@@ -275,17 +294,12 @@
       
       rdfs:comment "The nature or genre of the resource."@en ;
       
-      rdfs:domain <http://www.knora.org/ontology/knora-base#Resource> ;
+      knora-base:subjectClassConstraint knora-base:Resource ;
       
-      rdfs:range <http://www.knora.org/ontology/knora-base#TextValue> ;
+      knora-base:objectClassConstraint knora-base:TextValue ;
       
-      rdfs:subPropertyOf <http://www.knora.org/ontology/knora-base#hasValue> .
+      rdfs:subPropertyOf knora-base:hasValue .
 
-
-
-###  http://www.knora.org/ontology/knora-base#hasValue
-
-<http://www.knora.org/ontology/knora-base#hasValue> rdf:type owl:ObjectProperty .
 
 
 
@@ -300,22 +314,16 @@
 
 ###  http://www.knora.org/ontology/knora-base#DateValue
 
-<http://www.knora.org/ontology/knora-base#DateValue> rdf:type owl:Class .
+knora-base:DateValue rdf:type owl:Class .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#Resource
 
-<http://www.knora.org/ontology/knora-base#Resource> rdf:type owl:Class .
+knora-base:Resource rdf:type owl:Class .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#TextValue
 
-<http://www.knora.org/ontology/knora-base#TextValue> rdf:type owl:Class .
-
-
-
-
-###  Generated by the OWL API (version 3.5.0) http://owlapi.sourceforge.net
-
+knora-base:TextValue rdf:type owl:Class .

@@ -51,6 +51,8 @@ object SearchRouteV1 extends Authenticator {
             case (key, value) => key -> value.reverse
         }
 
+        //println(params)
+
         params.get("searchtype") match {
             case Some(List("extended")) => ()
             case other => throw BadRequestException(s"Unexpected searchtype param for extended search")

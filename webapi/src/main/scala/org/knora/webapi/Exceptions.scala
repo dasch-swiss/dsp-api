@@ -115,16 +115,6 @@ case class ForbiddenException(message: String) extends RequestRejectedException(
 case class NotFoundException(message: String) extends RequestRejectedException(message)
 
 /**
-  * An exception indicating that a requested update was not performed, because the data that was to be updated
-  * has just been changed, and as a result, the client's information is out of date in some way. The application was
-  * unable to throw a more specific exception, because the data was changed just before the update was attempted. The
-  * client should reload the relevant data and check whether the update still needs to be performed. If the client
-  * attempts the same update again, it may get a more specific exception.
-  * @param message a description of the error.
-  */
-case class UpdateNotPerformedException(message: String = "The requested update was not performed, perhaps because it was based on outdated information") extends RequestRejectedException(message)
-
-/**
   * An exception indicating that a requested update is not allowed because it would create a duplicate value.
   * @param message a description of the error.
   */
@@ -132,7 +122,7 @@ case class DuplicateValueException(message: String = "Duplicate values are not p
 
 /**
   * An exception indicating that a requested update is not allowed because it would violate an ontology constraint,
-  * e.g. an `rdfs:range` or an OWL cardinality restriction.
+  * e.g. an `knora-base:objectClassConstraint` or an OWL cardinality restriction.
   * @param message a description of the error.
   */
 case class OntologyConstraintException(message: String) extends RequestRejectedException(message)
@@ -148,6 +138,13 @@ object InternalServerException {
     // So we can match instances of InternalServerException, even though it's an abstract class
     def unapply(e: InternalServerException): Option[InternalServerException] = Option(e)
 }
+
+/**
+  * An exception indicating that a requested update was not performed, although it was expected to succeed.
+  * This probably indicates a bug.
+  * @param message a description of the error.
+  */
+case class UpdateNotPerformedException(message: String = "A requested update was not performed. Please report this as a possible bug.") extends InternalServerException(message)
 
 /**
   * An abstract class for exceptions indicating that something went wrong with the triplestore.
@@ -224,6 +221,11 @@ object InconsistentTriplestoreDataException {
 case class ApplicationLockException(message: String) extends InternalServerException(message)
 
 /**
+  * Indicates that an error occurred in transaction management.
+  */
+case class TransactionManagementException(message: String) extends InternalServerException(message)
+
+/**
   * Indicates that an Akka actor received an unexpected message.
   * @param message a description of the error.
   */
@@ -257,6 +259,18 @@ case class FileWriteException(message: String) extends InternalServerException(m
   * @param message a description of the error.
   */
 case class NotImplementedException(message: String) extends InternalServerException(message)
+
+
+/**
+  * Indicates that an error occurred with Sipi not relating to the user's request (it is not the user's fault).
+  * @param message a description of the error.
+  */
+case class SipiException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
+
+object SipiException {
+    def apply(message: String, e: Throwable, log: LoggingAdapter): SipiException =
+        SipiException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+}
 
 /**
   * An abstract base class for exceptions indicating that something about a configuration made it impossible to start.

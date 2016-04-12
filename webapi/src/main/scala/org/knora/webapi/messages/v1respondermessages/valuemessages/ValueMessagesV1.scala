@@ -23,6 +23,7 @@ package org.knora.webapi.messages.v1respondermessages.valuemessages
 import java.util.UUID
 
 import org.knora.webapi._
+import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.DateUtilV1
@@ -37,14 +38,16 @@ import spray.json._
   * Represents an API request payload that asks the Knora API server to create a new value of a resource property
   * (as opposed to a new version of an existing value).
   *
-  * @param project_id the IRI of the project to be updated.
-  * @param res_id the IRI of the resource in which the value is to be added.
-  * @param prop the property that is to receive the value.
+  * @param project_id     the IRI of the project to be updated.
+  * @param res_id         the IRI of the resource in which the value is to be added.
+  * @param prop           the property that is to receive the value.
   * @param richtext_value a rich-text object to be used in the value.
-  * @param int_value an integer literal to be used in the value.
-  * @param float_value a floating-point literal to be used in the value.
-  * @param date_value a date object to be used in the value.
-  * @param color_value a colour literal to be used in the value.
+  * @param int_value      an integer literal to be used in the value.
+  * @param float_value    a floating-point literal to be used in the value.
+  * @param date_value     a date object to be used in the value.
+  * @param color_value    a colour literal to be used in the value.
+  * @param geom_value     a geometry literal to be used in the value.
+  * @param comment        a comment to add to the value.
   */
 case class CreateValueApiRequestV1(project_id: IRI,
                                    res_id: IRI,
@@ -60,8 +63,8 @@ case class CreateValueApiRequestV1(project_id: IRI,
 /**
   * Represents a richtext object consisting of text, text attributes and resource references.
   *
-  * @param utf8str the mere string representation.
-  * @param textattr the attributes of the text as standoff (still a String to be parsed into an object itself).
+  * @param utf8str            the mere string representation.
+  * @param textattr           the attributes of the text as standoff (still a String to be parsed into an object itself).
   * @param resource_reference references to Knora resources out of the text.
   */
 case class CreateRichtextV1(utf8str: String,
@@ -76,13 +79,11 @@ case class CreateRichtextV1(utf8str: String,
   *
   * @param originalFilename the original name of the file.
   * @param originalMimeType the original mime type of the file.
-  * @param full the full quality representation of the file.
-  * @param preview a low quality representation of the file, if possible (e.g. an image thumbnail).
+  * @param filename         the name of the file to be attached to a Knora-resource (file is temporarily stored by SIPI).
   */
 case class CreateFileV1(originalFilename: String,
                         originalMimeType: String,
-                        full: CreateFileQualityLevelV1,
-                        preview: Option[CreateFileQualityLevelV1] = None) {
+                        filename: String) {
 
     def toJsValue = ApiValueV1JsonProtocol.createFileV1Format.write(this)
 
@@ -91,15 +92,15 @@ case class CreateFileV1(originalFilename: String,
 /**
   * Represents a quality level of a file value to added to a Knora resource.
   *
-  * @param path the path to the file.
+  * @param path     the path to the file.
   * @param mimeType the mime type of the file.
-  * @param dimX the x dimension of the file, if given (e.g. an image).
-  * @param dimY the y dimension of the file, if given (e.g. an image).
+  * @param dimX     the x dimension of the file, if given (e.g. an image).
+  * @param dimY     the y dimension of the file, if given (e.g. an image).
   */
 case class CreateFileQualityLevelV1(path: String,
                                     mimeType: String,
                                     dimX: Option[Int] = None,
-                                    dimY: Option[Int]= None) {
+                                    dimY: Option[Int] = None) {
 
     def toJsValue = ApiValueV1JsonProtocol.createFileQualityLevelFormat.write(this)
 }
@@ -108,13 +109,14 @@ case class CreateFileQualityLevelV1(path: String,
   * Represents an API request payload that asks the Knora API server to change a value of a resource property (i.e. to
   * update its version history).
   *
-  * @param project_id the IRI of the project to be updated.
+  * @param project_id     the IRI of the project to be updated.
   * @param richtext_value a rich-text object to be used in the value.
-  * @param int_value an integer literal to be used in the value.
-  * @param float_value a floating-point literal to be used in the value.
-  * @param date_value a date object to be used in the value.
-  * @param color_value a colour literal to be used in the value.
-  * @param geom_value a geometry literal to be used in the value.
+  * @param int_value      an integer literal to be used in the value.
+  * @param float_value    a floating-point literal to be used in the value.
+  * @param date_value     a date object to be used in the value.
+  * @param color_value    a colour literal to be used in the value.
+  * @param geom_value     a geometry literal to be used in the value.
+  * @param comment        a comment to add to the value.
   */
 case class ChangeValueApiRequestV1(project_id: IRI,
                                    richtext_value: Option[CreateRichtextV1] = None,
@@ -124,6 +126,17 @@ case class ChangeValueApiRequestV1(project_id: IRI,
                                    color_value: Option[String] = None,
                                    geom_value: Option[String] = None,
                                    comment: Option[String] = None)
+
+/**
+  * Represents an API request payload that asks the Knora API server to change the file attached to a resource
+  * (i. e. to create a new version of its file values).
+  *
+  * @param file the new file to be attached to the resource (GUI-case).
+  */
+case class ChangeFileValueApiRequestV1(file: CreateFileV1) {
+
+    def toJsValue = ApiValueV1JsonProtocol.changeFileValueApiRequestV1Format.write(this)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -136,7 +149,7 @@ sealed trait ValuesResponderRequestV1 extends KnoraRequestV1
 /**
   * Represents a request for a (current) value. A successful response will be a [[ValueGetResponseV1]].
   *
-  * @param valueIri the IRI of the value requested.
+  * @param valueIri    the IRI of the value requested.
   * @param userProfile the profile of the user making the request.
   */
 case class ValueGetRequestV1(valueIri: IRI, userProfile: UserProfileV1) extends ValuesResponderRequestV1
@@ -145,20 +158,20 @@ case class ValueGetRequestV1(valueIri: IRI, userProfile: UserProfileV1) extends 
   * Represents a request for the details of a reification node describing a direct link between two resources.
   * A successful response will be a [[ValueGetResponseV1]] containing a [[LinkValueV1]].
   *
-  * @param subjectIri the IRI of the resource that is the source of the link.
+  * @param subjectIri   the IRI of the resource that is the source of the link.
   * @param predicateIri the IRI of the property that links the two resources.
-  * @param objectIri the IRI of the resource that is the target of the link.
-  * @param userProfile the profile of the user making the request.
+  * @param objectIri    the IRI of the resource that is the target of the link.
+  * @param userProfile  the profile of the user making the request.
   */
 case class LinkValueGetRequestV1(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserProfileV1) extends ValuesResponderRequestV1
 
 /**
   * Provides details of a Knora value. A successful response will be a [[ValueGetResponseV1]].
   *
-  * @param value the single requested value.
+  * @param value     the single requested value.
   * @param valuetype the IRI of the value's type.
-  * @param rights the user's permission on the value.
-  * @param userdata information about the user that made the request.
+  * @param rights    the user's permission on the value.
+  * @param userdata  information about the user that made the request.
   */
 case class ValueGetResponseV1(valuetype: IRI,
                               value: ApiValueV1,
@@ -170,10 +183,10 @@ case class ValueGetResponseV1(valuetype: IRI,
 /**
   * Represents a request for the version history of a value. A successful response will be a [[ValueVersionHistoryGetResponseV1]].
   *
-  * @param resourceIri the IRI of the resource that the value belongs to.
-  * @param propertyIri the IRI of the property that points to the value.
+  * @param resourceIri     the IRI of the resource that the value belongs to.
+  * @param propertyIri     the IRI of the property that points to the value.
   * @param currentValueIri the IRI of the current version of the value.
-  * @param userProfile the profile of the user making the request.
+  * @param userProfile     the profile of the user making the request.
   */
 case class ValueVersionHistoryGetRequestV1(resourceIri: IRI,
                                            propertyIri: IRI,
@@ -184,7 +197,7 @@ case class ValueVersionHistoryGetRequestV1(resourceIri: IRI,
   * Provides the version history of a value.
   *
   * @param valueVersions a list of the versions of the value, from newest to oldest.
-  * @param userdata information about the user that made the request.
+  * @param userdata      information about the user that made the request.
   */
 case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1],
                                             userdata: UserDataV1) extends KnoraResponseV1 {
@@ -195,12 +208,12 @@ case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1],
   * Represents a request to add a new value of a resource property (as opposed to a new version of an existing value). A
   * successful response will be an [[CreateValueResponseV1]].
   *
-  * @param projectIri the project in which the value is to be added.
-  * @param resourceIri the IRI of the resource to which the value should be added.
-  * @param propertyIri the IRI of the property that should receive the value.
-  * @param value the value to be added.
-  * @param comment an optional comment on the value.
-  * @param userProfile the profile of the user making the request.
+  * @param projectIri   the project in which the value is to be added.
+  * @param resourceIri  the IRI of the resource to which the value should be added.
+  * @param propertyIri  the IRI of the property that should receive the value.
+  * @param value        the value to be added.
+  * @param comment      an optional comment on the value.
+  * @param userProfile  the profile of the user making the request.
   * @param apiRequestID the ID of this API request.
   */
 case class CreateValueRequestV1(projectIri: IRI,
@@ -214,10 +227,10 @@ case class CreateValueRequestV1(projectIri: IRI,
 /**
   * Represents a response to a [[CreateValueRequestV1]].
   *
-  * @param value the value that was added.
-  * @param comment an optional comment on the value.
-  * @param id the IRI of the value that was added.
-  * @param rights a code representing the requesting user's permissions on the value.
+  * @param value    the value that was added.
+  * @param comment  an optional comment on the value.
+  * @param id       the IRI of the value that was added.
+  * @param rights   a code representing the requesting user's permissions on the value.
   * @param userdata information about the user that made the request.
   */
 case class CreateValueResponseV1(value: ApiValueV1,
@@ -229,56 +242,101 @@ case class CreateValueResponseV1(value: ApiValueV1,
 }
 
 /**
+  * Represents a value that should have been created using the SPARQL returned in a
+  * [[GenerateSparqlToCreateMultipleValuesResponseV1]]. To verify that the value was in fact created, send a
+  * [[VerifyMultipleValueCreationRequestV1]].
+  *
+  * @param newValueIri the IRI of the value that should have been created.
+  * @param value       an [[UpdateValueV1]] representing the value that should have been created.
+  */
+case class UnverifiedValueV1(newValueIri: IRI, value: UpdateValueV1)
+
+/**
+  * Requests verification that new values were created.
+  *
+  * @param resourceIri      the IRI of the resource in which the values should have been created.
+  * @param unverifiedValues a [[Map]] of property IRIs to [[UnverifiedValueV1]] objects
+  *                         describing the values that should have been created for each property.
+  * @param userProfile      the profile of the user making the request.
+  */
+case class VerifyMultipleValueCreationRequestV1(resourceIri: IRI,
+                                                unverifiedValues: Map[IRI, Seq[UnverifiedValueV1]],
+                                                userProfile: UserProfileV1) extends ValuesResponderRequestV1
+
+/**
+  * In response to a [[VerifyMultipleValueCreationRequestV1]], indicates that all requested values were
+  * created successfully.
+  *
+  * @param verifiedValues information about the values that were created.
+  */
+case class VerifyMultipleValueCreationResponseV1(verifiedValues: Map[IRI, Seq[CreateValueResponseV1]])
+
+/**
   * A holder for an [[UpdateValueV1]] along with an optional comment.
   *
   * @param updateValueV1 the [[UpdateValueV1]].
-  * @param comment an optional comment on the value.
+  * @param comment       an optional comment on the value.
   */
 case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Option[String] = None)
 
 /**
-  * Creates multiple values in a new, empty resource. The resource ''must'' be a new, empty resource, i.e. it must
-  * have no values. This message is used only internally by Knora, and is not part of the Knora v1 API. All pre-update
-  * checks must already have been performed before this message is sent. Specifically, the sender must ensure that:
+  * Requests SPARQL for creating multiple values in a new, empty resource. The resource ''must'' be a new, empty
+  * resource, i.e. it must have no values. This message is used only internally by Knora, and is not part of the Knora
+  * v1 API. All pre-update checks must already have been performed before this message is sent. Specifically, the
+  * sender must ensure that:
   *
   * - The requesting user has permission to add values to the resource.
-  * - Each submitted value is consistent with the `rdfs:range` of the property that is supposed to point to it.
+  * - Each submitted value is consistent with the `knora-base:objectClassConstraint` of the property that is supposed
+  *   to point to it.
   * - The resource class has a suitable cardinality for each submitted value.
   * - All required values are provided.
   *
-  * @param projectIri the project the values belong to.
-  * @param resourceIri the resource the values will be attached to.
+  * @param projectIri       the project the values belong to.
+  * @param resourceIri      the resource the values will be attached to.
   * @param resourceClassIri the IRI of the resource's OWL class.
-  * @param values the values to be added, with optional comments.
-  * @param userProfile the user that is creating the values.
-  * @param apiRequestID the ID of this API request.
+  * @param values           the values to be added, with optional comments.
+  * @param userProfile      the user that is creating the values.
+  * @param apiRequestID     the ID of this API request.
   */
-case class CreateMultipleValuesRequestV1(projectIri: IRI,
-                                         resourceIri: IRI,
-                                         resourceClassIri: IRI,
-                                         values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                         userProfile: UserProfileV1,
-                                         apiRequestID: UUID) extends ValuesResponderRequestV1
+case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
+                                                         resourceIri: IRI,
+                                                         resourceClassIri: IRI,
+                                                         values: Map[IRI, Seq[CreateValueV1WithComment]],
+                                                         userProfile: UserProfileV1,
+                                                         apiRequestID: UUID) extends ValuesResponderRequestV1
 
 /**
-  * Represents a response to a [[CreateMultipleValuesRequestV1]].
+  * Represents a response to a [[GenerateSparqlToCreateMultipleValuesRequestV1]], providing strings that can be included
+  * in the `WHERE` and `INSERT` clauses of a SPARQL update operation to create the requested values. The `WHERE` clause must
+  * also bind the following SPARQL variables:
   *
-  * @param values The values that have been added to the resource.
+  * - `?resource`: the IRI of the resource in which the values are being created.
+  * - `?resourceClass`: the IRI of the OWL class of that resource.
+  * - `?currentTime`: the return value of the SPARQL function `NOW()`.
+  *
+  * After executing the SPARQL update, the receiver can check whether the values were actually created by sending a
+  * [[VerifyMultipleValueCreationRequestV1]].
+  *
+  * @param whereSparql a string containing statements that must be inserted into the WHERE clause of the SPARQL
+  *                    update that will create the values.
+  * @param insertSparql a string containing statements that must be inserted into the INSERT clause of the SPARQL
+  *                     update that will create the values.
+  * @param unverifiedValues a map of property IRIs to [[UnverifiedValueV1]] objects describing
+  *                         the values that should have been created.
   */
-case class CreateMultipleValuesResponseV1(values: Map[IRI, Seq[CreateValueResponseV1]]) extends KnoraResponseV1 {
-
-    def toJsValue = ApiValueV1JsonProtocol.createMultipleValuesResponseV1Format.write(this)
-}
+case class GenerateSparqlToCreateMultipleValuesResponseV1(whereSparql: String,
+                                                          insertSparql: String,
+                                                          unverifiedValues: Map[IRI, Seq[UnverifiedValueV1]])
 
 
 /**
   * Represents a request to change the value of a property (by updating its version history). A successful response will
   * be a [[ChangeValueResponseV1]].
   *
-  * @param valueIri the IRI of the current value.
-  * @param value the new value, or [[None]] if only the value's comment is being changed.
-  * @param comment an optional comment on the value.
-  * @param userProfile the profile of the user making the request.
+  * @param valueIri     the IRI of the current value.
+  * @param value        the new value, or [[None]] if only the value's comment is being changed.
+  * @param comment      an optional comment on the value.
+  * @param userProfile  the profile of the user making the request.
   * @param apiRequestID the ID of this API request.
   */
 case class ChangeValueRequestV1(valueIri: IRI,
@@ -290,9 +348,9 @@ case class ChangeValueRequestV1(valueIri: IRI,
 /**
   * Represents a request to change the comment on a value. A successful response will be a [[ChangeValueResponseV1]].
   *
-  * @param valueIri the IRI of the current value.
-  * @param comment the comment to be added to the new version of the value.
-  * @param userProfile the profile of the user making the request.
+  * @param valueIri     the IRI of the current value.
+  * @param comment      the comment to be added to the new version of the value.
+  * @param userProfile  the profile of the user making the request.
   * @param apiRequestID the ID of this API request.
   */
 case class ChangeCommentRequestV1(valueIri: IRI,
@@ -303,9 +361,9 @@ case class ChangeCommentRequestV1(valueIri: IRI,
 /**
   * Represents a response to an [[ChangeValueRequestV1]].
   *
-  * @param value the value that was added.
-  * @param comment an optional comment on the value.
-  * @param id the IRI of the value that was added.
+  * @param value    the value that was added.
+  * @param comment  an optional comment on the value.
+  * @param id       the IRI of the value that was added.
   * @param userdata information about the user that made the request.
   */
 case class ChangeValueResponseV1(value: ApiValueV1,
@@ -320,9 +378,9 @@ case class ChangeValueResponseV1(value: ApiValueV1,
   * Represents a request to mark a value as deleted. This will create a new version of the value, consisting of a
   * copy of the current version plus the `knora-base:isDeleted` flag.
   *
-  * @param valueIri the IRI of the value to be marked as deleted.
-  * @param comment an optional comment explaining why the value is being deleted.
-  * @param userProfile the profile of the user making the request.
+  * @param valueIri     the IRI of the value to be marked as deleted.
+  * @param comment      an optional comment explaining why the value is being deleted.
+  * @param userProfile  the profile of the user making the request.
   * @param apiRequestID the ID of this API request.
   */
 case class DeleteValueRequestV1(valueIri: IRI,
@@ -333,7 +391,7 @@ case class DeleteValueRequestV1(valueIri: IRI,
 /**
   * Represents a response to a [[DeleteValueRequestV1]].
   *
-  * @param id the IRI of the value version that was added.
+  * @param id       the IRI of the value version that was added.
   * @param userdata information about the user that made the request.
   */
 case class DeleteValueResponseV1(id: IRI,
@@ -341,6 +399,26 @@ case class DeleteValueResponseV1(id: IRI,
     def toJsValue = ApiValueV1JsonProtocol.deleteValueResponseV1Format.write(this)
 }
 
+/**
+  * Represents a request to change (update) the file value(s) of a given resource.
+  * In case of an image, two file valueshave to be changed: thumbnail and full quality.
+  *
+  * @param resourceIri the resource whose files value(s) should be changed.
+  * @param file        the file to be created and added.
+  */
+case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiResponderConversionRequestV1, apiRequestID: UUID, userProfile: UserProfileV1) extends ValuesResponderRequestV1
+
+/**
+  * Represents a response to a [[ChangeFileValueRequestV1]].
+  * Possibly, two file values have been changed (thumb and full quality).
+  *
+  * @param changedFilesValues the updated file value(s).
+  * @param userdata           information about the user that made the request.
+  */
+case class ChangeFileValueResponseV1(changedFilesValues: Vector[ChangeValueResponseV1],
+                                     userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = ApiValueV1JsonProtocol.changeFileValueresponseV1Format.write(this)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -395,7 +473,7 @@ sealed trait UpdateValueV1 extends ValueV1 {
   * Represents a Knora API v1 property value object and some associated information.
   *
   * @param valueObjectIri the IRI of the value object.
-  * @param valueV1 a [[ApiValueV1]] containing the object's literal value.
+  * @param valueV1        a [[ApiValueV1]] containing the object's literal value.
   */
 case class ValueObjectV1(valueObjectIri: IRI,
                          valueV1: ApiValueV1,
@@ -461,10 +539,10 @@ object KnoraPrecisionV1 extends Enumeration {
   * If the attribute is a link to another Knora resource, its IRI is given.
   *
   * @param start the start position of the range.
-  * @param end the end position of the range.
+  * @param end   the end position of the range.
   * @param resid the IRI of of a Knora resource that this [[StandoffPositionV1]] refers to.
-  * @param href the IRI of a web resource that this [[StandoffPositionV1]] refers to. In Knora API v1, if `resid`
-  *             is non-empty, `href` is the URL of an API operation for querying the same resource.
+  * @param href  the IRI of a web resource that this [[StandoffPositionV1]] refers to. In Knora API v1, if `resid`
+  *              is non-empty, `href` is the URL of an API operation for querying the same resource.
   */
 case class StandoffPositionV1(start: Int,
                               end: Int,
@@ -492,8 +570,8 @@ object StandoffConstantsV1 {
 /**
   * Represents a textual value with additional information in standoff format.
   *
-  * @param utf8str text in mere utf8 representation (including newlines and carriage returns).
-  * @param textattr attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffPositionV1]]).
+  * @param utf8str            text in mere utf8 representation (including newlines and carriage returns).
+  * @param textattr           attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffPositionV1]]).
   * @param resource_reference referred Knora resources.
   */
 case class TextValueV1(utf8str: String,
@@ -513,7 +591,7 @@ case class TextValueV1(utf8str: String,
         })
 
         JsObject(
-            "uft8str" -> JsString(utf8str),
+            "utf8str" -> JsString(utf8str),
             "textattr" -> JsString(textattrAsJsValue.compactPrint), // textattr is expected to be a stringified JSON
             "resource_reference" -> resource_reference.toJson
         )
@@ -558,11 +636,11 @@ case class TextValueV1(utf8str: String,
 /**
   * Represents a direct link from one resource to another.
   *
-  * @param targetResourceIri the IRI of the resource that the link points to.
-  * @param valueLabel the `rdfs:label` of the resource referred to.
-  * @param valueResourceClass the IRI of the OWL class of the resource that the link points to.
+  * @param targetResourceIri       the IRI of the resource that the link points to.
+  * @param valueLabel              the `rdfs:label` of the resource referred to.
+  * @param valueResourceClass      the IRI of the OWL class of the resource that the link points to.
   * @param valueResourceClassLabel the label of the OWL class of the resource that the link points to.
-  * @param valueResourceClassIcon the icon of the OWL class of the resource that the link points to.
+  * @param valueResourceClassIcon  the icon of the OWL class of the resource that the link points to.
   */
 case class LinkV1(targetResourceIri: IRI,
                   valueLabel: Option[String] = None,
@@ -582,9 +660,9 @@ case class LinkV1(targetResourceIri: IRI,
 /**
   * Represents a `knora-base:LinkValue`, i.e. a reification of a link between two resources.
   *
-  * @param subjectIri the IRI of the resource that is the source of the link.
-  * @param predicateIri the IRI of the property that links the two resources.
-  * @param objectIri the IRI of the resource that is the target of the link.
+  * @param subjectIri     the IRI of the resource that is the source of the link.
+  * @param predicateIri   the IRI of the property that links the two resources.
+  * @param objectIri      the IRI of the resource that is the target of the link.
   * @param referenceCount the reference count of the `LinkValue`. If the link property is `knora-base:hasStandoffLinkTo`,
   *                       the reference count can be any integer greater than or equal to 0. Otherwise, the reference
   *                       count can only be 0 or 1.
@@ -699,9 +777,9 @@ case class TimeValueV1(tval: String) extends UpdateValueV1 with ApiValueV1 {
 /**
   * Represents a date value as a period bounded by Julian Day Counts. Knora stores dates internally in this format.
   *
-  * @param dateval1 the beginning of the date (a Julian day count).
-  * @param dateval2 the end of the date (a Julian day count).
-  * @param calendar the preferred calendar for representing the date.
+  * @param dateval1       the beginning of the date (a Julian day count).
+  * @param dateval2       the end of the date (a Julian day count).
+  * @param calendar       the preferred calendar for representing the date.
   * @param dateprecision1 the precision of the beginning of the date.
   * @param dateprecision2 the precision of the end of the date.
   */
@@ -823,9 +901,11 @@ sealed trait FileValueV1 extends UpdateValueV1 with ApiValueV1 {
   * @param internalMimeType the MIME-type of the internal representation.
   * @param internalFilename the internal filename of the object.
   * @param originalFilename the original filename of the object at the time of the import.
-  * @param dimX the X dimension of the object.
-  * @param dimY the Y dimension of the object.
-  * @param qualityLevel the quality level of this image (higher values mean higher resolutions).
+  * @param dimX             the X dimension of the object.
+  * @param dimY             the Y dimension of the object.
+  * @param qualityLevel     the quality level of this image (higher values mean higher resolutions).
+  * @param qualityName      a string representation of the qualityLevel
+  * @param isPreview        indicates if the file value is used as a preview (thumbnail)
   */
 case class StillImageFileValueV1(internalMimeType: String,
                                  internalFilename: String,
@@ -844,13 +924,26 @@ case class StillImageFileValueV1(internalMimeType: String,
     override def toString = originalFilename
 }
 
+case class MovingImageFileValueV1(internalMimeType: String,
+                                  internalFilename: String,
+                                  originalFilename: String,
+                                  originalMimeType: Option[String] = None) extends FileValueV1 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.MovingImageFileValue
+
+    def toJsValue = ApiValueV1JsonProtocol.movingImageFileValueV1Format.write(this)
+
+    override def toString = originalFilename
+
+}
+
 
 /**
   * Represents information about a version of a value.
   *
-  * @param valueObjectIri the IRI of the version.
+  * @param valueObjectIri    the IRI of the version.
   * @param valueCreationDate the timestamp of the version.
-  * @param previousValue the IRI of the previous version.
+  * @param previousValue     the IRI of the previous version.
   */
 case class ValueVersionV1(valueObjectIri: IRI,
                           valueCreationDate: Option[String],
@@ -942,10 +1035,11 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     }
 
     implicit val createFileQualityLevelFormat: RootJsonFormat[CreateFileQualityLevelV1] = jsonFormat4(CreateFileQualityLevelV1)
-    implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat4(CreateFileV1)
+    implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat3(CreateFileV1)
     implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat4(ValueGetResponseV1)
     implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat3(DateValueV1)
     implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat9(StillImageFileValueV1)
+    implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat4(MovingImageFileValueV1)
     implicit val valueVersionV1Format: JsonFormat[ValueVersionV1] = jsonFormat3(ValueVersionV1)
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
     implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat2(ValueVersionHistoryGetResponseV1)
@@ -955,5 +1049,6 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat8(ChangeValueApiRequestV1)
     implicit val changeValueResponseV1Format: RootJsonFormat[ChangeValueResponseV1] = jsonFormat5(ChangeValueResponseV1)
     implicit val deleteValueResponseV1Format: RootJsonFormat[DeleteValueResponseV1] = jsonFormat2(DeleteValueResponseV1)
-    implicit val createMultipleValuesResponseV1Format: RootJsonFormat[CreateMultipleValuesResponseV1] = jsonFormat1(CreateMultipleValuesResponseV1)
+    implicit val changeFileValueApiRequestV1Format: RootJsonFormat[ChangeFileValueApiRequestV1] = jsonFormat1(ChangeFileValueApiRequestV1)
+    implicit val changeFileValueresponseV1Format: RootJsonFormat[ChangeFileValueResponseV1] = jsonFormat2(ChangeFileValueResponseV1)
 }

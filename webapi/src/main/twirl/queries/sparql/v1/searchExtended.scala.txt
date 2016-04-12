@@ -26,10 +26,9 @@
 @**
  * Performs an extended search.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param countResults if true, just returns a count of the number of results.
  * @param searchCriteria a list of maps containing search criteria, each of which contains:
- * @param triplestore the name of the triplestore being used. The template uses this value to generate the correct
- *                    full-text search query syntax.
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
  * @param projectIri if filtering by project is desired, the IRI of the project to search.
@@ -38,9 +37,9 @@
  * @param offset the offset at which to start returning search results.
  * @param limit the maximum number of search results to return.
  *@
-@(countResults: Boolean,
+@(triplestore: String,
+  countResults: Boolean,
   searchCriteria: Seq[SearchCriterion],
-  triplestore: String,
   preferredLanguage: String,
   fallbackLanguage: String,
   projectIriOption: Option[IRI],
@@ -71,13 +70,12 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 
 @if(countResults) {
-SELECT (COUNT(DISTINCT ?resourceIri) as ?count)
+SELECT (COUNT(DISTINCT ?resource) as ?count)
 } else {
 SELECT DISTINCT
-    ?resourceIri
-    ?resourceClassIcon
-    ?resourceClassLabel
-    ?firstProperty
+    ?resource
+    ?resourceLabel @* The label of a matching resource. This is called "firstprop" in the v1 API. *@
+    ?resourceClass
     ?previewPath
     ?previewDimX
     ?previewDimY
@@ -87,6 +85,10 @@ SELECT DISTINCT
         (SAMPLE(?anyLiteral@index) AS ?literal@index)
     }
     (GROUP_CONCAT(DISTINCT(?permissionAssertion); separator=";") AS ?permissionAssertions)
+}
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
     BIND(STR("@preferredLanguage") AS ?preferredLanguage)
@@ -104,11 +106,7 @@ WHERE {
         *@
 
         @if(searchCriterion.valueType != "http://www.knora.org/ontology/knora-base#Resource") {
-            ?resourceIri <@{searchCriterion.propertyIri}> ?valueObjectIri@index .
-
-            MINUS {
-                ?resourceIri knora-base:isDeleted true .
-            }
+            ?resource <@{searchCriterion.propertyIri}> ?valueObjectIri@index .
         }
 
         # Search criterion @index: operator @searchCriterion.comparisonOperator
@@ -192,11 +190,7 @@ WHERE {
                 @searchCriterion.valueType match {
                     case "http://www.knora.org/ontology/knora-base#Resource" => {
 
-                        ?resourceIri <@{searchCriterion.propertyIri}> ?targetResource@index .
-
-                        MINUS {
-                            ?resourceIri knora-base:isDeleted true .
-                        }
+                        ?resource <@{searchCriterion.propertyIri}> ?targetResource@index .
 
                         ?targetResource@index rdfs:label ?anyLiteral@index .
 
@@ -273,17 +267,33 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#Resource" => {
 
-                        ?resourceIri <@searchCriterion.propertyIri> <@searchCriterion.searchValue> .
-
-                        MINUS {
-                            ?resourceIri knora-base:isDeleted true .
-                        }
+                        ?resource <@searchCriterion.propertyIri> <@searchCriterion.searchValue> .
 
                         <@searchCriterion.searchValue> rdfs:label ?anyLiteral@index .
 
                         MINUS {
                             <@searchCriterion.searchValue> knora-base:isDeleted true .
                         }
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#ListValue" => {
+
+                        @*
+
+                        Get all the subnodes of the given node, including the given node (operator *)
+
+                        *@
+
+                        ?valueObjectIri@index knora-base:valueHasListNode ?listNode .
+                        <@searchCriterion.searchValue> knora-base:hasSubListNode* ?listNode .
+
+                        MINUS {
+                            ?valueObjectIri@index knora-base:isDeleted true .
+                        }
+
+                        ?listNode rdfs:label ?listNodeLabel .
+                        BIND(?listNodeLabel AS ?anyLiteral@index)
+
                     }
 
                     case other => {
@@ -337,7 +347,6 @@ WHERE {
                         ?valueObjectIri@index knora-base:valueHasStartJDC ?dateStart@index .
                         ?valueObjectIri@index knora-base:valueHasEndJDC ?dateEnd@index .
                         ?valueObjectIri@index knora-base:valueHasString ?dateString@index .
-                        @* TODO: check the these conditions with the master of disaster Lukas *@
 
                         MINUS {
                             ?valueObjectIri@index knora-base:isDeleted true .
@@ -611,15 +620,19 @@ WHERE {
         }
     }
 
-    ?resourceIri rdfs:label ?firstProperty .
-    ?resourceIri a ?resourceClass .
+    MINUS {
+        ?resource knora-base:isDeleted true .
+    }
+
+    ?resource rdfs:label ?resourceLabel .
+    ?resource a ?resourceClass .
 
 
     @projectIriOption match {
         case Some(projectIri) => {
 
             # filter by projectIri
-            ?resourceIri knora-base:attachedToProject <@projectIri> .
+            ?resource knora-base:attachedToProject <@projectIri> .
 
         }
 
@@ -630,7 +643,7 @@ WHERE {
         case Some(restypeIri) => {
 
             # filter by restypeIri
-            ?resourceIri a <@restypeIri> .
+            ?resource a <@restypeIri> .
         }
 
         case None => {}
@@ -641,35 +654,16 @@ WHERE {
         case Some(ownerIri) => {
 
             # filter by ownerIri
-            ?resourceIri knora-base:attachedToUser <@ownerIri> .
+            ?resource knora-base:attachedToUser <@ownerIri> .
         }
 
         case None => {}
     }
 
-    ?resourceClass knora-base:resourceIcon ?resourceClassIcon .
-
     OPTIONAL {
-        ?resourceClass rdfs:label ?preferredLanguageResourceClassLabel .
-        FILTER (LANG(?preferredLanguageResourceClassLabel) = ?preferredLanguage) .
-    }
-
-    OPTIONAL {
-        ?resourceClass rdfs:label ?fallbackLanguageResourceClassLabel .
-        FILTER (LANG(?fallbackLanguageResourceClassLabel) = ?fallbackLanguage) .
-    }
-
-    OPTIONAL {
-        ?resourceClass rdfs:label ?anyLanguageResourceClassLabel .
-    }
-
-    BIND(COALESCE(str(?preferredLanguageResourceClassLabel), str(?fallbackLanguageResourceClassLabel), str(?anyLanguageResourceClassLabel)) AS ?resourceClassLabel)
-
-    OPTIONAL {
-        ?fileValueProp rdfs:subPropertyOf* knora-base:hasFileValue .
-        ?resourceIri ?fileValueProp ?fileValue .
+        ?resource knora-base:hasStillImageFileValue ?fileValue .
         ?fileValue a knora-base:StillImageFileValue .
-        ?fileValue knora-base:valueIsPreview true .
+        ?fileValue knora-base:isPreview true .
         ?fileValue knora-base:internalFilename ?previewPath .
 
         OPTIONAL {
@@ -680,31 +674,30 @@ WHERE {
 
     OPTIONAL {
         ?permission rdfs:subPropertyOf+ knora-base:hasPermission .
-        ?resourceIri ?permission ?group .
+        ?resource ?permission ?group .
         BIND(CONCAT(STR(?permission), ",", STR(?group)) as ?permissionAssertion)
     }
 
     OPTIONAL {
-        ?resourceIri knora-base:attachedToUser ?attachedToUser .
+        ?resource knora-base:attachedToUser ?attachedToUser .
     }
 
     OPTIONAL {
-        ?resourceIri knora-base:attachedToProject ?attachedToProject .
+        ?resource knora-base:attachedToProject ?attachedToProject .
     }
 }
 @if(!countResults) {
 GROUP BY
-    ?resourceIri
-    ?resourceClassIcon
-    ?resourceClassLabel
-    ?firstProperty
+    ?resource
+    ?resourceLabel
+    ?resourceClass
     ?previewPath
     ?previewDimX
     ?previewDimY
     ?attachedToUser
     ?attachedToProject
 
-ORDER BY ?resourceIri
+ORDER BY ?resource
 }
 
 @offsetOption match {

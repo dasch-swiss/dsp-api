@@ -18,8 +18,8 @@
 
 .. _shared_packages:
 
-###############
+
 Shared Packages
-###############
+===============
 
 TODO

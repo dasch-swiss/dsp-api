@@ -106,10 +106,37 @@ Make sure you've started Fuseki as shown above. Then at the SBT prompt:
 
 ### Technical
 
-* Benjamin Geer `<benjaminlewis.geer@unibas.ch>`
-* Tobias Schweizer `<t.schweizer@unibas.ch>`
-* Ivan Subotic `<ivan.subotic@unibas.ch>`
+Please use the [knora-user](https://www.maillist.unibas.ch/mailman/listinfo/knora-user) mailing list for technical questions.
 
 ### Administrative
 
 Lukas Rosenthaler `<lukas.rosenthaler@unibas.ch>`
+
+## Commit Message Schema
+
+When writing commit messages, we stick to this schema:
+
+```
+type (scope): subject
+body
+```
+
+Types:
+
+- feature (new feature for the user)
+- fix (bug fix for the user)
+- docs (changes to the documentation)
+- style (formatting, etc; no production code change)
+- refactor (refactoring production code, eg. renaming a variable)
+- test (adding missing tests, refactoring tests; no production code change)
+- build (changes to sbt tasks, CI tasks, deployment tasks, etc.; no production code changes)
+- enhancement (residual category)
+
+Example:
+
+```
+feature (resources route): add route for resource creation
+- add path for multipart request
+- adapt handling of resources responder
+
+```

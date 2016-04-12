@@ -16,15 +16,14 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-###################
 Triplestore Updates
-###################
+===================
 
 Requirements
-============
+------------
 
 General
--------
+^^^^^^^
 
 The supported update operations are:
 
@@ -60,7 +59,7 @@ does not provide a way to do this, and currently it can be done only by embeddin
 in the application and using a vendor-specific API, but we cannot require this in Knora.)
 
 Permissions
------------
+^^^^^^^^^^^
 
 To create a new value (as opposed to a new version of an existing value), the user must have
 ``knora-base:hasModifyPermission`` on the containing resource.
@@ -78,7 +77,7 @@ the corresponding subproperties of ``knora-base:hasPermission``. Similarly, when
 created, it is given the default permissions specified in the definition of its OWL class.
 
 Ontology Constraints
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 Knora must not allow an update that would violate an ontology constraint.
 
@@ -86,15 +85,15 @@ When creating a new value (as opposed to adding a new version of an existing val
 allow the update if the containing resource's OWL class does not contain a cardinality restriction for the
 submitted property, or if the new value would violate the cardinality restriction.
 
-It must also not allow the update if the type of the submitted value does not match the ``rdfs:range`` of the
-property, or if the property has no ``rdfs:range``. In the case of a property that points to a resource,
-Knora must ensure that the target resource belongs to the OWL class specified in the property's
-``rdfs:range``, or to a subclass of that class.
-
-When creating the set of new values in a new, empty resource,
+It must also not allow the update if the type of the submitted value does not
+match the ``knora-base:objectClassConstraint`` of the property, or if the
+property has no ``knora-base:objectClassConstraint``. In the case of a
+property that points to a resource, Knora must ensure that the target resource
+belongs to the OWL class specified in the property's
+``knora-base:objectClassConstraint``, or to a subclass of that class.
 
 Duplicate and Redundant Values
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When creating a new value, or changing an existing value, Knora checks whether the submitted
 value would duplicate an existing value for the same property in the resource. The definition of
@@ -112,7 +111,7 @@ type of value, but in practice, it means that the values are strictly equal: any
 trivial, is allowed.
 
 Versioning
-----------
+^^^^^^^^^^
 
 Each Knora value (i.e. something belonging to an OWL class derived from ``knora-base:Value``) is versioned.
 This means that once created, a value is never modified. Instead, 'changing' a value means creating a new
@@ -139,7 +138,7 @@ resource.
 .. _triplestore-linking-reqs:
 
 Linking
--------
+^^^^^^^
 
 Knora API v1 treats a link between two resources as a value, but in RDF, links must be treated
 differently to other types of values. Knora needs to maintain information about the link,
@@ -188,10 +187,24 @@ When a ``LinkValue`` is created for a standoff resource reference, it is given t
 as the text value containing the reference.
 
 Design
-======
+------
 
-Transactions and Locking
-------------------------
+Responsibilities of Responders
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``ResourcesResponderV1`` has sole responsibility for generating SPARQL to
+create and updating resources, and ``ValuesResponderV1`` has sole
+responsibility for generating SPARQL to create and update values. When a new
+resource is created with its values, ``ValuesResponderV1`` generates SPARQL
+statements that can be included in the ``WHERE`` and ``INSERT`` clauses of a
+SPARQL update to create the values, and ``ResourcesResponderV1`` adds these
+statements to the SPARQL update that creates the resource. This ensures that
+the resource and its values are created in a single SPARQL update operation,
+and hence in a single triplestore transaction.
+
+
+Application-level Locking
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The 'read committed' isolation level cannot prevent a scenario where two users
 want to add the same data at the same time. It is possible that both requests
@@ -203,55 +216,245 @@ a time can update a given resource. Before each update, the application
 acquires a resource lock. It then does the pre-update checks and the update,
 then releases the lock. The lock implementation (in ``ResourceLocker``)
 requires each API request message to include a random UUID, which is generated
-in the :ref:`api-routing` package.
+in the :ref:`api-routing` package. Using application-level locks allows us to
+do pre-update checks in their own transactions, and finally to do the SPARQL
+update in its own transaction.
 
-Using application-level locks allows us to do pre-update checks in their own transactions, and finally to
-do the SPARQL update in its own transaction. However, the SPARQL update itself is our only chance to do
-pre-update checks in the same transaction that will perform the update. The design of the
-`SPARQL 1.1 Update`_ standard makes it possible to ensure that if certain conditions are not met, the update
-will not be performed. Redundant database integrity checks are a good thing. Therefore, whenever possible,
-the SPARQL update itself checks that the update will respect ontology constraints.
+Consistency Checks
+^^^^^^^^^^^^^^^^^^
 
-Responsibilities of Responders
-------------------------------
+Knora enforces consistency constraints in three ways: by doing pre-update
+checks, by doing checks in the ``WHERE`` clauses of SPARQL updates, and
+by using GraphDB's built-in consistency checker. We take the view that
+redundant consistency checks are a good thing.
 
-``ResourcesResponderV1`` has sole responsibility for creating and updating resources, and
-``ValuesResponderV1`` has sole responsibility for creating and updating values. When a new resource is
-created with its initial values, ``ResourcesResponderV1`` first creates an empty resource. Then, while still
-holding a write lock on the resource, it sends a ``CreateMultipleValuesRequestV1`` message to
-``ValuesResponderV1``, asking it to create the initial values. Once it receives a reply from
-``ValuesResponderV1``, it releases the lock.
+Pre-update checks are SPARQL ``SELECT`` queries that are executed while
+holding an application-level lock on the resource to be updated. These checks
+should work with any triplestore, and can return helpful, Knora-specific
+error messages to the client if the request would violate a consistency
+constraint.
 
-SPARQL Update Design
---------------------
+However, the SPARQL update itself is our only chance to do pre-update checks
+in the same transaction that will perform the update. The design of the
+`SPARQL 1.1 Update`_ standard makes it possible to ensure that if certain
+conditions are not met, the update will not be performed. In our SPARQL update
+code, each update contains a ``WHERE`` clause, possibly a ``DELETE`` clause,
+and an ``INSERT`` clause. The ``WHERE`` clause is executed first. It performs
+consistency checks and provides values for variables that are used in the
+``DELETE`` and/or ``INSERT`` clauses. In our updates, if the expectations of
+the ``WHERE`` clause are not met (e.g. because the data to be updated does not
+exist), the ``WHERE`` clause should return no results; as a result, the update
+will not be performed.
 
-The `SPARQL 1.1 Update`_ standard allows for a number of ways to design updates. In our SPARQL update code,
-each update contains a ``WHERE`` clause, possibly a ``DELETE`` clause, and an ``INSERT`` clause. The
-``WHERE`` clause is executed first. It does pre-update checks and provides values for variables that are
-used in the ``DELETE`` and/or ``INSERT`` clauses. In our updates, if the pre-update checks succeed, the
-``WHERE`` clause will return exactly one row of results. If the pre-update checks fail (e.g. because the
-data to be updated does not exist), the ``WHERE`` clause returns no results, and the update is not performed.
+Regardless of whether the update succeeds or not, it returns nothing. So the
+only way to find out whether it was successful is to do a ``SELECT``
+afterwards. Moreover, if the update failed, there is no straightforward way to
+find out why. This is one reason why Knora does pre-update checks by means of
+separate ``SELECT`` queries, *before* performing the update. This makes it
+possible to return specific error messages to the user to indicate why an
+update cannot be performed.
 
-However, regardless of whether the update succeeds or not, it returns nothing. So the only way
-to find out whether it was successful is to do a ``SELECT`` afterwards. Moreover, if the update failed,
-there is no straightforward way to find out why. Therefore, Knora does all pre-update checks by means of
-separate ``SELECT`` queries, *before* performing the update. This makes it possible to return specific
-error messages to the user to indicate why an update cannot be performed. Any pre-update checks carried out
-in the SPARQL update itself are therefore strictly redundant, and the application must not rely on them,
-but we take the view that redundant checks are a good thing when a database is being updated.
+Moreover, while some checks are easy to do in a SPARQL update, others are
+difficult, impractical, or impossible. Easy checks include checking whether a
+resource or value exists or is deleted, and checking that the
+``knora-base:objectClassConstraint`` of a predicate matches the ``rdf:type`` of
+its intended object. Cardinality checks are not very difficult, but they perform
+poorly on Jena. Knora does not do permission checks in SPARQL, because its
+permission-checking algorithm is too complex to be implemented in SPARQL. For
+this reason, Knora's check for duplicate values cannot be done in SPARQL
+update code, because it relies on permission checks.
 
-Moreover, while some pre-update checks are easy to do in a SPARQL update,
-others are difficult, impractical, or impossible. Easy checks include checking
-whether a resource or value exists or is deleted, and checking that the
-``rdfs:range`` of a predicate matches the ``rdf:type`` of its intended object.
-Cardinality checks are not very difficult, but they perform poorly on Jena
-(although GraphDB does them efficiently). Knora does not do permission checks
-in SPARQL, because its permission-checking algorithm is too complex to be
-implemented in SPARQL. For this reason, Knora's check for duplicate values
-cannot be done in SPARQL update code, because it relies on permission checks.
+
+GraphDB's consistency checker can be turned on to ensure that each update
+transaction respects the consistency constraints, as described in the section
+`Consistency checks`_ of the GraphDB documentation. This makes it possible to
+catch consistency constraint violations caused by bugs in Knora, and it also
+checks data that is uploaded directly into the triplestore without going
+through the Knora API. However, this feature is only partly enabled, because
+of problems described in `issue 33`_.
+
+GraphDB's consistency checker requires the repository to be created with
+reasoning enabled. GraphDB's reasoning rules are defined in rule files with
+the ``.pie`` filename extension, as described in Reasoning_ in the GraphDB
+documentation. To use consistency checking, it is necessary to modify one of
+GraphDB's standard ``.pie`` files by adding consistency rules. We have added
+rules to the standard RDFS inference rules file ``builtin_RdfsRules.pie``, to
+create the file ``KnoraRules.pie``. The ``.ttl`` configuration file that is
+used to create the repository must contain these settings:
+
+::
+
+    owlim:ruleset "/path/to/KnoraRules.pie" ;
+    owlim:check-for-inconsistencies "true" ;
+
+
+The path to ``KnoraRules.pie`` must be an absolute path. The scripts provided
+with Knora to create test repositories set this path automatically.
+
+A GraphDB consistency rule is composed of two parts: a pattern that will match
+if corresponding triples are found in the data, and an optional pattern that
+will match if corresponding triples are not found in the data. If both
+parts match, this means that there is a consistency violation, and the
+transaction will be rolled back. A rule is written in this form:
+
+::
+
+    Consistency: <rule name>
+        <pattern for triples found in the data>
+        -------------------------------
+        <pattern for triples not found in the data>
+
+The triple patterns can contain variable names for subjects, predicates, and
+objects, as well as actual property names.
+
+The consistency rules are currently being revised, so here are just two examples.
+
+knora-base:subjectClassConstraint
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    // knora-base:subjectClassConstraint
+    Consistency: subject_class_constraint
+        p <knora-base:subjectClassConstraint> t
+        i p j
+        ------------------------------------
+        i <rdf:type> t
+
+
+If resource ``i`` has a predicate ``p`` that requires a subject of type ``t``,
+and ``i`` is not a ``t``, the constraint is violated.
+
+knora-base:objectClassConstraint
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    // knora-base:objectClassConstraint
+    Consistency: object_class_constraint
+        p <knora-base:objectClassConstraint> t
+        i p j
+        ------------------------------------
+        j <rdf:type> t
+
+
+If resource ``i`` has a predicate ``p`` that requires an object of type ``t``,
+and the object of ``p`` is not a ``t``, the constraint is violated.
+
+.. Commented out because the rules are currently being revised.
+
+   owl:maxCardinality 1
+   ~~~~~~~~~~~~~~~~~~~~
+
+   ::
+
+       // owl:maxCardinality 1
+       Consistency: max_cardinality_1
+           i <rdf:type> r
+           r <owl:maxCardinality> "1"^^xsd:nonNegativeInteger
+           r <owl:onProperty> p
+           i p j
+           i p k [Constraint j != k]
+           ------------------------------------
+
+   If resource ``i`` is a member of a subclass of ``owl:Restriction`` ``r``,
+   which has a maximum cardinality of 1 for property ``p``, and there are two
+   different triples with ``i`` as the subject and ``p`` as the predicate, the
+   constraint is violated.
+
+   owl:minCardinality 1
+   ~~~~~~~~~~~~~~~~~~~~
+
+   ::
+
+       // owl:minCardinality 1
+       Consistency: min_cardinality_1
+           i <rdf:type> r
+           r <owl:minCardinality> "1"^^xsd:nonNegativeInteger
+           r <owl:onProperty> p
+           ------------------------------------
+           i p j
+
+   If resource ``i`` is a member of a subclass of ``owl:Restriction`` ``r``,
+   which has a minimum cardinality of 1 for property ``p``, and there is no
+   triple with ``i`` as the subject and ``p`` as the predicate, the constraint is
+   violated.
+
+   owl:cardinality 1
+   ~~~~~~~~~~~~~~~~~
+
+   This requires two rules, which are essentially the same as the two previous rules.
+
+   ::
+
+       // owl:cardinality 1 (check that the number of property instances is not greater than 1)
+       Consistency: cardinality_1_not_greater
+           i <rdf:type> r
+           r <owl:cardinality> "1"^^xsd:nonNegativeInteger
+           r <owl:onProperty> p
+           i p j
+           i p k [Constraint j != k]
+           ------------------------------------
+
+       // owl:cardinality 1 (check that the number of property instances is not 0)
+       Consistency: cardinality_1_not_less
+           i <rdf:type> r
+           r <owl:cardinality> "1"^^xsd:nonNegativeInteger
+           r <owl:onProperty> p
+           ------------------------------------
+           i p j
+
+   Any cardinality
+   ~~~~~~~~~~~~~~~
+
+   Knora allows a subproperty of ``knora-base:hasValue`` to be a predicate of a
+   resource only if the resource's class has some cardinality for the property.
+   To indicate that there is no restriction on the number of values that can be
+   created with the same predicate, the cardinality ``owl:minCardinality 0`` can
+   be used.
+
+   ::
+
+       // Check that if a resource has a subproperty of knora-base:hasValue, the resource class has
+       // some cardinality for that property (or for a subproperty of that property). This is the
+       // only way we check owl:minCardinality 0.
+       Consistency: cardinality_any
+           i <knora-base:hasValue> j
+           i p j [Constraint p != <knora-base:hasValue>]
+           ------------------------------------
+           q <rdfs:subPropertyOf> p
+           i q j
+           i <rdf:type> r
+           r <owl:onProperty> q
+
+   If resource ``i`` has a predicate that is a subproperty of
+   ``knora-base:hasValue``, and ``i`` is not a member of a subclass of
+   ``owl:Restriction`` ``r`` specifying a cardinality for that predicate, the
+   constraint is violated.
+
+   For example, suppose ``incunabula:title`` is a subproperty of ``dc:title``,
+   which is a subproperty of ``knora-base:hasValue``. (The project-specific
+   ``incunabula`` ontology is required to make its own subproperty of
+   ``dc:title`` rather than use it directly.) Furthermore, suppose that there is
+   an instance of ``incunabula:book`` that has an ``incunabula:title``. By
+   inference, the book also has a ``dc:title``. Therefore, if ``i`` matches the
+   book, ``p`` can match either ``dc:title`` or ``incunabula:title``. There are
+   two possibilities:
+
+   1. The class ``incunabula:book`` has no cardinality for ``incunabula:title``.
+      Regardless of whether ``p``  matches ``dc:title`` or ``incunabula:title``,
+      there is no match for ``q`` that has the required cardinality, so the
+      constraint is violated.
+   2. The class ``incunabula:book`` has a cardinality for ``incunabula:title``.
+      If ``p`` matches ``dc:title``, ``q`` will match ``incunabula:title``, for
+      which there is a cardinality, so the constraint is respected. If ``p``
+      matches ``incunabula:title``, ``q`` also matches ``incunabula:title``
+      (``q`` equals ``p``), and the constraint is again respected.
+
+
 
 SPARQL Update Examples
-======================
+----------------------
 
 The following sample SPARQL update code is simpler than what Knora actually does. It is included here to
 illustrate the way Knora's SPARQL updates are structured and how concurrent updates are handled.
@@ -259,7 +462,7 @@ illustrate the way Knora's SPARQL updates are structured and how concurrent upda
 .. _find-value-in-version-history:
 
 Finding a value IRI in a value's version history
-------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We will need this query below. If a value is present in a resource
 property's version history, the query returns everything known about the
@@ -282,8 +485,8 @@ value, or nothing otherwise:
         ?searchValue ?p ?o .
     }
 
-Creating the first value of a property
---------------------------------------
+Creating the initial version of a value
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -315,35 +518,7 @@ Creating the first value of a property
         ?resource rdf:type ?resourceClass .
 
         # Do nothing if the submitted value has the wrong type.
-        ?property rdfs:range ?valueType .
-
-        # Do nothing if the resource class has no cardinality for this property.
-
-        ?resourceClass rdfs:subClassOf ?restriction .
-        ?restriction a owl:Restriction .
-        ?restriction owl:onProperty ?property .
-
-        # Do nothing if the resource class is allowed to have at most one instance of this property, and it already has one.
-
-        MINUS {
-            ?restriction owl:cardinality 1 .
-            ?resource ?property ?value .
-        }
-
-        MINUS {
-            ?restriction owl:maxCardinality 1 .
-            ?resource ?property ?value .
-        }
-
-        MINUS {
-            ?restriction owl:qualifiedCardinality 1 .
-            ?resource ?property ?value .
-        }
-
-        MINUS {
-            ?restriction owl:maxQualifiedCardinality 1 .
-            ?resource ?property ?value .
-        }
+        ?property knora-base:objectClassConstraint ?valueType .
     }
 
 To find out whether the insert succeeded, the application can use the
@@ -351,7 +526,7 @@ query in :ref:`find-value-in-version-history` to look for the new IRI in the
 property's version history.
 
 Adding a new version of a value
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -383,7 +558,7 @@ Adding a new version of a value
         BIND(NOW() AS ?currentTime)
 
         ?resource ?property ?currentValue .
-        ?property rdfs:range ?valueType .
+        ?property knora-base:objectClassConstraint ?valueType .
     }
 
 The update request must contain the IRI of the most recent version of
@@ -409,7 +584,7 @@ there are two possibilities:
    in the value's version history.
 
 Getting all versions of a value
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -439,7 +614,10 @@ This assumes that we know the current version of the value. If the
 version we have is not actually the current version, this query will
 return no rows.
 
-.. _GraphDB SE Transactions: https://confluence.ontotext.com/display/GraphDB6/GraphDB-SE+Indexing+Specifics#GraphDB-SEIndexingSpecifics-TransactionControl
+.. _GraphDB SE Transactions: http://graphdb.ontotext.com/documentation/free/storage.html#transaction-control
 .. _SPARQL 1.1 Protocol: http://www.w3.org/TR/sparql11-protocol/
 .. _SPARQL 1.1 Update: http://www.w3.org/TR/sparql11-update/
 .. _reifications: http://www.w3.org/TR/rdf-schema/#ch_reificationvocab
+.. _issue 33: https://github.com/dhlab-basel/Knora/issues/33
+.. _Consistency checks: http://graphdb.ontotext.com/documentation/standard/reasoning.html#consistency-checks
+.. _Reasoning: http://graphdb.ontotext.com/documentation/standard/reasoning.html

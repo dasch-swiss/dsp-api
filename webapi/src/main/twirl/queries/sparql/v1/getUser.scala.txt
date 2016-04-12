@@ -23,11 +23,17 @@
 @**
  * Gets all information about a user, given the user's IRI.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param userIri the user's IRI.
  *@
-@(userIri: IRI)
+@(triplestore: String,
+  userIri: IRI)
 
 SELECT ?p ?o
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@userIri") as ?user)
 

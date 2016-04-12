@@ -77,7 +77,7 @@ class ProjectsResponderV1 extends ResponderV1 {
 
         for {
         // group project result rows by their IRI
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjects().toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getProjects(triplestore = settings.triplestoreType).toString())
             projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
 
@@ -174,7 +174,10 @@ class ProjectsResponderV1 extends ResponderV1 {
       */
     private def getProjectInfoByIRIGetRequest(projectIri: IRI, requestType: ProjectInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(projectIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(
+                triplestore = settings.triplestoreType,
+                projectIri = projectIri
+            ).toString())
             projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             projectInfo = createProjectInfoV1FromProjectResponse(projectResponse = projectResponse.results.bindings, projectIri = projectIri, requestType = requestType, userProfile)
@@ -198,7 +201,10 @@ class ProjectsResponderV1 extends ResponderV1 {
       */
     private def getProjectInfoByShortnameGetRequest(shortname: String, requestType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByShortname(shortname).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByShortname(
+                triplestore = settings.triplestoreType,
+                shortname = shortname
+            ).toString())
             projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             // get project Iri from results rows

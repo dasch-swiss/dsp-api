@@ -23,6 +23,7 @@ package org.knora.webapi.util
 import java.io.File
 import java.nio.file.{Files, Paths}
 
+import akka.event.LoggingAdapter
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
 import org.joda.time.DateTime
@@ -227,11 +228,11 @@ object InputValidation {
 
     /**
       *
-      * @param settings Knora application settings.
+      * @param settings   Knora application settings.
       * @param binaryData the binary file data to be saved.
       * @return the location where the file has been written to.
       */
-    def saveFileToTmpLocation(settings: SettingsImpl, binaryData: Array[Byte]): String = {
+    def saveFileToTmpLocation(settings: SettingsImpl, binaryData: Array[Byte]): File = {
 
         // check if the location for writing temporary files exists
         if (!Files.exists(Paths.get(settings.tmpDataDir))) {
@@ -240,12 +241,25 @@ object InputValidation {
             } does not exist on server")
         }
 
-        val sourcePath: File = File.createTempFile("tmp_", ".bin", new File(settings.tmpDataDir))
+        val fileName: File = File.createTempFile("tmp_", ".bin", new File(settings.tmpDataDir))
+
+        if (!fileName.canWrite) throw FileWriteException(s"File ${fileName} cannot be written.")
 
         // write given file to disk
-        Files.write(sourcePath.toPath, binaryData)
+        Files.write(fileName.toPath, binaryData)
 
-        sourcePath.toString
+        fileName
     }
 
+    def deleteFileFromTmpLocation(fileName: File, log: LoggingAdapter): Boolean = {
+
+        val path = fileName.toPath
+
+        if (!fileName.canWrite) {
+            val ex = FileWriteException(s"File $path cannot be deleted.")
+            log.error(ex, ex.getMessage)
+        }
+
+        Files.deleteIfExists(path)
+    }
 }

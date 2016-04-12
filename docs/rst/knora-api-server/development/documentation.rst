@@ -20,30 +20,23 @@
 
 .. _documentation:
 
-########################
 Documentation Guidelines
-########################
+========================
 
 The Knora documentation uses `reStructuredText`_ as its markup language and is
 built using `Sphinx`_.
 
-Sphinx
-======
-
-For more details, see `The Sphinx Documentation <http://sphinx.pocoo.org/contents.html>`_.
-
-reStructuredText
-================
-
-For more details, see `The reST Quickref <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`_.
+For more details, see `The Sphinx Documentation <http://sphinx.pocoo.org/contents.html>`_
+and `Quick reStructuredText <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`_.
 
 Sections
 --------
 
 Section headings are very flexible in reST. We use the following convention in
-the Akka documentation:
+the Knora documentation based on the `Python Documentation Conventions`_:
 
-* ``#`` (over and under) for module headings
+* ``#`` (over and under) for parts
+* ``*`` (over and under) for chapters
 * ``=`` for sections
 * ``-`` for subsections
 * ``^`` for subsubsections
@@ -60,32 +53,35 @@ unique references across the entire documentation.
 
 For example::
 
-  .. _akka-module:
+  .. _knora_part::
 
-  #############
-   Akka Module
-  #############
+  ##########
+  Knora Part
+  ##########
 
-  This is the module documentation.
+  .. _knora-chapter:
 
-  .. _akka-section:
+  *************
+  Knora Chapter
+  *************
 
-  Akka Section
-  ============
+  This is the chapter documentation.
 
-  Akka Subsection
-  ---------------
+  .. _knora-section:
 
-  Here is a reference to "akka section": :ref:`akka-section` which will have the
-  name "Akka Section".
+  Knora Section
+  =============
+
+  Knora Subsection
+  ----------------
+
+  Here is a reference to "knora section": :ref:`knora-section` which will have the
+  name "Knora Section".
 
 Build the documentation
-=======================
+-----------------------
 
 First install `Sphinx`_. See below.
-
-Building
---------
 
 For the html version of the docs::
 
@@ -152,4 +148,5 @@ If you get the error ``unknown locale: UTF-8`` when generating the documentation
   export LC_ALL=en_GB.UTF-8
 
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
-.. _sphinx: http://sphinx.pocoo.org
+.. _Sphinx: http://sphinx.pocoo.org
+.. _Python Documentation Conventions: https://docs.python.org/devguide/documenting.html

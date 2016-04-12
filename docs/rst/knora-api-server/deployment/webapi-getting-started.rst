@@ -16,12 +16,12 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-#########################################
+
 Getting Started with the Knora API Server
-#########################################
+=========================================
 
 Choosing and Setting Up a Triplestore
-=====================================
+-------------------------------------
 
 The Knora API server requires a standards-compliant RDF_ triplestore. A number
 of triplestore implementations are available, including `free software`_ as
@@ -38,7 +38,7 @@ work out of the box with the following triplestores:
 TODO: explain how to get started with these.
 
 Creating a Test Installation
-============================
+-----------------------------
 
 TODO: write subsections like this:
 

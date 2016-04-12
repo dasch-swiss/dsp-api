@@ -59,6 +59,7 @@ object TriplestoreManagerActorSpec {
         }
         """.stripMargin)
 
+    /*
     val configEmbeddedJenaTDB = ConfigFactory.parseString(
         """
         app {
@@ -85,6 +86,7 @@ object TriplestoreManagerActorSpec {
             }
         }
         """.stripMargin)
+    */
 }
 
 /*
@@ -188,6 +190,10 @@ class TriplestoreManagerActorSpec03 extends CoreSpec("TriplestoreManagerActorTes
 
 }
 
+/**
+  * Supporting code is removed (for now).
+  */
+/*
 class TriplestoreManagerActorSpec05 extends CoreSpec("TriplestoreManagerActorTestSystem", TriplestoreManagerActorSpec.configEmbeddedJenaTDB) with ImplicitSender {
 
     // here we start the actor under test with the TestProbeMaker trait
@@ -217,7 +223,13 @@ class TriplestoreManagerActorSpec05 extends CoreSpec("TriplestoreManagerActorTes
 
 
 }
+*/
 
+/**
+  * Supporting code is removed (for now).
+  */
+
+/*
 class TriplestoreManagerActorSpec06 extends CoreSpec("TriplestoreManagerActorTestSystem", TriplestoreManagerActorSpec.configEmbeddedGraphDB) with ImplicitSender {
 
     // here we start the actor under test with the TestProbeMaker trait
@@ -247,6 +259,7 @@ class TriplestoreManagerActorSpec06 extends CoreSpec("TriplestoreManagerActorTes
 
 
 }
+*/
 
 /*
 class TriplestoreManagerActorSpec07 extends CoreSpec("TriplestoreManagerActorTestSystem", TriplestoreManagerActorSpec.configUnknownTriplestore) with ImplicitSender {

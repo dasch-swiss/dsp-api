@@ -222,10 +222,10 @@ object CacheUtil {
       * @param queryFun a function that will be called to get the value if it's not in the cache.
       * @return a value from the cache or from the query function.
       */
-    def getOrCacheItem[K <: Ordered[K], V](cacheName: String, cacheKey: K, queryFun: () => Future[V])(implicit executionContext: ExecutionContext): Future[V] = {
+    def getOrCacheItem[K <: Ordered[K], V](cacheName: String, cacheKey: K, queryFun: K => Future[V])(implicit executionContext: ExecutionContext): Future[V] = {
         def queryItem(keySet: Set[K]): Future[Map[K, V]] = {
             for {
-                value <- queryFun()
+                value <- queryFun(cacheKey)
             } yield Map(keySet.head -> value)
         }
 

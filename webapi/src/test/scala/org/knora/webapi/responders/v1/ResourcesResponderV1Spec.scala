@@ -26,12 +26,13 @@ import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1respondermessages.resourcemessages._
+import org.knora.webapi.messages.v1respondermessages.sipimessages._
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
 import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1respondermessages.valuemessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
-import org.knora.webapi.util.{DateUtilV1, FormatConstants, MessageUtil}
+import org.knora.webapi.util._
 
 import scala.concurrent.duration._
 
@@ -59,6 +60,7 @@ object ResourcesResponderV1Spec {
     )
 }
 
+
 /**
   * Tests [[ResourcesResponderV1]].
   */
@@ -66,7 +68,9 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[ResourcesResponderV1]
-    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+
+    val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
+
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List(
@@ -80,7 +84,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
     // The default timeout for receiving reply messages from actors.
     private val timeout = 60.seconds
 
-    private var newResourceIri: IRI = ""
+    private val newResourceIri = new MutableTestIri
 
     private def compareResourceFullResponses(expected: ResourceFullResponseV1, received: ResourceFullResponseV1): Unit = {
         // println(MessageUtil.toSource(received))
@@ -293,6 +297,27 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     }
 
+    private def getLastModificationDate(resourceIri: IRI): Option[String] = {
+        val lastModSparqlQuery = queries.sparql.v1.txt.getLastModificationDate(
+            triplestore = settings.triplestoreType,
+            resourceIri = resourceIri
+        ).toString()
+
+        storeManager ! SparqlSelectRequest(lastModSparqlQuery)
+
+        expectMsgPF(timeout) {
+            case response: SparqlSelectResponse =>
+                val rows = response.results.bindings
+                assert(rows.size <= 1, s"Resource $resourceIri has more than one instance of knora-base:lastModificationDate")
+
+                if (rows.size == 1) {
+                    Some(rows.head.rowMap("lastModificationDate"))
+                } else {
+                    None
+                }
+        }
+    }
+
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
@@ -376,18 +401,57 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "return 27 resources containing 'Narrenschiff' in their label" in {
+            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=4&limit=100&restype_id=-1
+
+            // This query is going to return also resources of knora-baseLinkObj with a knora-base:hasComment.
+            // Because this resource is directly defined in knora-base, its property knora-base:hasComment
+            // has no guiOrder (normally, the guiOrder is defined in project specific ontologies) which used to cause problems in the SPARQL query.
+            // Now, the guiOrder was made optional in the SPARQL query, and this test ensures that the query works as expected.
+
+            actorUnderTest ! ResourceSearchGetRequestV1(
+                searchString = "Narrenschiff",
+                numberOfProps = 4,
+                limitOfResults = 100,
+                userProfile = ResourcesResponderV1Spec.userProfile,
+                resourceTypeIri = None
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceSearchResponseV1 =>
+                    assert(response.resources.size == 27, s"expected 27 resources")
+            }
+        }
+
+        "return 3 resources containing 'Narrenschiff' in their label of type incunabula:book" in {
+            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=3&limit=100&restype_id=-1
+
+            actorUnderTest ! ResourceSearchGetRequestV1(
+                searchString = "Narrenschiff",
+                numberOfProps = 3,
+                limitOfResults = 100,
+                userProfile = ResourcesResponderV1Spec.userProfile,
+                resourceTypeIri = Some("http://www.knora.org/ontology/incunabula#book")
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceSearchResponseV1 =>
+                    assert(response.resources.size == 3, s"expected 3 resources")
+            }
+        }
+
         "not create a resource when too many values are submitted for a property" in {
-            // The Incunabula ontology specifies that an incunabula:book must have exactly one title.
+            // An incunabula:misc allows at most one color value.
             val valuesToBeCreated = Map(
-                "http://www.knora.org/ontology/incunabula#title" -> Vector(
-                    CreateValueV1WithComment(TextValueV1(utf8str = "De generatione Christi"), None),
-                    CreateValueV1WithComment(TextValueV1(utf8str = "Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae"), None)
+                "http://www.knora.org/ontology/incunabula#miscHasColor" -> Vector(
+                    CreateValueV1WithComment(ColorValueV1("#000000")),
+                    CreateValueV1WithComment(ColorValueV1("#FFFFFF"))
                 )
             )
 
             val resourceCreateRequest = ResourceCreateRequestV1(
-                resourceTypeIri = "http://www.knora.org/ontology/incunabula#book",
-                label = "Test-Book",
+                resourceTypeIri = "http://www.knora.org/ontology/incunabula#misc",
+                label = "Test-Misc",
                 projectIri = "http://data.knora.org/projects/77275339",
                 values = valuesToBeCreated,
                 userProfile = ResourcesResponderV1Spec.userProfile,
@@ -442,7 +506,21 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val title1 = TextValueV1("A beautiful book")
 
             val citation1 = TextValueV1("ein Zitat")
-            val citation2 = TextValueV1("ein weiteres Zitat")
+            val citation2 = TextValueV1(
+                utf8str = "This citation refers to another resource",
+                textattr = Map(
+                    "bold" -> Vector(StandoffPositionV1(
+                        start = 5,
+                        end = 13
+                    )),
+                    StandoffConstantsV1.LINK_ATTR -> Vector(StandoffPositionV1(
+                        start = 32,
+                        end = 40,
+                        resid = Some("http://data.knora.org/c5058f3a")
+                    ))
+                ),
+                resource_reference = Vector("http://data.knora.org/c5058f3a")
+            )
             val citation3 = TextValueV1("und noch eines")
             val citation4 = TextValueV1("noch ein letztes")
 
@@ -482,15 +560,16 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: ResourceCreateResponseV1 =>
-                    newResourceIri = response.res_id
+                    newResourceIri.set(response.res_id)
                     checkResourceCreation(valuesExpected, response)
             }
-        }
 
-        "query resource that has been created" in {
-            newResourceIri.nonEmpty should ===(true)
+            // Check that the resource doesn't have more than one lastModificationDate.
+            getLastModificationDate(newResourceIri.get)
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = newResourceIri, userProfile = ResourcesResponderV1Spec.userProfile)
+            // See if we can query the resource.
+
+            actorUnderTest ! ResourceFullGetRequestV1(iri = newResourceIri.get, userProfile = ResourcesResponderV1Spec.userProfile)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => () // If we got a ResourceFullResponseV1, the operation succeeded.
@@ -502,7 +581,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val origname = TextValueV1("Blatt")
             val seqnum = IntegerValueV1(1)
 
-            val fileValue = StillImageFileValueV1(
+            val fileValueFull = StillImageFileValueV1(
                 internalMimeType = "image/jp2",
                 internalFilename = "gaga.jpg",
                 originalFilename = "test.jpg",
@@ -514,16 +593,26 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 isPreview = false
             )
 
+            val fileValueThumb = StillImageFileValueV1(
+                internalMimeType = "image/jpeg",
+                internalFilename = "gaga.jpg",
+                originalFilename = "test.jpg",
+                originalMimeType = Some("image/jpg"),
+                dimX = 1000,
+                dimY = 1000,
+                qualityLevel = 100,
+                qualityName = Some("full"),
+                isPreview = false
+            )
 
-            val book = newResourceIri
+            val book = newResourceIri.get
 
             val valuesToBeCreated = Map(
                 "http://www.knora.org/ontology/incunabula#hasRightSideband" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://data.knora.org/482a33d65c36"))),
                 "http://www.knora.org/ontology/incunabula#pagenum" -> Vector(CreateValueV1WithComment(recto)),
                 "http://www.knora.org/ontology/incunabula#partOf" -> Vector(CreateValueV1WithComment(LinkUpdateV1(book))),
                 "http://www.knora.org/ontology/incunabula#origname" -> Vector(CreateValueV1WithComment(origname)),
-                "http://www.knora.org/ontology/incunabula#seqnum" -> Vector(CreateValueV1WithComment(seqnum)),
-                OntologyConstants.KnoraBase.HasStillImageFileValue -> Vector(CreateValueV1WithComment(fileValue))
+                "http://www.knora.org/ontology/incunabula#seqnum" -> Vector(CreateValueV1WithComment(seqnum))
             )
 
             val expected = Map(
@@ -532,7 +621,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 "http://www.knora.org/ontology/incunabula#partOf" -> Vector(LinkV1(book)),
                 "http://www.knora.org/ontology/incunabula#origname" -> Vector(origname),
                 "http://www.knora.org/ontology/incunabula#seqnum" -> Vector(seqnum),
-                OntologyConstants.KnoraBase.HasStillImageFileValue -> Vector(fileValue)
+                OntologyConstants.KnoraBase.HasStillImageFileValue -> Vector(fileValueFull, fileValueThumb)
             )
 
             actorUnderTest ! ResourceCreateRequestV1(
@@ -540,13 +629,19 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 label = "Test-Page",
                 projectIri = "http://data.knora.org/projects/77275339",
                 values = valuesToBeCreated,
+                file = Some(SipiResponderConversionFileRequestV1(
+                    originalFilename = "test.jpg",
+                    originalMimeType = "image/jpeg",
+                    filename = "./test_server/images/Chlaus.jpg",
+                    userProfile = ResourcesResponderV1Spec.userProfile
+                )),
                 userProfile = ResourcesResponderV1Spec.userProfile,
                 apiRequestID = UUID.randomUUID
             )
 
             expectMsgPF(timeout) {
                 case response: ResourceCreateResponseV1 =>
-                    newResourceIri = response.res_id
+                    newResourceIri.set(response.res_id)
                     checkResourceCreation(expected, response)
             }
         }

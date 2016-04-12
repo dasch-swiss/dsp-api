@@ -3,7 +3,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix foaf: <http://xmln.com/foaf/0.1/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix dc: <http://www.knora.org/ontology/dc#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
@@ -12,8 +12,7 @@
 @prefix images: <http://www.knora.org/ontology/images#> .
 @prefix : <http://www.knora.org/ontology/images#> .
 
-<http://www.knora.org/ontology/images> rdf:type owl:Ontology ;
-                                        owl:imports <http://www.knora.org/ontology/knora-base> .
+<http://www.knora.org/ontology/images> rdf:type owl:Ontology .
 
 ##########################################################
 #
@@ -34,9 +33,9 @@
           rdfs:comment """Nachname einer Person"""@de ,
                        """Last name of a person"""@en ;
 
-          rdfs:domain :person ;
+          knora-base:subjectClassConstraint :person ;
 
-          rdfs:range knora-base:TextValue ;
+          knora-base:objectClassConstraint knora-base:TextValue ;
 
           salsah-gui:guiOrder "1"^^xsd:integer ;
 
@@ -65,9 +64,9 @@
            rdfs:comment """Vorname einer Person"""@de ,
                         """First name of a person"""@en ;
 
-           rdfs:domain :person ;
+           knora-base:subjectClassConstraint :person ;
 
-           rdfs:range knora-base:TextValue ;
+           knora-base:objectClassConstraint knora-base:TextValue ;
 
            salsah-gui:guiOrder "2"^^xsd:integer ;
 
@@ -95,9 +94,9 @@
 
              rdfs:comment """Institution"""@de ;
 
-             rdfs:domain :person ;
+             knora-base:subjectClassConstraint :person ;
 
-             rdfs:range knora-base:TextValue ;
+             knora-base:objectClassConstraint knora-base:TextValue ;
 
              salsah-gui:guiOrder "3"^^xsd:integer ;
 
@@ -125,9 +124,9 @@
 
          rdfs:comment """Adresse (Strassenname, Nummer etc.)"""@de ;
 
-         rdfs:domain :person ;
+         knora-base:subjectClassConstraint :person ;
 
-         rdfs:range knora-base:TextValue ;
+         knora-base:objectClassConstraint knora-base:TextValue ;
 
          salsah-gui:guiOrder "4"^^xsd:integer ;
 
@@ -150,9 +149,9 @@
       rdfs:label "Ort"@de ,
                  "City"@en ;
 
-      rdfs:domain :person ;
+      knora-base:subjectClassConstraint :person ;
 
-      rdfs:range knora-base:TextValue ;
+      knora-base:objectClassConstraint knora-base:TextValue ;
 
       salsah-gui:guiOrder "5"^^xsd:integer ;
 
@@ -180,9 +179,9 @@
 
          rdfs:comment """Postleitzajl"""@de ;
 
-         rdfs:domain :person ;
+         knora-base:subjectClassConstraint :person ;
 
-         rdfs:range knora-base:TextValue ;
+         knora-base:objectClassConstraint knora-base:TextValue ;
 
          salsah-gui:guiOrder "6"^^xsd:integer ;
 
@@ -207,9 +206,9 @@
 
        rdfs:label "Telefon"@de ;
 
-       rdfs:domain :person ;
+       knora-base:subjectClassConstraint :person ;
 
-       rdfs:range knora-base:TextValue ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
 
        salsah-gui:guiOrder "7"^^xsd:integer ;
 
@@ -233,9 +232,9 @@
 
      rdfs:comment """Fax"""@de ;
 
-     rdfs:domain :person ;
+     knora-base:subjectClassConstraint :person ;
 
-     rdfs:range knora-base:TextValue ;
+     knora-base:objectClassConstraint knora-base:TextValue ;
 
      salsah-gui:guiOrder "8"^^xsd:integer ;
 
@@ -258,9 +257,9 @@
        rdfs:label "Email"@de ,
                   "Email"@en ;
 
-       rdfs:domain :person ;
+       knora-base:subjectClassConstraint :person ;
 
-       rdfs:range knora-base:TextValue ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
 
        salsah-gui:guiOrder "9"^^xsd:integer ;
 
@@ -285,9 +284,9 @@
                     "tipo di immagine"@it ,
                     "Image type"@en ;
 
-         rdfs:domain :bildformat ;
+         knora-base:subjectClassConstraint :bildformat ;
 
-         rdfs:range knora-base:ListValue ;
+         knora-base:objectClassConstraint knora-base:ListValue ;
 
          salsah-gui:guiOrder "1"^^xsd:integer ;
 
@@ -314,9 +313,9 @@
                          "Data di acquisizione"@it ,
                          "Date of acquisition"@en ;
 
-              rdfs:domain :bildformat ;
+              knora-base:subjectClassConstraint :bildformat ;
 
-              rdfs:range knora-base:DateValue ;
+              knora-base:objectClassConstraint knora-base:DateValue ;
 
               salsah-gui:guiOrder "2"^^xsd:integer ;
 
@@ -338,9 +337,9 @@
                    "Formato"@it ,
                    "Format"@en ;
 
-        rdfs:domain :bildformat ;
+        knora-base:subjectClassConstraint :bildformat ;
 
-        rdfs:range knora-base:TextValue ;
+        knora-base:objectClassConstraint knora-base:TextValue ;
 
         salsah-gui:guiOrder "3"^^xsd:integer ;
 
@@ -363,14 +362,14 @@
 
                 rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-                rdfs:range knora-base:LinkValue ;
+                knora-base:objectClassConstraint knora-base:LinkValue ;
 
                 rdfs:label "Lieferant"@de ,
                            "Fournisseur"@fr ,
                            "Fornitore"@it ,
                            "Supplier"@en ;
 
-                rdfs:domain :bildformat ;
+                knora-base:subjectClassConstraint :bildformat ;
 
                 salsah-gui:guiOrder "4"^^xsd:integer ;
 
@@ -392,9 +391,9 @@
                       "Fornitore"@it ,
                       "Supplier"@en ;
 
-           rdfs:domain :bildformat ;
+           knora-base:subjectClassConstraint :bildformat ;
 
-           rdfs:range :person ;
+           knora-base:objectClassConstraint :person ;
 
            salsah-gui:guiOrder "4"^^xsd:integer ;
 
@@ -419,9 +418,9 @@
                        "Numero d'immagini"@it ,
                        "No. of items"@en ;
 
-            rdfs:domain :bildformat ;
+            knora-base:subjectClassConstraint :bildformat ;
 
-            rdfs:range knora-base:IntValue ;
+            knora-base:objectClassConstraint knora-base:IntValue ;
 
             salsah-gui:guiOrder "5"^^xsd:integer ;
 
@@ -448,9 +447,9 @@
 
             rdfs:comment """Die Art und Weise, wie ein Objekt in den Besitz gelangt ist."""@de ;
 
-            rdfs:domain :bildformat ;
+            knora-base:subjectClassConstraint :bildformat ;
 
-            rdfs:range knora-base:ListValue ;
+            knora-base:objectClassConstraint knora-base:ListValue ;
 
             salsah-gui:guiOrder "6"^^xsd:integer ;
 
@@ -474,9 +473,9 @@
                   "Prezzo"@it ,
                   "Price"@en ;
 
-       rdfs:domain :bildformat ;
+       knora-base:subjectClassConstraint :bildformat ;
 
-       rdfs:range knora-base:TextValue ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
 
        salsah-gui:guiOrder "7"^^xsd:integer ;
 
@@ -501,9 +500,9 @@
                           "Data di ricevimento"@it ,
                           "Date of receipt"@en ;
 
-               rdfs:domain :bildformat ;
+               knora-base:subjectClassConstraint :bildformat ;
 
-               rdfs:range knora-base:DateValue ;
+               knora-base:objectClassConstraint knora-base:DateValue ;
 
                salsah-gui:guiOrder "8"^^xsd:integer ;
 
@@ -530,9 +529,9 @@
 
          rdfs:comment """Unstrukturierte Bemerkungen zu einem Objekt"""@de ;
 
-         rdfs:domain :bildformat ;
+         knora-base:subjectClassConstraint :bildformat ;
 
-         rdfs:range knora-base:TextValue ;
+         knora-base:objectClassConstraint knora-base:TextValue ;
 
          salsah-gui:guiOrder "9"^^xsd:integer ;
 
@@ -558,9 +557,9 @@
                   "Titolo"@it ,
                   "Title"@en ;
 
-       rdfs:domain :bild ;
+       knora-base:subjectClassConstraint :bild ;
 
-       rdfs:range knora-base:ListValue ;
+       knora-base:objectClassConstraint knora-base:ListValue ;
 
        salsah-gui:guiOrder "1"^^xsd:integer ;
 
@@ -589,9 +588,9 @@
 
           rdfs:comment """Die spezielle Signatur"""@de ;
 
-          rdfs:domain :bild ;
+          knora-base:subjectClassConstraint :bild ;
 
-          rdfs:range knora-base:TextValue ;
+          knora-base:objectClassConstraint knora-base:TextValue ;
 
           salsah-gui:guiOrder "2"^^xsd:integer ;
 
@@ -618,9 +617,9 @@
                    "Immagine ID"@it ,
                    "Picture ID"@en ;
 
-        rdfs:domain :bild ;
+        knora-base:subjectClassConstraint :bild ;
 
-        rdfs:range knora-base:TextValue ;
+        knora-base:objectClassConstraint knora-base:TextValue ;
 
         salsah-gui:guiOrder "3"^^xsd:integer ;
 
@@ -648,9 +647,9 @@
                         "Descrizione"@it ,
                         "Description"@en ;
 
-             rdfs:domain :bild ;
+             knora-base:subjectClassConstraint :bild ;
 
-             rdfs:range knora-base:TextValue ;
+             knora-base:objectClassConstraint knora-base:TextValue ;
 
              salsah-gui:guiOrder "4"^^xsd:integer ;
 
@@ -679,9 +678,9 @@
                        "Stagione"@it ,
                        "Season"@en ;
 
-            rdfs:domain :bild ;
+            knora-base:subjectClassConstraint :bild ;
 
-            rdfs:range knora-base:ListValue ;
+            knora-base:objectClassConstraint knora-base:ListValue ;
 
             salsah-gui:guiOrder "5"^^xsd:integer ;
 
@@ -708,9 +707,9 @@
                       "Decennio"@it ,
                       "Decade"@en ;
 
-           rdfs:domain :bild ;
+           knora-base:subjectClassConstraint :bild ;
 
-           rdfs:range knora-base:DateValue ;
+           knora-base:objectClassConstraint knora-base:DateValue ;
 
            salsah-gui:guiOrder "6"^^xsd:integer ;
 
@@ -734,9 +733,9 @@
                        "Anno"@it ,
                        "Year"@en ;
 
-            rdfs:domain :bild ;
+            knora-base:subjectClassConstraint :bild ;
 
-            rdfs:range knora-base:TextValue ;
+            knora-base:objectClassConstraint knora-base:TextValue ;
 
             salsah-gui:guiOrder "7"^^xsd:integer ;
 
@@ -759,7 +758,7 @@
 
                  rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-                 rdfs:range knora-base:LinkValue ;
+                 knora-base:objectClassConstraint knora-base:LinkValue ;
 
                  rdfs:label "Bildformat"@de ;
 
@@ -768,7 +767,7 @@
                               """Formato immagine"""@it ,
                               """Image format"""@en ;
 
-                 rdfs:domain :bild ;
+                 knora-base:subjectClassConstraint :bild ;
 
                  salsah-gui:guiOrder "8"^^xsd:integer ;
 
@@ -792,9 +791,9 @@
                          """Formato immagine"""@it ,
                          """Image format"""@en ;
 
-            rdfs:domain :bild ;
+            knora-base:subjectClassConstraint :bild ;
 
-            rdfs:range :bildformat ;
+            knora-base:objectClassConstraint :bildformat ;
 
             salsah-gui:guiOrder "8"^^xsd:integer ;
 
@@ -821,9 +820,9 @@
                             "Data di acquisizione"@it ,
                             "Date of acquisition"@en ;
 
-                 rdfs:domain :bild ;
+                 knora-base:subjectClassConstraint :bild ;
 
-                 rdfs:range knora-base:DateValue ;
+                 knora-base:objectClassConstraint knora-base:DateValue ;
 
                  salsah-gui:guiOrder "9"^^xsd:integer ;
 
@@ -847,9 +846,9 @@
                            "Mutazione data"@it ,
                            "Mutation date"@en ;
 
-                rdfs:domain :bild ;
+                knora-base:subjectClassConstraint :bild ;
 
-                rdfs:range knora-base:DateValue ;
+                knora-base:objectClassConstraint knora-base:DateValue ;
 
                 salsah-gui:guiOrder "10"^^xsd:integer ;
 
@@ -871,9 +870,9 @@
                        "Editore"@it ,
                        "Editor"@en ;
 
-            rdfs:domain :bild ;
+            knora-base:subjectClassConstraint :bild ;
 
-            rdfs:range knora-base:TextValue ;
+            knora-base:objectClassConstraint knora-base:TextValue ;
 
             salsah-gui:guiOrder "11"^^xsd:integer ;
 
@@ -898,9 +897,9 @@
                           "Numero del negativo"@it ,
                           "Number of negative"@en ;
 
-               rdfs:domain :bild ;
+               knora-base:subjectClassConstraint :bild ;
 
-               rdfs:range knora-base:TextValue ;
+               knora-base:objectClassConstraint knora-base:TextValue ;
 
                salsah-gui:guiOrder "12"^^xsd:integer ;
 
@@ -922,7 +921,7 @@
 
               rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-              rdfs:range knora-base:LinkValue ;
+              knora-base:objectClassConstraint knora-base:LinkValue ;
 
               rdfs:label "Urheber"@de ,
                          "Auteur"@fr ,
@@ -931,7 +930,7 @@
 
               rdfs:comment """An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity."""@de ;
 
-              rdfs:domain :bild ;
+              knora-base:subjectClassConstraint :bild ;
 
               salsah-gui:guiOrder "13"^^xsd:integer ;
 
@@ -955,9 +954,9 @@
 
          rdfs:comment """An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity."""@de ;
 
-         rdfs:domain :bild ;
+         knora-base:subjectClassConstraint :bild ;
 
-         rdfs:range :person ;
+         knora-base:objectClassConstraint :person ;
 
          salsah-gui:guiOrder "13"^^xsd:integer ;
 
@@ -980,7 +979,7 @@
 
                 rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-                rdfs:range knora-base:LinkValue ;
+                knora-base:objectClassConstraint knora-base:LinkValue ;
 
                 rdfs:label "Copyright"@de ;
 
@@ -989,7 +988,7 @@
                              """Copyright"""@it ,
                              """Copyright"""@en ;
 
-                rdfs:domain :bild ;
+                knora-base:subjectClassConstraint :bild ;
 
                 salsah-gui:guiOrder "14"^^xsd:integer ;
 
@@ -1006,16 +1005,16 @@
 
            rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-           rdfs:label "Copyright"@de ;
+           rdfs:label "Copyright"@en ;
 
            rdfs:comment """Copyright"""@de ,
-                        """Droit d'auteur"""@fr ,
+                        """Copyright"""@fr ,
                         """Copyright"""@it ,
                         """Copyright"""@en ;
 
-           rdfs:domain :bild ;
+           knora-base:subjectClassConstraint :bild ;
 
-           rdfs:range :person ;
+           knora-base:objectClassConstraint :person ;
 
            salsah-gui:guiOrder "14"^^xsd:integer ;
 

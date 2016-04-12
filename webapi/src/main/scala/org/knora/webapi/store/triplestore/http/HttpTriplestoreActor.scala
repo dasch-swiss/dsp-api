@@ -22,6 +22,7 @@ package org.knora.webapi.store.triplestore.http
 
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging, Status}
 import dispatch._
@@ -86,11 +87,11 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
         case HTTP_GRAPH_DB_TS_TYPE => queryRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-            addParameter("infer", "false") // Turn off SPARQL inference (Sesame-specific).
+            addParameter("infer", "false") // Turn off reasoning.
         case HTTP_GRAPH_DB_FREE_TS_TYPE => queryRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-            addParameter("infer", "false") // Turn off SPARQL inference (Sesame-specific).
+            addParameter("infer", "false") // Turn off reasoning.
         case HTTP_FUSEKI_TS_TYPE => queryRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name)
@@ -104,11 +105,11 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
         case HTTP_GRAPH_DB_TS_TYPE => updateRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-            addParameter("infer", "false") // Turn off SPARQL inference (Sesame-specific).
+            addParameter("infer", "true") // Turn on reasoning, which is needed for consistency checking.
         case HTTP_GRAPH_DB_FREE_TS_TYPE => updateRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-            addParameter("infer", "false") // Turn off SPARQL inference (Sesame-specific).
+            addParameter("infer", "true") // Turn on reasoning, which is needed for consistency checking.
         case HTTP_FUSEKI_TS_TYPE => updateRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name)
@@ -133,7 +134,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
         case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
         case HelloTriplestore(msg) if msg == tsType => sender ! HelloTriplestore(tsType)
-        case CheckConnection => checkTriplestore
+        case CheckConnection => checkTriplestore()
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -159,8 +160,8 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
                 FakeTriplestore.add(sparql, resultStr, log)
             }
 
-            // _ = log.debug(s"SPARQL: $logDelimiter$sparql")
-            //_ = log.debug(s"Result: $logDelimiter$resultStr")
+            // _ = println(s"SPARQL: $logDelimiter$sparql")
+            // _ = println(s"Result: $logDelimiter$resultStr")
 
             // Parse the response as a JSON object and generate a response message.
             responseMessage <- SparqlUtil.parseJsonResponse(sparql, resultStr, log)
@@ -168,19 +169,19 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
     }
 
     /**
-      * Given the SPARQL update query string, runs the update operation, returning a [[SparqlUpdateResponse]] if the
-      * operation succeeded.
-      * @param sparql the SPARQL UPDATE query string.
+      * Performs a SPARQL update operation.
+      * @param sparqlUpdate the SPARQL update.
       * @return a [[SparqlUpdateResponse]].
       */
-    private def sparqlHttpUpdate(sparql: String): Future[SparqlUpdateResponse] = {
-        for {
-        // Send the SPARQL to the triplestore.
-            _ <- getTriplestoreHttpResponse(sparql, update = true)
+    private def sparqlHttpUpdate(sparqlUpdate: String): Future[SparqlUpdateResponse] = {
+        // println(logDelimiter + sparqlUpdate)
 
-            /* In the case of GraphDB we need to update the index after every update */
+        for {
+            // Send the request to the triplestore.
+            _ <- getTriplestoreHttpResponse(sparqlUpdate, update = true)
+
+            // If we're using GraphDB, update the full-text search index.
             _ = if (tsType == HTTP_GRAPH_DB_TS_TYPE) {
-                /* need to update the lucene index */
                 val indexUpdateSparqlString =
                     """
                         PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
@@ -284,7 +285,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
                             PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
                             INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
                         """
-                    Await.result(getTriplestoreHttpResponse(indexUpdateSparqlString, true), 5.seconds)
+                    Await.result(getTriplestoreHttpResponse(indexUpdateSparqlString, update = true), 5.seconds)
                 }
 
                 log.debug(s"added: ${elem.name}")
@@ -299,7 +300,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
     }
 
-    private def checkTriplestore {
+    private def checkTriplestore() {
 
         val sparql = "SELECT ?s ?p ?o WHERE { ?s ?p ?o  } LIMIT 10"
 

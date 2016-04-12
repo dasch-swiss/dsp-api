@@ -72,7 +72,9 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
     )
 
     // The default timeout for receiving reply messages from actors.
@@ -109,8 +111,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 iconlabel = Some("Buch"),
                 icontitle = Some("Buch"),
-                iconsrc = Some("book.gif"),
-                preview_path = "book.gif",
+                iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
+                preview_path = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
                 obj_id = "http://data.knora.org/c5058f3a"
             ),
             SearchResultRowV1(
@@ -131,8 +133,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 iconlabel = Some("Buch"),
                 icontitle = Some("Buch"),
-                iconsrc = Some("book.gif"),
-                preview_path = "book.gif",
+                iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
+                preview_path = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
                 obj_id = "http://data.knora.org/ff17e5ef9601"
             )
         ),
@@ -144,8 +146,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         subjects = Vector(
             SearchResultRowV1(
                 obj_id = "http://data.knora.org/c5058f3a",
-                preview_path = "book.gif",
-                iconsrc = Some("http://localhost:3333/v1/assets/book.gif"),
+                preview_path = Some("http://localhost:3335/project-icons/incunabula/book.gif"),
+                iconsrc = Some("http://localhost:3335/project-icons/incunabula/book.gif"),
                 icontitle = Some("Buch"),
                 iconlabel = Some("Buch"),
                 valuetype_id = Vector("http://www.w3.org/2000/01/rdf-schema#label", "http://www.knora.org/ontology/knora-base#TextValue"),
@@ -157,8 +159,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             ),
             SearchResultRowV1(
                 obj_id = "http://data.knora.org/ff17e5ef9601",
-                preview_path = "book.gif",
-                iconsrc = Some("http://localhost:3333/v1/assets/book.gif"),
+                preview_path = Some("http://localhost:3335/project-icons/incunabula/book.gif"),
+                iconsrc = Some("http://localhost:3335/project-icons/incunabula/book.gif"),
                 icontitle = Some("Buch"),
                 iconlabel = Some("Buch"),
                 valuetype_id = Vector("http://www.w3.org/2000/01/rdf-schema#label", "http://www.knora.org/ontology/knora-base#TextValue"),
@@ -284,7 +286,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsg(timeout, twoZeitglöckleinBooksResponse)
         }
 
-        "return 1 books with the title 'Zeitglöcklein des Lebens und Leidens Christi' that was published in 1490 (Julian Calendar) when we search for book titles containing the word 'Zeitglöcklein' (using the full-text search index) in the Incunabula test data" in {
+        "return 1 book with the title 'Zeitglöcklein des Lebens und Leidens Christi' that was published in 1490 (Julian Calendar) when we search for book titles containing the word 'Zeitglöcklein' (using the full-text search index) in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=MATCH&searchval=Zeitglöcklein&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23pubdate&compop=EQ&searchval=
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = SearchResponderV1Spec.userProfile,
@@ -527,5 +529,61 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
         }
+
+        "return all the images from the images-demo project whose title belong to the category 'Sport'" in {
+            // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F71a1543cce&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = SearchResponderV1Spec.userProfile,
+                searchValue = Vector("http://data.knora.org/lists/71a1543cce"), // list node SPORT
+                compareProps = Vector(SearchComparisonOperatorV1.EQ),
+                propertyIri = Vector("http://www.knora.org/ontology/images#titel"),
+                filterByRestype = Some("http://www.knora.org/ontology/images#bild"),
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(10)
+            }
+
+        }
+
+        "return all the images from the images-demo project whose title belong to the category 'Spazieren'" in {
+            // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F38c73482e3&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = SearchResponderV1Spec.userProfile,
+                searchValue = Vector("http://data.knora.org/lists/38c73482e3"), // list node SPAZIEREN
+                compareProps = Vector(SearchComparisonOperatorV1.EQ),
+                propertyIri = Vector("http://www.knora.org/ontology/images#titel"),
+                filterByRestype = Some("http://www.knora.org/ontology/images#bild"),
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(1)
+            }
+
+        }
+
+        "return all the images from the images-demo project whose title belong to the category 'Alpinismus'" in {
+            // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F3bc59463e2&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = SearchResponderV1Spec.userProfile,
+                searchValue = Vector("http://data.knora.org/lists/3bc59463e2"), // list node ALPINISMUS
+                compareProps = Vector(SearchComparisonOperatorV1.EQ),
+                propertyIri = Vector("http://www.knora.org/ontology/images#titel"),
+                filterByRestype = Some("http://www.knora.org/ontology/images#bild"),
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(4)
+            }
+
+        }
+
+
     }
 }
