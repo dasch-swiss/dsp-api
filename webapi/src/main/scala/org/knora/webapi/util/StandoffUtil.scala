@@ -3,6 +3,7 @@ package org.knora.webapi.util
 import javax.xml.parsers.SAXParserFactory
 
 import scala.xml._
+import org.xmlunit.builder.{DiffBuilder, Input}
 
 /**
   * Provides generic data structures representing standoff markup.
@@ -48,7 +49,7 @@ object StandoffUtil {
 
     /**
       * Represents a range of characters that have been marked up with a standoff tag.
- *
+      *
       * @param tagName the name of the tag.
       * @param attributes the attributes attached to this tag.
       * @param startPosition the start position of the range of characters marked up with this tag.
@@ -234,7 +235,7 @@ class StandoffUtil {
                             attributes2Xml(standoffTag)
                         }
 
-                        xmlString.append(" />")
+                        xmlString.append("/>")
                     }
 
 
@@ -284,7 +285,8 @@ object StandoffUtilTest extends App {
           |
           |    <paragraph>
           |        <person id="6789">Einstein</person> originally proposed it in
-          |        <date calendar="gregorian" value="1905">1905</date> in <citation id="einstein_1905a" />.
+          |        <date value="1905" calendar="gregorian">1905</date> in <citation
+          |        id="einstein_1905a"/>.
           |
           |        Here is a sentence with a sequence of empty tags: <foo /><bar /><baz />.
           |    </paragraph>
@@ -314,5 +316,7 @@ object StandoffUtilTest extends App {
     println(s"Converted standoff back to XML:\n\n")
     println(backToXml)
 
-    println(s"\n\nGenerated XML document is identical to original XML document: ${simpleXmlDoc == backToXml}")
+    val diff = DiffBuilder.compare(Input.fromString(simpleXmlDoc)).withTest(Input.fromString(backToXml)).build()
+
+    println(s"\n\nGenerated XML document is identical to original XML document: ${!diff.hasDifferences}")
 }
