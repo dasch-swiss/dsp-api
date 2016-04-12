@@ -22,6 +22,9 @@ package org.knora.webapi.util.standoff
 
 import javax.xml.parsers.SAXParserFactory
 
+import com.sksamuel.diffpatch.DiffMatchPatch
+import com.sksamuel.diffpatch.DiffMatchPatch._
+
 import scala.xml._
 
 /**
@@ -88,17 +91,70 @@ case class StandoffTag(tagName: String,
 case class TextWithStandoff(text: String, standoff: Seq[StandoffRange])
 
 /**
+  * Represents a difference between two texts, a base text and a derived text.
+  */
+trait StandoffDiff {
+    /**
+      * The position in the base text where the difference starts.
+      */
+    def baseStartPosition: Int
+
+    /**
+      * The position in the derived text where the difference starts.
+      */
+    def derivedStartPosition: Int
+}
+
+/**
+  * Represents a string that is present in the derived text but not in the base text.
+  *
+  * @param baseStartPosition    the position in the base text where the string would have to be inserted to match
+  *                             the derived text.
+  * @param derivedStartPosition the start position of the inserted string in the derived text.
+  * @param derivedEndPosition   the end position of the inserted string in the derived text.
+  */
+case class StandoffDiffInsert(baseStartPosition: Int,
+                              derivedStartPosition: Int,
+                              derivedEndPosition: Int) extends StandoffDiff
+
+/**
+  * Represents a string that is present in the base text but not in the derived text.
+  *
+  * @param baseStartPosition    the start position of the deleted string in the base text.
+  * @param baseEndPosition      the end position of the deleted string in the base text.
+  * @param derivedStartPosition the position in the derived text where the string would have to be inserted to
+  *                             match the base text.
+  */
+case class StandoffDiffDelete(baseStartPosition: Int,
+                              baseEndPosition: Int,
+                              derivedStartPosition: Int) extends StandoffDiff
+
+
+/**
   * Converts XML documents to standoff markup and back again.
   */
 class StandoffUtil {
+    // Parse XML with an XML parser configured to prevent certain security risks.
+    // See <https://github.com/scala/scala-xml/issues/17>.
+    private val saxParserFactory = SAXParserFactory.newInstance()
+    saxParserFactory.setFeature("http://xml.org/sax/features/external-general-entities", false)
+    saxParserFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+
+    // Computes diffs between texts.
+    private val diffMatchPatch = new DiffMatchPatch
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Public methods
+
     /**
       * Converts an XML document to an equivalent [[TextWithStandoff]].
       *
       * @param xmlStr the XML document to be converted.
       * @return a [[TextWithStandoff]].
       */
-    def xml2Standoff(xmlStr: String): TextWithStandoff = {
-        val nodes = SecureXml.loadString(xmlStr)
+    def xml2TextWithStandoff(xmlStr: String): TextWithStandoff = {
+        val saxParser = saxParserFactory.newSAXParser()
+        val nodes = XML.withSAXParser(saxParser).loadString(xmlStr)
 
         val standoff = xmlNodes2StandoffRanges(
             nodes = nodes,
@@ -117,7 +173,7 @@ class StandoffUtil {
       * @param textWithStandoff the [[TextWithStandoff]] to be converted.
       * @return an XML document.
       */
-    def standoff2Xml(textWithStandoff: TextWithStandoff): String = {
+    def textWithStandoff2Xml(textWithStandoff: TextWithStandoff): String = {
         val groupedRanges: Map[Option[Int], Seq[StandoffRange]] = textWithStandoff.standoff.groupBy(_.parentIndex)
         val stringBuilder = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
 
@@ -130,6 +186,26 @@ class StandoffUtil {
 
         stringBuilder.toString
     }
+
+    /**
+      * Computes the differences between a base text and a derived text.
+      *
+      * @param baseText    the base text.
+      * @param derivedText the derived text.
+      * @return the differences between the two texts.
+      */
+    def makeStandoffDiffs(baseText: String, derivedText: String): Seq[StandoffDiff] = {
+        import scala.collection.JavaConversions._
+
+        val diffs: Seq[Diff] = diffMatchPatch.diff_main(baseText, derivedText)
+
+        // TODO
+
+        Vector.empty[StandoffDiff]
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private methods
 
     /**
       * Represents the state of the conversion of XML text to standoff.
@@ -255,19 +331,5 @@ class StandoffUtil {
                     xmlString.append(text.substring(textRange.startPosition, textRange.endPosition))
             }
         }
-    }
-}
-
-/**
-  * Parses XML with an XML parser configured to prevent certain security risks.
-  * See [[https://github.com/scala/scala-xml/issues/17]].
-  */
-object SecureXml {
-    def loadString(xml: String): NodeSeq = {
-        val spf = SAXParserFactory.newInstance()
-        spf.setFeature("http://xml.org/sax/features/external-general-entities", false)
-        spf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
-        val saxParser = spf.newSAXParser()
-        XML.withSAXParser(saxParser).loadString(xml)
     }
 }

@@ -36,11 +36,11 @@ class StandoffUtilSpec extends WordSpec with Matchers {
         "convert a simple XML document to text with standoff, then back to an equivalent XML document" in {
 
             // Convert the XML document to standoff.
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2Standoff(StandoffUtilSpec.simpleXmlDoc)
+            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(StandoffUtilSpec.simpleXmlDoc)
 
             // Convert the text with standoff back to XML. The resulting XML is intentionally different in insignificant
             // ways (e.g. order of attributes).
-            val backToXml = standoffUtil.standoff2Xml(textWithStandoff)
+            val backToXml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
             // Compare the original XML with the regenerated XML, ignoring insignificant differences.
             val diff = DiffBuilder.compare(Input.fromString(StandoffUtilSpec.simpleXmlDoc)).withTest(Input.fromString(backToXml)).build()
