@@ -277,6 +277,7 @@ object ResourceContextCodeV1 extends Enumeration {
   * @param res_id           the IRI of each resource that is part of the queried resource.
   * @param resclass_name    obsolete.
   * @param preview          a thumbnail image of each resource that is part of the queried resource.
+  * @param locations        full quality representations of the resource.
   * @param firstprop        the `rdfs:label` of each resource that is part of the queried resource.
   * @param region           unused, always an array of nulls.
   * @param context          indicates whether the queried resource is part of another resource, has parts of its own, or neither.
@@ -286,6 +287,7 @@ object ResourceContextCodeV1 extends Enumeration {
 case class ResourceContextV1(res_id: Option[Seq[IRI]] = None,
                              resclass_name: Option[String] = None,
                              preview: Option[Seq[Option[LocationV1]]] = None,
+                             locations: Option[Seq[Option[Seq[LocationV1]]]] = None,
                              firstprop: Option[Seq[Option[String]]] = None,
                              region: Option[Seq[Option[String]]] = None,
                              context: ResourceContextCodeV1.Value,
@@ -299,11 +301,13 @@ case class ResourceContextV1(res_id: Option[Seq[IRI]] = None,
   *
   * @param res_id    the IRI of a resource that is part of the queried resource.
   * @param preview   a thumbnail image of the resource represented by `res_id`.
+  * @param locations full quality representations of the resource represented by `res_id` in various qualities.
   * @param firstprop the `rdfs:label` of the resource represented by `res_id`.
   * @param region    unused, always null.
   */
 case class ResourceContextItemV1(res_id: IRI,
                                  preview: Option[LocationV1],
+                                 locations: Option[Seq[LocationV1]],
                                  firstprop: Option[String],
                                  region: Option[String] = None)
 
@@ -739,6 +743,6 @@ object ResourceContextV1JsonProtocol extends DefaultJsonProtocol {
     import ResourceV1JsonProtocol._
     import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
 
-    implicit val resourceContextV1Format: JsonFormat[ResourceContextV1] = jsonFormat10(ResourceContextV1)
+    implicit val resourceContextV1Format: JsonFormat[ResourceContextV1] = jsonFormat11(ResourceContextV1)
     implicit val resourceContextResponseV1Format: RootJsonFormat[ResourceContextResponseV1] = jsonFormat2(ResourceContextResponseV1)
 }

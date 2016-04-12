@@ -757,17 +757,18 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 case None => None
                             }
 
-                            val locations: Seq[LocationV1] = sourceObj.fileValues.filter(fileVal => fileVal.permissions.nonEmpty && !fileVal.image.isPreview).headOption match {
+                            val locations: Option[Seq[LocationV1]] = sourceObj.fileValues.filter(fileVal => fileVal.permissions.nonEmpty && !fileVal.image.isPreview).headOption match {
                                 case Some(full: StillImageFileValue) =>
                                     val fileVals = createMultipleImageResolutions(full.image)
-                                    fileVals.map(valueUtilV1.fileValueV12LocationV1(_))
+                                    Some(preview.toVector ++ fileVals.map(valueUtilV1.fileValueV12LocationV1(_)))
 
-                                case None => Vector.empty[LocationV1]
+                                case None => None
                             }
 
                             ResourceContextItemV1(
                                 res_id = sourceObj.id,
                                 preview = preview,
+                                locations = locations,
                                 firstprop = sourceObj.firstprop
                             )
                     }
@@ -798,6 +799,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     ResourceContextV1(
                         res_id = Some(resourceContexts.map(_.res_id)),
                         preview = Some(resourceContexts.map(_.preview)),
+                        locations = Some(resourceContexts.map(_.locations)),
                         firstprop = Some(resourceContexts.map(_.firstprop)),
                         region = Some(resourceContexts.map(_ => None)),
                         canonical_res_id = resourceIri,
