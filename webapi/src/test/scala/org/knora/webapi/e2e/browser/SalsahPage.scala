@@ -1,5 +1,6 @@
 package org.knora.webapi.e2e.browser
 
+import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.{By, WebDriver, WebElement}
 
 /**
@@ -7,28 +8,50 @@ import org.openqa.selenium.{By, WebDriver, WebElement}
   * here instead of doing their own queries, tests can be more readable, and can be protected from future changes
   * in the structure of the HTML.
   *
+  * You need to download the Selenium driver for Chrome and put it in `webapi/lib`.
+  **
   * See [[https://selenium.googlecode.com/git/docs/api/java/index.html?org/openqa/selenium/WebDriver.html WebDriver]]
   * for more documentation.
   */
-object SalsahPage {
+class SalsahPage {
+    val pageUrl = "http://localhost:3335/index.html" // TODO: get this from application.conf
+
+    // Load the native Selenium driver for Chrome.
+    System.setProperty("webdriver.chrome.driver", "lib/chromedriver")
+    implicit val driver: WebDriver = new ChromeDriver()
+
     /**
-      * Returns the title of the HTML page.
+      * Loads the SALSAH home page.
       */
-    def getPageTitle(implicit driver: WebDriver): String = {
+    def load(): Unit = {
+        driver.get(pageUrl)
+    }
+
+    /**
+      * Closes the web browser. Once this method has been called, this instance of `SalsahPage` can no longer be used.
+      */
+    def quit(): Unit = {
+        driver.quit()
+    }
+
+    /**
+      * Returns the title of the page.
+      */
+    def getPageTitle: String = {
         Option(driver.getTitle).getOrElse("")
     }
 
     /**
       * Returns the SALSAH simple search field.
       */
-    def getSimpleSearchField(implicit driver: WebDriver): WebElement = {
+    def getSimpleSearchField: WebElement = {
         driver.findElement(By.id("simplesearch"))
     }
 
     /**
       * Returns a `div` representing search results.
       */
-    def getSearchResultDiv(implicit driver: WebDriver): WebElement = {
+    def getSearchResultDiv: WebElement = {
         driver.findElement(By.name("result"))
     }
 
