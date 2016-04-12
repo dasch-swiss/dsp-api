@@ -634,22 +634,11 @@ class ResourcesResponderV1 extends ResponderV1 {
                     rows = contextQueryResponse.results.bindings
 
                     // Filter the component resources by eliminating the ones that the user doesn't have permission to see.
-                    filteredRowsForResourcePermissions <- if (rows.nonEmpty) {
-                        for {
-                            sparqlQuery <- Future(queries.sparql.v1.txt.getAuthorisationInfoForResources(resourceIris = rows.map(_.rowMap("sourceObject"))).toString())
-                            authorizationInfoQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-                            authorizationInfoGroupedByResource: Map[IRI, Seq[VariableResultsRow]] = authorizationInfoQueryResponse.results.bindings.groupBy(_.rowMap("resource"))
-                        } yield rows.filter {
-                            case row =>
-                                val componentIri = row.rowMap("sourceObject")
-                                val authorizationAssertionsForResource = authorizationInfoGroupedByResource(componentIri).map {
-                                    row => row.rowMap("p") -> row.rowMap("o")
-                                }
-
-                                PermissionUtilV1.getUserPermissionV1(componentIri, authorizationAssertionsForResource, userProfile).nonEmpty
-                        }
-                    } else {
-                        Future(rows)
+                    filteredRowsForResourcePermissions = rows.filter {
+                        row =>
+                            val componentIri = row.rowMap("sourceObject")
+                            val authorizationAssertionsForResource = PermissionUtilV1.parsePermissions(row.rowMap("sourceObjectPermissionAssertions"), row.rowMap("sourceObjectAttachedToUser"), row.rowMap("sourceObjectAttachedToProject"))
+                            PermissionUtilV1.getUserPermissionV1(componentIri, authorizationAssertionsForResource, userProfile).nonEmpty
                     }
 
                     // Sort them by the ordering knora-base:seqnum (e.g. the order of pages in a book).
@@ -659,51 +648,32 @@ class ResourcesResponderV1 extends ResponderV1 {
                     }
 
                     // Filter out the preview images that the user doesn't have permission to see.
+                    rowMapsWithFilteredPreviews: Seq[Map[String, String]] = orderedBySeqNum.map {
+                        row =>
 
-                    rowMapsWithFilteredPreviews: Seq[Map[String, String]] <- if (orderedBySeqNum.nonEmpty) {
-                        // Get the IRIs of the preview images of the resources that have preview images.
-                        val previewIris: Vector[IRI] = orderedBySeqNum.foldLeft(Vector.empty[IRI]) {
-                            case (acc, row) =>
-                                row.rowMap.get("preview") match {
-                                    case Some(iri) => acc :+ iri
-                                    case None => acc
-                                }
-                        }
+                            row.rowMap.get("preview") match {
+                                case Some(fileValueIri) =>
+                                    // Allow the user to see the preview if they have any permissions on it (because the lowest permission
+                                    // is restricted view permission).
 
-                        // Get the user's permssions on each preview image.
-
-                        for {
-                            sparqlQuery <- Future(queries.sparql.v1.txt.getAuthorisationInfoForValues(previewIris).toString())
-                            authorizationInfoQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-                            authorizationInfoGroupedByFileValue: Map[IRI, Seq[VariableResultsRow]] = authorizationInfoQueryResponse.results.bindings.groupBy(_.rowMap("value"))
-                            permissionCodesForFileValues: Map[IRI, Int] = authorizationInfoGroupedByFileValue.foldLeft(Map.empty[IRI, Int]) {
-                                case (acc, (fileValueIri, permissionRelevantRows)) =>
-                                    val permissionRelevantAssertions: Seq[(String, String)] = permissionRelevantRows.map {
-                                        row => row.rowMap("objPred") -> row.rowMap("objObj")
+                                    // if the file value has no project, get the project from the source object
+                                    val previewProject = row.rowMap.get("previewAttachedToProject") match {
+                                        case Some(previewProjectIri) => previewProjectIri
+                                        case None => row.rowMap("sourceObjectAttachedToProject")
                                     }
 
-                                    PermissionUtilV1.getUserPermissionV1(fileValueIri, permissionRelevantAssertions, userProfile) match {
-                                        case Some(permissionCode) => acc + (fileValueIri -> permissionCode)
-                                        case None => acc
-                                    }
-                            }
-                        } yield orderedBySeqNum.map {
-                            row =>
-                                val rowMap = row.rowMap
-                                val preview = rowMap("preview")
+                                    val authorizationAssertionsForFileValue = PermissionUtilV1.parsePermissions(row.rowMap("previewPermissionAssertions"), row.rowMap("previewAttachedToUser"), previewProject)
+                                    val permissions = PermissionUtilV1.getUserPermissionV1(fileValueIri, authorizationAssertionsForFileValue, userProfile)
 
-                                // Allow the user to see the preview if they have any permissions on it (because the lowest permission
-                                // is restricted view permission).
-                                if (permissionCodesForFileValues.contains(preview)) {
-                                    rowMap
-                                } else {
                                     // If the user doesn't have permission to see the preview, just remove the preview's IRI
                                     // from the results.
-                                    rowMap - "preview"
-                                }
-                        }
-                    } else {
-                        Future(orderedBySeqNum.map(_.rowMap))
+                                    if (permissions.nonEmpty) {
+                                        row.rowMap
+                                    } else {
+                                        row.rowMap - "preview"
+                                    }
+                                case None => row.rowMap
+                            }
                     }
 
                     // For each resource, construct a ResourceContextItemV1.
