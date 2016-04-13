@@ -10,7 +10,7 @@ cache:
     - $HOME/.ivy2
 script:
 - cd webapi/_fuseki/ && ./fuseki-server &
-- cd ../../ && sbt 'project webapi' 'testOnly *AllTriplestoreSpec'
+- sbt 'project webapi' 'testOnly *AllTriplestoreSpec'
 notifications:
   email: false
   slack:
