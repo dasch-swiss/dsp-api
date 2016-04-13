@@ -1,10 +1,16 @@
+git:
+    depth: 5
 language: scala
 scala:
 - 2.11.7
 jdk:
 - oraclejdk8
+cache:
+  directories:
+    - $HOME/.ivy2
 script:
-- sbt 'project webapi' tdb:test
+- cd webapi/_fuseki/ && ./fuseki-server &
+- cd ../../ && sbt 'project webapi' 'testOnly *AllTriplestoreSpec'
 notifications:
   email: false
   slack:
