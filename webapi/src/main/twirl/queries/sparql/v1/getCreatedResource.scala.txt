@@ -20,13 +20,20 @@
 
 @import org.knora.webapi.IRI
 
-@*
+@**
  * Query a newly created resource.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the Iri of the resource.
  *@
- @(resourceIri: IRI)
+@(triplestore: String,
+  resourceIri: IRI)
 
- SELECT ?p ?o WHERE {
- 	<@resourceIri> ?p ?o .
- }
+SELECT ?p ?o
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
+WHERE {
+    <@resourceIri> ?p ?o .
+}

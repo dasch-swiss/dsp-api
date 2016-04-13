@@ -23,9 +23,11 @@
 @**
  * Given the IRI of a resource, gets information about the resources that are part of that resource.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.
  *@
-@(resourceIri: IRI)
+@(triplestore: String,
+  resourceIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -33,6 +35,10 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 
 SELECT ?seqnum ?sourceObject ?sourceObjectAttachedToUser ?sourceObjectAttachedToProject (GROUP_CONCAT(DISTINCT(?sourceObjectPermissionAssertion); separator=";") AS ?sourceObjectPermissionAssertions) ?firstprop ?fileValue ?isPreview ?internalFilename ?internalMimeType ?originalFilename ?dimX ?dimY ?qualityLevel (GROUP_CONCAT(DISTINCT(?fileValuePermissionAssertion); separator=";") AS ?fileValuePermissionAssertions) ?fileValueAttachedToUser ?fileValueAttachedToProject
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 

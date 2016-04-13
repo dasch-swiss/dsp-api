@@ -126,6 +126,7 @@ class HierarchicalListsResponderV1 extends ResponderV1 {
         for {
             listQuery <- Future {
                 queries.sparql.v1.txt.getList(
+                    triplestore = settings.triplestoreType,
                     rootNodeIri = rootNodeIri,
                     preferredLanguage = userProfile.userData.lang,
                     fallbackLanguage = settings.fallbackLanguage
@@ -213,6 +214,7 @@ class HierarchicalListsResponderV1 extends ResponderV1 {
         for {
             nodePathQuery <- Future {
                 queries.sparql.v1.txt.getNodePath(
+                    triplestore = settings.triplestoreType,
                     queryNodeIri = queryNodeIri,
                     preferredLanguage = userProfile.userData.lang,
                     fallbackLanguage = settings.fallbackLanguage

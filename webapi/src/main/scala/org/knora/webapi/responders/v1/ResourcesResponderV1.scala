@@ -39,7 +39,6 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
 import scala.concurrent.{Future, Promise}
-import scala.util.Try
 
 /**
   * Responds to requests for information about resources, and returns responses in Knora API v1 format.
@@ -270,7 +269,10 @@ class ResourcesResponderV1 extends ResponderV1 {
         // the template can be of depth n, currently it's hardcoded at level 2
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getGraph(resourceIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getGraph(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri
+            ).toString())
             graphResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             graphResponseRows: Seq[VariableResultsRow] = graphResponse.results.bindings
 
@@ -363,7 +365,10 @@ class ResourcesResponderV1 extends ResponderV1 {
         val maybeIncomingRefsFuture: Future[Option[SparqlSelectResponse]] = if (getIncoming) {
             for {
             // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
-                incomingRefsSparql <- Future(queries.sparql.v1.txt.getIncomingReferences(resourceIri).toString())
+                incomingRefsSparql <- Future(queries.sparql.v1.txt.getIncomingReferences(
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceIri
+                ).toString())
                 response <- (storeManager ? SparqlSelectRequest(incomingRefsSparql)).mapTo[SparqlSelectResponse]
             } yield Some(response)
         } else {
@@ -686,7 +691,10 @@ class ResourcesResponderV1 extends ResponderV1 {
 
         for {
         // If this resource is part of another resource, get its parent resource.
-            isPartOfSparqlQuery <- Future(queries.sparql.v1.txt.isPartOf(resourceIri).toString())
+            isPartOfSparqlQuery <- Future(queries.sparql.v1.txt.isPartOf(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri
+            ).toString())
             isPartOfResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isPartOfSparqlQuery)).mapTo[SparqlSelectResponse]
 
             (parentResourceIriOption, parentResInfoV1Option) <- isPartOfResponse.results.bindings match {
@@ -713,7 +721,10 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 // Do a SPARQL query that returns binary representations of resources that are part of this resource (as
                 // indicated by knora-base:isPartOf).
-                    contextSparqlQuery <- Future(queries.sparql.v1.txt.getContext(resourceIri).toString())
+                    contextSparqlQuery <- Future(queries.sparql.v1.txt.getContext(
+                        triplestore = settings.triplestoreType,
+                        resourceIri = resourceIri
+                    ).toString())
                     contextQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(contextSparqlQuery)).mapTo[SparqlSelectResponse]
                     rows = contextQueryResponse.results.bindings
 
@@ -875,7 +886,15 @@ class ResourcesResponderV1 extends ResponderV1 {
 
         for {
 
-            searchResourcesSparql <- Future(queries.sparql.v1.txt.getResourceSearchResult(phrase, lastTerm, resourceTypeIri, numberOfProps, limitOfResults, settings.triplestoreType, FormatConstants.INFORMATION_SEPARATOR_ONE).toString())
+            searchResourcesSparql <- Future(queries.sparql.v1.txt.getResourceSearchResult(
+                triplestore = settings.triplestoreType,
+                phrase = phrase,
+                lastTerm = lastTerm,
+                resourceTypeIri = resourceTypeIri,
+                numberOfProps = numberOfProps,
+                limitOfResults = limitOfResults,
+                separator = FormatConstants.INFORMATION_SEPARATOR_ONE
+            ).toString())
             //_ = println(searchResourcesSparql)
             searchResponse <- (storeManager ? SparqlSelectRequest(searchResourcesSparql)).mapTo[SparqlSelectResponse]
 
@@ -1089,47 +1108,48 @@ class ResourcesResponderV1 extends ResponderV1 {
                     }
                 }
 
-                // Everything looks OK, so we can create an empty resource and add the values to it. This must
-                // happen in an update transaction managed by the store package, to ensure that triplestore
-                // consistency checks are performed on the result of the whole set of updates. We use
-                // TransactionUtil.runInUpdateTransaction to handle the store module's transaction management.
-                // Its first argument is a lambda function that sends all the updates to the store manager,
-                // using a transaction ID provided by TransactionUtil.runInUpdateTransaction.
-                createMultipleValuesResponse <- TransactionUtil.runInUpdateTransaction({
-                    transactionID =>
-                        for {
-                        // Create an empty resource.
-                            createNewResourceSparql <- Future(queries.sparql.v1.txt.createNewResource(
-                                dataNamedGraph = namedGraph,
-                                triplestore = settings.triplestoreType,
-                                resourceIri = resourceIri,
-                                label = label,
-                                resourceClassIri = resourceClassIri,
-                                ownerIri = ownerIri,
-                                projectIri = projectIri,
-                                permissions = permissions).toString())
-                            createResourceResponse <- (storeManager ? SparqlUpdateRequest(transactionID, createNewResourceSparql)).mapTo[SparqlUpdateResponse]
+                // Everything looks OK, so we can create the resource and its values.
 
-                            // Ask the values responder to create the values.
-                            createValuesRequest = CreateMultipleValuesRequestV1(
-                                transactionID = transactionID,
-                                projectIri = projectIri,
-                                resourceIri = resourceIri,
-                                resourceClassIri = resourceClassIri,
-                                values = values ++ fileValuesV1,
-                                userProfile = userProfile,
-                                apiRequestID = apiRequestID
-                            )
-                            createValuesResponse: CreateMultipleValuesResponseV1 <- (responderManager ? createValuesRequest).mapTo[CreateMultipleValuesResponseV1]
-                        } yield createValuesResponse
-                }, storeManager)
+                // Ask the values responder for the SPARQL statements that are needed to create the values.
+                generateSparqlForValuesRequest = GenerateSparqlToCreateMultipleValuesRequestV1(
+                    projectIri = projectIri,
+                    resourceIri = resourceIri,
+                    resourceClassIri = resourceClassIri,
+                    values = values ++ fileValuesV1,
+                    userProfile = userProfile,
+                    apiRequestID = apiRequestID
+                )
+                generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- (responderManager ? generateSparqlForValuesRequest).mapTo[GenerateSparqlToCreateMultipleValuesResponseV1]
+
+                // Generate SPARQL for creating the resource, and include the SPARQL for creating the values.
+                createNewResourceSparql = queries.sparql.v1.txt.createNewResource(
+                    triplestore = settings.triplestoreType,
+                    dataNamedGraph = namedGraph,
+                    resourceIri = resourceIri,
+                    label = label,
+                    resourceClassIri = resourceClassIri,
+                    ownerIri = ownerIri,
+                    projectIri = projectIri,
+                    permissions = permissions,
+                    whereStatementsForValues = generateSparqlForValuesResponse.whereSparql,
+                    insertStatementsForValues = generateSparqlForValuesResponse.insertSparql
+                ).toString()
+
+                // _ = println(createNewResourceSparql)
+
+                // Do the update.
+                createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]
 
                 // Verify that the resource was created.
 
-                createdResourcesSparql <- Future(queries.sparql.v1.txt.getCreatedResource(resourceIri = resourceIri).toString())
+                createdResourcesSparql <- Future(queries.sparql.v1.txt.getCreatedResource(
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceIri
+                ).toString())
                 createdResourceResponse <- (storeManager ? SparqlSelectRequest(createdResourcesSparql)).mapTo[SparqlSelectResponse]
 
                 _ = if (createdResourceResponse.results.bindings.isEmpty) {
+                    log.error(s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$createNewResourceSparql")
                     throw UpdateNotPerformedException(s"Resource $resourceIri was not created. Please report this as a possible bug.")
                 }
 
@@ -1137,7 +1157,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 verifyCreateValuesRequest = VerifyMultipleValueCreationRequestV1(
                     resourceIri = resourceIri,
-                    unverifiedValues = createMultipleValuesResponse.unverifiedValues,
+                    unverifiedValues = generateSparqlForValuesResponse.unverifiedValues,
                     userProfile = userProfile
                 )
 
@@ -1248,7 +1268,11 @@ class ResourcesResponderV1 extends ResponderV1 {
                 throw ForbiddenException(s"User $userIri does not have permission to view resource $resourceIri")
             }
 
-            sparqlQuery = queries.sparql.v1.txt.checkSubClass(superClassIri = owlClass, subClassIri = resourceInfo.restype_id).toString()
+            sparqlQuery = queries.sparql.v1.txt.checkSubClass(
+                triplestore = settings.triplestoreType,
+                superClassIri = owlClass,
+                subClassIri = resourceInfo.restype_id
+            ).toString()
             queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
         } yield ResourceCheckClassResponseV1(isInClass = queryResponse.results.bindings.nonEmpty)
     }
@@ -1268,7 +1292,10 @@ class ResourcesResponderV1 extends ResponderV1 {
       */
     private def getResourceInfoV1(resourceIri: IRI, userProfile: UserProfileV1, queryOntology: Boolean): Future[(Option[Int], ResourceInfoV1)] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getResourceInfo(resourceIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getResourceInfo(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri
+            ).toString())
             resInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             resInfoResponseRows = resInfoResponse.results.bindings
             resInfo <- makeResourceInfoV1(resourceIri, resInfoResponseRows, userProfile, queryOntology)
@@ -1435,7 +1462,10 @@ class ResourcesResponderV1 extends ResponderV1 {
     private def getGroupedProperties(resourceIri: IRI): Future[GroupedPropertiesByType] = {
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getResourcePropertiesAndValues(resourceIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getResourcePropertiesAndValues(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri
+            ).toString())
             // _ = println(sparqlQuery)
             resPropsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
