@@ -76,7 +76,7 @@ case class TextRange(startPosition: Int,
   * @param parentIndex   the index of the [[StandoffTag]] that is the parent of this tag.
   */
 case class StandoffTag(tagName: String,
-                       attributes: Map[String, String],
+                       attributes: Map[String, String] = Map.empty[String, String],
                        startPosition: Int,
                        endPosition: Int,
                        index: Int,
@@ -106,6 +106,19 @@ trait StandoffDiff {
 }
 
 /**
+  * Represents a string that is in both the base text and the derived text.
+  *
+  * @param baseStartPosition    the start position of the string in the base text.
+  * @param baseEndPosition      the end position of the string in the base text.
+  * @param derivedStartPosition the start position of the string in the derived text.
+  * @param derivedEndPosition   the end position of the string in the derived text.
+  */
+case class StandoffDiffEqual(baseStartPosition: Int,
+                             baseEndPosition: Int,
+                             derivedStartPosition: Int,
+                             derivedEndPosition: Int) extends StandoffDiff
+
+/**
   * Represents a string that is present in the derived text but not in the base text.
   *
   * @param baseStartPosition    the position in the base text where the string would have to be inserted to match
@@ -130,10 +143,15 @@ case class StandoffDiffDelete(baseStartPosition: Int,
                               derivedStartPosition: Int) extends StandoffDiff
 
 
+object StandoffUtil {
+    private val XmlHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+}
+
 /**
   * Converts XML documents to standoff markup and back again.
   */
 class StandoffUtil {
+
     // Parse XML with an XML parser configured to prevent certain security risks.
     // See <https://github.com/scala/scala-xml/issues/17>.
     private val saxParserFactory = SAXParserFactory.newInstance()
@@ -175,7 +193,7 @@ class StandoffUtil {
       */
     def textWithStandoff2Xml(textWithStandoff: TextWithStandoff): String = {
         val groupedRanges: Map[Option[Int], Seq[StandoffRange]] = textWithStandoff.standoff.groupBy(_.parentIndex)
-        val stringBuilder = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+        val stringBuilder = new StringBuilder(StandoffUtil.XmlHeader)
 
         standoffRanges2XmlString(
             text = textWithStandoff.text,
@@ -197,11 +215,89 @@ class StandoffUtil {
     def makeStandoffDiffs(baseText: String, derivedText: String): Seq[StandoffDiff] = {
         import scala.collection.JavaConversions._
 
-        val diffs: Seq[Diff] = diffMatchPatch.diff_main(baseText, derivedText)
+        case class DiffConversionState(standoffDiffs: Vector[StandoffDiff] = Vector.empty[StandoffDiff],
+                                       basePos: Int = 0,
+                                       derivedPos: Int = 0)
 
-        // TODO
+        val diffList = diffMatchPatch.diff_main(baseText, derivedText)
+        diffMatchPatch.diff_cleanupSemantic(diffList)
+        val diffs: Seq[Diff] = diffList
 
-        Vector.empty[StandoffDiff]
+        val conversionResult = diffs.foldLeft(DiffConversionState()) {
+            case (conversionState, diff) =>
+                diff.operation match {
+                    case Operation.EQUAL =>
+                        val standoffDiff = StandoffDiffEqual(
+                            baseStartPosition = conversionState.basePos,
+                            baseEndPosition = conversionState.basePos + diff.text.length,
+                            derivedStartPosition = conversionState.derivedPos,
+                            derivedEndPosition = conversionState.derivedPos + diff.text.length
+                        )
+
+                        DiffConversionState(
+                            standoffDiffs = conversionState.standoffDiffs :+ standoffDiff,
+                            basePos = standoffDiff.baseEndPosition,
+                            derivedPos = standoffDiff.derivedEndPosition
+                        )
+
+                    case Operation.DELETE =>
+                        val standoffDiff = StandoffDiffDelete(
+                            baseStartPosition = conversionState.basePos,
+                            baseEndPosition = conversionState.basePos + diff.text.length,
+                            derivedStartPosition = conversionState.derivedPos
+                        )
+
+                        DiffConversionState(
+                            standoffDiffs = conversionState.standoffDiffs :+ standoffDiff,
+                            basePos = standoffDiff.baseEndPosition,
+                            derivedPos = conversionState.derivedPos
+                        )
+
+                    case Operation.INSERT =>
+                        val standoffDiff = StandoffDiffInsert(
+                            baseStartPosition = conversionState.basePos,
+                            derivedStartPosition = conversionState.derivedPos,
+                            derivedEndPosition = conversionState.derivedPos + diff.text.length
+                        )
+
+                        DiffConversionState(
+                            standoffDiffs = conversionState.standoffDiffs :+ standoffDiff,
+                            basePos = conversionState.basePos,
+                            derivedPos = standoffDiff.derivedEndPosition
+                        )
+                }
+        }
+
+        conversionResult.standoffDiffs
+    }
+
+    /**
+      * Converts standoff diffs to XML. The resulting XML has a root element called `<diff>` containing the base
+      * text, along with `<del>` tags representing deletions and `<ins>` tags representing insertions.
+      *
+      * @param baseText the base text that was used to calculate the diffs.
+      * @param derivedText the derived text that was used to calculate the diffs.
+      * @param standoffDiffs the standoff diffs.
+      * @return an XML representation of the diffs.
+      */
+    def standoffDiffs2Xml(baseText: String, derivedText: String, standoffDiffs: Seq[StandoffDiff]): String = {
+        val stringBuilder = new StringBuilder(StandoffUtil.XmlHeader).append("<diffs>")
+
+        for (standoffDiff <- standoffDiffs) {
+            standoffDiff match {
+                case equal: StandoffDiffEqual =>
+                    stringBuilder.append(baseText.substring(equal.baseStartPosition, equal.baseEndPosition))
+
+                case delete: StandoffDiffDelete =>
+                    stringBuilder.append("<del>").append(baseText.substring(delete.baseStartPosition, delete.baseEndPosition)).append("</del>")
+
+                case insert: StandoffDiffInsert =>
+                    stringBuilder.append("<ins>").append(derivedText.substring(insert.derivedStartPosition, insert.derivedEndPosition)).append("</ins>")
+            }
+        }
+
+        stringBuilder.append("</diffs>")
+        stringBuilder.toString
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
