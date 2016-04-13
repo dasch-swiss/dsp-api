@@ -151,7 +151,6 @@ lazy val webApiLibs = Seq(
     // testing
     "com.typesafe.akka" %% "akka-testkit" % "2.4.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.scalatest" %% "scalatest" % "2.2.6" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
-    "org.seleniumhq.selenium" % "selenium-java" % "2.35.0" % "test",
     "io.spray" %% "spray-testkit" % "1.3.3" % "test, fuseki, fuseki-tomcat, graphdb, tdb"
 )
 
@@ -274,5 +273,6 @@ lazy val salsahLibs = Seq(
     "com.typesafe.akka" % "akka-http-xml-experimental_2.11" % "2.0-M2",
     // testing
     "com.typesafe.akka" %% "akka-http-testkit-experimental" % "2.0-M2" % "test",
-    "org.scalatest" %% "scalatest" % "2.2.5" % "test"
+    "org.scalatest" %% "scalatest" % "2.2.5" % "test",
+    "org.seleniumhq.selenium" % "selenium-java" % "2.35.0" % "test"
 )

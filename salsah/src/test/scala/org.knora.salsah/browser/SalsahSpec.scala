@@ -1,4 +1,24 @@
-package org.knora.webapi.e2e.browser
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.knora.salsah.browser
 
 import org.openqa.selenium.WebElement
 import org.scalatest._
@@ -58,10 +78,10 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
         }
 
         // Uncomment this if you want the browser to close after the test completes.
-        /*
-        "close the browser" in {
+
+        /*"close the browser" in {
             page.quit()
-        }
-        */
+        }*/
+
     }
 }
