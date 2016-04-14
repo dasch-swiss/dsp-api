@@ -20,8 +20,12 @@
 
 package org.knora.salsah.browser
 
+import scala.collection.JavaConversions._
 import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.interactions.Actions
+import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.{By, WebDriver, WebElement}
+import org.scalatest.concurrent.Eventually._
 
 /**
   * Gives browser tests access to elements in a SALSAH HTML page, using the Selenium API. By using methods provided
@@ -63,6 +67,27 @@ class SalsahPage {
     }
 
     /**
+      * Does login with given credentials.
+      *
+      * @param user username
+      * @param password password
+      */
+    def doLogin(user: String, password: String) = {
+        val loginButton = driver.findElement(By.id("dologin"))
+
+        loginButton.click()
+
+        val userInput = driver.findElement(By.id("user_id"))
+        val passwordInput = driver.findElement(By.id("password"))
+        val sendCredentials = driver.findElement(By.id("login_button"))
+
+        userInput.sendKeys("root")
+        passwordInput.sendKeys("test")
+        sendCredentials.click()
+
+    }
+
+    /**
       * Returns the SALSAH simple search field.
       */
     def getSimpleSearchField: WebElement = {
@@ -94,5 +119,82 @@ class SalsahPage {
       */
     def getFirstSearchResult(searchResultDiv: WebElement): String = {
         searchResultDiv.findElement(By.xpath("table/tbody/tr[2]/td[4]")).getText
+    }
+
+    /**
+      * Clicks on the specified search result row.
+      *
+      * @param searchResultDiv a `div` representing search results.
+      * @param number          the search result row to be opened.
+      */
+    def openResult(searchResultDiv: WebElement, number: Int) = {
+        val resultRows: Seq[WebElement] = searchResultDiv.findElements(By.xpath("table/tbody/tr[@class='result_row']"))
+
+        val resultRow = resultRows.get(number)
+
+        resultRow.click()
+
+
+    }
+
+    /**
+      * Ensures the minimum overall amount of windows and returns a list of them.
+      *
+      * @param minSize the minimum amount of windows.
+      * @return a list of [[WebElement]].
+      */
+    private def getWindows(minSize: Int): Seq[WebElement] = {
+
+        val windows = driver.findElements(By.className("win"))
+        if (windows.size < minSize) throw new Exception() else windows
+    }
+
+    /**
+      * Get the window with the given id.
+      *
+      * @param winId the window's id.
+      * @return a [[WebElement]] representing the window.
+      */
+    def getWindow(winId: Int): WebElement = {
+        // make sure that the specified window is ready in the DOM
+        val windows = getWindows(winId + 1)
+
+        driver.findElement(By.id(winId.toString))
+    }
+
+    /**
+      * Gets a window's metadata section.
+      *
+      * @param window a [[WebElement]] representing the window.
+      * @return a [[WebElement]] representing the metadat section.
+      */
+    def getMetadataSection(window: WebElement) = {
+        eventually {
+            window.findElement(By.xpath("div[@class='content contentWithTaskbar']//div[contains(@class, 'metadata') and contains(@class, 'section') and not (contains(@class, 'sectionheader'))]"))
+        }
+    }
+
+    def getEditingFieldsFromMetadataSection(metadataSection: WebElement) = {
+        metadataSection.findElements(By.xpath("div[@class='propedit datafield_1 winid_1']")).toList
+    }
+
+    /**
+      * Moves a window.
+      *
+      * @param window the [[WebElement]] representing the window.
+      * @param offsetX horizontal moving distance.
+      * @param offsetY vertical moving distance.
+      */
+    def dragWindow(window: WebElement, offsetX: Int, offsetY: Int) = {
+        val titlebar = window.findElement(By.className("titlebar"))
+
+        val builder = new Actions(driver)
+
+        builder.clickAndHold(titlebar).moveByOffset(offsetX, offsetY).release().build.perform()
+
+    }
+
+    def findCkeditor(field: WebElement) = {
+        field.findElement(By.xpath("div//iframe"))
     }
 }
