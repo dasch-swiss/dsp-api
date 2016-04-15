@@ -10,7 +10,7 @@ cache:
   directories:
     - $HOME/.ivy2
 script:
-- cd webapi/_fuseki/ && ./fuseki-server &
+- cd triplestore/fuseki/ && ./fuseki-server &
 - sbt 'project webapi' 'test'
 notifications:
   slack:
