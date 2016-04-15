@@ -289,7 +289,7 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   *
   * - The requesting user has permission to add values to the resource.
   * - Each submitted value is consistent with the `knora-base:objectClassConstraint` of the property that is supposed
-  *   to point to it.
+  * to point to it.
   * - The resource class has a suitable cardinality for each submitted value.
   * - All required values are provided.
   *
@@ -319,10 +319,10 @@ case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
   * After executing the SPARQL update, the receiver can check whether the values were actually created by sending a
   * [[VerifyMultipleValueCreationRequestV1]].
   *
-  * @param whereSparql a string containing statements that must be inserted into the WHERE clause of the SPARQL
-  *                    update that will create the values.
-  * @param insertSparql a string containing statements that must be inserted into the INSERT clause of the SPARQL
-  *                     update that will create the values.
+  * @param whereSparql      a string containing statements that must be inserted into the WHERE clause of the SPARQL
+  *                         update that will create the values.
+  * @param insertSparql     a string containing statements that must be inserted into the INSERT clause of the SPARQL
+  *                         update that will create the values.
   * @param unverifiedValues a map of property IRIs to [[UnverifiedValueV1]] objects describing
   *                         the values that should have been created.
   */
@@ -693,8 +693,10 @@ case class LinkUpdateV1(targetResourceIri: IRI) extends UpdateValueV1 {
       * @return `true` if `other` is a duplicate of `this`.
       */
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+
         other match {
             case linkV1: LinkV1 => targetResourceIri == linkV1.targetResourceIri
+            case linkValueV1: LinkValueV1 => targetResourceIri == linkValueV1.objectIri
             case _ => false
         }
     }
