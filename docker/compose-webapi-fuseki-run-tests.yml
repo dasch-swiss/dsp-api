@@ -1,0 +1,11 @@
+version: '2'
+services:
+  triplestore:
+    image: subotic/fuseki
+  webapi:
+    build: ../webapi/Dockerfile
+    command: sbt 'project webapi' 'fuseki:test'
+    depends_on:
+      - triplestore
+    link:
+      - triplestore
