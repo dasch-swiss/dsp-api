@@ -40,7 +40,9 @@ SELECT ?objPred ?objObj
 }
 WHERE {
 
-    ?fileValue knora-base:internalFilename "@filename"
+    ?fileValue knora-base:internalFilename "@filename" ;
+        knora-base:isDeleted false .
+
 
     {
         ?fileValue ?objPred ?objObj .
@@ -78,9 +80,5 @@ WHERE {
         BIND(COALESCE(?valueProjectBasePath, ?resourceProjectBasepath) AS ?projectBasepath)
         BIND(knora-base:projectBasepath AS ?objPred)
         BIND(?projectBasepath AS ?objObj)
-    }
-
-    MINUS {
-        ?fileValue knora-base:isDeleted true .
     }
 }

@@ -44,18 +44,12 @@ SELECT ?book ?page
 WHERE {
     BIND(IRI("@projectIri") as ?projectIri)
 
-    ?book knora-base:attachedToProject ?projectIri .
-    ?book rdf:type incunabula:book .
+    ?book knora-base:attachedToProject ?projectIri ;
+        rdf:type incunabula:book ;
+        knora-base:isDeleted false .
 
-    MINUS {
-        ?book knora-base:isDeleted true .
-    }
-
-    ?page incunabula:partOf ?book .
-
-    MINUS {
-        ?page knora-base:isDeleted true .
-    }
+    ?page incunabula:partOf ?book ;
+        knora-base:isDeleted false .
 }
 @limitOption match {
     case Some(limit) => {

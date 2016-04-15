@@ -56,7 +56,7 @@ DELETE {
 } INSERT {
     @* Copy the contents of the current version of the value into the new version, and mark it as deleted. *@
     ?newValue ?valuePred ?valueObj ;
-        knora-base:isDeleted "true"^^xsd:boolean ;
+        knora-base:isDeleted true ;
         @maybeComment match {
             case Some(comment) => {
                 knora-base:valueHasComment """@comment""" ;
@@ -85,11 +85,8 @@ WHERE {
     BIND(NOW() AS ?currentTime)
 
     ?resource ?property ?currentValue .
-    ?currentValue ?valuePred ?valueObj .
-
-    MINUS {
-        ?currentValue knora-base:isDeleted true .
-    }
+    ?currentValue ?valuePred ?valueObj ;
+        knora-base:isDeleted false .
 
     @* Copy all the predicates and objects from the current version of the value, except the ones we need to update. *@
 

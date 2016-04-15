@@ -1394,6 +1394,45 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             lastModBeforeUpdate != lastModAfterUpdate should ===(true)
         }
 
+        "change the partOf property of a page" in {
+            // A test UserDataV1.
+            val userData = UserDataV1(
+                email = Some("test@test.ch"),
+                lastname = Some("Test"),
+                firstname = Some("User"),
+                username = Some("testuser"),
+                token = None,
+                user_id = Some("http://data.knora.org/users/91e19f1e01"),
+                lang = "de"
+            )
+
+            // A test UserProfileV1.
+            val userProfile = UserProfileV1(
+                projects = Vector("http://data.knora.org/projects/77275339"),
+                groups = Nil,
+                userData = userData
+            )
+
+            val linkTargetIri = "http://data.knora.org/e41ab5695c"
+            val linkValueIri = "http://data.knora.org/8a0b1e75/values/3a7b5130-22c2-4400-a794-062b7a3e3436"
+
+            val changeValueRequest = ChangeValueRequestV1(
+                value = LinkUpdateV1(
+                    targetResourceIri = linkTargetIri
+                ),
+                userProfile = userProfile,
+                valueIri = linkValueIri,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! changeValueRequest
+
+            expectMsgPF(timeout) {
+                case ChangeValueResponseV1(linkValue: LinkV1, _, newLinkValueIri: IRI, _, _) =>
+                    linkValue.targetResourceIri should ===(linkTargetIri)
+            }
+        }
+
         "add a new text value with a comment" in {
             val comment = "This is a comment"
             val metaComment = "This is a metacomment"

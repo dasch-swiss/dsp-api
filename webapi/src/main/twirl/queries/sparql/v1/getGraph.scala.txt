@@ -42,9 +42,7 @@ SELECT ?resource ?outgoingProp1 ?incomingProp1 ?resource1 ?outgoingProp2 ?incomi
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
+    ?resource knora-base:isDeleted false .
 
     {
         ?outgoingProp1 rdfs:subPropertyOf* knora-base:hasLinkTo .

@@ -49,8 +49,10 @@ WHERE {
     BIND(IRI("@searchValueIri") as ?searchValue)
 
     {
-        ?resource ?property ?currentValue .
-        ?currentValue knora-base:previousValue* ?searchValue .
+        ?resource ?property ?currentValue ;
+            knora-base:isDeleted false .
+        ?currentValue knora-base:previousValue* ?searchValue ;
+            knora-base:isDeleted false .
         ?searchValue ?objPred ?objObj .
 
         FILTER(?objPred != knora-base:attachedToProject)
@@ -62,9 +64,11 @@ WHERE {
     }
     UNION
     {
-        ?resource ?property ?currentValue .
-        ?currentValue knora-base:previousValue* ?searchValue .
-        ?resource knora-base:attachedToProject ?resourceProject .
+        ?resource ?property ?currentValue ;
+            knora-base:isDeleted false ;
+            knora-base:attachedToProject ?resourceProject .
+        ?currentValue knora-base:previousValue* ?searchValue ;
+            knora-base:isDeleted false .
 
         @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
 
@@ -74,13 +78,5 @@ WHERE {
 
         BIND(knora-base:attachedToProject AS ?objPred)
         BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
-    }
-
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
-
-    MINUS {
-        ?currentValue knora-base:isDeleted true .
     }
 }

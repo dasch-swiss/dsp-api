@@ -40,9 +40,7 @@ SELECT ?referringResource ?linkingProp ?p ?o ?objPred ?objObj
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
+    ?resource knora-base:isDeleted false .
 
     ?linkingProp rdfs:subPropertyOf* knora-base:hasLinkTo .
 
@@ -50,11 +48,8 @@ WHERE {
         ?linkingProp rdfs:subPropertyOf+ knora-base:isPartOf .
     }
 
-    ?referringResource ?linkingProp ?resource .
-
-    MINUS {
-        ?referringResource knora-base:isDeleted true .
-    }
+    ?referringResource ?linkingProp ?resource ;
+        knora-base:isDeleted false .
 
     {
         ?referringResource ?p ?o .
@@ -67,11 +62,8 @@ WHERE {
     {
         ?p rdfs:subPropertyOf* knora-base:hasFileValue .
         ?referringResource ?p ?o .
+        ?o knora-base:isDeleted false .
 
         ?o ?objPred ?objObj .
-    }
-
-    MINUS {
-        ?o knora-base:isDeleted true .
     }
 }

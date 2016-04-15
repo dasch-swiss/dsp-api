@@ -41,7 +41,8 @@ SELECT ?prop ?isLinkProp ?isLinkValueProp ?obj ?objPred ?objObj ?predStandoff ?o
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
-    ?resource rdf:type ?resourceClass .
+    ?resource rdf:type ?resourceClass ;
+        knora-base:isDeleted false .
     ?resourceClass rdfs:subClassOf+ knora-base:Resource .
 
     {
@@ -65,6 +66,7 @@ WHERE {
             @* Get the value's project if it has one, otherwise use the project of the containing resource. *@
 
             ?resource ?prop ?obj .
+            ?obj knora-base:isDeleted false .
             ?resource knora-base:attachedToProject ?resourceProject .
 
             OPTIONAL {
@@ -79,6 +81,7 @@ WHERE {
             @* Get the value's Standoff markup nodes if it has any. *@
 
             ?resource ?prop ?obj .
+            ?obj knora-base:isDeleted false .
             ?obj a knora-base:TextValue .
             BIND(knora-base:valueHasStandoff AS ?objPred)
 	        ?obj ?objPred ?objObj .
@@ -89,6 +92,7 @@ WHERE {
             @* Get any other statements about the value. *@
 
             ?resource ?prop ?obj .
+            ?obj knora-base:isDeleted false .
 	        ?obj ?objPred ?objObj .
 
             FILTER(!(?objPred = knora-base:attachedToProject || ?objPred = knora-base:valueHasStandoff))
@@ -102,15 +106,7 @@ WHERE {
         BIND(true AS ?isLinkProp)
 
         ?resource ?prop ?obj .
-
+        ?obj knora-base:isDeleted false .
         ?obj ?objPred ?objObj .
-    }
-
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
-
-    MINUS {
-        ?obj knora-base:isDeleted true .
     }
 }

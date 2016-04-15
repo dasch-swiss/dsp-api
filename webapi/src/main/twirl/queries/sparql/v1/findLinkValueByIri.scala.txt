@@ -66,7 +66,8 @@ WHERE {
     ?linkValue rdf:type knora-base:LinkValue ;
                rdf:subject ?subject ;
                rdf:predicate ?predicate ;
-               rdf:object ?object .
+               rdf:object ?object ;
+               knora-base:isDeleted false .
 
     OPTIONAL {
         ?subject ?predicate ?object .
@@ -92,15 +93,5 @@ WHERE {
 
         BIND(knora-base:attachedToProject AS ?objPred)
         BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
-    }
-
-    @*
-
-    Once a LinkValue is deleted, it cannot be used again, and no new versions of it can be made.
-
-    *@
-
-    MINUS {
-        ?linkValue knora-base:isDeleted true .
     }
 }

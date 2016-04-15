@@ -107,7 +107,7 @@ INSERT {
             }
             knora-base:valueHasRefCount @linkUpdateForNewLink.newReferenceCount ;
             knora-base:valueHasOrder ?order ;
-            knora-base:isDeleted "false"^^xsd:boolean ;
+            knora-base:isDeleted false ;
             knora-base:valueCreationDate ?currentTime .
 
         @for(assertion <- linkUpdateForNewLink.permissionRelevantAssertions) {
@@ -147,9 +147,7 @@ WHERE {
 
     @* Do nothing if the link source is marked as deleted. *@
 
-    MINUS {
-        ?linkSource knora-base:isDeleted true .
-    }
+    ?linkSource knora-base:isDeleted false .
 
     @* Make sure the current direct link exists between the two resources. *@
 
@@ -172,10 +170,10 @@ WHERE {
             rdf:predicate ?linkProperty ;
             rdf:object ?linkTargetForCurrentLink ;
             knora-base:valueHasRefCount @linkUpdateForCurrentLink.currentReferenceCount ;
-            knora-base:valueHasOrder ?order .
+            knora-base:isDeleted false .
 
-        MINUS {
-            ?currentLinkValueForCurrentLink knora-base:isDeleted true .
+        OPTIONAL {
+            ?currentLinkValueForCurrentLink knora-base:valueHasOrder ?order .
         }
     } else {
         @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.linkValueExists must be true in this SPARQL template"); ()}
@@ -206,12 +204,7 @@ WHERE {
             rdf:subject ?linkSource ;
             rdf:predicate ?linkProperty ;
             rdf:object ?linkTargetForNewLink ;
-            knora-base:valueHasRefCount @linkUpdateForCurrentLink.currentReferenceCount ;
-            knora-base:valueHasOrder ?order .
-
-        MINUS {
-            ?currentLinkValueForNewLink knora-base:isDeleted true .
-        }
+            knora-base:isDeleted false .
     }
 
     @*
@@ -222,14 +215,11 @@ WHERE {
     *@
 
     @if(linkUpdateForNewLink.insertDirectLink) {
-        ?linkTargetForNewLink rdf:type ?linkTargetClass .
+        ?linkTargetForNewLink rdf:type ?linkTargetClass ;
+            knora-base:isDeleted false .
         ?linkTargetClass rdfs:subClassOf+ knora-base:Resource .
         ?linkProperty knora-base:objectClassConstraint ?expectedTargetClass .
         ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
-
-        MINUS {
-            ?linkTargetForNewLink knora-base:isDeleted true .
-        }
     } else {
         @{throw SparqlGenerationException(s"linkUpdateForNewLink.insertDirectLink must be true in this SPARQL template"); ()}
     }

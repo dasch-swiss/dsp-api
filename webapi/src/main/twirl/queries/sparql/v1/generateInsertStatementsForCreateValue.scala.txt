@@ -53,7 +53,7 @@
 
         @* Construct the value. *@
         ?newValue@valueIndex rdf:type ?valueType@valueIndex ;
-            knora-base:isDeleted "false"^^xsd:boolean .
+            knora-base:isDeleted false .
 
         @value match {
             case textValue: TextValueV1 => {

@@ -332,6 +332,7 @@ Consistency: system_prop_cardinality_1_not_less
  * Consistency checks for cardinalities on Knora content properties
  */
 
+/* Commented out because it's very slow
 // owl:maxCardinality 1 (check that the property has no more than one non-deleted object)
 Consistency: content_prop_max_cardinality_1
     i <rdf:type> r
@@ -340,9 +341,10 @@ Consistency: content_prop_max_cardinality_1
     p <rdfs:subPropertyOf> <knora-base:hasContent>
     i p j
     i p k [Constraint j != k]
-    /* j <knora-base:isDeleted> "false"^^xsd:boolean // Commented out because it's very slow
-    k <knora-base:isDeleted> "false"^^xsd:boolean */
+    j <knora-base:isDeleted> "false"^^xsd:boolean
+    k <knora-base:isDeleted> "false"^^xsd:boolean
     ------------------------------------
+*/
 
 // owl:minCardinality 1 (check that the property has an object)
 // This won't catch the case where an object exists but is marked as deleted.
@@ -355,6 +357,7 @@ Consistency: content_prop_min_cardinality_1
     i p j
     /* j <knora-base:isDeleted> "false"^^xsd:boolean */ // Commented out because of GraphDB issue OWLIM-2937 (Consistency rules with multiple consequents do not trigger)
 
+/* Commented out because it's very slow
 // owl:cardinality 1 (check that the property has no more than one non-deleted object)
 Consistency: cardinality_1_not_greater_content_prop
     i <rdf:type> r
@@ -363,9 +366,10 @@ Consistency: cardinality_1_not_greater_content_prop
     p <rdfs:subPropertyOf> <knora-base:hasContent>
     i p j
     i p k [Constraint j != k]
-    /* j <knora-base:isDeleted> "false"^^xsd:boolean // Commented out because it's very slow
-    k <knora-base:isDeleted> "false"^^xsd:boolean */
+    j <knora-base:isDeleted> "false"^^xsd:boolean
+    k <knora-base:isDeleted> "false"^^xsd:boolean
     ------------------------------------
+*/
 
 // owl:cardinality 1 (check that the property has an object)
 // This won't catch the case where an object exists but is marked as deleted.

@@ -89,11 +89,8 @@
 
             *@
 
-            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex .
-
-            MINUS {
-                <@linkUpdate.linkTargetIri> knora-base:isDeleted true .
-            }
+            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex ;
+                knora-base:isDeleted false .
 
             ?linkTargetClass@linkValueIndex rdfs:subClassOf+ knora-base:Resource .
             <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
@@ -122,11 +119,9 @@
                 rdf:subject ?resource ;
                 rdf:predicate <@linkUpdate.linkPropertyIri> ;
                 rdf:object <@linkUpdate.linkTargetIri> ;
-                knora-base:valueHasRefCount @linkUpdate.currentReferenceCount .
+                knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
+                knora-base:isDeleted false .
 
-            MINUS {
-                ?linkValue@linkValueIndex knora-base:isDeleted true .
-            }
         } else {
             @* Make sure there is no such knora-base:LinkValue. *@
             MINUS {
@@ -134,11 +129,8 @@
                 ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
                     rdf:subject ?resource ;
                     rdf:predicate <@linkUpdate.linkPropertyIri> ;
-                    rdf:object <@linkUpdate.linkTargetIri> .
-
-                MINUS {
-                  ?linkValue@linkValueIndex knora-base:isDeleted true .
-                }
+                    rdf:object <@linkUpdate.linkTargetIri> ;
+                    knora-base:isDeleted false .
             }
         }
     }
@@ -170,11 +162,8 @@
                 SELECT ((MAX(?order@valueIndex)) AS ?maxOrder@valueIndex) (IF(BOUND(?maxOrder@valueIndex), ?maxOrder@valueIndex + 1, 0) AS ?nextOrder@valueIndex)
                 WHERE {
                     <@resourceIri> <@propertyIri> ?otherValue@valueIndex .
-                    ?otherValue@valueIndex knora-base:valueHasOrder ?order@valueIndex .
-
-                    MINUS {
-                      ?otherValue@valueIndex knora-base:isDeleted true .
-                    }
+                    ?otherValue@valueIndex knora-base:valueHasOrder ?order@valueIndex ;
+                        knora-base:isDeleted false .
                 }
             }
 

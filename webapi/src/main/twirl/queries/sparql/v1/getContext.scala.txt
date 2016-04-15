@@ -42,11 +42,8 @@ SELECT ?seqnum ?sourceObject ?sourceObjectAttachedToUser ?sourceObjectAttachedTo
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
-    ?resource rdf:type ?resourceClass .
-
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
+    ?resource rdf:type ?resourceClass ;
+         knora-base:isDeleted false .
 
     ?resourceClass rdfs:subClassOf+ knora-base:Resource .
 
@@ -55,7 +52,8 @@ WHERE {
     ?linkingProp rdfs:subPropertyOf+ knora-base:isPartOf .
     ?seqProp rdfs:subPropertyOf+ knora-base:seqnum .
 
-    ?sourceObject ?linkingProp ?resource .
+    ?sourceObject ?linkingProp ?resource ;
+      knora-base:isDeleted false .
 
     ?sourceObject ?seqProp ?seqnumVal .
     ?seqnumVal knora-base:valueHasInteger ?seqnum .
@@ -72,14 +70,11 @@ WHERE {
         ?fileValueProp rdfs:subPropertyOf* knora-base:hasFileValue .
         ?sourceObject ?fileValueProp ?fileValue .
 
-        ?fileValue a knora-base:StillImageFileValue .
+        ?fileValue a knora-base:StillImageFileValue ;
+             knora-base:isDeleted false .
 
         OPTIONAL {
             ?fileValue knora-base:isPreview ?isPreview .
-        }
-
-        MINUS {
-            ?fileValue knora-base:isDeleted true .
         }
 
         ?fileValue knora-base:internalMimeType ?internalMimeType ;
@@ -98,10 +93,6 @@ WHERE {
             ?fileValue knora-base:attachedToProject ?fileValueAttachedToProject .
         }
 
-    }
-
-    MINUS {
-        ?sourceObject knora-base:isDeleted true .
     }
 }
 
