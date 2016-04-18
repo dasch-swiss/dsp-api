@@ -454,9 +454,7 @@ sealed trait UpdateValueV1 extends ValueV1 {
       * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
       */
-    def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
-        other == this
-    }
+    def isDuplicateOfOtherValue(other: ApiValueV1): Boolean
 
     /**
       * Returns `true` if this [[UpdateValueV1]] would be redundant as a new version of an existing value. This means
@@ -466,9 +464,7 @@ sealed trait UpdateValueV1 extends ValueV1 {
       * @param currentVersion the current version of the value.
       * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
       */
-    def isRedundant(currentVersion: ApiValueV1): Boolean = {
-        currentVersion == this
-    }
+    def isRedundant(currentVersion: ApiValueV1): Boolean
 }
 
 /**
@@ -622,7 +618,7 @@ case class TextValueV1(utf8str: String,
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case TextValueV1(otherUtf8Str, _, _) => utf8str == otherUtf8Str
-            case _ => false
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -630,8 +626,20 @@ case class TextValueV1(utf8str: String,
         utf8str
     }
 
-    // Note: we take the default implementation of isRedundant, which uses equals, because it's OK to add
-    // a new version of a text value as long as something has been changed in it, even if it's only the markup.
+    /**
+      * It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case textValueV1: TextValueV1 => textValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
+
+
 }
 
 
@@ -697,7 +705,7 @@ case class LinkUpdateV1(targetResourceIri: IRI) extends UpdateValueV1 {
         other match {
             case linkV1: LinkV1 => targetResourceIri == linkV1.targetResourceIri
             case linkValueV1: LinkValueV1 => targetResourceIri == linkValueV1.objectIri
-            case _ => false
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -736,6 +744,32 @@ case class IntegerValueV1(ival: Int) extends UpdateValueV1 with ApiValueV1 {
     def valueTypeIri = OntologyConstants.KnoraBase.IntValue
 
     def toJsValue = JsNumber(ival)
+
+    /**
+      * Checks if a new integer value would equal an existing integer value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case integerValueV1: IntegerValueV1 => integerValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of this integer value would equal the existing version of this integer value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case integerValueV1: IntegerValueV1 => integerValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
 }
 
 /**
@@ -748,6 +782,33 @@ case class FloatValueV1(fval: Float) extends UpdateValueV1 with ApiValueV1 {
     def valueTypeIri = OntologyConstants.KnoraBase.FloatValue
 
     def toJsValue = JsNumber(fval)
+
+    /**
+      * Checks if a new float value would equal an existing float value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case floatValueV1: FloatValueV1 => floatValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of this float value would equal the existing version of this float value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case floatValueV1: FloatValueV1 => floatValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
+
 }
 
 /**
@@ -764,6 +825,33 @@ case class IntervalValueV1(timeval1: String, timeval2: String) extends UpdateVal
         "timeval1" -> JsString(timeval1),
         "timeval2" -> JsString(timeval2)
     )
+
+    /**
+      * Checks if a new interval value would equal an existing interval value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case intervalValueV1: IntervalValueV1 => intervalValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of this interval value would equal the existing version of this interval value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case intervalValueV1: IntervalValueV1 => intervalValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
+
 }
 
 /**
@@ -776,6 +864,32 @@ case class TimeValueV1(tval: String) extends UpdateValueV1 with ApiValueV1 {
     def valueTypeIri = OntologyConstants.KnoraBase.TimeValue
 
     def toJsValue = JsString(tval)
+
+    /**
+      * Checks if a new time value would equal an existing time value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case timeValueV1: TimeValueV1 => timeValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of this time value would equal the existing version of this time value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case timeValueV1: TimeValueV1 => timeValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
 }
 
 /**
@@ -798,7 +912,7 @@ case class JulianDayCountValueV1(dateval1: Int,
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
             case dateValueV1: DateValueV1 => DateUtilV1.julianDayCountValueV1ToDateValueV1(this) == other
-            case _ => false
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
 
@@ -873,6 +987,32 @@ case class ColorValueV1(color: String) extends UpdateValueV1 with ApiValueV1 {
     def toJsValue = JsString(color)
 
     override def toString = color
+
+    /**
+      * Checks if a new color value would equal an existing color value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case colorValueV1: ColorValueV1 => colorValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of this color value would equal the existing version of this color value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case colorValueV1: ColorValueV1 => colorValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
 }
 
 /**
@@ -887,6 +1027,32 @@ case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
     def toJsValue = JsString(geom)
 
     override def toString = geom
+
+    /**
+      * Checks if a new geom value would equal an existing geom value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case geomValueV1: GeomValueV1 => geomValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of this geom value would equal the existing version of this geom value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case geomValueV1: GeomValueV1 => geomValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
 }
 
 /**
@@ -926,6 +1092,32 @@ case class StillImageFileValueV1(internalMimeType: String,
     def toJsValue = ApiValueV1JsonProtocol.stillImageFileValueV1Format.write(this)
 
     override def toString = originalFilename
+
+    /**
+      * Checks if a new still image file value would equal an existing still image file value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case stillImageFileValueV1: StillImageFileValueV1 => stillImageFileValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of this still image file value would equal the existing version of this still image file value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case stillImageFileValueV1: StillImageFileValueV1 => stillImageFileValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
 }
 
 case class MovingImageFileValueV1(internalMimeType: String,
@@ -938,6 +1130,32 @@ case class MovingImageFileValueV1(internalMimeType: String,
     def toJsValue = ApiValueV1JsonProtocol.movingImageFileValueV1Format.write(this)
 
     override def toString = originalFilename
+
+    /**
+      * Checks if a new moving image file value would equal an existing moving image file value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case movingImageFileValueV1: MovingImageFileValueV1 => movingImageFileValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of this moving image file value would equal the existing version of this moving image file value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case movingImageFileValueV1: MovingImageFileValueV1 => movingImageFileValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
 
 }
 
