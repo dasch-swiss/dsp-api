@@ -14,6 +14,10 @@ native
 docs/env
 docs/_build
 webapi/_TMP
+webapi/_fuseki/run/databases
+webapi/_fuseki/run/system
+webapi/_fuseki/run/templates
+webapi/_fuseki/run/lucene
 webapi/logs
 webapi/src/main/resources/query-log/
 *.aux
