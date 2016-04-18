@@ -20,6 +20,8 @@
 
 package org.knora.webapi.util
 
+import java.util.UUID
+
 import org.knora.webapi.util.standoff._
 import org.scalatest.{Matchers, WordSpec}
 import org.xmlunit.builder.{DiffBuilder, Input}
@@ -41,7 +43,10 @@ class StandoffUtilSpec extends WordSpec with Matchers {
 
             // Convert the text with standoff back to XML. The resulting XML is intentionally different in insignificant
             // ways (e.g. order of attributes).
-            val backToXml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
+            val backToXml = standoffUtil.textWithStandoff2Xml(
+                textWithStandoff = textWithStandoff,
+                includeUuids = false
+            )
 
             // Compare the original XML with the regenerated XML, ignoring insignificant differences.
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(StandoffUtilSpec.simpleXmlDoc)).withTest(Input.fromString(backToXml)).build()
@@ -55,7 +60,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             // strikethrough, and a repeated word (which could be the author's mistake or the transcriber's mistake).
             val diplomaticTranscription1 =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<paragraph>Ich habe d Bus <strike>heute </strike>genommen, weil ich ich verspätet war.</paragraph>
+                  |<paragraph uuid="c0b31981-d2d2-4bde-be58-a47baf0693b5">Ich habe d Bus <strike uuid="a94a7f35-a5f8-4cad-a1ed-fe0e435333fd">heute </strike>genommen, weil ich ich verspätet war.</paragraph>
                 """.stripMargin
 
             // Convert the markup in the transcription to standoff, and check that it's correct.
@@ -69,7 +74,8 @@ class StandoffUtilSpec extends WordSpec with Matchers {
                         index = 0,
                         startPosition = 0,
                         endPosition = 58,
-                        tagName = "paragraph"
+                        tagName = "paragraph",
+                        uuid = UUID.fromString("c0b31981-d2d2-4bde-be58-a47baf0693b5")
                     ),
                     TextRange(
                         parentIndex = Some(0),
@@ -82,7 +88,8 @@ class StandoffUtilSpec extends WordSpec with Matchers {
                         index = 2,
                         startPosition = 15,
                         endPosition = 21,
-                        tagName = "strike"
+                        tagName = "strike",
+                        uuid = UUID.fromString("a94a7f35-a5f8-4cad-a1ed-fe0e435333fd")
                     ),
                     TextRange(
                         parentIndex = Some(2),
@@ -100,11 +107,19 @@ class StandoffUtilSpec extends WordSpec with Matchers {
                 text = "Ich habe d Bus heute genommen, weil ich ich verspätet war."
             ))
 
+            val diplo1TextBackTtoXml: String = standoffUtil.textWithStandoff2Xml(
+                textWithStandoff = diplo1TextWithStandoff,
+                includeUuids = true
+            )
+
+            val diplo1XmlDiff: Diff = DiffBuilder.compare(Input.fromString(diplomaticTranscription1)).withTest(Input.fromString(diplo1TextBackTtoXml)).build()
+            diplo1XmlDiff.hasDifferences should be(false)
+
             // The editor keeps the <paragraph> tag, expands the abbreviation, deletes the text marked with strikethrough,
             // and corrects the repeated word.
             val editorialText1 =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<paragraph>Ich habe den Bus genommen, weil ich verspätet war.</paragraph>
+                  |<paragraph uuid="c0b31981-d2d2-4bde-be58-a47baf0693b5">Ich habe den Bus genommen, weil ich verspätet war.</paragraph>
                 """.stripMargin
 
             val edito1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText1)
@@ -133,11 +148,12 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             val xmlDiff1: Diff = DiffBuilder.compare(Input.fromString(expectedEditorialDiffs1AsXml)).withTest(Input.fromString(editorialDiffs1AsXml)).build()
             xmlDiff1.hasDifferences should be(false)
 
-            // Now suppose the transcription has been updated. The new transcription changes 'Bus' to 'Bahn', and corrects
-            // the repeated word, which turns out to have been a transcription error.
+            // Now suppose the transcription has been updated. The new transcription changes 'Bus' to 'Bahn', corrects
+            // the repeated word, which turns out to have been a transcription error, and adds a <blue> tag for ink
+            // colour.
             val diplomaticTranscription2 =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<paragraph>Ich habe d Bahn <strike>heute </strike>genommen, weil ich verspätet war.</paragraph>
+                  |<paragraph uuid="c0b31981-d2d2-4bde-be58-a47baf0693b5">Ich habe d Bahn <strike uuid="a94a7f35-a5f8-4cad-a1ed-fe0e435333fd">heute </strike>genommen, weil ich <blue uuid="28e228c3-6fbb-48b3-8ed4-390e4fe23952">verspätet</blue> war.</paragraph>
                 """.stripMargin
 
             // The editor now rebases the editorial text against the revised transcription, by making new diffs.
@@ -168,12 +184,20 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             val xmlDiff2: Diff = DiffBuilder.compare(Input.fromString(expectedEditorialDiffs2AsXml)).withTest(Input.fromString(editorialDiffs2AsXml)).build()
             xmlDiff2.hasDifferences should be(false)
 
+            // Also find out which standoff tags have changed in the new version of the transcription.
+
+            val (addedTagUuids, removedTagUuids) = standoffUtil.findChangedStandoffTags(diplo1TextWithStandoff.standoff, diplo2TextWithStandoff.standoff)
+
+            addedTagUuids should be(Set(UUID.fromString("28e228c3-6fbb-48b3-8ed4-390e4fe23952"))) // Just the <blue> tag was added.
+            removedTagUuids should be(Set()) // No tags were removed.
+
             // The editor now corrects the editorial text to take into account the change from 'Bus' to 'Bahn'. This
             // means that the abbreviation 'd' in the transcription now has to be expanded as 'die' rather than 'der'.
+            // The editor also takes the <blue> tag.
 
             val editorialText2 =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<paragraph>Ich habe die Bahn genommen, weil ich verspätet war.</paragraph>
+                  |<paragraph uuid="c0b31981-d2d2-4bde-be58-a47baf0693b5">Ich habe die Bahn genommen, weil ich <blue uuid="28e228c3-6fbb-48b3-8ed4-390e4fe23952">verspätet</blue> war.</paragraph>
                 """.stripMargin
 
             val edito2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText2)

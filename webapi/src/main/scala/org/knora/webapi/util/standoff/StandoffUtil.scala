@@ -24,6 +24,7 @@ import javax.xml.parsers.SAXParserFactory
 
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
+import java.util.UUID
 
 import scala.xml._
 
@@ -74,13 +75,16 @@ case class TextRange(startPosition: Int,
   * @param endPosition   the end position of the range of characters marked up with this tag.
   * @param index         the index of this tag. IDs are numbered from 0 within the context of a particular text.
   * @param parentIndex   the index of the [[StandoffTag]] that is the parent of this tag.
+  * @param uuid          a [[UUID]] representing this standoff tag and any other standoff tags that
+  *                      point to semantically equivalent content in other versions of the same text.
   */
 case class StandoffTag(tagName: String,
                        attributes: Map[String, String] = Map.empty[String, String],
                        startPosition: Int,
                        endPosition: Int,
                        index: Int,
-                       parentIndex: Option[Int]) extends StandoffRange
+                       parentIndex: Option[Int],
+                       uuid: UUID) extends StandoffRange
 
 /**
   * Represents a text and its standoff markup.
@@ -149,8 +153,10 @@ object StandoffUtil {
 
 /**
   * Converts XML documents to standoff markup and back again.
+  *
+  * @param uuidAttrName the name of the XML attribute that contains the optional Knora UUID of a tag.
   */
-class StandoffUtil {
+class StandoffUtil(uuidAttrName: String = "uuid") {
 
     // Parse XML with an XML parser configured to prevent certain security risks.
     // See <https://github.com/scala/scala-xml/issues/17>.
@@ -189,9 +195,10 @@ class StandoffUtil {
       * Converts a [[TextWithStandoff]] to an equivalent XML document.
       *
       * @param textWithStandoff the [[TextWithStandoff]] to be converted.
+      * @param includeUuids     if `true`, include the UUID of each standoff tag as an XML attribute.
       * @return an XML document.
       */
-    def textWithStandoff2Xml(textWithStandoff: TextWithStandoff): String = {
+    def textWithStandoff2Xml(textWithStandoff: TextWithStandoff, includeUuids: Boolean): String = {
         val groupedRanges: Map[Option[Int], Seq[StandoffRange]] = textWithStandoff.standoff.groupBy(_.parentIndex)
         val stringBuilder = new StringBuilder(StandoffUtil.XmlHeader)
 
@@ -199,7 +206,8 @@ class StandoffUtil {
             text = textWithStandoff.text,
             parentId = None,
             groupedRanges = groupedRanges,
-            xmlString = stringBuilder
+            xmlString = stringBuilder,
+            includeUuids
         )
 
         stringBuilder.toString
@@ -300,6 +308,30 @@ class StandoffUtil {
         stringBuilder.toString
     }
 
+    /**
+      * Given the standoff ranges in an old version of a text and the standoff ranges in a newer version of the text,
+      * finds the UUIDs of the standoff tags that have been added or removed.
+      * @param oldStandoff the standoff ranges in the old version of the text.
+      * @param newStandoff the standoff ranges in the new version of the text.
+      * @return a tuple containing the UUIDs of the added standoff tags and the UUIDs of the removed standoff tags.
+      */
+    def findChangedStandoffTags(oldStandoff: Seq[StandoffRange], newStandoff: Seq[StandoffRange]): (Set[UUID], Set[UUID]) = {
+        def makeStandoffTagUuidSet(standoff: Seq[StandoffRange]): Set[UUID] = {
+            standoff.foldLeft(Set.empty[UUID]) {
+                case (acc, standoffTag: StandoffTag) => acc + standoffTag.uuid
+                case (acc, _) => acc
+            }
+        }
+
+        val oldStandoffTagUuids = makeStandoffTagUuidSet(oldStandoff)
+        val newStandoffTagUuids = makeStandoffTagUuidSet(newStandoff)
+
+        val addedTagUuids = newStandoffTagUuids -- oldStandoffTagUuids
+        val removedTagUuids = oldStandoffTagUuids -- newStandoffTagUuids
+
+        (addedTagUuids, removedTagUuids)
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
 
@@ -333,13 +365,19 @@ class StandoffUtil {
                 // println(s"got Elem <${elem.label}>")
                 val standoffTagIndex = acc.nextIndex
 
+                val attrMap = elem.attributes.asAttrMap
+
                 val standoffTag = StandoffTag(
                     tagName = elem.label,
-                    attributes = elem.attributes.asAttrMap,
+                    attributes = attrMap - uuidAttrName,
                     startPosition = acc.currentPos,
                     endPosition = acc.currentPos + elem.text.length,
                     index = acc.nextIndex,
-                    parentIndex = startState.parentId
+                    parentIndex = startState.parentId,
+                    uuid = attrMap.get(uuidAttrName) match {
+                        case Some(uuidStr) => UUID.fromString(uuidStr)
+                        case None => UUID.randomUUID
+                    }
                 )
 
                 // Process the element's child nodes.
@@ -382,10 +420,16 @@ class StandoffUtil {
       * @param groupedRanges a [[Map]] of all the [[StandoffRange]] objects that refer to the text, grouped by parent tag ID.
       * @param xmlString     the resulting XML text.
       */
-    private def standoffRanges2XmlString(text: String, parentId: Option[Int], groupedRanges: Map[Option[Int], Seq[StandoffRange]], xmlString: StringBuilder): Unit = {
+    private def standoffRanges2XmlString(text: String, parentId: Option[Int], groupedRanges: Map[Option[Int], Seq[StandoffRange]], xmlString: StringBuilder, includeUuids: Boolean): Unit = {
         def attributes2Xml(standoffTag: StandoffTag): Unit = {
-            for ((attrName, attrValue) <- standoffTag.attributes.toVector.sortBy(_._1)) {
-                xmlString.append(" ").append(attrName).append("=\"").append(attrValue).append("\"")
+            val maybeUuid: Option[(String, String)] = if (includeUuids) Some(uuidAttrName, standoffTag.uuid.toString) else None
+            val attributesWithUuid = standoffTag.attributes.toVector.sortBy(_._1) ++ maybeUuid
+
+            if (attributesWithUuid.nonEmpty) {
+                for ((attrName, attrValue) <- attributesWithUuid) {
+                    xmlString.append(" ").append(attrName).append("=\"").append(attrValue).append("\"")
+                }
+
             }
         }
 
@@ -397,28 +441,21 @@ class StandoffUtil {
                     if (groupedRanges.contains(Some(standoffTag.index))) {
                         // Non-empty tag
                         xmlString.append(s"<${standoffTag.tagName}")
-
-                        if (standoffTag.attributes.nonEmpty) {
-                            attributes2Xml(standoffTag)
-                        }
-
+                        attributes2Xml(standoffTag)
                         xmlString.append(">")
 
                         standoffRanges2XmlString(
                             text = text,
                             parentId = Some(standoffTag.index),
                             groupedRanges = groupedRanges,
-                            xmlString = xmlString
+                            xmlString = xmlString,
+                            includeUuids
                         )
                         xmlString.append(s"</${standoffTag.tagName}>")
                     } else {
                         // Empty tag
                         xmlString.append(s"<${standoffTag.tagName}")
-
-                        if (standoffTag.attributes.nonEmpty) {
-                            attributes2Xml(standoffTag)
-                        }
-
+                        attributes2Xml(standoffTag)
                         xmlString.append("/>")
                     }
 
