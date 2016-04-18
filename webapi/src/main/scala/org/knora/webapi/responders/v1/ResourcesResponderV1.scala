@@ -452,10 +452,15 @@ class ResourcesResponderV1 extends ResponderV1 {
             resourceTypeIri = resInfoWithoutQueryingOntology.restype_id
             resourceTypeEntityInfo = entityInfoResponse.resourceEntityInfoMap(resourceTypeIri)
 
+            maybeResourceTypeIconSrc = resourceTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) match {
+                case Some(resClassIcon) => Some(valueUtilV1.makeResourceClassIconURL(resourceTypeIri, resClassIcon))
+                case _ => None
+            }
+
             resInfo: ResourceInfoV1 = resInfoWithoutQueryingOntology.copy(
                 restype_label = resourceTypeEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
                 restype_description = resourceTypeEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
-                restype_iconsrc = resourceTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
+                restype_iconsrc = maybeResourceTypeIconSrc
             )
 
             // Construct a ResourceDataV1.
@@ -464,7 +469,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 restype_label = resourceTypeEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
                 restype_name = resInfo.restype_id,
                 res_id = resourceIri,
-                iconsrc = resourceTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
+                iconsrc = maybeResourceTypeIconSrc
             )
 
             // Add ontology-based information to incoming references.
@@ -476,7 +481,10 @@ class ResourcesResponderV1 extends ResponderV1 {
                         resinfo = incoming.resinfo.copy(
                             restype_label = incomingResourceTypeEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
                             restype_description = incomingResourceTypeEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
-                            restype_iconsrc = incomingResourceTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
+                            restype_iconsrc = incomingResourceTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) match {
+                                case Some(resClassIcon) => Some(valueUtilV1.makeResourceClassIconURL(incoming.resinfo.restype_id, resClassIcon))
+                                case _ => None
+                            }
                         )
                     )
             }
@@ -1291,6 +1299,9 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @return a tuple (permission, [[ResourceInfoV1]]) describing the resource.
       */
     private def getResourceInfoV1(resourceIri: IRI, userProfile: UserProfileV1, queryOntology: Boolean): Future[(Option[Int], ResourceInfoV1)] = {
+        // TODO: check if there are regions pointing to the queried resource (isRegionOf)
+        // TODO: this should be optional (only do it when required) -> it will be only used for a reqtype=context query with resinfo=true
+        // https://github.com/dhlab-basel/Knora/issues/116
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getResourceInfo(
                 triplestore = settings.triplestoreType,
@@ -1298,7 +1309,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             ).toString())
             resInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             resInfoResponseRows = resInfoResponse.results.bindings
-            resInfo <- makeResourceInfoV1(resourceIri, resInfoResponseRows, userProfile, queryOntology)
+            resInfo: (Option[Int], ResourceInfoV1) <- makeResourceInfoV1(resourceIri, resInfoResponseRows, userProfile, queryOntology)
         } yield resInfo
     }
 
@@ -1425,7 +1436,10 @@ class ResourcesResponderV1 extends ResponderV1 {
                         entityInfo = entityInfoResponse.resourceEntityInfoMap(resTypeIri)
                         label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label)
                         description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment)
-                        iconsrc = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
+                        iconsrc = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) match {
+                            case Some(resClassIcon) => Some(valueUtilV1.makeResourceClassIconURL(resTypeIri, resClassIcon))
+                            case _ => None
+                        }
                     } yield (label, description, iconsrc)
                 } else {
                     Future(None, None, None)
@@ -1633,12 +1647,19 @@ class ResourcesResponderV1 extends ResponderV1 {
                             case None => (None, None)
                         }
 
+                        val valueResourceClassOption = predicates(OntologyConstants.Rdf.Type).literals.headOption
+                        // build the correct path to the icon
+                        val maybeValueResourceClassIcon = valueResourceClassOption match {
+                            case Some(resClass) if maybeResourceClassIcon.nonEmpty => Some(valueUtilV1.makeResourceClassIconURL(resClass, maybeResourceClassIcon.get))
+                            case _ => None
+                        }
+
                         val valueV1 = LinkV1(
                             targetResourceIri = targetResourceIri,
                             valueLabel = predicates.get(OntologyConstants.Rdfs.Label).map(_.literals.head),
-                            valueResourceClass = predicates(OntologyConstants.Rdf.Type).literals.headOption,
+                            valueResourceClass = valueResourceClassOption,
                             valueResourceClassLabel = maybeResourceClassLabel,
-                            valueResourceClassIcon = maybeResourceClassIcon
+                            valueResourceClassIcon = maybeValueResourceClassIcon
                         )
 
                         // A direct link between resources has a corresponding LinkValue reification. We use its IRI as the

@@ -20,10 +20,17 @@
 
 package org.knora.webapi.responders.v1
 
+import akka.actor.ActorSystem
+import org.knora.webapi.Settings
 import org.knora.webapi.messages.v1respondermessages.resourcemessages._
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1
 
 object ResourcesResponderV1SpecContextData {
+
+    implicit lazy val system = ActorSystem("webapi")
+
+    val settings = Settings(system)
+
 
     // first element of 402 locations consisting of a preview and six different qualities
     val expectedFirstLocationOfBookResourceContextResponse = Some(Vector(
@@ -120,7 +127,7 @@ object ResourcesResponderV1SpecContextData {
                 locdata = None,
                 locations = None,
                 preview = None,
-                restype_iconsrc = Some("book.gif"),
+                restype_iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
                 restype_description = Some("Diese Resource-Klasse beschreibt ein Buch"),
                 restype_label = Some("Buch"),
                 restype_name = Some("http://www.knora.org/ontology/incunabula#book"),
@@ -5410,7 +5417,7 @@ object ResourcesResponderV1SpecContextData {
                 locdata = None,
                 locations = None,
                 preview = None,
-                restype_iconsrc = Some("book.gif"),
+                restype_iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
                 restype_description = Some("Diese Resource-Klasse beschreibt ein Buch"),
                 restype_label = Some("Buch"),
                 restype_name = Some("http://www.knora.org/ontology/incunabula#book"),
@@ -5535,7 +5542,7 @@ object ResourcesResponderV1SpecContextData {
                     origname = "ad+s167_druck1=0001.tif",
                     format_name = "JPEG"
                 )),
-                restype_iconsrc = Some("page.gif"),
+                restype_iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/page.gif"),
                 restype_description = Some("Eine Seite ist ein Teil eines Buchs"),
                 restype_label = Some("Seite"),
                 restype_name = Some("http://www.knora.org/ontology/incunabula#page"),
