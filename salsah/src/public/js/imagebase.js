@@ -810,7 +810,7 @@ $(function() {
 					'min-height': '50px',
 					'background-color': '#bbb'
 				});
-				SALSAH.ApiGet('resourcetypes', 'salsah:generic_region', function(data) {
+				SALSAH.ApiGet('resourcetypes', 'http://www.knora.org/ontology/knora-base#Region', function(data) {
 					if (data.status == ApiErrors.OK) {
 						region_area.resadd({
 							rtinfo: data.restype_info,
@@ -940,7 +940,7 @@ $(function() {
 				var region_area = metadata_area_tabs.tabs('contentElement', 'regions');
 				var comment;
 
-				SALSAH.ApiGet('resourcetypes/salsah:generic_region', {}, function(data) {
+				SALSAH.ApiGet('resourcetypes', 'http://www.knora.org/ontology/knora-base#Region', {}, function(data) {
 					if (data.status == ApiErrors.OK) {
 						region_area.resadd({
 							rtinfo: data.restype_info,
@@ -4200,7 +4200,7 @@ $(function() {
 		SALSAH.ApiGet('resources', res_id, {resinfo: true, reqtype: 'context'}, function(data) {
 			if (data.status == ApiErrors.OK) {
 				var context = data.resource_context;
-				if (context.resinfo.restype_name == 'salsah:generic_region') {
+				if (context.resinfo.restype_name == 'http://www.knora.org/ontology/knora-base#Region') {
 					//
 					// we have a region_of! Let's find the corresponding image
 					//

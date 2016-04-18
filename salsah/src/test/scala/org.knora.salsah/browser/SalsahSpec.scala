@@ -100,7 +100,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
         }
 
-        "edit the description of a page" in {
+        /*"edit the description of a page" in {
 
             val window = eventually {
                 page.getWindow(1)
@@ -133,7 +133,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             }
 
             assert(paragraph.getText.substring(0, 7) == "my text")
-        }
+        }*/
 
 
         // Uncomment this if you want the browser to close after the test completes.

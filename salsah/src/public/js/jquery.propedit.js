@@ -307,6 +307,7 @@
 				if (!propinfo[active.prop].value_restype) propinfo[active.prop].value_restype = Array();
 			};
 
+			// deprecated, Knora only supports RICHTEXT
 			postdata[VALTYPE_TEXT] = function(value_container, prop, value_index, value, is_new_value) {
 				var data = {};
 				if (is_new_value) {
@@ -417,6 +418,8 @@
 					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
 						if (data.status == ApiErrors.OK) {
 							propinfo[active.prop].values[active.value_index] = data.value;
+							// set new value Iri
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
 
 							active.value_container.empty();
 							reset_value(active.value_container, active.prop, active.value_index);
@@ -425,8 +428,7 @@
 								make_add_button(prop_container, active.prop);
 							}
 
-							// set new value Iri
-							propinfo[prop].value_ids[value_index] = data.id;
+
 
 						}
 						else {
@@ -439,7 +441,7 @@
 				}
 			};
 
-			postdata[VALTYPE_FLOAT] = postdata[VALTYPE_INTEGER] = function(value_container, prop, value_index, value, is_new_value) {
+			postdata[VALTYPE_FLOAT] = function(value_container, prop, value_index, value, is_new_value) {
 				var data = {};
 				if (is_new_value) {
 					data.float_value = parseFloat(value); // it is an float
@@ -478,6 +480,8 @@
 					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
 						if (data.status == ApiErrors.OK) {
 							propinfo[active.prop].values[active.value_index] = data.value;
+							// set new value Iri
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
 
 							active.value_container.empty();
 							reset_value(active.value_container, active.prop, active.value_index);
@@ -486,8 +490,6 @@
 								make_add_button(prop_container, active.prop);
 							}
 
-							// set new value Iri
-							propinfo[prop].value_ids[value_index] = data.id;
 
 						}
 						else {
@@ -548,6 +550,9 @@
 					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
 						if (data.status == ApiErrors.OK) {
 							propinfo[active.prop].values[active.value_index] = data.value;
+							// set new value Iri
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+
 
 							active.value_container.empty();
 							reset_value(active.value_container, active.prop, active.value_index);
@@ -556,8 +561,6 @@
 								make_add_button(prop_container, active.prop);
 							}
 
-							// set new value Iri
-							propinfo[prop].value_ids[value_index] = data.id;
 						}
 						else {
 							alert(status.errormsg);
@@ -694,12 +697,12 @@
 
 
 							propinfo[active.prop].values[active.value_index] = tmpobj; // HIER IST DER FEHLER!!!!!!!!!
+							// set new value Iri
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
 
 							active.value_container.empty();
 							reset_value(active.value_container, active.prop, active.value_index);
 
-							// set new value Iri
-							propinfo[prop].value_ids[value_index] = data.id;
 						}
 						else {
 							alert(data.errormsg);
@@ -791,18 +794,14 @@
 				var tmp_active = {};
 				$.extend(tmp_active, active);
 				if (is_new_value) {
-					data.value = value;
+					data._link_value = value;
 					data.res_id = res_id;
 					data.prop = prop;
+					data.project_id = project_id;
 					SALSAH.ApiPost('values', data, function(data) {
 						if (data.status == ApiErrors.OK) {
-							
-							if (!propinfo[active.prop].values) propinfo[active.prop].values = Array();
-							if (!propinfo[active.prop].value_ids) propinfo[active.prop].value_ids = Array();
-							if (!propinfo[active.prop].value_rights) propinfo[active.prop].value_rights = Array();
-							if (!propinfo[active.prop].value_iconsrcs) propinfo[active.prop].value_iconsrcs = Array();
-							if (!propinfo[active.prop].value_firstprops) propinfo[active.prop].value_firstprops = Array();
-							if (!propinfo[active.prop].value_restype) propinfo[active.prop].value_restype = Array();
+
+							init_value_structure();
 							propinfo[active.prop].values[active.value_index] = data.value;
 							propinfo[active.prop].value_ids[active.value_index] = data.id;
 							propinfo[active.prop].value_rights[active.value_index] = data.rights;
@@ -836,14 +835,18 @@
 					});
 				}
 				else {
-					data.value = value;
-					SALSAH.ApiPut('values/' + propinfo[prop].value_ids[value_index], data, function(data) {
+					data.link_value = value;
+					data.project_id = project_id;
+					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
 						if (data.status == ApiErrors.OK) {
 							propinfo[active.prop].values[active.value_index] = data.value;
 
+							// set new value Iri
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+
 							var tmp_active = {};
 							$.extend(tmp_active, active);
-							
+
 							SALSAH.ApiGet('resources', data.value, {reqtype: 'info'}, function(data) {
 								if (data.status == ApiErrors.OK) {
 									var resinfo = data.resource_info;
@@ -852,6 +855,10 @@
 									propinfo[tmp_active.prop].value_restype[tmp_active.value_index] = resinfo.restype_label;
 									tmp_active.value_container.empty();
 									reset_value(tmp_active.value_container, tmp_active.prop, tmp_active.value_index);
+
+
+
+
 								}
 								else {
 									alert(data.errormsg);
@@ -868,7 +875,76 @@
 				}
 			};
 
-			postdata[VALTYPE_GEOMETRY] = postdata[VALTYPE_TEXT];
+			postdata[VALTYPE_GEOMETRY] = function(value_container, prop, value_index, value, is_new_value) {
+				var data = {};
+				if (is_new_value) {
+					data.geom_value = value;
+					data.res_id = res_id;
+					data.prop = prop;
+					data.project_id = project_id;
+
+					SALSAH.ApiPost('values', data, function(data) {
+						if (data.status == ApiErrors.OK) {
+							init_value_structure();
+
+							var tmpgeo = JSON.parse(data.value);
+							tmpgeo.val_id = data.id;
+							tmpgeo.res_id = res_id;
+							if ((typeof options === 'object') && (typeof options.canvas !== 'undefined')) {
+								options.canvas.regions('setObjectAttribute', 'val_id', data.id, value_container.find('span').data('figure_index'));
+								options.canvas.regions('setObjectAttribute', 'res_id', res_id, value_container.find('span').data('figure_index'));
+							}
+							propinfo[active.prop].values[active.value_index] = JSON.stringify(tmpgeo);
+
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+							propinfo[active.prop].value_rights[active.value_index] = data.rights;
+							propinfo[active.prop].value_iconsrcs[active.value_index] = null;
+							propinfo[active.prop].value_firstprops[active.value_index] = null;
+							propinfo[active.prop].value_restype[active.value_index] = null;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				}
+				else {
+					data.geom_value = value;
+					data.project_id = project_id;
+					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
+						if (data.status == ApiErrors.OK) {
+							propinfo[active.prop].values[active.value_index] = data.value;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+
+							// set new value Iri
+							propinfo[prop].value_ids[value_index] = data.id;
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				}
+			};
+
+
 			postdata[VALTYPE_COLOR] = postdata[VALTYPE_TEXT];
 			postdata[VALTYPE_SELECTION] = postdata[VALTYPE_TEXT];
 			postdata[VALTYPE_HLIST] = postdata[VALTYPE_TEXT];
@@ -983,11 +1059,11 @@
 			value_container.empty();
 
 			var attributes = {'class': 'propedit'};
-			var extattr;
+			var textattr;
 			if (propinfo[prop].attributes) {
-				extattr = propinfo[prop].attributes.split(';');
-				for (idx in extattr) {
-					var tmp = extattr[idx].split('=');
+				textattr = propinfo[prop].attributes.split(';');
+				for (idx in textattr) {
+					var tmp = textattr[idx].split('=');
 					if (tmp[0] == 'selection') continue;
 					if (tmp[0] == 'hlist') continue;
 					if (tmp[0] == 'restypeid') continue;
@@ -999,34 +1075,46 @@
 				case 'text': {
 					attributes.type = 'text';
 					if (!is_new_value) {
-						attributes.value = propinfo[prop].values[value_index];
+						attributes.value = propinfo[prop].values[value_index].utf8str;
 					}
 					attributes['style'] = 'width: 95%'; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! should be configurable !!
-					var tmpele = $('<input>', attributes).dragndrop('makeDropable', function(event, dropdata) {
+					var tmpele = $('<input>', attributes);
+					/*.dragndrop('makeDropable', function(event, dropdata) {
 						front = tmpele.val().substring(0, tmpele.attr('selectionStart'));
 						back = tmpele.val().substring(tmpele.attr('selectionEnd'));
 						tmpele.val(front + '<+LINKTO RESID=' + dropdata.resid + '+>'+ back);
-					});
+					});*/
 					value_container.append(tmpele);
 					tmpele.focus();
 					value_container.append($('<img>', {src: save_icon.src, title: strings._save, 'class': 'propedit'}).click(function(event) {
-						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, value_container.find('input').val(), is_new_value);
+						var richtext_value = {
+							utf8str: value_container.find('input').val(),
+							textattr: JSON.stringify({}),
+							resource_reference: []
+						};
+						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, richtext_value, is_new_value);
 					}).css({cursor: 'pointer'}));
 					break;
 				}
 				case 'textarea': {
-					var tmpele = $('<textarea>', attributes).dragndrop('makeDropable', function(event, dropdata) {
+					var tmpele = $('<textarea>', attributes)/*.dragndrop('makeDropable', function(event, dropdata) {
 						front = tmpele.val().substring(0, tmpele.attr('selectionStart'));
 						back = tmpele.val().substring(tmpele.attr('selectionEnd'));
 						tmpele.val(front + '<+LINKTO RESID=' + dropdata.resid + '+>'+ back);
-					});
+					});*/
 					if (!is_new_value) {
-						tmpele.append(propinfo[prop].values[value_index]);
+						console.log("not new value")
+						tmpele.append(propinfo[prop].values[value_index].utf8str);
 					}
 					value_container.append(tmpele);
 					tmpele.focus();
 					value_container.append($('<img>', {src: save_icon.src, title: strings._save, 'class': 'propedit'}).click(function(event) {
-						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, value_container.find('textarea').val(), is_new_value);
+						var richtext_value = {
+							utf8str: value_container.find('textarea').val(),
+							textattr: JSON.stringify({}),
+							resource_reference: []
+						};
+						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, richtext_value, is_new_value);
 					}).css({cursor: 'pointer'}));
 					break;
 				}
@@ -1035,14 +1123,14 @@
 					var rtopts = {};
 					
 					//
-					// extattr contains the matching between tagnames and offset names
+					// textattr contains the matching between tagnames and offset names
 					// 
-					if (extattr !== undefined) {
+					if (textattr !== undefined) {
 						//console.log(extattr);
 						
 						var matching = {};
-						for (var i in extattr) {
-							var cur_attr = extattr[i].split('=');
+						for (var i in textattr) {
+							var cur_attr = textattr[i].split('=');
 							matching[cur_attr[0]] = cur_attr[1];
 						}
 						
