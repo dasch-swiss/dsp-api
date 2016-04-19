@@ -24,10 +24,9 @@
 @*
  * Performs a simple full-text search.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param countResults if true, just returns a count of the number of results.
  * @param searchValue the value to be searched for.
- * @param triplestore the name of the triplestore being used. The template uses this value to generate the correct
- *                    full-text search query syntax.
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
  * @param projectIri if filtering by project is desired, the IRI of the project to search.
@@ -35,9 +34,9 @@
  * @param offset the offset at which to start returning search results.
  * @param limit the maximum number of search results to return.
  *@
-@(countResults: Boolean,
+@(triplestore: String,
+  countResults: Boolean,
   searchTerms: Seq[String],
-  triplestore: String,
   preferredLanguage: String,
   fallbackLanguage: String,
   projectIriOption: Option[IRI],
@@ -52,7 +51,7 @@ In order for OFFSET and LIMIT to work, search queries must return only one row p
 
 1. If a single resource could match multiple times (e.g. because it is a book with two titles that both
    match the search criteria), we have to collapse it to a single row. Since the v1 API can only return one
-   literal value per matching property anyway, we do this by selecting one arbitrarily, the SAMPLE
+   literal value per matching property anyway, we do this by selecting one arbitrarily, using the SAMPLE
    function.
 
 2. To get the permissions declared on each matching resource (so we can decide whether the user is authorised to
@@ -78,6 +77,10 @@ SELECT DISTINCT
     ?attachedToProject
     (SAMPLE(?anyMatch) AS ?match)
     (GROUP_CONCAT(DISTINCT(?permissionAssertion); separator=";") AS ?permissionAssertions)
+}
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
     BIND(STR("@preferredLanguage") AS ?preferredLanguage)

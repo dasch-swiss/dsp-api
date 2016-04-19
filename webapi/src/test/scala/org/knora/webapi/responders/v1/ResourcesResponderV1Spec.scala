@@ -299,6 +299,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private def getLastModificationDate(resourceIri: IRI): Option[String] = {
         val lastModSparqlQuery = queries.sparql.v1.txt.getLastModificationDate(
+            triplestore = settings.triplestoreType,
             resourceIri = resourceIri
         ).toString()
 
@@ -307,7 +308,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         expectMsgPF(timeout) {
             case response: SparqlSelectResponse =>
                 val rows = response.results.bindings
-                (rows.size <= 1) should ===(true)
+                assert(rows.size <= 1, s"Resource $resourceIri has more than one instance of knora-base:lastModificationDate")
 
                 if (rows.size == 1) {
                     Some(rows.head.rowMap("lastModificationDate"))
@@ -505,7 +506,21 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val title1 = TextValueV1("A beautiful book")
 
             val citation1 = TextValueV1("ein Zitat")
-            val citation2 = TextValueV1("ein weiteres Zitat")
+            val citation2 = TextValueV1(
+                utf8str = "This citation refers to another resource",
+                textattr = Map(
+                    "bold" -> Vector(StandoffPositionV1(
+                        start = 5,
+                        end = 13
+                    )),
+                    StandoffConstantsV1.LINK_ATTR -> Vector(StandoffPositionV1(
+                        start = 32,
+                        end = 40,
+                        resid = Some("http://data.knora.org/c5058f3a")
+                    ))
+                ),
+                resource_reference = Vector("http://data.knora.org/c5058f3a")
+            )
             val citation3 = TextValueV1("und noch eines")
             val citation4 = TextValueV1("noch ein letztes")
 

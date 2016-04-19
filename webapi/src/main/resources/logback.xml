@@ -10,13 +10,13 @@
 <configuration scan="false" debug="false">
     <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%date{ISO8601} - %-5level - %logger - %X{sourceThread} - %X{akkaSource} - %msg%n</pattern>
+            <pattern>[%date{ISO8601}] %-5level %logger{0} - %X{sourceThread} - %X{akkaSource} - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <File>logs/console.log</File>
         <encoder>
-            <pattern>%date{ISO8601} - %-5level - %logger - %X{sourceThread} - %X{akkaSource} - %msg%n</pattern>
+            <pattern>[%date{ISO8601}] %-5level %logger{0} - %X{sourceThread} - %X{akkaSource} - %msg%n</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>logs/console.log.%d{yyyy-MM-dd-HH}</fileNamePattern>

@@ -23,13 +23,15 @@
 @**
  * Returns all versions of a value.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource to search.
  * @param propertyIri the property to search.
  * @param currentValueIri the most recent version of the value.
  *
  * Returns nothing if currentValueIri is not the most recent version.
  *@
- @(resourceIri: IRI,
+ @(triplestore: String,
+   resourceIri: IRI,
    propertyIri: IRI,
    currentValueIri: IRI)
 
@@ -38,6 +40,10 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?value ?valueCreationDate ?previousValue ?valueOwner ?project (GROUP_CONCAT(?permissionAssertion; separator=";") AS ?permissionAssertions)
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@resourceIri") AS ?resource)
     BIND(IRI("@propertyIri") AS ?prop)

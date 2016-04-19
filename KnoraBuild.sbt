@@ -167,12 +167,12 @@ lazy val javaRunOptions = Seq(
 
 lazy val javaTestOptions = Seq(
     // "-showversion",
-    "-Xms8192m",
-    "-Xmx8192m",
+    "-Xms2048m",
+    "-Xmx4096m"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500",
-    "-XX:MaxMetaspaceSize=4096m"
+    //"-XX:MaxMetaspaceSize=4096m"
 )
 
 lazy val FusekiTest = config("fuseki") extend(Test)

@@ -10,9 +10,9 @@
    rep:repositoryImpl [
      rep:repositoryType "openrdf:SailRepository" ;
      sr:sailImpl [
-       owlim:ruleset "empty" ;
-       # owlim:ruleset "PIE_FILE" ;
-       # owlim:check-for-inconsistencies "true";
+       # owlim:ruleset "empty" ;
+       owlim:ruleset "PIE_FILE" ;
+       owlim:check-for-inconsistencies "true";
        sail:sailType "owlim:Sail" ;
        owlim:base-URL "http://data.knora.org/" ;
        owlim:repository-type "file-repository" ;

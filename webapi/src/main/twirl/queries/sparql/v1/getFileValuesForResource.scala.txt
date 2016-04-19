@@ -23,15 +23,23 @@
 @**
  * Gets the file value Iris of a resource and their quality level.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.
  *@
-@(resourceIri: IRI)
+@(triplestore: String,
+  resourceIri: IRI)
 
 
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT ?p ?fileValueIri ?quality WHERE {
+
+SELECT ?p ?fileValueIri ?quality
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
+WHERE {
 	BIND(IRI("@resourceIri") as ?resIri)
 
     ?resIri ?p ?fileValueIri .

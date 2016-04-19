@@ -1,0 +1,75 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi._
+@import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
+@import org.knora.webapi.messages.v1respondermessages.valuemessages._
+
+@**
+ * Generates statements to be added to the INSERT clause of a SPARQL update to insert direct links and LinkValues
+ * for Standoff resource references, when creating new values (as opposed to new versions of existing values).
+ * This template is used in two contexts: when creating a single text value in an existing resource, and when
+ * creating a new resource with its initial values.
+ *
+ * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
+ *        updated for resource references in Standoff text values.
+ *
+ * The SPARQL variables `?resource` and `?currentTime` must already be bound.
+ *@
+@(linkUpdates: Seq[SparqlTemplateLinkUpdate])
+
+        @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
+            @* Insert a direct link for the resource reference if necessary. *@
+            @if(linkUpdate.insertDirectLink) {
+                ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+            }
+
+            @* Insert a LinkValue for the resource reference. *@
+            <@linkUpdate.newLinkValueIri> rdf:type knora-base:LinkValue ;
+                rdf:subject ?resource ;
+                rdf:predicate <@linkUpdate.linkPropertyIri> ;
+                rdf:object <@linkUpdate.linkTargetIri> ;
+                knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
+                knora-base:isDeleted "false"^^xsd:boolean ;
+                knora-base:valueCreationDate ?currentTime .
+
+            @for(assertion <- linkUpdate.permissionRelevantAssertions) {
+                <@linkUpdate.newLinkValueIri> <@assertion._1> <@assertion._2> .
+            }
+
+            @*
+
+            If this template is being used to create a single text value containing standoff links, the new LinkValue
+            we are creating may be a new version of an existing LinkValue (linkUpdate.linkValueExists will be true).
+            In that case, the WHERE clause will have already bound a SPARQL variable ?linkValue@linkValueIndex,
+            containing the IRI of the existing LinkValue. In that case, add a triple indicating that the new LinkValue
+            is a new version of the existing one.
+
+            If this template is being used to create a new resource with its initial values, there won't be any existing
+            LinkValues for standoff links, so linkUpdate.linkValueExists will be false.
+
+            *@
+            @if(linkUpdate.linkValueExists) {
+                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex .
+            }
+
+            @* Attach the new LinkValue to its containing resource. *@
+            ?resource <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
+        }

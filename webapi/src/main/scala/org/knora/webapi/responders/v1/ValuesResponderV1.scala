@@ -20,15 +20,12 @@
 
 package org.knora.webapi.responders.v1
 
-import java.util.UUID
-
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1respondermessages.ontologymessages._
 import org.knora.webapi.messages.v1respondermessages.resourcemessages._
-import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiConstants.FileType
-import org.knora.webapi.messages.v1respondermessages.sipimessages.{SipiConstants, SipiResponderConversionResponseV1, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1}
+import org.knora.webapi.messages.v1respondermessages.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1respondermessages.valuemessages._
@@ -45,7 +42,6 @@ import scala.concurrent.Future
   * Updates Knora values.
   */
 class ValuesResponderV1 extends ResponderV1 {
-
     // Creates IRIs for new Knora value objects.
     val knoraIriUtil = new KnoraIriUtil
 
@@ -66,7 +62,7 @@ class ValuesResponderV1 extends ResponderV1 {
         case changeFileValueRequest: ChangeFileValueRequestV1 => future2Message(sender(), changeFileValueV1(changeFileValueRequest), log)
         case changeCommentRequest: ChangeCommentRequestV1 => future2Message(sender(), changeCommentV1(changeCommentRequest), log)
         case deleteValueRequest: DeleteValueRequestV1 => future2Message(sender(), deleteValueV1(deleteValueRequest), log)
-        case createMultipleValuesRequest: CreateMultipleValuesRequestV1 => future2Message(sender(), createMultipleValuesV1(createMultipleValuesRequest), log)
+        case createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV1 => future2Message(sender(), createMultipleValuesV1(createMultipleValuesRequest), log)
         case verifyMultipleValueCreationRequest: VerifyMultipleValueCreationRequestV1 => future2Message(sender(), verifyMultipleValueCreation(verifyMultipleValueCreationRequest), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
@@ -186,19 +182,15 @@ class ValuesResponderV1 extends ResponderV1 {
             permissionRelevantAssertionsForNewValue: Seq[(IRI, IRI)] = ownerTuple +: projectTuple +: permissionsFromDefaults
 
             // Create the new value.
-            unverifiedValue <- TransactionUtil.runInUpdateTransaction({
-                transactionID => createValueV1AfterChecks(
-                    transactionID = transactionID,
-                    projectIri = resourceFullResponse.resinfo.get.project_id,
-                    resourceIri = createValueRequest.resourceIri,
-                    propertyIri = createValueRequest.propertyIri,
-                    value = createValueRequest.value,
-                    comment = createValueRequest.comment,
-                    permissionRelevantAssertions = permissionRelevantAssertionsForNewValue,
-                    updateResourceLastModificationDate = true,
-                    userProfile = createValueRequest.userProfile
-                )
-            }, storeManager)
+            unverifiedValue <- createValueV1AfterChecks(
+                projectIri = resourceFullResponse.resinfo.get.project_id,
+                resourceIri = createValueRequest.resourceIri,
+                propertyIri = createValueRequest.propertyIri,
+                value = createValueRequest.value,
+                comment = createValueRequest.comment,
+                permissionRelevantAssertions = permissionRelevantAssertionsForNewValue,
+                updateResourceLastModificationDate = true,
+                userProfile = createValueRequest.userProfile)
 
             // Verify that it was created.
             apiResponse <- verifyValueCreation(
@@ -226,9 +218,9 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Creates multiple values in a new, empty resource, using an existing transaction. The resource ''must'' be a new,
-      * empty resource, i.e. it must have no values. All pre-update checks must already have been performed. Specifically,
-      * this method assumes that:
+      * Generates SPARQL for creating multiple values in a new, empty resource, using an existing transaction.
+      * The resource ''must'' be a new, empty resource, i.e. it must have no values. All pre-update checks must already
+      * have been performed. Specifically, this method assumes that:
       *
       * - The requesting user has permission to add values to the resource.
       * - Each submitted value is consistent with the `knora-base:objectClassConstraint` of the property that is supposed to point to it.
@@ -236,9 +228,9 @@ class ValuesResponderV1 extends ResponderV1 {
       * - All required values are provided.
       *
       * @param createMultipleValuesRequest the request message.
-      * @return a [[CreateMultipleValuesResponseV1]].
+      * @return a [[GenerateSparqlToCreateMultipleValuesResponseV1]].
       */
-    private def createMultipleValuesV1(createMultipleValuesRequest: CreateMultipleValuesRequestV1): Future[CreateMultipleValuesResponseV1] = {
+    private def createMultipleValuesV1(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV1): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
         /**
           * Creates a [[Future]] that performs the update. This function will be called by [[ResourceLocker]] once it
           * has acquired an update lock on the resource.
@@ -246,7 +238,32 @@ class ValuesResponderV1 extends ResponderV1 {
           * @param userIri the IRI of the user making the request.
           * @return a [[Future]] that does pre-update checks and performs the update.
           */
-        def makeTaskFuture(userIri: IRI): Future[CreateMultipleValuesResponseV1] = {
+        def makeTaskFuture(userIri: IRI): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
+            /**
+              * Assists in the numbering of values to be created.
+              * @param createValueV1WithComment the value to be created.
+              * @param valueIndex the index of the value in the sequence of all values to be created. This will be used
+              *                   to generate unique SPARQL variable names.
+              * @param valueHasOrder the index of the value in the sequence of values to be created for a particular property.
+              *                      This will be used to generate `knora-base:valueHasOrder`.
+              */
+            case class NumberedValueToCreate(createValueV1WithComment: CreateValueV1WithComment,
+                                             valueIndex: Int,
+                                             valueHasOrder: Int)
+
+            /**
+              * Assists in collecting generated SPARQL as well as other information about values to be created for
+              * a particular property.
+              * @param whereSparql statements to be included in the SPARQL WHERE clause.
+              * @param insertSparql statements to be included in the SPARQL INSERT clause.
+              * @param valuesToVerify information about each value to be created.
+              * @param valueIndexes the value index of each value described by this object (so they can be sorted).
+              */
+            case class SparqlGenerationResultForProperty(whereSparql: Vector[String] = Vector.empty[String],
+                                                         insertSparql: Vector[String] = Vector.empty[String],
+                                                         valuesToVerify: Vector[UnverifiedValueV1] = Vector.empty[UnverifiedValueV1],
+                                                         valueIndexes: Vector[Int] = Vector.empty[Int])
+
             // Make owner and project assertions for the new values. Give them the same project as the
             // containing resource, and make the requesting user the owner.
             val ownerTuple: (IRI, IRI) = OntologyConstants.KnoraBase.AttachedToUser -> userIri
@@ -259,44 +276,168 @@ class ValuesResponderV1 extends ResponderV1 {
                     userProfile = createMultipleValuesRequest.userProfile
                 )).mapTo[EntityInfoGetResponseV1]
 
-                // We have a Map of property IRIs to sequences of UpdateValueV1s. Create each value in the triplestore, and
-                // build a Map with the same structure, except that instead of UpdateValueV1s, it contains Futures
-                // providing the results of creating the values.
-                valueCreationFutures: Map[IRI, Future[Seq[UnverifiedCreateValueResponseV1]]] = createMultipleValuesRequest.values.map {
-                    case (propertyIri: IRI, valuesWithComments: Seq[CreateValueV1WithComment]) =>
-                        // Construct a list of permission-relevant assertions about the new values of the property,
+                // We could be creating several text values with standoff links to the same target resource. Count
+                // the number of standoff links to each target resource.
+                targetIris: Seq[(IRI, Int)] = createMultipleValuesRequest.values.values.flatten.collect {
+                    case CreateValueV1WithComment(textValueV1: TextValueV1, _) => textValueV1.resource_reference
+                }.flatten.groupBy(identity).mapValues(_.size).toSeq // http://stackoverflow.com/a/10934489
+
+                // Construct a SparqlTemplateLinkUpdate to create one link and one LinkValue for each resource that is
+                // the target of a standoff link.
+                standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = targetIris.map {
+                    case (targetIri, initialReferenceCount) =>
+                        SparqlTemplateLinkUpdate(
+                            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                            directLinkExists = false,
+                            insertDirectLink = true,
+                            deleteDirectLink = false,
+                            linkValueExists = false,
+                            newLinkValueIri = knoraIriUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
+                            linkTargetIri = targetIri,
+                            currentReferenceCount = 0,
+                            newReferenceCount = initialReferenceCount,
+                            permissionRelevantAssertions = Vector(ownerTuple, projectTuple) // TODO: How should we create permissions for a LinkValue for standoff links? (issue 88)
+                        )
+                }
+
+                // Generate INSERT clause statements based on those SparqlTemplateLinkUpdates.
+                standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(linkUpdates = standoffLinkUpdates).toString()
+
+                // Ungroup the values to be created so we can number them as a single sequence (to create unique SPARQL variable names for each value).
+                ungroupedValues: Seq[(IRI, CreateValueV1WithComment)] = createMultipleValuesRequest.values.toSeq.flatMap {
+                    case (propertyIri, values) => values.map(value => (propertyIri, value))
+                }
+
+                // Number them all as a single sequence. Give each one a knora-base:valueHasOrder of 0 for now; we'll take care of that in a moment.
+                numberedValues: Seq[(IRI, NumberedValueToCreate)] = ungroupedValues.zipWithIndex.map {
+                    case ((propertyIri: IRI, valueWithComment: CreateValueV1WithComment), valueIndex) => (propertyIri, NumberedValueToCreate(valueWithComment, valueIndex, 0))
+                }
+
+                // Group them again by property so we generate knora-base:valueHasOrder for the values of each property.
+                groupedNumberedValues: Map[IRI, Seq[NumberedValueToCreate]] = numberedValues.groupBy(_._1).map {
+                    case (propertyIri, propertyIriAndValueTuples) => (propertyIri, propertyIriAndValueTuples.map(_._2))
+                }
+
+                // Generate knora-base:valueHasOrder for the values of each property.
+                groupedNumberedValuesWithValueHasOrder: Map[IRI, Seq[NumberedValueToCreate]] = groupedNumberedValues.map {
+                    case (propertyIri, values) =>
+                        val valuesWithValueHasOrder = values.zipWithIndex.map {
+                            case (numberedValueToCreate, valueHasOrder) => numberedValueToCreate.copy(valueHasOrder = valueHasOrder)
+                        }
+
+                        (propertyIri, valuesWithValueHasOrder)
+                }
+
+                // For each value to be created, generate WHERE clause statements, INSERT clause statements, and an UnverifiedValueV1 (so the successful
+                // creation of the value can be verified later).
+                sparqlGenerationResults: Map[IRI, SparqlGenerationResultForProperty] = groupedNumberedValuesWithValueHasOrder.foldLeft(Map.empty[IRI, SparqlGenerationResultForProperty]) {
+                    case (acc, (propertyIri: IRI, valuesToCreate: Seq[NumberedValueToCreate])) =>
+                        // Construct a list of permission-relevant assertions about the new values of each property,
                         // i.e. the values' owner and project plus their permissions. Use the property's default
                         // permissions to make permissions for the new values.
                         val propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
                         val permissionsFromDefaults: Seq[(IRI, IRI)] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
-                        val permissionRelevantAssertionsForNewValue: Seq[(IRI, IRI)] = ownerTuple +: projectTuple +: permissionsFromDefaults
+                        val permissionRelevantAssertionsForProperty: Seq[(IRI, IRI)] = ownerTuple +: projectTuple +: permissionsFromDefaults
 
-                        // For each value submitted for the property, make a Future that creates the value. Don't update
-                        // the resource's lastModificationDate in these Futures, because the operations might be
-                        // run concurrently, and it is not safe to update a resource in multiple concurrent operations.
-                        // (Multiple operations could simultaneously find that the resource has no lastModificationDate,
-                        // and they could all add it, giving the resource multiple lastModificationDate triples.)
-                        val valueCreationResponsesForProperty: Seq[Future[UnverifiedCreateValueResponseV1]] = valuesWithComments.map {
-                            valueV1WithComment: CreateValueV1WithComment => createValueV1AfterChecks(
-                                transactionID = createMultipleValuesRequest.transactionID,
-                                projectIri = createMultipleValuesRequest.projectIri,
-                                resourceIri = createMultipleValuesRequest.resourceIri,
-                                propertyIri = propertyIri,
-                                value = valueV1WithComment.updateValueV1,
-                                comment = valueV1WithComment.comment,
-                                permissionRelevantAssertions = permissionRelevantAssertionsForNewValue,
-                                updateResourceLastModificationDate = false,
-                                userProfile = createMultipleValuesRequest.userProfile
-                            )
+                        // For each property, construct a SparqlGenerationResultForProperty containing WHERE clause statements, INSERT clause statements, and UnverifiedValueV1s.
+                        val sparqlGenerationResultForProperty: SparqlGenerationResultForProperty = valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
+                            case (propertyAcc: SparqlGenerationResultForProperty, valueToCreate: NumberedValueToCreate) =>
+                                val updateValueV1 = valueToCreate.createValueV1WithComment.updateValueV1
+                                val newValueIri = knoraIriUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
+
+                                // How we generate the SPARQL depends on whether we're creating a link or an ordinary value.
+                                val (whereSparql: String, insertSparql: String) = valueToCreate.createValueV1WithComment.updateValueV1 match {
+                                    case linkUpdateV1: LinkUpdateV1 =>
+                                        // We're creating a link.
+
+                                        // Construct a SparqlTemplateLinkUpdate to tell the SPARQL templates how to create
+                                        // the link and its LinkValue.
+                                        val sparqlTemplateLinkUpdate = SparqlTemplateLinkUpdate(
+                                            linkPropertyIri = propertyIri,
+                                            directLinkExists = false,
+                                            insertDirectLink = true,
+                                            deleteDirectLink = false,
+                                            linkValueExists = false,
+                                            newLinkValueIri = newValueIri,
+                                            linkTargetIri = linkUpdateV1.targetResourceIri,
+                                            currentReferenceCount = 0,
+                                            newReferenceCount = 1,
+                                            permissionRelevantAssertions = permissionRelevantAssertionsForProperty
+                                        )
+
+                                        // Generate WHERE clause statements for the link.
+                                        val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateLink(
+                                            valueIndex = valueToCreate.valueIndex,
+                                            resourceIri = createMultipleValuesRequest.resourceIri,
+                                            linkUpdate = sparqlTemplateLinkUpdate,
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                        ).toString()
+
+                                        // Generate INSERT clause statements for the link.
+                                        val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateLink(
+                                            valueIndex = valueToCreate.valueIndex,
+                                            linkUpdate = sparqlTemplateLinkUpdate,
+                                            maybeComment = valueToCreate.createValueV1WithComment.comment
+                                        ).toString()
+
+                                        (whereSparql, insertSparql)
+
+                                    case ordinaryValue =>
+                                        // We're creating an ordinary value.
+
+                                        // Generate WHERE clause statements for the value.
+                                        val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateValue(
+                                            valueIndex = valueToCreate.valueIndex,
+                                            resourceIri = createMultipleValuesRequest.resourceIri,
+                                            propertyIri = propertyIri,
+                                            newValueIri = newValueIri,
+                                            valueTypeIri = updateValueV1.valueTypeIri,
+                                            linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately below.
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                        ).toString()
+
+                                        // Generate INSERT clause statements for the value.
+                                        val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateValue(
+                                            valueIndex = valueToCreate.valueIndex,
+                                            propertyIri = propertyIri,
+                                            value = updateValueV1,
+                                            linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately below.
+                                            maybeComment = valueToCreate.createValueV1WithComment.comment,
+                                            permissionRelevantAssertions = permissionRelevantAssertionsForProperty
+                                        ).toString()
+
+                                        (whereSparql, insertSparql)
+                                }
+
+                                // For each value of the property, accumulate the generated SPARQL and an UnverifiedValueV1
+                                // in the SparqlGenerationResultForProperty.
+                                propertyAcc.copy(
+                                    whereSparql = propertyAcc.whereSparql :+ whereSparql,
+                                    insertSparql = propertyAcc.insertSparql :+ insertSparql,
+                                    valuesToVerify = propertyAcc.valuesToVerify :+ UnverifiedValueV1(newValueIri = newValueIri, value = updateValueV1),
+                                    valueIndexes = propertyAcc.valueIndexes :+ valueToCreate.valueIndex
+                                )
                         }
 
-                        propertyIri -> Future.sequence(valueCreationResponsesForProperty)
+                        acc + (propertyIri -> sparqlGenerationResultForProperty)
                 }
 
-                // Convert our Map full of Futures into one Future, which will provide a Map of all the results
-                // when they're available.
-                valueCreationResponses <- ActorUtil.sequenceFuturesInMap(valueCreationFutures)
-            } yield CreateMultipleValuesResponseV1(unverifiedValues = valueCreationResponses)
+                // Concatenate all the generated SPARQL into one string for the WHERE clause and one string for the INSERT clause.
+                // Sort the contents of each string by value index.
+                resultsForAllProperties: Iterable[SparqlGenerationResultForProperty] = sparqlGenerationResults.values
+                allWhereSparql: String = resultsForAllProperties.flatMap(result => result.whereSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n")
+                allInsertSparql: String = resultsForAllProperties.flatMap(result => result.insertSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n")
+
+                // Collect all the UnverifiedValueV1s for each property.
+                allUnverifiedValues: Map[IRI, Seq[UnverifiedValueV1]] = sparqlGenerationResults.map {
+                    case (propertyIri, results) => propertyIri -> results.valuesToVerify
+                }
+
+            } yield GenerateSparqlToCreateMultipleValuesResponseV1(
+                whereSparql = allWhereSparql,
+                insertSparql = allInsertSparql,
+                unverifiedValues = allUnverifiedValues
+            )
         }
 
         for {
@@ -327,7 +468,7 @@ class ValuesResponderV1 extends ResponderV1 {
         // build a Map with the same structure, except that instead of UnverifiedCreateValueResponseV1s, it contains Futures
         // providing the results of querying the values.
         val valueVerificationFutures: Map[IRI, Future[Seq[CreateValueResponseV1]]] = verifyRequest.unverifiedValues.map {
-            case (propertyIri: IRI, unverifiedValues: Seq[UnverifiedCreateValueResponseV1]) =>
+            case (propertyIri: IRI, unverifiedValues: Seq[UnverifiedValueV1]) =>
                 val valueVerificationResponsesForProperty = unverifiedValues.map {
                     unverifiedValue =>
                         verifyValueCreation(
@@ -357,6 +498,24 @@ class ValuesResponderV1 extends ResponderV1 {
     private def changeFileValueV1(changeFileValueRequest: ChangeFileValueRequestV1): Future[ChangeFileValueResponseV1] = {
 
         /**
+          * Temporary structure to represent existing file values of a resource.
+          *
+          * @param property       the property Iri (e.g., hasStillImageFileValueRepresentation)
+          * @param valueObjectIri the Iri of the value object.
+          * @param quality        the quality of the file value
+          */
+        case class CurrentFileValue(property: IRI, valueObjectIri: IRI, quality: Option[Int])
+
+        def changeFileValue(oldFileValue: CurrentFileValue, newFileValue: FileValueV1): Future[ChangeValueResponseV1] = {
+            changeValueV1(ChangeValueRequestV1(
+                valueIri = oldFileValue.valueObjectIri,
+                value = newFileValue,
+                userProfile = changeFileValueRequest.userProfile,
+                apiRequestID = changeFileValueRequest.apiRequestID // re-use the same id
+            ))
+        }
+
+        /**
           * Preprocesses a file value change request by calling the Sipi responder to create a new file
           * and calls [[changeValueV1]] to actually change the file value in Knora.
           *
@@ -365,25 +524,18 @@ class ValuesResponderV1 extends ResponderV1 {
           */
         def makeTaskFuture(changeFileValueRequest: ChangeFileValueRequestV1): Future[ChangeFileValueResponseV1] = {
 
-            /**
-              * Temporary structure to represent existing file values of a resource.
-              *
-              * @param property       the property Iri (e.g., hasStillImageFileValueRepresentation)
-              * @param valueObjectIri the Iri of the value object.
-              * @param quality        the quality of the file value
-              */
-            case class CurrentFileValue(property: IRI, valueObjectIri: IRI, quality: Option[Int])
-
             // get the Iris of the current file value(s)
             val resultFuture = for {
 
                 resourceIri <- Future(changeFileValueRequest.resourceIri)
 
-                getFileValuesSparql = queries.sparql.v1.txt.getFileValuesForResource(resourceIri = resourceIri).toString()
+                getFileValuesSparql = queries.sparql.v1.txt.getFileValuesForResource(
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceIri
+                ).toString()
                 //_ = print(getFileValuesSparql)
                 getFileValuesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(getFileValuesSparql)).mapTo[SparqlSelectResponse]
                 // _ <- Future(println(getFileValuesResponse))
-
 
                 // get the property Iris, file value Iris and qualities attached to the resource
                 fileValues: Seq[CurrentFileValue] = getFileValuesResponse.results.bindings.map {
@@ -403,7 +555,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 // if resource has no existing file values, throw an exception
                 _ = if (fileValues.isEmpty) {
-                    BadRequestException(s"File values for ${resourceIri} should be updated, but resource has no existing file values")
+                    BadRequestException(s"File values for $resourceIri should be updated, but resource has no existing file values")
                 }
 
                 // the message to be sent to Sipi responder
@@ -422,12 +574,12 @@ class ValuesResponderV1 extends ResponderV1 {
                 //
 
                 // create the apt case class depending on the file type returned by Sipi
-                changedFileValuesFuture: Vector[Future[ChangeValueResponseV1]] = sipiResponse.file_type match {
+                changedFileValues: Vector[ChangeValueResponseV1] <- sipiResponse.file_type match {
                     case SipiConstants.FileType.IMAGE =>
                         // we deal with hasStillImageFileValue, so there need to be two file values:
                         // one for the full and one for the thumb
                         if (fileValues.size != 2) {
-                            throw InconsistentTriplestoreDataException(s"Expected 2 file values for ${resourceIri}, but ${fileValues.size} given.")
+                            throw InconsistentTriplestoreDataException(s"Expected 2 file values for $resourceIri, but ${fileValues.size} given.")
                         }
 
                         // make sure that we have quality information for the existing file values
@@ -443,30 +595,21 @@ class ValuesResponderV1 extends ResponderV1 {
                             case otherFileValue: FileValueV1 => throw SipiException(s"Sipi returned a wrong file value type: ${otherFileValue.valueTypeIri}")
                         }
 
+                        val valuesToChange = oldFileValuesSorted.zip(newFileValuesSorted)
+                        val (firstOldValue, firstNewValue) = valuesToChange.head
+                        val (secondOldValue, secondNewValue) = valuesToChange(1)
+
                         //
-                        // now request to change all the values
+                        // Change the file values sequentially (because concurrent SPARQL updates could interfere with each other).
                         //
-                        newFileValuesSorted.zip(oldFileValuesSorted).map {
-                            case (newFileValue: StillImageFileValueV1, oldFileValue: CurrentFileValue) =>
-                                // create ChangeValueRequest
-                                val changeImageFileValueRequest: ChangeValueRequestV1 = ChangeValueRequestV1(
-                                    valueIri = oldFileValue.valueObjectIri,
-                                    value = newFileValue,
-                                    userProfile = changeFileValueRequest.userProfile,
-                                    apiRequestID = changeFileValueRequest.apiRequestID // re-use the same id
-                                )
-
-                                // do change request
-                                changeValueV1(changeImageFileValueRequest)
-                            case _ => throw SipiException("Sipi created a wrong file value type (not a StillImageFileValueV1)")
-                        }
+                        for {
+                            firstResult <- changeFileValue(firstOldValue, firstNewValue)
+                            secondResult <- changeFileValue(secondOldValue, secondNewValue)
+                        } yield Vector(firstResult, secondResult)
 
 
-                    case otherFileType => throw NotImplementedException(s"File type ${otherFileType} not yet supported")
+                    case otherFileType => throw NotImplementedException(s"File type $otherFileType not yet supported")
                 }
-
-                // turn a sequence of Futures of messages into a sequence of messages
-                changedFileValues: Vector[ChangeValueResponseV1] <- Future.sequence(changedFileValuesFuture)
 
             } yield ChangeFileValueResponseV1(// return the response(s) of the call(s) of changeValueV1
                 changedFilesValues = changedFileValues,
@@ -488,11 +631,11 @@ class ValuesResponderV1 extends ResponderV1 {
 
         for {
 
-            // Do the preparations of a file value change while already holding an update lock on the resource.
-            // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource Iri have to been retrieved.
-            // Using the lock, we make sure that these are still up to date when `changeValueV1` is being called.
-            //
-            // The method `changeValueV1` will be called using the same lock.
+        // Do the preparations of a file value change while already holding an update lock on the resource.
+        // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource Iri have to been retrieved.
+        // Using the lock, we make sure that these are still up to date when `changeValueV1` is being called.
+        //
+        // The method `changeValueV1` will be called using the same lock.
             taskResult <- ResourceLocker.runWithResourceLock(
                 changeFileValueRequest.apiRequestID,
                 changeFileValueRequest.resourceIri,
@@ -735,9 +878,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 ).toString()
 
                 // Do the update.
-                sparqlUpdateResponse <- TransactionUtil.runInUpdateTransaction({
-                    transactionID => (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
-                }, storeManager)
+                sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
                 // To find out whether the update succeeded, look for the new value in the triplestore.
                 verifyUpdateResult <- verifyOrdinaryValueUpdate(
@@ -842,12 +983,13 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Do the update.
-            sparqlUpdateResponse <- TransactionUtil.runInUpdateTransaction({
-                transactionID => (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
-            }, storeManager)
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
             // Check whether the update succeeded.
-            sparqlQuery = queries.sparql.v1.txt.checkDeletion(newValueIri).toString()
+            sparqlQuery = queries.sparql.v1.txt.checkDeletion(
+                triplestore = settings.triplestoreType,
+                valueIri = newValueIri
+            ).toString()
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = sparqlSelectResponse.results.bindings
 
@@ -855,9 +997,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 throw UpdateNotPerformedException(s"Value ${deleteValueRequest.valueIri} was not deleted. Please report this as a possible bug.")
             }
         } yield DeleteValueResponseV1(
-            id = newValueIri,
-            userdata = deleteValueRequest.userProfile.userData
-        )
+                id = newValueIri,
+                userdata = deleteValueRequest.userProfile.userData
+            )
 
         for {
         // Don't allow anonymous users to update values.
@@ -911,6 +1053,7 @@ class ValuesResponderV1 extends ResponderV1 {
             sparqlQuery <- Future {
                 // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
                 queries.sparql.v1.txt.getVersionHistory(
+                    triplestore = settings.triplestoreType,
                     resourceIri = versionHistoryRequest.resourceIri,
                     propertyIri = versionHistoryRequest.propertyIri,
                     currentValueIri = versionHistoryRequest.currentValueIri
@@ -1070,7 +1213,10 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     private def findValue(valueIri: IRI, userProfile: UserProfileV1): Future[Option[ValueQueryResult]] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getValue(valueIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getValue(
+                triplestore = settings.triplestoreType,
+                valueIri = valueIri
+            ).toString())
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows: Seq[VariableResultsRow] = response.results.bindings
 
@@ -1097,6 +1243,7 @@ class ValuesResponderV1 extends ResponderV1 {
         for {
             sparqlQuery <- Future {
                 queries.sparql.v1.txt.findLinkValueByIri(
+                    triplestore = settings.triplestoreType,
                     subjectIri = subjectIri,
                     predicateIri = predicateIri,
                     maybeObjectIri = objectIri,
@@ -1124,6 +1271,7 @@ class ValuesResponderV1 extends ResponderV1 {
         for {
             sparqlQuery <- Future {
                 queries.sparql.v1.txt.findLinkValueByObject(
+                    triplestore = settings.triplestoreType,
                     subjectIri = subjectIri,
                     predicateIri = predicateIri,
                     objectIri = objectIri
@@ -1181,7 +1329,7 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     private def verifyValueCreation(resourceIri: IRI,
                                     propertyIri: IRI,
-                                    unverifiedValue: UnverifiedCreateValueResponseV1,
+                                    unverifiedValue: UnverifiedValueV1,
                                     userProfile: UserProfileV1): Future[CreateValueResponseV1] = {
         unverifiedValue.value match {
             case linkUpdateV1: LinkUpdateV1 =>
@@ -1242,6 +1390,7 @@ class ValuesResponderV1 extends ResponderV1 {
             sparqlQuery <- Future {
                 // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
                 queries.sparql.v1.txt.findValueInVersions(
+                    triplestore = settings.triplestoreType,
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
                     searchValueIri = searchValueIri
@@ -1377,7 +1526,10 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     private def findResourceWithValue(valueIri: IRI): Future[FindResourceWithValueResult] = {
         for {
-            findResourceSparqlQuery <- Future(queries.sparql.v1.txt.findResourceWithValue(valueIri).toString())
+            findResourceSparqlQuery <- Future(queries.sparql.v1.txt.findResourceWithValue(
+                triplestore = settings.triplestoreType,
+                searchValueIri = valueIri
+            ).toString())
             findResourceResponse <- (storeManager ? SparqlSelectRequest(findResourceSparqlQuery)).mapTo[SparqlSelectResponse]
 
             _ = if (findResourceResponse.results.bindings.isEmpty) {
@@ -1400,7 +1552,6 @@ class ValuesResponderV1 extends ResponderV1 {
       * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that
       * pre-update checks have already been done.
       *
-      * @param transactionID                      the transaction ID.
       * @param projectIri                         the IRI of the project in which to create the value.
       * @param resourceIri                        the IRI of the resource in which to create the value.
       * @param propertyIri                        the IRI of the property that will point from the resource to the value.
@@ -1409,21 +1560,19 @@ class ValuesResponderV1 extends ResponderV1 {
       *                                           and project plus its permissions.
       * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
       * @param userProfile                        the profile of the user making the request.
-      * @return an [[UnverifiedCreateValueResponseV1]].
+      * @return an [[UnverifiedValueV1]].
       */
-    private def createValueV1AfterChecks(transactionID: UUID,
-                                         projectIri: IRI,
+    private def createValueV1AfterChecks(projectIri: IRI,
                                          resourceIri: IRI,
                                          propertyIri: IRI,
                                          value: UpdateValueV1,
                                          comment: Option[String],
                                          permissionRelevantAssertions: Seq[(IRI, IRI)],
                                          updateResourceLastModificationDate: Boolean,
-                                         userProfile: UserProfileV1): Future[UnverifiedCreateValueResponseV1] = {
+                                         userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         value match {
             case linkUpdateV1: LinkUpdateV1 =>
                 createLinkValueV1AfterChecks(
-                    transactionID = transactionID,
                     projectIri = projectIri,
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
@@ -1436,7 +1585,6 @@ class ValuesResponderV1 extends ResponderV1 {
 
             case ordinaryUpdateValueV1 =>
                 createOrdinaryValueV1AfterChecks(
-                    transactionID = transactionID,
                     projectIri = projectIri,
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
@@ -1452,7 +1600,6 @@ class ValuesResponderV1 extends ResponderV1 {
     /**
       * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
       *
-      * @param transactionID                      the transaction ID.
       * @param projectIri                         the IRI of the project in which the link is to be created.
       * @param resourceIri                        the resource in which the link is to be created.
       * @param propertyIri                        the link property.
@@ -1461,17 +1608,16 @@ class ValuesResponderV1 extends ResponderV1 {
       *                                           its owner and project plus permissions.
       * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
       * @param userProfile                        the profile of the user making the request.
-      * @return an [[UnverifiedCreateValueResponseV1]].
+      * @return an [[UnverifiedValueV1]].
       */
-    private def createLinkValueV1AfterChecks(transactionID: UUID,
-                                             projectIri: IRI,
+    private def createLinkValueV1AfterChecks(projectIri: IRI,
                                              resourceIri: IRI,
                                              propertyIri: IRI,
                                              linkUpdateV1: LinkUpdateV1,
                                              comment: Option[String],
                                              permissionRelevantAssertions: Seq[(IRI, IRI)],
                                              updateResourceLastModificationDate: Boolean,
-                                             userProfile: UserProfileV1): Future[UnverifiedCreateValueResponseV1] = {
+                                             userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         for {
             sparqlTemplateLinkUpdate <- incrementLinkValue(
                 sourceResourceIri = resourceIri,
@@ -1485,10 +1631,9 @@ class ValuesResponderV1 extends ResponderV1 {
             sparqlUpdate = queries.sparql.v1.txt.createLink(
                 dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
                 triplestore = settings.triplestoreType,
-                linkSourceIri = resourceIri,
+                resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
-                maybeComment = comment,
-                updateResourceLastModificationDate = updateResourceLastModificationDate
+                maybeComment = comment
             ).toString()
 
             /*
@@ -1498,8 +1643,8 @@ class ValuesResponderV1 extends ResponderV1 {
             */
 
             // Do the update.
-            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
-        } yield UnverifiedCreateValueResponseV1(
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        } yield UnverifiedValueV1(
             newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
             value = linkUpdateV1
         )
@@ -1508,7 +1653,6 @@ class ValuesResponderV1 extends ResponderV1 {
     /**
       * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
       *
-      * @param transactionID                      the transaction ID.
       * @param projectIri                         the project in which the value is to be created.
       * @param resourceIri                        the resource in which the value is to be created.
       * @param propertyIri                        the property that should point to the value.
@@ -1517,17 +1661,16 @@ class ValuesResponderV1 extends ResponderV1 {
       *                                           its owner and project plus permissions.
       * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
       * @param userProfile                        the profile of the user making the request.
-      * @return an [[UnverifiedCreateValueResponseV1]].
+      * @return an [[UnverifiedValueV1]].
       */
-    private def createOrdinaryValueV1AfterChecks(transactionID: UUID,
-                                                 projectIri: IRI,
+    private def createOrdinaryValueV1AfterChecks(projectIri: IRI,
                                                  resourceIri: IRI,
                                                  propertyIri: IRI,
                                                  value: UpdateValueV1,
                                                  comment: Option[String],
                                                  permissionRelevantAssertions: Seq[(IRI, IRI)],
                                                  updateResourceLastModificationDate: Boolean,
-                                                 userProfile: UserProfileV1): Future[UnverifiedCreateValueResponseV1] = {
+                                                 userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         // Generate an IRI for the new value.
         val newValueIri = knoraIriUtil.makeRandomValueIri(resourceIri)
 
@@ -1545,7 +1688,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 sourceResourceIri = resourceIri,
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = targetResourceIri,
-                                permissionRelevantAssertions = permissionRelevantAssertions,
+                                permissionRelevantAssertions = permissionRelevantAssertions, // TODO: How should we create permissions for a LinkValue for standoff links (issue 88)?
                                 userProfile = userProfile
                             )
                         }
@@ -1566,8 +1709,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 value = value,
                 linkUpdates = standoffLinkUpdates,
                 maybeComment = comment,
-                permissionRelevantAssertions = permissionRelevantAssertions,
-                updateResourceLastModificationDate = updateResourceLastModificationDate
+                permissionRelevantAssertions = permissionRelevantAssertions
             ).toString()
 
             /*
@@ -1577,8 +1719,8 @@ class ValuesResponderV1 extends ResponderV1 {
             */
 
             // Do the update.
-            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
-        } yield UnverifiedCreateValueResponseV1(
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        } yield UnverifiedValueV1(
             newValueIri = newValueIri,
             value = value
         )
@@ -1641,9 +1783,7 @@ class ValuesResponderV1 extends ResponderV1 {
             */
 
             // Do the update.
-            sparqlUpdateResponse <- TransactionUtil.runInUpdateTransaction({
-                transactionID => (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
-            }, storeManager)
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
             // To find out whether the update succeeded, check that the new link is in the triplestore.
             linkValueQueryResult <- verifyLinkUpdate(
@@ -1760,9 +1900,7 @@ class ValuesResponderV1 extends ResponderV1 {
             */
 
             // Do the update.
-            sparqlUpdateResponse <- TransactionUtil.runInUpdateTransaction({
-                transactionID => (storeManager ? SparqlUpdateRequest(transactionID, sparqlUpdate)).mapTo[SparqlUpdateResponse]
-            }, storeManager)
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
             // To find out whether the update succeeded, look for the new value in the triplestore.
             verifyUpdateResult <- verifyOrdinaryValueUpdate(
