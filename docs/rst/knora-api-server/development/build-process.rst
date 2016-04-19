@@ -1,0 +1,102 @@
+.. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+   Tobias Schweizer, André Kilchenmann, and André Fatton.
+
+   This file is part of Knora.
+
+   Knora is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Affero General Public License as published
+   by the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Knora is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU Affero General Public License for more details.
+
+   You should have received a copy of the GNU Affero General Public
+   License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+
+.. _webapi-build-process:
+
+Build Process
+=============
+
+TODO: complete this file.
+    - SBT
+    - Using GraphDb for development and how to initializing the 'knora-test-unit' repository
+    - Using Fuseki for development
+    - Using embedded JenaTDB
+    - Using docker for all of the above
+
+Building and Running
+---------------------
+
+Start the provided Fuseki triplestore:
+
+::
+
+    $ cd KNORA_PROJECT_DIRECTORY/triplestores/fuseki
+    $ ./fuseki-server
+
+Then in another terminal, load some test data into the triplestore:
+
+::
+
+    $ cd KNORA_PROJECT_DIRECTORY/webapi/scripts
+    $ ./fuseki-load-test-data.sh
+
+Then go back to the webapi root directory and use SBT to start the API server:
+
+::
+
+    $ cd KNORA_PROJECT_DIRECTORY/webapi
+    $ sbt
+    > compile
+    > re-start
+
+To shut down the Knora API server:
+
+::
+  
+  > re-stop
+
+
+Run the automated tests
+------------------------
+
+Make sure you've started Fuseki as shown above. Then at the SBT prompt:
+
+::
+
+    > fuseki:test
+
+
+
+Continuous Integration
+-----------------------
+
+For continuous integration testing, we use Travis-CI. Every commit pushed to the git repository or every
+pull request, triggers the build. Additionaly, in Github there is a litle checkmark beside every commit, signaling the
+status of the build (successful, unsucessful, ongoing).
+
+The build that is executed on Travis-CI is defined in ``.travis.yml`` situated in the root folder of the project, and
+looks like this:
+
+.. literalinclude:: ../../../../.travis.yml
+    :language: yaml
+    :linenos:
+    
+It basically means:
+
+ - use the virtual machine based environment (line 1)
+ - checkout git with a shorter history (lines 2-3)
+ - add scala libraries (lines 4-6)
+ - add oracle jdk version 8 (lines 7-8)
+ - cache some directories between builds to make it faster (line 9-11)
+ - start fuseki and afterwards start all tests (lines 12-14)
+ - send notification to our slack channel (lines 15-17)
+ 
+SBT Build Configuration
+------------------------
+ 
+.. literalinclude:: ../../../../webapi/WebapiBuild.sbt

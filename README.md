@@ -59,7 +59,7 @@ See `docs/Readme.md`.
 Start the built-in Fuseki triplestore:
 
 ```
-$ cd webapi/_fuseki
+$ cd triplestores/fuseki
 $ ./fuseki-server
 ```
 
@@ -70,12 +70,11 @@ $ cd webapi/scripts
 $ ./fuseki-load-test-data.sh
 ```
 
-Then go back to the project's root directory and use SBT to start the API server:
+Then go back to the webapi root directory and use SBT to start the API server:
 
 ```
-$ cd ../..
+$ cd ..
 $ sbt
-> project webapi
 > compile
 > re-start
 ```
