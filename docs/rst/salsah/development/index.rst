@@ -17,14 +17,10 @@
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 *******************************
-Developing the Knora API Server
+Developing SALSAH
 *******************************
 
 .. toctree::
    :maxdepth: 2
 
    build-process
-   intellij-config
-   documentation
-   test-tags
-   testing-with-fuseki
