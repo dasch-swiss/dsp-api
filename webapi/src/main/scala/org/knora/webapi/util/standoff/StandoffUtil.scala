@@ -26,6 +26,8 @@ import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import java.util.UUID
 
+import org.apache.commons.lang3.StringEscapeUtils
+
 import scala.xml._
 
 /**
@@ -294,13 +296,13 @@ class StandoffUtil(uuidAttrName: String = "uuid") {
         for (standoffDiff <- standoffDiffs) {
             standoffDiff match {
                 case equal: StandoffDiffEqual =>
-                    stringBuilder.append(baseText.substring(equal.baseStartPosition, equal.baseEndPosition))
+                    stringBuilder.append(StringEscapeUtils.escapeXml11(baseText.substring(equal.baseStartPosition, equal.baseEndPosition)))
 
                 case delete: StandoffDiffDelete =>
-                    stringBuilder.append("<del>").append(baseText.substring(delete.baseStartPosition, delete.baseEndPosition)).append("</del>")
+                    stringBuilder.append("<del>").append(StringEscapeUtils.escapeXml11(baseText.substring(delete.baseStartPosition, delete.baseEndPosition))).append("</del>")
 
                 case insert: StandoffDiffInsert =>
-                    stringBuilder.append("<ins>").append(derivedText.substring(insert.derivedStartPosition, insert.derivedEndPosition)).append("</ins>")
+                    stringBuilder.append("<ins>").append(StringEscapeUtils.escapeXml11(derivedText.substring(insert.derivedStartPosition, insert.derivedEndPosition))).append("</ins>")
             }
         }
 
@@ -461,7 +463,7 @@ class StandoffUtil(uuidAttrName: String = "uuid") {
 
 
                 case textRange: TextRange =>
-                    xmlString.append(text.substring(textRange.startPosition, textRange.endPosition))
+                    xmlString.append(StringEscapeUtils.escapeXml11(text.substring(textRange.startPosition, textRange.endPosition)))
             }
         }
     }

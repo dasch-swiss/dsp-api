@@ -54,6 +54,68 @@ class StandoffUtilSpec extends WordSpec with Matchers {
 
         }
 
+        "calculate the diffs between a critical text and a diplomatic transcription" in {
+            val diplomaticTranscription =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<region uuid="55879316-8174-4108-99c9-93ff42abebd4">
+                  |<center><underline>CLI</underline></center>.
+                  |<underline>Examen modi Renaldiniani inscribendi q&#780;vis polygona regularia in circulo,
+                  |depromti ex Lib. II. de Resol. &#38; Composi: Mathem: p. 367.</underline> (<underline>vid. Sturmii
+                  |Mathesin enucleatam p. 38.</underline>)
+                  |</region>
+                """.stripMargin
+
+            val criticalText =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<region uuid="55879316-8174-4108-99c9-93ff42abebd4">
+                  |<center>
+                  |<bold>CLI</bold><medskip/>
+                  |<bold>Examen modi Renaldiniani inscribendi quaevis polygona regularia in circulo,
+                  |depromti ex Lib. II. de <expansion>Resolutione</expansion> &#38; Compositione Mathematica p. 367.
+                  |(vide Sturmii Mathesin enucleatam p. 38.)</bold>
+                  |</center>
+                  |</region>
+                """.stripMargin
+
+            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription)
+            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText)
+
+            val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
+                baseText = diploTextWithStandoff.text,
+                derivedText = criticalTextWithStandoff.text
+            )
+
+            val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
+                baseText = diploTextWithStandoff.text,
+                derivedText = criticalTextWithStandoff.text,
+                standoffDiffs = criticalTextDiffs
+            )
+
+            val expectedCriticalTextDiffsAsXml =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<diffs><ins>
+                  |</ins>
+                  |CLI<del>.</del>
+                  |Examen modi Renaldiniani inscribendi q<del>&#780;</del><ins>uae</ins>vis polygona regularia in circulo,
+                  |depromti ex Lib. II. de Resol<del>.</del><ins>utione</ins> &#38; Composi<del>:</del><ins>tione</ins> Mathem<del>:</del><ins>atica</ins> p. 367.<del> </del><ins>
+                  |</ins>(vid<del>.</del><ins>e</ins> Sturmii<del>
+                  |</del><ins> </ins>Mathesin enucleatam p. 38.)
+                  |<ins>
+                  |</ins></diffs>
+                """.stripMargin
+
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(expectedCriticalTextDiffsAsXml)).withTest(Input.fromString(criticalTextDiffsAsXml)).build()
+            xmlDiff.hasDifferences should be(false)
+
+            val (standoffAdded: Set[UUID], standoffRemoved: Set[UUID]) = standoffUtil.findChangedStandoffTags(
+                oldStandoff = diploTextWithStandoff.standoff,
+                newStandoff = criticalTextWithStandoff.standoff
+            )
+
+            standoffAdded.contains(UUID.fromString("55879316-8174-4108-99c9-93ff42abebd4")) should be(false)
+            standoffRemoved.contains(UUID.fromString("55879316-8174-4108-99c9-93ff42abebd4")) should be(false)
+        }
+
         "calculate the diffs in a workflow with two versions of a diplomatic transcription and two versions of an editorial text" in {
 
             // The diplomatic transcription has a structural tag (paragraph), an abbreviation ('d' for 'den'), a

@@ -32,3 +32,4 @@ webapi/src/main/resources/query-log/
 *.toc
 .sbtrc
 
+chromedriver
