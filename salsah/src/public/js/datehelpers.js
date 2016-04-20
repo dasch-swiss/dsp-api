@@ -89,8 +89,13 @@
 	        yindex, dyindex, year, yearday, leapadj;
 
 
-		var jsd = parseInt(jd);
-	    wjd = Math.floor(jsd - 0.5) + 0.5;
+		//var jsd = parseInt(jd);
+
+		// if a Julian Day has a fraction of 0.5 or higher, it refers to midnight (0h) or later
+		// if it is has a fraction below 0.5, it refers to a time before midnight which is the day before
+		// 2457498.5 -> 2016-04-20 0h
+		// 2457498.4 -> 2016-04-19
+	    wjd = Math.floor(jd - 0.5) + 0.5;
 	    depoch = wjd - GREGORIAN_EPOCH;
 	    quadricent = Math.floor(depoch / 146097);
 	    dqc = mod(depoch, 146097);
