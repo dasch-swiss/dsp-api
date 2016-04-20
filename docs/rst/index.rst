@@ -23,6 +23,7 @@
     introduction/index
     knora-ontologies/index
     knora-api-server/index
+    salsah/index
     sipi/index
 
 ###################
