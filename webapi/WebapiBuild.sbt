@@ -7,9 +7,7 @@ import com.typesafe.sbt.SbtNativePackager.autoImport._
 // Bring the sbt-aspectj settings into this build
 //aspectjSettings
 
-lazy val root = (project in file("."))
-
-lazy val webapi = (project in file("webapi")).
+lazy val webapi = (project in file(".")).
         configs(
             FusekiTest,
             FusekiTomcatTest,
@@ -165,12 +163,12 @@ lazy val javaRunOptions = Seq(
 
 lazy val javaTestOptions = Seq(
     // "-showversion",
-    "-Xms8192m",
-    "-Xmx8192m",
+    "-Xms2048m",
+    "-Xmx4096m"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500",
-    "-XX:MaxMetaspaceSize=4096m"
+    //"-XX:MaxMetaspaceSize=4096m"
 )
 
 lazy val FusekiTest = config("fuseki") extend(Test)
@@ -237,42 +235,3 @@ assemblyMergeStrategy in assembly := {
 //lazy val generateFakeTriplestore = taskKey[Unit]("Generate fake triplestore from a list of requests")
 
 //fullRunTask(generateFakeTriplestore, Test, "org.knora.webapi.GenFakeTripleStore")
-
-
-/******************************************************************************/
-/************************* salsah build settings ******************************/
-/******************************************************************************/
-lazy val salsah = (project in file("salsah")).
-        settings(salsahCommonSettings:  _*).
-        settings(
-            libraryDependencies ++= salsahLibs,
-            logLevel := Level.Info,
-            fork in run := true,
-            javaOptions in run ++= javaRunOptions,
-            mainClass in (Compile, run) := Some("org.knora.salsah.Main"),
-            fork in Test := true,
-            javaOptions in Test ++= javaTestOptions,
-            parallelExecution in Test := false,
-            /* show full stack traces and test case durations */
-            testOptions in Test += Tests.Argument("-oDF")
-        ).
-        settings(Revolver.settings: _*)
-
-lazy val salsahCommonSettings = Seq(
-    organization := "org.knora",
-    name := "salsah",
-    version := "0.1.0",
-    scalaVersion := "2.11.7"
-)
-
-lazy val salsahLibs = Seq(
-    // akka
-    "com.typesafe.akka" % "akka-http-core-experimental_2.11" % "2.0-M2",
-    "com.typesafe.akka" % "akka-http-experimental_2.11" % "2.0-M2",
-    "com.typesafe.akka" % "akka-http-spray-json-experimental_2.11" % "2.0-M2",
-    "com.typesafe.akka" % "akka-http-xml-experimental_2.11" % "2.0-M2",
-    // testing
-    "com.typesafe.akka" %% "akka-http-testkit-experimental" % "2.0-M2" % "test",
-    "org.scalatest" %% "scalatest" % "2.2.5" % "test",
-    "org.seleniumhq.selenium" % "selenium-java" % "2.35.0" % "test"
-)

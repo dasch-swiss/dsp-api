@@ -16,24 +16,11 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-.. _development-tools:
+*******************************
+Developing SALSAH
+*******************************
 
-Development Tools
-=================
+.. toctree::
+   :maxdepth: 2
 
-TODO: complete this file.
-
-Local Development
------------------
-
-- Using GraphDb for development and how to initializing the 'knora-test-unit' repository
-- Using Fuseki for development
-- Using embedded JenaTDB
-- Using docker for all of the above
-
-
-
-Continuous Integration
-----------------------
-
-- Gitlab-CI configuration
+   build-process
