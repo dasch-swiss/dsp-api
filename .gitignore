@@ -29,3 +29,4 @@ webapi/src/main/resources/query-log/
 .sbtrc
 
 chromedriver
+webapi/.idea

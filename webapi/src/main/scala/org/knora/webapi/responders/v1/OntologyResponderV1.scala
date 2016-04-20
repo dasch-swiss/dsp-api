@@ -43,7 +43,7 @@ import scala.concurrent.Future
 class OntologyResponderV1 extends ResponderV1 {
 
     private val OntologyCacheName = "ontologyCache"
-    private val knoraIriUtil = new KnoraIriUtil
+    private val knoraIdUtil = new KnoraIdUtil
     private val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
@@ -258,13 +258,13 @@ class OntologyResponderV1 extends ResponderV1 {
                         val fileValueProps = owlCardinalities.filter(_.isFileValueProp).map(_.propertyIri).toSet
 
                         // Make sure there is a link value property for each link property.
-                        val missingLinkValueProps = linkProps.map(linkProp => knoraIriUtil.linkPropertyIriToLinkValuePropertyIri(linkProp)) -- linkValueProps
+                        val missingLinkValueProps = linkProps.map(linkProp => knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(linkProp)) -- linkValueProps
                         if (missingLinkValueProps.nonEmpty) {
                             throw InconsistentTriplestoreDataException(s"Resource class $resourceClass has cardinalities for one or more link properties without corresponding link value properties. The missing link value property or properties: ${missingLinkValueProps.mkString(", ")}")
                         }
 
                         // Make sure there is a link property for each link value property.
-                        val missingLinkProps = linkValueProps.map(linkValueProp => knoraIriUtil.linkValuePropertyIri2LinkPropertyIri(linkValueProp)) -- linkProps
+                        val missingLinkProps = linkValueProps.map(linkValueProp => knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(linkValueProp)) -- linkProps
                         if (missingLinkProps.nonEmpty) {
                             throw InconsistentTriplestoreDataException(s"Resource class $resourceClass has cardinalities for one or more link value properties without corresponding link properties. The missing link property or properties: ${missingLinkProps.mkString(", ")}")
                         }

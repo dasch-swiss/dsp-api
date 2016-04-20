@@ -43,7 +43,7 @@ import scala.concurrent.Future
   */
 class ValuesResponderV1 extends ResponderV1 {
     // Creates IRIs for new Knora value objects.
-    val knoraIriUtil = new KnoraIriUtil
+    val knoraIdUtil = new KnoraIdUtil
 
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
@@ -292,7 +292,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             insertDirectLink = true,
                             deleteDirectLink = false,
                             linkValueExists = false,
-                            newLinkValueIri = knoraIriUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
+                            newLinkValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
                             linkTargetIri = targetIri,
                             currentReferenceCount = 0,
                             newReferenceCount = initialReferenceCount,
@@ -343,7 +343,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         val sparqlGenerationResultForProperty: SparqlGenerationResultForProperty = valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
                             case (propertyAcc: SparqlGenerationResultForProperty, valueToCreate: NumberedValueToCreate) =>
                                 val updateValueV1 = valueToCreate.createValueV1WithComment.updateValueV1
-                                val newValueIri = knoraIriUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
+                                val newValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
 
                                 // How we generate the SPARQL depends on whether we're creating a link or an ordinary value.
                                 val (whereSparql: String, insertSparql: String) = valueToCreate.createValueV1WithComment.updateValueV1 match {
@@ -665,7 +665,7 @@ class ValuesResponderV1 extends ResponderV1 {
             // If we're updating a link, findResourceWithValueResult will contain the IRI of the property that points to the
             // knora-base:LinkValue, but we'll need the IRI of the corresponding link property.
             val propertyIri = changeValueRequest.value match {
-                case linkUpdateV1: LinkUpdateV1 => knoraIriUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
+                case linkUpdateV1: LinkUpdateV1 => knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
                 case _ => findResourceWithValueResult.propertyIri
             }
 
@@ -791,7 +791,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                     case _ =>
                         // We're updating an ordinary value. Generate an IRI for the new version of the value.
-                        val newValueIri = knoraIriUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
+                        val newValueIri = knoraIdUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
 
                         // Give the new version the same permissions and project as the previous version, but make the requesting user
                         // the owner.
@@ -864,7 +864,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Everything looks OK, so update the comment.
 
                 // Generate an IRI for the new value.
-                newValueIri = knoraIriUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
+                newValueIri = knoraIdUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
 
                 // Generate a SPARQL update.
                 sparqlUpdate = queries.sparql.v1.txt.changeComment(
@@ -947,7 +947,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 case linkValue: LinkValueV1 =>
                     // It's a link value. Make a SparqlTemplateLinkUpdate describing how to delete it.
 
-                    val linkPropertyIri = knoraIriUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
+                    val linkPropertyIri = knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
 
                     for {
                         sparqlTemplateLinkUpdate <- decrementLinkValue(
@@ -968,7 +968,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 case _ =>
                     // Generate an IRI for the new value.
-                    val newValueIri = knoraIriUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
+                    val newValueIri = knoraIdUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
                     val sparqlUpdate = queries.sparql.v1.txt.deleteValue(
                         dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
                         triplestore = settings.triplestoreType,
@@ -1672,7 +1672,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                                  updateResourceLastModificationDate: Boolean,
                                                  userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         // Generate an IRI for the new value.
-        val newValueIri = knoraIriUtil.makeRandomValueIri(resourceIri)
+        val newValueIri = knoraIdUtil.makeRandomValueIri(resourceIri)
 
         for {
         // If we're creating a text value, update direct links and LinkValues for any resource references in Standoff.
@@ -1943,7 +1943,7 @@ class ValuesResponderV1 extends ResponderV1 {
             )
 
             // Generate an IRI for the new LinkValue.
-            newLinkValueIri = knoraIriUtil.makeRandomValueIri(sourceResourceIri)
+            newLinkValueIri = knoraIdUtil.makeRandomValueIri(sourceResourceIri)
 
             linkUpdate = maybeLinkValueQueryResult match {
                 case Some(linkValueQueryResult) =>
@@ -2012,7 +2012,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     val deleteDirectLink = linkValueQueryResult.directLinkExists && newReferenceCount == 0
 
                     // Generate an IRI for the new LinkValue.
-                    val newLinkValueIri = knoraIriUtil.makeRandomValueIri(sourceResourceIri)
+                    val newLinkValueIri = knoraIdUtil.makeRandomValueIri(sourceResourceIri)
 
                     SparqlTemplateLinkUpdate(
                         linkPropertyIri = linkPropertyIri,
