@@ -23,7 +23,7 @@ Build Process
 
 TODO: complete this file.
     - SBT
-    
+
 
 Building and Running
 ---------------------
@@ -64,21 +64,25 @@ Then in another terminal, go to the SALSAH root directory and start the server:
 To shut down the SALSAH server:
 
 ::
-  
+
   > re-stop
 
 
 Run the automated tests
 ------------------------
 
-Make sure you've started Fuseki and the API server as shown above. Then at the SBT prompt:
+Make sure you've started Fuseki and the API server as shown above.
+In order to run the tests, the Selenium driver for Chrome has to be installed.
+Please download it from https://sites.google.com/a/chromium.org/chromedriver/downloads and save it as ``salsah/lib/chromedriver``.
+
+Then at the SBT prompt:
 
 ::
 
     > test
 
- 
+
 SBT Build Configuration
 ------------------------
- 
+
 .. literalinclude:: ../../../../salsah/SalsahBuild.sbt

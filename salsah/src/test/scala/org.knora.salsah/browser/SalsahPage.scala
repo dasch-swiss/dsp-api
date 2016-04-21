@@ -20,12 +20,17 @@
 
 package org.knora.salsah.browser
 
+import java.io.File
+
 import scala.collection.JavaConversions._
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.{By, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
+import java.io.FileNotFoundException
+
+
 
 /**
   * Gives browser tests access to elements in a SALSAH HTML page, using the Selenium API. By using methods provided
@@ -40,6 +45,12 @@ import org.scalatest.concurrent.Eventually._
   */
 class SalsahPage {
     val pageUrl = "http://localhost:3335/index.html" // TODO: get this from application.conf
+
+    val chromeDriverPath = "lib/chromedriver"
+
+    // check if the Selenium driver for Chrome exists
+    val SeleniumChromeDriver = new File(chromeDriverPath)
+    if (!SeleniumChromeDriver.exists) throw new FileNotFoundException(s"${chromeDriverPath} could not be found. Please install Selenium Chrome Driver.")
 
     // Load the native Selenium driver for Chrome.
     System.setProperty("webdriver.chrome.driver", "lib/chromedriver")
