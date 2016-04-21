@@ -34,7 +34,6 @@ These settings need to be set accordingly in Knora's ``application.conf``. If yo
 Whenever a file is requested from Sipi (e.g. a browser trying to dereference an image link served by Knora), a preflight function is called.
 This function is defined in ``sipi.init-knora.lua`` present in the Sipi root directory. It takes three parameters: ``prefix``, ``identifier`` (the name of the requested file), and ``cookie``. File links created by Knora use the prefix ``knora``, e.g. ``http://localhost:1024/knora/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg``.
 
-
 Given these information, Sipi asks Knora about the current's users permissions on the given file.
 The cookie contains the current user's Knora session id, so Knora can match Sipi's request with a given user profile and determine the permissions this user has on the file.
 If the Knora response grants sufficient permissions, the file is served in the requested quality. If the suer has preview rights, Sipi serves a reduced quality or integrates a watermark.
@@ -46,28 +45,5 @@ See :ref:`sharing_sessionid_with_sipi` for more information about sharing the se
 Test Sipi
 =========
 
-If you just want to test Sipi with Knora without serving the actual files, you can simply replace the variable ``identifier`` with a name of a file that exists in your Sipi ``imgroot`` (see ``sipi.knora-config.lua``). Then always this file will be served.
-
-
- .. code::
-
-    function pre_flight(prefix,identifier,cookie)
-
-        ...
-
-        if config.prefix_as_path then
-                filepath = config.imgroot .. '/' .. prefix .. '/' .. 'your_file.jp2'
-            else
-                filepath = config.imgroot .. '/' .. 'your_image.jp2'
-            end
-
-        ...
-
-    end
-
-Taking the default settings, the image ``your_file.jp2`` should reside in ``sipidir/images/``.
-
-
-
-
-
+If you just want to test Sipi with Knora without serving the actual files, you can simply start Sipi like this: ``build/sipi -config sipi.knora-test-config.lua``.
+Then always the same test file will be served which is included in Sipi. In test mode, Sipi will not aks Knora about the user's permission on the requested file.
