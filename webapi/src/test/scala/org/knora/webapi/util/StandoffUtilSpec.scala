@@ -32,21 +32,18 @@ import org.xmlunit.diff.Diff
   */
 class StandoffUtilSpec extends WordSpec with Matchers {
 
-    val standoffUtil = new StandoffUtil
     val knoraIdUtil = new KnoraIdUtil
 
     "The standoff utility" should {
 
         "convert an XML document to text with standoff, then back to an equivalent XML document" in {
+            val standoffUtil = new StandoffUtil(includeAllIdsInXml = false)
 
             // Convert the XML document to text with standoff.
             val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(StandoffUtilSpec.simpleXmlDoc)
 
             // Convert the text with standoff back to XML.
-            val backToXml = standoffUtil.textWithStandoff2Xml(
-                textWithStandoff = textWithStandoff,
-                includeUuids = false
-            )
+            val backToXml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
             // Compare the original XML with the regenerated XML, ignoring insignificant differences such as order of attributes.
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(StandoffUtilSpec.simpleXmlDoc)).withTest(Input.fromString(backToXml)).build()
@@ -54,6 +51,8 @@ class StandoffUtilSpec extends WordSpec with Matchers {
         }
 
         "calculate the diffs between a critical text and a diplomatic transcription" in {
+            val standoffUtil = new StandoffUtil
+
             val diplomaticTranscription =
                 """<?xml version="1.0" encoding="UTF-8"?>
                   |<region id="VYeTFoF0QQiZyZP_Qqvr1A">
@@ -116,6 +115,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
         }
 
         "calculate the diffs in a workflow with two versions of a diplomatic transcription and two versions of an editorial text" in {
+            val standoffUtil = new StandoffUtil
 
             // The diplomatic transcription has a structural tag (paragraph), an abbreviation ('d' for 'den'), a
             // strikethrough, and a repeated word (which could be the author's mistake or the transcriber's mistake).
@@ -128,10 +128,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
 
             val diplo1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription1)
 
-            val diplo1TextBackTtoXml: String = standoffUtil.textWithStandoff2Xml(
-                textWithStandoff = diplo1TextWithStandoff,
-                includeUuids = true
-            )
+            val diplo1TextBackTtoXml: String = standoffUtil.textWithStandoff2Xml(diplo1TextWithStandoff)
 
             val diplo1XmlDiff: Diff = DiffBuilder.compare(Input.fromString(diplomaticTranscription1)).withTest(Input.fromString(diplo1TextBackTtoXml)).build()
             diplo1XmlDiff.hasDifferences should be(false)

@@ -47,71 +47,79 @@ trait StandoffTag {
     def tagName: String
 
     /**
-      * The attributes attached to this tag.
-      */
-    def attributes: Map[String, String]
-
-    /**
-      * The start position of the range.
+      * The start position of the text range.
       */
     def startPosition: Int
 
     /**
-      * The end position of the range.
+      * The end position of the text range.
       */
     def endPosition: Int
+
+    /**
+      * The attributes attached to this tag.
+      */
+    def attributes: Map[String, String]
 }
 
 /**
-  * Represents a range of characters that have been marked up with a standoff tag.
+  * Represents a [[StandoffTag]] that has a single index indicating its position in a sequence of standoff tags,
+  * and optionally the index of the tag that contains it.
+  */
+trait IndexedStandoffTag extends StandoffTag {
+    def index: Int
+
+    def parentIndex: Option[Int]
+}
+
+/**
+  * Represents a standoff tag that requires a hierarchical document structure. When serialised to XML, it is represented
+  * as a single element.
+  *
+  * @param uuid          a [[UUID]] representing this tag and any other tags that
+  *                      point to semantically equivalent content in other versions of the same text.
+  * @param tagName       the name of the tag.
+  * @param attributes    the attributes attached to this tag.
+  * @param startPosition the start position of the range of characters marked up with this tag.
+  * @param endPosition   the end position of the range of characters marked up with this tag.
+  * @param index         the index of this tag. Indexes are numbered from 0 within the context of a particular text,
+  *                      and make it possible to order tags that share the same position.
+  * @param parentIndex   the index of the [[HierarchicalStandoffTag]] that contains this tag. If a tag has no
+  *                      parent, it is the root of the tree.
+  */
+case class HierarchicalStandoffTag(uuid: UUID,
+                                   tagName: String,
+                                   attributes: Map[String, String] = Map.empty[String, String],
+                                   startPosition: Int,
+                                   endPosition: Int,
+                                   index: Int,
+                                   parentIndex: Option[Int]) extends IndexedStandoffTag
+
+/**
+  * Represents a standoff tag that does not require a hierarchical document structure, although it can be used within
+  * such a structure. When serialised to XML, it is represented as two empty elements.
   *
   * @param uuid             a [[UUID]] representing this tag and any other tags that
   *                         point to semantically equivalent content in other versions of the same text.
-  * @param xmlIdAttrName    the name of the attribute that should contain the UUID when it is serialised to XML.
-  * @param isPartOfSplitTag if `true`, this is part of a split tag, so its UUID should always be written when it is
-  *                         serialised to XML.
   * @param tagName          the name of the tag.
   * @param attributes       the attributes attached to this tag.
   * @param startPosition    the start position of the range of characters marked up with this tag.
   * @param endPosition      the end position of the range of characters marked up with this tag.
-  * @param index            the index of this tag. Indexes are numbered from 0 within the context of a particular text.
-  * @param parentIndex      the index of the [[SimpleStandoffTag]] that is the parent of this tag.
+  * @param startIndex       the index of the start position. Indexes are numbered from 0 within the context of a
+  *                         particular text, and make it possible to order tags that share the same position.
+  * @param startParentIndex the index of the [[HierarchicalStandoffTag]], if any, that contains the start position.
+  * @param endIndex         the index of the end position.
+  * @param endParentIndex   the index of the [[HierarchicalStandoffTag]], if any, that contains the end position.
   */
-case class SimpleStandoffTag(uuid: UUID,
-                             xmlIdAttrName: String = StandoffUtil.XmlIdAttrName,
-                             isPartOfSplitTag: Boolean = false,
-                             tagName: String,
-                             attributes: Map[String, String] = Map.empty[String, String],
-                             startPosition: Int,
-                             endPosition: Int,
-                             index: Int,
-                             parentIndex: Option[Int]) extends StandoffTag
-
-/**
-  * Represent a range of characters that have been marked up with a standoff tag and that was represented
-  * as two empty tags in XML to permit non-hierarchical markup. When converted back to XML, the same two empty
-  * tags will be generated.
-  *
-  * @param uuid              a [[UUID]] representing this tag and any other tags that
-  *                          point to semantically equivalent content in other versions of the same text.
-  * @param tagName           the name of the tag.
-  * @param attributes        the attributes attached to this tag.
-  * @param startPosition     the start position of the range of characters marked up with this tag.
-  * @param endPosition       the end position of the range of characters marked up with this tag.
-  * @param firstIndex        the index of the first empty tag. Indexes are numbered from 0 within the context of a particular text.
-  * @param firstParentIndex  the index of the [[SimpleStandoffTag]] that is the parent of the first empty tag.
-  * @param secondIndex       the index of the second empty tag.
-  * @param secondParentIndex the index of the [[SimpleStandoffTag]] that is the parent of the second empty tag.
-  */
-case class SplitStandoffTag(uuid: UUID,
-                            tagName: String,
-                            attributes: Map[String, String] = Map.empty[String, String],
-                            startPosition: Int,
-                            endPosition: Int,
-                            firstIndex: Int,
-                            firstParentIndex: Option[Int],
-                            secondIndex: Int,
-                            secondParentIndex: Option[Int]) extends StandoffTag
+case class FreeStandoffTag(uuid: UUID,
+                           tagName: String,
+                           attributes: Map[String, String] = Map.empty[String, String],
+                           startPosition: Int,
+                           endPosition: Int,
+                           startIndex: Int,
+                           startParentIndex: Option[Int],
+                           endIndex: Int,
+                           endParentIndex: Option[Int]) extends StandoffTag
 
 /**
   * Represents a text and its standoff markup.
@@ -184,11 +192,12 @@ object StandoffUtil {
 /**
   * Converts XML documents to standoff markup and back again.
   *
-  * @param writeBase64UuidXmlAttrs if `true`, converts UUIDs to Base64 encoding when generating XML.
-  * @param writeOnlyEmptyXmlTags   if `true`, only empty XML tags will be written, ensuring that non-hierarchical
-  *                                markup will be converted to valid XML.
+  * @param includeAllIdsInXml If `true`, includes the ID of every standoff tag as an XML attribute.
+  *                           Otherwise, only the IDs of free standoff tags are included.
+  * @param writeBase64Ids     if `true`, writes tag IDs in Base 64 encoding.
   */
-class StandoffUtil(writeBase64UuidXmlAttrs: Boolean = true, writeOnlyEmptyXmlTags: Boolean = false) {
+class StandoffUtil(includeAllIdsInXml: Boolean = true,
+                   writeBase64Ids: Boolean = true) {
 
     import StandoffUtil._
 
@@ -203,6 +212,21 @@ class StandoffUtil(writeBase64UuidXmlAttrs: Boolean = true, writeOnlyEmptyXmlTag
 
     // Encodes and decodes UUIDs in Base 64.
     private val knoraIdUtil = new KnoraIdUtil
+
+    /**
+      * Represents half of a [[FreeStandoffTag]] that has been split into two empty tags to facilitate serialisation
+      * as XML.
+      *
+      * @param isFirstTag if `true`, this is the start tag, otherwise it is the end tag.
+      */
+    private case class SplitFreeStandoffTag(uuid: UUID,
+                                            tagName: String,
+                                            attributes: Map[String, String] = Map.empty[String, String],
+                                            startPosition: Int,
+                                            endPosition: Int,
+                                            index: Int,
+                                            parentIndex: Option[Int],
+                                            isFirstTag: Boolean) extends IndexedStandoffTag
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -232,60 +256,40 @@ class StandoffUtil(writeBase64UuidXmlAttrs: Boolean = true, writeOnlyEmptyXmlTag
       * Converts a [[TextWithStandoff]] to an equivalent XML document.
       *
       * @param textWithStandoff the [[TextWithStandoff]] to be converted.
-      * @param includeUuids     if `true`, include the UUID of each standoff tag as an XML attribute.
       * @return an XML document.
       */
-    def textWithStandoff2Xml(textWithStandoff: TextWithStandoff, includeUuids: Boolean): String = {
-        // Convert non-hierarchical markup to hierarchical markup.
-        val hierarchicalTags = textWithStandoff.standoff.foldLeft(Vector.empty[SimpleStandoffTag]) {
-            case (acc, splitStandoffTag: SplitStandoffTag) =>
-                val startTag = SimpleStandoffTag(
-                    uuid = splitStandoffTag.uuid,
-                    xmlIdAttrName = XmlStartIdAttrName,
-                    isPartOfSplitTag = true,
-                    tagName = splitStandoffTag.tagName,
-                    attributes = splitStandoffTag.attributes,
-                    startPosition = splitStandoffTag.startPosition,
-                    endPosition = splitStandoffTag.startPosition,
-                    index = splitStandoffTag.firstIndex,
-                    parentIndex = splitStandoffTag.firstParentIndex
+    def textWithStandoff2Xml(textWithStandoff: TextWithStandoff): String = {
+        val tags = textWithStandoff.standoff.foldLeft(Vector.empty[IndexedStandoffTag]) {
+            // Split each free tag into two empty tags.
+            case (acc, freeTag: FreeStandoffTag) =>
+                val startTag = SplitFreeStandoffTag(
+                    uuid = freeTag.uuid,
+                    tagName = freeTag.tagName,
+                    attributes = freeTag.attributes,
+                    startPosition = freeTag.startPosition,
+                    endPosition = freeTag.startPosition,
+                    index = freeTag.startIndex,
+                    parentIndex = freeTag.startParentIndex,
+                    isFirstTag = true
                 )
 
-                val endTag = SimpleStandoffTag(
-                    uuid = splitStandoffTag.uuid,
-                    xmlIdAttrName = XmlEndIdAttrName,
-                    isPartOfSplitTag = true,
-                    tagName = splitStandoffTag.tagName,
-                    startPosition = splitStandoffTag.endPosition,
-                    endPosition = splitStandoffTag.endPosition,
-                    index = splitStandoffTag.secondIndex,
-                    parentIndex = splitStandoffTag.secondParentIndex
+                val endTag = SplitFreeStandoffTag(
+                    uuid = freeTag.uuid,
+                    tagName = freeTag.tagName,
+                    startPosition = freeTag.endPosition,
+                    endPosition = freeTag.endPosition,
+                    index = freeTag.endIndex,
+                    parentIndex = freeTag.endParentIndex,
+                    isFirstTag = false
                 )
 
                 acc :+ startTag :+ endTag
 
-            case (acc, simpleStandoffTag: SimpleStandoffTag) =>
-                if (writeOnlyEmptyXmlTags) {
-                    val startTag = simpleStandoffTag.copy(
-                        xmlIdAttrName = XmlStartIdAttrName,
-                        isPartOfSplitTag = true,
-                        endPosition = simpleStandoffTag.startPosition
-                    )
-
-                    val endTag = simpleStandoffTag.copy(
-                        xmlIdAttrName = XmlEndIdAttrName,
-                        isPartOfSplitTag = true,
-                        startPosition = simpleStandoffTag.endPosition,
-                        attributes = Map.empty[String, String]
-                    )
-                    acc :+ startTag :+ endTag
-
-                } else {
-                    acc :+ simpleStandoffTag
-                }
+            case (acc, hierarchicalTag: HierarchicalStandoffTag) =>
+                acc :+ hierarchicalTag
         }
 
-        val groupedTags: Map[Option[Int], Seq[SimpleStandoffTag]] = hierarchicalTags.groupBy(_.parentIndex)
+        val groupedTags: Map[Option[Int], Seq[IndexedStandoffTag]] = tags.groupBy(_.parentIndex)
         val stringBuilder = new StringBuilder(StandoffUtil.XmlHeader)
 
         // Start with the root.
@@ -296,8 +300,7 @@ class StandoffUtil(writeBase64UuidXmlAttrs: Boolean = true, writeOnlyEmptyXmlTag
                     groupedTags = groupedTags,
                     posBeforeSiblings = 0,
                     siblings = children,
-                    xmlString = stringBuilder,
-                    includeUuids
+                    xmlString = stringBuilder
                 )
 
             case Some(children) =>
@@ -415,16 +418,16 @@ class StandoffUtil(writeBase64UuidXmlAttrs: Boolean = true, writeOnlyEmptyXmlTag
     def findChangedStandoffTags(oldStandoff: Seq[StandoffTag], newStandoff: Seq[StandoffTag]): (Set[UUID], Set[UUID]) = {
         def makeStandoffTagUuidSet(standoff: Seq[StandoffTag]): Set[UUID] = {
             standoff.foldLeft(Set.empty[UUID]) {
-                case (acc, standoffTag: SimpleStandoffTag) => acc + standoffTag.uuid
+                case (acc, standoffTag: HierarchicalStandoffTag) => acc + standoffTag.uuid
                 case (acc, _) => acc
             }
         }
 
-        val oldStandoffTagUuids = makeStandoffTagUuidSet(oldStandoff)
-        val newStandoffTagUuids = makeStandoffTagUuidSet(newStandoff)
+        val oldTagUuids = makeStandoffTagUuidSet(oldStandoff)
+        val newTagUuids = makeStandoffTagUuidSet(newStandoff)
 
-        val addedTagUuids = newStandoffTagUuids -- oldStandoffTagUuids
-        val removedTagUuids = oldStandoffTagUuids -- newStandoffTagUuids
+        val addedTagUuids = newTagUuids -- oldTagUuids
+        val removedTagUuids = oldTagUuids -- newTagUuids
 
         (addedTagUuids, removedTagUuids)
     }
@@ -436,7 +439,7 @@ class StandoffUtil(writeBase64UuidXmlAttrs: Boolean = true, writeOnlyEmptyXmlTag
       * Represents the state of the conversion of XML text to standoff.
       *
       * @param currentPos   the current position in the text.
-      * @param parentId     the ID of the parent [[SimpleStandoffTag]], or [[None]] if the root tag is being generated.
+      * @param parentId     the ID of the parent [[HierarchicalStandoffTag]], or [[None]] if the root tag is being generated.
       * @param nextIndex    the next available standoff tag index.
       * @param standoffTags the standoff tags generated so far.
       */
@@ -444,7 +447,7 @@ class StandoffUtil(writeBase64UuidXmlAttrs: Boolean = true, writeOnlyEmptyXmlTag
                                          parentId: Option[Int] = None,
                                          nextIndex: Int = 0,
                                          standoffTags: Vector[StandoffTag] = Vector.empty[StandoffTag],
-                                         emptyStartTags: Map[String, SimpleStandoffTag] = Map.empty[String, SimpleStandoffTag])
+                                         emptyStartTags: Map[String, HierarchicalStandoffTag] = Map.empty[String, HierarchicalStandoffTag])
 
     /**
       * Recursively converts XML nodes to standoff.
@@ -474,7 +477,7 @@ class StandoffUtil(writeBase64UuidXmlAttrs: Boolean = true, writeOnlyEmptyXmlTag
                         UUID.randomUUID
                     }
 
-                    val standoffTag = SimpleStandoffTag(
+                    val tag = HierarchicalStandoffTag(
                         tagName = elem.label,
                         attributes = attrMap - XmlStartIdAttrName,
                         startPosition = acc.currentPos,
@@ -486,7 +489,7 @@ class StandoffUtil(writeBase64UuidXmlAttrs: Boolean = true, writeOnlyEmptyXmlTag
 
                     acc.copy(
                         nextIndex = newTagIndex + 1,
-                        emptyStartTags = acc.emptyStartTags + (sID -> standoffTag)
+                        emptyStartTags = acc.emptyStartTags + (sID -> tag)
                     )
                 } else if (isEmptyTag && attrMap.contains(XmlEndIdAttrName)) {
                     // It's the second part of a split tag. Combine it with the first part.
@@ -497,26 +500,26 @@ class StandoffUtil(writeBase64UuidXmlAttrs: Boolean = true, writeOnlyEmptyXmlTag
                         throw new InvalidStandoffException(s"The empty start tag with ID '$eID' has tag name '${firstPart.tagName}', but the empty end tag with the same ID has tag name ${elem.label}")
                     }
 
-                    val splitStandoffTag = SplitStandoffTag(
+                    val freeTag = FreeStandoffTag(
                         uuid = firstPart.uuid,
                         tagName = firstPart.tagName,
                         attributes = firstPart.attributes,
                         startPosition = firstPart.startPosition,
                         endPosition = acc.currentPos,
-                        firstIndex = firstPart.index,
-                        firstParentIndex = firstPart.parentIndex,
-                        secondIndex = newTagIndex,
-                        secondParentIndex = startState.parentId
+                        startIndex = firstPart.index,
+                        startParentIndex = firstPart.parentIndex,
+                        endIndex = newTagIndex,
+                        endParentIndex = startState.parentId
                     )
 
                     acc.copy(
                         nextIndex = newTagIndex + 1,
-                        standoffTags = acc.standoffTags :+ splitStandoffTag,
+                        standoffTags = acc.standoffTags :+ freeTag,
                         emptyStartTags = acc.emptyStartTags - eID
                     )
                 } else {
                     // It's an ordinary hierarchical element.
-                    val standoffTag = SimpleStandoffTag(
+                    val tag = HierarchicalStandoffTag(
                         tagName = elem.label,
                         attributes = attrMap - XmlIdAttrName,
                         startPosition = acc.currentPos,
@@ -535,7 +538,7 @@ class StandoffUtil(writeBase64UuidXmlAttrs: Boolean = true, writeOnlyEmptyXmlTag
                         acc.copy(
                             parentId = Some(newTagIndex),
                             nextIndex = newTagIndex + 1,
-                            standoffTags = acc.standoffTags :+ standoffTag
+                            standoffTags = acc.standoffTags :+ tag
                         )
                     )
                 }
@@ -552,28 +555,36 @@ class StandoffUtil(writeBase64UuidXmlAttrs: Boolean = true, writeOnlyEmptyXmlTag
     }
 
     /**
-      * Recursively generates XML text representing [[StandoffTag]] objects.
+      * Recursively generates XML text representing [[IndexedStandoffTag]] objects.
       *
       * @param text         the text that has been marked up.
-      * @param groupedTags  a [[Map]] of all the [[StandoffTag]] objects that refer to the text, grouped by parent tag ID.
+      * @param groupedTags  a [[Map]] of all the [[IndexedStandoffTag]] objects that refer to the text, grouped by parent tag ID.
       * @param siblings     a sequence of tags having the same parent.
       * @param xmlString    the resulting XML text.
-      * @param includeUuids if `true`, include each tag's UUID as an XML attribute.
       */
     private def standoffTags2XmlString(text: String,
-                                       groupedTags: Map[Option[Int], Seq[SimpleStandoffTag]],
+                                       groupedTags: Map[Option[Int], Seq[IndexedStandoffTag]],
                                        posBeforeSiblings: Int,
-                                       siblings: Seq[SimpleStandoffTag],
-                                       xmlString: StringBuilder,
-                                       includeUuids: Boolean): Int = {
-        def attributes2Xml(standoffTag: SimpleStandoffTag): Unit = {
-            val maybeUuid: Option[(String, String)] = if (includeUuids || standoffTag.isPartOfSplitTag) {
-                Some(standoffTag.xmlIdAttrName, knoraIdUtil.encodeUuid(standoffTag.uuid, writeBase64UuidXmlAttrs))
+                                       siblings: Seq[IndexedStandoffTag],
+                                       xmlString: StringBuilder): Int = {
+        def attributes2Xml(tag: IndexedStandoffTag): Unit = {
+            val maybeUuid: Option[(String, String)] = if (includeAllIdsInXml) {
+                Some(XmlIdAttrName, knoraIdUtil.encodeUuid(tag.uuid, writeBase64Ids))
             } else {
-                None
+                tag match {
+                    case splitTag: SplitFreeStandoffTag =>
+                        val uuidStr = knoraIdUtil.encodeUuid(tag.uuid, writeBase64Ids)
+                        if (splitTag.isFirstTag) {
+                            Some(XmlStartIdAttrName, uuidStr)
+                        } else {
+                            Some(XmlEndIdAttrName, uuidStr)
+                        }
+
+                    case _ => None
+                }
             }
 
-            val attributesWithUuid = standoffTag.attributes.toVector.sortBy(_._1) ++ maybeUuid
+            val attributesWithUuid = tag.attributes.toVector.sortBy(_._1) ++ maybeUuid
 
             if (attributesWithUuid.nonEmpty) {
                 for ((attrName, attrValue) <- attributesWithUuid) {
@@ -584,46 +595,47 @@ class StandoffUtil(writeBase64UuidXmlAttrs: Boolean = true, writeOnlyEmptyXmlTag
         }
 
         siblings.sortBy(_.index).foldLeft(posBeforeSiblings) {
-            case (posBeforeTag, standoffTag) =>
-                if (standoffTag.startPosition > posBeforeTag) {
-                    xmlString.append(StringEscapeUtils.escapeXml11(text.substring(posBeforeTag, standoffTag.startPosition)))
+            case (posBeforeTag, tag) =>
+                // If there's some text between the current position and this tag, include it now.
+                if (tag.startPosition > posBeforeTag) {
+                    xmlString.append(StringEscapeUtils.escapeXml11(text.substring(posBeforeTag, tag.startPosition)))
                 }
 
-                if (standoffTag.endPosition > standoffTag.startPosition) {
+                if (tag.endPosition > tag.startPosition) {
                     // Non-empty tag
-                    xmlString.append(s"<${standoffTag.tagName}")
-                    attributes2Xml(standoffTag)
+                    xmlString.append(s"<${tag.tagName}")
+                    attributes2Xml(tag)
                     xmlString.append(">")
 
-                    val maybeChildren = groupedTags.get(Some(standoffTag.index))
+                    val maybeChildren = groupedTags.get(Some(tag.index))
 
                     val posAfterChildren = maybeChildren match {
                         case Some(children) =>
                             standoffTags2XmlString(
                                 text = text,
                                 groupedTags = groupedTags,
-                                posBeforeSiblings = standoffTag.startPosition,
+                                posBeforeSiblings = tag.startPosition,
                                 siblings = children,
-                                xmlString = xmlString,
-                                includeUuids = includeUuids
+                                xmlString = xmlString
                             )
 
-                        case None => standoffTag.startPosition
+                        case None => tag.startPosition
                     }
 
-                    if (standoffTag.endPosition > posAfterChildren) {
-                        xmlString.append(StringEscapeUtils.escapeXml11(text.substring(posAfterChildren, standoffTag.endPosition)))
+                    // If there's some text between the last child and the closing tag, include it now.
+                    if (tag.endPosition > posAfterChildren) {
+                        xmlString.append(StringEscapeUtils.escapeXml11(text.substring(posAfterChildren, tag.endPosition)))
                     }
 
-                    xmlString.append(s"</${standoffTag.tagName}>")
+                    xmlString.append(s"</${tag.tagName}>")
                 } else {
                     // Empty tag
-                    xmlString.append(s"<${standoffTag.tagName}")
-                    attributes2Xml(standoffTag)
+                    xmlString.append(s"<${tag.tagName}")
+                    attributes2Xml(tag)
                     xmlString.append("/>")
                 }
 
-                standoffTag.endPosition
+                tag.endPosition
         }
     }
 }
