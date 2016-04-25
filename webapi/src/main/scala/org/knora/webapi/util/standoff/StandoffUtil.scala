@@ -97,7 +97,8 @@ case class HierarchicalStandoffTag(uuid: UUID,
 
 /**
   * Represents a standoff tag that does not require a hierarchical document structure, although it can be used within
-  * such a structure. When serialised to XML, it is represented as two empty elements.
+  * such a structure. Its XML representation is a pair of empty elements in
+  * [[http://conferences.idealliance.org/extreme/html/2004/DeRose01/EML2004DeRose01.html#t6 CLIX]] format.
   *
   * @param uuid             a [[UUID]] representing this tag and any other tags that
   *                         point to semantically equivalent content in other versions of the same text.
@@ -181,23 +182,69 @@ case class StandoffDiffDelete(baseStartPosition: Int,
                               baseEndPosition: Int,
                               derivedStartPosition: Int) extends StandoffDiff
 
-
+/**
+  * Standoff-related constants.
+  */
 object StandoffUtil {
+    // TODO: support XML namespaces.
+
+    // The header written at the start of every XML document.
     private val XmlHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-    val XmlIdAttrName = "id"
-    val XmlStartIdAttrName = "sID"
-    val XmlEndIdAttrName = "eID"
+
+    // The name of the XML attribute that contains the ID of an ordinary element (i.e. not a CLIX milestone).
+    private val XmlIdAttrName = "id"
+
+    // The name of the XML element that contains the ID of a CLIX start milestone.
+    private val XmlStartIdAttrName = "sID"
+
+    // The name of the XML element that contains the ID of a CLIX end milestone.
+    private val XmlEndIdAttrName = "eID"
 }
 
 /**
-  * Converts XML documents to standoff markup and back again.
+  * Converts XML documents to standoff markup and back again. Supports
+  * [[http://conferences.idealliance.org/extreme/html/2004/DeRose01/EML2004DeRose01.html#t6 CLIX]] format
+  * for overlapping tags.
   *
-  * @param includeAllIdsInXml If `true`, includes the ID of every standoff tag as an XML attribute.
-  *                           Otherwise, only the IDs of free standoff tags are included.
-  * @param writeBase64Ids     if `true`, writes tag IDs in Base 64 encoding.
+  * Every standoff tag has a [[UUID]]. These can be represented in XML in different ways:
+  *
+  * - In canonical form as a 36-character string.
+  * - As a 22-character Base64-encoded string.
+  * - As a document-specific ID that can be mapped to a UUID.
+  *
+  * These IDs are represented using the following XML attributes:
+  *
+  * - `sID` for CLIX start milestones.
+  * - `eID` for CLIX end milestones.
+  * - `id` for all other elements.
+  *
+  * IDs are required on CLIX milestones, and optional on other elements.
+  *
+  * When converting from XML:
+  *
+  * - If a document-specific ID is provided and can be mapped to a UUID, that UUID is used.
+  * - If a UUID is provided in canonical form or Base64 encoding, that UUID is used.
+  * - Otherwise (if no ID is provided, or if an ID is provided but cannot be parsed as a UUID or mapped to one),
+  *   a random UUID is generated.
+  *
+  * When converting to XML:
+  *
+  * - If `writeAllIds` is set to `true` (the default), the ID of every element is written; otherwise, only the IDs of
+  *   CLIX milestones are included.
+  * - If a UUID can be mapped to a document-specific ID, the document-specific ID is used, otherwise the UUID is used.
+  * - UUIDs are written in Base64 encoding if `writeBase64Ids` is `true` (the default), otherwise in canonical form.
+  *
+  * @param writeAllIDs         If `true` (the default), adds the ID of every standoff tag as an attribute when writing
+  *                            XML. Otherwise, only the IDs of CLIX milestones are included.
+  * @param writeBase64IDs      If `true`, writes UUIDs in Base64 encoding; otherwise, writes UUIDs in canonical form.
+  * @param documentSpecificIDs An optional mapping between document-specific IDs and UUIDs. When reading XML,
+  *                            each document-specific ID will be converted to the corresponding UUID. Elements that
+  *                            don't specify an ID will be assigned a random UUID. When writing XML, each UUID will
+  *                            be converted to the corresponding document-specific ID if available.
   */
-class StandoffUtil(includeAllIdsInXml: Boolean = true,
-                   writeBase64Ids: Boolean = true) {
+class StandoffUtil(writeAllIDs: Boolean = true,
+                   writeBase64IDs: Boolean = true,
+                   documentSpecificIDs: Map[String, UUID] = Map.empty[String, UUID]) {
 
     import StandoffUtil._
 
@@ -213,20 +260,22 @@ class StandoffUtil(includeAllIdsInXml: Boolean = true,
     // Encodes and decodes UUIDs in Base 64.
     private val knoraIdUtil = new KnoraIdUtil
 
+    // A Map of UUIDs to document-specific IDs.
+    private val uuidsToDocumentSpecificIds: Map[UUID, String] = documentSpecificIDs.map(_.swap)
+
     /**
-      * Represents half of a [[FreeStandoffTag]] that has been split into two empty tags to facilitate serialisation
-      * as XML.
+      * An empty standoff tag representing a CLIX milestone, to facilitate conversion to and from XML.
       *
-      * @param isFirstTag if `true`, this is the start tag, otherwise it is the end tag.
+      * @param isStartTag if `true`, this tag represents the start element, otherwise it represents the end element.
       */
-    private case class SplitFreeStandoffTag(uuid: UUID,
-                                            tagName: String,
-                                            attributes: Map[String, String] = Map.empty[String, String],
-                                            startPosition: Int,
-                                            endPosition: Int,
-                                            index: Int,
-                                            parentIndex: Option[Int],
-                                            isFirstTag: Boolean) extends IndexedStandoffTag
+    private case class ClixMilestoneTag(uuid: UUID,
+                                        tagName: String,
+                                        attributes: Map[String, String] = Map.empty[String, String],
+                                        startPosition: Int,
+                                        endPosition: Int,
+                                        index: Int,
+                                        parentIndex: Option[Int],
+                                        isStartTag: Boolean) extends IndexedStandoffTag
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -241,14 +290,22 @@ class StandoffUtil(includeAllIdsInXml: Boolean = true,
         val saxParser = saxParserFactory.newSAXParser()
         val nodes = XML.withSAXParser(saxParser).loadString(xmlStr)
 
-        val standoff = xmlNodes2StandoffTags(
+        val finishedConversionState = xmlNodes2Standoff(
             nodes = nodes,
             startState = Xml2StandoffState()
-        ).standoffTags
+        )
+
+        if (finishedConversionState.clixStartMilestones.nonEmpty) {
+            val missingEndTags = finishedConversionState.clixStartMilestones.map {
+                case (startTagID, startTag) => s"<${startTag.tagName} $XmlStartIdAttrName=${'"'}$startTagID${'"'}>"
+            }.mkString(", ")
+
+            throw InvalidStandoffException(s"One or more CLIX milestones were not closed: $missingEndTags")
+        }
 
         TextWithStandoff(
             text = nodes.text,
-            standoff = standoff
+            standoff = finishedConversionState.standoffTags
         )
     }
 
@@ -260,9 +317,9 @@ class StandoffUtil(includeAllIdsInXml: Boolean = true,
       */
     def textWithStandoff2Xml(textWithStandoff: TextWithStandoff): String = {
         val tags = textWithStandoff.standoff.foldLeft(Vector.empty[IndexedStandoffTag]) {
-            // Split each free tag into two empty tags.
+            // Split each free tag into a pair of CLIX milestones.
             case (acc, freeTag: FreeStandoffTag) =>
-                val startTag = SplitFreeStandoffTag(
+                val startTag = ClixMilestoneTag(
                     uuid = freeTag.uuid,
                     tagName = freeTag.tagName,
                     attributes = freeTag.attributes,
@@ -270,17 +327,17 @@ class StandoffUtil(includeAllIdsInXml: Boolean = true,
                     endPosition = freeTag.startPosition,
                     index = freeTag.startIndex,
                     parentIndex = freeTag.startParentIndex,
-                    isFirstTag = true
+                    isStartTag = true
                 )
 
-                val endTag = SplitFreeStandoffTag(
+                val endTag = ClixMilestoneTag(
                     uuid = freeTag.uuid,
                     tagName = freeTag.tagName,
                     startPosition = freeTag.endPosition,
                     endPosition = freeTag.endPosition,
                     index = freeTag.endIndex,
                     parentIndex = freeTag.endParentIndex,
-                    isFirstTag = false
+                    isStartTag = false
                 )
 
                 acc :+ startTag :+ endTag
@@ -306,7 +363,8 @@ class StandoffUtil(includeAllIdsInXml: Boolean = true,
             case Some(children) =>
                 throw InvalidStandoffException("The standoff cannot be serialised to XML because it would have multiple root nodes")
 
-            case None => ()
+            case None =>
+                throw InvalidStandoffException("The standoff cannot be serialised to XML because there is no root element")
         }
 
         stringBuilder.toString
@@ -438,16 +496,19 @@ class StandoffUtil(includeAllIdsInXml: Boolean = true,
     /**
       * Represents the state of the conversion of XML text to standoff.
       *
-      * @param currentPos   the current position in the text.
-      * @param parentId     the ID of the parent [[HierarchicalStandoffTag]], or [[None]] if the root tag is being generated.
-      * @param nextIndex    the next available standoff tag index.
-      * @param standoffTags the standoff tags generated so far.
+      * @param currentPos          the current position in the text.
+      * @param parentId            the ID of the parent [[HierarchicalStandoffTag]], or [[None]] if the root element is
+      *                            being generated.
+      * @param nextIndex           the next available standoff tag index.
+      * @param standoffTags        the standoff tags generated so far.
+      * @param clixStartMilestones a map of element IDs to CLIX start milestones for which end milestones have not yet
+      *                            been encountered.
       */
     private case class Xml2StandoffState(currentPos: Int = 0,
                                          parentId: Option[Int] = None,
                                          nextIndex: Int = 0,
                                          standoffTags: Vector[StandoffTag] = Vector.empty[StandoffTag],
-                                         emptyStartTags: Map[String, HierarchicalStandoffTag] = Map.empty[String, HierarchicalStandoffTag])
+                                         clixStartMilestones: Map[String, ClixMilestoneTag] = Map.empty[String, ClixMilestoneTag])
 
     /**
       * Recursively converts XML nodes to standoff.
@@ -456,7 +517,19 @@ class StandoffUtil(includeAllIdsInXml: Boolean = true,
       * @param startState the current state of the conversion.
       * @return the resulting conversion state.
       */
-    private def xmlNodes2StandoffTags(nodes: NodeSeq, startState: Xml2StandoffState): Xml2StandoffState = {
+    private def xmlNodes2Standoff(nodes: NodeSeq, startState: Xml2StandoffState): Xml2StandoffState = {
+        def idToUuid(id: String): UUID = {
+            documentSpecificIDs.get(id) match {
+                case Some(existingUuid) => existingUuid
+                case None =>
+                    if (knoraIdUtil.couldBeUuid(id)) {
+                        knoraIdUtil.decodeUuid(id)
+                    } else {
+                        UUID.randomUUID
+                    }
+            }
+        }
+
         // Process sibling nodes.
         nodes.foldLeft(startState) {
             case (acc: Xml2StandoffState, elem: Elem) =>
@@ -465,49 +538,50 @@ class StandoffUtil(includeAllIdsInXml: Boolean = true,
 
                 val newTagIndex = acc.nextIndex
                 val attrMap = elem.attributes.asAttrMap
-                val isEmptyTag = elem.text.length == 0
+                val isEmptyElement = elem.text.length == 0
 
-                if (isEmptyTag && attrMap.contains(XmlStartIdAttrName)) {
-                    // It's the first part of a split tag. Save it until we get the second part.
+                if (isEmptyElement && attrMap.contains(XmlStartIdAttrName)) {
+                    // It's a CLIX start milestone. Save it until we get the matching end milestone.
+
                     val sID = attrMap(XmlStartIdAttrName)
 
-                    val uuid = if (knoraIdUtil.couldBeUuid(sID)) {
-                        knoraIdUtil.decodeUuid(sID)
-                    } else {
-                        UUID.randomUUID
-                    }
-
-                    val tag = HierarchicalStandoffTag(
+                    val tag = ClixMilestoneTag(
                         tagName = elem.label,
                         attributes = attrMap - XmlStartIdAttrName,
                         startPosition = acc.currentPos,
                         endPosition = acc.currentPos,
                         index = newTagIndex,
                         parentIndex = startState.parentId,
-                        uuid = uuid
+                        uuid = idToUuid(sID),
+                        isStartTag = true
                     )
 
                     acc.copy(
                         nextIndex = newTagIndex + 1,
-                        emptyStartTags = acc.emptyStartTags + (sID -> tag)
+                        clixStartMilestones = acc.clixStartMilestones + (sID -> tag)
                     )
-                } else if (isEmptyTag && attrMap.contains(XmlEndIdAttrName)) {
-                    // It's the second part of a split tag. Combine it with the first part.
-                    val eID = attrMap(XmlEndIdAttrName)
-                    val firstPart = acc.emptyStartTags.getOrElse(eID, throw InvalidStandoffException(s"No empty start tag found to match the empty end tag with ID $eID"))
+                } else if (isEmptyElement && attrMap.contains(XmlEndIdAttrName)) {
+                    // It's a CLIX end milestone. Combine it with the start milestone to make a FreeStandoffTag.
 
-                    if (firstPart.tagName != elem.label) {
-                        throw new InvalidStandoffException(s"The empty start tag with ID '$eID' has tag name '${firstPart.tagName}', but the empty end tag with the same ID has tag name ${elem.label}")
+                    val eID: String = attrMap(XmlEndIdAttrName)
+
+                    val startMilestone: ClixMilestoneTag = acc.clixStartMilestones.getOrElse(
+                        eID,
+                        throw InvalidStandoffException(s"Found a CLIX milestone with $XmlEndIdAttrName $eID, but there was no start milestone with that ID")
+                    )
+
+                    if (startMilestone.tagName != elem.label) {
+                        throw InvalidStandoffException(s"The CLIX start milestone with $XmlStartIdAttrName $eID has tag name <${startMilestone.tagName}>, but the end milestone with the same ID has tag name ${elem.label}")
                     }
 
                     val freeTag = FreeStandoffTag(
-                        uuid = firstPart.uuid,
-                        tagName = firstPart.tagName,
-                        attributes = firstPart.attributes,
-                        startPosition = firstPart.startPosition,
+                        uuid = startMilestone.uuid,
+                        tagName = startMilestone.tagName,
+                        attributes = startMilestone.attributes,
+                        startPosition = startMilestone.startPosition,
                         endPosition = acc.currentPos,
-                        startIndex = firstPart.index,
-                        startParentIndex = firstPart.parentIndex,
+                        startIndex = startMilestone.index,
+                        startParentIndex = startMilestone.parentIndex,
                         endIndex = newTagIndex,
                         endParentIndex = startState.parentId
                     )
@@ -515,7 +589,7 @@ class StandoffUtil(includeAllIdsInXml: Boolean = true,
                     acc.copy(
                         nextIndex = newTagIndex + 1,
                         standoffTags = acc.standoffTags :+ freeTag,
-                        emptyStartTags = acc.emptyStartTags - eID
+                        clixStartMilestones = acc.clixStartMilestones - eID
                     )
                 } else {
                     // It's an ordinary hierarchical element.
@@ -527,13 +601,13 @@ class StandoffUtil(includeAllIdsInXml: Boolean = true,
                         index = newTagIndex,
                         parentIndex = startState.parentId,
                         uuid = attrMap.get(XmlIdAttrName) match {
-                            case Some(uuidStr) => knoraIdUtil.decodeUuid(uuidStr)
+                            case Some(id) => idToUuid(id)
                             case None => UUID.randomUUID
                         }
                     )
 
                     // Process the element's child nodes.
-                    xmlNodes2StandoffTags(
+                    xmlNodes2Standoff(
                         nodes = elem.child,
                         acc.copy(
                             parentId = Some(newTagIndex),
@@ -557,10 +631,11 @@ class StandoffUtil(includeAllIdsInXml: Boolean = true,
     /**
       * Recursively generates XML text representing [[IndexedStandoffTag]] objects.
       *
-      * @param text         the text that has been marked up.
-      * @param groupedTags  a [[Map]] of all the [[IndexedStandoffTag]] objects that refer to the text, grouped by parent tag ID.
-      * @param siblings     a sequence of tags having the same parent.
-      * @param xmlString    the resulting XML text.
+      * @param text        the text that has been marked up.
+      * @param groupedTags a [[Map]] of all the [[IndexedStandoffTag]] objects that refer to the text, grouped by
+      *                    parent tag index.
+      * @param siblings    a sequence of tags having the same parent.
+      * @param xmlString   the resulting XML text.
       */
     private def standoffTags2XmlString(text: String,
                                        groupedTags: Map[Option[Int], Seq[IndexedStandoffTag]],
@@ -568,23 +643,27 @@ class StandoffUtil(includeAllIdsInXml: Boolean = true,
                                        siblings: Seq[IndexedStandoffTag],
                                        xmlString: StringBuilder): Int = {
         def attributes2Xml(tag: IndexedStandoffTag): Unit = {
-            val maybeUuid: Option[(String, String)] = if (includeAllIdsInXml) {
-                Some(XmlIdAttrName, knoraIdUtil.encodeUuid(tag.uuid, writeBase64Ids))
+            val id = uuidsToDocumentSpecificIds.get(tag.uuid) match {
+                case Some(documentSpecificId) => documentSpecificId
+                case None => knoraIdUtil.encodeUuid(tag.uuid, writeBase64IDs)
+            }
+
+            val maybeIdAttr: Option[(String, String)] = if (writeAllIDs) {
+                Some(XmlIdAttrName, id)
             } else {
                 tag match {
-                    case splitTag: SplitFreeStandoffTag =>
-                        val uuidStr = knoraIdUtil.encodeUuid(tag.uuid, writeBase64Ids)
-                        if (splitTag.isFirstTag) {
-                            Some(XmlStartIdAttrName, uuidStr)
+                    case splitTag: ClixMilestoneTag =>
+                        if (splitTag.isStartTag) {
+                            Some(XmlStartIdAttrName, id)
                         } else {
-                            Some(XmlEndIdAttrName, uuidStr)
+                            Some(XmlEndIdAttrName, id)
                         }
 
                     case _ => None
                 }
             }
 
-            val attributesWithUuid = tag.attributes.toVector.sortBy(_._1) ++ maybeUuid
+            val attributesWithUuid = tag.attributes ++ maybeIdAttr
 
             if (attributesWithUuid.nonEmpty) {
                 for ((attrName, attrValue) <- attributesWithUuid) {

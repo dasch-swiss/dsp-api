@@ -18,11 +18,11 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util
+package org.knora.webapi.util.standoff
 
 import java.util.UUID
 
-import org.knora.webapi.util.standoff._
+import org.knora.webapi.util.KnoraIdUtil
 import org.scalatest.{Matchers, WordSpec}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
@@ -37,7 +37,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
     "The standoff utility" should {
 
         "convert an XML document to text with standoff, then back to an equivalent XML document" in {
-            val standoffUtil = new StandoffUtil(includeAllIdsInXml = false)
+            val standoffUtil = new StandoffUtil(writeAllIDs = false)
 
             // Convert the XML document to text with standoff.
             val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(StandoffUtilSpec.simpleXmlDoc)
@@ -45,17 +45,46 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             // Convert the text with standoff back to XML.
             val backToXml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
-            // Compare the original XML with the regenerated XML, ignoring insignificant differences such as order of attributes.
+            // Compare the original XML with the regenerated XML.
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(StandoffUtilSpec.simpleXmlDoc)).withTest(Input.fromString(backToXml)).build()
             xmlDiff.hasDifferences should be(false)
         }
 
+        "convert an XML document with CLIX milestones to standoff, then back to an equivalent XML document" in {
+            val documentSpecificIDs = Map(
+                "s02" -> UUID.randomUUID,
+                "s03" -> UUID.randomUUID,
+                "s04" -> UUID.randomUUID
+            )
+
+            val standoffUtil = new StandoffUtil(
+                writeAllIDs = false,
+                documentSpecificIDs = documentSpecificIDs
+            )
+
+            // Convert the XML document to text with standoff.
+            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(StandoffUtilSpec.xmlDocWithClix)
+
+            // Convert the text with standoff back to XML.
+            val backToXml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
+
+            // Compare the original XML with the regenerated XML.
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(StandoffUtilSpec.xmlDocWithClix)).withTest(Input.fromString(backToXml)).build()
+            xmlDiff.hasDifferences should be(false)
+        }
+
         "calculate the diffs between a critical text and a diplomatic transcription" in {
-            val standoffUtil = new StandoffUtil
+            val regionID = UUID.randomUUID
+
+            val documentSpecificIDs = Map(
+                "1" -> regionID
+            )
+
+            val standoffUtil = new StandoffUtil(documentSpecificIDs = documentSpecificIDs)
 
             val diplomaticTranscription =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<region id="VYeTFoF0QQiZyZP_Qqvr1A">
+                  |<region id="1">
                   |<center><underline>CLI</underline></center>.
                   |<underline>Examen modi Renaldiniani inscribendi q&#780;vis polygona regularia in circulo,
                   |depromti ex Lib. II. de Resol. &#38; Composi: Mathem: p. 367.</underline> (<underline>vid. Sturmii
@@ -65,7 +94,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
 
             val criticalText =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<region id="VYeTFoF0QQiZyZP_Qqvr1A">
+                  |<region id="1">
                   |<center>
                   |<bold>CLI</bold><medskip/>
                   |<bold>Examen modi Renaldiniani inscribendi quaevis polygona regularia in circulo,
@@ -110,18 +139,28 @@ class StandoffUtilSpec extends WordSpec with Matchers {
                 newStandoff = criticalTextWithStandoff.standoff
             )
 
-            standoffAdded.contains(knoraIdUtil.decodeUuid("VYeTFoF0QQiZyZP_Qqvr1A")) should be(false)
-            standoffRemoved.contains(knoraIdUtil.decodeUuid("VYeTFoF0QQiZyZP_Qqvr1A")) should be(false)
+            standoffAdded.contains(regionID) should be(false)
+            standoffRemoved.contains(regionID) should be(false)
         }
 
         "calculate the diffs in a workflow with two versions of a diplomatic transcription and two versions of an editorial text" in {
-            val standoffUtil = new StandoffUtil
+            val paragraphID = UUID.randomUUID
+            val strikeID = UUID.randomUUID
+            val blueID = UUID.randomUUID
+
+            val documentSpecificIDs = Map(
+                "1" -> paragraphID,
+                "2" -> strikeID,
+                "3" -> blueID
+            )
+
+            val standoffUtil = new StandoffUtil(documentSpecificIDs = documentSpecificIDs)
 
             // The diplomatic transcription has a structural tag (paragraph), an abbreviation ('d' for 'den'), a
             // strikethrough, and a repeated word (which could be the author's mistake or the transcriber's mistake).
             val diplomaticTranscription1 =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<paragraph id="wLMZgdLSS96-WKR7rwaTtQ">Ich habe d Bus <strike id="qUp_NaX4TK2h7f4OQ1Mz_Q">heute </strike>genommen, weil ich ich verspätet war.</paragraph>
+                  |<paragraph id="1">Ich habe d Bus <strike id="2">heute </strike>genommen, weil ich ich verspätet war.</paragraph>
                 """.stripMargin
 
             // Convert the markup in the transcription to standoff and back again to check that it's correct.
@@ -137,7 +176,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             // and corrects the repeated word.
             val editorialText1 =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<paragraph id="wLMZgdLSS96-WKR7rwaTtQ">Ich habe den Bus genommen, weil ich verspätet war.</paragraph>
+                  |<paragraph id="1">Ich habe den Bus genommen, weil ich verspätet war.</paragraph>
                 """.stripMargin
 
             val edito1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText1)
@@ -171,7 +210,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             // colour.
             val diplomaticTranscription2 =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<paragraph id="wLMZgdLSS96-WKR7rwaTtQ">Ich habe d Bahn <strike id="qUp_NaX4TK2h7f4OQ1Mz_Q">heute </strike>genommen, weil ich <blue id="KOIow2-7SLOO1DkOT-I5Ug">verspätet</blue> war.</paragraph>
+                  |<paragraph id="1">Ich habe d Bahn <strike id="2">heute </strike>genommen, weil ich <blue id="3">verspätet</blue> war.</paragraph>
                 """.stripMargin
 
             // The editor now rebases the editorial text against the revised transcription, by making new diffs.
@@ -206,7 +245,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
 
             val (addedTagUuids, removedTagUuids) = standoffUtil.findChangedStandoffTags(diplo1TextWithStandoff.standoff, diplo2TextWithStandoff.standoff)
 
-            addedTagUuids should be(Set(knoraIdUtil.decodeUuid("KOIow2-7SLOO1DkOT-I5Ug"))) // Just the <blue> tag was added.
+            addedTagUuids should be(Set(blueID)) // Just the <blue> tag was added.
             removedTagUuids should be(Set()) // No tags were removed.
 
             // The editor now corrects the editorial text to take into account the change from 'Bus' to 'Bahn'. This
@@ -215,7 +254,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
 
             val editorialText2 =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<paragraph id="wLMZgdLSS96-WKR7rwaTtQ">Ich habe die Bahn genommen, weil ich <blue id="KOIow2-7SLOO1DkOT-I5Ug">verspätet</blue> war.</paragraph>
+                  |<paragraph id="1">Ich habe die Bahn genommen, weil ich <blue id="3">verspätet</blue> war.</paragraph>
                 """.stripMargin
 
             val edito2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText2)
@@ -261,9 +300,9 @@ object StandoffUtilSpec {
           |        original pedagogical treatment, it is based on two postulates:
           |
           |        <orderedList>
-          |            <listItem>that the laws of <q sID="4Uu8CyvCSraUfpePo84cTA"/>physics are invariant (i.e. identical) in all inertial systems
+          |            <listItem>that the laws of physics are invariant (i.e. identical) in all inertial systems
           |                (non-accelerating frames of reference).</listItem>
-          |            <listItem>that the speed of light in a vacuum<q eID="4Uu8CyvCSraUfpePo84cTA"/> is the same for all observers, regardless of the
+          |            <listItem>that the speed of light in a vacuum is the same for all observers, regardless of the
           |                motion of the light source.</listItem>
           |        </orderedList>
           |    </paragraph>
@@ -277,4 +316,18 @@ object StandoffUtilSpec {
           |    </paragraph>
           |</article>""".stripMargin
 
+    val xmlDocWithClix =
+        """<?xml version="1.0" encoding="UTF-8"?>
+          |<lg>
+          | <l>
+          |  <seg>Scorn not the sonnet;</seg>
+          |  <s sID="s02"/>critic, you have frowned, </l>
+          | <l>Mindless of its just honours; <s eID="s02"/>
+          |  <s sID="s03"/>with this key </l>
+          | <l>Shakespeare unlocked his heart; <s eID="s03"/>
+          |  <s sID="s04"/>the melody </l>
+          | <l>Of this small lute gave ease to Petrarch's wound. <s eID="s04"/>
+          | </l>
+          |</lg>
+        """.stripMargin
 }
