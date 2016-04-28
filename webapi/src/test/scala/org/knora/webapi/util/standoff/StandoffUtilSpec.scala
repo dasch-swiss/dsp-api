@@ -50,7 +50,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             xmlDiff.hasDifferences should be(false)
         }
 
-        "convert an XML document with CLIX milestones to standoff, then back to an equivalent XML document" in {
+        "convert an XML document with namespaces and CLIX milestones to standoff, then back to an equivalent XML document" in {
             val documentSpecificIDs = Map(
                 "s02" -> UUID.randomUUID,
                 "s03" -> UUID.randomUUID,
@@ -58,6 +58,8 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             )
 
             val standoffUtil = new StandoffUtil(
+                defaultXmlNamespace = Some("http://www.example.org/ns1"),
+                xmlNamespaces = Map("ns2" -> "http://www.example.org/ns2"),
                 writeAllIDs = false,
                 documentSpecificIDs = documentSpecificIDs
             )
@@ -318,15 +320,15 @@ object StandoffUtilSpec {
 
     val xmlDocWithClix =
         """<?xml version="1.0" encoding="UTF-8"?>
-          |<lg>
+          |<lg xmlns="http://www.example.org/ns1" xmlns:ns2="http://www.example.org/ns2">
           | <l>
-          |  <seg>Scorn not the sonnet;</seg>
-          |  <s sID="s02"/>critic, you have frowned, </l>
-          | <l>Mindless of its just honours; <s eID="s02"/>
-          |  <s sID="s03"/>with this key </l>
-          | <l>Shakespeare unlocked his heart; <s eID="s03"/>
-          |  <s sID="s04"/>the melody </l>
-          | <l>Of this small lute gave ease to Petrarch's wound. <s eID="s04"/>
+          |  <seg foo="x" ns2:bar="y">Scorn not the sonnet;</seg>
+          |  <ns2:s sID="s02"/>critic, you have frowned,</l>
+          | <l>Mindless of its just honours;<ns2:s eID="s02"/>
+          |  <ns2:s sID="s03"/>with this key</l>
+          | <l>Shakespeare unlocked his heart;<ns2:s eID="s03"/>
+          |  <ns2:s sID="s04"/>the melody</l>
+          | <l>Of this small lute gave ease to Petrarch's wound.<ns2:s eID="s04"/>
           | </l>
           |</lg>
         """.stripMargin

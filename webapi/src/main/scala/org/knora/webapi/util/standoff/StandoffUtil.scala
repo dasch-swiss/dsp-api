@@ -26,10 +26,19 @@ import javax.xml.parsers.SAXParserFactory
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import org.apache.commons.lang3.StringEscapeUtils
-import org.knora.webapi.InvalidStandoffException
-import org.knora.webapi.util.KnoraIdUtil
+import org.knora.webapi.{IRI, InvalidStandoffException}
+import org.knora.webapi.util.{ErrorHandlingMap, KnoraIdUtil}
 
 import scala.xml._
+
+/**
+  * Represents an attribute of a standoff tag.
+  *
+  * @param key          the name of the attribute.
+  * @param xmlNamespace the XML namespace that is used for the attribute when the tag is represented as XML.
+  * @param value        the value of the attribute.
+  */
+case class StandoffTagAttribute(key: String, xmlNamespace: Option[IRI], value: String)
 
 /**
   * Represents markup on a range of characters in a text.
@@ -47,6 +56,11 @@ trait StandoffTag {
     def tagName: String
 
     /**
+      * The namespace used when this tag is represented as XML.
+      */
+    def xmlNamespace: Option[IRI]
+
+    /**
       * The start position of the text range.
       */
     def startPosition: Int
@@ -59,7 +73,7 @@ trait StandoffTag {
     /**
       * The attributes attached to this tag.
       */
-    def attributes: Map[String, String]
+    def attributes: Set[StandoffTagAttribute]
 }
 
 /**
@@ -78,7 +92,8 @@ trait IndexedStandoffTag extends StandoffTag {
   *
   * @param uuid          a [[UUID]] representing this tag and any other tags that
   *                      point to semantically equivalent content in other versions of the same text.
-  * @param tagName       the name of the tag.
+  * @param tagName       the name of this tag.
+  * @param xmlNamespace  the namespace used when this tag is represented as XML.
   * @param attributes    the attributes attached to this tag.
   * @param startPosition the start position of the range of characters marked up with this tag.
   * @param endPosition   the end position of the range of characters marked up with this tag.
@@ -89,11 +104,12 @@ trait IndexedStandoffTag extends StandoffTag {
   */
 case class HierarchicalStandoffTag(uuid: UUID,
                                    tagName: String,
-                                   attributes: Map[String, String] = Map.empty[String, String],
+                                   xmlNamespace: Option[IRI] = None,
+                                   attributes: Set[StandoffTagAttribute] = Set.empty[StandoffTagAttribute],
                                    startPosition: Int,
                                    endPosition: Int,
                                    index: Int,
-                                   parentIndex: Option[Int]) extends IndexedStandoffTag
+                                   parentIndex: Option[Int] = None) extends IndexedStandoffTag
 
 /**
   * Represents a standoff tag that does not require a hierarchical document structure, although it can be used within
@@ -103,6 +119,7 @@ case class HierarchicalStandoffTag(uuid: UUID,
   * @param uuid             a [[UUID]] representing this tag and any other tags that
   *                         point to semantically equivalent content in other versions of the same text.
   * @param tagName          the name of the tag.
+  * @param xmlNamespace     the namespace used when this tag is represented as XML.
   * @param attributes       the attributes attached to this tag.
   * @param startPosition    the start position of the range of characters marked up with this tag.
   * @param endPosition      the end position of the range of characters marked up with this tag.
@@ -114,13 +131,14 @@ case class HierarchicalStandoffTag(uuid: UUID,
   */
 case class FreeStandoffTag(uuid: UUID,
                            tagName: String,
-                           attributes: Map[String, String] = Map.empty[String, String],
+                           xmlNamespace: Option[IRI] = None,
+                           attributes: Set[StandoffTagAttribute] = Set.empty[StandoffTagAttribute],
                            startPosition: Int,
                            endPosition: Int,
                            startIndex: Int,
-                           startParentIndex: Option[Int],
+                           startParentIndex: Option[Int] = None,
                            endIndex: Int,
-                           endParentIndex: Option[Int]) extends StandoffTag
+                           endParentIndex: Option[Int] = None) extends StandoffTag
 
 /**
   * Represents a text and its standoff markup.
@@ -186,19 +204,20 @@ case class StandoffDiffDelete(baseStartPosition: Int,
   * Standoff-related constants.
   */
 object StandoffUtil {
-    // TODO: support XML namespaces.
-
     // The header written at the start of every XML document.
     private val XmlHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 
-    // The name of the XML attribute that contains the ID of an ordinary element (i.e. not a CLIX milestone).
-    private val XmlIdAttrName = "id"
+    // The name of the XML attribute that contains the ID of a hierarchical element (i.e. not a CLIX milestone).
+    private val XmlHierarchicalIdAttrName = "id"
 
-    // The name of the XML element that contains the ID of a CLIX start milestone.
-    private val XmlStartIdAttrName = "sID"
+    // The name of the XML attribute that contains the ID of a CLIX start milestone.
+    private val XmlClixStartIdAttrName = "sID"
 
-    // The name of the XML element that contains the ID of a CLIX end milestone.
-    private val XmlEndIdAttrName = "eID"
+    // The name of the XML attribute that contains the ID of a CLIX end milestone.
+    private val XmlClixEndIdAttrName = "eID"
+
+    // The names of all the XML attributes used as IDs.
+    private val XmlIdAttrNames = Set(XmlHierarchicalIdAttrName, XmlClixStartIdAttrName, XmlClixEndIdAttrName)
 }
 
 /**
@@ -225,15 +244,16 @@ object StandoffUtil {
   * - If a document-specific ID is provided and can be mapped to a UUID, that UUID is used.
   * - If a UUID is provided in canonical form or Base64 encoding, that UUID is used.
   * - Otherwise (if no ID is provided, or if an ID is provided but cannot be parsed as a UUID or mapped to one),
-  *   a random UUID is generated.
+  * a random UUID is generated.
   *
   * When converting to XML:
   *
   * - If `writeAllIds` is set to `true` (the default), the ID of every element is written; otherwise, only the IDs of
-  *   CLIX milestones are included.
+  * CLIX milestones are included.
   * - If a UUID can be mapped to a document-specific ID, the document-specific ID is used, otherwise the UUID is used.
   * - UUIDs are written in Base64 encoding if `writeBase64Ids` is `true` (the default), otherwise in canonical form.
   *
+  * @param xmlNamespaces       A map of prefixes to XML namespaces, to be used when converting standoff to XML.
   * @param writeAllIDs         If `true` (the default), adds the ID of every standoff tag as an attribute when writing
   *                            XML. Otherwise, only the IDs of CLIX milestones are included.
   * @param writeBase64IDs      If `true`, writes UUIDs in Base64 encoding; otherwise, writes UUIDs in canonical form.
@@ -242,7 +262,9 @@ object StandoffUtil {
   *                            don't specify an ID will be assigned a random UUID. When writing XML, each UUID will
   *                            be converted to the corresponding document-specific ID if available.
   */
-class StandoffUtil(writeAllIDs: Boolean = true,
+class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
+                   defaultXmlNamespace: Option[IRI] = None,
+                   writeAllIDs: Boolean = true,
                    writeBase64IDs: Boolean = true,
                    documentSpecificIDs: Map[String, UUID] = Map.empty[String, UUID]) {
 
@@ -263,6 +285,10 @@ class StandoffUtil(writeAllIDs: Boolean = true,
     // A Map of UUIDs to document-specific IDs.
     private val uuidsToDocumentSpecificIds: Map[UUID, String] = documentSpecificIDs.map(_.swap)
 
+    private val xmlNamespaces2Prefixes = new ErrorHandlingMap(
+        xmlNamespaces.map(_.swap), { key: String => s"No prefix defined for XML namespace $key" }
+    )
+
     /**
       * An empty standoff tag representing a CLIX milestone, to facilitate conversion to and from XML.
       *
@@ -270,11 +296,12 @@ class StandoffUtil(writeAllIDs: Boolean = true,
       */
     private case class ClixMilestoneTag(uuid: UUID,
                                         tagName: String,
-                                        attributes: Map[String, String] = Map.empty[String, String],
+                                        xmlNamespace: Option[IRI] = None,
+                                        attributes: Set[StandoffTagAttribute] = Set.empty[StandoffTagAttribute],
                                         startPosition: Int,
                                         endPosition: Int,
                                         index: Int,
-                                        parentIndex: Option[Int],
+                                        parentIndex: Option[Int] = None,
                                         isStartTag: Boolean) extends IndexedStandoffTag
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -297,7 +324,7 @@ class StandoffUtil(writeAllIDs: Boolean = true,
 
         if (finishedConversionState.clixStartMilestones.nonEmpty) {
             val missingEndTags = finishedConversionState.clixStartMilestones.map {
-                case (startTagID, startTag) => s"<${startTag.tagName} $XmlStartIdAttrName=${'"'}$startTagID${'"'}>"
+                case (startTagID, startTag) => s"<${startTag.tagName} $XmlClixStartIdAttrName=${'"'}$startTagID${'"'}>"
             }.mkString(", ")
 
             throw InvalidStandoffException(s"One or more CLIX milestones were not closed: $missingEndTags")
@@ -322,6 +349,7 @@ class StandoffUtil(writeAllIDs: Boolean = true,
                 val startTag = ClixMilestoneTag(
                     uuid = freeTag.uuid,
                     tagName = freeTag.tagName,
+                    xmlNamespace = freeTag.xmlNamespace,
                     attributes = freeTag.attributes,
                     startPosition = freeTag.startPosition,
                     endPosition = freeTag.startPosition,
@@ -333,6 +361,7 @@ class StandoffUtil(writeAllIDs: Boolean = true,
                 val endTag = ClixMilestoneTag(
                     uuid = freeTag.uuid,
                     tagName = freeTag.tagName,
+                    xmlNamespace = freeTag.xmlNamespace,
                     startPosition = freeTag.endPosition,
                     endPosition = freeTag.endPosition,
                     index = freeTag.endIndex,
@@ -357,6 +386,7 @@ class StandoffUtil(writeAllIDs: Boolean = true,
                     groupedTags = groupedTags,
                     posBeforeSiblings = 0,
                     siblings = children,
+                    writeNamespaces = true,
                     xmlString = stringBuilder
                 )
 
@@ -518,15 +548,42 @@ class StandoffUtil(writeAllIDs: Boolean = true,
       * @return the resulting conversion state.
       */
     private def xmlNodes2Standoff(nodes: NodeSeq, startState: Xml2StandoffState): Xml2StandoffState = {
-        def idToUuid(id: String): UUID = {
+        /**
+          * Converts an XML element ID to a UUID.
+          *
+          * @param id the ID to be converted.
+          * @return the corresponding UUID.
+          */
+        def id2Uuid(id: String): UUID = {
+            // If the ID was listed as a document-specific ID corresponding to an existing UUID, use that UUID.
             documentSpecificIDs.get(id) match {
                 case Some(existingUuid) => existingUuid
                 case None =>
+                    // Otherwise, try to parse the ID as a UUID.
                     if (knoraIdUtil.couldBeUuid(id)) {
                         knoraIdUtil.decodeUuid(id)
                     } else {
+                        // If the ID doesn't seem to be a UUID, replace it with a random UUID.
                         UUID.randomUUID
                     }
+            }
+        }
+
+        /**
+          * Converts XML attributes to standoff tag attributes, ignoring ID attributes.
+          *
+          * @param element the XML element containing the attributes.
+          * @return the corresponding standoff tag attributes.
+          */
+        def xmlAttrs2StandoffAttrs(element: Elem): Set[StandoffTagAttribute] = {
+            element.attributes.foldLeft(Set.empty[StandoffTagAttribute]) {
+                case (acc, xmlAttr: MetaData) if !XmlIdAttrNames.contains(xmlAttr.key) => acc + StandoffTagAttribute(
+                    key = xmlAttr.key,
+                    xmlNamespace = Option(xmlAttr.getNamespace(element)),
+                    value = xmlAttr.value.text
+                )
+
+                case (acc, _) => acc
             }
         }
 
@@ -540,19 +597,20 @@ class StandoffUtil(writeAllIDs: Boolean = true,
                 val attrMap = elem.attributes.asAttrMap
                 val isEmptyElement = elem.text.length == 0
 
-                if (isEmptyElement && attrMap.contains(XmlStartIdAttrName)) {
+                if (isEmptyElement && attrMap.contains(XmlClixStartIdAttrName)) {
                     // It's a CLIX start milestone. Save it until we get the matching end milestone.
 
-                    val sID = attrMap(XmlStartIdAttrName)
+                    val sID = attrMap(XmlClixStartIdAttrName)
 
                     val tag = ClixMilestoneTag(
                         tagName = elem.label,
-                        attributes = attrMap - XmlStartIdAttrName,
+                        xmlNamespace = Option(elem.namespace),
+                        attributes = xmlAttrs2StandoffAttrs(elem),
                         startPosition = acc.currentPos,
                         endPosition = acc.currentPos,
                         index = newTagIndex,
                         parentIndex = startState.parentId,
-                        uuid = idToUuid(sID),
+                        uuid = id2Uuid(sID),
                         isStartTag = true
                     )
 
@@ -560,23 +618,28 @@ class StandoffUtil(writeAllIDs: Boolean = true,
                         nextIndex = newTagIndex + 1,
                         clixStartMilestones = acc.clixStartMilestones + (sID -> tag)
                     )
-                } else if (isEmptyElement && attrMap.contains(XmlEndIdAttrName)) {
+                } else if (isEmptyElement && attrMap.contains(XmlClixEndIdAttrName)) {
                     // It's a CLIX end milestone. Combine it with the start milestone to make a FreeStandoffTag.
 
-                    val eID: String = attrMap(XmlEndIdAttrName)
+                    val eID: String = attrMap(XmlClixEndIdAttrName)
 
                     val startMilestone: ClixMilestoneTag = acc.clixStartMilestones.getOrElse(
                         eID,
-                        throw InvalidStandoffException(s"Found a CLIX milestone with $XmlEndIdAttrName $eID, but there was no start milestone with that ID")
+                        throw InvalidStandoffException(s"Found a CLIX milestone with $XmlClixEndIdAttrName $eID, but there was no start milestone with that $XmlClixStartIdAttrName")
                     )
 
                     if (startMilestone.tagName != elem.label) {
-                        throw InvalidStandoffException(s"The CLIX start milestone with $XmlStartIdAttrName $eID has tag name <${startMilestone.tagName}>, but the end milestone with the same ID has tag name ${elem.label}")
+                        throw InvalidStandoffException(s"The CLIX start milestone with $XmlClixStartIdAttrName $eID has tag name <${startMilestone.tagName}>, but the end milestone with that $XmlClixEndIdAttrName has tag name ${elem.label}")
+                    }
+
+                    if (startMilestone.xmlNamespace != Option(elem.namespace)) {
+                        throw InvalidStandoffException(s"The CLIX start milestone with $XmlClixStartIdAttrName $eID is in namespace ${startMilestone.xmlNamespace}, but the end milestone with that $XmlClixEndIdAttrName is in namespace ${elem.namespace}")
                     }
 
                     val freeTag = FreeStandoffTag(
                         uuid = startMilestone.uuid,
                         tagName = startMilestone.tagName,
+                        xmlNamespace = startMilestone.xmlNamespace,
                         attributes = startMilestone.attributes,
                         startPosition = startMilestone.startPosition,
                         endPosition = acc.currentPos,
@@ -595,13 +658,14 @@ class StandoffUtil(writeAllIDs: Boolean = true,
                     // It's an ordinary hierarchical element.
                     val tag = HierarchicalStandoffTag(
                         tagName = elem.label,
-                        attributes = attrMap - XmlIdAttrName,
+                        xmlNamespace = Option(elem.namespace),
+                        attributes = xmlAttrs2StandoffAttrs(elem),
                         startPosition = acc.currentPos,
                         endPosition = acc.currentPos + elem.text.length,
                         index = newTagIndex,
                         parentIndex = startState.parentId,
-                        uuid = attrMap.get(XmlIdAttrName) match {
-                            case Some(id) => idToUuid(id)
+                        uuid = attrMap.get(XmlHierarchicalIdAttrName) match {
+                            case Some(id) => id2Uuid(id)
                             case None => UUID.randomUUID
                         }
                     )
@@ -641,37 +705,88 @@ class StandoffUtil(writeAllIDs: Boolean = true,
                                        groupedTags: Map[Option[Int], Seq[IndexedStandoffTag]],
                                        posBeforeSiblings: Int,
                                        siblings: Seq[IndexedStandoffTag],
+                                       writeNamespaces: Boolean = false,
                                        xmlString: StringBuilder): Int = {
-        def attributes2Xml(tag: IndexedStandoffTag): Unit = {
+        /**
+          * Adds an optional XML namespace prefix to the name of an XML element or attribute.
+          *
+          * @param unprefixedName the unprefixed name of the element or attribute.
+          * @param xmlNamespace   the XML namespace.
+          * @return the prefixed name.
+          */
+        def makePrefixedXmlName(unprefixedName: String, xmlNamespace: Option[IRI]): String = {
+            (xmlNamespace, defaultXmlNamespace) match {
+                case (Some(namespace), Some(defaultNamespace)) if namespace != defaultNamespace =>
+                    xmlNamespaces2Prefixes(namespace) + ":" + unprefixedName
+
+                case (Some(namespace), None) =>
+                    xmlNamespaces2Prefixes(namespace) + ":" + unprefixedName
+
+                case _ => unprefixedName
+            }
+        }
+
+        /**
+          * Writes key-value pairs representing the default XML namespaces, prefixes for other XML namespaces,
+          * and the attributes of an XML element.
+          *
+          * @param tag the tag being converted to XML.
+          */
+        def attributesAndNamespaces2Xml(tag: IndexedStandoffTag): Unit = {
+            // If we were asked to write definitions of the default namespace and of namespace prefixes
+            // (because we're writing the root element of the XML document), add them first.
+            val namespacesAsXml: Vector[(String, String)] = if (writeNamespaces) {
+                val maybeDefaultNamespace = defaultXmlNamespace.map(
+                    namespace => ("xmlns", namespace)
+                ).toVector
+
+                val prefixedNamespaces = xmlNamespaces.map {
+                    case (prefix, namespace) => (s"xmlns:$prefix", namespace)
+                }.toVector
+
+                maybeDefaultNamespace ++ prefixedNamespaces
+            } else {
+                Vector.empty[(String, String)]
+            }
+
+            // Convert any standoff attributes to XML attributes.
+            val standoffAttrsAsXml: Vector[(String, String)] = tag.attributes.toVector.map {
+                standoffAttr => (makePrefixedXmlName(standoffAttr.key, standoffAttr.xmlNamespace), standoffAttr.value)
+            }
+
+            // Add an XML attribute for the standoff tag's UUID, if necessary.
+
             val id = uuidsToDocumentSpecificIds.get(tag.uuid) match {
                 case Some(documentSpecificId) => documentSpecificId
                 case None => knoraIdUtil.encodeUuid(tag.uuid, writeBase64IDs)
             }
 
             val maybeIdAttr: Option[(String, String)] = if (writeAllIDs) {
-                Some(XmlIdAttrName, id)
+                Some(XmlHierarchicalIdAttrName, id)
             } else {
                 tag match {
                     case splitTag: ClixMilestoneTag =>
                         if (splitTag.isStartTag) {
-                            Some(XmlStartIdAttrName, id)
+                            Some(XmlClixStartIdAttrName, id)
                         } else {
-                            Some(XmlEndIdAttrName, id)
+                            Some(XmlClixEndIdAttrName, id)
                         }
 
                     case _ => None
                 }
             }
 
-            val attributesWithUuid = tag.attributes ++ maybeIdAttr
+            val allAttributes = namespacesAsXml ++ standoffAttrsAsXml ++ maybeIdAttr
 
-            if (attributesWithUuid.nonEmpty) {
-                for ((attrName, attrValue) <- attributesWithUuid) {
+            if (allAttributes.nonEmpty) {
+                for ((attrName, attrValue) <- allAttributes) {
                     xmlString.append(" ").append(attrName).append("=\"").append(attrValue).append("\"")
                 }
 
             }
         }
+
+        // Convert each sibling standoff tag to XML.
 
         siblings.sortBy(_.index).foldLeft(posBeforeSiblings) {
             case (posBeforeTag, tag) =>
@@ -680,10 +795,13 @@ class StandoffUtil(writeAllIDs: Boolean = true,
                     xmlString.append(StringEscapeUtils.escapeXml11(text.substring(posBeforeTag, tag.startPosition)))
                 }
 
+                // Add a namespace prefix to the tag's name, if necessary.
+                val prefixedTagName = makePrefixedXmlName(tag.tagName, tag.xmlNamespace)
+
                 if (tag.endPosition > tag.startPosition) {
                     // Non-empty tag
-                    xmlString.append(s"<${tag.tagName}")
-                    attributes2Xml(tag)
+                    xmlString.append(s"<$prefixedTagName")
+                    attributesAndNamespaces2Xml(tag)
                     xmlString.append(">")
 
                     val maybeChildren = groupedTags.get(Some(tag.index))
@@ -706,11 +824,11 @@ class StandoffUtil(writeAllIDs: Boolean = true,
                         xmlString.append(StringEscapeUtils.escapeXml11(text.substring(posAfterChildren, tag.endPosition)))
                     }
 
-                    xmlString.append(s"</${tag.tagName}>")
+                    xmlString.append(s"</$prefixedTagName>")
                 } else {
                     // Empty tag
-                    xmlString.append(s"<${tag.tagName}")
-                    attributes2Xml(tag)
+                    xmlString.append(s"<$prefixedTagName")
+                    attributesAndNamespaces2Xml(tag)
                     xmlString.append("/>")
                 }
 
