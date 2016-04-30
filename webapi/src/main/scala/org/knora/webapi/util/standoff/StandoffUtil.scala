@@ -376,7 +376,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
         }
 
         val groupedTags: Map[Option[Int], Seq[IndexedStandoffTag]] = tags.groupBy(_.parentIndex)
-        val stringBuilder = new StringBuilder(StandoffUtil.XmlHeader)
+        val stringBuilder = new StringBuilder(XmlHeader)
 
         // Start with the root.
         groupedTags.get(None) match {
@@ -476,7 +476,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
       * @return an XML representation of the diffs.
       */
     def standoffDiffs2Xml(baseText: String, derivedText: String, standoffDiffs: Seq[StandoffDiff]): String = {
-        val stringBuilder = new StringBuilder(StandoffUtil.XmlHeader).append("<diffs>")
+        val stringBuilder = new StringBuilder(XmlHeader).append("<diffs>")
 
         for (standoffDiff <- standoffDiffs) {
             standoffDiff match {
