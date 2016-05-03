@@ -53,7 +53,7 @@ class SalsahPage {
     if (!SeleniumChromeDriver.exists) throw new FileNotFoundException(s"${chromeDriverPath} could not be found. Please install Selenium Chrome Driver.")
 
     // Load the native Selenium driver for Chrome.
-    System.setProperty("webdriver.chrome.driver", "lib/chromedriver")
+    System.setProperty("webdriver.chrome.driver", chromeDriverPath)
     implicit val driver: WebDriver = new ChromeDriver()
 
     /**
@@ -103,6 +103,13 @@ class SalsahPage {
       */
     def getSimpleSearchField: WebElement = {
         driver.findElement(By.id("simplesearch"))
+    }
+
+    /**
+      * Returns the SALSAH extended search button.
+      */
+    def getExtendedSearchField: WebElement = {
+        driver.findElement(By.xpath("//div[@id='searchctrl']/img[2][@class='link']"))
     }
 
     /**

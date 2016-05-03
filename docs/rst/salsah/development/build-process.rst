@@ -73,7 +73,7 @@ Run the automated tests
 
 Make sure you've started Fuseki and the API server as shown above.
 In order to run the tests, the Selenium driver for Chrome has to be installed.
-Please download it from https://sites.google.com/a/chromium.org/chromedriver/downloads and save it as ``salsah/lib/chromedriver``.
+Please download it from `here <https://sites.google.com/a/chromium.org/chromedriver/downloads>`_ and save it as ``salsah/lib/chromedriver``.
 
 Then at the SBT prompt:
 
