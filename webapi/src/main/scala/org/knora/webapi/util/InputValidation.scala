@@ -43,7 +43,7 @@ object InputValidation {
     val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss"
 
     private val schemes = Array("http", "https")
-    private val urlValidator = new UrlValidator(schemes)
+    private val urlValidator = new UrlValidator(schemes, UrlValidator.ALLOW_LOCAL_URLS) // local urls are url encoded Knora Iris as part of the whole URL
 
     def toInt(s: String, errorFun: () => Nothing): Int = {
         try {
@@ -193,14 +193,14 @@ object InputValidation {
     def validateTextattr(textattr: Map[String, Seq[StandoffPositionV1]]): Map[String, Seq[StandoffPositionV1]] = {
         textattr.map {
             case (attr: String, positions: Seq[StandoffPositionV1]) => (InputValidation.toSparqlEncodedString(attr), positions.map {
-                case (position: StandoffPositionV1) => StandoffPositionV1(start = position.start, end = position.end, href = position.href match {
-                    case Some(href) => Some(InputValidation.toIri(href, () => throw BadRequestException(s"Invalid Knora resource Iri $href")))
-                    case _ => None
-                }, resid = position.resid match {
-                    case Some(resid) => Some(InputValidation.toIri(resid, () => throw BadRequestException(s"Invalid Knora resource Iri $resid")))
-                    case _ => None
+                    case (position: StandoffPositionV1) => StandoffPositionV1(start = position.start, end = position.end, href = position.href match {
+                            case Some(href) => Some(InputValidation.toIri(href, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute href $href")))
+                            case _ => None
+                        }, resid = position.resid match {
+                            case Some(resid) => Some(InputValidation.toIri(resid, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute resid $resid")))
+                            case _ => None
+                        })
                 })
-            })
         }
     }
 

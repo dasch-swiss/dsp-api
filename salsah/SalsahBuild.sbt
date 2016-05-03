@@ -53,5 +53,6 @@ lazy val salsahLibs = Seq(
     "com.typesafe.akka" % "akka-http-xml-experimental_2.11" % "2.0-M2",
     // testing
     "com.typesafe.akka" %% "akka-http-testkit-experimental" % "2.0-M2" % "test",
-    "org.scalatest" %% "scalatest" % "2.2.5" % "test"
+    "org.scalatest" %% "scalatest" % "2.2.5" % "test",
+    "org.seleniumhq.selenium" % "selenium-java" % "2.35.0" % "test"
 )

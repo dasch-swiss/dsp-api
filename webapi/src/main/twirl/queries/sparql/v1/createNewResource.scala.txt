@@ -54,7 +54,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 INSERT {
     GRAPH ?dataNamedGraph {
         ?resource rdf:type ?resourceClass ;
-            knora-base:isDeleted "false"^^xsd:boolean ;
+            knora-base:isDeleted false ;
             knora-base:attachedToUser ?ownerIri ;
             knora-base:attachedToProject ?projectIri ;
             rdfs:label ?label ;

@@ -41,10 +41,11 @@ SELECT ?objPred ?objObj ?predStandoff ?objStandoff
 WHERE {
     BIND(IRI("@valueIri") AS ?obj)
 
-    ?resource ?resourceProp ?obj .
     ?resourceProp rdfs:subPropertyOf+ knora-base:hasValue .
 
     {
+        ?resource ?resourceProp ?obj .
+        ?obj knora-base:isDeleted false .
         ?obj ?objPred ?objObj .
 
         FILTER(?objPred != knora-base:attachedToProject)
@@ -58,7 +59,8 @@ WHERE {
     {
         @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
 
-        ?resource ?resourceProp ?obj . @* TODO: Why do we need this here? (Issue 235) *@
+        ?resource ?resourceProp ?obj .
+        ?obj knora-base:isDeleted false .
         ?resource knora-base:attachedToProject ?resourceProject .
 
         OPTIONAL {
@@ -67,9 +69,5 @@ WHERE {
 
         BIND(knora-base:attachedToProject AS ?objPred)
         BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
-    }
-
-    MINUS {
-        ?obj knora-base:isDeleted true .
     }
 }

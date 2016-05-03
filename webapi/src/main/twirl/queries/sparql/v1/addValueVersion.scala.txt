@@ -288,15 +288,11 @@ WHERE {
 
     @* Do nothing if the resource is marked as deleted. *@
 
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
+    ?resource knora-base:isDeleted false .
 
     @* Don't add a new version of a deleted value. *@
 
-    MINUS {
-        ?currentValue knora-base:isDeleted true .
-    }
+    ?currentValue knora-base:isDeleted false .
 
     @*
 
@@ -314,10 +310,7 @@ WHERE {
             *@
 
             <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex .
-
-            MINUS {
-                <@linkUpdate.linkTargetIri> knora-base:isDeleted true .
-            }
+            <@linkUpdate.linkTargetIri> knora-base:isDeleted false .
 
             ?linkTargetClass@linkValueIndex rdfs:subClassOf+ knora-base:Resource .
             <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
@@ -346,11 +339,8 @@ WHERE {
                 rdf:subject ?resource ;
                 rdf:predicate <@linkUpdate.linkPropertyIri> ;
                 rdf:object <@linkUpdate.linkTargetIri> ;
-                knora-base:valueHasRefCount @linkUpdate.currentReferenceCount .
-
-            MINUS {
-                ?linkValue@linkValueIndex knora-base:isDeleted true .
-            }
+                knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
+                knora-base:isDeleted false .
         } else {
             @* Make sure there is no such knora-base:LinkValue. *@
             MINUS {
@@ -358,11 +348,8 @@ WHERE {
                 ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
                     rdf:subject ?resource ;
                     rdf:predicate <@linkUpdate.linkPropertyIri> ;
-                    rdf:object <@linkUpdate.linkTargetIri> .
-
-                MINUS {
-                    ?linkValue@linkValueIndex knora-base:isDeleted true .
-                }
+                    rdf:object <@linkUpdate.linkTargetIri> ;
+                    knora-base:isDeleted false .
             }
         }
     }

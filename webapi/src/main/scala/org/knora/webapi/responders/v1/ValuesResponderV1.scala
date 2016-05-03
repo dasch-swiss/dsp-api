@@ -700,11 +700,6 @@ class ValuesResponderV1 extends ResponderV1 {
                     throw ForbiddenException(s"User $userIri does not have permission to add a new version to value ${changeValueRequest.valueIri}")
                 }
 
-                // Make sure the new version would not be redundant, given the current version.
-                _ = if (changeValueRequest.value.isRedundant(currentValueQueryResult.value)) {
-                    throw DuplicateValueException("The submitted value is the same as the current version")
-                }
-
                 // Check that the submitted value has the correct type for the property.
 
                 entityInfoResponse <- (responderManager ? EntityInfoGetRequestV1(
@@ -729,6 +724,11 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Check that the current value and the submitted value have the same type.
                 _ = if (currentValueQueryResult.value.valueTypeIri != changeValueRequest.value.valueTypeIri) {
                     throw BadRequestException(s"Value ${changeValueRequest.valueIri} has type ${currentValueQueryResult.value.valueTypeIri}, but the submitted new version has type ${changeValueRequest.value.valueTypeIri}")
+                }
+
+                // Make sure the new version would not be redundant, given the current version.
+                _ = if (changeValueRequest.value.isRedundant(currentValueQueryResult.value)) {
+                    throw DuplicateValueException("The submitted value is the same as the current version")
                 }
 
                 // Get details of the resource.  (We do this as late as possible because it's slower than the other checks,
@@ -993,7 +993,7 @@ class ValuesResponderV1 extends ResponderV1 {
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = sparqlSelectResponse.results.bindings
 
-            _ = if (rows.isEmpty || !rows.head.rowMap.get("isDeleted").exists(_.toBoolean)) {
+            _ = if (rows.isEmpty || !InputValidation.optionStringToBoolean(rows.head.rowMap.get("isDeleted"))) {
                 throw UpdateNotPerformedException(s"Value ${deleteValueRequest.valueIri} was not deleted. Please report this as a possible bug.")
             }
         } yield DeleteValueResponseV1(

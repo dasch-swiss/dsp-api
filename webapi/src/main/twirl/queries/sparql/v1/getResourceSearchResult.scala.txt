@@ -95,7 +95,8 @@ WHERE {
     }
 
 
-    ?resourceIri a ?resourceClass .
+    ?resourceIri a ?resourceClass ;
+        knora-base:isDeleted false .
     ?resourceClass rdfs:subClassOf+ knora-base:Resource .
     @if(resourceTypeIri.nonEmpty) {
         FILTER(?resourceClass = <@resourceTypeIri>)
@@ -110,8 +111,9 @@ WHERE {
     @if(numberOfProps > 1) {
         ?resourceIri ?property ?valueObjectIri .
         ?property knora-base:objectClassConstraint knora-base:TextValue .
-        ?valueObjectIri knora-base:valueHasString ?valueString .
-        ?valueObjectIri knora-base:valueHasOrder ?valueOrder .
+        ?valueObjectIri knora-base:valueHasString ?valueString ;
+            knora-base:isDeleted false ;
+            knora-base:valueHasOrder ?valueOrder .
 
         OPTIONAL {
             ?property salsah-gui:guiOrder ?maybeGuiOrder .
@@ -127,13 +129,6 @@ WHERE {
 
         BIND(IF(BOUND(?maybeGuiOrder), ?maybeGuiOrder, -1) AS ?guiOrder)
 
-        MINUS {
-                 ?valueObjectIri knora-base:isDeleted true .
-             }
-    }
-
-    MINUS {
-        ?resourceIri knora-base:isDeleted true .
     }
 
     OPTIONAL {

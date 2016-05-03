@@ -106,7 +106,9 @@ WHERE {
         *@
 
         @if(searchCriterion.valueType != "http://www.knora.org/ontology/knora-base#Resource") {
-            ?resource <@{searchCriterion.propertyIri}> ?valueObjectIri@index .
+            ?resource <@{searchCriterion.propertyIri}> ?valueObjectIri@index ;
+                knora-base:isDeleted false .
+            ?valueObjectIri@index knora-base:isDeleted false .
         }
 
         # Search criterion @index: operator @searchCriterion.comparisonOperator
@@ -147,20 +149,12 @@ WHERE {
                         @{throw SparqlGenerationException(s"Triplestore type $other is not supported in this SPARQL template"); ()}
                     }
                 }
-
-                MINUS {
-                    ?valueObjectIri@index knora-base:isDeleted true .
-                }
             }
 
             case SearchComparisonOperatorV1.LIKE => {
 
                 @* TODO: escape regex metachars *@
                 ?valueObjectIri@index knora-base:valueHasString ?anyLiteral@index .
-
-                MINUS {
-                    ?valueObjectIri@index knora-base:isDeleted true .
-                }
 
                 FILTER regex(?anyLiteral@index, '@searchCriterion.searchValue', "i")
             }
@@ -178,10 +172,6 @@ WHERE {
 
                 ?valueObjectIri@index knora-base:valueHasString ?anyLiteral@index .
 
-                MINUS {
-                    ?valueObjectIri@index knora-base:isDeleted true .
-                }
-
                 FILTER (!regex(?anyLiteral@index, '@searchCriterion.searchValue', "i"))
             }
 
@@ -192,20 +182,14 @@ WHERE {
 
                         ?resource <@{searchCriterion.propertyIri}> ?targetResource@index .
 
-                        ?targetResource@index rdfs:label ?anyLiteral@index .
-
-                        MINUS {
-                            ?targetResource@index knora-base:isDeleted true .
-                        }
+                        ?targetResource@index rdfs:label ?anyLiteral@index ;
+                            knora-base:isDeleted false .
                     }
 
                     case other => {
 
                         ?valueObjectIri@index knora-base:valueHasString ?anyLiteral@index .
 
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
                     }
                 }
             }
@@ -218,10 +202,6 @@ WHERE {
 
                         ?valueObjectIri@index knora-base:valueHasString '@searchCriterion.searchValue' .
 
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
-
                         BIND('@searchCriterion.searchValue' AS ?anyLiteral@index)
 
                     }
@@ -230,10 +210,6 @@ WHERE {
 
                         ?valueObjectIri@index knora-base:valueHasInteger @searchCriterion.searchValue .
 
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
-
                         BIND('@searchCriterion.searchValue' AS ?anyLiteral@index)
 
                     }
@@ -241,10 +217,6 @@ WHERE {
                     case "http://www.knora.org/ontology/knora-base#FloatValue" => {
 
                         ?valueObjectIri@index knora-base:valueHasFloat @searchCriterion.searchValue .
-
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
 
                         BIND('@searchCriterion.searchValue' AS ?anyLiteral@index)
 
@@ -256,10 +228,6 @@ WHERE {
                         ?valueObjectIri@index knora-base:valueHasEndJDC ?dateEnd@index .
                         ?valueObjectIri@index knora-base:valueHasString ?dateString@index .
 
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
-
                         FILTER (@searchCriterion.dateStart <= ?dateEnd@index && @searchCriterion.dateEnd >= ?dateStart@index)
                         BIND(?dateString@index as ?anyLiteral@index)
 
@@ -269,11 +237,8 @@ WHERE {
 
                         ?resource <@searchCriterion.propertyIri> <@searchCriterion.searchValue> .
 
-                        <@searchCriterion.searchValue> rdfs:label ?anyLiteral@index .
-
-                        MINUS {
-                            <@searchCriterion.searchValue> knora-base:isDeleted true .
-                        }
+                        <@searchCriterion.searchValue> rdfs:label ?anyLiteral@index ;
+                            knora-base:isDeleted false .
                     }
 
                     case "http://www.knora.org/ontology/knora-base#ListValue" => {
@@ -286,10 +251,6 @@ WHERE {
 
                         ?valueObjectIri@index knora-base:valueHasListNode ?listNode .
                         <@searchCriterion.searchValue> knora-base:hasSubListNode* ?listNode .
-
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
 
                         ?listNode rdfs:label ?listNodeLabel .
                         BIND(?listNodeLabel AS ?anyLiteral@index)
@@ -310,10 +271,6 @@ WHERE {
 
                         ?valueObjectIri@index knora-base:valueHasString ?anyLiteral@index .
 
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
-
                         FILTER (?anyLiteral@index != '@searchCriterion.searchValue')
 
                     }
@@ -322,10 +279,6 @@ WHERE {
 
                         ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
 
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
-
                         FILTER (?anyLiteral@index != @searchCriterion.searchValue)
 
                     }
@@ -333,10 +286,6 @@ WHERE {
                     case "http://www.knora.org/ontology/knora-base#FloatValue" => {
 
                         ?valueObjectIri@index knora-base:valueHasFloat ?anyLiteral@index .
-
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
 
                         FILTER (?anyLiteral@index != @searchCriterion.searchValue)
 
@@ -347,10 +296,6 @@ WHERE {
                         ?valueObjectIri@index knora-base:valueHasStartJDC ?dateStart@index .
                         ?valueObjectIri@index knora-base:valueHasEndJDC ?dateEnd@index .
                         ?valueObjectIri@index knora-base:valueHasString ?dateString@index .
-
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
 
                         FILTER (@searchCriterion.dateEnd < ?dateStart@index || @searchCriterion.dateStart > ?dateEnd@index )
                         BIND(?dateString@index as ?anyLiteral@index)
@@ -371,10 +316,6 @@ WHERE {
 
                         ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
 
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
-
                         FILTER (?anyLiteral@index > @searchCriterion.searchValue)
 
                     }
@@ -382,10 +323,6 @@ WHERE {
                     case "http://www.knora.org/ontology/knora-base#FloatValue" => {
 
                         ?valueObjectIri@index knora-base:valueHasFloat ?anyLiteral@index .
-
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
 
                         FILTER (?anyLiteral@index > searchCriterion.searchValue )
 
@@ -395,10 +332,6 @@ WHERE {
 
                         ?valueObjectIri@index knora-base:valueHasStartJDC ?dateStart@index .
                         ?valueObjectIri@index knora-base:valueHasString ?dateString@index .
-
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
 
                         FILTER (?dateStart@index > @searchCriterion.dateEnd)
                         BIND(?dateString@index as ?anyLiteral@index)
@@ -419,10 +352,6 @@ WHERE {
 
                         ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
 
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
-
                         FILTER (?anyLiteral@index >= @searchCriterion.searchValue)
 
                     }
@@ -430,10 +359,6 @@ WHERE {
                     case "http://www.knora.org/ontology/knora-base#FloatValue" => {
 
                         ?valueObjectIri@index knora-base:valueHasFloat ?anyLiteral@index .
-
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
 
                         FILTER (?anyLiteral@index >= @searchCriterion.searchValue)
 
@@ -443,10 +368,6 @@ WHERE {
 
                         ?valueObjectIri@index knora-base:valueHasStartJDC ?dateStart@index .
                         ?valueObjectIri@index knora-base:valueHasString ?dateString@index .
-
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
 
                         FILTER (?dateStart@index >= @searchCriterion.dateEnd)
                         BIND(?dateString@index as ?anyLiteral@index)
@@ -467,10 +388,6 @@ WHERE {
 
                         ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
 
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
-
                         FILTER (?anyLiteral@index < @searchCriterion.searchValue)
 
                     }
@@ -478,10 +395,6 @@ WHERE {
                     case "http://www.knora.org/ontology/knora-base#FloatValue" => {
 
                         ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
-
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
 
                         FILTER (?anyLiteral@index < @searchCriterion.searchValue)
 
@@ -491,10 +404,6 @@ WHERE {
 
                         ?valueObjectIri@index knora-base:valueHasEndJDC ?dateEnd@index .
                         ?valueObjectIri@index knora-base:valueHasString ?dateString@index .
-
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
 
                         FILTER (?dateEnd@index < @searchCriterion.dateStart)
                         BIND(?dateString@index as ?anyLiteral@index)
@@ -515,10 +424,6 @@ WHERE {
 
                         ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
 
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
-
                         FILTER (?anyLiteral@index <= @searchCriterion.searchValue)
 
                     }
@@ -526,10 +431,6 @@ WHERE {
                     case "http://www.knora.org/ontology/knora-base#FloatValue" => {
 
                         ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
-
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
 
                         FILTER (?anyLiteral@index <= @searchCriterion.searchValue)
 
@@ -539,10 +440,6 @@ WHERE {
 
                         ?valueObjectIri@index knora-base:valueHasEndJDC ?dateEnd@index .
                         ?valueObjectIri@index knora-base:valueHasString ?dateString@index .
-
-                        MINUS {
-                            ?valueObjectIri@index knora-base:isDeleted true .
-                        }
 
                         FILTER (?dateEnd@index <= @searchCriterion.dateStart)
                         BIND(?dateString@index as ?anyLiteral@index)
@@ -608,10 +505,6 @@ WHERE {
                         }
                     }
                 }
-
-                MINUS {
-                    ?valueObjectIri@index knora-base:isDeleted true .
-                }
             }
 
             case other => {
@@ -620,13 +513,8 @@ WHERE {
         }
     }
 
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
-
     ?resource rdfs:label ?resourceLabel .
     ?resource a ?resourceClass .
-
 
     @projectIriOption match {
         case Some(projectIri) => {

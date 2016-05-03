@@ -41,14 +41,8 @@ SELECT ?containingResource
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
-
+    ?resource knora-base:isDeleted false .
     ?linkingProp rdfs:subPropertyOf+ knora-base:isPartOf .
     ?resource ?linkingProp ?containingResource .
-
-    MINUS {
-        ?containingResource knora-base:isDeleted true .
-    }
+    ?containingResource knora-base:isDeleted false .
 }

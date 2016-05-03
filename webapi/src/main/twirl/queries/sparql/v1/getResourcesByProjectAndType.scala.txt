@@ -43,10 +43,7 @@ WHERE {
     BIND(IRI("@projectIri") as ?projectIri)
     BIND(IRI("@resType") as ?resType)
 
-    ?s rdf:type ?resType .
-    ?s knora-base:attachedToProject ?projectIri .
-
-    MINUS {
-        ?s knora-base:isDeleted true .
-    }
+    ?s rdf:type ?resType ;
+        knora-base:isDeleted false ;
+        knora-base:attachedToProject ?projectIri .
 }

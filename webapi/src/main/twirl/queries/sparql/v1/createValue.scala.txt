@@ -105,12 +105,9 @@ WHERE {
 
     @* Do nothing if the resource doesn't exist, is marked as deleted, or isn't actually a resource. *@
 
-    ?resource rdf:type ?resourceClass .
+    ?resource rdf:type ?resourceClass ;
+        knora-base:isDeleted false .
     ?resourceClass rdfs:subClassOf+ knora-base:Resource .
-
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
 
     @* Get the resource's last modification date, if it has one, so we can update it. *@
 

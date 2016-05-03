@@ -112,6 +112,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val linkObjLinkValueIri = new MutableTestIri
     private val currentColorValueIri = new MutableTestIri
     private val currentGeomValueIri = new MutableTestIri
+    private val partOfLinkValueIri = new MutableTestIri
 
     private def checkComment1aResponse(response: CreateValueResponseV1, utf8str: String, textattr: Map[String, Seq[StandoffPositionV1]] = Map.empty[String, Seq[StandoffPositionV1]]): Unit = {
         assert(response.rights == 8, "rights was not 8")
@@ -540,7 +541,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
             }
         }
 
@@ -1392,6 +1394,87 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // Check that the link source's last modification date got updated.
             val lastModAfterUpdate = getLastModificationDate(linkSourceIri)
             lastModBeforeUpdate != lastModAfterUpdate should ===(true)
+        }
+
+        "change the partOf property of a page" in {
+            // A test UserDataV1.
+            val userData = UserDataV1(
+                email = Some("test@test.ch"),
+                lastname = Some("Test"),
+                firstname = Some("User"),
+                username = Some("testuser"),
+                token = None,
+                user_id = Some("http://data.knora.org/users/91e19f1e01"),
+                lang = "de"
+            )
+
+            // A test UserProfileV1.
+            val userProfile = UserProfileV1(
+                projects = Vector("http://data.knora.org/projects/77275339"),
+                groups = Nil,
+                userData = userData
+            )
+
+            val linkTargetIri = "http://data.knora.org/e41ab5695c"
+
+            partOfLinkValueIri.set("http://data.knora.org/8a0b1e75/values/3a7b5130-22c2-4400-a794-062b7a3e3436")
+
+            val changeValueRequest = ChangeValueRequestV1(
+                value = LinkUpdateV1(
+                    targetResourceIri = linkTargetIri
+                ),
+                userProfile = userProfile,
+                valueIri = partOfLinkValueIri.get,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! changeValueRequest
+
+            expectMsgPF(timeout) {
+                case ChangeValueResponseV1(linkValue: LinkV1, _, newLinkValueIri: IRI, _, _) =>
+                    // save valueIri for next test
+                    partOfLinkValueIri.set(newLinkValueIri)
+                    linkValue.targetResourceIri should ===(linkTargetIri)
+            }
+
+        }
+
+        "try to change the partOf property of a page, but submit the current target Iri" in {
+            // A test UserDataV1.
+            val userData = UserDataV1(
+                email = Some("test@test.ch"),
+                lastname = Some("Test"),
+                firstname = Some("User"),
+                username = Some("testuser"),
+                token = None,
+                user_id = Some("http://data.knora.org/users/91e19f1e01"),
+                lang = "de"
+            )
+
+            // A test UserProfileV1.
+            val userProfile = UserProfileV1(
+                projects = Vector("http://data.knora.org/projects/77275339"),
+                groups = Nil,
+                userData = userData
+            )
+
+            val linkTargetIri = "http://data.knora.org/e41ab5695c"
+
+            val changeValueRequest = ChangeValueRequestV1(
+                value = LinkUpdateV1(
+                    targetResourceIri = linkTargetIri
+                ),
+                userProfile = userProfile,
+                valueIri = partOfLinkValueIri.get, // use valueIri from previous test
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! changeValueRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+
         }
 
         "add a new text value with a comment" in {

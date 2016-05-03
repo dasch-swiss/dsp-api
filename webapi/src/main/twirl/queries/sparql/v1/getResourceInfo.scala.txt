@@ -42,12 +42,10 @@ SELECT ?p ?o ?isFileValue ?objPred ?objObj
 WHERE {
     BIND(IRI("@resourceIri") AS ?resource)
 
-    ?resource rdf:type ?resourceClass .
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?resource rdf:type ?resourceClass ;
+        knora-base:isDeleted false .
 
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
 
     {
         @* Query statements about the resource's file values. *@
@@ -55,17 +53,18 @@ WHERE {
         ?p rdfs:subPropertyOf* knora-base:hasFileValue .
         BIND(true AS ?isFileValue)
 
-
         @* Get the file value's project if it has one, otherwise use the resource's project. *@
 
         {
             ?resource ?p ?o .
+            ?o knora-base:isDeleted false .
             ?o ?objPred ?objObj .
             FILTER(?objPred != knora-base:attachedToProject)
         }
         UNION
         {
             ?resource ?p ?o .
+            ?o knora-base:isDeleted false .
             ?resource knora-base:attachedToProject ?resourceProject .
 
             OPTIONAL {
@@ -85,9 +84,5 @@ WHERE {
         MINUS {
             ?p rdfs:subPropertyOf+ knora-base:hasValue .
         }
-    }
-
-    MINUS {
-        ?o knora-base:isDeleted true .
     }
 }

@@ -32,6 +32,9 @@
  * </pre>
  */
 (function( $ ){
+
+	'use strict';
+
 	var spin_up = new Image();
 	spin_up.src = SITE_URL + '/app/icons/up.png';
 
@@ -51,19 +54,58 @@
 	var spin_down3 = new Image();
 	spin_down3.src = SITE_URL + '/app/icons/spin-down3.png';
 */
+	// TODO: temporary fix due to async loading problem of strings, https://github.com/dhlab-basel/Knora/issues/92
+	var cal_strings = {
+		"_day_su" : "Sun",
+		"_day_mo" : "Mon",
+		"_day_tu" : "Tue",
+		"_day_we" : "Wed",
+		"_day_th" : "Thu",
+		"_day_fr" : "Fri",
+		"_day_sa" : "Sat",
+		"_mon_jan_short" : "Jan",
+		"_mon_feb_short" : "Feb",
+		"_mon_mar_short" : "Mar",
+		"_mon_apr_short" : "Apr",
+		"_mon_may_short" : "May",
+		"_mon_jun_short" : "Jun",
+		"_mon_jul_short" : "Jul",
+		"_mon_aug_short" : "Aug",
+		"_mon_sep_short" : "Sep",
+		"_mon_oct_short" : "Oct",
+		"_mon_nov_short" : "Nov",
+		"_mon_dec_short" : "Dec",
+		"_mon_jan_long" : "January",
+		"_mon_feb_long" : "February",
+		"_mon_mar_long" : "March",
+		"_mon_apr_long" : "April",
+		"_mon_may_long" : "May",
+		"_mon_jun_long" : "June",
+		"_mon_jul_long" : "July",
+		"_mon_aug_long" : "August",
+		"_mon_sep_long" : "September",
+		"_mon_oct_long" : "October",
+		"_mon_nov_long" : "November",
+		"_mon_dec_long" : "December",
+		"_not_stated" : "Not stated",
+		"_change_year" : "Change Year",
+		"_change_decade" : "Change decade",
+		"_change_century" : "Change century",
+		"_period" : "Period"
+	};
 
-	var weekday = [strings._day_su, strings._day_mo, strings._day_tu, strings._day_we, strings._day_th, strings._day_fr, strings._day_sa];
+	var weekday = [cal_strings._day_su, cal_strings._day_mo, cal_strings._day_tu, cal_strings._day_we, cal_strings._day_th, cal_strings._day_fr, cal_strings._day_sa];
 
 	var months = {
-		GREGORIAN: ['ZERO', strings._mon_jan_short, strings._mon_feb_short, strings._mon_mar_short, strings._mon_apr_short, strings._mon_may_short, strings._mon_jun_short, strings._mon_jul_short, strings._mon_aug_short, strings._mon_sep_short, strings._mon_oct_short, strings._mon_nov_short, strings._mon_dec_short],
-		JULIAN: ['ZERO', strings._mon_jan_short, strings._mon_feb_short, strings._mon_mar_short, strings._mon_apr_short, strings._mon_may_short, strings._mon_jun_short, strings._mon_jul_short, strings._mon_aug_short, strings._mon_sep_short, strings._mon_oct_short, strings._mon_nov_short, strings._mon_dec_short],
+		GREGORIAN: ['ZERO', cal_strings._mon_jan_short, cal_strings._mon_feb_short, cal_strings._mon_mar_short, cal_strings._mon_apr_short, cal_strings._mon_may_short, cal_strings._mon_jun_short, cal_strings._mon_jul_short, cal_strings._mon_aug_short, cal_strings._mon_sep_short, cal_strings._mon_oct_short, cal_strings._mon_nov_short, cal_strings._mon_dec_short],
+		JULIAN: ['ZERO', cal_strings._mon_jan_short, cal_strings._mon_feb_short, cal_strings._mon_mar_short, cal_strings._mon_apr_short, cal_strings._mon_may_short, cal_strings._mon_jun_short, cal_strings._mon_jul_short, cal_strings._mon_aug_short, cal_strings._mon_sep_short, cal_strings._mon_oct_short, cal_strings._mon_nov_short, cal_strings._mon_dec_short],
 		JEWISH: ['ZERO', 'Tishri', 'Heshvan', 'Kislev', 'Tevet', 'Shevat', 'AdarI', 'AdarII', 'Nisan', 'Iyyar', 'Sivan', 'Tammuz', 'Av', 'Elul'],
 		FRENCH: ['ZERO', 'Vendemiaire', 'Brumaire', 'Frimaire', 'Nivose', 'Pluviose', 'Ventose', 'Germinal', 'Floreal', 'Prairial', 'Messidor', 'Thermidor', 'Fructidor', 'Extra']
 	};
 
 	var months_long = {
-		GREGORIAN: ['ZERO', strings._mon_jan_long, strings._mon_feb_long, strings._mon_mar_long, strings._mon_apr_long, strings._mon_may_long, strings._mon_jun_long, strings._mon_jul_long, strings._mon_aug_long, strings._mon_sep_long, strings._mon_oct_long, strings._mon_nov_long, strings._mon_dec_long],
-		JULIAN: ['ZERO', strings._mon_jan_long, strings._mon_feb_long, strings._mon_mar_long, strings._mon_mapr_long, strings._mon_may_long, strings._mon_jun_long, strings._mon_jul_long, strings._mon_aug_long, strings._mon_sep_long, strings._mon_oct_long, strings._mon_nov_long, strings._mon_dec_long],
+		GREGORIAN: ['ZERO', cal_strings._mon_jan_long, cal_strings._mon_feb_long, cal_strings._mon_mar_long, cal_strings._mon_apr_long, cal_strings._mon_may_long, cal_strings._mon_jun_long, cal_strings._mon_jul_long, cal_strings._mon_aug_long, cal_strings._mon_sep_long, cal_strings._mon_oct_long, cal_strings._mon_nov_long, cal_strings._mon_dec_long],
+		JULIAN: ['ZERO', cal_strings._mon_jan_long, cal_strings._mon_feb_long, cal_strings._mon_mar_long, cal_strings._mon_mapr_long, cal_strings._mon_may_long, cal_strings._mon_jun_long, cal_strings._mon_jul_long, cal_strings._mon_aug_long, cal_strings._mon_sep_long, cal_strings._mon_oct_long, cal_strings._mon_nov_long, cal_strings._mon_dec_long],
 		JEWISH: ['ZERO', 'Tishri', 'Heshvan', 'Kislev', 'Tevet', 'Shevat', 'AdarI', 'AdarII', 'Nisan', 'Iyyar', 'Sivan', 'Tammuz', 'Av', 'Elul'],
 		FRENCH: ['ZERO', 'Vendemiaire', 'Brumaire', 'Frimaire', 'Nivose', 'Pluviose', 'Ventose', 'Germinal', 'Floreal', 'Prairial', 'Messidor', 'Thermidor', 'Fructidor', 'Extra']
 	};
@@ -122,7 +164,7 @@
 			cnt++;
 		}
 		line = $('<tr>').appendTo(daytab);
-		td_ele = $('<td>', {colspan: 7}).text(strings._not_stated).on('click', function(e) {
+		td_ele = $('<td>', {colspan: 7}).text(cal_strings._not_stated).on('click', function(e) {
 			e.stopPropagation();
 			daysel.val('-');
 			__daysel.remove();
@@ -195,7 +237,7 @@
 		else {
 			dayval = day > 0 ? day : '-';
 		}
-		dayselattr = {type: 'text', size: 1, maxlength: 1, readonly: true};
+		var dayselattr = {type: 'text', size: 1, maxlength: 1, readonly: true};
 		if (precision == 'YEAR') {
 			dayselattr.disabled = true;
 		}
@@ -260,7 +302,7 @@
 		// textfield for year
 		//
 		yearsel = $('<input>', {type: 'text', 'class': 'propedit yearsel', value: year, size: '4', maxlength: '4'}).appendTo(ele);
-		ele.append($('<span>').attr({title: strings._change_year})
+		ele.append($('<span>').attr({title: cal_strings._change_year})
 			.append($('<img>', {src: spin_up.src}).css({'vertical-align': 'middle', cursor: 'pointer'}).attr({title: 'click: +1\nshift+click: +10\nshift+alt+click: +100'}).click(function(event){
 				if (event.shiftKey && event.altKey){
 					yearsel.val(parseInt(yearsel.val()) + 100);
@@ -284,7 +326,7 @@
 				}
 			}))
 		);
-	}
+	};
 
 
 	var parse_datestr = function(datestr, calendar, periodpart) {
@@ -315,7 +357,7 @@
 		d.calendar = calendar;
 
 		return d;
-	}
+	};
 	
 	
 /**
@@ -327,10 +369,9 @@
 	var methods = {
 		init: function (dateobj) {
 			var $that = this;
-			var d1 = {};
-			var d2 = {};
-			var datestr;
-			
+			var d1;
+			var d2;
+
 			d1 = parse_datestr(dateobj.dateval1, dateobj.calendar, 'START');
 			d2 = parse_datestr(dateobj.dateval2, dateobj.calendar, 'END');
 
@@ -470,15 +511,15 @@
 				d2.jdc = SALSAH.date_to_jdc(d2.day, d2.month, d2.year, d2.calendar, 'END');
 			}
 			else {
-				current_cal = dateobj.calendar;
+				var current_cal = dateobj.calendar;
 				if (dateobj.dateprecision1 !== undefined) {
 					alert('OLD DATE FORMAT!!!')
 					d1.jdc = dateobj.dateval1;
 					d2.jdc = dateobj.dateval2;
-					date1 = SALSAH.jdc_to_date(dateval1, current_cal);
-					date2 = SALSAH.jdc_to_date(dateval2, current_cal);
-					dateprecision1 = dateobj.dateprecision1;
-					dateprecision2 = dateobj.dateprecision2;
+					var date1 = SALSAH.jdc_to_date(dateval1, current_cal);
+					var date2 = SALSAH.jdc_to_date(dateval2, current_cal);
+					var dateprecision1 = dateobj.dateprecision1;
+					var dateprecision2 = dateobj.dateprecision2;
 				}
 				else {
 					d1 = parse_datestr(dateobj.dateval1, dateobj.calendar, 'START');
@@ -528,7 +569,7 @@
 				type: 'checkbox'
 			};
 			if (period) periodattr.checked = 'checked';
-			this.append(' ' + strings._period + ':');
+			this.append(' ' + cal_strings._period + ':');
 			var periodsel = $('<input>', periodattr).click(function(event) {
 				if (event.target.checked) {
 					datecontainer2.append(' - ');
