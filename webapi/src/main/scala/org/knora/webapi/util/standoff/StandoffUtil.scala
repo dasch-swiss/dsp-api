@@ -26,8 +26,8 @@ import javax.xml.parsers.SAXParserFactory
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import org.apache.commons.lang3.StringEscapeUtils
-import org.knora.webapi.{IRI, InvalidStandoffException}
 import org.knora.webapi.util.{ErrorHandlingMap, KnoraIdUtil}
+import org.knora.webapi.{IRI, InvalidStandoffException}
 
 import scala.xml._
 
@@ -496,28 +496,31 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
     }
 
     /**
-      * Given the standoff ranges in an old version of a text and the standoff tags in a newer version of the text,
-      * finds the UUIDs of the standoff tags that have been added or removed.
+      * Given a set of standoff tags referring to an old version of a text and a set of standoff tags referring to a newer
+      * version of the text, finds the standoff tags that have been added or removed.
       *
-      * @param oldStandoff the standoff tags in the old version of the text.
-      * @param newStandoff the standoff tags in the new version of the text.
-      * @return a tuple containing the UUIDs of the added standoff tags and the UUIDs of the removed standoff tags.
+      * @param oldStandoff the standoff tags referring to the old version of the text.
+      * @param newStandoff the standoff tags referring to the new version of the text.
+      * @return a tuple containing the added standoff tags and the removed standoff tags.
       */
-    def findChangedStandoffTags(oldStandoff: Seq[StandoffTag], newStandoff: Seq[StandoffTag]): (Set[UUID], Set[UUID]) = {
-        def makeStandoffTagUuidSet(standoff: Seq[StandoffTag]): Set[UUID] = {
-            standoff.foldLeft(Set.empty[UUID]) {
-                case (acc, standoffTag: HierarchicalStandoffTag) => acc + standoffTag.uuid
-                case (acc, _) => acc
-            }
-        }
+    def findChangedStandoffTags(oldStandoff: Seq[StandoffTag], newStandoff: Seq[StandoffTag]): (Set[StandoffTag], Set[StandoffTag]) = {
+        def makeStandoffTagUuidMap(standoff: Seq[StandoffTag]): Map[UUID, StandoffTag] = standoff.map {
+            tag => tag.uuid -> tag
+        }.toMap
 
-        val oldTagUuids = makeStandoffTagUuidSet(oldStandoff)
-        val newTagUuids = makeStandoffTagUuidSet(newStandoff)
+        val oldTags = makeStandoffTagUuidMap(oldStandoff)
+        val oldUuids = oldTags.keySet
 
-        val addedTagUuids = newTagUuids -- oldTagUuids
-        val removedTagUuids = oldTagUuids -- newTagUuids
+        val newTags = makeStandoffTagUuidMap(newStandoff)
+        val newUuids = newTags.keySet
 
-        (addedTagUuids, removedTagUuids)
+        val addedTagUuids = newUuids -- oldUuids
+        val addedTags = addedTagUuids.map(uuid => newTags(uuid))
+
+        val removedTagUuids = oldUuids -- newUuids
+        val removedTags = removedTagUuids.map(uuid => oldTags(uuid))
+
+        (addedTags, removedTags)
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

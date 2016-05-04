@@ -136,13 +136,13 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(expectedCriticalTextDiffsAsXml)).withTest(Input.fromString(criticalTextDiffsAsXml)).build()
             xmlDiff.hasDifferences should be(false)
 
-            val (standoffAdded: Set[UUID], standoffRemoved: Set[UUID]) = standoffUtil.findChangedStandoffTags(
+            val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
                 oldStandoff = diploTextWithStandoff.standoff,
                 newStandoff = criticalTextWithStandoff.standoff
             )
 
-            standoffAdded.contains(regionID) should be(false)
-            standoffRemoved.contains(regionID) should be(false)
+            standoffAdded.exists(_.uuid == regionID) should be(false)
+            standoffRemoved.exists(_.uuid == regionID) should be(false)
         }
 
         "calculate the diffs in a workflow with two versions of a diplomatic transcription and two versions of an editorial text" in {
@@ -219,6 +219,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             // Find the differences between the version 2 of the transcription and version 1 of the editorial text.
 
             val diplo2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription2)
+            val blueTag = diplo2TextWithStandoff.standoff.find(_.uuid == blueID).getOrElse("<blue> tag not in standoff")
 
             val editorialStandoffDiffs2: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
                 baseText = diplo2TextWithStandoff.text,
@@ -245,10 +246,10 @@ class StandoffUtilSpec extends WordSpec with Matchers {
 
             // Also find out which standoff tags have changed in the new version of the transcription.
 
-            val (addedTagUuids, removedTagUuids) = standoffUtil.findChangedStandoffTags(diplo1TextWithStandoff.standoff, diplo2TextWithStandoff.standoff)
+            val (addedTags, removedTags) = standoffUtil.findChangedStandoffTags(diplo1TextWithStandoff.standoff, diplo2TextWithStandoff.standoff)
 
-            addedTagUuids should be(Set(blueID)) // Just the <blue> tag was added.
-            removedTagUuids should be(Set()) // No tags were removed.
+            addedTags should be(Set(blueTag)) // Just the <blue> tag was added.
+            removedTags should be(Set()) // No tags were removed.
 
             // The editor now corrects the editorial text to take into account the change from 'Bus' to 'Bahn'. This
             // means that the abbreviation 'd' in the transcription now has to be expanded as 'die' rather than 'der'.
