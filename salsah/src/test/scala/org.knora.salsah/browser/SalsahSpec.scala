@@ -20,9 +20,11 @@
 
 package org.knora.salsah.browser
 
+import org.openqa.selenium.support.ui.Select
 import org.openqa.selenium.{By, WebElement}
 import org.scalatest._
 import org.scalatest.concurrent.Eventually._
+
 import scala.collection.JavaConversions._
 import scala.concurrent.duration._
 
@@ -55,6 +57,8 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
         "log in as root" in {
 
+            page.load
+
             page.doLogin("root", "test")
 
             eventually {
@@ -64,39 +68,117 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             }
         }
 
-        "do a simple search for 'Zeitglöcklein' and open a search result row representing a page, and move it" in {
+        "do a simple search for 'Zeitglöcklein' and open a search result row representing a page" in {
+
+            page.load()
 
             val searchField: WebElement = page.getSimpleSearchField
             searchField.clear()
             searchField.sendKeys("Zeitglöcklein\n")
 
-            // Use 'eventually' to test results that may take time to appear.
-            val resultDiv: WebElement = eventually {
-                page.getSearchResultDiv
-            }
+            val header = page.getSearchResultHeader
 
-            val resultHeader: String = eventually {
-                page.getSearchResultHeader(resultDiv)
-            }
+            assert(header.contains("Total of 3 hits"))
 
-            assert(resultHeader.contains("Total of 3 hits"))
+            val rows = page.getExtendedSearchResultRows
 
-            val firstResult: String = eventually {
-                page.getFirstSearchResult(resultDiv)
-            }
+            val row1Text = page.getSearchResultRowText(rows(0))
 
-            assert(firstResult.contains("Zeitglöcklein des Lebens und Leidens Christi"))
+            assert(row1Text.contains("Zeitglöcklein des Lebens und Leidens Christi"))
 
-            eventually {
-                // open second element in list
-                page.openResult(resultDiv, 1)
-            }
+            rows(1).click()
 
             val window = eventually {
                 page.getWindow(1)
             }
 
             page.dragWindow(window, 90, 10)
+
+
+        }
+
+        "do an extended search for restype book containing 'Zeitglöcklein in the title'" in {
+
+            page.load()
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#book")
+
+            page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#title")
+
+            page.getExtendedSearchSelectionByName(1, "compop").selectByValue("LIKE")
+
+            page.getValueField(1).sendKeys("Zeitglöcklein")
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            assert(rows.length == 2, "There should be two result rows")
+
+        }
+
+        "do an extended search for restype page with seqnum 1 belonging to a book conatining 'Narrenschiff' in its title" in {
+
+            page.load
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#page")
+
+            page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#seqnum")
+
+            page.getExtendedSearchSelectionByName(1, "compop").selectByValue("EQ")
+
+            page.getValueField(1).sendKeys("1")
+
+            page.addPropertySetToExtendedSearch(2)
+
+            page.getExtendedSearchSelectionByName(2, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#partOf")
+
+            page.getExtendedSearchSelectionByName(2, "compop").selectByValue("EQ")
+
+            page.getValueField(2).sendKeys("Narrenschiff")
+
+            page.chooseElementFromSearchbox(1)
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            assert(rows.length == 1, "There should be one result row")
+
+        }
+
+        "do an extended search involving a hierarchical list selection" in {
+
+            page.load
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/images#bild")
+
+            page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/images#titel")
+
+            var selections = page.getHierarchicalListSelections(1)
+
+            val firstSel = selections(0)
+
+            firstSel.selectByValue("http://data.knora.org/lists/71a1543cce")
+
+            // refresh the selection
+            selections = page.getHierarchicalListSelections(1)
+
+            val secondSel = selections(1)
+
+            secondSel.selectByValue("http://data.knora.org/lists/d1fa87bbe3")
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            assert(rows.length == 5, "There should be five result rows")
 
         }
 

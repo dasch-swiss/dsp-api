@@ -25,10 +25,11 @@ import java.io.File
 import scala.collection.JavaConversions._
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.interactions.Actions
-import org.openqa.selenium.support.ui.ExpectedConditions
+import org.openqa.selenium.support.ui.{ExpectedConditions, Select}
 import org.openqa.selenium.{By, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
 import java.io.FileNotFoundException
+
 
 
 
@@ -98,6 +99,12 @@ class SalsahPage {
 
     }
 
+    /*
+
+    Search
+
+     */
+
     /**
       * Returns the SALSAH simple search field.
       */
@@ -106,54 +113,154 @@ class SalsahPage {
     }
 
     /**
-      * Returns the SALSAH extended search button.
-      */
-    def getExtendedSearchField: WebElement = {
-        driver.findElement(By.xpath("//div[@id='searchctrl']/img[2][@class='link']"))
-    }
-
-    /**
-      * Returns a `div` representing search results.
-      */
-    def getSearchResultDiv: WebElement = {
-        driver.findElement(By.name("result"))
-    }
-
-    /**
       * Returns the header of a `div` representing search results.
       *
-      * @param searchResultDiv a `div` representing search results.
       * @return the contents of the header.
       */
-    def getSearchResultHeader(searchResultDiv: WebElement): String = {
-        searchResultDiv.findElement(By.xpath("div[1]")).getText
+    def getSearchResultHeader: String = {
+        eventually {
+            val searchResultDiv = driver.findElement(By.name("result"))
+            searchResultDiv.findElement(By.xpath("div[1]")).getText
+        }
     }
 
     /**
       * Returns a description of the first search result.
       *
-      * @param searchResultDiv a `div` representing search results.
+      * @param searchResultRow a `tr` representing a search result row.
       * @return the contents of the last column of the first row of the search results table.
       */
-    def getFirstSearchResult(searchResultDiv: WebElement): String = {
-        searchResultDiv.findElement(By.xpath("table/tbody/tr[2]/td[4]")).getText
+    def getSearchResultRowText(searchResultRow: WebElement): String = {
+        eventually {
+            searchResultRow.findElement(By.xpath("td[4]")).getText
+        }
     }
 
     /**
-      * Clicks on the specified search result row.
-      *
-      * @param searchResultDiv a `div` representing search results.
-      * @param number          the search result row to be opened.
+      * Returns the SALSAH extended search button.
       */
-    def openResult(searchResultDiv: WebElement, number: Int) = {
-        val resultRows: Seq[WebElement] = searchResultDiv.findElements(By.xpath("table/tbody/tr[@class='result_row']"))
-
-        val resultRow = resultRows.get(number)
-
-        resultRow.click()
-
-
+    def clickExtendedSearchButton = {
+        driver.findElement(By.xpath("//div[@id='searchctrl']/img[2][@class='link']")).click()
     }
+
+    /**
+      * Select a restype to search for.
+      *
+      * @param restype the restype to be selected.
+      */
+    def selectExtendedSearchRestype(restype: String) = {
+        eventually {
+            val restypeSelect = driver.findElement(By.name("selrestype"))
+            new Select(restypeSelect).selectByValue(restype)
+        }
+    }
+
+    /**
+      *
+      * Get a selection in extended search.
+      *
+      * @param propIndex indicate which (first, second, third etc. ) property field set to use: the user may perform a search involving several properties.
+      * @param name the name of the selection ("selprop" or "compop")
+      * @return a [[Select]] representing the HTML select.
+      */
+    def getExtendedSearchSelectionByName(propIndex: Int, name: String): Select = {
+        eventually {
+            val selection = driver.findElement(By.xpath(s"//div[$propIndex][contains(@class, 'selprop') and contains(@class, 'extsearch')]")).findElement(By.name(name))
+            new Select(selection)
+        }
+    }
+
+    /**
+      * Get the value field to enter the value to search for.
+      *
+      * @param propIndex indicate which (first, second, third etc. ) property field set to use: the user may perform a search involving several properties.
+      * @return a [[WebElement]] representing the value field.
+      */
+    def getValueField(propIndex: Int): WebElement = {
+        eventually {
+            driver.findElement(By.xpath(s"//div[$propIndex][contains(@class, 'selprop')]")).findElement(By.name("valfield")).findElement(By.xpath("input"))
+        }
+    }
+
+    /**
+      * Get the selects representing a hierarchical list.
+      *
+      * @param propIndex indicate which (first, second, third etc. ) property field set to use: the user may perform a search involving several properties.
+      * @return a list of [[Select]]
+      */
+    def getHierarchicalListSelections(propIndex: Int): List[Select] = {
+        eventually {
+
+            val selections = driver.findElement(By.xpath(s"//div[$propIndex][contains(@class, 'selprop')]")).findElement(By.name("valfield")).findElements(By.xpath("span[@class='propval']//select"))
+            // make sure to find any selection (async)
+            if (selections.length < 1) throw new Exception
+
+            selections.map(new Select(_)).toList
+
+        }
+    }
+
+    /**
+      * Add a new property to search for.
+      *
+      * @param propIndex the index that this property set will have. If this is the first additional set, the index will be 2.
+      */
+    def addPropertySetToExtendedSearch(propIndex: Int): WebElement = {
+        eventually {
+            driver.findElement(By.xpath("//div[contains(@class, 'propedit_frame')]//img[contains(@src,'add.png')]")).click()
+        }
+
+        eventually {
+            // make sure that the new set is loaded
+            driver.findElement(By.xpath(s"//div[$propIndex][contains(@class, 'selprop')]"))
+        }
+    }
+
+    /**
+      * Chooses an element from a searchbox.
+      *
+      * @param eleIndex the index of the element to choose (beginning with 1).
+      */
+    def chooseElementFromSearchbox(eleIndex: Int) = {
+        val searchbox = eventually {
+            driver.findElement(By.className("searchbox"))
+        }
+
+        eventually {
+            searchbox.findElement(By.xpath(s"//div[$eleIndex][@class='searchboxItem']")).click()
+        }
+    }
+
+    /**
+      * Submit the extended search form.
+      */
+    def submitExtendedSearch = {
+        eventually {
+            driver.findElement(By.xpath("//input[@value='Search']")).click()
+        }
+    }
+
+    /**
+      * Returns the result rows.
+      *
+      * @return list of [[WebElement]]
+      */
+    def getExtendedSearchResultRows: List[WebElement] = {
+        eventually {
+            val table = driver.findElement(By.name("result")).findElement(By.xpath("//table"))
+
+            val rows = table.findElements(By.xpath("//tr[@class='result_row']"))
+
+            // make sure that rows are loaded
+            if (rows.length < 1) throw new Exception
+
+            rows.toList
+
+        }
+    }
+
+
+
 
     /**
       * Ensures the minimum overall amount of windows and returns a list of them.
