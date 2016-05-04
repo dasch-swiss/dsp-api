@@ -44,12 +44,9 @@ SELECT ?bild
 WHERE {
     BIND(IRI("@projectIri") as ?projectIri)
 
-    ?bild knora-base:attachedToProject ?projectIri .
-    ?bild rdf:type dokubib:bild .
-
-    MINUS {
-        ?bild knora-base:isDeleted true .
-    }
+    ?bild knora-base:attachedToProject ?projectIri ;
+        rdf:type dokubib:bild ;
+        knora-base:isDeleted false .
 }
 @limitOption match {
     case Some(limit) => {

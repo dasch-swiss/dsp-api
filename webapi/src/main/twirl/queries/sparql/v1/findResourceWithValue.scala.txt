@@ -41,19 +41,14 @@ SELECT ?resource ?project ?property
 WHERE {
     BIND(IRI("@searchValueIri") as ?searchValue)
 
+    ?searchValue knora-base:isDeleted false .
+
     @* Find something that links to searchValue, and make sure it's a Resource. *@
 
-    ?resource ?property ?searchValue .
-    ?resource rdf:type ?resourceClass .
+    ?resource ?property ?searchValue ;
+        knora-base:isDeleted false ;
+        rdf:type ?resourceClass .
     ?resourceClass rdfs:subClassOf+ knora-base:Resource .
     ?property rdfs:subPropertyOf+ knora-base:hasValue .
     ?resource knora-base:attachedToProject ?project .
-
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
-
-    MINUS {
-        ?searchValue knora-base:isDeleted true .
-    }
 }

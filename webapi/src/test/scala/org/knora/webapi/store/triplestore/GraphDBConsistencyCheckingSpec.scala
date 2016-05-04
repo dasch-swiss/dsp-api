@@ -50,6 +50,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
             }
         }
 
+        /* Commented out because this consistency rule is disabled.
         "not create a new resource with two values for a property that has owl:maxCardinality 1" in {
             storeManager ! SparqlUpdateRequest(GraphDBConsistencyCheckingSpec.tooManyPublocs)
 
@@ -57,7 +58,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
                     msg.contains(s"${GraphDBConsistencyCheckingSpec.CONSISTENCY_CHECK_ERROR} content_prop_max_cardinality_1") should ===(true)
             }
-        }
+        } */
 
         "not create a new resource with more than one lastModificationDate" in {
             storeManager ! SparqlUpdateRequest(GraphDBConsistencyCheckingSpec.tooManyLastModificationDates)

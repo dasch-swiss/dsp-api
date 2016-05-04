@@ -58,9 +58,7 @@
 
     @* Do nothing if the target resource doesn't exist or is marked as deleted. *@
 
-    MINUS {
-        ?linkTarget@valueIndex knora-base:isDeleted true .
-    }
+    ?linkTarget@valueIndex knora-base:isDeleted false .
 
     @* Do nothing if the source resource's OWL class has no cardinality for the link property. *@
 
@@ -103,11 +101,8 @@
                 SELECT ((MAX(?order@valueIndex)) AS ?maxOrder@valueIndex) (IF(BOUND(?maxOrder@valueIndex), ?maxOrder@valueIndex + 1, 0) AS ?nextOrder@valueIndex)
                 WHERE {
                     <@resourceIri> <@{linkUpdate.linkPropertyIri}Value> ?otherLinkValue@valueIndex .
-                    ?otherLinkValue@valueIndex knora-base:valueHasOrder ?order@valueIndex .
-
-                    MINUS {
-                        ?otherLinkValue@valueIndex knora-base:isDeleted true .
-                    }
+                    ?otherLinkValue@valueIndex knora-base:valueHasOrder ?order@valueIndex ;
+                        knora-base:isDeleted false .
                 }
             }
 

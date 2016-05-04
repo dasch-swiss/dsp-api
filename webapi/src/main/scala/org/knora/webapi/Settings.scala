@@ -36,7 +36,6 @@ import scala.concurrent.duration._
   * Reads application settings that come from `application.conf`.
   */
 class SettingsImpl(config: Config) extends Extension {
-    val baseApiUrl = config.getString("app.http.base-api-url")
     val baseSALSAHUrl = config.getString("app.http.base-salsah-url")
     val projectIconsBasePath = config.getString("app.http.project-icons-basepath")
     val httpInterface = config.getString("app.http.interface")
@@ -54,6 +53,7 @@ class SettingsImpl(config: Config) extends Extension {
     val sipiPathConversionRoute = config.getString("app.sipi.path-conversion-route")
     val sipiFileConversionRoute = config.getString("app.sipi.file-conversion-route")
     val httpPort = config.getInt("app.http.port")
+    val baseApiUrl = s"http://$httpInterface:$httpPort/"
     val caches = config.getList("app.caches").iterator.map {
         (cacheConfigItem: ConfigValue) =>
             val cacheConfigMap = cacheConfigItem.unwrapped.asInstanceOf[java.util.HashMap[String, Any]]

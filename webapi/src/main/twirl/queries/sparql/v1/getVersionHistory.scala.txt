@@ -49,13 +49,8 @@ WHERE {
     BIND(IRI("@propertyIri") AS ?prop)
     BIND(IRI("@currentValueIri") AS ?currentValue)
 
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
-
-    MINUS {
-        ?currentValue knora-base:isDeleted true .
-    }
+    ?resource knora-base:isDeleted false .
+    ?currentValue knora-base:isDeleted false .
 
     ?resource ?prop ?currentValue .
     ?prop rdfs:subPropertyOf+ knora-base:hasValue .

@@ -20,10 +20,87 @@
 
 package org.knora.webapi.responders.v1
 
+import akka.actor.ActorSystem
+import org.knora.webapi.Settings
 import org.knora.webapi.messages.v1respondermessages.resourcemessages._
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1
 
 object ResourcesResponderV1SpecContextData {
+
+    implicit lazy val system = ActorSystem("webapi")
+
+    val settings = Settings(system)
+
+
+    // first element of 402 locations consisting of a preview and six different qualities
+    val expectedFirstLocationOfBookResourceContextResponse = Some(Vector(
+        LocationV1(
+            "JPEG",
+            "ad+s167_druck1=0001.tif",
+            Some(95),
+            Some(128),
+            "http://localhost:1024/knora/incunabula_0000000002.jpg/full/full/0/default.jpg",
+            0,
+            0,
+            "file"),
+        LocationV1(
+            "JPEG2000",
+            "ad+s167_druck1=0001.tif",
+            Some(82),
+            Some(110),
+            "http://localhost:1024/knora/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
+            0,
+            0,
+            "file"),
+        LocationV1(
+            "JPEG2000",
+            "ad+s167_druck1=0001.tif",
+            Some(163),
+            Some(219),
+            "http://localhost:1024/knora/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
+            0,
+            0,
+            "file"),
+        LocationV1(
+            "JPEG2000",
+            "ad+s167_druck1=0001.tif",
+            Some(327),
+            Some(438),
+            "http://localhost:1024/knora/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
+            0,
+            0,
+            "file"),
+        LocationV1(
+            "JPEG2000",
+            "ad+s167_druck1=0001.tif",
+            Some(653),
+            Some(876),
+            "http://localhost:1024/knora/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
+            0,
+            0,
+            "file"),
+        LocationV1(
+            "JPEG2000",
+            "ad+s167_druck1=0001.tif",
+            Some(1307),
+            Some(1753),
+            "http://localhost:1024/knora/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
+            0,
+            0,
+            "file"),
+        LocationV1(
+            "JPEG2000",
+            "ad+s167_druck1=0001.tif",
+            Some(2613),
+            Some(3505),
+            "http://localhost:1024/knora/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
+            0,
+            0,
+            "file")))
+
+    // this response is supposed to have locations,
+    // but adding all the 402 locations consisting of one preview and six different qualities (402*7) is not possible here.
+    // Therefore, only the first location is checked, see above.
     val expectedBookResourceContextResponse = ResourceContextResponseV1(
         userdata = UserDataV1(
             projects_info = Nil,
@@ -50,7 +127,7 @@ object ResourcesResponderV1SpecContextData {
                 locdata = None,
                 locations = None,
                 preview = None,
-                restype_iconsrc = Some("book.gif"),
+                restype_iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
                 restype_description = Some("Diese Resource-Klasse beschreibt ein Buch"),
                 restype_label = Some("Buch"),
                 restype_name = Some("http://www.knora.org/ontology/incunabula#book"),
@@ -5340,7 +5417,7 @@ object ResourcesResponderV1SpecContextData {
                 locdata = None,
                 locations = None,
                 preview = None,
-                restype_iconsrc = Some("book.gif"),
+                restype_iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
                 restype_description = Some("Diese Resource-Klasse beschreibt ein Buch"),
                 restype_label = Some("Buch"),
                 restype_name = Some("http://www.knora.org/ontology/incunabula#book"),
@@ -5465,7 +5542,7 @@ object ResourcesResponderV1SpecContextData {
                     origname = "ad+s167_druck1=0001.tif",
                     format_name = "JPEG"
                 )),
-                restype_iconsrc = Some("page.gif"),
+                restype_iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/page.gif"),
                 restype_description = Some("Eine Seite ist ein Teil eines Buchs"),
                 restype_label = Some("Seite"),
                 restype_name = Some("http://www.knora.org/ontology/incunabula#page"),

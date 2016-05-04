@@ -421,12 +421,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
                         // If there's a resid, generate an href from it, because the SALSAH GUI expects this.
                         // Otherwise, use the href returned by the query, if present.
-                        val maybeHref = maybeResId match {
-                            case Some(targetResourceIri) =>
-                                val urlEncodedResIdIri = URLEncoder.encode(targetResourceIri, "UTF-8")
-                                Some(s"${settings.baseApiUrl}v1/resources/$urlEncodedResIdIri")
-
-                            case None => standoffInfo.get(OntologyConstants.KnoraBase.StandoffHasHref)
+                        val maybeHref = if (maybeResId.nonEmpty) {
+                            maybeResId
+                        } else {
+                            standoffInfo.get(OntologyConstants.KnoraBase.StandoffHasHref)
                         }
 
                         StandoffPositionV1(

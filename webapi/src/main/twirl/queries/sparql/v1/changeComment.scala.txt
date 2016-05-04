@@ -57,7 +57,7 @@ DELETE {
     ?newValue ?valuePred ?valueObj .
     ?newValue knora-base:valueHasComment """@comment""" ;
         knora-base:previousValue ?currentValue ;
-        knora-base:isDeleted "false"^^xsd:boolean ;
+        knora-base:isDeleted false ;
         knora-base:valueCreationDate ?currentTime .
     ?resource ?property ?newValue .
 
@@ -76,11 +76,8 @@ WHERE {
     BIND(NOW() AS ?currentTime)
 
     ?resource ?property ?currentValue .
-    ?currentValue ?valuePred ?valueObj .
-
-    MINUS {
-        ?currentValue knora-base:isDeleted true .
-    }
+    ?currentValue ?valuePred ?valueObj ;
+        knora-base:isDeleted false .
 
     FILTER(!(?valuePred = knora-base:previousValue || ?valuePred = knora-base:valueCreationDate || ?valuePred = knora-base:valueHasComment))
 

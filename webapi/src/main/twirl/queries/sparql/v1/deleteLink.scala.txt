@@ -83,7 +83,7 @@ INSERT {
                 case None => {}
             }
             @if(linkUpdate.newReferenceCount == 0) {
-                knora-base:isDeleted "true"^^xsd:boolean .
+                knora-base:isDeleted true .
             } else {
                 @{throw SparqlGenerationException(s"linkUpdate.newReferenceCount must be 0 in this SPARQL template"); ()}
             }
@@ -114,12 +114,8 @@ WHERE {
 
     @* Do nothing if the link source doesn't exist, is marked as deleted, or isn't a knora-base:Resource. *@
 
-    ?linkSource rdf:type ?linkSourceClass .
-
-    MINUS {
-        ?linkSource knora-base:isDeleted true .
-    }
-
+    ?linkSource rdf:type ?linkSourceClass ;
+        knora-base:isDeleted false .
     ?linkSourceClass rdfs:subClassOf+ knora-base:Resource .
 
     @* Make sure a direct link exists between the two resources. *@
@@ -143,11 +139,7 @@ WHERE {
             rdf:predicate ?linkProperty ;
             rdf:object ?linkTarget ;
             knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
-            knora-base:valueHasOrder ?order .
-
-        MINUS {
-            ?currentLinkValue knora-base:isDeleted true .
-        }
+            knora-base:isDeleted false .
     } else {
         @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be true in this SPARQL template"); ()}
     }

@@ -238,7 +238,7 @@ class SearchResponderV1 extends ResponderV1 {
                     val searchResultRow: SearchResultRowV1 = searchResultRowWithEntityIris.searchResultRow
                     val resourceEntityInfoMap: ResourceEntityInfoV1 = entityInfoResponse.resourceEntityInfoMap(searchResultRowWithEntityIris.resourceClassIri)
                     val resourceClassLabel = resourceEntityInfoMap.getPredicateObject(OntologyConstants.Rdfs.Label)
-                    val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) // TODO: make a Sipi URL.
+                    val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
                     val resourceClassIri = searchResultRowWithEntityIris.resourceClassIri
 
                     val resourceClassIconURL = resourceClassIcon match {

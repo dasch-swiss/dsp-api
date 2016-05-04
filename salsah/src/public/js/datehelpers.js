@@ -16,6 +16,8 @@
 
 (function( S ) {
 
+	'use strict';
+
 	S.calendars = {
 		GREGORIAN: {name: 'Gregorian', n_months: 12},
 		JULIAN: {name: 'Julian', n_months: 12},
@@ -78,7 +80,7 @@
 			Math.floor((year - 1) / 400) +
 			Math.floor((((367 * month) - 362) / 12) +
 			((month <= 2) ? 0 : (leap_gregorian(year) ? -1 : -2)) + day);
-	}
+	};
 
 	//  JD_TO_GREGORIAN  --  Calculate Gregorian calendar date from Julian day
 
@@ -86,7 +88,13 @@
 	    var wjd, depoch, quadricent, dqc, cent, dcent, quad, dquad,
 	        yindex, dyindex, year, yearday, leapadj;
 
-		jsd = parseInt(jd);
+
+		//var jsd = parseInt(jd);
+
+		// if a Julian Day has a fraction of 0.5 or higher, it refers to midnight (0h) or later
+		// if it is has a fraction below 0.5, it refers to a time before midnight which is the day before
+		// 2457498.5 -> 2016-04-20 0h
+		// 2457498.4 -> 2016-04-19
 	    wjd = Math.floor(jd - 0.5) + 0.5;
 	    depoch = wjd - GREGORIAN_EPOCH;
 	    quadricent = Math.floor(depoch / 146097);
@@ -102,13 +110,13 @@
 	    }
 	    yearday = wjd - S.gregorian_to_jd(year, 1, 1);
 	    leapadj = ((wjd < S.gregorian_to_jd(year, 3, 1)) ? 0 : (leap_gregorian(year) ? 1 : 2));
-	    month = Math.floor((((yearday + leapadj) * 12) + 373) / 367);
-	    day = (wjd - S.gregorian_to_jd(year, month, 1)) + 1;
+	    var month = Math.floor((((yearday + leapadj) * 12) + 373) / 367);
+	    var day = (wjd - S.gregorian_to_jd(year, month, 1)) + 1;
 
 		if (year <= 0) year--; // correction for PHPvar JULIAN_EPOCH = 1721423.5;
 
 	    return new Array(Math.round(year), Math.round(month), Math.round(day));
-	}
+	};
 	
 	
 	function leap_julian(year) {
@@ -167,7 +175,7 @@
 	    }
 
 	    return new Array(Math.round(year), Math.round(month), Math.round(day));
-	}
+	};
 	
 	function hebrew_leap(year) {
 		year = parseInt(year);
@@ -185,17 +193,18 @@
 	//  Sunday, Wednesday, and Friday as start of the new year.
 
 	function hebrew_delay_1(year) {
-	    var months, days, parts;
+		var months, days, parts;
 		year = parseInt(year);
 
 	    months = Math.floor(((235 * year) - 234) / 19);
 	    parts = 12084 + (13753 * months);
-	    day = (months * 29) + Math.floor(parts / 25920);
+	    days = (months * 29) + Math.floor(parts / 25920);
 
-	    if (mod((3 * (day + 1)), 7) < 3) {
-	        day++;
+	    if (mod((3 * (days + 1)), 7) < 3) {
+	        days++;
 	    }
-	    return day;
+
+	    return days;
 	}
 
 	//  Check for delay in start of new year due to length of adjacent years
@@ -348,7 +357,7 @@
 	    jour = (jour % 10) + 1;
 
 	    return new Array(an, mois, decade, jour);
-	}
+	};
 
 	/*  FRENCH_REVOLUTIONARY_TO_JD  --  Obtain Julian day from a given French
 	                                    Revolutionary calendar date.  */
@@ -430,7 +439,7 @@
 			days: days,
 			weekday_first: jwday(dc1)
 		}
-	}
+	};
 
 	S.jdc_to_date = function (jdc, cal) {
 		jdc = parseInt(jdc);
@@ -477,12 +486,12 @@
 			if (i_month == 0) i_month = S.calendars[cal].n_months;
 			if (i_day == 0) {
 				var tmp = SALSAH.daycnt(cal, i_year, i_month);
-				day = tmp.days;
+				i_day = tmp.days;
 			}
 		}
 		else {
-			if (month == 0) month = 1;
-			if (day == 0) day = 1;
+			if (month == 0) i_month = 1;
+			if (day == 0) i_day = 1;
 		}
 
 		switch (cal) {

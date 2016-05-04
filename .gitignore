@@ -1,5 +1,5 @@
 /.project
-/.idea
+*/.idea
 target/
 *.iml
 /logs/
@@ -27,6 +27,4 @@ webapi/src/main/resources/query-log/
 *.tdo
 *.toc
 .sbtrc
-
-chromedriver
-webapi/.idea
+salsah/lib/chromedriver
