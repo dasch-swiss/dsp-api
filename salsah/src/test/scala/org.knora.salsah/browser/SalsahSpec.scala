@@ -47,6 +47,29 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
     val page = new SalsahPage
 
+    def doZeitgloeckleinSearchandOpenPage = {
+
+        val searchField: WebElement = page.getSimpleSearchField
+        searchField.clear()
+        searchField.sendKeys("Zeitglöcklein\n")
+
+        val header = page.getSearchResultHeader
+
+        assert(header.contains("Total of 3 hits"))
+
+        val rows = page.getExtendedSearchResultRows
+
+        val row1Text = page.getSearchResultRowText(rows(0))
+
+        assert(row1Text.contains("Zeitglöcklein des Lebens und Leidens Christi"))
+
+        rows(1).click()
+
+        eventually {
+            page.getWindow(1)
+        }
+    }
+
     "The SALSAH home page" should {
 
         "have the correct title" in {
@@ -72,25 +95,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.load()
 
-            val searchField: WebElement = page.getSimpleSearchField
-            searchField.clear()
-            searchField.sendKeys("Zeitglöcklein\n")
-
-            val header = page.getSearchResultHeader
-
-            assert(header.contains("Total of 3 hits"))
-
-            val rows = page.getExtendedSearchResultRows
-
-            val row1Text = page.getSearchResultRowText(rows(0))
-
-            assert(row1Text.contains("Zeitglöcklein des Lebens und Leidens Christi"))
-
-            rows(1).click()
-
-            val window = eventually {
-                page.getWindow(1)
-            }
+            val window = doZeitgloeckleinSearchandOpenPage
 
             page.dragWindow(window, 90, 10)
 
@@ -119,7 +124,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
         }
 
-        "do an extended search for restype page with seqnum 1 belonging to a book conatining 'Narrenschiff' in its title" in {
+        "do an extended search for restype page with seqnum 1 belonging to a book containing 'Narrenschiff' in its title" in {
 
             page.load
 
@@ -181,6 +186,50 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             assert(rows.length == 5, "There should be five result rows")
 
         }
+
+        "do an extended search for a book with a certain publication data" in {
+            page.load
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#book")
+
+            page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#pubdate")
+
+            page.getExtendedSearchSelectionByName(1, "compop").selectByValue("GT")
+
+            val dateForm = page.getDateForm(1)
+
+            val calsel = page.getCalSelection(dateForm)
+
+            calsel.selectByValue("JULIAN")
+
+            val monthsel = page.getMonthSelection(dateForm)
+
+            monthsel.selectByValue("8")
+
+            val days = page.getDays(dateForm = dateForm)
+
+            days(1).click()
+
+            val yearsel = page.getYearField(dateForm)
+
+            yearsel.clear
+            yearsel.sendKeys("1495")
+
+            page.submitExtendedSearch
+
+        }
+
+        /*"edit the pagenumber of a page" in {
+
+            page.load()
+
+            val window = doZeitgloeckleinSearchandOpenPage
+
+
+
+        }*/
 
         /*"edit the description of a page" in {
 

@@ -201,6 +201,73 @@ class SalsahPage {
     }
 
     /**
+      * Get the date form for a date value property.
+      *
+      * @param propIndex indicate which (first, second, third etc. ) property field set to use: the user may perform a search involving several properties.
+      * @return the [[WebElement]] representing the date form.
+      */
+    def getDateForm(propIndex: Int): WebElement = {
+        eventually {
+            driver.findElement(By.xpath(s"//div[$propIndex][contains(@class, 'selprop')]")).findElement(By.name("valfield")).findElement(By.name("searchval"))
+        }
+
+    }
+
+    /**
+      * Get calendar type selection.
+      *
+      * @param dateForm the [[WebElement]] representing the date form.
+      * @return a [[Select]] representing the calendar types.
+      */
+    def getCalSelection(dateForm: WebElement): Select = {
+
+        eventually {
+            new Select(dateForm.findElement(By.xpath("//select[contains(@class,'calsel')]")))
+        }
+
+    }
+
+    /**
+      * Get month selection.
+      *
+      * @param dateForm the [[WebElement]] representing the date form.
+      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @return a [[Select]] representing the month.
+      */
+    def getMonthSelection(dateForm: WebElement, index: Int = 1) = {
+        eventually {
+            new Select(dateForm.findElement(By.xpath(s"span[$index]/select[contains(@class,'monthsel')]")))
+        }
+    }
+
+    /**
+      * Get the days.
+      *
+      * @param dateForm dateForm the [[WebElement]] representing the date form.
+      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @return a list of `td` representing the days.
+      */
+    def getDays(dateForm: WebElement, index: Int = 1): List[WebElement] = {
+        eventually {
+            val daysel = dateForm.findElement(By.xpath(s"//span[$index]/input[contains(@class,'daysel')]"))
+
+            daysel.click()
+
+            val dayForm = dateForm.findElement(By.xpath(s"//span[$index]/div[contains(@class,'daysel')]/table"))
+
+            dayForm.findElements(By.tagName("td")).toList
+
+        }
+    }
+
+
+    def getYearField(dateForm: WebElement, index: Int = 1) = {
+        eventually {
+            dateForm.findElement(By.xpath("//input[contains(@class,'yearsel')]"))
+        }
+    }
+
+    /**
       * Add a new property to search for.
       *
       * @param propIndex the index that this property set will have. If this is the first additional set, the index will be 2.
@@ -260,7 +327,11 @@ class SalsahPage {
     }
 
 
+    /*
 
+    Window handling
+
+    */
 
     /**
       * Ensures the minimum overall amount of windows and returns a list of them.
@@ -322,4 +393,10 @@ class SalsahPage {
     def findCkeditor(field: WebElement) = {
         field.findElement(By.xpath("div//iframe"))
     }
+
+    /*
+
+    Edit Properties
+
+     */
 }
