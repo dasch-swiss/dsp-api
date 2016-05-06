@@ -228,6 +228,17 @@ class SalsahPage {
     }
 
     /**
+      * Hit checkbox to search for a date that is a period.
+      *
+      * @param dateForm the [[WebElement]] representing the date form.
+      */
+    def makePeriod(dateForm: WebElement) = {
+        eventually {
+            dateForm.findElement(By.xpath("//input[contains(@class,'periodsel')]")).click()
+        }
+    }
+
+    /**
       * Get month selection.
       *
       * @param dateForm the [[WebElement]] representing the date form.
@@ -249,21 +260,32 @@ class SalsahPage {
       */
     def getDays(dateForm: WebElement, index: Int = 1): List[WebElement] = {
         eventually {
-            val daysel = dateForm.findElement(By.xpath(s"//span[$index]/input[contains(@class,'daysel')]"))
+            val daysel = dateForm.findElement(By.xpath(s"span[$index]/input[contains(@class,'daysel')]"))
 
             daysel.click()
 
-            val dayForm = dateForm.findElement(By.xpath(s"//span[$index]/div[contains(@class,'daysel')]/table"))
+            val dayForm = dateForm.findElement(By.xpath(s"span[$index]/div[contains(@class,'daysel')]/table"))
 
-            dayForm.findElements(By.tagName("td")).toList
+            val days = dayForm.findElements(By.tagName("td")).toList
+
+            days.filter(
+                (day: WebElement) => day.getText.nonEmpty
+
+            )
 
         }
     }
 
-
+    /**
+      * Get year entry field.
+      *
+      * @param dateForm the [[WebElement]] representing the date form.
+      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @return a `input` representing the year entry field.
+      */
     def getYearField(dateForm: WebElement, index: Int = 1) = {
         eventually {
-            dateForm.findElement(By.xpath("//input[contains(@class,'yearsel')]"))
+            dateForm.findElement(By.xpath(s"span[$index]/input[contains(@class,'yearsel')]"))
         }
     }
 

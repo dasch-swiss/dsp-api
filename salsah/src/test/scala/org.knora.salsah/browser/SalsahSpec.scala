@@ -63,11 +63,11 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
         assert(row1Text.contains("Zeitglöcklein des Lebens und Leidens Christi"))
 
-        rows(1).click()
+        //rows(1).click()
 
-        eventually {
-            page.getWindow(1)
-        }
+        //eventually {
+        //    page.getWindow(1)
+        //}
     }
 
     "The SALSAH home page" should {
@@ -78,7 +78,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
         }
 
-        "log in as root" in {
+        /*"log in as root" in {
 
             page.load
 
@@ -89,15 +89,15 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
                 // search for element with id 'dologout'
                 page.driver.findElement(By.id("dologout"))
             }
-        }
+        }*/
 
         "do a simple search for 'Zeitglöcklein' and open a search result row representing a page" in {
 
             page.load()
 
-            val window = doZeitgloeckleinSearchandOpenPage
+            /*val window =*/ doZeitgloeckleinSearchandOpenPage
 
-            page.dragWindow(window, 90, 10)
+            //page.dragWindow(window, 90, 10)
 
 
         }
@@ -156,7 +156,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
         }
 
-        "do an extended search involving a hierarchical list selection" in {
+        "do an extended search for images:bild involving a hierarchical list selection for its title" in {
 
             page.load
 
@@ -187,7 +187,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
         }
 
-        "do an extended search for a book with a certain publication data" in {
+        "do an extended search for a book with the exact publication date Julian 1497-08-01" in {
             page.load
 
             page.clickExtendedSearchButton
@@ -196,7 +196,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#pubdate")
 
-            page.getExtendedSearchSelectionByName(1, "compop").selectByValue("GT")
+            page.getExtendedSearchSelectionByName(1, "compop").selectByValue("EQ")
 
             val dateForm = page.getDateForm(1)
 
@@ -210,14 +210,80 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             val days = page.getDays(dateForm = dateForm)
 
-            days(1).click()
+            days(0).click()
 
             val yearsel = page.getYearField(dateForm)
 
             yearsel.clear
-            yearsel.sendKeys("1495")
+            yearsel.sendKeys("1497")
 
             page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            assert(rows.length == 2, "There should be two result rows")
+
+
+        }
+
+        "do an extended search for a book with the period Julian 1495 as publication date" in {
+
+            page.load
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#book")
+
+            page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#pubdate")
+
+            page.getExtendedSearchSelectionByName(1, "compop").selectByValue("EQ")
+
+            val dateForm = page.getDateForm(1)
+
+            page.makePeriod(dateForm)
+
+            val calsel = page.getCalSelection(dateForm)
+
+            calsel.selectByValue("JULIAN")
+
+            //
+            // start date
+            //
+            val monthsel1 = page.getMonthSelection(dateForm, 1)
+
+            monthsel1.selectByValue("1")
+
+            val days1 = page.getDays(dateForm, 1)
+
+            days1(0).click()
+
+            val yearsel1 = page.getYearField(dateForm, 1)
+
+            yearsel1.clear
+            yearsel1.sendKeys("1495")
+
+
+            //
+            // end date
+            //
+            val monthsel2 = page.getMonthSelection(dateForm, 2)
+
+            monthsel2.selectByValue("12")
+
+            val days2 = page.getDays(dateForm, 2)
+
+            days2(30).click()
+
+            val yearsel2 = page.getYearField(dateForm, 2)
+
+            yearsel2.clear
+            yearsel2.sendKeys("1495")
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            assert(rows.length == 3, "There should be three result rows")
 
         }
 
