@@ -392,8 +392,14 @@ class SalsahPage {
         }
     }
 
-    def getEditingFieldsFromMetadataSection(metadataSection: WebElement) = {
-        metadataSection.findElements(By.xpath("div[@class='propedit datafield_1 winid_1']")).toList
+    def getEditingFieldsFromMetadataSection(metadataSection: WebElement): List[WebElement] = {
+        eventually {
+            val editingFields = metadataSection.findElements(By.xpath("div[@class='propedit datafield_1 winid_1']")).toList
+            if (editingFields.length < 1) throw new Exception
+            editingFields
+        }
+
+
     }
 
     /**

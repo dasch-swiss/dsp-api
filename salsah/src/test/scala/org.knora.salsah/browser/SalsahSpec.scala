@@ -20,12 +20,10 @@
 
 package org.knora.salsah.browser
 
-import org.openqa.selenium.support.ui.Select
 import org.openqa.selenium.{By, WebElement}
 import org.scalatest._
 import org.scalatest.concurrent.Eventually._
 
-import scala.collection.JavaConversions._
 import scala.concurrent.duration._
 
 /**
@@ -43,11 +41,11 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
      */
 
     // How long to wait for results obtained using the 'eventually' function
-    implicit val patienceConfig = PatienceConfig(timeout = scaled(5.seconds), interval = scaled(20.millis))
+    implicit val patienceConfig = PatienceConfig(timeout = scaled(10.seconds), interval = scaled(20.millis))
 
     val page = new SalsahPage
 
-    def doZeitgloeckleinSearchandOpenPage = {
+    def doZeitgloeckleinSearch = {
 
         val searchField: WebElement = page.getSimpleSearchField
         searchField.clear()
@@ -63,11 +61,6 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
         assert(row1Text.contains("Zeitglöcklein des Lebens und Leidens Christi"))
 
-        //rows(1).click()
-
-        //eventually {
-        //    page.getWindow(1)
-        //}
     }
 
     "The SALSAH home page" should {
@@ -78,7 +71,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
         }
 
-        /*"log in as root" in {
+        "log in as root" in {
 
             page.load
 
@@ -89,18 +82,56 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
                 // search for element with id 'dologout'
                 page.driver.findElement(By.id("dologout"))
             }
-        }*/
+        }
 
         "do a simple search for 'Zeitglöcklein' and open a search result row representing a page" in {
 
             page.load()
 
-            /*val window =*/ doZeitgloeckleinSearchandOpenPage
+            doZeitgloeckleinSearch
 
-            //page.dragWindow(window, 90, 10)
+            val rows = page.getExtendedSearchResultRows
 
+            // open the second row representing a page
+            /*rows(1).click()
+
+            val window = eventually {
+                page.getWindow(1)
+            }
+
+            // drag and drop the window
+            page.dragWindow(window, 90, 10)
+            */
 
         }
+
+        "do a simple search for 'Zeitglöcklein' and open a search result row representing a book" in {
+
+            page.load()
+
+            doZeitgloeckleinSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            // open the first search result representing a book
+            /*rows(0).click()
+
+            val window = eventually {
+                page.getWindow(1)
+            }
+
+            page.dragWindow(window, 90, 10)
+
+            // click next page twice
+            for (i <- 1 to 2) {
+                eventually {
+                    window.findElement(By.xpath("//div[@class='nextImage']")).click()
+                }
+
+            }*/
+
+        }
+
 
         "do an extended search for restype book containing 'Zeitglöcklein in the title'" in {
 
@@ -251,10 +282,12 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             //
             val monthsel1 = page.getMonthSelection(dateForm, 1)
 
+            // choose January
             monthsel1.selectByValue("1")
 
             val days1 = page.getDays(dateForm, 1)
 
+            // choose the first day of the month
             days1(0).click()
 
             val yearsel1 = page.getYearField(dateForm, 1)
@@ -272,6 +305,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             val days2 = page.getDays(dateForm, 2)
 
+            // choose the last day of the month (31st)
             days2(30).click()
 
             val yearsel2 = page.getYearField(dateForm, 2)
@@ -287,15 +321,89 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
         }
 
-        /*"edit the pagenumber of a page" in {
+        "edit the seqnum and the pagenumber of a page" in {
 
             page.load()
 
-            val window = doZeitgloeckleinSearchandOpenPage
+            doZeitgloeckleinSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            // open page of a book
+            rows(1).click()
+
+            val window = eventually {
+                page.getWindow(1)
+            }
+
+            // get metadata section
+            val metadataSection: WebElement = page.getMetadataSection(window)
+
+            // get a list of editing fields
+            val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
+
+            // get the field representing the seqnum of the page
+            val seqnumField = editFields(10)
+
+            // get the edit button for this field (pen)
+            val editButton = seqnumField.findElement(By.xpath("div//img[1]"))
+
+            editButton.click()
+
+            // click spin box to increase value by one
+            seqnumField.findElement(By.xpath("div/span/span/img[1]")).click()
+
+            // get save button (disk)
+            val saveButton = seqnumField.findElement(By.xpath("div/img[1]"))
+
+            saveButton.click()
+
+            // read the new value back
+            val value = eventually {
+                val value = seqnumField.findElement(By.xpath("div[contains(@class, 'value_container')]"))
+                if (value.getText.isEmpty) throw new Exception
+                value
+            }
+
+            val seqnumValue = value.getText
+
+            assert(seqnumValue.contains("2"), s"$seqnumValue")
+
+            // get the field representing the pagenum of the page
+            val pagenumField = editFields(3)
+
+            // get the edit button for this field (pen)
+            val editButton2 = pagenumField.findElement(By.xpath("div//img[1]"))
+
+            editButton2.click()
+
+            // get the input field
+            val input = eventually {
+                pagenumField.findElement(By.xpath("//input[@class='propedit']"))
+            }
+
+            input.clear
+
+            input.sendKeys("test")
+
+            // get save button (disk)
+            val saveButton2 = pagenumField.findElement(By.xpath("div/img[1]"))
+
+            saveButton2.click()
+
+            // read the new value back
+            val value2 = eventually {
+                val value = pagenumField.findElement(By.xpath("div[contains(@class, 'value_container')]"))
+                if (value.getText.isEmpty) throw new Exception
+                value
+            }
+
+            val pagenumValue = value2.getText
+
+            assert(pagenumValue.contains("test"), s"$pagenumValue")
 
 
-
-        }*/
+        }
 
         /*"edit the description of a page" in {
 
