@@ -31,6 +31,7 @@ import org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectsRes
 import org.knora.webapi.messages.v1respondermessages.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1respondermessages.searchmessages.SearchResponderRequestV1
 import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiResponderRequestV1
+import org.knora.webapi.messages.v1respondermessages.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.messages.v1respondermessages.usermessages.UsersResponderRequestV1
 import org.knora.webapi.messages.v1respondermessages.valuemessages.ValuesResponderRequestV1
 import org.knora.webapi.responders._
@@ -156,6 +157,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
         case graphdataResponderRequest: GraphDataResponderRequestV1 => resourcesRouter.forward(graphdataResponderRequest)
         case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter forward projectsResponderRequest
         case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter forward ckanResponderRequest
+        case triplestoreManagerRequest: TriplestoreRequest =>
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 }
