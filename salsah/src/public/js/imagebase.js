@@ -388,7 +388,7 @@ $(function() {
 				tabele.find('.delres').click(
 					function(event) {
 						if (confirm(strings._delentry)) {
-							SALSAH.ApiDelete('resources/' + $(event.target).data('res_id'), function(data) {
+							SALSAH.ApiDelete('resources/' + encodeURIComponent($(event.target).data('res_id')), function(data) {
 								if (data.status == ApiErrors.OK) {
 									viewer.destroy();
 								}
