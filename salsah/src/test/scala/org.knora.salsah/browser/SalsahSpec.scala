@@ -132,7 +132,6 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
         }
 
-
         "do an extended search for restype book containing 'Zeitglöcklein in the title'" in {
 
             page.load()
@@ -405,7 +404,69 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
         }
 
-        /*"edit the description of a page" in {
+        "add a new creator to a book" in {
+
+            page.load()
+
+            doZeitgloeckleinSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            // open a book
+            rows(0).click()
+
+            val window = eventually {
+                page.getWindow(1)
+            }
+
+            // get metadata section
+            val metadataSection: WebElement = page.getMetadataSection(window)
+
+            // get a list of editing fields
+            val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
+
+            // get the field representing the seqnum of the page
+            val creatorField = editFields(1)
+
+            // get the edit button for this field (pen)
+            val addButton = creatorField.findElement(By.xpath("div[2]/img[1]"))
+
+            addButton.click()
+
+            val input = eventually {
+                creatorField.findElement(By.xpath("//input[@class='propedit']"))
+            }
+
+            input.sendKeys("Tobiasus")
+
+            // get save button (disk)
+            val saveButton = creatorField.findElement(By.xpath("div[2]/img[1]"))
+
+            saveButton.click()
+
+            // read the new value back
+            val value = eventually {
+                val value = creatorField.findElement(By.xpath("div[2][contains(@class, 'value_container')]"))
+                if (value.getText.isEmpty) throw new Exception
+                value
+            }
+
+            val creatorValue = value.getText
+
+            assert(creatorValue.contains("Tobiasus"), s"$creatorValue")
+
+        }
+
+        "edit the description of a page" in {
+
+            page.load()
+
+            doZeitgloeckleinSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            // open a page
+            rows(1).click()
 
             val window = eventually {
                 page.getWindow(1)
@@ -438,7 +499,59 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             }
 
             assert(paragraph.getText.substring(0, 7) == "my text")
-        }*/
+        }
+
+        "change the partof property of a page" in {
+
+            page.load()
+
+            doZeitgloeckleinSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            // open a page
+            rows(1).click()
+
+            val window = eventually {
+                page.getWindow(1)
+            }
+
+            // get metadata section
+            val metadataSection: WebElement = page.getMetadataSection(window)
+
+            // get a list of editing fields
+            val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
+
+            val partOfField = editFields(2)
+
+            val editButton = partOfField.findElement(By.xpath("div//img[contains(@src,'edit.png')]"))
+
+            editButton.click()
+
+            val input = eventually {
+                partOfField.findElement(By.xpath("//input[@class='__searchbox']"))
+            }
+
+            input.sendKeys("Narrenschiff")
+
+            page.chooseElementFromSearchbox(2)
+
+            val saveButton = partOfField.findElement(By.xpath("div//img[1]"))
+
+            saveButton.click()
+
+            // read the new value back
+            val value = eventually {
+                val value = partOfField.findElement(By.xpath("div[contains(@class, 'value_container')]"))
+                if (value.getText.isEmpty) throw new Exception
+                value
+            }
+
+            val partOfValue = value.getText
+
+            assert(partOfValue.contains("Narrenschiff"), s"$partOfValue")
+
+        }
 
 
         // Uncomment this if you want the browser to close after the test completes.
