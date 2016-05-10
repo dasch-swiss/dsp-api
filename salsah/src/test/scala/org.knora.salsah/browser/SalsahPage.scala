@@ -30,7 +30,7 @@ import org.openqa.selenium.{By, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
 import java.io.FileNotFoundException
 
-
+import scala.concurrent.duration._
 
 
 /**
@@ -45,6 +45,10 @@ import java.io.FileNotFoundException
   * for more documentation.
   */
 class SalsahPage {
+
+    // How long to wait for results obtained using the 'eventually' function
+    implicit val patienceConfig = PatienceConfig(timeout = scaled(10.seconds), interval = scaled(20.millis))
+
     val pageUrl = "http://localhost:3335/index.html" // TODO: get this from application.conf
 
     val chromeDriverPath = "lib/chromedriver"
@@ -418,13 +422,97 @@ class SalsahPage {
 
     }
 
-    def findCkeditor(field: WebElement) = {
-        field.findElement(By.xpath("div//iframe"))
-    }
-
     /*
 
     Edit Properties
 
      */
+
+    /**
+      * Gets the `iframe` representing CKEditor.
+      *
+      * @param field the editing field from [[getEditingFieldsFromMetadataSection]]
+      * @return the `iframe` representing CKEditor.
+      */
+    def findCkeditor(field: WebElement): WebElement = {
+        field.findElement(By.xpath("div//iframe"))
+    }
+
+    /**
+      * Clicks the edit button in a editing field.
+      *
+      * @param field the editing field in question.
+      */
+    def clickEditButton(field: WebElement) = {
+        eventually {
+            field.findElement(By.xpath("div/img[contains(@src,'edit.png')]")).click()
+        }
+    }
+
+    /**
+      * Clicks the add button in a editing field.
+      *
+      * @param field the editing field in question.
+      */
+    def clickAddButton(field: WebElement) = {
+        eventually {
+            field.findElement(By.xpath("div/img[contains(@src,'add.png')]")).click()
+        }
+    }
+
+    def clickSaveButton(field: WebElement) = {
+        eventually {
+            field.findElement(By.xpath("div/img[contains(@src,'save.png')]")).click()
+        }
+    }
+
+    /**
+      * Gets the value container to check for its contents
+      *
+      * @param field the editing field in question.
+      * @param index specifiy which container to return (there may be several value instances for one prop).
+      * @return the value container.
+      */
+    def getValueContainer(field: WebElement, index: Int = 1): WebElement = {
+        eventually {
+            val valueField = field.findElement(By.xpath(s"div[$index][contains(@class, 'value_container')]"))
+            if (valueField.getText.isEmpty) throw new Exception
+            valueField
+        }
+    }
+
+    /**
+      * Get input field.
+      *
+      * @param field the editing field.
+      * @return the `input` representing the input field.
+      */
+    def getInputField(field: WebElement): WebElement = {
+        eventually {
+            field.findElement(By.xpath("//input[@class='propedit']"))
+        }
+    }
+
+    /**
+      * Get the input field of a searchbox.
+      *
+      * @param linkField the link editing field.
+      * @return the `input` representing the input field.
+      */
+    def getSearchBoxInputField(linkField: WebElement): WebElement = {
+        eventually {
+            linkField.findElement(By.xpath("//input[@class='__searchbox']"))
+        }
+    }
+
+    /**
+      * Increases an integer value by one.
+      *
+      * @param integerField the editing field of an integer value.
+      */
+    def clickOnSpinboxUp(integerField: WebElement) = {
+        eventually {
+            integerField.findElement(By.xpath("//img[contains(@src,'spin-up.png')]")).click()
+        }
+    }
 }

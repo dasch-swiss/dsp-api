@@ -40,10 +40,11 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
      */
 
-    // How long to wait for results obtained using the 'eventually' function
-    implicit val patienceConfig = PatienceConfig(timeout = scaled(10.seconds), interval = scaled(20.millis))
-
     val page = new SalsahPage
+
+    // How long to wait for results obtained using the 'eventually' function
+    implicit val patienceConfig = page.patienceConfig
+
 
     def doZeitgloeckleinSearch = {
 
@@ -341,66 +342,51 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
+            //
+            // seqnum
+            //
+
             // get the field representing the seqnum of the page
             val seqnumField = editFields(10)
 
-            // get the edit button for this field (pen)
-            val editButton = seqnumField.findElement(By.xpath("div//img[1]"))
+            page.clickEditButton(seqnumField)
 
-            editButton.click()
+            page.clickOnSpinboxUp(seqnumField)
 
-            // click spin box to increase value by one
-            seqnumField.findElement(By.xpath("div/span/span/img[1]")).click()
-
-            // get save button (disk)
-            val saveButton = seqnumField.findElement(By.xpath("div/img[1]"))
-
-            saveButton.click()
+            page.clickSaveButton(seqnumField)
 
             // read the new value back
-            val value = eventually {
-                val value = seqnumField.findElement(By.xpath("div[contains(@class, 'value_container')]"))
-                if (value.getText.isEmpty) throw new Exception
-                value
-            }
+            val seqnumValueContainer = page.getValueContainer(seqnumField)
 
-            val seqnumValue = value.getText
+            val seqnumValue = seqnumValueContainer.getText
 
-            assert(seqnumValue.contains("2"), s"$seqnumValue")
+            assert(seqnumValue.contains("2"), s"seqnum should be 2, but is $seqnumValue")
+
+
+            //
+            // pagenum
+            //
 
             // get the field representing the pagenum of the page
             val pagenumField = editFields(3)
 
-            // get the edit button for this field (pen)
-            val editButton2 = pagenumField.findElement(By.xpath("div//img[1]"))
-
-            editButton2.click()
+            page.clickEditButton(pagenumField)
 
             // get the input field
-            val input = eventually {
-                pagenumField.findElement(By.xpath("//input[@class='propedit']"))
-            }
+            val input = page.getInputField(pagenumField)
 
             input.clear
 
             input.sendKeys("test")
 
-            // get save button (disk)
-            val saveButton2 = pagenumField.findElement(By.xpath("div/img[1]"))
-
-            saveButton2.click()
+            page.clickSaveButton(pagenumField)
 
             // read the new value back
-            val value2 = eventually {
-                val value = pagenumField.findElement(By.xpath("div[contains(@class, 'value_container')]"))
-                if (value.getText.isEmpty) throw new Exception
-                value
-            }
+            val pagenumValueContainer = page.getValueContainer(pagenumField)
 
-            val pagenumValue = value2.getText
+            val pagenumValue = pagenumValueContainer.getText
 
-            assert(pagenumValue.contains("test"), s"$pagenumValue")
-
+            assert(pagenumValue.contains("test"), s"pagnum should be 'test', but is $pagenumValue")
 
         }
 
@@ -428,30 +414,22 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             // get the field representing the seqnum of the page
             val creatorField = editFields(1)
 
-            // get the edit button for this field (pen)
-            val addButton = creatorField.findElement(By.xpath("div[2]/img[1]"))
+            page.clickAddButton(creatorField)
 
-            addButton.click()
+            // get the input field
+            val input = page.getInputField(creatorField)
 
-            val input = eventually {
-                creatorField.findElement(By.xpath("//input[@class='propedit']"))
-            }
+            input.clear
 
             input.sendKeys("Tobiasus")
 
-            // get save button (disk)
-            val saveButton = creatorField.findElement(By.xpath("div[2]/img[1]"))
-
-            saveButton.click()
+            page.clickSaveButton(creatorField)
 
             // read the new value back
-            val value = eventually {
-                val value = creatorField.findElement(By.xpath("div[2][contains(@class, 'value_container')]"))
-                if (value.getText.isEmpty) throw new Exception
-                value
-            }
+            // get the second container because there is already one existing value
+            val creatorValueContainer = page.getValueContainer(creatorField, 2)
 
-            val creatorValue = value.getText
+            val creatorValue = creatorValueContainer.getText
 
             assert(creatorValue.contains("Tobiasus"), s"$creatorValue")
 
@@ -480,9 +458,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             val descriptionField = editFields(7)
 
-            val editButton = descriptionField.findElement(By.xpath("div//img[1]"))
-
-            editButton.click()
+            page.clickEditButton(descriptionField)
 
             val ckeditor = eventually {
                 page.findCkeditor(descriptionField)
@@ -490,15 +466,13 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             ckeditor.sendKeys("my text")
 
-            val saveButton = descriptionField.findElement(By.xpath("div//img[1]"))
+            page.clickSaveButton(descriptionField)
 
-            saveButton.click()
+            // read the new value back
+            val seqnumValueContainer = page.getValueContainer(descriptionField)
 
-            val paragraph = eventually {
-                descriptionField.findElement(By.xpath("div//p"))
-            }
 
-            assert(paragraph.getText.substring(0, 7) == "my text")
+            assert(descriptionField.getText.substring(0, 7) == "my text")
         }
 
         "change the partof property of a page" in {
@@ -524,30 +498,20 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             val partOfField = editFields(2)
 
-            val editButton = partOfField.findElement(By.xpath("div//img[contains(@src,'edit.png')]"))
+            page.clickEditButton(partOfField)
 
-            editButton.click()
-
-            val input = eventually {
-                partOfField.findElement(By.xpath("//input[@class='__searchbox']"))
-            }
+            val input = page.getSearchBoxInputField(partOfField)
 
             input.sendKeys("Narrenschiff")
 
             page.chooseElementFromSearchbox(2)
 
-            val saveButton = partOfField.findElement(By.xpath("div//img[1]"))
-
-            saveButton.click()
+            page.clickSaveButton(partOfField)
 
             // read the new value back
-            val value = eventually {
-                val value = partOfField.findElement(By.xpath("div[contains(@class, 'value_container')]"))
-                if (value.getText.isEmpty) throw new Exception
-                value
-            }
+            val partOfValueContainer = page.getValueContainer(partOfField)
 
-            val partOfValue = value.getText
+            val partOfValue = partOfValueContainer.getText
 
             assert(partOfValue.contains("Narrenschiff"), s"$partOfValue")
 
