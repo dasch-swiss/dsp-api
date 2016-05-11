@@ -23,11 +23,15 @@ import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1storemessages.triplestoremessages.{ResetTriplestoreContent, TriplestoreJsonProtocol}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import spray.json.RootJsonFormat
 import spray.routing.Directives._
 import spray.routing._
 
 import scala.concurrent.duration._
 import scala.util.Try
+
+
+case class Test(path: String, name: String)
 
 /**
   * A route used to serve data to CKAN. It is used be the Ckan instance running under http://data.humanities.ch.
@@ -35,6 +39,9 @@ import scala.util.Try
 object StoreRouteV1 extends Authenticator {
 
     def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+
+        implicit val testFormat: RootJsonFormat[Test] = jsonFormat2(Test)
+        import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
 
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
@@ -44,7 +51,7 @@ object StoreRouteV1 extends Authenticator {
         path("v1" / "store") {
             get {
                 requestContext =>
-                /** MAybe returns some statistics about the store, e.g., what triplestore, number of triples in
+                /** Maybe return some statistics about the store, e.g., what triplestore, number of triples in
                   * each named graph and in total, etc.
                   */
                 // TODO: Implement some simple return
@@ -53,10 +60,10 @@ object StoreRouteV1 extends Authenticator {
         path("v1" / "store" / "ResetTriplestoreContent") {
             post {
                 /* ResetTriplestoreContent */
-                entity(as[Seq[RdfDataObject]]) { apiRequest => requestContext =>
+                entity(as[Test]) { apiRequest => requestContext =>
                     val requestMessageTry = Try {
                         // create the message
-                        ResetTriplestoreContent(apiRequest)
+                        ResetTriplestoreContent(List())
                     }
 
                     RouteUtilV1.runJsonRoute(

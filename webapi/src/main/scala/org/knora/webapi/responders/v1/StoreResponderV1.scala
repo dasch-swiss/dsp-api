@@ -36,7 +36,7 @@ class StoreResponderV1 extends ResponderV1 {
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
-    private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentACK] = {
+    private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[TriplestoreAdminResponse] = {
 
         if (!StartupFlags.allowResetTriplestoreContentOperation.get) {
             throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
@@ -44,8 +44,8 @@ class StoreResponderV1 extends ResponderV1 {
 
         for {
             response <- (storeManager ? ResetTriplestoreContent(rdfDataObjects)).mapTo[ResetTriplestoreContentACK]
-        } yield response
+            result = TriplestoreAdminResponse("ResetTripleStoreContent done!")
+        } yield result
     }
-
 
 }

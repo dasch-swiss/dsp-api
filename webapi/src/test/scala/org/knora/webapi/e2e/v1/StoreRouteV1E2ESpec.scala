@@ -81,14 +81,14 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
     "The ResetTriplestoreContent Route ('v1/store/ResetTriplestoreContent')" should {
         "succeed with resetting if startup flag is set" in {
             StartupFlags.allowResetTriplestoreContentOperation send true
-            Post() ~> storePath ~> check {
+            Post(rdfDataObjectsJsonList) ~> storePath ~> check {
                 storeManagerProbe.expectMsg(300.seconds, ResetTriplestoreContent(rdfDataObjects))
                 storeManagerProbe reply ResetTriplestoreContentACK
                 assert(status === StatusCodes.OK)
             }
         }
         "fail with resetting if startup flag is not set" in {
-            Post() ~> storePath ~> check {
+            Post(rdfDataObjectsJsonList) ~> storePath ~> check {
                 assert(status === StatusCodes.Unauthorized)
 
             }
