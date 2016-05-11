@@ -22,7 +22,8 @@ package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import org.knora.webapi.messages.v1respondermessages.searchmessages.{ExtendedSearchGetRequestV1, FulltextSearchGetRequestV1, SearchComparisonOperatorV1}
+import org.knora.webapi.messages.v1.responder.searchmessages.{ExtendedSearchGetRequestV1, FulltextSearchGetRequestV1, SearchComparisonOperatorV1}
+import org.knora.webapi.messages.v1respondermessages.searchmessages.SearchComparisonOperatorV1
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation

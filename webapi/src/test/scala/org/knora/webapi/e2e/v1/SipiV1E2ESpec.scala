@@ -28,9 +28,11 @@ import akka.actor._
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.e2e.E2ESpec
+import org.knora.webapi.messages.v1.responder.valuemessages.CreateRichtextV1
 import org.knora.webapi.messages.v1respondermessages.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
+import org.knora.webapi.messages.v1respondermessages.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.v1respondermessages.valuemessages.ChangeFileValueApiRequestV1
+import org.knora.webapi.messages.v1storemessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}

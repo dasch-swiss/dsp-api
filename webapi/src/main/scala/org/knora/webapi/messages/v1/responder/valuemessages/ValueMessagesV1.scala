@@ -18,14 +18,14 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages.valuemessages
+package org.knora.webapi.messages.v1.responder.valuemessages
 
 import java.util.UUID
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiResponderConversionRequestV1
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.util.DateUtilV1
 import spray.httpx.SprayJsonSupport
 import spray.json._
@@ -1183,7 +1183,7 @@ case class ValueVersionV1(valueObjectIri: IRI,
   */
 object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
-    import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     /**
       * Converts between [[StandoffPositionV1]] objects and [[JsValue]] objects.

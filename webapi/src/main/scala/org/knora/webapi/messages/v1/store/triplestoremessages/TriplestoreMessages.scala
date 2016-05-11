@@ -1,10 +1,8 @@
-package org.knora.webapi.messages.v1respondermessages.triplestoremessages
+package org.knora.webapi.messages.v1.store.triplestoremessages
 
-import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{InconsistentTriplestoreDataException, TriplestoreResponseException}
-import java.util.UUID
 import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -227,7 +225,7 @@ case class FakeTriplestoreUse(userProfileV1: UserProfileV1) extends TriplestoreA
   * @param message
   */
 case class TriplestoreAdminResponse(message: String) extends KnoraResponseV1 {
-    def toJsValue = TriplestoreAdminJsonProtocol.triplestoreAdminResponseFormat.write(this)
+    def toJsValue = TriplestoreJsonProtocol.triplestoreAdminResponseFormat.write(this)
 }
 
 
@@ -247,8 +245,10 @@ case class RdfDataObject(path: String, name: String)
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
   */
-object TriplestoreAdminJsonProtocol extends DefaultJsonProtocol with NullOptions {
+object TriplestoreJsonProtocol extends DefaultJsonProtocol with NullOptions {
 
     implicit val triplestoreAdminResponseFormat: RootJsonFormat[TriplestoreAdminResponse] = jsonFormat1(TriplestoreAdminResponse)
+    implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject)
+    implicit val resetTriplestoreContentFormat: RootJsonFormat[ResetTriplestoreContent] = jsonFormat1(ResetTriplestoreContent)
 
 }

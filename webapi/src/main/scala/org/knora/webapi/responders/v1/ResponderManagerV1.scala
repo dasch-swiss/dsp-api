@@ -23,17 +23,17 @@ package org.knora.webapi.responders.v1
 import akka.actor.{Actor, ActorLogging, Props, Status}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
-import org.knora.webapi.messages.v1respondermessages.ckanmessages.CkanResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.graphdatamessages.GraphDataResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.listmessages.ListsResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.ontologymessages.OntologyResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectsResponderRequestV1
+import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
+import org.knora.webapi.messages.v1.responder.graphdatamessages.GraphDataResponderRequestV1
+import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
+import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
+import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
+import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderRequestV1
+import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
 import org.knora.webapi.messages.v1respondermessages.resourcemessages.ResourcesResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.searchmessages.SearchResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.messages.v1respondermessages.usermessages.UsersResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.valuemessages.ValuesResponderRequestV1
+import org.knora.webapi.messages.v1storemessages.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.responders._
 import org.knora.webapi.{ActorMaker, UnexpectedMessageException}
 

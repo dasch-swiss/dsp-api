@@ -23,7 +23,8 @@ package org.knora.webapi.util
 import akka.event.LoggingAdapter
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.StringUtils
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.v1respondermessages.triplestoremessages.VariableResultsRow
+import org.knora.webapi.messages.v1storemessages.triplestoremessages.{SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.SparqlResultProtocol._
 import org.knora.webapi.{SettingsImpl, TriplestoreResponseException}
 import org.slf4j.LoggerFactory

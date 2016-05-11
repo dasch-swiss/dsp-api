@@ -25,9 +25,11 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1respondermessages.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1respondermessages.resourcemessages._
-import org.knora.webapi.messages.v1respondermessages.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
+import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1respondermessages.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
@@ -75,7 +77,7 @@ object ResourcesRouteV1 extends Authenticator {
 
         def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiResponderConversionPathRequestV1] = None, userProfile: UserProfileV1): ResourceCreateRequestV1 = {
             // necessary import statements to convert to [[StandoffPositionV1]]
-            import org.knora.webapi.messages.v1respondermessages.valuemessages.ApiValueV1JsonProtocol._
+            import ApiValueV1JsonProtocol._
             import spray.json.JsonParser
 
             val projectIri = InputValidation.toIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI ${apiRequest.project_id}"))

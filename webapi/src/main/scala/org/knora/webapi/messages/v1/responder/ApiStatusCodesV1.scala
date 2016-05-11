@@ -18,7 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages
+package org.knora.webapi.messages.v1.responder
 
 import org.knora.webapi._
 import spray.http.{StatusCode, StatusCodes}

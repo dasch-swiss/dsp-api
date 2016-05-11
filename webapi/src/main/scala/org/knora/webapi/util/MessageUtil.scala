@@ -2,6 +2,7 @@ package org.knora.webapi.util
 
 import org.apache.commons.lang3.StringEscapeUtils
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1respondermessages.resourcemessages.{LiteralValueType, ResourceCreateValueObjectResponseV1, ResourceCreateValueResponseV1}
 import org.knora.webapi.messages.v1respondermessages.valuemessages._
 

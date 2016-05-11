@@ -18,7 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages.authenticatemessages
+package org.knora.webapi.messages.v1.responder.authenticatemessages
 
 import spray.httpx.SprayJsonSupport
 import spray.json._

@@ -22,9 +22,11 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
+import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1respondermessages.projectmessages._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.v1respondermessages.triplestoremessages.VariableResultsRow
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1storemessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.{IRI, NotFoundException, OntologyConstants, UnexpectedMessageException}
 
@@ -37,7 +39,7 @@ import scala.concurrent.Future
 class ProjectsResponderV1 extends ResponderV1 {
 
     /**
-      * Receives a message extending [[org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectsResponderRequestV1]], and returns an appropriate response message, or
+      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message, or
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */

@@ -18,11 +18,11 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages.searchmessages
+package org.knora.webapi.messages.v1.responder.searchmessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -168,7 +168,7 @@ case class SearchResultPage(current: Boolean, start_at: Int, show_nrows: Int)
   */
 object SearchV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
-    import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val searchResultPageV1Format: JsonFormat[SearchResultPage] = jsonFormat3(SearchResultPage)
     implicit val searchPreviewDimensionsV1Format: JsonFormat[SearchPreviewDimensionsV1] = jsonFormat2(SearchPreviewDimensionsV1)

@@ -29,6 +29,7 @@ import akka.util.Timeout
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
 import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1storemessages.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody, SparqlSelectResponseHeader}
 import org.mindrot.jbcrypt.BCrypt
 
 import scala.concurrent.duration._

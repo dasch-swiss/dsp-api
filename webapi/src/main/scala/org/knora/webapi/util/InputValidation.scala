@@ -29,7 +29,8 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{CreateRichtextV1, StandoffPositionV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{CreateRichtextV1, StandoffPositionV1}
+import org.knora.webapi.messages.v1respondermessages.valuemessages.StandoffPositionV1
 
 
 /**

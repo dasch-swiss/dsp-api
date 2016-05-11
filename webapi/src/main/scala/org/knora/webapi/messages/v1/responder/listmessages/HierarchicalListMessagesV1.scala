@@ -18,11 +18,11 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages.listmessages
+package org.knora.webapi.messages.v1.responder.listmessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -127,7 +127,7 @@ case class NodePathElementV1(id: IRI, name: Option[String], label: Option[String
   */
 object HierarchicalListV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
-    import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit object HierarchicalListV1JsonFormat extends JsonFormat[HierarchicalListV1] {
         /**

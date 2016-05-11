@@ -18,15 +18,15 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages.graphdatamessages
+package org.knora.webapi.messages.v1.responder.graphdatamessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.{PropsV1, ResourceInfoV1}
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.{PropsV1, ResourceInfoV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import spray.json._
 
-import scala.collection.breakOut
+import scala.collection._
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,8 +104,7 @@ case class GraphDataEdgeV1(label: Option[String], from: IRI, to: IRI)
 
 object GraphDataV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
-    import org.knora.webapi.messages.v1respondermessages.resourcemessages.ResourceV1JsonProtocol._
-    import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit object GraphDataV1JsonFormat extends JsonFormat[GraphV1] {
         /**

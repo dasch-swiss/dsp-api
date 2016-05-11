@@ -18,10 +18,10 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages.projectmessages
+package org.knora.webapi.messages.v1.responder.projectmessages
 
-import org.knora.webapi.messages.v1respondermessages._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
@@ -118,7 +118,7 @@ object ProjectInfoType extends Enumeration {
   */
 object ProjectV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
-    import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat8(ProjectInfoV1)
     // we have to use lazyFormat here because `UserDataV1JsonProtocol` contains an import statement for this object.

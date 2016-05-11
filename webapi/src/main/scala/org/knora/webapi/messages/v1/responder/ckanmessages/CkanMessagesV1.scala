@@ -18,10 +18,10 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages.ckanmessages
+package org.knora.webapi.messages.v1.responder.ckanmessages
 
-import org.knora.webapi.messages.v1respondermessages._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -186,7 +186,7 @@ case class IncunabulaCkanProjectDatasetFileV1(resid: String,
   */
 object CkanV1JsonProtocol extends DefaultJsonProtocol {
 
-    import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val ckanProjectDatasetFileV1Format: JsonFormat[CkanProjectDatasetFileV1] = jsonFormat7(CkanProjectDatasetFileV1)
     implicit val ckanProjectDatasetV1Format: JsonFormat[CkanProjectDatasetV1] = jsonFormat4(CkanProjectDatasetV1)

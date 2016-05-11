@@ -21,7 +21,7 @@
 package org.knora.webapi.store.triplestore
 
 import com.typesafe.config.Config
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
 
 /**
   *

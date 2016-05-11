@@ -18,11 +18,11 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages.usermessages
+package org.knora.webapi.messages.v1.responder.usermessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.KnoraRequestV1
-import org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectInfoV1
+import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.mindrot.jbcrypt.BCrypt
 import spray.json._
 
@@ -131,7 +131,7 @@ case class UserDataV1(lang: String,
 
 object UserDataV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
-    import org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectV1JsonProtocol.projectInfoV1Format
+    import ProjectV1JsonProtocol.projectInfoV1Format
 
     implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat11(UserDataV1)
 }

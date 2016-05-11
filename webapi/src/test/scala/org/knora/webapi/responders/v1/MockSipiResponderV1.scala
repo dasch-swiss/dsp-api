@@ -24,8 +24,11 @@ import org.knora.webapi.messages.v1respondermessages.sipimessages._
 import org.knora.webapi.messages.v1respondermessages.valuemessages._
 import org.knora.webapi.util.ActorUtil._
 import java.io.File
+
 import scala.concurrent.Future
 import org.knora.webapi.BadRequestException
+import org.knora.webapi.messages.v1.responder.sipimessages._
+import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV1
 
 /**
   * Keep track of the temporary files that was written in the route

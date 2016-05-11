@@ -18,15 +18,15 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages.resourcemessages
+package org.knora.webapi.messages.v1.responder.resourcemessages
 
 import java.util.UUID
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiResponderConversionRequestV1
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1respondermessages.valuemessages._
-import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import spray.httpx.SprayJsonSupport
 import spray.json._
 
@@ -604,8 +604,8 @@ case class ResourceCreateValueObjectResponseV1(textval: Map[LiteralValueType.Val
 object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
     import LiteralValueType.LiteralValueTypeV1Protocol._
-    import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
-    import org.knora.webapi.messages.v1respondermessages.valuemessages.ApiValueV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 
     implicit val locationFormat: JsonFormat[LocationV1] = jsonFormat8(LocationV1)
 
@@ -741,7 +741,7 @@ object ResourceContextV1JsonProtocol extends DefaultJsonProtocol {
 
     import ResourceContextCodeV1.ResourceContextCodeV1Protocol._
     import ResourceV1JsonProtocol._
-    import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val resourceContextV1Format: JsonFormat[ResourceContextV1] = jsonFormat11(ResourceContextV1)
     implicit val resourceContextResponseV1Format: RootJsonFormat[ResourceContextResponseV1] = jsonFormat2(ResourceContextResponseV1)

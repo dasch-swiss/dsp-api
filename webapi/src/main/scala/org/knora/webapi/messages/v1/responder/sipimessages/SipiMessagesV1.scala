@@ -18,14 +18,14 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages.sipimessages
+package org.knora.webapi.messages.v1.responder.sipimessages
 
 import java.io.File
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{StillImageFileValueV1, FileValueV1}
-import org.knora.webapi.messages.v1respondermessages.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.FileValueV1
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -257,7 +257,7 @@ case class SipiFileInfoGetResponseV1(permissionCode: Option[Int],
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
 object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
-    import org.knora.webapi.messages.v1respondermessages.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat3(SipiFileInfoGetResponseV1)
     implicit val sipiErrorConversionResponseFormat = jsonFormat2(SipiErrorConversionResponse)

@@ -25,7 +25,7 @@ import akka.io.IO
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.http._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.store._

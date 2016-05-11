@@ -18,7 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages
+package org.knora.webapi.messages.v1.responder
 
 /**
   * A tagging trait for messages that can be sent to Knora API v1 responders.

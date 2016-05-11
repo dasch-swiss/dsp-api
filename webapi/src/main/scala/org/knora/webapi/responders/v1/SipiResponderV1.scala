@@ -23,12 +23,15 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.sipimessages.RepresentationV1JsonProtocol._
-import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiConstants.FileType
+import org.knora.webapi.messages.v1.responder.sipimessages._
+import RepresentationV1JsonProtocol._
+import SipiConstants.FileType
+import org.knora.webapi.messages.v1.responder.valuemessages.{ApiValueV1, FileValueV1, StillImageFileValueV1}
 import org.knora.webapi.messages.v1respondermessages.sipimessages._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
+import org.knora.webapi.messages.v1respondermessages.triplestoremessages.SparqlSelectResponse
 import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{ApiValueV1, FileValueV1, StillImageFileValueV1}
+import org.knora.webapi.messages.v1respondermessages.valuemessages.StillImageFileValueV1
+import org.knora.webapi.messages.v1storemessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.InputValidation
 import spray.client.pipelining._
