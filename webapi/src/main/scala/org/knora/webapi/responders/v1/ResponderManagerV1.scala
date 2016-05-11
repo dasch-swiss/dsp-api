@@ -146,6 +146,17 @@ class ResponderManagerV1 extends Actor with ActorLogging {
       */
     protected val ckanRouter = makeDefaultCkanRouter
 
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[StoreResponderV1]].
+      */
+    protected final def makeDefaultStoreRouter = makeActor(FromConfig.props(Props[StoreResponderV1]), STORE_ROUTER_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the Store responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default Store responder.
+      */
+    protected val storeRouter = makeDefaultStoreRouter
+
     def receive = LoggingReceive {
         case resourcesResponderRequestV1: ResourcesResponderRequestV1 => resourcesRouter.forward(resourcesResponderRequestV1)
         case valuesResponderRequest: ValuesResponderRequestV1 => valuesRouter.forward(valuesResponderRequest)
@@ -157,7 +168,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
         case graphdataResponderRequest: GraphDataResponderRequestV1 => resourcesRouter.forward(graphdataResponderRequest)
         case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter forward projectsResponderRequest
         case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter forward ckanResponderRequest
-        case triplestoreManagerRequest: TriplestoreRequest =>
+        case storeResponderRequest: TriplestoreRequest => storeRouter forward storeResponderRequest
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 }

@@ -16,13 +16,10 @@
 
 package org.knora.webapi.routing.v1
 
-import java.util.UUID
-
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.util.Timeout
-import org.knora.webapi.SettingsImpl
-import org.knora.webapi.messages.v1respondermessages.ckanmessages.CkanRequestV1
+import org.knora.webapi.{SettingsImpl, StartupFlags}
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import spray.routing.Directives._
@@ -43,31 +40,20 @@ object StoreRouteV1 extends Authenticator {
         implicit val timeout = Timeout(30.seconds)
         val responderManager = system.actorSelection("/user/responderManager")
 
-        path("v1" / "storemanager") {
+        path("v1" / "store") {
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query.toMap
-                        val project: Option[Seq[String]] = params.get("project").map(_.split(","))
-                        val limit: Option[Int] = params.get("limit").map(_.toInt)
-                        val info: Boolean = params.getOrElse("info", false) == true
-                        CkanRequestV1(project, limit, info, userProfile)
-                    }
-                    RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            } ~ post {
-                /* create a new user */
+                /** MAybe returns some statistics about the store, e.g., what triplestore, number of triples in
+                  * each named graph and in total, etc.
+                  */
+                // TODO: Implement some simple return
+            }
+        } ~
+        path("v1" / "store" / "ResetTriplestoreContent") {
+            post {
+                /* ResetTriplestoreContent */
                 entity(as[Seq[RdfDataObject]]) { apiRequest => requestContext =>
                     val requestMessageTry = Try {
-
-                        // check if flag is set allowing this operation
-
                         // create the message
                         ResetTriplestoreContent(apiRequest)
                     }

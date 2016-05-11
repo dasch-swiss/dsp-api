@@ -74,10 +74,10 @@ object KnoraService {
     /**
       * Starts Knora.
       */
-    def start(loadDemoData: Boolean) = {
+    def start = {
         CacheUtil.createCaches(settings.caches)
 
-        if (loadDemoData) {
+        if (StartupFlags.loadDemoData.get) {
             println("Start loading of demo data ...")
             implicit val timeout = Timeout(300.seconds)
             val configList = settings.tripleStoreConfig.getConfigList("rdf-data")
