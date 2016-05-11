@@ -75,7 +75,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             xmlDiff.hasDifferences should be(false)
         }
 
-        "calculate the diffs between a critical text and a diplomatic transcription" in {
+        "calculate the diffs between a critical text and a diplomatic transcription (1)" in {
             val regionID = UUID.randomUUID
 
             val documentSpecificIDs = Map(
@@ -143,6 +143,77 @@ class StandoffUtilSpec extends WordSpec with Matchers {
 
             standoffAdded.exists(_.uuid == regionID) should be(false)
             standoffRemoved.exists(_.uuid == regionID) should be(false)
+        }
+
+        "calculate the diffs between a critical text and a diplomatic transcription (2)" in {
+
+            val regionID = UUID.randomUUID
+
+            val documentSpecificIDs = Map(
+                "2" -> regionID
+            )
+
+            val standoffUtil = new StandoffUtil(documentSpecificIDs = documentSpecificIDs)
+
+            val diplomaticTranscription =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<region id="2">
+                  |Modus hic est: Fiat triang: æquil: <math>ABD</math>, divisâq́  diametro <math>AB</math> in tot partes æquales,
+                  |quot laterum est figura inscribenda, duabusq́  earum p̃termissis <strike>et</strike> à <math>B</math> versùs <math>A</math>, ducat,
+                  |per initium tertiæ recta <math>DF</math>, &amp; hinc recta <math>FB</math>, quam putat esse latus polygoni optati
+                  |<underline>Anal</underline>: Sit secta diameter utcunq́  in <math>E</math>, <math>e</math> , ductæq́  <math>DEF</math>, {<math>FA</math>,} <strike>&amp;</strike> <math>FB</math> &amp; demissa in diametrum per-
+                  |pendicularis <math>FG</math>, fiat <math>CB=a</math>, <math>CE</math> vel <math>Ce=b</math>, <math>FB=x</math>, unde <math>AF=\sqrt{\mathstrut}\,\overline{4aa-xx}</math>
+                  |</region>
+                """.stripMargin
+
+            val criticalText =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<region id="2">
+                  |Modus hic est: Fiat triang[ulum] aequil[aterum] <math>ABD</math> divisaque diametro <math>AB</math> in tot partes aequales, quot laterum est figura inscribenda, duabusque earum praetermissis a <math>B</math> versus <math>A</math>, ducatur per initium tertiae recta <math>DF</math>, &amp; hinc recta <math>FB</math>, quam putat esse latus polygoni optati.
+                  |<italic>Anal[ysis]</italic>: Sit secta diameter utcunque in <math>E</math>, <math>e</math>, ductaeque <math>DEF</math>, <math>FA</math>, &amp; <math>FB</math> &amp; demissa in diametrum perpendicularis <math>FG</math>, fiat <math>CB=a</math>, <math>CE</math> vel <math>Ce=b</math>, <math>FB=x</math>, unde <math>AF=\sqrt{4aa-xx}</math>
+                  |</region>
+                """.stripMargin
+
+
+            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription)
+            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText)
+
+            val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
+                baseText = diploTextWithStandoff.text,
+                derivedText = criticalTextWithStandoff.text
+            )
+
+            val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
+                baseText = diploTextWithStandoff.text,
+                derivedText = criticalTextWithStandoff.text,
+                standoffDiffs = criticalTextDiffs
+            )
+
+            //println(ScalaPrettyPrinter.prettyPrint(criticalTextDiffsAsXml))
+
+            val expectedCriticalTextDiffsAsXml =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                |<diffs>
+                |Modus hic est: Fiat triang<del>: æquil:</del><ins>[ulum] aequil[aterum]</ins> ABD<del>,</del> divis<del>âq́ </del><ins>aque</ins> diametro AB in tot partes <del>æ</del><ins>ae</ins>quales,<del>
+                |</del><ins> </ins>quot laterum est figura inscribenda, duabusq<del>́ </del><ins>ue</ins> earum p<del>̃</del><ins>rae</ins>termissis <del>et à</del><ins>a</ins> B vers<del>ù</del><ins>u</ins>s A, ducat<del>,
+                |</del><ins>ur </ins>per initium terti<del>æ</del><ins>ae</ins> recta DF, &amp; hinc recta FB, quam putat esse latus polygoni optati<ins>.</ins>
+                |Anal<ins>[ysis]</ins>: Sit secta diameter utcunq<del>́ </del><ins>ue</ins> in E, e<del> </del>, duct<del>æq́ </del><ins>aeque</ins> DEF, <del>{</del>FA,<del>}</del> &amp; FB &amp; demissa in diametrum per<del>-
+                |</del>pendicularis FG, fiat CB=a, CE vel Ce=b, FB=x, unde AF=\sqrt{<del>\mathstrut}\,\overline{</del>4aa-xx}
+                |</diffs>
+                """.stripMargin
+
+
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(expectedCriticalTextDiffsAsXml)).withTest(Input.fromString(criticalTextDiffsAsXml)).build()
+            xmlDiff.hasDifferences should be(false)
+
+            val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
+                oldStandoff = diploTextWithStandoff.standoff,
+                newStandoff = criticalTextWithStandoff.standoff
+            )
+
+            standoffAdded.exists(_.uuid == regionID) should be(false)
+            standoffRemoved.exists(_.uuid == regionID) should be(false)
+
         }
 
         "calculate the diffs in a workflow with two versions of a diplomatic transcription and two versions of an editorial text" in {
