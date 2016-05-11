@@ -267,17 +267,17 @@ Id: rdfs13
 
 
 /*
- * Consistency checks for subject and object class constraints
+ * Consistency checks for subject and object class constraints.
  */
 
-// knora-base:subjectClassConstraint
+// The subject of a property must belong to the class specified in the property's knora-base:subjectClassConstraint.
 Consistency: subject_class_constraint
     p <knora-base:subjectClassConstraint> t
     i p j
     ------------------------------------
     i <rdf:type> t
 
-// knora-base:objectClassConstraint
+// The object of an object property must belong to the class specified in the property's knora-base:objectClassConstraint.
 Consistency: object_class_constraint
     p <knora-base:objectClassConstraint> t
     i p j
@@ -286,112 +286,107 @@ Consistency: object_class_constraint
 
 
 /*
- * Consistency checks for cardinalities on Knora system properties
+ * Consistency checks for cardinalities on any properties.
  */
 
-// owl:maxCardinality 1
-Consistency: system_prop_max_cardinality_1
-    i <rdf:type> r
-    r <owl:maxCardinality> "1"^^xsd:nonNegativeInteger
-    r <owl:onProperty> p
-    p <rdfs:subPropertyOf> <knora-base:systemProperty>
-    i p j
-    i p k [Constraint j != k]
-    ------------------------------------
-
-// owl:minCardinality 1
-Consistency: system_prop_min_cardinality_1
+// With owl:minCardinality 1, the property must have an object. It's OK if the object is marked as deleted.
+Consistency: min_cardinality_1_any_object
     i <rdf:type> r
     r <owl:minCardinality> "1"^^xsd:nonNegativeInteger
     r <owl:onProperty> p
-    p <rdfs:subPropertyOf> <knora-base:systemProperty>
     ------------------------------------
     i p j
 
-// owl:cardinality 1 (check that the property has no more than one object)
-Consistency: system_prop_cardinality_1_not_greater
-    i <rdf:type> r
-    r <owl:cardinality> "1"^^xsd:nonNegativeInteger
-    r <owl:onProperty> p
-    p <rdfs:subPropertyOf> <knora-base:systemProperty>
-    i p j
-    i p k [Constraint j != k]
-    ------------------------------------
 
-// owl:cardinality 1 (check that the property has an object)
-Consistency: system_prop_cardinality_1_not_less
+// With owl:cardinality 1, the property must have an object. It's OK if the object is marked as deleted.
+Consistency: cardinality_1_not_less_any_object
     i <rdf:type> r
     r <owl:cardinality> "1"^^xsd:nonNegativeInteger
     r <owl:onProperty> p
-    p <rdfs:subPropertyOf> <knora-base:systemProperty>
     ------------------------------------
     i p j
 
 
 /*
- * Consistency checks for cardinalities on Knora content properties
+ * Consistency checks for cardinalities on properties whose objects cannot be marked as deleted
+ * using the boolean flag knora-base:isDeleted.
  */
 
-/* Commented out because it's very slow
-// owl:maxCardinality 1 (check that the property has no more than one non-deleted object)
-Consistency: content_prop_max_cardinality_1
+// With owl:maxCardinality 1, if the object of the property cannot be marked as deleted, just check that there
+// is not more than one object.
+Consistency: max_cardinality_1_without_deletion_flag
     i <rdf:type> r
     r <owl:maxCardinality> "1"^^xsd:nonNegativeInteger
     r <owl:onProperty> p
-    p <rdfs:subPropertyOf> <knora-base:hasContent>
+    p <rdfs:subPropertyOf> <knora-base:objectCannotBeMarkedAsDeleted>
+    i p j
+    i p k [Constraint j != k]
+    ------------------------------------
+
+// With owl:cardinality 1, if the object of the property cannot be marked as deleted, just check that there
+// is not more than one object.
+Consistency: cardinality_1_not_greater_without_deletion_flag
+    i <rdf:type> r
+    r <owl:cardinality> "1"^^xsd:nonNegativeInteger
+    r <owl:onProperty> p
+    p <rdfs:subPropertyOf> <knora-base:objectCannotBeMarkedAsDeleted>
+    i p j
+    i p k [Constraint j != k]
+    ------------------------------------
+
+
+/*
+ * Consistency checks for cardinalities on properties whose objects can be marked as deleted
+ * using the boolean flag knora-base:isDeleted. Here we take advantage of the fact that every class
+ * that *allows* knora-base:isDeleted also *requires* knora-base:isDeleted. So an object that can be
+ * marked as deleted, but has not been marked as deleted, will have knora-base:isDeleted false.
+ */
+
+// The next two checks are commented out because they're very slow.
+
+/*
+
+// With owl:maxCardinality 1, if the object of the property can be marked as deleted, there must not be
+// more than one non-deleted object. (In other words, it's OK if there is more than one object,
+// as long only one object has knora-base:isDeleted false.)
+Consistency: max_cardinality_1_with_deletion_flag
+    i <rdf:type> r
+    r <owl:maxCardinality> "1"^^xsd:nonNegativeInteger
+    r <owl:onProperty> p
     i p j
     i p k [Constraint j != k]
     j <knora-base:isDeleted> "false"^^xsd:boolean
     k <knora-base:isDeleted> "false"^^xsd:boolean
     ------------------------------------
-*/
 
-// owl:minCardinality 1 (check that the property has an object)
-// This won't catch the case where an object exists but is marked as deleted.
-Consistency: content_prop_min_cardinality_1
-    i <rdf:type> r
-    r <owl:minCardinality> "1"^^xsd:nonNegativeInteger
-    r <owl:onProperty> p
-    p <rdfs:subPropertyOf> <knora-base:hasContent>
-    ------------------------------------
-    i p j
-    /* j <knora-base:isDeleted> "false"^^xsd:boolean */ // Commented out because of GraphDB issue OWLIM-2937 (Consistency rules with multiple consequents do not trigger)
 
-/* Commented out because it's very slow
-// owl:cardinality 1 (check that the property has no more than one non-deleted object)
-Consistency: cardinality_1_not_greater_content_prop
+// With owl:cardinality 1, if the object of the property can be marked as deleted, there must not be
+// more than one non-deleted object. (In other words, it's OK if there is more than one object,
+// as long only one object has knora-base:isDeleted false.)
+Consistency: cardinality_1_not_greater_with_deletion_flag
     i <rdf:type> r
     r <owl:cardinality> "1"^^xsd:nonNegativeInteger
     r <owl:onProperty> p
-    p <rdfs:subPropertyOf> <knora-base:hasContent>
     i p j
     i p k [Constraint j != k]
     j <knora-base:isDeleted> "false"^^xsd:boolean
     k <knora-base:isDeleted> "false"^^xsd:boolean
     ------------------------------------
-*/
 
-// owl:cardinality 1 (check that the property has an object)
-// This won't catch the case where an object exists but is marked as deleted.
-Consistency: content_prop_cardinality_1_not_less
-    i <rdf:type> r
-    r <owl:cardinality> "1"^^xsd:nonNegativeInteger
-    r <owl:onProperty> p
-    p <rdfs:subPropertyOf> <knora-base:hasContent>
-    ------------------------------------
-    i p j
-    /* j <knora-base:isDeleted> "false"^^xsd:boolean */ // Commented out because of GraphDB issue OWLIM-2937 (Consistency rules with multiple consequents do not trigger)
+ */
 
-// Check that if a resource has a content property, the resource class has
+// If a resource has a property pointing to a resource or value, the resource class must have
 // some cardinality for that property.
-// Commented out because of GraphDB issue OWLIM-2937 (Consistency rules with multiple consequents do not trigger)
+// This check is commented out because of GraphDB issue OWLIM-2937 (Consistency rules with multiple consequents do not trigger)
 /*
+
 Consistency: content_prop_cardinality_any
-    i <knora-base:hasContent> j
+    i <knora-base:resourceProperty> j
     ------------------------------------
     i p j
     i <rdf:type> r
     r <owl:onProperty> p
+
 */
 
 }
