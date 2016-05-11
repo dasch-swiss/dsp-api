@@ -34,7 +34,7 @@ import scala.util.Try
 /**
   * A route used to serve data to CKAN. It is used be the Ckan instance running under http://data.humanities.ch.
   */
-object StoreManagerRouteV1 extends Authenticator {
+object StoreRouteV1 extends Authenticator {
 
     def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 

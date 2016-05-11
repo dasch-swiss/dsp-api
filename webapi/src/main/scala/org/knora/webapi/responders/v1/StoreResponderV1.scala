@@ -1,0 +1,466 @@
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.knora.webapi.responders.v1
+
+import java.net.URLEncoder
+
+import akka.actor.{ActorSelection, Status}
+import akka.pattern._
+import akka.util.Timeout
+import org.knora.webapi
+import org.knora.webapi._
+import org.knora.webapi.messages.v1respondermessages.ckanmessages._
+import org.knora.webapi.messages.v1respondermessages.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
+import org.knora.webapi.messages.v1respondermessages.projectmessages.{ProjectInfoByShortnameGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
+import org.knora.webapi.messages.v1respondermessages.resourcemessages._
+import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1respondermessages.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
+import org.knora.webapi.util.ActorUtil._
+
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
+
+/**
+  * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
+  * under http://data.humanities.ch
+  */
+class StoreResponderV1 extends ResponderV1 {
+
+
+    def receive = {
+        case CkanRequestV1(projects, limit, info, userProfile) => future2Message(sender(), getCkanResponseV1(projects, limit, info, userProfile), log)
+        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+    }
+
+    private def getCkanResponseV1(project: Option[Seq[String]], limit: Option[Int], info: Boolean, userProfile: UserProfileV1): Future[CkanResponseV1] = {
+
+
+        log.debug("Ckan Endpoint:")
+        log.debug(s"Project: $project")
+        log.debug(s"Limit: $limit")
+        log.debug(s"Info: $info")
+
+        val defaultProjectList: Seq[String] = Vector("dokubib", "incunabula")
+
+        val selectedProjectsFuture = project match {
+            case Some(projectList) =>
+                // look up resources only for these projects if allowed
+                val allowedProjects = projectList.filter(defaultProjectList.contains(_))
+                getProjectInfos(allowedProjects, userProfile)
+
+            case None =>
+                // return our default project map, containing all projects that we want to serve over the Ckan endpoint
+                getProjectInfos(defaultProjectList, userProfile)
+        }
+
+        for {
+            projects <- selectedProjectsFuture
+            ckanProjects: Seq[Future[CkanProjectV1]] = projects flatMap {
+                case ("dokubib", projectFullInfo) => Some(getDokubibCkanProject(projectFullInfo, limit, userProfile))
+                case ("incunabula", projectFullInfo) => Some(getIncunabulaCkanProject(projectFullInfo, limit, userProfile))
+                case _ => None
+            }
+            result <- Future.sequence(ckanProjects)
+            response = CkanResponseV1(projects = result, userdata = userProfile.userData)
+        } yield response
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DOKUBIB
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+      * Dokubib specific Ckan export stuff
+      * @param pinfo
+      * @param limit
+      * @param userProfileV1
+      * @return
+      */
+    private def getDokubibCkanProject(pinfo: ProjectInfoV1, limit: Option[Int], userProfileV1: UserProfileV1): Future[CkanProjectV1] = {
+
+        /*
+         - datasets
+            - bild 1
+                - files
+                    - bild 1
+            - bild 2
+        */
+
+        val pIri = pinfo.id
+        val resType = "http://www.knora.org/ontology/dokubib#bild"
+
+        val ckanPInfo =
+            CkanProjectInfoV1(
+                shortname = pinfo.shortname,
+                longname = pinfo.longname,
+                ckan_tags = Vector("Kulturanthropologie"),
+                ckan_license_id = "CC-BY-NC-SA-4.0")
+
+
+        val datasetsFuture: Future[Seq[CkanProjectDatasetV1]] = for {
+            bilder <- getDokubibBilderIRIs(pIri, limit)
+            bilderMitPropsFuture = getResources(bilder, userProfileV1)
+            bilderMitProps <- bilderMitPropsFuture
+            dataset = bilderMitProps.map {
+                case (iri, info, props) =>
+                    val infoMap = flattenInfo(info)
+                    val propsMap = flattenProps(props)
+                    CkanProjectDatasetV1(
+                        ckan_title = propsMap.getOrElse("Description", ""),
+                        ckan_tags = propsMap.getOrElse("Title", "").split("/").map(_.trim),
+                        files = Vector(
+                            CkanProjectDatasetFileV1(
+                                ckan_title = propsMap.getOrElse("preview_loc_origname", ""),
+                                data_url = "http://localhost:3333/v1/assets/" + URLEncoder.encode(iri, "UTF-8"),
+                                data_mimetype = "",
+                                source_url = "http://salsah.org/resources/" + URLEncoder.encode(iri, "UTF-8"),
+                                source_mimetype = "")),
+                        other_props = propsMap
+                    )
+            }
+        } yield dataset
+
+        for {
+            datasets <- datasetsFuture
+            result = CkanProjectV1(project_info = ckanPInfo, project_datasets = Some(datasets))
+        } yield result
+
+
+    }
+
+    /**
+      * Get all Bilder IRIs for Dokubib
+      * @param projectIri
+      * @param limit
+      * @return
+      */
+    private def getDokubibBilderIRIs(projectIri: IRI, limit: Option[Int]): Future[Seq[IRI]] = {
+
+        implicit val timeout = Timeout(180.seconds)
+
+        for {
+            sparqlQuery <- Future(queries.sparql.v1.txt.ckanDokubib(settings.triplestoreType, projectIri, limit).toString())
+            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            responseRows: Seq[VariableResultsRow] = response.results.bindings
+
+            bilder: Seq[String] = responseRows.groupBy(_.rowMap("bild")).keys.toVector
+
+            result = limit match {
+                case Some(n) if n > 0 => bilder.take(n)
+                case None => bilder
+            }
+
+        } yield result
+
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // INCUNABULA
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+      * Incunabula specific Ckan stuff
+      * @param pinfo
+      * @param limit
+      * @param userProfileV1
+      * @return
+      */
+    private def getIncunabulaCkanProject(pinfo: ProjectInfoV1, limit: Option[Int], userProfileV1: UserProfileV1): Future[CkanProjectV1] = {
+
+        /*
+         - datasets
+            - book 1
+                - files
+                    - page 1
+                    - page 2
+                    ...
+            - book 2
+        */
+
+        val pIri = pinfo.id
+
+        val ckanPInfo =
+            CkanProjectInfoV1(
+                shortname = pinfo.shortname,
+                longname = pinfo.longname,
+                ckan_tags = Vector("Kunstgeschichte"),
+                ckan_license_id = "CC-BY-4.0")
+
+        // get book and page IRIs in project
+        val booksWithPagesFuture = getIncunabulaBooksWithPagesIRIs(pIri, limit)
+
+        val bookDatasetsFuture = booksWithPagesFuture.flatMap {
+            case singleBook =>
+                val bookDataset = singleBook map {
+                    case (bookIri: webapi.IRI, pageIris: Seq[webapi.IRI]) =>
+                        val bookResourceFuture = getResource(bookIri, userProfileV1)
+                        bookResourceFuture flatMap {
+                            case (bIri, bInfo, bProps) =>
+                                val bInfoMap = flattenInfo(bInfo)
+                                val bPropsMap = flattenProps(bProps)
+                                val files = pageIris map {
+                                    case pageIri =>
+                                        getResource(pageIri, userProfileV1) map {
+                                            case (pIri, pInfo, pProps) =>
+                                                val pInfoMap = flattenInfo(pInfo)
+                                                val pPropsMap = flattenProps(pProps)
+                                                CkanProjectDatasetFileV1(
+                                                    ckan_title = pPropsMap.getOrElse("Page identifier", ""),
+                                                    ckan_description = Some(pPropsMap.getOrElse("Beschreibung (Richtext)", "")),
+                                                    data_url = "http://localhost:3333/v1/assets/" + URLEncoder.encode(pIri, "UTF-8"),
+                                                    data_mimetype = "",
+                                                    source_url = "http://salsah.org/resources/" + URLEncoder.encode(pIri, "UTF-8"),
+                                                    source_mimetype = "",
+                                                    other_props = Some(pPropsMap))
+                                        }
+                                }
+                                Future.sequence(files) map {
+                                    case filesList =>
+                                        CkanProjectDatasetV1(
+                                            ckan_title = bPropsMap.getOrElse("Title", ""),
+                                            ckan_tags = Vector("Kunstgeschichte"),
+                                            files = filesList,
+                                            other_props = bPropsMap
+                                        )
+                                }
+                        }
+                }
+                Future.sequence(bookDataset.toVector)
+        }
+
+
+        for {
+            bookDatasets <- bookDatasetsFuture
+            result = CkanProjectV1(project_info = ckanPInfo, project_datasets = Some(bookDatasets))
+        } yield result
+    }
+
+    /**
+      * Get all book IRIs for Incunabula
+      * @param projectIri
+      * @param limit
+      * @return
+      */
+    private def getIncunabulaBooksWithPagesIRIs(projectIri: webapi.IRI, limit: Option[Int]): Future[Map[webapi.IRI, Seq[webapi.IRI]]] = {
+
+        for {
+            sparqlQuery <- Future(queries.sparql.v1.txt.ckanIncunabula(settings.triplestoreType, projectIri, limit).toString())
+            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            responseRows: Seq[VariableResultsRow] = response.results.bindings
+
+            booksWithPages: Map[String, Seq[String]] = responseRows.groupBy(_.rowMap("book")).map {
+                case (bookIri: String, rows: Seq[VariableResultsRow]) => (bookIri, rows.map {
+                    case row => row.rowMap("page")
+                })
+            }
+
+            result = limit match {
+                case Some(n) if n > 0 => booksWithPages.take(n)
+                case None => booksWithPages
+            }
+
+        } yield result
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // GENERAL
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+      * Get detailed information about the projects
+      * @param projectNames
+      * @param userProfile
+      * @return
+      */
+    private def getProjectInfos(projectNames: Seq[String], userProfile: UserProfileV1): Future[Seq[(String, ProjectInfoV1)]] = {
+        Future.sequence {
+            for {
+                pName <- projectNames
+                projectInfoResponseFuture = (responderManager ? ProjectInfoByShortnameGetRequest(pName, ProjectInfoType.SHORT, Some(userProfile))).mapTo[ProjectInfoResponseV1]
+                result = projectInfoResponseFuture.map(_.project_info) map {
+                    case pInfo => (pName, pInfo)
+                }
+            } yield result
+        }
+    }
+
+    /**
+      * Get IRIs of a certain type inside a certain project
+      * @param projectIri
+      * @param resType
+      * @param limit
+      * @param userProfile
+      * @return
+      */
+    private def getIris(projectIri: webapi.IRI, resType: String, limit: Option[Int], userProfile: UserProfileV1): Future[Seq[webapi.IRI]] = {
+
+        for {
+            sparqlQuery <- Future(queries.sparql.v1.txt.getResourcesByProjectAndType(
+                triplestore = settings.triplestoreType,
+                projectIri = projectIri,
+                resType = resType
+            ).toString())
+            resourcesResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            resourcesResponseRows: Seq[VariableResultsRow] = resourcesResponse.results.bindings
+            resIri = resourcesResponseRows.groupBy(_.rowMap("s")).keys.toVector
+            result = limit match {
+                case Some(n) if n > 0 => resIri.take(n)
+                case None => resIri
+            }
+        } yield result
+    }
+
+    /**
+      * Get all information there is about these resources
+      * @param iris
+      * @param userProfileV1
+      * @return
+      */
+    private def getResources(iris: Seq[IRI], userProfileV1: UserProfileV1): Future[Seq[(String, Option[ResourceInfoV1], Option[PropsV1])]] = {
+
+        Future.sequence {
+            for {
+                iri <- iris
+                resource = getResource(iri, userProfileV1)
+            } yield resource
+        }
+    }
+
+    /**
+      * Get all information there is about this one resource
+      * @param iri
+      * @param userProfileV1
+      * @return
+      */
+    private def getResource(iri: webapi.IRI, userProfileV1: UserProfileV1): Future[(String, Option[ResourceInfoV1], Option[PropsV1])] = {
+
+        val resourceFullResponseFuture = (responderManager ? ResourceFullGetRequestV1(iri, userProfileV1)).mapTo[ResourceFullResponseV1]
+
+        resourceFullResponseFuture map {
+            case ResourceFullResponseV1(resInfo, _, props, _, _, _) => (iri, resInfo, props)
+        }
+
+    }
+
+
+    private def flattenInfo(maybeInfo: Option[ResourceInfoV1]): Map[String, String] = {
+        def maybeTuple(key: String, maybeValue: Option[String]): Option[(String, String)] = {
+            maybeValue.map(value => (key, value))
+        }
+
+        maybeInfo match {
+            case None => Map()
+            case Some(info) =>
+                val listOfOptions = Vector(
+                    maybeTuple("project_id", Some(info.project_id)),
+                    maybeTuple("person_id", Some(info.person_id)),
+                    maybeTuple("restype_id", Some(info.restype_id)),
+                    maybeTuple("restype_label", info.restype_label),
+                    maybeTuple("restype_description", info.restype_description),
+                    maybeTuple("restype_iconsrc", info.restype_iconsrc),
+                    maybeTuple("firstproperty", info.firstproperty)
+                ) ++ flattenLocation(info.preview)
+                listOfOptions.flatten.toMap
+        }
+
+    }
+
+    private def flattenLocation(location: Option[LocationV1]): Seq[Option[(String, String)]] = {
+        location match {
+            case None => Vector(None)
+            case Some(loc) =>
+                Vector(Some(("preview_loc_origname", loc.origname)))
+        }
+    }
+
+    private def flattenProps(props: Option[PropsV1]): Map[String, String] = {
+
+        if (props.nonEmpty) {
+            val properties = props.get.properties
+
+            val propMap = properties.foldLeft(Map.empty[String, String]) {
+                case (acc, propertyV1: PropertyV1) =>
+
+                    val label = propertyV1.label.getOrElse("")
+
+                    val values: Seq[String] = propertyV1.valuetype_id.get match {
+                        case OntologyConstants.KnoraBase.TextValue =>
+                            propertyV1.values.map(literal => textValue2String(literal.asInstanceOf[TextValueV1]))
+
+                        case OntologyConstants.KnoraBase.DateValue =>
+                            propertyV1.values.map(literal => dateValue2String(literal.asInstanceOf[DateValueV1]))
+
+                        case OntologyConstants.KnoraBase.ListValue =>
+                            propertyV1.values.map(literal => listValue2String(literal.asInstanceOf[HierarchicalListValueV1], responderManager))
+
+                        case OntologyConstants.KnoraBase.Resource => // TODO: this could actually be a subclass of knora-base:Resource.
+                            propertyV1.values.map(literal => resourceValue2String(literal.asInstanceOf[LinkV1], responderManager))
+
+                        case _ => Vector()
+                    }
+
+                    if (label.nonEmpty && values.nonEmpty) {
+                        acc + (label -> values.mkString(","))
+                    } else {
+                        acc
+                    }
+            }
+
+            propMap
+        } else {
+            Map.empty[String, String]
+        }
+
+    }
+
+    private def textValue2String(text: TextValueV1): String = {
+        text.utf8str
+    }
+
+    private def dateValue2String(date: DateValueV1): String = {
+
+        if (date.dateval1 == date.dateval2) {
+            date.dateval1.toString + ", " + date.calendar.toString
+        } else {
+            date.dateval1.toString + ", " + date.dateval2 + ", " + date.calendar.toString
+        }
+    }
+
+    private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorSelection): String = {
+
+
+        val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, UserProfileV1(UserDataV1("en")))
+        val nodePath = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
+
+        val labels = nodePath.nodelist map {
+            case element => element.label.getOrElse("")
+        }
+
+        labels.mkString(" / ")
+    }
+
+    private def resourceValue2String(resource: LinkV1, responderManager: ActorSelection): String = {
+        resource.valueLabel.get
+    }
+
+}
