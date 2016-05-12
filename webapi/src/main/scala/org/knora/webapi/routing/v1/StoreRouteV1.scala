@@ -20,10 +20,9 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.knora.webapi.SettingsImpl
+import org.knora.webapi.messages.v1.responder.storemessages.ResetTriplestoreContentRequestV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, TriplestoreJsonProtocol}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import spray.json.RootJsonFormat
 import spray.routing.Directives._
 import spray.routing._
 
@@ -40,7 +39,7 @@ object StoreRouteV1 extends Authenticator {
 
     def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
-        implicit val testFormat: RootJsonFormat[Test] = jsonFormat2(Test)
+        import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
         import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
 
         implicit val system: ActorSystem = _system
@@ -60,10 +59,13 @@ object StoreRouteV1 extends Authenticator {
         path("v1" / "store" / "ResetTriplestoreContent") {
             post {
                 /* ResetTriplestoreContent */
-                entity(as[Test]) { apiRequest => requestContext =>
+                entity(as[Seq[RdfDataObject]]) { apiRequest => requestContext =>
+
+                    log.debug("inside")
+
                     val requestMessageTry = Try {
                         // create the message
-                        ResetTriplestoreContent(List())
+                        ResetTriplestoreContentRequestV1(List())
                     }
 
                     RouteUtilV1.runJsonRoute(

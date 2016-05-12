@@ -16,8 +16,8 @@
 
 package org.knora.webapi.e2e.v1
 
+import akka.actor.ActorDSL._
 import akka.actor.{ActorSystem, Props}
-import akka.testkit.TestProbe
 import akka.util.Timeout
 import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
@@ -25,7 +25,8 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.StoreRouteV1
 import org.knora.webapi.store._
-import org.knora.webapi.{LiveActorMaker, StartupFlags}
+import org.knora.webapi.{BadRequestException, LiveActorMaker, StartupFlags}
+import spray.http.MediaTypes._
 import spray.http._
 import spray.httpx.RequestBuilding
 
@@ -49,7 +50,18 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     /* Start a mocked StoreManager */
-    val storeManagerProbe = TestProbe(STORE_MANAGER_ACTOR_NAME)
+    val storeManagerProbe = actor(STORE_MANAGER_ACTOR_NAME)(new Act {
+        become {
+            case ResetTriplestoreContent(rdo) => {
+                if (rdo === rdfDataObjects) {
+                    sender ! ResetTriplestoreContentACK
+                } else {
+                    throw BadRequestException(s"Payload not what is expected: ${rdo.toString}")
+                }
+            }
+            case _ => throw BadRequestException("Shouldn't be here")
+        }
+    })
 
     /* get the path of the route we want to test */
     val storePath = StoreRouteV1.rapierPath(system, settings, log)
@@ -61,11 +73,11 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
     val rdfDataObjectsJsonList =
         """
             [
-                {path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"},
-                {path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"},
-                {path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"},
-                {path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"},
-                {path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"}
+                {"path": "../knora-ontologies/knora-base.ttl", "name": "http://www.knora.org/ontology/knora-base"},
+                {"path": "../knora-ontologies/knora-dc.ttl", "name": "http://www.knora.org/ontology/dc"},
+                {"path": "../knora-ontologies/salsah-gui.ttl", "name": "http://www.knora.org/ontology/salsah-gui"},
+                {"path": "_test_data/ontologies/incunabula-onto.ttl", "name": "http://www.knora.org/ontology/incunabula"},
+                {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"}
             ]
         """
 
@@ -80,14 +92,12 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
     "The ResetTriplestoreContent Route ('v1/store/ResetTriplestoreContent')" should {
         "succeed with resetting if startup flag is set" in {
             StartupFlags.allowResetTriplestoreContentOperation send true
-            Post(rdfDataObjectsJsonList) ~> storePath ~> check {
-                storeManagerProbe.expectMsg(300.seconds, ResetTriplestoreContent(rdfDataObjects))
-                storeManagerProbe reply ResetTriplestoreContentACK
+            Post("/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList)) ~> storePath ~> check {
                 assert(status === StatusCodes.OK)
             }
         }
         "fail with resetting if startup flag is not set" in {
-            Post(rdfDataObjectsJsonList) ~> storePath ~> check {
+            Post("/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList)) ~> storePath ~> check {
                 assert(status === StatusCodes.Unauthorized)
 
             }

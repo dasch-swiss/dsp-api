@@ -19,6 +19,7 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, ResetTriplestoreContentResponseV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, TriplestoreAdminResponse}
 import org.knora.webapi.util.ActorUtil._
 
@@ -31,11 +32,11 @@ import scala.concurrent.Future
 class StoreResponderV1 extends ResponderV1 {
 
     def receive = {
-        case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTriplestoreContent(rdfDataObjects), log)
+        case ResetTriplestoreContentRequestV1(rdfDataObjects) => future2Message(sender(), resetTriplestoreContent(rdfDataObjects), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
-    private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[TriplestoreAdminResponse] = {
+    private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentResponseV1] = {
 
         if (!StartupFlags.allowResetTriplestoreContentOperation.get) {
             throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
@@ -43,7 +44,7 @@ class StoreResponderV1 extends ResponderV1 {
 
         for {
             response <- (storeManager ? ResetTriplestoreContent(rdfDataObjects)).mapTo[ResetTriplestoreContentACK]
-            result = TriplestoreAdminResponse("ResetTripleStoreContent done!")
+            result = ResetTriplestoreContentResponseV1("ResetTripleStoreContent done!")
         } yield result
     }
 
