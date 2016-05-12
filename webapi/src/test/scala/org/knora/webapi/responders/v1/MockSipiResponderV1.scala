@@ -20,8 +20,6 @@
 
 package org.knora.webapi.responders.v1
 
-import org.knora.webapi.messages.v1respondermessages.sipimessages._
-import org.knora.webapi.messages.v1respondermessages.valuemessages._
 import org.knora.webapi.util.ActorUtil._
 import java.io.File
 

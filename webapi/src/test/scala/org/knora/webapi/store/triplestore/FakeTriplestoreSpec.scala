@@ -23,8 +23,7 @@ package org.knora.webapi.store.triplestore
 import akka.actor.Props
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.InitializedResponse
-import org.knora.webapi.messages.v1storemessages.triplestoremessages.{HelloTriplestore, Initialized, InitializedResponse}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{HelloTriplestore, Initialized, InitializedResponse}
 import org.knora.webapi.store._
 import org.knora.webapi.{CoreSpec, LiveActorMaker}
 
