@@ -25,11 +25,9 @@ import akka.pattern._
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1respondermessages.ontologymessages._
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.SalsahGuiConversions
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.VariableResultsRow
-import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1storemessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 

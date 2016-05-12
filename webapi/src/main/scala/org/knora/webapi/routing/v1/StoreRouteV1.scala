@@ -20,8 +20,8 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.knora.webapi.SettingsImpl
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.v1storemessages.triplestoremessages.{ResetTriplestoreContent, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, TriplestoreJsonProtocol}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import spray.json.RootJsonFormat
 import spray.routing.Directives._

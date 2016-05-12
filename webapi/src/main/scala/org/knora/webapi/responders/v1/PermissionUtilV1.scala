@@ -21,8 +21,7 @@
 package org.knora.webapi.responders.v1
 
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoV1, PredicateInfoV1, PropertyEntityInfoV1, ResourceEntityInfoV1}
-import org.knora.webapi.messages.v1respondermessages.ontologymessages.PropertyEntityInfoV1
-import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.v1.GroupedProps.{ValueLiterals, ValueProps}
 import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}

@@ -20,6 +20,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestProbe
 import akka.util.Timeout
 import org.knora.webapi.e2e.E2ESpec
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1respondermessages.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1storemessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._

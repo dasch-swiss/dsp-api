@@ -31,9 +31,9 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderR
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.ResourcesResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.usermessages.UsersResponderRequestV1
-import org.knora.webapi.messages.v1storemessages.triplestoremessages.TriplestoreRequest
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
+import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
+import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.responders._
 import org.knora.webapi.{ActorMaker, UnexpectedMessageException}
 

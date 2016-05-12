@@ -28,10 +28,8 @@ import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{CheckSubClassRequestV1, CheckSubClassResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v1respondermessages.ontologymessages.CheckSubClassResponseV1
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.LocationV1
-import org.knora.webapi.messages.v1respondermessages.valuemessages._
-import org.knora.webapi.messages.v1storemessages.triplestoremessages.VariableResultsRow
+import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
+import org.knora.webapi.messages.v1.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
 

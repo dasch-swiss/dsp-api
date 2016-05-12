@@ -25,20 +25,14 @@ import java.util.UUID
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.graphdatamessages.{GraphDataEdgeV1, GraphDataGetResponseV1, GraphNodeV1, GraphV1}
+import org.knora.webapi.messages.v1.responder.graphdatamessages.{GraphDataEdgeV1, GraphDataGetResponseV1, GraphNodeV1, GraphV1, GraphDataGetRequestV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType}
 import org.knora.webapi.messages.v1.responder.sipimessages._
+import org.knora.webapi.messages.v1.responder.resourcemessages._
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v1respondermessages.graphdatamessages._
-import org.knora.webapi.messages.v1respondermessages.ontologymessages._
-import org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectInfoType
-import org.knora.webapi.messages.v1respondermessages.resourcemessages._
-import org.knora.webapi.messages.v1respondermessages.sipimessages._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1respondermessages.valuemessages._
-import org.knora.webapi.messages.v1storemessages.triplestoremessages._
+import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.ResourceLocker
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.util.ActorUtil._

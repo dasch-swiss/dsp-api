@@ -23,10 +23,8 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v1respondermessages.projectmessages._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.VariableResultsRow
-import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1storemessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.{IRI, NotFoundException, OntologyConstants, UnexpectedMessageException}
 

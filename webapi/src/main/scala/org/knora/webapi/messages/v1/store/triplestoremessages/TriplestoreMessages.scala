@@ -1,5 +1,6 @@
 package org.knora.webapi.messages.v1.store.triplestoremessages
 
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{InconsistentTriplestoreDataException, TriplestoreResponseException}

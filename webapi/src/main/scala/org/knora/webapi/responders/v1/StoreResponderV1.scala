@@ -19,8 +19,7 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
-import org.knora.webapi.messages.v1storemessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, TriplestoreAdminResponse}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, TriplestoreAdminResponse}
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.Future

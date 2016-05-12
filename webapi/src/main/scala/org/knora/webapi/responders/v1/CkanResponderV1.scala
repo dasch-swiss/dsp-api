@@ -31,14 +31,9 @@ import org.knora.webapi.messages.v1.responder.ckanmessages._
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
-import org.knora.webapi.messages.v1respondermessages.ckanmessages._
-import org.knora.webapi.messages.v1respondermessages.listmessages.NodePathGetResponseV1
-import org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectInfoType
-import org.knora.webapi.messages.v1respondermessages.resourcemessages._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.VariableResultsRow
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1respondermessages.valuemessages.DateValueV1
-import org.knora.webapi.messages.v1storemessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.v1.responder.resourcemessages._
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.duration._
