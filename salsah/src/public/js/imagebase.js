@@ -4206,7 +4206,8 @@ $(function() {
 					//
 					SALSAH.ApiGet('properties', res_id, function(data) {
 						if (data.status == ApiErrors.OK) {
-							SALSAH.ApiGet('resources', data.properties['salsah:region_of'].values[0].val, {resinfo: true, reqtype: 'context'}, function(data) {
+							// TODO: access data.properties['http://www.knora.org/ontology/knora-base#isRegionOf'].values[0].val (https://github.com/dhlab-basel/Knora/issues/134#issue-154443186)
+							SALSAH.ApiGet('resources', data.properties['http://www.knora.org/ontology/knora-base#isRegionOf'].values[0], {resinfo: true, reqtype: 'context'}, function(data) {
 								if (data.status == ApiErrors.OK) {
 									var context = data.resource_context;
 									create_viewer(context, true);

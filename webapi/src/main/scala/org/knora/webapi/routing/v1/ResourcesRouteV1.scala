@@ -151,6 +151,10 @@ object ResourcesRouteV1 extends Authenticator {
             )
         }
 
+        def makeGetPropertiesRequestMessage(resIri: IRI, userProfile: UserProfileV1) = {
+            PropertiesGetRequestV1(resIri, userProfile)
+        }
+
         path("v1" / "resources" / Segment) { iri =>
             get {
                 requestContext =>
@@ -328,6 +332,27 @@ object ResourcesRouteV1 extends Authenticator {
                         responderManager,
                         log
                     )
+            }
+        } ~ path("v1" / "properties" / Segment) { iri =>
+            get {
+                requestContext =>
+                    val requestMessageTry = Try {
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+
+                        makeGetPropertiesRequestMessage(resIri, userProfile)
+
+                    }
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+
             }
         }
     }

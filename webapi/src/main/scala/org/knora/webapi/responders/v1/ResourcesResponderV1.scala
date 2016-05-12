@@ -65,6 +65,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserProfileV1) => future2Message(sender(), getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile), log)
         case ResourceCreateRequestV1(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID) => future2Message(sender(), createNewResource(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID), log)
         case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1) => future2Message(sender(), checkResourceClass(resourceIri, owlClass, userProfile), log)
+        case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -1311,6 +1312,26 @@ class ResourcesResponderV1 extends ResponderV1 {
             resInfoResponseRows = resInfoResponse.results.bindings
             resInfo: (Option[Int], ResourceInfoV1) <- makeResourceInfoV1(resourceIri, resInfoResponseRows, userProfile, queryOntology)
         } yield resInfo
+    }
+
+    /**
+      *
+      * Queries the properties for the given resource.
+      *
+      * @param resourceIri the Iri of the given resource.
+      * @param userProfile the profile of the user making the request.
+      * @return a [[PropertiesGetResponseV1]] representing the properties of the given resource.
+      */
+    private def getPropertiesV1(resourceIri: IRI, userProfile: UserProfileV1): Future[PropertiesGetResponseV1] = {
+
+        for {
+
+            properties: Seq[PropertyV1] <- getResourceProperties(resourceIri = resourceIri, maybeResourceTypeIri = None, userProfile = userProfile)
+
+            // TODO: refactor PropertiesGetResponseV1 and convert PropertyV1 into the new structure (https://github.com/dhlab-basel/Knora/issues/134#issue-154443186)
+
+        } yield PropertiesGetResponseV1(PropsV1(properties))
+
     }
 
     /**

@@ -237,6 +237,25 @@ case class ResourceCreateResponseV1(res_id: IRI,
     def toJsValue = ResourceV1JsonProtocol.resourceCreateResponseV1Format.write(this)
 }
 
+/**
+  * Requests the properties of a given resource.
+  *
+  * @param iri the iri of the given resource.
+  */
+case class PropertiesGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends ResourcesResponderRequestV1
+
+
+// TODO: refactor PropertiesGetResponseV1 (https://github.com/dhlab-basel/Knora/issues/134#issue-154443186)
+
+/**
+  * Describes the answer to a [[PropertiesGetRequestV1]].
+  *
+  * @param properties the properties of the specified resource.
+  */
+case class PropertiesGetResponseV1(properties: PropsV1) extends KnoraResponseV1 {
+    def toJsValue = ResourceV1JsonProtocol.propertiesGetResponseV1Format.write(this)
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -726,6 +745,7 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val externalResourceIDV1Format: JsonFormat[ExternalResourceIDV1] = jsonFormat2(ExternalResourceIDV1)
     implicit val incomingV1Format: JsonFormat[IncomingV1] = jsonFormat3(IncomingV1)
     implicit val resourceFullResponseV1Format: RootJsonFormat[ResourceFullResponseV1] = jsonFormat6(ResourceFullResponseV1)
+    implicit val propertiesGetResponseV1Format: RootJsonFormat[PropertiesGetResponseV1] = jsonFormat1(PropertiesGetResponseV1)
     implicit val resourceRightsResponseV1Format: RootJsonFormat[ResourceRightsResponseV1] = jsonFormat2(ResourceRightsResponseV1)
     implicit val resourceSearchResultV1Format: RootJsonFormat[ResourceSearchResultRowV1] = jsonFormat3(ResourceSearchResultRowV1)
     implicit val resourceSearchResponseV1Format: RootJsonFormat[ResourceSearchResponseV1] = jsonFormat2(ResourceSearchResponseV1)
