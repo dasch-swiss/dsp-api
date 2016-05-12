@@ -349,6 +349,7 @@ case class ResourceContextItemV1(res_id: IRI,
   * @param lastmod               a timestamp of the last modification of the resource.
   * @param value_of              obsolete, always 0.
   * @param firstproperty         a string representation of the resource's first property.
+  * @param regions               representation of regions pointing to this resource.
   */
 case class ResourceInfoV1(project_id: IRI,
                           person_id: IRI,
@@ -365,7 +366,8 @@ case class ResourceInfoV1(project_id: IRI,
                           resclass_has_location: Boolean = false,
                           lastmod: String = "0000-00-00 00:00:00",
                           value_of: Int = 0,
-                          firstproperty: Option[String] = None)
+                          firstproperty: Option[String] = None,
+                          regions: Option[Seq[PropsV1]] = None)
 
 /**
   * Provides additional information about a Knora resource, in Knora API v1 JSON.
@@ -731,7 +733,8 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
                 "resclass_name" -> resInfoV1.resclass_name.toJson,
                 "resclass_has_location" -> resInfoV1.resclass_has_location.toJson,
                 "lastmod" -> resInfoV1.lastmod.toJson,
-                "value_of" -> resInfoV1.value_of.toJson
+                "value_of" -> resInfoV1.value_of.toJson,
+                "regions" -> resInfoV1.regions.toJson
             ) ++ firstProp
 
             JsObject(fields)

@@ -822,7 +822,7 @@ $(function() {
 									if (data.status == ApiErrors.OK) {
 										var context = data.resource_context;
 										RESVIEW.setupRegionTab(context.resinfo, viewer);
-										if ((context.resinfo.regions !== undefined) && (context.resinfo.regions.length > 0)) {
+										if ((context.resinfo.regions !== null) && (context.resinfo.regions.length > 0)) {
 											regionsTabOnEnterCB(metadata_area_tabs.tabs('dataHook', 'regions'));
 										}
 									}
@@ -950,7 +950,7 @@ $(function() {
 							on_cancel_cb: function() {
 								SALSAH.ApiGet('resources', res_id, {reqtype: 'context', resinfo: true}, function(data) {
 									if (data.status == ApiErrors.OK) {
-										if ((data.resource_context.resinfo.regions !== undefined) && (data.resource_context.resinfo.regions.length > 0)) {
+										if ((data.resource_context.resinfo.regions !== null) && (data.resource_context.resinfo.regions.length > 0)) {
 											regionsTabOnEnterCB(metadata_area_tabs.tabs('dataHook', 'regions'));
 										}
 									}
@@ -2609,7 +2609,7 @@ $(function() {
 	RESVIEW.setupRegionTab = function(resinfo, viewer, make_active) {
 		var metadata_area_tabs = viewer.metadataArea();
 		var figures = [];
-		if ((resinfo.regions !== undefined) && (resinfo.regions.length > 0)) {
+		if ((resinfo.regions !== null) && (resinfo.regions.length > 0)) {
 			var winid = viewer.windowId();
 			var canvas = viewer.topCanvas();
 			//
@@ -2617,7 +2617,7 @@ $(function() {
 			//
 			var region_id = [];
 			canvas.regions('reinit');
-			if (resinfo.regions !== undefined) {
+			if (resinfo.regions !== null) {
 				for (var reg in resinfo.regions) { // loop over all regions
 					region_id[reg] = resinfo.regions[reg].res_id;
 					figures[reg] = [];

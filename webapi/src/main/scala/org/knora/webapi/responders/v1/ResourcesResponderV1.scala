@@ -803,11 +803,47 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             resinfoV1Option: Option[ResourceInfoV1] <- resInfoV1Future
 
+            //
+            // check if there are regions pointing to this resource
+            //
+            regionSparqlQuery <- Future(queries.sparql.v1.txt.getRegions(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri
+            ).toString())
+            regionQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(regionSparqlQuery)).mapTo[SparqlSelectResponse]
+            regionRows = regionQueryResponse.results.bindings
+
+            regionPropertiesSequencedFutures: Seq[Future[Seq[PropertyV1]]] = regionRows.filter {
+                regionRow =>
+                    val permissionsForRegion = PermissionUtilV1.parsePermissions(regionRow.rowMap("regionObjectPermissionAssertions"), regionRow.rowMap("owner"), regionRow.rowMap("project"))
+                    val sourceObjectPermissions = PermissionUtilV1.getUserPermissionV1(resourceIri, permissionsForRegion, userProfile)
+
+                    // ignore regions the user has no permissions on
+                    sourceObjectPermissions.nonEmpty
+            }.map {
+                regionRow =>
+                    // get the properties for each region
+                    getResourceProperties(resourceIri = regionRow.rowMap("region"), maybeResourceTypeIri = None, userProfile = userProfile)
+            }
+
+            // turn sequenced Futures into one Future of a sequence
+            regionProperties: Seq[Seq[PropertyV1]] <- Future.sequence(regionPropertiesSequencedFutures)
+
+            resinfoV1WithRegionsOption: Option[ResourceInfoV1] = if (regionProperties.nonEmpty && resinfoV1Option.nonEmpty) {
+                // resinfo is not None and regions are given
+                Some(resinfoV1Option.get.copy(
+                    regions = Some(regionProperties.map((props) => PropsV1(props)))
+                ))
+            } else {
+                // resinfo is None or no regions are given
+                resinfoV1Option
+            }
+
             resourceContextV1 = parentResourceIriOption match {
                 case Some(_) =>
                     // This resource is part of another resource, so return the resource info of the parent.
                     ResourceContextV1(
-                        resinfo = resinfoV1Option,
+                        resinfo = resinfoV1WithRegionsOption,
                         parent_res_id = parentResourceIriOption,
                         parent_resinfo = parentResInfoV1Option,
                         context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_PARTOF,
@@ -823,14 +859,14 @@ class ResourcesResponderV1 extends ResponderV1 {
                         firstprop = Some(resourceContexts.map(_.firstprop)),
                         region = Some(resourceContexts.map(_ => None)),
                         canonical_res_id = resourceIri,
-                        resinfo = resinfoV1Option,
+                        resinfo = resinfoV1WithRegionsOption,
                         resclass_name = Some("image"),
                         context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_COMPOUND
                     )
                 } else {
                     // Indicate that neither of the above is true.
                     ResourceContextV1(
-                        resinfo = resinfoV1Option,
+                        resinfo = resinfoV1WithRegionsOption,
                         canonical_res_id = resourceIri,
                         context = ResourceContextCodeV1.RESOURCE_CONTEXT_NONE
                     )
