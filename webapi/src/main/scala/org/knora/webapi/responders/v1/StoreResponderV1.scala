@@ -20,7 +20,7 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, ResetTriplestoreContentResponseV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, TriplestoreAdminResponse}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.Future

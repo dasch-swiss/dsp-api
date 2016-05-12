@@ -28,12 +28,12 @@ import org.knora.webapi.messages.v1.responder.graphdatamessages.GraphDataRespond
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderRequestV1
-import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
-import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
+import org.knora.webapi.messages.v1.responder.storemessages.StoreResponderRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
-import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreRequest
+import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
 import org.knora.webapi.responders._
 import org.knora.webapi.{ActorMaker, UnexpectedMessageException}
 
@@ -168,7 +168,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
         case graphdataResponderRequest: GraphDataResponderRequestV1 => resourcesRouter.forward(graphdataResponderRequest)
         case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter forward projectsResponderRequest
         case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter forward ckanResponderRequest
-        case storeResponderRequest: TriplestoreRequest => storeRouter forward storeResponderRequest
+        case storeResponderRequest: StoreResponderRequestV1 => storeRouter forward storeResponderRequest
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 }

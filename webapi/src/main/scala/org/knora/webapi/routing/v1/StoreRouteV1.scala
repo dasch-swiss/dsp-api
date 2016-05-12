@@ -65,7 +65,7 @@ object StoreRouteV1 extends Authenticator {
 
                     val requestMessageTry = Try {
                         // create the message
-                        ResetTriplestoreContentRequestV1(List())
+                        ResetTriplestoreContentRequestV1(apiRequest)
                     }
 
                     RouteUtilV1.runJsonRoute(

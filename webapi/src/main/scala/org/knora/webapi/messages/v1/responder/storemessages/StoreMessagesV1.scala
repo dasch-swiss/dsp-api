@@ -28,13 +28,16 @@ import spray.json._
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
 
+
+sealed trait StoreResponderRequestV1 extends KnoraRequestV1
+
 /**
   * Represents an API request that asks the Knora API server to load the triplestore with data referenced inside
   * [[RdfDataObject]]. Any data contained inside the triplestore will be deleted first.
   * @param rdfDataObjects an object containing the path to the data and the name of the named graph into which the data
   *                       should be loaded.
   */
-case class ResetTriplestoreContentRequestV1(rdfDataObjects: Seq[RdfDataObject]) extends KnoraRequestV1
+case class ResetTriplestoreContentRequestV1(rdfDataObjects: Seq[RdfDataObject]) extends StoreResponderRequestV1
 
 case class ResetTriplestoreContentResponseV1(message: String) extends KnoraResponseV1 {
     def toJsValue = StoreV1JsonProtocol.resetTriplestoreContentResponseV1Format.write(this)

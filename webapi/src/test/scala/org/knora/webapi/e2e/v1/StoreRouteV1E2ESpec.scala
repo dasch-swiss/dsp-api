@@ -42,8 +42,8 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
 
     override def testConfigSource =
         """
-         # akka.loglevel = "DEBUG"
-         # akka.stdout-loglevel = "DEBUG"
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
     /* Start a live ResponderManager */
