@@ -20,14 +20,15 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, ResetTriplestoreContentResponseV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.util.ActorUtil._
 
-import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 /**
-  * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
-  * under http://data.humanities.ch
+  * This responder is used by [[org.knora.webapi.routing.v1.StoreRouteV1]], for piping through HTTP requests to the
+  * 'Store Module'
   */
 class StoreResponderV1 extends ResponderV1 {
 
@@ -36,16 +37,23 @@ class StoreResponderV1 extends ResponderV1 {
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
+    /**
+      * This method send a [[ResetTriplestoreContent]] message to the [[org.knora.webapi.store.triplestore.TriplestoreManagerActor]].
+      * @param rdfDataObjects the payload consisting of a list of [[RdfDataObject]] send inside the message.
+      * @return a future containing a [[ResetTriplestoreContentResponseV1]].
+      */
     private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentResponseV1] = {
 
-        if (!StartupFlags.allowResetTriplestoreContentOperation.get) {
-            throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
-        }
+        //log.debug(s"resetTriplestoreContent called with: ${rdfDataObjects.toString}")
+        //log.debug(s"StartupFlags.allowResetTriplestoreContentOperation = ${StartupFlags.allowResetTriplestoreContentOperation.get}")
 
-        for {
-            response <- (storeManager ? ResetTriplestoreContent(rdfDataObjects)).mapTo[ResetTriplestoreContentACK]
-            result = ResetTriplestoreContentResponseV1("ResetTripleStoreContent done!")
-        } yield result
+        if (!StartupFlags.allowResetTriplestoreContentOperation.get) {
+            Future(throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?"))
+        } else {
+            val future = storeManager ? ResetTriplestoreContent(rdfDataObjects)
+            val result = Await.result(future, 300.seconds)
+            Future(ResetTriplestoreContentResponseV1(s"${result.toString}"))
+        }
     }
 
 }

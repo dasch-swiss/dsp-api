@@ -54,6 +54,7 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
         become {
             case ResetTriplestoreContent(rdo) => {
                 if (rdo === rdfDataObjects) {
+                    Thread.sleep(10000)
                     sender ! ResetTriplestoreContentACK
                 } else {
                     throw BadRequestException(s"Payload not what is expected: ${rdo.toString}")
@@ -66,9 +67,8 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
     /* get the path of the route we want to test */
     val storePath = StoreRouteV1.rapierPath(system, settings, log)
 
-    implicit val timeout: Timeout = 300.seconds
-
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(5).second)
+    /* set the timeout for the route test */
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(60).second)
 
     val rdfDataObjectsJsonList =
         """
@@ -93,12 +93,15 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
         "succeed with resetting if startup flag is set" in {
             StartupFlags.allowResetTriplestoreContentOperation send true
             Post("/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList)) ~> storePath ~> check {
+                log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
             }
         }
         "fail with resetting if startup flag is not set" in {
+            StartupFlags.allowResetTriplestoreContentOperation send false
             Post("/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList)) ~> storePath ~> check {
-                assert(status === StatusCodes.Unauthorized)
+                log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.Forbidden)
 
             }
         }
