@@ -47,7 +47,7 @@ class StoreResponderV1 extends ResponderV1 {
         //log.debug(s"resetTriplestoreContent called with: ${rdfDataObjects.toString}")
         //log.debug(s"StartupFlags.allowResetTriplestoreContentOperation = ${StartupFlags.allowResetTriplestoreContentOperation.get}")
 
-        if (!StartupFlags.allowResetTriplestoreContentOperation.get) {
+        if (!StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get) {
             Future(throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?"))
         } else {
             val future = storeManager ? ResetTriplestoreContent(rdfDataObjects)

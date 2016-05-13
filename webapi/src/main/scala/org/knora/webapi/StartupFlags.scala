@@ -23,6 +23,6 @@ import akka.agent.Agent
   * Holds flags that are passed to the 'webapi' server at startup
   */
 object StartupFlags {
-    val allowResetTriplestoreContentOperation = Agent(false)
+    val allowResetTriplestoreContentOperationOverHTTP = Agent(false)
     val loadDemoData = Agent(false)
 }

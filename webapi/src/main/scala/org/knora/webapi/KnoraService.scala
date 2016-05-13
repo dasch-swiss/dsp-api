@@ -89,6 +89,11 @@ object KnoraService {
             println("... loading of demo data finished!")
         }
 
+        if (StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get) {
+            println("WARNING: Resetting Triplestore Content over HTTP is turned ON!")
+        }
+
+
         IO(Http) ! Http.Bind(knoraHttpServiceManager, settings.httpInterface, port = settings.httpPort)
         println(s"Knora Webapi started! You can access it on http://${settings.httpInterface}:${settings.httpPort}.")
     }

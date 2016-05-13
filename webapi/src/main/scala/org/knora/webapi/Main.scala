@@ -31,7 +31,7 @@ object Main extends App {
     val arglist = args.toList
 
     if (arglist.contains("loadDemoData")) StartupFlags.loadDemoData send true
-    if (arglist.contains("allowResetTriplestore")) StartupFlags.allowResetTriplestoreContentOperation send true
+    if (arglist.contains("allowResetTriplestoreContentOperationOverHTTP")) StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
 
     KnoraService.start
 
