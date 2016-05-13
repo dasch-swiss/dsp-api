@@ -1,0 +1,61 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Given the IRI of a resource, gets the regions that point to this resource.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param resourceIri the IRI of the resource.
+ *@
+ @(triplestore: String,
+   resourceIri: IRI)
+
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?region (GROUP_CONCAT(DISTINCT(?regionObjectPermissionAssertion); separator=";") AS ?regionObjectPermissionAssertions) ?owner ?project
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
+WHERE {
+
+    BIND(IRI("@resourceIri") as ?resource)
+
+    ?region knora-base:isRegionOf ?resource .
+
+    ?region a knora-base:Region .
+
+    ?permission rdfs:subPropertyOf+ knora-base:hasPermission .
+    ?region ?permission ?regionObjectPermissionGroup .
+    BIND(CONCAT(STR(?permission), ",", STR(?regionObjectPermissionGroup)) as ?regionObjectPermissionAssertion)
+
+    ?region knora-base:attachedToUser ?owner .
+
+    ?region knora-base:attachedToProject ?project .
+
+}
+
+GROUP BY
+    ?region
+    ?owner
+    ?project
