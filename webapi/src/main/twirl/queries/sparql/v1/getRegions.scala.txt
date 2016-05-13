@@ -40,10 +40,16 @@ SELECT ?region (GROUP_CONCAT(DISTINCT(?regionObjectPermissionAssertion); separat
 WHERE {
 
     BIND(IRI("@resourceIri") as ?resource)
+    ?resource knora-base:isDeleted false .
 
-    ?region knora-base:isRegionOf ?resource .
 
-    ?region a knora-base:Region .
+    ?linkingProp rdfs:subPropertyOf* knora-base:isRegionOf .
+    ?region ?linkingProp ?resource .
+
+    ?region knora-base:isDeleted false .
+
+    ?region a ?resclass .
+    ?resclass rdfs:subClassOf* knora-base:Region .
 
     ?permission rdfs:subPropertyOf+ knora-base:hasPermission .
     ?region ?permission ?regionObjectPermissionGroup .
