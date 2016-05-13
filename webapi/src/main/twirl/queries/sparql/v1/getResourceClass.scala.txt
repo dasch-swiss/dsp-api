@@ -21,7 +21,7 @@
 @import org.knora.webapi.IRI
 
 @**
- * Given the IRI of a resource, gets the regions that point to this resource.
+ * Gets the resource class of the specified resource Iri.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.
@@ -29,11 +29,9 @@
  @(triplestore: String,
    resourceIri: IRI)
 
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT ?region ?resclass (GROUP_CONCAT(DISTINCT(?regionObjectPermissionAssertion); separator=";") AS ?regionObjectPermissionAssertions) ?owner ?project
+SELECT ?resourceClass
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -41,29 +39,7 @@ SELECT ?region ?resclass (GROUP_CONCAT(DISTINCT(?regionObjectPermissionAssertion
 WHERE {
 
     BIND(IRI("@resourceIri") as ?resource)
-    ?resource knora-base:isDeleted false .
-
-
-    ?linkingProp rdfs:subPropertyOf* knora-base:isRegionOf .
-    ?region ?linkingProp ?resource .
-
-    ?region knora-base:isDeleted false .
-
-    ?region a ?resclass .
-    ?resclass rdfs:subClassOf* knora-base:Region .
-
-    ?permission rdfs:subPropertyOf+ knora-base:hasPermission .
-    ?region ?permission ?regionObjectPermissionGroup .
-    BIND(CONCAT(STR(?permission), ",", STR(?regionObjectPermissionGroup)) as ?regionObjectPermissionAssertion)
-
-    ?region knora-base:attachedToUser ?owner .
-
-    ?region knora-base:attachedToProject ?project .
+    ?resource a ?resourceClass .
 
 }
 
-GROUP BY
-    ?region
-    ?resclass
-    ?owner
-    ?project

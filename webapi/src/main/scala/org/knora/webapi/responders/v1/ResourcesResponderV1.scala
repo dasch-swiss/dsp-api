@@ -823,7 +823,9 @@ class ResourcesResponderV1 extends ResponderV1 {
             }.map {
                 regionRow =>
                     // get the properties for each region
-                    getResourceProperties(resourceIri = regionRow.rowMap("region"), maybeResourceTypeIri = None, userProfile = userProfile)
+                    getResourceProperties(resourceIri = regionRow.rowMap("region"), Some(regionRow.rowMap("resclass")), userProfile = userProfile)
+                    // TODO: add ontology information to props like label, value_type etc.
+
             }
 
             // turn sequenced Futures into one Future of a sequence
@@ -1362,7 +1364,15 @@ class ResourcesResponderV1 extends ResponderV1 {
 
         for {
 
-            properties: Seq[PropertyV1] <- getResourceProperties(resourceIri = resourceIri, maybeResourceTypeIri = None, userProfile = userProfile)
+            // get resource class of the specified resource
+            resclassSparqlQuery <- Future(queries.sparql.v1.txt.getResourceClass(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri
+            ).toString())
+            resclassQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resclassSparqlQuery)).mapTo[SparqlSelectResponse]
+            resclass = resclassQueryResponse.results.bindings.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"No resource class given for $resourceIri"))
+
+            properties: Seq[PropertyV1] <- getResourceProperties(resourceIri = resourceIri, maybeResourceTypeIri = Some(resclass.rowMap("resourceClass")), userProfile = userProfile)
 
             // TODO: refactor PropertiesGetResponseV1 and convert PropertyV1 into the new structure (https://github.com/dhlab-basel/Knora/issues/134#issue-154443186)
 
