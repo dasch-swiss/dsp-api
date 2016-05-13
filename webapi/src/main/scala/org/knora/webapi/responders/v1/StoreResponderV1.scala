@@ -45,8 +45,7 @@ class StoreResponderV1 extends ResponderV1 {
     private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentResponseV1] = {
 
         //log.debug(s"resetTriplestoreContent called with: ${rdfDataObjects.toString}")
-        //log.debug(s"StartupFlags.allowResetTriplestoreContentOperation = ${StartupFlags.allowResetTriplestoreContentOperation.get}")
-
+        log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
         if (!StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get) {
             Future(throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?"))
         } else {

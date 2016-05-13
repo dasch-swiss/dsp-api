@@ -30,6 +30,7 @@ import spray.http.MediaTypes._
 import spray.http._
 import spray.httpx.RequestBuilding
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
@@ -91,7 +92,11 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
 
     "The ResetTriplestoreContent Route ('v1/store/ResetTriplestoreContent')" should {
         "succeed with resetting if startup flag is set" in {
+            println("=>>")
             StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
+            println("=>>" + Await.result(StartupFlags.allowResetTriplestoreContentOperationOverHTTP.future(), 5.seconds))
+            log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
+            println("=>>" + Await.result(StartupFlags.allowResetTriplestoreContentOperationOverHTTP.future(), 5.seconds))
             Post("/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList)) ~> storePath ~> check {
                 log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
@@ -99,6 +104,7 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
         }
         "fail with resetting if startup flag is not set" in {
             StartupFlags.allowResetTriplestoreContentOperationOverHTTP send false
+            log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
             Post("/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList)) ~> storePath ~> check {
                 log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.Forbidden)
