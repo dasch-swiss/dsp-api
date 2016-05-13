@@ -463,6 +463,23 @@ case class PropertyV1(pid: IRI,
                       locations: Seq[LocationV1] = Nil)
 
 
+case class PropertyGetV1(pid: IRI,
+                         label: Option[String] = None,
+                         valuetype_id: Option[IRI] = None,
+                         valuetype: Option[String],
+                         guielement: Option[String] = None,
+                         attributes: String = "",
+                         is_annotation: String = "0",
+                         values: Seq[PropertyGetValueV1])
+
+case class PropertyGetValueV1(person_id: Option[IRI] = None,
+                              comment: String,
+                              textval: String,
+                              value: ApiValueV1,
+                              id: IRI,
+                              lastmod: Option[String] = None,
+                              lastmod_utc: Option[String] = None)
+
 /**
   * Holds a list of [[PropertyV1]] objects representing the properties of a resource in
   * Knora API v1 format. In Knora API v1, we format these as a JSON object (a map of property IRIs to PropertyV1 objects)

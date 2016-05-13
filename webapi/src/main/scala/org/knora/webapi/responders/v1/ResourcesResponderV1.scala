@@ -1374,6 +1374,13 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             properties: Seq[PropertyV1] <- getResourceProperties(resourceIri = resourceIri, maybeResourceTypeIri = Some(resclass.rowMap("resourceClass")), userProfile = userProfile)
 
+            _ = properties.foreach {
+
+                prop =>
+                    println(ScalaPrettyPrinter.prettyPrint(convertPropertyV1toPropertyGetV1(prop)))
+
+            }
+
             // TODO: refactor PropertiesGetResponseV1 and convert PropertyV1 into the new structure (https://github.com/dhlab-basel/Knora/issues/134#issue-154443186)
 
         } yield PropertiesGetResponseV1(PropsV1(properties))
@@ -1788,6 +1795,28 @@ class ResourcesResponderV1 extends ResponderV1 {
         }.toVector.flatten
 
         valuePropertiesWithData ++ linkPropertiesWithData
+    }
+
+    private def convertPropertyV1toPropertyGetV1(propertyV1: PropertyV1) = {
+
+        val valueObjects: Seq[PropertyGetValueV1] = (propertyV1.value_ids, propertyV1.values, propertyV1.comments).zipped.map {
+            case (id: IRI, value: ApiValueV1, comment: String) =>
+                PropertyGetValueV1(id = id,
+                    value = value,
+                    textval = value.toString,
+                    comment = comment)
+        }
+
+        PropertyGetV1(
+            pid = propertyV1.pid,
+            label = propertyV1.label,
+            valuetype_id = propertyV1.valuetype_id,
+            valuetype = None,
+            guielement = propertyV1.guielement,
+            attributes = propertyV1.attributes,
+            is_annotation = propertyV1.is_annotation,
+            values = valueObjects
+        )
     }
 
     /**
