@@ -2621,14 +2621,14 @@ $(function() {
 				for (var reg in resinfo.regions) { // loop over all regions
 					region_id[reg] = resinfo.regions[reg].res_id;
 					figures[reg] = [];
-					for (var ff in resinfo.regions[reg]['salsah:geometry'].values) {
+					for (var ff in resinfo.regions[reg]['http://www.knora.org/ontology/knora-base#hasGeometry'].values) {
 						var fff;
-						figures[reg].push(JSON.parse(resinfo.regions[reg]['salsah:geometry'].values[ff].val));
+						figures[reg].push(JSON.parse(resinfo.regions[reg]['http://www.knora.org/ontology/knora-base#hasGeometry'].values[ff].value));
 						fff = figures[reg].length - 1; // the last index pushed a line obove...
 
 						figures[reg][fff].res_id = resinfo.regions[reg].res_id;
-						figures[reg][fff].lineColor = resinfo.regions[reg]['salsah:color'].values[0].val;
-						figures[reg][fff].val_id = resinfo.regions[reg]['salsah:geometry'].values[ff].id;
+						figures[reg][fff].lineColor = resinfo.regions[reg]['http://www.knora.org/ontology/knora-base#hasColor'].values[0].value;
+						figures[reg][fff].val_id = resinfo.regions[reg]['http://www.knora.org/ontology/knora-base#hasGeometry'].values[ff].id;
 					}
 				}
 			}
@@ -2642,7 +2642,7 @@ $(function() {
 				cont.append(
 					$('<div>', {'class': 'propedit regionheader metadata winid_' + winid + ' regnum_' + resinfo.regions[rr].res_id, 'data-reg_id': resinfo.regions[rr].res_id, 'data-reg_num': rr})
 					.append($('<img>', {src: SITE_URL + '/app/icons/collapse.png'}))
-					.append($('<span>').css({'background-color': resinfo.regions[rr]['salsah:color'].values[0].val}).append('REGION ' + rr + ' '))
+					.append($('<span>').css({'background-color': resinfo.regions[rr]['http://www.knora.org/ontology/knora-base#hasColor'].values[0].value}).append('REGION ' + rr + ' '))
 					.append($('<img>', {src: resinfo.regions[rr].iconsrc}).dragndrop('makeDraggable', 'RESID', {resid: resinfo.regions[rr].res_id}))
 				);
 				cont.append(regmeta_area[rr] = $('<div>', {'class':'propedit section metadata winid_' + winid + ' regnum_' + resinfo.regions[rr].res_id}).append(tmpstr));
@@ -4207,7 +4207,7 @@ $(function() {
 					SALSAH.ApiGet('properties', res_id, function(data) {
 						if (data.status == ApiErrors.OK) {
 							// TODO: access data.properties['http://www.knora.org/ontology/knora-base#isRegionOf'].values[0].val (https://github.com/dhlab-basel/Knora/issues/134#issue-154443186)
-							SALSAH.ApiGet('resources', data.properties['http://www.knora.org/ontology/knora-base#isRegionOf'].values[0], {resinfo: true, reqtype: 'context'}, function(data) {
+							SALSAH.ApiGet('resources', data.properties['http://www.knora.org/ontology/knora-base#isRegionOf'].values[0].value, {resinfo: true, reqtype: 'context'}, function(data) {
 								if (data.status == ApiErrors.OK) {
 									var context = data.resource_context;
 									create_viewer(context, true);

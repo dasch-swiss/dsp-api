@@ -602,11 +602,11 @@ class ResourcesResponderV1 extends ResponderV1 {
         /**
           * Represents a source object (e.g. a page of a book).
           *
-          * @param id IRI of the source Object.
-          * @param firstprop first property of the source object.
-          * @param seqnum sequence number of the source object.
+          * @param id          IRI of the source Object.
+          * @param firstprop   first property of the source object.
+          * @param seqnum      sequence number of the source object.
           * @param permissions the current user's permissions on the source object.
-          * @param fileValues the file values belonging to the source object.
+          * @param fileValues  the file values belonging to the source object.
           */
         case class SourceObject(id: IRI,
                                 firstprop: Option[String],
@@ -617,13 +617,13 @@ class ResourcesResponderV1 extends ResponderV1 {
         /**
           * Represents a still image file value belonging to a source object (e.g., an image representation of a page).
           *
-          * @param id the file value IRI
+          * @param id          the file value IRI
           * @param permissions the current user's permissions on the file value.
-          * @param image a [[StillImageFileValueV1]]
+          * @param image       a [[StillImageFileValueV1]]
           */
         case class StillImageFileValue(id: IRI,
-                             permissions: Option[Int],
-                             image: StillImageFileValueV1)
+                                       permissions: Option[Int],
+                                       image: StillImageFileValueV1)
 
 
         /**
@@ -793,7 +793,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                             )
                     }
 
-                    //_ = println(ScalaPrettyPrinter.prettyPrint(contextItems))
+                //_ = println(ScalaPrettyPrinter.prettyPrint(contextItems))
 
 
                 } yield contextItems
@@ -813,7 +813,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             regionQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(regionSparqlQuery)).mapTo[SparqlSelectResponse]
             regionRows = regionQueryResponse.results.bindings
 
-            regionPropertiesSequencedFutures: Seq[Future[Seq[PropertyV1]]] = regionRows.filter {
+            regionPropertiesSequencedFutures: Seq[Future[PropsGetForRegionV1]] = regionRows.filter {
                 regionRow =>
                     val permissionsForRegion = PermissionUtilV1.parsePermissions(regionRow.rowMap("regionObjectPermissionAssertions"), regionRow.rowMap("owner"), regionRow.rowMap("project"))
                     val sourceObjectPermissions = PermissionUtilV1.getUserPermissionV1(resourceIri, permissionsForRegion, userProfile)
@@ -822,20 +822,48 @@ class ResourcesResponderV1 extends ResponderV1 {
                     sourceObjectPermissions.nonEmpty
             }.map {
                 regionRow =>
+
+                    val regionIri = regionRow.rowMap("region")
+                    val resClass = regionRow.rowMap("resclass") // possibly we deal with a subclass of knora-base:Region
+
                     // get the properties for each region
-                    getResourceProperties(resourceIri = regionRow.rowMap("region"), Some(regionRow.rowMap("resclass")), userProfile = userProfile)
-                    // TODO: add ontology information to props like label, value_type etc.
+                    for {
+                        propsV1: Seq[PropertyV1] <- getResourceProperties(resourceIri = regionIri, Some(resClass), userProfile = userProfile)
+
+                        propsGetV1 = propsV1.map {
+                            // convert each PropertyV1 in a PropertyGetV1
+                            (propV1: PropertyV1) => convertPropertyV1toPropertyGetV1(propV1)
+                        }
+
+                        // get the icon for this region's resource class
+                        entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+                            resourceClassIris = Set(resClass),
+                            userProfile = userProfile
+                        )).mapTo[EntityInfoGetResponseV1]
+
+                        regionInfo: ResourceEntityInfoV1 = entityInfoResponse.resourceEntityInfoMap(resClass)
+
+                        resClassIcon: Option[String] = regionInfo.predicates.get(OntologyConstants.KnoraBase.ResourceIcon) match {
+                            case Some(predicateInfo: PredicateInfoV1) =>
+                                Some(valueUtilV1.makeResourceClassIconURL(resClass, predicateInfo.objects.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"resourceClass $resClass has no value for ${OntologyConstants.KnoraBase.ResourceIcon}"))))
+                            case None => None
+                        }
+
+                    } yield PropsGetForRegionV1(
+                        properties = propsGetV1,
+                        res_id = regionIri,
+                        iconsrc = resClassIcon
+                    )
 
             }
 
             // turn sequenced Futures into one Future of a sequence
-            regionProperties: Seq[Seq[PropertyV1]] <- Future.sequence(regionPropertiesSequencedFutures)
+            regionProperties: Seq[PropsGetForRegionV1] <- Future.sequence(regionPropertiesSequencedFutures)
 
             resinfoV1WithRegionsOption: Option[ResourceInfoV1] = if (regionProperties.nonEmpty && resinfoV1Option.nonEmpty) {
                 // resinfo is not None and regions are given
                 Some(resinfoV1Option.get.copy(
-                    regions = Some(regionProperties.map((props) => PropsV1(props)))
-                ))
+                    regions = Some(regionProperties)))
             } else {
                 // resinfo is None or no regions are given
                 resinfoV1Option
@@ -1015,10 +1043,10 @@ class ResourcesResponderV1 extends ResponderV1 {
           * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `knora-base:objectClassConstraint` of
           * the property that is supposed to point to it.
           *
-          * @param propertyIri the IRI of the property.
+          * @param propertyIri                   the IRI of the property.
           * @param propertyObjectClassConstraint the IRI of the `knora-base:objectClassConstraint` of the property.
-          * @param updateValueV1 the value to be updated.
-          * @param userProfile   the profile of the user making the request.
+          * @param updateValueV1                 the value to be updated.
+          * @param userProfile                   the profile of the user making the request.
           * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
           */
         def checkPropertyObjectClassConstraintForValue(propertyIri: IRI, propertyObjectClassConstraint: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {
@@ -1338,9 +1366,6 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @return a tuple (permission, [[ResourceInfoV1]]) describing the resource.
       */
     private def getResourceInfoV1(resourceIri: IRI, userProfile: UserProfileV1, queryOntology: Boolean): Future[(Option[Int], ResourceInfoV1)] = {
-        // TODO: check if there are regions pointing to the queried resource (isRegionOf)
-        // TODO: this should be optional (only do it when required) -> it will be only used for a reqtype=context query with resinfo=true
-        // https://github.com/dhlab-basel/Knora/issues/116
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getResourceInfo(
                 triplestore = settings.triplestoreType,
@@ -1364,7 +1389,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
         for {
 
-            // get resource class of the specified resource
+        // get resource class of the specified resource
             resclassSparqlQuery <- Future(queries.sparql.v1.txt.getResourceClass(
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri
@@ -1374,16 +1399,14 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             properties: Seq[PropertyV1] <- getResourceProperties(resourceIri = resourceIri, maybeResourceTypeIri = Some(resclass.rowMap("resourceClass")), userProfile = userProfile)
 
-            _ = properties.foreach {
+            propertiesGetV1: Seq[PropertyGetV1] = properties.map {
 
                 prop =>
-                    println(ScalaPrettyPrinter.prettyPrint(convertPropertyV1toPropertyGetV1(prop)))
+                    convertPropertyV1toPropertyGetV1(prop)
 
             }
 
-            // TODO: refactor PropertiesGetResponseV1 and convert PropertyV1 into the new structure (https://github.com/dhlab-basel/Knora/issues/134#issue-154443186)
-
-        } yield PropertiesGetResponseV1(PropsV1(properties))
+        } yield PropertiesGetResponseV1(PropsGetV1(propertiesGetV1))
 
     }
 
@@ -1598,7 +1621,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         def makePropertyV1(propertyIri: IRI, propertyCardinality: Option[Cardinality.Value], propertyEntityInfo: Option[PropertyEntityInfoV1], valueObjects: Seq[ValueObjectV1]): PropertyV1 = {
             PropertyV1(
                 pid = propertyIri,
-                valuetype_id = propertyEntityInfo.flatMap{
+                valuetype_id = propertyEntityInfo.flatMap {
                     row =>
                         if (row.isLinkProp) {
                             // it is a linking property
@@ -1797,21 +1820,33 @@ class ResourcesResponderV1 extends ResponderV1 {
         valuePropertiesWithData ++ linkPropertiesWithData
     }
 
-    private def convertPropertyV1toPropertyGetV1(propertyV1: PropertyV1) = {
+    private def convertPropertyV1toPropertyGetV1(propertyV1: PropertyV1): PropertyGetV1 = {
+
+        // TODO: try to unify this with MessageUtil's convertCreateValueResponseV1ToResourceCreateValueResponseV1
+        val textval = "textval"
+        val ival = "ival"
+        val fval = "fval"
+        val dateval = "dateval"
 
         val valueObjects: Seq[PropertyGetValueV1] = (propertyV1.value_ids, propertyV1.values, propertyV1.comments).zipped.map {
             case (id: IRI, value: ApiValueV1, comment: String) =>
                 PropertyGetValueV1(id = id,
                     value = value,
                     textval = value.toString,
-                    comment = comment)
+                    comment = comment) // TODO: person_id and lastmod are not handled yet. Probably these are never used by the GUI.
         }
 
         PropertyGetV1(
             pid = propertyV1.pid,
             label = propertyV1.label,
             valuetype_id = propertyV1.valuetype_id,
-            valuetype = None,
+            valuetype = propertyV1.valuetype_id match { // derive valuetype from valuetype_id
+                case Some(OntologyConstants.KnoraBase.IntValue) => Some(ival)
+                case Some(OntologyConstants.KnoraBase.FloatValue) => Some(fval)
+                case Some(OntologyConstants.KnoraBase.DateValue) => Some(dateval)
+                case Some(other: IRI) => Some(textval)
+                case None => None
+            },
             guielement = propertyV1.guielement,
             attributes = propertyV1.attributes,
             is_annotation = propertyV1.is_annotation,

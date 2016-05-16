@@ -252,7 +252,7 @@ case class PropertiesGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends 
   *
   * @param properties the properties of the specified resource.
   */
-case class PropertiesGetResponseV1(properties: PropsV1) extends KnoraResponseV1 {
+case class PropertiesGetResponseV1(properties: PropsGetV1) extends KnoraResponseV1 {
     def toJsValue = ResourceV1JsonProtocol.propertiesGetResponseV1Format.write(this)
 }
 
@@ -367,7 +367,7 @@ case class ResourceInfoV1(project_id: IRI,
                           lastmod: String = "0000-00-00 00:00:00",
                           value_of: Int = 0,
                           firstproperty: Option[String] = None,
-                          regions: Option[Seq[PropsV1]] = None)
+                          regions: Option[Seq[PropsGetForRegionV1]] = None)
 
 /**
   * Provides additional information about a Knora resource, in Knora API v1 JSON.
@@ -462,24 +462,6 @@ case class PropertyV1(pid: IRI,
                       value_rights: Seq[Option[Int]],
                       locations: Seq[LocationV1] = Nil)
 
-
-case class PropertyGetV1(pid: IRI,
-                         label: Option[String] = None,
-                         valuetype_id: Option[IRI] = None,
-                         valuetype: Option[String],
-                         guielement: Option[String] = None,
-                         attributes: String = "",
-                         is_annotation: String = "0",
-                         values: Seq[PropertyGetValueV1])
-
-case class PropertyGetValueV1(person_id: Option[IRI] = None,
-                              comment: String,
-                              textval: String,
-                              value: ApiValueV1,
-                              id: IRI,
-                              lastmod: Option[String] = None,
-                              lastmod_utc: Option[String] = None)
-
 /**
   * Holds a list of [[PropertyV1]] objects representing the properties of a resource in
   * Knora API v1 format. In Knora API v1, we format these as a JSON object (a map of property IRIs to PropertyV1 objects)
@@ -490,6 +472,66 @@ case class PropertyGetValueV1(person_id: Option[IRI] = None,
   * @param properties a list of [[PropertyV1]] objects.
   */
 case class PropsV1(properties: Seq[PropertyV1])
+
+/**
+  * Represents a property of a resource in the format as required for the properties route.
+  *
+  * @param pid           the IRI of the property.
+  * @param label         the `rdfs:label` of this property.
+  * @param valuetype_id  the IRI of the OWL class of the values of this property.
+  * @param valuetype     a string indicating the OWL class of the values of this property.
+  * @param guielement    the type of GUI element used to render this property.
+  * @param attributes    HTML attributes for the GUI element used to render this property.
+  * @param is_annotation obsolete, always 0.
+  * @param values        the property's literal values for this resource (may be an empty list).
+  */
+case class PropertyGetV1(pid: IRI,
+                         label: Option[String] = None,
+                         valuetype_id: Option[IRI] = None,
+                         valuetype: Option[String] = None,
+                         guielement: Option[String] = None,
+                         attributes: String = "",
+                         is_annotation: String = "0",
+                         values: Seq[PropertyGetValueV1])
+
+/**
+  * Represents the value of a property in the format as required for the properties route.
+  *
+  * @param person_id   the owner of the value.
+  * @param comment     any comment attached to the value.
+  * @param textval     the string representation of the value object.
+  * @param value       literal(s) representing this value object.
+  * @param id          the Iri of this value object.
+  * @param lastmod     the date of the last modification of this value.
+  * @param lastmod_utc the date of the last modification of this value as UTC.
+  *
+  */
+case class PropertyGetValueV1(person_id: Option[IRI] = None,
+                              comment: String,
+                              textval: String,
+                              value: ApiValueV1, // TODO: this is called 'val' in the old Salsah, but val is a keyword in scala
+                              id: IRI,
+                              lastmod: Option[String] = None,
+                              lastmod_utc: Option[String] = None)
+
+/**
+  * Holds a list of [[PropertyGetV1]] objects representing the properties of a resource in the format as requested
+  * by properties route (see [[ResourceV1JsonProtocol.PropsGetV1JsonFormat]]).
+  *
+  * @param properties a list of [[PropertyGetV1]] objects.
+  */
+case class PropsGetV1(properties: Seq[PropertyGetV1])
+
+/**
+  * Holds a list of [[PropertyGetV1]] objects representing the properties of a region in the format requested for the context query. If a resource
+  * is pointed to by regions, these are returned in the resource's context query (`resinfo.regions`). Additionally, the region's Iri and the icon of its resource class are given
+  * (see [[ResourceV1JsonProtocol.PropsGetForRegionV1JsonFormat]]).
+  *
+  * @param properties a list of [[PropertyGetV1]] objects.
+  * @param res_id     the region's Iri.
+  * @param iconsrc    the icon of the region's resource class.
+  */
+case class PropsGetForRegionV1(properties: Seq[PropertyGetV1], res_id: IRI, iconsrc: Option[String])
 
 /**
   * Represents information about one resource matching the criteria of a [[ResourceSearchGetRequestV1]]
@@ -647,6 +689,25 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
 
     implicit val locationFormat: JsonFormat[LocationV1] = jsonFormat8(LocationV1)
 
+
+    /**
+      * Converts an optional list to an [[Option]] containing a tuple of the list's name and [[JsValue]]. The
+      * [[Option]] will be a [[Some]] if the list is non-empty, or a [[None]] if the list is empty.
+      *
+      * @param name       the list's name.
+      * @param list       the list.
+      * @param jsValueFun a function that returns the list's [[JsValue]].
+      * @return either a [[Some]] containing the list's name and [[JsValue]], or a [[None]].
+      */
+    private def list2JsonOption(name: String, list: Seq[Any], jsValueFun: () => JsValue): Option[(String, JsValue)] = {
+        if (list.nonEmpty) {
+            // We need jsValueFun so spray-json will know the list's type at compile time.
+            Some(name -> jsValueFun())
+        } else {
+            None
+        }
+    }
+
     /**
       * Converts between [[PropsV1]] objects and [[JsValue]] objects.
       */
@@ -691,25 +752,83 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
 
             JsObject(properties)
         }
+    }
+
+    /**
+      * Converts between [[PropsGetV1]] objects and [[JsValue]] objects.
+      */
+    implicit object PropsGetV1JsonFormat extends JsonFormat[PropsGetV1] {
 
         /**
-          * Converts an optional list to an [[Option]] containing a tuple of the list's name and [[JsValue]]. The
-          * [[Option]] will be a [[Some]] if the list is non-empty, or a [[None]] if the list is empty.
-          *
-          * @param name       the list's name.
-          * @param list       the list.
-          * @param jsValueFun a function that returns the list's [[JsValue]].
-          * @return either a [[Some]] containing the list's name and [[JsValue]], or a [[None]].
+          * Not implemented.
           */
-        private def list2JsonOption(name: String, list: Seq[Any], jsValueFun: () => JsValue): Option[(String, JsValue)] = {
-            if (list.nonEmpty) {
-                // We need jsValueFun so spray-json will know the list's type at compile time.
-                Some(name -> jsValueFun())
-            } else {
-                None
-            }
+        def read(jsonVal: JsValue) = ???
+
+        /**
+          * Converts a [[PropsGetV1]] into a [[JsValue]].
+          *
+          * @param propsGetV1 the [[PropsGetV1]].
+          * @return a [[JsValue]].
+          */
+        def write(propsGetV1: PropsGetV1): JsValue = {
+            // Convert each PropertyGetV1 object into a JsObject.
+            val properties: Map[IRI, JsValue] = propsGetV1.properties.map {
+                (propertyGetV1: PropertyGetV1) =>
+                    val fields = Map(
+                        "pid" -> propertyGetV1.pid.toJson,
+                        "label" -> propertyGetV1.label.toJson,
+                        "valuetype_id" -> propertyGetV1.valuetype_id.toJson,
+                        "valuetype" -> propertyGetV1.valuetype.toJson,
+                        "guielement" -> propertyGetV1.guielement.toJson,
+                        "is_annotation" -> propertyGetV1.is_annotation.toJson,
+                        "attributes" -> propertyGetV1.attributes.toJson) ++
+                        // Don't generate JSON for these lists if they're empty.
+                        list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
+                    (propertyGetV1.pid, JsObject(fields))
+            }(breakOut)
+
+            JsObject(properties)
+        }
+
+    }
+
+    /**
+      * Converts between [[PropsGetForRegionV1]] objects and [[JsValue]] objects.
+      */
+    implicit object PropsGetForRegionV1JsonFormat extends JsonFormat[PropsGetForRegionV1] {
+
+        /**
+          * Not implemented.
+          */
+        def read(jsonVal: JsValue) = ???
+
+        /**
+          * Converts a [[PropsGetForRegionV1]] into a [[JsValue]].
+          *
+          * @param propsGetForRegionV1 the [[PropsGetForRegionV1]].
+          * @return a [[JsValue]].
+          */
+        def write(propsGetForRegionV1: PropsGetForRegionV1): JsValue = {
+            // Convert each PropertyGetV1 object into a JsObject.
+            val properties: Map[IRI, JsValue] = propsGetForRegionV1.properties.map {
+                (propertyGetV1: PropertyGetV1) =>
+                    val fields = Map(
+                        "pid" -> propertyGetV1.pid.toJson,
+                        "label" -> propertyGetV1.label.toJson,
+                        "valuetype_id" -> propertyGetV1.valuetype_id.toJson,
+                        "valuetype" -> propertyGetV1.valuetype.toJson,
+                        "guielement" -> propertyGetV1.guielement.toJson,
+                        "is_annotation" -> propertyGetV1.is_annotation.toJson,
+                        "attributes" -> propertyGetV1.attributes.toJson) ++
+                        // Don't generate JSON for these lists if they're empty.
+                        list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
+                    (propertyGetV1.pid, JsObject(fields))
+            }(breakOut)
+
+            JsObject(properties ++ Map("res_id" -> propsGetForRegionV1.res_id.toJson, "iconsrc" -> propsGetForRegionV1.iconsrc.toJson)) // add res_id and iconsrc to response
         }
     }
+
 
     /**
       * Converts between [[ResourceInfoV1]] objects and [[JsValue]] objects.
@@ -765,6 +884,7 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val externalResourceIDV1Format: JsonFormat[ExternalResourceIDV1] = jsonFormat2(ExternalResourceIDV1)
     implicit val incomingV1Format: JsonFormat[IncomingV1] = jsonFormat3(IncomingV1)
     implicit val resourceFullResponseV1Format: RootJsonFormat[ResourceFullResponseV1] = jsonFormat6(ResourceFullResponseV1)
+    implicit val propertiesGetValueV1Format: RootJsonFormat[PropertyGetValueV1] = jsonFormat7(PropertyGetValueV1)
     implicit val propertiesGetResponseV1Format: RootJsonFormat[PropertiesGetResponseV1] = jsonFormat1(PropertiesGetResponseV1)
     implicit val resourceRightsResponseV1Format: RootJsonFormat[ResourceRightsResponseV1] = jsonFormat2(ResourceRightsResponseV1)
     implicit val resourceSearchResultV1Format: RootJsonFormat[ResourceSearchResultRowV1] = jsonFormat3(ResourceSearchResultRowV1)
