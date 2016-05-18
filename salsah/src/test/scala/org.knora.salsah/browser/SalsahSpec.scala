@@ -23,7 +23,15 @@ package org.knora.salsah.browser
 import org.openqa.selenium.{By, WebElement}
 import org.scalatest._
 import org.scalatest.concurrent.Eventually._
+import spray.client.pipelining._
+import spray.http.MediaTypes._
+import spray.http._
+import akka.actor.ActorSystem
+import spray.http.{HttpRequest, HttpResponse}
+
+import scala.concurrent.{Await, Future}
 import scala.collection.JavaConversions._
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
@@ -43,9 +51,48 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
     // How long to wait for results obtained using the 'eventually' function
     implicit val patienceConfig = PatienceConfig(timeout = scaled(5.seconds), interval = scaled(20.millis))
 
+    implicit val system = ActorSystem()
+
+    implicit val dispatcher = system.dispatcher
+
     val page = new SalsahPage
 
+    val rdfDataObjectsJsonList =
+        """
+            [
+                {"path": "../knora-ontologies/knora-base.ttl", "name": "http://www.knora.org/ontology/knora-base"},
+                {"path": "../knora-ontologies/knora-dc.ttl", "name": "http://www.knora.org/ontology/dc"},
+                {"path": "../knora-ontologies/salsah-gui.ttl", "name": "http://www.knora.org/ontology/salsah-gui"},
+                {"path": "_test_data/ontologies/incunabula-onto.ttl", "name": "http://www.knora.org/ontology/incunabula"},
+                {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"}
+            ]
+        """
+
+
+
+
     "The SALSAH home page" should {
+        "load test data" in {
+            // define a pipeline function that gets turned into a generic [[HTTP Response]] (containing JSON)
+            val pipeline: HttpRequest => Future[HttpResponse] = (
+                addHeader("Accept", "application/json")
+                    ~> sendReceive
+                    ~> unmarshal[HttpResponse]
+                )
+
+            val loadRequest: HttpRequest = Post("http://localhost:3333/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList))
+
+            val loadRequestFuture: Future[HttpResponse] = for {
+                postRequest <- Future(loadRequest)
+                pipelineResult <- pipeline(postRequest)
+            } yield pipelineResult
+
+            val loadRequestResponse = Await.result(loadRequestFuture, Duration("10 seconds"))
+
+            assert(loadRequestResponse.status == StatusCodes.OK)
+        }
+
+
 
         "have the correct title" in {
             page.load()
@@ -64,7 +111,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             }
         }
 
-        "do a simple search for 'Zeitglöcklein' and open a search result row representing a page, and move it" in {
+        /*"do a simple search for 'Zeitglöcklein' and open a search result row representing a page, and move it" in {
 
             val searchField: WebElement = page.getSimpleSearchField
             searchField.clear()
@@ -98,7 +145,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.dragWindow(window, 90, 10)
 
-        }
+        }*/
 
         /*"edit the description of a page" in {
 
