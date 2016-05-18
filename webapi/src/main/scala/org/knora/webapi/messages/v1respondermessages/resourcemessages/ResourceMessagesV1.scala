@@ -31,6 +31,7 @@ import spray.httpx.SprayJsonSupport
 import spray.json._
 
 import scala.collection.breakOut
+import scala.collection.immutable.Iterable
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -797,10 +798,60 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
       */
     implicit object PropsGetForRegionV1JsonFormat extends JsonFormat[PropsGetForRegionV1] {
 
+        def getRequiredString(jsObj: JsObject, key: String): String = {
+            jsObj.fields.get(key) match {
+                case Some(JsString(str)) => str
+                case _ => throw InvalidApiJsonException(s"missing or invalid '$key'")
+            }
+        }
+
+        def getOptionalString(jsObj: JsObject, key: String): Option[String] = {
+            jsObj.fields.get(key) match {
+                case Some(JsString(str)) => Some(str)
+                case Some(JsNull) => None
+                case None => None
+                case _ => throw InvalidApiJsonException(s"'$key' must be a string")
+            }
+        }
+
         /**
-          * Not implemented.
+          * Converts a [[JsValue]] to a [[PropsGetForRegionV1]].
+          *
+          * @param jsonVal the [[JsValue]] to be converted.
+          * @return a [[PropsGetForRegionV1]].
           */
-        def read(jsonVal: JsValue) = ???
+        def read(jsonVal: JsValue) = {
+
+            val jsonObj = jsonVal.asJsObject
+
+            val properties: Map[String, JsValue] = jsonObj.fields - "res_id" - "iconsrc"
+
+            val propsConverted: Seq[PropertyGetV1] = properties.map {
+                case (propname: String, prop: JsValue) =>
+                    val propObj = prop.asJsObject
+
+                    PropertyGetV1(
+                        pid = getRequiredString(propObj, "pid"),
+
+                        label = getOptionalString(propObj, "label"),
+
+                        /*values = propObj.fields.get("values") match {
+                            case Some(JsArray(valuesVector)) => valuesVector.map(_.convertTo[PropertyGetValueV1])
+                            case _ => throw InvalidApiJsonException("missing or invalid 'values'")
+                        }*/
+
+                        // TODO: create an empty vector because for now we cannot recreate an ApiValueV1 from a JsValue since the read method
+                        // TODO: of ValueV1JsonFormat in ValueMessagesV1 cannot deduce its value type.
+                        values = Vector.empty[PropertyGetValueV1]
+                    )
+            }.toSeq
+
+            PropsGetForRegionV1(
+                res_id = getRequiredString(jsonObj, "res_id"),
+                iconsrc = getOptionalString(jsonObj, "iconsrc"),
+                properties = propsConverted
+            )
+        }
 
         /**
           * Converts a [[PropsGetForRegionV1]] into a [[JsValue]].
@@ -884,7 +935,7 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val externalResourceIDV1Format: JsonFormat[ExternalResourceIDV1] = jsonFormat2(ExternalResourceIDV1)
     implicit val incomingV1Format: JsonFormat[IncomingV1] = jsonFormat3(IncomingV1)
     implicit val resourceFullResponseV1Format: RootJsonFormat[ResourceFullResponseV1] = jsonFormat6(ResourceFullResponseV1)
-    implicit val propertiesGetValueV1Format: RootJsonFormat[PropertyGetValueV1] = jsonFormat7(PropertyGetValueV1)
+    implicit val propertiesGetValueV1Format: JsonFormat[PropertyGetValueV1] = jsonFormat7(PropertyGetValueV1)
     implicit val propertiesGetResponseV1Format: RootJsonFormat[PropertiesGetResponseV1] = jsonFormat1(PropertiesGetResponseV1)
     implicit val resourceRightsResponseV1Format: RootJsonFormat[ResourceRightsResponseV1] = jsonFormat2(ResourceRightsResponseV1)
     implicit val resourceSearchResultV1Format: RootJsonFormat[ResourceSearchResultRowV1] = jsonFormat3(ResourceSearchResultRowV1)
