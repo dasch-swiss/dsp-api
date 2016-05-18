@@ -270,13 +270,9 @@ class SalsahPage {
 
             val dayForm = dateForm.findElement(By.xpath(s"span[$index]/div[contains(@class,'daysel')]/table"))
 
-            val days = dayForm.findElements(By.tagName("td")).toList
+            dayForm.findElements(By.xpath("tbody/tr/td[normalize-space(.)!='']")).toList
 
-            // TODO: this seems to be very slow
-            days.filter(
-                (day: WebElement) => day.getText.nonEmpty
 
-            )
 
         }
     }
@@ -558,12 +554,8 @@ class SalsahPage {
 
             val dayForm = dateForm.findElement(By.xpath(s"//span[@class='propedit']/span[$index]/div[contains(@class,'daysel')]/table"))
 
-            val days = dayForm.findElements(By.tagName("td")).toList
+            dayForm.findElements(By.xpath("tbody/tr/td[normalize-space(.)!='']")).toList
 
-            days.filter(
-                (day: WebElement) => day.getText.nonEmpty
-
-            )
 
         }
     }

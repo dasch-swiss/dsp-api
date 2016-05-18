@@ -85,30 +85,6 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             }
         }
 
-        "do an extended search for restype region and open a region" in {
-
-            page.load()
-
-            page.clickExtendedSearchButton
-
-            page.selectExtendedSearchRestype("http://www.knora.org/ontology/knora-base#Region")
-
-            page.submitExtendedSearch
-
-            val rows = page.getExtendedSearchResultRows
-
-            rows(1).click()
-
-            val window = eventually {
-                page.getWindow(1)
-            }
-
-            // get metadata section
-            val metadataSection: WebElement = page.getMetadataSection(window)
-
-
-        }
-
 
         "do a simple search for 'Zeitglöcklein' and open a search result row representing a page" in {
 
@@ -177,6 +153,31 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             val rows = page.getExtendedSearchResultRows
 
             assert(rows.length == 2, "There should be two result rows")
+
+        }
+
+
+        "do an extended search for restype region and open a region" in {
+
+            page.load()
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/knora-base#Region")
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            rows(1).click()
+
+            val window = eventually {
+                page.getWindow(1)
+            }
+
+            // get metadata section
+            val metadataSection: WebElement = page.getMetadataSection(window)
+
 
         }
 
@@ -359,7 +360,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             val rows = page.getExtendedSearchResultRows
 
             // open page of a book
-            rows(0).click()
+            rows.head.click()
 
             val window = eventually {
                 page.getWindow(1)
