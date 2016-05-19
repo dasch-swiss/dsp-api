@@ -803,70 +803,78 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             resinfoV1Option: Option[ResourceInfoV1] <- resInfoV1Future
 
-            //
-            // check if there are regions pointing to this resource
-            //
-            regionSparqlQuery <- Future(queries.sparql.v1.txt.getRegions(
-                triplestore = settings.triplestoreType,
-                resourceIri = resourceIri
-            ).toString())
-            regionQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(regionSparqlQuery)).mapTo[SparqlSelectResponse]
-            regionRows = regionQueryResponse.results.bindings
+            resinfoV1WithRegionsOption: Option[ResourceInfoV1] <- if (resinfoV1Option.nonEmpty) {
 
-            regionPropertiesSequencedFutures: Seq[Future[PropsGetForRegionV1]] = regionRows.filter {
-                regionRow =>
-                    val permissionsForRegion = PermissionUtilV1.parsePermissions(regionRow.rowMap("regionObjectPermissionAssertions"), regionRow.rowMap("owner"), regionRow.rowMap("project"))
-                    val sourceObjectPermissions = PermissionUtilV1.getUserPermissionV1(resourceIri, permissionsForRegion, userProfile)
+                for {
+                    //
+                    // check if there are regions pointing to this resource
+                    //
+                    regionSparqlQuery <- Future(queries.sparql.v1.txt.getRegions(
+                        triplestore = settings.triplestoreType,
+                        resourceIri = resourceIri
+                    ).toString())
+                    regionQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(regionSparqlQuery)).mapTo[SparqlSelectResponse]
+                    regionRows = regionQueryResponse.results.bindings
 
-                    // ignore regions the user has no permissions on
-                    sourceObjectPermissions.nonEmpty
-            }.map {
-                regionRow =>
+                    regionPropertiesSequencedFutures: Seq[Future[PropsGetForRegionV1]] = regionRows.filter {
+                        regionRow =>
+                            val permissionsForRegion = PermissionUtilV1.parsePermissions(regionRow.rowMap("regionObjectPermissionAssertions"), regionRow.rowMap("owner"), regionRow.rowMap("project"))
+                            val sourceObjectPermissions = PermissionUtilV1.getUserPermissionV1(resourceIri, permissionsForRegion, userProfile)
 
-                    val regionIri = regionRow.rowMap("region")
-                    val resClass = regionRow.rowMap("resclass") // possibly we deal with a subclass of knora-base:Region
+                            // ignore regions the user has no permissions on
+                            sourceObjectPermissions.nonEmpty
+                    }.map {
+                        regionRow =>
 
-                    // get the properties for each region
-                    for {
-                        propsV1: Seq[PropertyV1] <- getResourceProperties(resourceIri = regionIri, Some(resClass), userProfile = userProfile)
+                            val regionIri = regionRow.rowMap("region")
+                            val resClass = regionRow.rowMap("resclass") // possibly we deal with a subclass of knora-base:Region
 
-                        propsGetV1 = propsV1.map {
-                            // convert each PropertyV1 in a PropertyGetV1
-                            (propV1: PropertyV1) => convertPropertyV1toPropertyGetV1(propV1)
-                        }
+                            // get the properties for each region
+                            for {
+                                propsV1: Seq[PropertyV1] <- getResourceProperties(resourceIri = regionIri, Some(resClass), userProfile = userProfile)
 
-                        // get the icon for this region's resource class
-                        entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-                            resourceClassIris = Set(resClass),
-                            userProfile = userProfile
-                        )).mapTo[EntityInfoGetResponseV1]
+                                propsGetV1 = propsV1.map {
+                                    // convert each PropertyV1 in a PropertyGetV1
+                                    (propV1: PropertyV1) => convertPropertyV1toPropertyGetV1(propV1)
+                                }
 
-                        regionInfo: ResourceEntityInfoV1 = entityInfoResponse.resourceEntityInfoMap(resClass)
+                                // get the icon for this region's resource class
+                                entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+                                    resourceClassIris = Set(resClass),
+                                    userProfile = userProfile
+                                )).mapTo[EntityInfoGetResponseV1]
 
-                        resClassIcon: Option[String] = regionInfo.predicates.get(OntologyConstants.KnoraBase.ResourceIcon) match {
-                            case Some(predicateInfo: PredicateInfoV1) =>
-                                Some(valueUtilV1.makeResourceClassIconURL(resClass, predicateInfo.objects.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"resourceClass $resClass has no value for ${OntologyConstants.KnoraBase.ResourceIcon}"))))
-                            case None => None
-                        }
+                                regionInfo: ResourceEntityInfoV1 = entityInfoResponse.resourceEntityInfoMap(resClass)
 
-                    } yield PropsGetForRegionV1(
-                        properties = propsGetV1,
-                        res_id = regionIri,
-                        iconsrc = resClassIcon
-                    )
+                                resClassIcon: Option[String] = regionInfo.predicates.get(OntologyConstants.KnoraBase.ResourceIcon) match {
+                                    case Some(predicateInfo: PredicateInfoV1) =>
+                                        Some(valueUtilV1.makeResourceClassIconURL(resClass, predicateInfo.objects.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"resourceClass $resClass has no value for ${OntologyConstants.KnoraBase.ResourceIcon}"))))
+                                    case None => None
+                                }
 
-            }
+                            } yield PropsGetForRegionV1(
+                                properties = propsGetV1,
+                                res_id = regionIri,
+                                iconsrc = resClassIcon
+                            )
 
-            // turn sequenced Futures into one Future of a sequence
-            regionProperties: Seq[PropsGetForRegionV1] <- Future.sequence(regionPropertiesSequencedFutures)
+                    }
 
-            resinfoV1WithRegionsOption: Option[ResourceInfoV1] = if (regionProperties.nonEmpty && resinfoV1Option.nonEmpty) {
-                // resinfo is not None and regions are given
-                Some(resinfoV1Option.get.copy(
-                    regions = Some(regionProperties)))
+                    // turn sequenced Futures into one Future of a sequence
+                    regionProperties: Seq[PropsGetForRegionV1] <- Future.sequence(regionPropertiesSequencedFutures)
+
+                    resInfo: Option[ResourceInfoV1] = if (regionProperties.nonEmpty) {
+                        // regions are given, append them to resinfo
+                        Some(resinfoV1Option.get.copy(
+                            regions = Some(regionProperties)))
+                    } else {
+                        // no regions given, just return resinfo
+                        resinfoV1Option
+                    }
+                } yield resInfo
             } else {
-                // resinfo is None or no regions are given
-                resinfoV1Option
+                // resinfo is not requested
+                Future(resinfoV1Option)
             }
 
             resourceContextV1 = parentResourceIriOption match {
@@ -1822,12 +1830,6 @@ class ResourcesResponderV1 extends ResponderV1 {
 
     private def convertPropertyV1toPropertyGetV1(propertyV1: PropertyV1): PropertyGetV1 = {
 
-        // TODO: try to unify this with MessageUtil's convertCreateValueResponseV1ToResourceCreateValueResponseV1
-        val textval = "textval"
-        val ival = "ival"
-        val fval = "fval"
-        val dateval = "dateval"
-
         val valueObjects: Seq[PropertyGetValueV1] = (propertyV1.value_ids, propertyV1.values, propertyV1.comments).zipped.map {
             case (id: IRI, value: ApiValueV1, comment: String) =>
                 PropertyGetValueV1(id = id,
@@ -1836,15 +1838,17 @@ class ResourcesResponderV1 extends ResponderV1 {
                     comment = comment) // TODO: person_id and lastmod are not handled yet. Probably these are never used by the GUI.
         }
 
+        // TODO: try to unify this with MessageUtil's convertCreateValueResponseV1ToResourceCreateValueResponseV1
         PropertyGetV1(
             pid = propertyV1.pid,
             label = propertyV1.label,
             valuetype_id = propertyV1.valuetype_id,
-            valuetype = propertyV1.valuetype_id match { // derive valuetype from valuetype_id
-                case Some(OntologyConstants.KnoraBase.IntValue) => Some(ival)
-                case Some(OntologyConstants.KnoraBase.FloatValue) => Some(fval)
-                case Some(OntologyConstants.KnoraBase.DateValue) => Some(dateval)
-                case Some(other: IRI) => Some(textval)
+            valuetype = propertyV1.valuetype_id match {
+                // derive valuetype from valuetype_id
+                case Some(OntologyConstants.KnoraBase.IntValue) => Some("ival")
+                case Some(OntologyConstants.KnoraBase.FloatValue) => Some("fval")
+                case Some(OntologyConstants.KnoraBase.DateValue) => Some("dateval")
+                case Some(other: IRI) => Some("textval")
                 case None => None
             },
             guielement = propertyV1.guielement,

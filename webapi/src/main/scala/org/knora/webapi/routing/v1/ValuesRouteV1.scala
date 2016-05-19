@@ -171,7 +171,6 @@ object ValuesRouteV1 extends Authenticator {
 
             case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, Some(hlistValue), comment) =>
                 val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given Iri ${hlistValue} is not a valid Knora IRI"))
-                println(listNodeIri)
                 (HierarchicalListValueV1(listNodeIri), comment)
 
             case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, Some(comment)) =>
