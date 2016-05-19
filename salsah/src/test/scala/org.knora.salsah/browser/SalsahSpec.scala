@@ -28,6 +28,8 @@ import spray.http.MediaTypes._
 import spray.http._
 import akka.actor.ActorSystem
 import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
+import org.knora.salsah.{Settings, SettingsImpl}
 import spray.http.{HttpRequest, HttpResponse}
 
 import scala.concurrent.{Await, Future}
@@ -57,6 +59,10 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
     implicit val system = ActorSystem()
 
     implicit val dispatcher = system.dispatcher
+
+    val settings = new SettingsImpl(ConfigFactory.load())
+
+    println(s"Base Knora URL from settings: ${settings.baseKNORAUrl}")
 
     val page = new SalsahPage
 

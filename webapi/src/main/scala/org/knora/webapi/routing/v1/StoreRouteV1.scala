@@ -44,7 +44,7 @@ object StoreRouteV1 extends Authenticator {
 
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
-        implicit val timeout = Timeout(30.seconds)
+        implicit val timeout = Timeout(300.seconds)
         val responderManager = system.actorSelection("/user/responderManager")
 
         path("v1" / "store") {
