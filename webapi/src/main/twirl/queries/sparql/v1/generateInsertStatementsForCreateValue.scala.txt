@@ -152,6 +152,13 @@
                 ?newValue@valueIndex knora-base:valueHasString """@stillImageFileValue.toString""" .
             }
 
+            case listValue: HierarchicalListValueV1 => {
+
+                ?newValue knora-base:valueHasListNode <@listValue.hierarchicalListIri> .
+                ?newValue knora-base:valueHasString """@listValue.toString""" .
+
+            }
+
             case other => {
                 @{throw SparqlGenerationException(s"Value object $other is not supported in this SPARQL template"); ()}
             }
