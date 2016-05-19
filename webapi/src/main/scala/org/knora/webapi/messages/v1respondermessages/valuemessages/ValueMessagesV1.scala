@@ -59,6 +59,7 @@ case class CreateValueApiRequestV1(project_id: IRI,
                                    color_value: Option[String] = None,
                                    geom_value: Option[String] = None,
                                    link_value: Option[IRI] = None,
+                                   hlist_value: Option[IRI] = None,
                                    comment: Option[String] = None)
 
 /**
@@ -127,6 +128,7 @@ case class ChangeValueApiRequestV1(project_id: IRI,
                                    color_value: Option[String] = None,
                                    geom_value: Option[String] = None,
                                    link_value: Option[IRI] = None,
+                                   hlist_value: Option[IRI] = None,
                                    comment: Option[String] = None)
 
 /**
@@ -727,11 +729,45 @@ case class LinkUpdateV1(targetResourceIri: IRI) extends UpdateValueV1 {
   *
   * @param hierarchicalListIri the IRI of the hierarchical list.
   */
-case class HierarchicalListValueV1(hierarchicalListIri: IRI) extends ApiValueV1 {
+case class HierarchicalListValueV1(hierarchicalListIri: IRI) extends UpdateValueV1 with ApiValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.ListValue
 
     def toJsValue = JsString(hierarchicalListIri)
+
+    override def toString = {
+        // TODO: implement this correctly
+
+        // the string representation is the rdfs:label of the list node
+
+        hierarchicalListIri
+    }
+
+    /**
+      * Checks if a new list value would equal an existing list value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case listValueV1: HierarchicalListValueV1 => listValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of this list value would equal the existing version of this list value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case listValueV1: HierarchicalListValueV1 => listValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
 }
 
 /**
@@ -1280,9 +1316,9 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
     implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat2(ValueVersionHistoryGetResponseV1)
     implicit val createRichtextV1Format: RootJsonFormat[CreateRichtextV1] = jsonFormat3(CreateRichtextV1)
-    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat11(CreateValueApiRequestV1)
+    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat12(CreateValueApiRequestV1)
     implicit val createValueResponseV1Format: RootJsonFormat[CreateValueResponseV1] = jsonFormat5(CreateValueResponseV1)
-    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat9(ChangeValueApiRequestV1)
+    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat10(ChangeValueApiRequestV1)
     implicit val changeValueResponseV1Format: RootJsonFormat[ChangeValueResponseV1] = jsonFormat5(ChangeValueResponseV1)
     implicit val deleteValueResponseV1Format: RootJsonFormat[DeleteValueResponseV1] = jsonFormat2(DeleteValueResponseV1)
     implicit val changeFileValueApiRequestV1Format: RootJsonFormat[ChangeFileValueApiRequestV1] = jsonFormat1(ChangeFileValueApiRequestV1)

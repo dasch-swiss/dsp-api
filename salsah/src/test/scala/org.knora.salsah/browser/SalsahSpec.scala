@@ -23,7 +23,7 @@ package org.knora.salsah.browser
 import org.openqa.selenium.{By, WebElement}
 import org.scalatest._
 import org.scalatest.concurrent.Eventually._
-import scala.collection.JavaConversions._
+
 import scala.concurrent.duration._
 
 /**
@@ -40,10 +40,29 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
      */
 
-    // How long to wait for results obtained using the 'eventually' function
-    implicit val patienceConfig = PatienceConfig(timeout = scaled(5.seconds), interval = scaled(20.millis))
-
     val page = new SalsahPage
+
+    // How long to wait for results obtained using the 'eventually' function
+    implicit val patienceConfig = page.patienceConfig
+
+
+    def doZeitgloeckleinSearch = {
+
+        val searchField: WebElement = page.getSimpleSearchField
+        searchField.clear()
+        searchField.sendKeys("Zeitglöcklein\n")
+
+        val header = page.getSearchResultHeader
+
+        assert(header.contains("Total of 3 hits"))
+
+        val rows = page.getExtendedSearchResultRows
+
+        val row1Text = page.getSearchResultRowText(rows(0))
+
+        assert(row1Text.contains("Zeitglöcklein des Lebens und Leidens Christi"))
+
+    }
 
     "The SALSAH home page" should {
 
@@ -55,6 +74,8 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
         "log in as root" in {
 
+            page.load
+
             page.doLogin("root", "test")
 
             eventually {
@@ -64,33 +85,38 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             }
         }
 
-        "do a simple search for 'Zeitglöcklein' and open a search result row representing a page, and move it" in {
 
-            val searchField: WebElement = page.getSimpleSearchField
-            searchField.clear()
-            searchField.sendKeys("Zeitglöcklein\n")
+        "do a simple search for 'Zeitglöcklein' and open a search result row representing a page" in {
 
-            // Use 'eventually' to test results that may take time to appear.
-            val resultDiv: WebElement = eventually {
-                page.getSearchResultDiv
+            page.load()
+
+            doZeitgloeckleinSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            // open the second row representing a page
+            rows(1).click()
+
+            val window = eventually {
+                page.getWindow(1)
             }
 
-            val resultHeader: String = eventually {
-                page.getSearchResultHeader(resultDiv)
-            }
+            // drag and drop the window
+            page.dragWindow(window, 90, 10)
 
-            assert(resultHeader.contains("Total of 3 hits"))
 
-            val firstResult: String = eventually {
-                page.getFirstSearchResult(resultDiv)
-            }
+        }
 
-            assert(firstResult.contains("Zeitglöcklein des Lebens und Leidens Christi"))
+        "do a simple search for 'Zeitglöcklein' and open a search result row representing a book" in {
 
-            eventually {
-                // open second element in list
-                page.openResult(resultDiv, 1)
-            }
+            page.load()
+
+            doZeitgloeckleinSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            // open the first search result representing a book
+            rows(0).click()
 
             val window = eventually {
                 page.getWindow(1)
@@ -98,9 +124,420 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.dragWindow(window, 90, 10)
 
+            // click next page twice
+            for (i <- 1 to 2) {
+                eventually {
+                    window.findElement(By.xpath("//div[@class='nextImage']")).click()
+                }
+
+            }
+
         }
 
-        /*"edit the description of a page" in {
+        "do an extended search for restype book containing 'Zeitglöcklein in the title'" in {
+
+            page.load()
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#book")
+
+            page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#title")
+
+            page.getExtendedSearchSelectionByName(1, "compop").selectByValue("LIKE")
+
+            page.getValueField(1).sendKeys("Zeitglöcklein")
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            assert(rows.length == 2, "There should be two result rows")
+
+        }
+
+
+        "do an extended search for restype region and open a region" in {
+
+            page.load()
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/knora-base#Region")
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            rows(1).click()
+
+            val window = eventually {
+                page.getWindow(1)
+            }
+
+            // get metadata section
+            val metadataSection: WebElement = page.getMetadataSection(window)
+
+
+        }
+
+        "do an extended search for restype page with seqnum 1 belonging to a book containing 'Narrenschiff' in its title" in {
+
+            page.load
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#page")
+
+            page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#seqnum")
+
+            page.getExtendedSearchSelectionByName(1, "compop").selectByValue("EQ")
+
+            page.getValueField(1).sendKeys("1")
+
+            page.addPropertySetToExtendedSearch(2)
+
+            page.getExtendedSearchSelectionByName(2, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#partOf")
+
+            page.getExtendedSearchSelectionByName(2, "compop").selectByValue("EQ")
+
+            page.getValueField(2).sendKeys("Narrenschiff")
+
+            page.chooseElementFromSearchbox(1)
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            assert(rows.length == 1, "There should be one result row")
+
+        }
+
+        "do an extended search for images:bild involving a hierarchical list selection for its title" in {
+
+            page.load
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/images#bild")
+
+            page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/images#titel")
+
+            var selections = page.getHierarchicalListSelections(1)
+
+            val firstSel = selections(0)
+
+            firstSel.selectByValue("http://data.knora.org/lists/71a1543cce")
+
+            // refresh the selection
+            selections = page.getHierarchicalListSelections(1)
+
+            val secondSel = selections(1)
+
+            secondSel.selectByValue("http://data.knora.org/lists/d1fa87bbe3")
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            assert(rows.length == 5, "There should be five result rows")
+
+        }
+
+        "do an extended search for a book with the exact publication date Julian 1497-08-01" in {
+            page.load
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#book")
+
+            page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#pubdate")
+
+            page.getExtendedSearchSelectionByName(1, "compop").selectByValue("EQ")
+
+            val dateForm = page.getDateFormInExtendedSearchForm(1)
+
+            val calsel = page.getCalSelection(dateForm)
+
+            calsel.selectByValue("JULIAN")
+
+            val monthsel = page.getMonthSelectionInExtendedSearchForm(dateForm)
+
+            monthsel.selectByValue("8")
+
+            val days = page.getDaysInExtendedSearchForm(dateForm = dateForm)
+
+            days(0).click()
+
+            val yearsel = page.getYearFieldInExtendedSearchForm(dateForm)
+
+            yearsel.clear
+            yearsel.sendKeys("1497")
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            assert(rows.length == 2, "There should be two result rows")
+
+
+        }
+
+        "do an extended search for a book with the period Julian 1495 as publication date" in {
+
+            page.load
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#book")
+
+            page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#pubdate")
+
+            page.getExtendedSearchSelectionByName(1, "compop").selectByValue("EQ")
+
+            val dateForm = page.getDateFormInExtendedSearchForm(1)
+
+            page.makePeriod(dateForm)
+
+            val calsel = page.getCalSelection(dateForm)
+
+            calsel.selectByValue("JULIAN")
+
+            //
+            // start date
+            //
+            val monthsel1 = page.getMonthSelectionInExtendedSearchForm(dateForm, 1)
+
+            // choose January
+            monthsel1.selectByValue("1")
+
+            val days1 = page.getDaysInExtendedSearchForm(dateForm, 1)
+
+            // choose the first day of the month
+            days1(0).click()
+
+            val yearsel1 = page.getYearFieldInExtendedSearchForm(dateForm, 1)
+
+            yearsel1.clear
+            yearsel1.sendKeys("1495")
+
+
+            //
+            // end date
+            //
+            val monthsel2 = page.getMonthSelectionInExtendedSearchForm(dateForm, 2)
+
+            monthsel2.selectByValue("12")
+
+            val days2 = page.getDaysInExtendedSearchForm(dateForm, 2)
+
+            // choose the last day of the month (31st)
+            days2(30).click()
+
+            val yearsel2 = page.getYearFieldInExtendedSearchForm(dateForm, 2)
+
+            yearsel2.clear
+            yearsel2.sendKeys("1495")
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            assert(rows.length == 3, "There should be three result rows")
+
+        }
+
+        "change the publication date of a book" in {
+
+            page.load
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#book")
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            // open page of a book
+            rows.head.click()
+
+            val window = eventually {
+                page.getWindow(1)
+            }
+
+            // get metadata section
+            val metadataSection: WebElement = page.getMetadataSection(window)
+
+            // get a list of editing fields
+            val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
+
+            val pubdateField = editFields(11)
+
+            page.clickEditButton(pubdateField)
+
+            //
+            // start date
+            //
+            val monthsel1 = page.getMonthSelection(pubdateField, 1)
+
+            // choose February
+            monthsel1.selectByValue("2")
+
+            val days1 = page.getDays(pubdateField, 1)
+
+            // choose the second day of the month
+            days1(1).click()
+
+            val yearsel1 = page.getYearField(pubdateField, 1)
+
+            yearsel1.clear
+            yearsel1.sendKeys("1495")
+
+            page.clickSaveButton(pubdateField)
+
+
+            // use eventually here because it requires several attempts to get the up to date value container
+            eventually {
+                // read the new value back
+                val pubdateValueContainer = page.getValueContainer(pubdateField)
+
+                val pubdateValue = pubdateValueContainer.getText
+
+                val found = pubdateValue.contains("Sat 2. Feb 1495")
+
+                if (!found) throw new Exception
+
+            }
+
+
+
+        }
+
+        "edit the seqnum and the pagenumber of a page" in {
+
+            page.load()
+
+            doZeitgloeckleinSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            // open page of a book
+            rows(1).click()
+
+            val window = eventually {
+                page.getWindow(1)
+            }
+
+            // get metadata section
+            val metadataSection: WebElement = page.getMetadataSection(window)
+
+            // get a list of editing fields
+            val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
+
+            //
+            // seqnum
+            //
+
+            // get the field representing the seqnum of the page
+            val seqnumField = editFields(10)
+
+            page.clickEditButton(seqnumField)
+
+            page.clickOnSpinboxUp(seqnumField)
+
+            page.clickSaveButton(seqnumField)
+
+            // read the new value back
+            val seqnumValueContainer = page.getValueContainer(seqnumField)
+
+            val seqnumValue = seqnumValueContainer.getText
+
+            assert(seqnumValue.contains("2"), s"seqnum should be 2, but is $seqnumValue")
+
+
+            //
+            // pagenum
+            //
+
+            // get the field representing the pagenum of the page
+            val pagenumField = editFields(3)
+
+            page.clickEditButton(pagenumField)
+
+            // get the input field
+            val input = page.getInputField(pagenumField)
+
+            input.clear
+
+            input.sendKeys("test")
+
+            page.clickSaveButton(pagenumField)
+
+            // read the new value back
+            val pagenumValueContainer = page.getValueContainer(pagenumField)
+
+            val pagenumValue = pagenumValueContainer.getText
+
+            assert(pagenumValue.contains("test"), s"pagnum should be 'test', but is $pagenumValue")
+
+        }
+
+        "add a new creator to a book" in {
+
+            page.load()
+
+            doZeitgloeckleinSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            // open a book
+            rows(0).click()
+
+            val window = eventually {
+                page.getWindow(1)
+            }
+
+            // get metadata section
+            val metadataSection: WebElement = page.getMetadataSection(window)
+
+            // get a list of editing fields
+            val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
+
+            // get the field representing the seqnum of the page
+            val creatorField = editFields(1)
+
+            page.clickAddButton(creatorField)
+
+            // get the input field
+            val input = page.getInputField(creatorField)
+
+            input.clear
+
+            input.sendKeys("Tobiasus")
+
+            page.clickSaveButton(creatorField)
+
+            // read the new value back
+            // get the second container because there is already one existing value
+            val creatorValueContainer = page.getValueContainer(creatorField, 2)
+
+            val creatorValue = creatorValueContainer.getText
+
+            assert(creatorValue.contains("Tobiasus"), s"$creatorValue")
+
+        }
+
+        "edit the description of a page" in {
+
+            page.load()
+
+            doZeitgloeckleinSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            // open a page
+            rows(1).click()
 
             val window = eventually {
                 page.getWindow(1)
@@ -114,9 +551,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             val descriptionField = editFields(7)
 
-            val editButton = descriptionField.findElement(By.xpath("div//img[1]"))
-
-            editButton.click()
+            page.clickEditButton(descriptionField)
 
             val ckeditor = eventually {
                 page.findCkeditor(descriptionField)
@@ -124,16 +559,56 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             ckeditor.sendKeys("my text")
 
-            val saveButton = descriptionField.findElement(By.xpath("div//img[1]"))
+            page.clickSaveButton(descriptionField)
 
-            saveButton.click()
+            // read the new value back
+            val seqnumValueContainer = page.getValueContainer(descriptionField)
 
-            val paragraph = eventually {
-                descriptionField.findElement(By.xpath("div//p"))
+
+            assert(descriptionField.getText.substring(0, 7) == "my text")
+        }
+
+        "change the partof property of a page" in {
+
+            page.load()
+
+            doZeitgloeckleinSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            // open a page
+            rows(1).click()
+
+            val window = eventually {
+                page.getWindow(1)
             }
 
-            assert(paragraph.getText.substring(0, 7) == "my text")
-        }*/
+            // get metadata section
+            val metadataSection: WebElement = page.getMetadataSection(window)
+
+            // get a list of editing fields
+            val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
+
+            val partOfField = editFields(2)
+
+            page.clickEditButton(partOfField)
+
+            val input = page.getSearchBoxInputField(partOfField)
+
+            input.sendKeys("Narrenschiff")
+
+            page.chooseElementFromSearchbox(2)
+
+            page.clickSaveButton(partOfField)
+
+            // read the new value back
+            val partOfValueContainer = page.getValueContainer(partOfField)
+
+            val partOfValue = partOfValueContainer.getText
+
+            assert(partOfValue.contains("Narrenschiff"), s"$partOfValue")
+
+        }
 
 
         // Uncomment this if you want the browser to close after the test completes.

@@ -96,8 +96,9 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
-        RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
-    )
+        RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"))
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 30.seconds
@@ -1545,5 +1546,38 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
         }
+
+        "change the season of a image:bild from summer to winter" in {
+
+            val winter = "http://data.knora.org/lists/eda2792605"
+
+            // A test UserDataV1.
+            val userData = UserDataV1(
+                user_id = Some("http://data.knora.org/users/91e19f1e01"),
+                lang = "de"
+            )
+
+            // A test UserProfileV1.
+            val userProfile = UserProfileV1(
+                projects = Vector("http://data.knora.org/projects/images"),
+                groups = Nil,
+                userData = userData
+            )
+
+            actorUnderTest ! ChangeValueRequestV1(
+                value = HierarchicalListValueV1(winter),
+                userProfile = userProfile,
+                valueIri = "http://data.knora.org/d208fb9357d5/values/bc90a9c5091004",
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case ChangeValueResponseV1(newValue: HierarchicalListValueV1, _, newValueIri: IRI, _, userProfile) =>
+                    newValue should ===(HierarchicalListValueV1(winter))
+            }
+
+        }
+
+        // TODO: add create value request test for list node valuegraphdb:test
     }
 }

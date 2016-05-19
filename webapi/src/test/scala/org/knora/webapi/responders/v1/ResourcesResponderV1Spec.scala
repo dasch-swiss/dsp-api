@@ -152,7 +152,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         assert(expectedContext.preview == receivedContext.preview, "preview does not match")
         assert(receivedContext.locations.nonEmpty, "no locations given")
         assert(receivedContext.locations.get.size == 402, "the length of locations did not match")
-        assert(receivedContext.locations.get(0) == ResourcesResponderV1SpecContextData.expectedFirstLocationOfBookResourceContextResponse , "first location did not match")
+        assert(receivedContext.locations.get(0) == ResourcesResponderV1SpecContextData.expectedFirstLocationOfBookResourceContextResponse, "first location did not match")
         assert(expectedContext.canonical_res_id == receivedContext.canonical_res_id, "canonical_res_id does not match")
         assert(expectedContext.region == receivedContext.region, "region does not match")
         assert(expectedContext.res_id == receivedContext.res_id, "res_id does not match")
@@ -319,6 +319,139 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     None
                 }
         }
+    }
+
+    private val propertiesGetResponseV1Region = PropertiesGetResponseV1(
+        PropsGetV1(
+            Vector(
+                PropertyGetV1(
+                    "http://www.knora.org/ontology/knora-base#hasComment",
+                    Some("Kommentar"),
+                    Some("http://www.knora.org/ontology/knora-base#TextValue"),
+                    Some("textval"),
+                    None,
+                    "",
+                    "0",
+                    Vector(
+                        PropertyGetValueV1(
+                            None,
+                            "",
+                            "Siehe Seite c5v",
+                            TextValueV1("Siehe Seite c5v", Map(), Vector()),
+                            "http://data.knora.org/021ec18f1735/values/8a96c303338201",
+                            None,
+                            None))),
+                PropertyGetV1(
+                    "http://www.knora.org/ontology/knora-base#hasColor",
+                    Some("Farbe"),
+                    Some(
+                        "http://www.knora.org/ontology/knora-base#ColorValue"),
+                    Some("textval"),
+                    Some("colorpicker"),
+                    "ncolors=8",
+                    "0",
+                    Vector(
+                        PropertyGetValueV1(
+                            None,
+                            "",
+                            "#ff3333",
+                            ColorValueV1("#ff3333"),
+                            "http://data.knora.org/021ec18f1735/values/10ea6976338201",
+                            None,
+                            None))),
+                PropertyGetV1(
+                    "http://www.knora.org/ontology/knora-base#hasGeometry",
+                    Some("Geometrie"),
+                    Some("http://www.knora.org/ontology/knora-base#GeomValue"),
+                    Some("textval"),
+                    Some("geometry"),
+                    "width=95%;rows=4;wrap=soft",
+                    "0",
+                    Vector(
+                        PropertyGetValueV1(
+                            None,
+                            "",
+                            "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}",
+                            GeomValueV1("{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}"),
+                            "http://data.knora.org/021ec18f1735/values/4dc0163d338201",
+                            None,
+                            None))),
+                PropertyGetV1(
+                    "http://www.knora.org/ontology/knora-base#isRegionOf",
+                    Some("is Region von"),
+                    Some("http://www.knora.org/ontology/knora-base#LinkValue"),
+                    Some("textval"),
+                    None,
+                    "restypeid=http://www.knora.org/ontology/knora-base#Representation",
+                    "0",
+                    Vector(
+                        PropertyGetValueV1(
+                            None,
+                            "",
+                            "http://data.knora.org/9d626dc76c03",
+                            LinkV1(
+                                "http://data.knora.org/9d626dc76c03",
+                                Some("u1r"),
+                                Some(
+                                    "http://www.knora.org/ontology/incunabula#page"),
+                                None,
+                                None),
+                            "http://data.knora.org/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
+                            None,
+                            None))))))
+
+
+    private def comparePropertiesGetResponse(expected: PropertiesGetResponseV1, received: PropertiesGetResponseV1) = {
+
+        assert(expected.properties.properties.length == received.properties.properties.length, "The length of given properties is not correct.")
+
+        expected.properties.properties.sortBy { // sort by property Iri
+            prop => prop.pid
+        }.zip(received.properties.properties.sortBy {
+            prop => prop.pid
+        }).foreach {
+            case (expectedProp: PropertyGetV1, receivedProp: PropertyGetV1) =>
+
+                // sort the values of each property
+                val expectedPropValuesSorted = expectedProp.values.sortBy(values => values.textval)
+
+                val receivedPropValuesSorted = receivedProp.values.sortBy(values => values.textval)
+
+                // create PropertyGetV1 with sorted values
+                val expectedPropSorted = expectedProp.copy(
+                    values = expectedPropValuesSorted
+                )
+
+                val receivedPropSorted = receivedProp.copy(
+                    values = receivedPropValuesSorted
+                )
+
+                assert(expectedPropSorted == receivedPropSorted, "Property did not match")
+        }
+    }
+
+    private def comparePageContextRegionResponse(received: ResourceContextResponseV1) = {
+
+        assert(received.resource_context.resinfo.nonEmpty)
+
+        assert(received.resource_context.resinfo.get.regions.nonEmpty)
+
+        assert(received.resource_context.resinfo.get.regions.get.length == 2, "Number of given regions is not correct.")
+
+        val regions: Seq[PropsGetForRegionV1] = received.resource_context.resinfo.get.regions.get
+
+        val region1 = regions.filter {
+            region => region.res_id == "http://data.knora.org/021ec18f1735"
+        }
+
+        val region2 = regions.filter {
+            region => region.res_id == "http://data.knora.org/b6b64a62b006"
+        }
+
+        assert(region1.length == 1, "No region found with Iri 'http://data.knora.org/021ec18f1735'")
+
+        assert(region2.length == 1, "No region found with Iri 'http://data.knora.org/b6b64a62b006'")
+
     }
 
     "Load test data" in {
@@ -647,6 +780,33 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     newResourceIri.set(response.res_id)
                     checkResourceCreation(expected, response)
             }
+        }
+
+        "get the properties of a resource" in {
+
+            val PropertiesGetRequest = PropertiesGetRequestV1(
+                "http://data.knora.org/021ec18f1735",
+                ResourcesResponderV1Spec.userProfile
+            )
+
+            actorUnderTest ! PropertiesGetRequest
+
+            expectMsgPF(timeout) {
+                case response: PropertiesGetResponseV1 => comparePropertiesGetResponse(propertiesGetResponseV1Region, response)
+            }
+
+        }
+
+        "get the regions of a page pointed to by regions" in {
+
+            val resourceContextPage = ResourceContextGetRequestV1(iri = "http://data.knora.org/9d626dc76c03", resinfo = true, userProfile = ResourcesResponderV1Spec.userProfile)
+
+            actorUnderTest ! resourceContextPage
+
+            expectMsgPF(timeout) {
+                case response: ResourceContextResponseV1 => comparePageContextRegionResponse(response)
+            }
+
         }
     }
 }

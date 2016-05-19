@@ -101,29 +101,33 @@ object ResourcesRouteV1 extends Authenticator {
                         case (givenValue: CreateResourceValueV1) =>
                             givenValue match {
                                 // create corresponding UpdateValueV1
-                                case CreateResourceValueV1(_, _, Some(intValue: Int), _, _, _, _, comment) => CreateValueV1WithComment(IntegerValueV1(intValue), comment)
-                                case CreateResourceValueV1(Some(richtext: CreateRichtextV1), _, _, _, _, _, _, comment) =>
+                                case CreateResourceValueV1(_, _, Some(intValue: Int), _, _, _, _, _ , comment) => CreateValueV1WithComment(IntegerValueV1(intValue), comment)
+                                case CreateResourceValueV1(Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, comment) =>
                                     val textattr: Map[String, Seq[StandoffPositionV1]] = InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]])
                                     val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
 
                                     CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
 
-                                case CreateResourceValueV1(_, Some(linkValue: IRI), _, _, _, _, _, comment) =>
+                                case CreateResourceValueV1(_, Some(linkValue: IRI), _, _, _, _, _, _, comment) =>
                                     val linkVal = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Invalid Knora resource Iri $linkValue"))
                                     CreateValueV1WithComment(LinkUpdateV1(linkVal), comment)
 
-                                case CreateResourceValueV1(_, _, _, Some(floatValue: Float), _, _, _, comment) => CreateValueV1WithComment(FloatValueV1(floatValue), comment)
+                                case CreateResourceValueV1(_, _, _, Some(floatValue: Float), _, _, _, _, comment) => CreateValueV1WithComment(FloatValueV1(floatValue), comment)
 
-                                case CreateResourceValueV1(_, _, _, _, Some(dateStr: String), _, _, comment) =>
+                                case CreateResourceValueV1(_, _, _, _, Some(dateStr: String), _, _, _, comment) =>
                                     CreateValueV1WithComment(DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)
 
-                                case CreateResourceValueV1(_, _, _, _, _, Some(colorStr: String), _, comment) =>
+                                case CreateResourceValueV1(_, _, _, _, _, Some(colorStr: String), _, _, comment) =>
                                     val colorValue = InputValidation.toColor(colorStr, () => throw BadRequestException(s"Invalid color value $colorStr"))
                                     CreateValueV1WithComment(ColorValueV1(colorValue), comment)
 
-                                case CreateResourceValueV1(_, _, _, _, _, _, Some(geomStr: String), comment) =>
+                                case CreateResourceValueV1(_, _, _, _, _, _, Some(geomStr: String), _, comment) =>
                                     val geometryValue = InputValidation.toGeometryString(geomStr, () => throw BadRequestException(s"Invalid geometry value geomStr"))
                                     CreateValueV1WithComment(GeomValueV1(geometryValue), comment)
+
+                                case CreateResourceValueV1(_, _, _, _, _, _, _ , Some(hlistValue), comment) =>
+                                    val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given Iri ${hlistValue} is not a valid Knora IRI"))
+                                    CreateValueV1WithComment(HierarchicalListValueV1(listNodeIri), comment)
 
                                 case _ => throw BadRequestException(s"No value submitted")
 
@@ -149,6 +153,10 @@ object ResourcesRouteV1 extends Authenticator {
                 userProfile = userProfile,
                 apiRequestID = UUID.randomUUID
             )
+        }
+
+        def makeGetPropertiesRequestMessage(resIri: IRI, userProfile: UserProfileV1) = {
+            PropertiesGetRequestV1(resIri, userProfile)
         }
 
         path("v1" / "resources" / Segment) { iri =>
@@ -328,6 +336,27 @@ object ResourcesRouteV1 extends Authenticator {
                         responderManager,
                         log
                     )
+            }
+        } ~ path("v1" / "properties" / Segment) { iri =>
+            get {
+                requestContext =>
+                    val requestMessageTry = Try {
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+
+                        makeGetPropertiesRequestMessage(resIri, userProfile)
+
+                    }
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+
             }
         }
     }

@@ -37,6 +37,22 @@ work out of the box with the following triplestores:
 
 TODO: explain how to get started with these.
 
+Load Test Data
+^^^^^^^^^^^^^^
+
+In order to load the test data, go to ``webapi/scripts`` and run the script for the triplestore you have chosen. In case of Fuseki, run ``fuseki-load-test-data.sh``,
+in case of GraphDB ``graphdb-se-load-test-data.sh``
+
+When working with GraphDB, you may encounter an error when loading the test data that says that there are multiple IDs for the same repository ``knora-test``.
+In that case something went wrong when dropping and recreating the repository. Please delete all the data and start over:
+
+* shutdown Tomcat: ``$CATALINA_HOME/bin/shutdown.sh``
+
+* go to `<http://localhost:8080/openrdf-sesame/system/overview.view>`_ and look for the field ``Data directory`` which indicates the location of the directory ``.aduna``.
+
+* Then remove this directory an restart tomcat. Now you should be able to load the test data correctly.
+
+
 Creating a Test Installation
 -----------------------------
 
