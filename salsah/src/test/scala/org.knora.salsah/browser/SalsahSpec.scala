@@ -62,8 +62,6 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
     val settings = new SettingsImpl(ConfigFactory.load())
 
-    println(s"Base Knora URL from settings: ${settings.baseKNORAUrl}")
-
     val page = new SalsahPage
 
     val rdfDataObjectsJsonList =
@@ -73,11 +71,13 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
                 {"path": "../knora-ontologies/knora-dc.ttl", "name": "http://www.knora.org/ontology/dc"},
                 {"path": "../knora-ontologies/salsah-gui.ttl", "name": "http://www.knora.org/ontology/salsah-gui"},
                 {"path": "_test_data/ontologies/incunabula-onto.ttl", "name": "http://www.knora.org/ontology/incunabula"},
-                {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"}
+                {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
+                {"path": "_test_data/ontologies/images-demo-onto.ttl", "name": "http://www.knora.org/ontology/images"},
+                {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"}
             ]
         """
 
-
+    // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
 
 
     "The SALSAH home page" should {
@@ -89,7 +89,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
                     ~> unmarshal[HttpResponse]
                 )
 
-            val loadRequest: HttpRequest = Post("http://localhost:3333/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList))
+            val loadRequest: HttpRequest = Post(s"${settings.baseKNORAUrl}/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList))
 
             val loadRequestFuture: Future[HttpResponse] = for {
                 postRequest <- Future(loadRequest)
@@ -137,7 +137,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             assert(resultHeader.contains("Total of 3 hits"))
 
-            val firstResult: String = eventually {
+            /*val firstResult: String = eventually {
                 page.getFirstSearchResult(resultDiv)
             }
 
@@ -152,7 +152,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
                 page.getWindow(1)
             }
 
-            page.dragWindow(window, 90, 10)
+            page.dragWindow(window, 90, 10)*/
 
         }
 
