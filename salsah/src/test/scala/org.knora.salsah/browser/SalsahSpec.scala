@@ -27,6 +27,7 @@ import spray.client.pipelining._
 import spray.http.MediaTypes._
 import spray.http._
 import akka.actor.ActorSystem
+import akka.util.Timeout
 import spray.http.{HttpRequest, HttpResponse}
 
 import scala.concurrent.{Await, Future}
@@ -50,6 +51,8 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
     // How long to wait for results obtained using the 'eventually' function
     implicit val patienceConfig = PatienceConfig(timeout = scaled(5.seconds), interval = scaled(20.millis))
+
+    implicit val timeout = Timeout(180 seconds)
 
     implicit val system = ActorSystem()
 
@@ -87,7 +90,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
                 pipelineResult <- pipeline(postRequest)
             } yield pipelineResult
 
-            val loadRequestResponse = Await.result(loadRequestFuture, Duration("10 seconds"))
+            val loadRequestResponse = Await.result(loadRequestFuture, Duration("180 seconds"))
 
             assert(loadRequestResponse.status == StatusCodes.OK)
         }
@@ -111,7 +114,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             }
         }
 
-        /*"do a simple search for 'Zeitglöcklein' and open a search result row representing a page, and move it" in {
+        "do a simple search for 'Zeitglöcklein' and open a search result row representing a page, and move it" in {
 
             val searchField: WebElement = page.getSimpleSearchField
             searchField.clear()
@@ -145,7 +148,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.dragWindow(window, 90, 10)
 
-        }*/
+        }
 
         /*"edit the description of a page" in {
 
