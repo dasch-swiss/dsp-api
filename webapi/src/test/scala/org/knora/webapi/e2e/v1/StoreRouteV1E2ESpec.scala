@@ -92,6 +92,10 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
 
     "The ResetTriplestoreContent Route ('v1/store/ResetTriplestoreContent')" should {
         "succeed with resetting if startup flag is set" in {
+            /**
+              * This test corresponds to the following curl call:
+              * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/v1/store/ResetTriplestoreContent
+              */
             println("=>>")
             StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
             println("=>>" + Await.result(StartupFlags.allowResetTriplestoreContentOperationOverHTTP.future(), 5.seconds))
