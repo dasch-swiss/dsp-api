@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/dhlab-basel/Knora.svg?branch=develop)](https://travis-ci.org/dhlab-basel/Knora)
+
 # Knora
 
 [Knora](http://www.knora.org/) (Knowledge Organization, Representation, and Annotation) is a software
