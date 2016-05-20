@@ -97,6 +97,8 @@ object MessageUtil {
                                                                     propertyIri: IRI,
                                                                     valueResponse: CreateValueResponseV1): ResourceCreateValueResponseV1 = {
 
+        // TODO: see resource responder's convertPropertyV1toPropertyGetV1 that also deals with valuetypes
+
         val basicObjectResponse = ResourceCreateValueObjectResponseV1(
             textval = Map(LiteralValueType.StringValue -> valueResponse.value.toString),
             resource_id = Map(LiteralValueType.StringValue -> resourceIri),

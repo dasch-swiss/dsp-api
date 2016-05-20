@@ -28,7 +28,7 @@ import akka.actor._
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.e2e.E2ESpec
-import org.knora.webapi.messages.v1.responder.valuemessages.CreateRichtextV1
+import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
@@ -152,7 +152,7 @@ class SipiV1E2ESpec extends E2ESpec {
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
-/*
+
         "try to create a resource sending binaries (multipart request) but fail because the mimetype is wrong" in {
 
             val fileToSend = new File(RequestParams.pathToFile)
@@ -193,9 +193,9 @@ class SipiV1E2ESpec extends E2ESpec {
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
-*/
+
     }
-/*
+
     "The Values endpoint" should {
 
         "change the file value of an existing page (submitting binaries)" in {
@@ -268,5 +268,5 @@ class SipiV1E2ESpec extends E2ESpec {
             }
 
         }
-    } */
+    }
 }

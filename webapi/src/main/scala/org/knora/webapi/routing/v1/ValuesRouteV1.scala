@@ -89,31 +89,35 @@ object ValuesRouteV1 extends Authenticator {
 
         // TODO: Support the rest of the value types.
         val (value: UpdateValueV1, commentStr: Option[String]) = apiRequest match {
-            case CreateValueApiRequestV1(_, _, _, _, Some(intValue: Int), _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)
+            case CreateValueApiRequestV1(_, _, _, _, Some(intValue: Int), _, _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)
 
-            case CreateValueApiRequestV1(_, _, _, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, comment) =>
+            case CreateValueApiRequestV1(_, _, _, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, comment) =>
                 // textattr is a string that can be parsed into Map[String, Seq[StandoffPositionV1]]
                 val textattr: Map[String, Seq[StandoffPositionV1]] = InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]])
                 val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
 
                 (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, Some(floatValue: Float), _, _, _, _, comment) => (FloatValueV1(floatValue), comment)
+            case CreateValueApiRequestV1(_, _, _, _, _, Some(floatValue: Float), _, _, _, _, _, comment) => (FloatValueV1(floatValue), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, _, Some(dateStr: String), _, _, _, comment) =>
+            case CreateValueApiRequestV1(_, _, _, _, _, _, Some(dateStr: String), _, _, _, _, comment) =>
                 (DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, _, _, Some(colorStr: String), _, _, comment) =>
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, Some(colorStr: String), _, _, _, comment) =>
                 val colorValue = InputValidation.toColor(colorStr, () => throw BadRequestException(s"Invalid color value $colorStr"))
                 (ColorValueV1(colorValue), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, Some(geomStr: String), _, comment) =>
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, Some(geomStr: String), _, _, comment) =>
                 val geometryValue = InputValidation.toGeometryString(geomStr, () => throw BadRequestException(s"Invalid geometry value geomStr"))
                 (GeomValueV1(geometryValue), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, Some(linkValue: IRI), comment) =>
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, Some(linkValue: IRI), _, comment) =>
                 val resourceIRI = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Given Iri ${linkValue} is not a valid Knora IRI"))
                 (LinkUpdateV1(targetResourceIri = resourceIri), comment)
+
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, Some(hlistValue), comment) =>
+                val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given Iri ${hlistValue} is not a valid Knora IRI"))
+                (HierarchicalListValueV1(listNodeIri), comment)
 
             case _ => throw BadRequestException(s"No value submitted")
         }
@@ -139,39 +143,45 @@ object ValuesRouteV1 extends Authenticator {
 
         // TODO: Support the rest of the value types.
         val (value: UpdateValueV1, commentStr: Option[String]) = apiRequest match {
-            case ChangeValueApiRequestV1(_, _, Some(intValue: Int), _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)
+            case ChangeValueApiRequestV1(_, _, Some(intValue: Int), _, _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)
 
-            case ChangeValueApiRequestV1(_, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, comment) =>
+            case ChangeValueApiRequestV1(_, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, comment) =>
                 // textattr is a string that can be parsed into Map[String, Seq[StandoffPositionV1]]
                 val textattr: Map[String, Seq[StandoffPositionV1]] = InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]])
                 val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
 
                 (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
 
-            case ChangeValueApiRequestV1(_, _, _, Some(floatValue: Float), _, _, _, _, comment) => (FloatValueV1(floatValue), comment)
+            case ChangeValueApiRequestV1(_, _, _, Some(floatValue: Float), _, _, _, _, _, comment) => (FloatValueV1(floatValue), comment)
 
-            case ChangeValueApiRequestV1(_, _, _, _, Some(dateStr: String), _, _, _, comment) =>
+            case ChangeValueApiRequestV1(_, _, _, _, Some(dateStr: String), _, _, _, _, comment) =>
                 (DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)
 
-            case ChangeValueApiRequestV1(_, _, _, _, _, Some(colorStr: String), _, _, comment) =>
+            case ChangeValueApiRequestV1(_, _, _, _, _, Some(colorStr: String), _, _, _, comment) =>
                 val colorValue = InputValidation.toColor(colorStr, () => throw BadRequestException(s"Invalid color value $colorStr"))
                 (ColorValueV1(colorValue), comment)
 
-            case ChangeValueApiRequestV1(_, _, _, _, _, _, Some(geomStr), _, comment) =>
+            case ChangeValueApiRequestV1(_, _, _, _, _, _, Some(geomStr), _, _, comment) =>
                 val geometryValue = InputValidation.toGeometryString(geomStr, () => throw BadRequestException(s"Invalid geometry value geomStr"))
                 (GeomValueV1(geometryValue), comment)
 
-            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, Some(comment)) =>
-                throw BadRequestException(s"No value was submitted")
-
-            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, Some(linkValue), comment) =>
+            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, Some(linkValue), _, comment) =>
                 val resourceIri = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Given Iri ${linkValue} is not a valid Knora IRI"))
                 (LinkUpdateV1(targetResourceIri = resourceIri), comment)
+
+            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, Some(hlistValue), comment) =>
+                val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given Iri ${hlistValue} is not a valid Knora IRI"))
+                (HierarchicalListValueV1(listNodeIri), comment)
+
+            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, Some(comment)) =>
+                throw BadRequestException(s"No value was submitted")
 
             case _ => throw BadRequestException(s"No value or comment was submitted")
         }
 
         val maybeComment = commentStr.map(str => InputValidation.toSparqlEncodedString(str))
+
+        println(value)
 
         ChangeValueRequestV1(
             valueIri = valueIri,
@@ -302,7 +312,7 @@ object ValuesRouteV1 extends Authenticator {
                         val userProfile = getUserProfileV1(requestContext)
 
                         apiRequest match {
-                            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, Some(comment)) => makeChangeCommentRequestMessage(userProfile, valueIri, comment)
+                            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, Some(comment)) => makeChangeCommentRequestMessage(userProfile, valueIri, comment)
                             case _ => makeAddValueVersionRequestMessage(userProfile, valueIri, apiRequest)
                         }
                     }

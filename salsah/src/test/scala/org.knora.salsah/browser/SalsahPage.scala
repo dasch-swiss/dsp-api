@@ -25,11 +25,12 @@ import java.io.File
 import scala.collection.JavaConversions._
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.interactions.Actions
-import org.openqa.selenium.support.ui.ExpectedConditions
+import org.openqa.selenium.support.ui.{ExpectedConditions, Select}
 import org.openqa.selenium.{By, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
 import java.io.FileNotFoundException
 
+import scala.concurrent.duration._
 
 
 /**
@@ -44,6 +45,10 @@ import java.io.FileNotFoundException
   * for more documentation.
   */
 class SalsahPage {
+
+    // How long to wait for results obtained using the 'eventually' function
+    implicit val patienceConfig = PatienceConfig(timeout = scaled(10.seconds), interval = scaled(20.millis))
+
     val pageUrl = "http://localhost:3335/index.html" // TODO: get this from application.conf
 
     val chromeDriverPath = "lib/chromedriver"
@@ -98,6 +103,12 @@ class SalsahPage {
 
     }
 
+    /*
+
+    Search
+
+     */
+
     /**
       * Returns the SALSAH simple search field.
       */
@@ -106,54 +117,244 @@ class SalsahPage {
     }
 
     /**
-      * Returns the SALSAH extended search button.
-      */
-    def getExtendedSearchField: WebElement = {
-        driver.findElement(By.xpath("//div[@id='searchctrl']/img[2][@class='link']"))
-    }
-
-    /**
-      * Returns a `div` representing search results.
-      */
-    def getSearchResultDiv: WebElement = {
-        driver.findElement(By.name("result"))
-    }
-
-    /**
       * Returns the header of a `div` representing search results.
       *
-      * @param searchResultDiv a `div` representing search results.
       * @return the contents of the header.
       */
-    def getSearchResultHeader(searchResultDiv: WebElement): String = {
-        searchResultDiv.findElement(By.xpath("div[1]")).getText
+    def getSearchResultHeader: String = {
+        eventually {
+            val searchResultDiv = driver.findElement(By.name("result"))
+            searchResultDiv.findElement(By.xpath("div[1]")).getText
+        }
     }
 
     /**
       * Returns a description of the first search result.
       *
-      * @param searchResultDiv a `div` representing search results.
+      * @param searchResultRow a `tr` representing a search result row.
       * @return the contents of the last column of the first row of the search results table.
       */
-    def getFirstSearchResult(searchResultDiv: WebElement): String = {
-        searchResultDiv.findElement(By.xpath("table/tbody/tr[2]/td[4]")).getText
+    def getSearchResultRowText(searchResultRow: WebElement): String = {
+        eventually {
+            searchResultRow.findElement(By.xpath("td[4]")).getText
+        }
     }
 
     /**
-      * Clicks on the specified search result row.
-      *
-      * @param searchResultDiv a `div` representing search results.
-      * @param number          the search result row to be opened.
+      * Returns the SALSAH extended search button.
       */
-    def openResult(searchResultDiv: WebElement, number: Int) = {
-        val resultRows: Seq[WebElement] = searchResultDiv.findElements(By.xpath("table/tbody/tr[@class='result_row']"))
+    def clickExtendedSearchButton = {
+        driver.findElement(By.xpath("//div[@id='searchctrl']/img[2][@class='link']")).click()
+    }
 
-        val resultRow = resultRows.get(number)
+    /**
+      * Select a restype to search for.
+      *
+      * @param restype the restype to be selected.
+      */
+    def selectExtendedSearchRestype(restype: String) = {
+        eventually {
+            val restypeSelect = driver.findElement(By.name("selrestype"))
+            new Select(restypeSelect).selectByValue(restype)
+        }
+    }
 
-        resultRow.click()
+    /**
+      *
+      * Get a selection in extended search.
+      *
+      * @param propIndex indicate which (first, second, third etc. ) property field set to use: the user may perform a search involving several properties.
+      * @param name the name of the selection ("selprop" or "compop")
+      * @return a [[Select]] representing the HTML select.
+      */
+    def getExtendedSearchSelectionByName(propIndex: Int, name: String): Select = {
+        eventually {
+            val selection = driver.findElement(By.xpath(s"//div[$propIndex][contains(@class, 'selprop') and contains(@class, 'extsearch')]")).findElement(By.name(name))
+            new Select(selection)
+        }
+    }
 
+    /**
+      * Get the value field to enter the value to search for.
+      *
+      * @param propIndex indicate which (first, second, third etc. ) property field set to use: the user may perform a search involving several properties.
+      * @return a [[WebElement]] representing the value field.
+      */
+    def getValueField(propIndex: Int): WebElement = {
+        eventually {
+            driver.findElement(By.xpath(s"//div[$propIndex][contains(@class, 'selprop')]")).findElement(By.name("valfield")).findElement(By.xpath("input"))
+        }
+    }
+
+    /**
+      * Get the selects representing a hierarchical list.
+      *
+      * @param propIndex indicate which (first, second, third etc. ) property field set to use: the user may perform a search involving several properties.
+      * @return a list of [[Select]]
+      */
+    def getHierarchicalListSelections(propIndex: Int): List[Select] = {
+        eventually {
+
+            val selections = driver.findElement(By.xpath(s"//div[$propIndex][contains(@class, 'selprop')]")).findElement(By.name("valfield")).findElements(By.xpath("span[@class='propval']//select"))
+            // make sure to find any selection (async)
+            if (selections.length < 1) throw new Exception
+
+            selections.map(new Select(_)).toList
+
+        }
+    }
+
+    /**
+      * Get the date form for a date value property.
+      *
+      * @param propIndex indicate which (first, second, third etc. ) property field set to use: the user may perform a search involving several properties.
+      * @return the [[WebElement]] representing the date form.
+      */
+    def getDateFormInExtendedSearchForm(propIndex: Int): WebElement = {
+        eventually {
+            driver.findElement(By.xpath(s"//div[$propIndex][contains(@class, 'selprop')]")).findElement(By.name("valfield")).findElement(By.name("searchval"))
+        }
 
     }
+
+    /**
+      * Get calendar type selection.
+      *
+      * @param dateForm the [[WebElement]] representing the date form.
+      * @return a [[Select]] representing the calendar types.
+      */
+    def getCalSelection(dateForm: WebElement): Select = {
+
+        eventually {
+            new Select(dateForm.findElement(By.xpath("//select[contains(@class,'calsel')]")))
+        }
+
+    }
+
+    /**
+      * Hit checkbox to search for a date that is a period.
+      *
+      * @param dateForm the [[WebElement]] representing the date form.
+      */
+    def makePeriod(dateForm: WebElement) = {
+        eventually {
+            dateForm.findElement(By.xpath("//input[contains(@class,'periodsel')]")).click()
+        }
+    }
+
+    /**
+      * Get month selection in extended search form.
+      *
+      * @param dateForm the [[WebElement]] representing the date form.
+      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @return a [[Select]] representing the month.
+      */
+    def getMonthSelectionInExtendedSearchForm(dateForm: WebElement, index: Int = 1) = {
+        eventually {
+            new Select(dateForm.findElement(By.xpath(s"span[$index]/select[contains(@class,'monthsel')]")))
+        }
+    }
+
+    /**
+      * Get the days in the extended search form.
+      *
+      * @param dateForm dateForm the [[WebElement]] representing the date form.
+      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @return a list of `td` representing the days.
+      */
+    def getDaysInExtendedSearchForm(dateForm: WebElement, index: Int = 1): List[WebElement] = {
+        eventually {
+            val daysel = dateForm.findElement(By.xpath(s"span[$index]/input[contains(@class,'daysel')]"))
+
+            daysel.click()
+
+            val dayForm = dateForm.findElement(By.xpath(s"span[$index]/div[contains(@class,'daysel')]/table"))
+
+            dayForm.findElements(By.xpath("tbody/tr/td[normalize-space(.)!='']")).toList
+
+
+
+        }
+    }
+
+    /**
+      * Get year entry field in extended search form.
+      *
+      * @param dateForm the [[WebElement]] representing the date form.
+      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @return a `input` representing the year entry field.
+      */
+    def getYearFieldInExtendedSearchForm(dateForm: WebElement, index: Int = 1) = {
+        eventually {
+            dateForm.findElement(By.xpath(s"span[$index]/input[contains(@class,'yearsel')]"))
+        }
+    }
+
+    /**
+      * Add a new property to search for.
+      *
+      * @param propIndex the index that this property set will have. If this is the first additional set, the index will be 2.
+      */
+    def addPropertySetToExtendedSearch(propIndex: Int): WebElement = {
+        eventually {
+            driver.findElement(By.xpath("//div[contains(@class, 'propedit_frame')]//img[contains(@src,'add.png')]")).click()
+        }
+
+        eventually {
+            // make sure that the new set is loaded
+            driver.findElement(By.xpath(s"//div[$propIndex][contains(@class, 'selprop')]"))
+        }
+    }
+
+    /**
+      * Chooses an element from a searchbox.
+      *
+      * @param eleIndex the index of the element to choose (beginning with 1).
+      */
+    def chooseElementFromSearchbox(eleIndex: Int) = {
+        val searchbox = eventually {
+            driver.findElement(By.className("searchbox"))
+        }
+
+        eventually {
+            searchbox.findElement(By.xpath(s"//div[$eleIndex][@class='searchboxItem']")).click()
+        }
+    }
+
+    /**
+      * Submit the extended search form.
+      */
+    def submitExtendedSearch = {
+        eventually {
+            driver.findElement(By.xpath("//input[@value='Search']")).click()
+        }
+    }
+
+    /**
+      * Returns the result rows.
+      *
+      * @return list of [[WebElement]]
+      */
+    def getExtendedSearchResultRows: List[WebElement] = {
+        eventually {
+            val table = driver.findElement(By.name("result")).findElement(By.xpath("//table"))
+
+            val rows = table.findElements(By.xpath("//tr[@class='result_row']"))
+
+            // make sure that rows are loaded
+            if (rows.length < 1) throw new Exception
+
+            rows.toList
+
+        }
+    }
+
+
+    /*
+
+    Window handling
+
+    */
 
     /**
       * Ensures the minimum overall amount of windows and returns a list of them.
@@ -192,8 +393,14 @@ class SalsahPage {
         }
     }
 
-    def getEditingFieldsFromMetadataSection(metadataSection: WebElement) = {
-        metadataSection.findElements(By.xpath("div[@class='propedit datafield_1 winid_1']")).toList
+    def getEditingFieldsFromMetadataSection(metadataSection: WebElement): List[WebElement] = {
+        eventually {
+            val editingFields = metadataSection.findElements(By.xpath("div[@class='propedit datafield_1 winid_1']")).toList
+            if (editingFields.length < 1) throw new Exception
+            editingFields
+        }
+
+
     }
 
     /**
@@ -212,7 +419,144 @@ class SalsahPage {
 
     }
 
-    def findCkeditor(field: WebElement) = {
+    /*
+
+    Edit Properties
+
+     */
+
+    /**
+      * Gets the `iframe` representing CKEditor.
+      *
+      * @param field the editing field from [[getEditingFieldsFromMetadataSection]]
+      * @return the `iframe` representing CKEditor.
+      */
+    def findCkeditor(field: WebElement): WebElement = {
         field.findElement(By.xpath("div//iframe"))
+    }
+
+    /**
+      * Clicks the edit button in a editing field.
+      *
+      * @param field the editing field in question.
+      */
+    def clickEditButton(field: WebElement) = {
+        eventually {
+            field.findElement(By.xpath("div/img[contains(@src,'edit.png')]")).click()
+        }
+    }
+
+    /**
+      * Clicks the add button in a editing field.
+      *
+      * @param field the editing field in question.
+      */
+    def clickAddButton(field: WebElement) = {
+        eventually {
+            field.findElement(By.xpath("div/img[contains(@src,'add.png')]")).click()
+        }
+    }
+
+    def clickSaveButton(field: WebElement) = {
+        eventually {
+            field.findElement(By.xpath("div/img[contains(@src,'save.png')]")).click()
+        }
+    }
+
+    /**
+      * Gets the value container to check for its contents
+      *
+      * @param field the editing field in question.
+      * @param index specifiy which container to return (there may be several value instances for one prop).
+      * @return the value container.
+      */
+    def getValueContainer(field: WebElement, index: Int = 1): WebElement = {
+        eventually {
+            val valueField = field.findElement(By.xpath(s"div[$index][contains(@class, 'value_container')]"))
+            if (valueField.getText.isEmpty) throw new Exception
+            valueField
+        }
+    }
+
+    /**
+      * Get input field.
+      *
+      * @param field the editing field.
+      * @return the `input` representing the input field.
+      */
+    def getInputField(field: WebElement): WebElement = {
+        eventually {
+            field.findElement(By.xpath("//input[@class='propedit']"))
+        }
+    }
+
+    /**
+      * Get the input field of a searchbox.
+      *
+      * @param linkField the link editing field.
+      * @return the `input` representing the input field.
+      */
+    def getSearchBoxInputField(linkField: WebElement): WebElement = {
+        eventually {
+            linkField.findElement(By.xpath("//input[@class='__searchbox']"))
+        }
+    }
+
+    /**
+      * Increases an integer value by one.
+      *
+      * @param integerField the editing field of an integer value.
+      */
+    def clickOnSpinboxUp(integerField: WebElement) = {
+        eventually {
+            integerField.findElement(By.xpath("//img[contains(@src,'spin-up.png')]")).click()
+        }
+    }
+
+    /**
+      * Get year entry field.
+      *
+      * @param dateForm the [[WebElement]] representing the date form.
+      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @return a `input` representing the year entry field.
+      */
+    def getYearField(dateForm: WebElement, index: Int = 1) = {
+        eventually {
+            dateForm.findElement(By.xpath(s"//span[@class='propedit']/span[$index]/input[contains(@class,'yearsel')]"))
+        }
+    }
+
+    /**
+      * Get month selection.
+      *
+      * @param dateForm the [[WebElement]] representing the date form.
+      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @return a [[Select]] representing the month.
+      */
+    def getMonthSelection(dateForm: WebElement, index: Int = 1) = {
+        eventually {
+            new Select(dateForm.findElement(By.xpath(s"//span[@class='propedit']/span[$index]/select[contains(@class,'monthsel')]")))
+        }
+    }
+
+    /**
+      * Get the days.
+      *
+      * @param dateForm dateForm the [[WebElement]] representing the date form.
+      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @return a list of `td` representing the days.
+      */
+    def getDays(dateForm: WebElement, index: Int = 1): List[WebElement] = {
+        eventually {
+            val daysel = dateForm.findElement(By.xpath(s"//span[@class='propedit']/span[$index]/input[contains(@class,'daysel')]"))
+
+            daysel.click()
+
+            val dayForm = dateForm.findElement(By.xpath(s"//span[@class='propedit']/span[$index]/div[contains(@class,'daysel')]/table"))
+
+            dayForm.findElements(By.xpath("tbody/tr/td[normalize-space(.)!='']")).toList
+
+
+        }
     }
 }
