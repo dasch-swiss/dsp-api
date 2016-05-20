@@ -20,6 +20,7 @@
 
 package org.knora.salsah.browser
 
+import org.openqa.selenium.support.ui.Select
 import org.openqa.selenium.{By, WebElement}
 import org.scalatest._
 import org.scalatest.concurrent.Eventually._
@@ -223,14 +224,14 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/images#titel")
 
-            var selections = page.getHierarchicalListSelections(1)
+            var selections = page.getHierarchicalListSelectionsInExtendedSearch(1)
 
             val firstSel = selections(0)
 
             firstSel.selectByValue("http://data.knora.org/lists/71a1543cce")
 
             // refresh the selection
-            selections = page.getHierarchicalListSelections(1)
+            selections = page.getHierarchicalListSelectionsInExtendedSearch(1)
 
             val secondSel = selections(1)
 
@@ -607,6 +608,94 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
             val partOfValue = partOfValueContainer.getText
 
             assert(partOfValue.contains("Narrenschiff"), s"$partOfValue")
+
+        }
+
+        "change the season property of a image:bild to winter" in {
+
+            page.load
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/images#bild")
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            rows(4).click()
+
+            val window = eventually {
+                page.getWindow(1)
+            }
+
+            // get metadata section
+            val metadataSection: WebElement = page.getMetadataSection(window)
+
+            // get a list of editing fields
+            val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
+
+            val seasonField = editFields(15)
+
+            page.clickEditButton(seasonField)
+
+            val seasonSel: List[Select] = page.getHierarchicalListSelections(seasonField)
+
+            seasonSel(0).selectByValue("http://data.knora.org/lists/526f26ed04")
+
+            page.clickSaveButton(seasonField)
+
+            // read the new value back
+            val seasonValueContainer = page.getValueContainer(seasonField)
+
+            val seasonValue = seasonValueContainer.getText
+
+            assert(seasonValue.contains("Sommer"), s"$seasonValue")
+
+        }
+
+        "add a season to a image:bild" in {
+
+            page.load
+
+            page.clickExtendedSearchButton
+
+            page.selectExtendedSearchRestype("http://www.knora.org/ontology/images#bild")
+
+            page.submitExtendedSearch
+
+            val rows = page.getExtendedSearchResultRows
+
+            rows(4).click()
+
+            val window = eventually {
+                page.getWindow(1)
+            }
+
+            // get metadata section
+            val metadataSection: WebElement = page.getMetadataSection(window)
+
+            // get a list of editing fields
+            val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
+
+            val seasonField = editFields(15)
+
+            page.clickAddButton(seasonField)
+
+            val seasonSel: List[Select] = page.getHierarchicalListSelections(seasonField)
+
+            seasonSel(0).selectByValue("http://data.knora.org/lists/eda2792605")
+
+            page.clickSaveButton(seasonField)
+
+            // read the new value back
+            val seasonValueContainer = page.getValueContainer(seasonField, 2)
+
+            val seasonValue = seasonValueContainer.getText
+
+            assert(seasonValue.contains("Winter"), s"$seasonValue")
+
+
 
         }
 

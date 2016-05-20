@@ -187,12 +187,12 @@ class SalsahPage {
     }
 
     /**
-      * Get the selects representing a hierarchical list.
+      * Get the selects representing a hierarchical list in extended search form.
       *
       * @param propIndex indicate which (first, second, third etc. ) property field set to use: the user may perform a search involving several properties.
       * @return a list of [[Select]]
       */
-    def getHierarchicalListSelections(propIndex: Int): List[Select] = {
+    def getHierarchicalListSelectionsInExtendedSearch(propIndex: Int): List[Select] = {
         eventually {
 
             val selections = driver.findElement(By.xpath(s"//div[$propIndex][contains(@class, 'selprop')]")).findElement(By.name("valfield")).findElements(By.xpath("span[@class='propval']//select"))
@@ -556,6 +556,24 @@ class SalsahPage {
 
             dayForm.findElements(By.xpath("tbody/tr/td[normalize-space(.)!='']")).toList
 
+
+        }
+    }
+
+    /**
+      * Get the selects representing a hierarchical list.
+      *
+      * @param selField selection property field.
+      * @return a list of [[Select]]
+      */
+    def getHierarchicalListSelections(selField: WebElement): List[Select] = {
+        eventually {
+
+            val selections = selField.findElements(By.xpath("div//select"))
+            // make sure to find any selection (async)
+            if (selections.length < 1) throw new Exception
+
+            selections.map(new Select(_)).toList
 
         }
     }
