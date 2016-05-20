@@ -161,7 +161,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
 
         }
-/*
+
         "do a simple search for 'Zeitglöcklein' and open a search result row representing a book" in {
 
             page.load()
@@ -663,7 +663,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             assert(partOfValue.contains("Narrenschiff"), s"$partOfValue")
 
-        }*/
+        }
 
 
         // Uncomment this if you want the browser to close after the test completes.

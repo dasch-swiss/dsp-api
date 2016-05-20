@@ -181,8 +181,6 @@ object ValuesRouteV1 extends Authenticator {
 
         val maybeComment = commentStr.map(str => InputValidation.toSparqlEncodedString(str))
 
-        println(value)
-
         ChangeValueRequestV1(
             valueIri = valueIri,
             value = value,
