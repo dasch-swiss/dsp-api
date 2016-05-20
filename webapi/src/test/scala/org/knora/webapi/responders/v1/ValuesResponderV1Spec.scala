@@ -1578,6 +1578,38 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        // TODO: add create value request test for list node valuegraphdb:test
+        "create a season of a image:bild" in {
+
+            val summer = "http://data.knora.org/lists/526f26ed04"
+
+            // A test UserDataV1.
+            val userData = UserDataV1(
+                user_id = Some("http://data.knora.org/users/91e19f1e01"),
+                lang = "de"
+            )
+
+            // A test UserProfileV1.
+            val userProfile = UserProfileV1(
+                projects = Vector("http://data.knora.org/projects/images"),
+                groups = Nil,
+                userData = userData
+            )
+
+            actorUnderTest ! CreateValueRequestV1(
+                value = HierarchicalListValueV1(summer),
+                userProfile = userProfile,
+                propertyIri = "http://www.knora.org/ontology/images#jahreszeit",
+                resourceIri = "http://data.knora.org/691e7e2244d5",
+                projectIri = "http://data.knora.org/projects/images",
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case CreateValueResponseV1(value, _ , _, _, _) =>
+                    value should ===(HierarchicalListValueV1(summer))
+            }
+
+        }
+
     }
 }

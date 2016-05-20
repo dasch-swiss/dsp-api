@@ -154,8 +154,8 @@
 
             case listValue: HierarchicalListValueV1 => {
 
-                ?newValue knora-base:valueHasListNode <@listValue.hierarchicalListIri> .
-                ?newValue knora-base:valueHasString """@listValue.toString""" .
+                ?newValue@valueIndex knora-base:valueHasListNode <@listValue.hierarchicalListIri> ;
+                                     knora-base:valueHasString """@listValue.toString""" .
 
             }
 

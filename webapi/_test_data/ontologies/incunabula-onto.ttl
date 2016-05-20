@@ -1029,7 +1029,7 @@
                       ],
                       [
                         rdf:type owl:Restriction ;
-                        owl:onProperty :misHasBook ;
+                        owl:onProperty :micsHasBook ;
                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
                       ] ;
 
