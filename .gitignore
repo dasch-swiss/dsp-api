@@ -26,4 +26,3 @@ target/
 *.tdo
 *.toc
 .sbtrc
-salsah/lib/chromedriver
