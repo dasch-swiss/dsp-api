@@ -19,7 +19,7 @@
  *@
 
 @import org.knora.webapi.IRI
-@import org.knora.webapi.messages.v1respondermessages.valuemessages._
+@import org.knora.webapi.messages.v1.responder.valuemessages._
 
 @*
  * Creates a new resource of the given type.

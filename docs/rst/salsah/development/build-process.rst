@@ -49,7 +49,7 @@ Then go back to the webapi root directory and use SBT to start the API server:
     $ cd KNORA_PROJECT_DIRECTORY/webapi
     $ sbt
     > compile
-    > re-start
+    > re-start allowResetTriplestoreContentOperationOverHTTP
 
 Then in another terminal, go to the SALSAH root directory and start the server:
 
@@ -73,7 +73,9 @@ Run the automated tests
 
 Make sure you've started Fuseki and the API server as shown above.
 In order to run the tests, the Selenium driver for Chrome has to be installed.
-Please download it from `here <https://sites.google.com/a/chromium.org/chromedriver/downloads>`_ and save it as ``salsah/lib/chromedriver``.
+Please download it from `here <https://sites.google.com/a/chromium.org/chromedriver/downloads>`_ and save it
+as ``salsah/lib/chromedriver``. Also, please make sure to start the API server with the
+``allowResetTriplestoreContentOperationOverHTTP`` flag. For more information about this flag, see :ref:`webapi-server-startup-flags`
 
 Then at the SBT prompt:
 
