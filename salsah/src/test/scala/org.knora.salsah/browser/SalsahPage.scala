@@ -51,7 +51,7 @@ class SalsahPage {
 
     val pageUrl = "http://localhost:3335/index.html" // TODO: get this from application.conf
 
-    val chromeDriverPath = "lib/chromedriver"
+    val chromeDriverPath = "lib/chromedriver/chromedriver"
 
     // check if the Selenium driver for Chrome exists
     val SeleniumChromeDriver = new File(chromeDriverPath)
@@ -136,7 +136,7 @@ class SalsahPage {
       */
     def getSearchResultRowText(searchResultRow: WebElement): String = {
         eventually {
-            searchResultRow.findElement(By.xpath("td[4]")).getText
+            searchResultRow.findElement(By.xpath("td[3]")).getText
         }
     }
 

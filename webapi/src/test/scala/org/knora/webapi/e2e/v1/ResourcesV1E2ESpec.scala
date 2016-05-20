@@ -25,8 +25,9 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.LiveActorMaker
 import org.knora.webapi.e2e.E2ESpec
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.PropsGetForRegionV1
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.ResourcesRouteV1
@@ -94,7 +95,6 @@ class ResourcesV1E2ESpec extends E2ESpec {
         }
 
         "get the regions of a page when doing a context query with resinfo set to true" in {
-            import org.knora.webapi.messages.v1respondermessages.resourcemessages.ResourceV1JsonProtocol._
 
             Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2F9d626dc76c03?resinfo=true&reqtype=context") ~> resourcesPath ~> check {
 

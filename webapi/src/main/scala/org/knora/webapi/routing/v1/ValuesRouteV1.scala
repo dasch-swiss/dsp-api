@@ -24,11 +24,11 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.CreateResourceApiRequestV1
-import org.knora.webapi.messages.v1respondermessages.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionPathRequestV1}
-import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1respondermessages.valuemessages.ApiValueV1JsonProtocol._
-import org.knora.webapi.messages.v1respondermessages.valuemessages._
+import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
+import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
+import org.knora.webapi.messages.v1.responder.resourcemessages.CreateResourceApiRequestV1
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.routing.v1.ResourcesRouteV1._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
@@ -180,8 +180,6 @@ object ValuesRouteV1 extends Authenticator {
         }
 
         val maybeComment = commentStr.map(str => InputValidation.toSparqlEncodedString(str))
-
-        println(value)
 
         ChangeValueRequestV1(
             valueIri = valueIri,

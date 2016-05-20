@@ -25,7 +25,7 @@ import akka.io.IO
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.http._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.store._
@@ -74,10 +74,10 @@ object KnoraService {
     /**
       * Starts Knora.
       */
-    def start(loadDemoData: Boolean) = {
+    def start = {
         CacheUtil.createCaches(settings.caches)
 
-        if (loadDemoData) {
+        if (StartupFlags.loadDemoData.get) {
             println("Start loading of demo data ...")
             implicit val timeout = Timeout(300.seconds)
             val configList = settings.tripleStoreConfig.getConfigList("rdf-data")
@@ -88,6 +88,11 @@ object KnoraService {
             val result = Await.result(resultFuture, timeout.duration).asInstanceOf[ResetTriplestoreContentACK]
             println("... loading of demo data finished!")
         }
+
+        if (StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get) {
+            println("WARNING: Resetting Triplestore Content over HTTP is turned ON!")
+        }
+
 
         IO(Http) ! Http.Bind(knoraHttpServiceManager, settings.httpInterface, port = settings.httpPort)
         println(s"Knora Webapi started! You can access it on http://${settings.httpInterface}:${settings.httpPort}.")
