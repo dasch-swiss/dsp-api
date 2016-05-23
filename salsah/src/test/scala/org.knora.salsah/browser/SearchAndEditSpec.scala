@@ -41,7 +41,7 @@ import scala.concurrent.duration._
 /**
   * Tests the SALSAH web interface using Selenium.
   */
-class SalsahSpec extends WordSpecLike with ShouldMatchers {
+class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
     /*
 
        We use the Selenium API directly instead of the ScalaTest wrapper, because the Selenium API is more
@@ -196,7 +196,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.clickExtendedSearchButton
 
-            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#book")
+            page.selectRestype("http://www.knora.org/ontology/incunabula#book")
 
             page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#title")
 
@@ -219,7 +219,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.clickExtendedSearchButton
 
-            page.selectExtendedSearchRestype("http://www.knora.org/ontology/knora-base#Region")
+            page.selectRestype("http://www.knora.org/ontology/knora-base#Region")
 
             page.submitExtendedSearch
 
@@ -243,7 +243,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.clickExtendedSearchButton
 
-            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#page")
+            page.selectRestype("http://www.knora.org/ontology/incunabula#page")
 
             page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#seqnum")
 
@@ -275,7 +275,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.clickExtendedSearchButton
 
-            page.selectExtendedSearchRestype("http://www.knora.org/ontology/images#bild")
+            page.selectRestype("http://www.knora.org/ontology/images#bild")
 
             page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/images#titel")
 
@@ -305,7 +305,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.clickExtendedSearchButton
 
-            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#book")
+            page.selectRestype("http://www.knora.org/ontology/incunabula#book")
 
             page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#pubdate")
 
@@ -345,7 +345,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.clickExtendedSearchButton
 
-            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#book")
+            page.selectRestype("http://www.knora.org/ontology/incunabula#book")
 
             page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#pubdate")
 
@@ -409,7 +409,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.clickExtendedSearchButton
 
-            page.selectExtendedSearchRestype("http://www.knora.org/ontology/incunabula#book")
+            page.selectRestype("http://www.knora.org/ontology/incunabula#book")
 
             page.submitExtendedSearch
 
@@ -672,7 +672,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.clickExtendedSearchButton
 
-            page.selectExtendedSearchRestype("http://www.knora.org/ontology/images#bild")
+            page.selectRestype("http://www.knora.org/ontology/images#bild")
 
             page.submitExtendedSearch
 
@@ -715,7 +715,7 @@ class SalsahSpec extends WordSpecLike with ShouldMatchers {
 
             page.clickExtendedSearchButton
 
-            page.selectExtendedSearchRestype("http://www.knora.org/ontology/images#bild")
+            page.selectRestype("http://www.knora.org/ontology/images#bild")
 
             page.submitExtendedSearch
 

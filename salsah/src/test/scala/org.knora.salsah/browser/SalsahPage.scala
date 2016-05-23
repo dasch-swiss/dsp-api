@@ -141,7 +141,7 @@ class SalsahPage {
     }
 
     /**
-      * Returns the SALSAH extended search button.
+      * Clicks the SALSAH extended search button.
       */
     def clickExtendedSearchButton = {
         driver.findElement(By.xpath("//div[@id='searchctrl']/img[2][@class='link']")).click()
@@ -152,7 +152,7 @@ class SalsahPage {
       *
       * @param restype the restype to be selected.
       */
-    def selectExtendedSearchRestype(restype: String) = {
+    def selectRestype(restype: String) = {
         eventually {
             val restypeSelect = driver.findElement(By.name("selrestype"))
             new Select(restypeSelect).selectByValue(restype)
@@ -577,4 +577,17 @@ class SalsahPage {
 
         }
     }
+
+
+    /*
+
+    Create Resource
+
+     */
+
+
+    def clickAddResourceButton() = {
+        driver.findElement(By.xpath("//div[@id='addresctrl']/img")).click()
+    }
+
 }

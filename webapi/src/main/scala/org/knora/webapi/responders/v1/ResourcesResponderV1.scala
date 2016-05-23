@@ -863,7 +863,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     // turn sequenced Futures into one Future of a sequence
                     regionProperties: Seq[PropsGetForRegionV1] <- Future.sequence(regionPropertiesSequencedFutures)
 
-                    resInfo: Option[ResourceInfoV1] = if (regionProperties.nonEmpty) {
+                    resinfoWithRegions: Option[ResourceInfoV1] = if (regionProperties.nonEmpty) {
                         // regions are given, append them to resinfo
                         Some(resinfoV1Option.get.copy(
                             regions = Some(regionProperties)))
@@ -871,7 +871,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         // no regions given, just return resinfo
                         resinfoV1Option
                     }
-                } yield resInfo
+                } yield resinfoWithRegions
             } else {
                 // resinfo is not requested
                 Future(resinfoV1Option)
