@@ -24,11 +24,13 @@
  * Searches for a value in the version history of the values of a resource property. If the value is found, returns
  * all assertions about it. If the value is not found, returns no rows.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource to search.
  * @param propertyIri the property to search.
  * @param searchValueIri the IRI of the value to look for.
  *@
-@(resourceIri: IRI,
+@(triplestore: String,
+  resourceIri: IRI,
   propertyIri: IRI,
   searchValueIri: IRI)
 
@@ -37,14 +39,20 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?objPred ?objObj ?predStandoff ?objStandoff
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
     BIND(IRI("@propertyIri") as ?property)
     BIND(IRI("@searchValueIri") as ?searchValue)
 
     {
-        ?resource ?property ?currentValue .
-        ?currentValue knora-base:previousValue* ?searchValue .
+        ?resource ?property ?currentValue ;
+            knora-base:isDeleted false .
+        ?currentValue knora-base:previousValue* ?searchValue ;
+            knora-base:isDeleted false .
         ?searchValue ?objPred ?objObj .
 
         FILTER(?objPred != knora-base:attachedToProject)
@@ -56,9 +64,11 @@ WHERE {
     }
     UNION
     {
-        ?resource ?property ?currentValue .
-        ?currentValue knora-base:previousValue* ?searchValue .
-        ?resource knora-base:attachedToProject ?resourceProject .
+        ?resource ?property ?currentValue ;
+            knora-base:isDeleted false ;
+            knora-base:attachedToProject ?resourceProject .
+        ?currentValue knora-base:previousValue* ?searchValue ;
+            knora-base:isDeleted false .
 
         @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
 
@@ -68,13 +78,5 @@ WHERE {
 
         BIND(knora-base:attachedToProject AS ?objPred)
         BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
-    }
-
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
-
-    MINUS {
-        ?currentValue knora-base:isDeleted true .
     }
 }

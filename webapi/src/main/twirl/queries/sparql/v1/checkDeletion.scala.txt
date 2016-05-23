@@ -23,15 +23,21 @@
 @**
  * Checks whether a knora-base:Value exists and is deleted.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param valueIri the IRI of the value.
  *@
-@(valueIri: IRI)
+@(triplestore: String,
+  valueIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?isDeleted
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@valueIri") AS ?value)
 

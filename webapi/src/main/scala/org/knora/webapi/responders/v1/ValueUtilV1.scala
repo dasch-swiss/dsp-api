@@ -26,10 +26,10 @@ import akka.actor.ActorSelection
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.ontologymessages.{CheckSubClassRequestV1, CheckSubClassResponseV1}
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.LocationV1
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.VariableResultsRow
-import org.knora.webapi.messages.v1respondermessages.valuemessages._
+import org.knora.webapi.messages.v1.responder.ontologymessages.{CheckSubClassRequestV1, CheckSubClassResponseV1}
+import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
+import org.knora.webapi.messages.v1.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
 
@@ -421,12 +421,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
                         // If there's a resid, generate an href from it, because the SALSAH GUI expects this.
                         // Otherwise, use the href returned by the query, if present.
-                        val maybeHref = maybeResId match {
-                            case Some(targetResourceIri) =>
-                                val urlEncodedResIdIri = URLEncoder.encode(targetResourceIri, "UTF-8")
-                                Some(s"${settings.baseApiUrl}v1/resources/$urlEncodedResIdIri")
-
-                            case None => standoffInfo.get(OntologyConstants.KnoraBase.StandoffHasHref)
+                        val maybeHref = if (maybeResId.nonEmpty) {
+                            maybeResId
+                        } else {
+                            standoffInfo.get(OntologyConstants.KnoraBase.StandoffHasHref)
                         }
 
                         StandoffPositionV1(

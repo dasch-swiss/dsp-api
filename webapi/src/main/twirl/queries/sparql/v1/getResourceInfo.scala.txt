@@ -24,24 +24,28 @@
  * Gets all the properties of a resource, along with the properties of its file values, but not
  * including subproperties of knora-base:hasValue.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource to be queried.
  *@
-@(resourceIri: IRI)
+@(triplestore: String,
+  resourceIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?p ?o ?isFileValue ?objPred ?objObj
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@resourceIri") AS ?resource)
 
-    ?resource rdf:type ?resourceClass .
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?resource rdf:type ?resourceClass ;
+        knora-base:isDeleted false .
 
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
 
     {
         @* Query statements about the resource's file values. *@
@@ -49,17 +53,18 @@ WHERE {
         ?p rdfs:subPropertyOf* knora-base:hasFileValue .
         BIND(true AS ?isFileValue)
 
-
         @* Get the file value's project if it has one, otherwise use the resource's project. *@
 
         {
             ?resource ?p ?o .
+            ?o knora-base:isDeleted false .
             ?o ?objPred ?objObj .
             FILTER(?objPred != knora-base:attachedToProject)
         }
         UNION
         {
             ?resource ?p ?o .
+            ?o knora-base:isDeleted false .
             ?resource knora-base:attachedToProject ?resourceProject .
 
             OPTIONAL {
@@ -79,9 +84,5 @@ WHERE {
         MINUS {
             ?p rdfs:subPropertyOf+ knora-base:hasValue .
         }
-    }
-
-    MINUS {
-        ?o knora-base:isDeleted true .
     }
 }

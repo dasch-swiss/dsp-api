@@ -23,26 +23,26 @@
 @**
  * Given the IRI of a resource, finds any other resource that contains the specified resource.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource whose containing resource, if any, is to be returned.
  *@
-@(resourceIri: IRI)
+@(triplestore: String,
+  resourceIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?containingResource
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
-
+    ?resource knora-base:isDeleted false .
     ?linkingProp rdfs:subPropertyOf+ knora-base:isPartOf .
     ?resource ?linkingProp ?containingResource .
-
-    MINUS {
-        ?containingResource knora-base:isDeleted true .
-    }
+    ?containingResource knora-base:isDeleted false .
 }

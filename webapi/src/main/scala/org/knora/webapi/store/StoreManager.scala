@@ -24,7 +24,7 @@ import akka.actor._
 import akka.event.LoggingReceive
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{Initialized, InitializedResponse, TriplestoreRequest}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{Initialized, InitializedResponse, TriplestoreRequest}
 import org.knora.webapi.store.triplestore.TriplestoreManagerActor
 import org.knora.webapi.{ActorMaker, LiveActorMaker, Settings, UnexpectedMessageException}
 

@@ -20,14 +20,13 @@
 
 @import org.knora.webapi._
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
-@import org.knora.webapi.messages.v1respondermessages.valuemessages._
+@import org.knora.webapi.messages.v1.responder.valuemessages._
 
 @**
  * Inserts a new value of a resource property (as opposed to a new version of an existing value).
  *
  * @param dataNamedGraph the named graph in which the project stores its data.
- * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
-                      results from the WHERE clause of the update.
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource to update.
  * @param propertyIri the resource property to update.
  * @param newValueIri the new value IRI.
@@ -37,12 +36,10 @@
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values.
  * @param maybeComment an optional comment on the value.
- * @param updateResourceLastModificationDate if true, update the resource's knora-base:lastModificationDate.
  * @param value the value to insert.
  *
- * This operation will do nothing if the information submitted is inconsistent with the resource's class definition,
- * if the insertion would be redundant, or if the resource is nonexistent or marked as deleted. To find out whether
- * the update succeeded, the application must query the property's version history.
+ * The generated WHERE clause does some consistency checks. If these fail, the operation will do nothing.
+ * To find out whether the update succeeded, the application must query the property's version history.
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
@@ -53,25 +50,31 @@
   value: UpdateValueV1,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   maybeComment: Option[String],
-  permissionRelevantAssertions: Seq[(IRI, IRI)],
-  updateResourceLastModificationDate: Boolean)
+  permissionRelevantAssertions: Seq[(IRI, IRI)])
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix owl: <http://www.w3.org/2002/07/owl#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?dataNamedGraph {
-        @if(updateResourceLastModificationDate) {
-            @* Delete the resource's last modification date so we can update it. *@
-            ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
-        }
+        @* Delete the resource's last modification date so we can update it. *@
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
 
         @* If any LinkValues need to be updated, detach them from the resource. *@
         @if(linkUpdates.exists(_.linkValueExists)) {
             @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
                 @if(linkUpdate.linkValueExists) {
+                    @*
+
+                    If we need to make a new version of an existing LinkValue for a standoff link, the WHERE
+                    clause will have bound a SPARQL variable ?linkValueN containing the IRI of the existing LinkValue,
+                    where N is an index in the sequence linkUpdates. Detach the existing LinkValue from the resource
+                    so we can attach the new version.
+
+                    *@
                     ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
                 }
             }
@@ -79,308 +82,46 @@ DELETE {
     }
 } INSERT {
     GRAPH ?dataNamedGraph {
-        @* Construct the value. *@
-        ?newValue rdf:type ?valueType .
+        ?resource knora-base:lastModificationDate ?currentTime .
 
-        @value match {
-            case textValue: TextValueV1 => {
-
-                ?newValue knora-base:valueHasString """@textValue.utf8str""" .
-
-                @* Create a Standoff node for each StandoffPositionV1. *@
-
-                @for((attribute, position) <- textValue.flattenStandoff) {
-                    ?newValue knora-base:valueHasStandoff
-                        [
-                            @*
-
-                            If the StandoffPositionV1 contains both a resid and an href, we assume that the href is
-                            redundant (i.e. it's based on the resid), so we ignore it.
-
-                            *@
-                            @(position.resid, position.href) match {
-                                case (Some(resid), _) => {
-                                    rdf:type knora-base:StandoffLink ;
-                                    knora-base:standoffHasAttribute "@attribute" ;
-                                    knora-base:standoffHasLink <@resid> ;
-                                }
-
-                                case (None, Some(href)) => {
-                                    rdf:type knora-base:StandoffHref ;
-                                    knora-base:standoffHasAttribute "@attribute" ;
-                                    knora-base:standoffHasHref <@href> ;
-                                }
-
-                                case (None, None) => {
-                                    rdf:type knora-base:StandoffVisualAttribute ;
-                                    knora-base:standoffHasAttribute "@attribute" ;
-                                }
-                            }
-
-                            knora-base:standoffHasStart @position.start ;
-                            knora-base:standoffHasEnd @position.end
-                        ] .
-                }
-            }
-
-            case intValue: IntegerValueV1 => {
-
-                ?newValue knora-base:valueHasInteger @intValue.ival .
-                ?newValue knora-base:valueHasString """@intValue.ival.toString""" .
-
-            }
-
-            case floatValue: FloatValueV1 => {
-
-                ?newValue knora-base:valueHasFloat @floatValue.fval .
-                ?newValue knora-base:valueHasString """@floatValue.fval.toString""" .
-
-            }
-
-            case jdcValue: JulianDayCountValueV1 => {
-
-                ?newValue knora-base:valueHasStartJDC @jdcValue.dateval1 .
-                ?newValue knora-base:valueHasEndJDC @jdcValue.dateval2 .
-                ?newValue knora-base:valueHasStartPrecision "@jdcValue.dateprecision1" .
-                ?newValue knora-base:valueHasEndPrecision "@jdcValue.dateprecision2" .
-                ?newValue knora-base:valueHasCalendar "@jdcValue.calendar" .
-                ?newValue knora-base:valueHasString """@jdcValue.toString""" .
-
-            }
-
-            case colorValue: ColorValueV1 => {
-
-                ?newValue knora-base:valueHasColor """@colorValue.color""" .
-                ?newValue knora-base:valueHasString """@colorValue.toString""" .
-
-            }
-
-            case geometryValue: GeomValueV1 => {
-
-                ?newValue knora-base:valueHasGeometry """@geometryValue.geom""" .
-                ?newValue knora-base:valueHasString """@geometryValue.toString""" .
-
-            }
-
-            case stillImageFileValue: StillImageFileValueV1 => {
-                ?newValue knora-base:originalFilename """@stillImageFileValue.originalFilename""" .
-                ?newValue knora-base:originalMimeType """@stillImageFileValue.originalMimeType""" .
-                ?newValue knora-base:internalFilename """@stillImageFileValue.internalFilename""" .
-                ?newValue knora-base:internalMimeType """@stillImageFileValue.internalMimeType""" .
-                ?newValue knora-base:dimX @stillImageFileValue.dimX .
-                ?newValue knora-base:dimY @stillImageFileValue.dimY .
-                ?newValue knora-base:qualityLevel @stillImageFileValue.qualityLevel .
-                ?newValue knora-base:valueHasQname """@stillImageFileValue.qualityName""" .
-
-                @if(stillImageFileValue.isPreview) {
-                    ?newValue knora-base:valueIsPreview true .
-                }
-
-                ?newValue knora-base:valueHasString """@stillImageFileValue.toString""" .
-            }
-
-            case other => {
-                @{throw SparqlGenerationException(s"Value object $other is not supported in this SPARQL template"); ()}
-            }
-        }
-
-        @* TODO: add remaining types. *@
-
-        @* Insert the value's comment, if given. *@
-        @maybeComment match {
-            case Some(comment) => {
-                ?newValue knora-base:valueHasComment """@comment""" .
-            }
-
-            case None => {}
-        }
-
-        @* Insert the value's permission-relevant assertions (its owner, project, and permissions). *@
-        @for(assertion <- permissionRelevantAssertions) {
-            ?newValue <@assertion._1> <@assertion._2> .
-        }
-
-        ?newValue knora-base:valueHasOrder ?nextOrder .
-        ?newValue knora-base:valueCreationDate ?currentTime .
-
-        @* Insert direct links and LinkValues for resource references. *@
-
-        @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
-            @* Insert a direct link for the resource reference if necessary. *@
-            @if(linkUpdate.insertDirectLink) {
-                ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
-            }
-
-            @* Insert a LinkValue for the resource reference. *@
-            <@linkUpdate.newLinkValueIri> rdf:type knora-base:LinkValue ;
-                rdf:subject ?resource ;
-                rdf:predicate <@linkUpdate.linkPropertyIri> ;
-                rdf:object <@linkUpdate.linkTargetIri> ;
-                knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
-                knora-base:valueCreationDate ?currentTime .
-
-            @for(assertion <- linkUpdate.permissionRelevantAssertions) {
-                <@linkUpdate.newLinkValueIri> <@assertion._1> <@assertion._2> .
-            }
-
-            @* If we're inserting a new version of an existing LinkValue, attach it to the previous version. *@
-            @if(linkUpdate.linkValueExists) {
-                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex .
-            }
-
-            @* Attach the new LinkValue to its containing resource. *@
-            ?resource <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
-        }
-
-        @* Attach the value to the resource. *@
-        ?resource ?property ?newValue .
-
-        @if(updateResourceLastModificationDate) {
-            @* Update the resource's last modification date. *@
-            ?resource knora-base:lastModificationDate ?currentTime .
+        @{
+            queries.sparql.v1.txt.generateInsertStatementsForCreateValue(valueIndex = 0,
+                                                                         propertyIri = propertyIri,
+                                                                         value = value,
+                                                                         linkUpdates = linkUpdates,
+                                                                         maybeComment = maybeComment,
+                                                                         permissionRelevantAssertions = permissionRelevantAssertions)
         }
     }
 }
-@*
-
-GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
-in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
-explicit statements in the WHERE clause here.
-
-*@
-@triplestore match {
-    case "graphdb" | "graphdb-free" => {
-        USING <http://www.ontotext.com/explicit>
-    }
-
-    case other => {}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
 }
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
     BIND(IRI("@resourceIri") AS ?resource)
-    BIND(IRI("@propertyIri") AS ?property)
-    BIND(IRI("@newValueIri") AS ?newValue)
-    BIND(IRI("@valueTypeIri") AS ?valueType)
-    BIND(NOW() AS ?currentTime)
+    BIND(NOW() as ?currentTime)
 
     @* Do nothing if the resource doesn't exist, is marked as deleted, or isn't actually a resource. *@
 
-    ?resource rdf:type ?resourceClass .
+    ?resource rdf:type ?resourceClass ;
+        knora-base:isDeleted false .
     ?resourceClass rdfs:subClassOf+ knora-base:Resource .
 
-    MINUS {
-        ?resource knora-base:isDeleted true .
+    @* Get the resource's last modification date, if it has one, so we can update it. *@
+
+    OPTIONAL {
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
     }
 
-    @* Do nothing if the submitted value has the wrong type. *@
-
-	?property knora-base:objectClassConstraint ?propertyRange .
-    ?valueType rdfs:subClassOf* ?propertyRange .
-
-    @* Do nothing if neither the resource class nor any of its superclasses has a cardinality for this property. *@
-
-    ?resourceClass rdfs:subClassOf* ?restriction .
-    ?restriction a owl:Restriction .
-    ?restriction owl:onProperty ?property .
-
-    @*
-
-    Check the state of any LinkValues to be updated for resource references.
-
-    *@
-
-    @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
-        @if(linkUpdate.insertDirectLink) {
-            @*
-
-            Do nothing if we were asked to insert a direct link to a target that doesn't exist, is marked as deleted,
-            isn't a knora-base:Resource, or belongs to the wrong OWL class for the link property.
-
-            *@
-
-            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass .
-
-            MINUS {
-                <@linkUpdate.linkTargetIri> knora-base:isDeleted true .
-            }
-
-            ?linkTargetClass rdfs:subClassOf+ knora-base:Resource .
-            <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass .
-            ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
-        }
-
-        @if(linkUpdate.directLinkExists) {
-            @* Make sure the relevant direct link exists between the two resources. *@
-            ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
-        } else {
-            @* Make sure there no such direct link. *@
-            MINUS {
-                ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
-            }
-        }
-
-        @if(linkUpdate.linkValueExists) {
-            @*
-
-            Make sure a knora-base:LinkValue exists, describing the relevant direct link
-            between the source and target resources, and has the correct reference count.
-
-            *@
-            ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
-            ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
-                rdf:subject ?resource ;
-                rdf:predicate <@linkUpdate.linkPropertyIri> ;
-                rdf:object <@linkUpdate.linkTargetIri> ;
-                knora-base:valueHasRefCount @linkUpdate.currentReferenceCount .
-
-            MINUS {
-                ?linkValue@linkValueIndex knora-base:isDeleted true .
-            }
-        } else {
-            @* Make sure there is no such knora-base:LinkValue. *@
-            MINUS {
-                ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
-                ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
-                    rdf:subject ?resource ;
-                    rdf:predicate <@linkUpdate.linkPropertyIri> ;
-                    rdf:object <@linkUpdate.linkTargetIri> .
-
-                MINUS {
-                    ?linkValue@linkValueIndex knora-base:isDeleted true .
-                }
-            }
-        }
-    }
-
-    @if(updateResourceLastModificationDate) {
-        @* Get the resource's last modification date, if it has one, so we can update it. *@
-
-        OPTIONAL {
-            ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
-        }
-    }
-
-    @*
-
-    Generate knora-base:valueHasOrder for the new value. If the property already has one or more (non-deleted)
-    values in the resource, find the one with the highest order, add 1 to its order, and give the resulting
-    order to the new value. Otherwise, give the new value an order of 0.
-
-    *@
-
-    {
-        SELECT ((MAX(?order)) AS ?maxOrder) (IF(BOUND(?maxOrder), ?maxOrder + 1, 0) AS ?nextOrder)
-        WHERE {
-            BIND(IRI("@resourceIri") AS ?resource)
-            BIND(IRI("@propertyIri") AS ?property)
-
-            ?resource ?property ?value .
-            ?value knora-base:valueHasOrder ?order .
-
-            MINUS {
-                ?value knora-base:isDeleted true .
-            }
-        }
-    }
+    @{
+        queries.sparql.v1.txt.generateWhereStatementsForCreateValue(valueIndex = 0,
+                                                                    resourceIri = resourceIri,
+                                                                    propertyIri = propertyIri,
+                                                                    newValueIri = newValueIri,
+                                                                    valueTypeIri = valueTypeIri,
+                                                                    linkUpdates = linkUpdates,
+                                                                    maybeValueHasOrder = None)
+     }
 }
-

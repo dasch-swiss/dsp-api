@@ -23,16 +23,17 @@ package org.knora.webapi.responders.v1
 import akka.actor.{Actor, ActorLogging, Props, Status}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
-import org.knora.webapi.messages.v1respondermessages.ckanmessages.CkanResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.graphdatamessages.GraphDataResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.listmessages.ListsResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.ontologymessages.OntologyResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectsResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.ResourcesResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.searchmessages.SearchResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.usermessages.UsersResponderRequestV1
-import org.knora.webapi.messages.v1respondermessages.valuemessages.ValuesResponderRequestV1
+import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
+import org.knora.webapi.messages.v1.responder.graphdatamessages.GraphDataResponderRequestV1
+import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
+import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
+import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
+import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderRequestV1
+import org.knora.webapi.messages.v1.responder.storemessages.StoreResponderRequestV1
+import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
+import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
 import org.knora.webapi.responders._
 import org.knora.webapi.{ActorMaker, UnexpectedMessageException}
 
@@ -145,6 +146,17 @@ class ResponderManagerV1 extends Actor with ActorLogging {
       */
     protected val ckanRouter = makeDefaultCkanRouter
 
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[StoreResponderV1]].
+      */
+    protected final def makeDefaultStoreRouter = makeActor(FromConfig.props(Props[StoreResponderV1]), STORE_ROUTER_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the Store responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default Store responder.
+      */
+    protected val storeRouter = makeDefaultStoreRouter
+
     def receive = LoggingReceive {
         case resourcesResponderRequestV1: ResourcesResponderRequestV1 => resourcesRouter.forward(resourcesResponderRequestV1)
         case valuesResponderRequest: ValuesResponderRequestV1 => valuesRouter.forward(valuesResponderRequest)
@@ -156,6 +168,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
         case graphdataResponderRequest: GraphDataResponderRequestV1 => resourcesRouter.forward(graphdataResponderRequest)
         case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter forward projectsResponderRequest
         case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter forward ckanResponderRequest
+        case storeResponderRequest: StoreResponderRequestV1 => storeRouter forward storeResponderRequest
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 }

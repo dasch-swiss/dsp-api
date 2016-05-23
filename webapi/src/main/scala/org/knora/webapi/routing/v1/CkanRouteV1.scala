@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.knora.webapi.SettingsImpl
-import org.knora.webapi.messages.v1respondermessages.ckanmessages.CkanRequestV1
+import org.knora.webapi.messages.v1.responder.ckanmessages.CkanRequestV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import spray.routing.Directives._
 import spray.routing._

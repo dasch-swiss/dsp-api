@@ -23,15 +23,21 @@
 @**
  * Gets the permission-relevant assertions (i.e. permissions plus owner and project) about a set of values.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param valueIris a list of IRIs of resources to query.
  *@
-@(valueIris: Seq[IRI])
+@(triplestore: String,
+  valueIris: Seq[IRI])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?value ?objPred ?objObj
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     @for((valueIri, index) <- valueIris.zipWithIndex) {
         @if(index > 0) {
@@ -40,12 +46,14 @@ WHERE {
 
         {
             BIND(IRI("@valueIri") as ?value)
+            ?value knora-base:isDeleted false .
             ?objPred rdfs:subPropertyOf+ knora-base:hasPermission .
             ?value ?objPred ?objObj .
         }
         UNION
         {
             BIND(IRI("@valueIri") as ?value)
+            ?value knora-base:isDeleted false .
             BIND(knora-base:attachedToUser as ?objPred)
             ?value ?objPred ?objObj
         }
@@ -55,6 +63,7 @@ WHERE {
 
             BIND(IRI("@valueIri") as ?value)
 
+            ?value knora-base:isDeleted false .
             ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
             ?resource ?prop ?value .
             ?resource knora-base:attachedToProject ?resourceProject .
@@ -66,9 +75,5 @@ WHERE {
             BIND(knora-base:attachedToProject AS ?objPred)
             BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
         }
-    }
-
-    MINUS {
-        ?value knora-base:isDeleted true .
     }
 }

@@ -23,12 +23,13 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.sipimessages.RepresentationV1JsonProtocol._
-import org.knora.webapi.messages.v1respondermessages.sipimessages.SipiConstants.FileType
-import org.knora.webapi.messages.v1respondermessages.sipimessages._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
-import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{ApiValueV1, FileValueV1, StillImageFileValueV1}
+import org.knora.webapi.messages.v1.responder.sipimessages._
+import RepresentationV1JsonProtocol._
+import SipiConstants.FileType
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.valuemessages.{ApiValueV1, FileValueV1, StillImageFileValueV1}
+import org.knora.webapi.messages.v1.responder.sipimessages._
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.InputValidation
 import spray.client.pipelining._
@@ -69,7 +70,10 @@ class SipiResponderV1 extends ResponderV1 {
       */
     private def getFileInfoForSipiV1(filename: IRI, userProfile: UserProfileV1): Future[SipiFileInfoGetResponseV1] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getFileValue(filename).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getFileValue(
+                triplestore = settings.triplestoreType,
+                filename = filename
+            ).toString())
             queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = queryResponse.results.bindings
             // check if rows were found for the given filename

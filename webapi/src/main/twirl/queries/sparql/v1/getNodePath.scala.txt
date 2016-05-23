@@ -24,11 +24,15 @@
  * Given a node in a hierarchical list, returns the nodes in the path from the root node to the specified node,
  * not including the root node.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param queryNodeIri the node whose path is to be queried.
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
  *@
-@(queryNodeIri: IRI, preferredLanguage: String, fallbackLanguage: String)
+@(triplestore: String,
+  queryNodeIri: IRI,
+  preferredLanguage: String,
+  fallbackLanguage: String)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -36,6 +40,10 @@ prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT DISTINCT ?node ?nodeName ?label ?child
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@queryNodeIri") as ?leafNode)
     BIND(str("@preferredLanguage") as ?preferredLanguage)

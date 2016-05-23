@@ -24,10 +24,10 @@ import akka.actor.Status
 import akka.pattern._
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.ontologymessages._
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.SalsahGuiConversions
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
-import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.ontologymessages._
+import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
@@ -192,11 +192,17 @@ class OntologyResponderV1 extends ResponderV1 {
 
             for {
             // get information about resource entities
-                sparqlQueryStringForResourceClasses <- Future(queries.sparql.v1.txt.getResourceClassInfo(resourceClassIris).toString())
+                sparqlQueryStringForResourceClasses <- Future(queries.sparql.v1.txt.getResourceClassInfo(
+                    triplestore = settings.triplestoreType,
+                    entityIris = resourceClassIris
+                ).toString())
                 // _ = println(sparqlQueryStringForResourceClasses)
                 resourceClassesResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryStringForResourceClasses)).mapTo[SparqlSelectResponse]
 
-                sparqlQueryStringForCardinalities = queries.sparql.v1.txt.getResourceClassCardinalities(resourceClassIris).toString()
+                sparqlQueryStringForCardinalities = queries.sparql.v1.txt.getResourceClassCardinalities(
+                    triplestore = settings.triplestoreType,
+                    entityIris = resourceClassIris
+                ).toString()
                 // _ = println(sparqlQueryStringForCardinalities)
                 cardinalitiesResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryStringForCardinalities)).mapTo[SparqlSelectResponse]
 
@@ -306,7 +312,10 @@ class OntologyResponderV1 extends ResponderV1 {
 
             for {
             // get information about property entities
-                sparqlQueryStringForProps <- Future(queries.sparql.v1.txt.getEntityInfoForProps(propertyIris.map(_.propertyIri).toVector).toString())
+                sparqlQueryStringForProps <- Future(queries.sparql.v1.txt.getEntityInfoForProps(
+                    triplestore = settings.triplestoreType,
+                    entityIris = propertyIris.map(_.propertyIri).toVector
+                ).toString())
                 propertiesResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryStringForProps)).mapTo[SparqlSelectResponse]
 
                 // Filter the query results to get text in the user's preferred language (or the application's default language),
@@ -489,6 +498,7 @@ class OntologyResponderV1 extends ResponderV1 {
         for {
             sparqlQuery <- Future(
                 queries.sparql.v1.txt.checkSubClass(
+                    triplestore = settings.triplestoreType,
                     subClassIri = checkSubClassRequest.subClassIri,
                     superClassIri = checkSubClassRequest.superClassIri
                 ).toString()
@@ -538,14 +548,20 @@ class OntologyResponderV1 extends ResponderV1 {
             val namedGraphIriToQuery = namedGraphInfoKey.namedGraphIri
 
             for {
-                resourceTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getResourceTypesForNamedGraph(namedGraphIriToQuery).toString())
+                resourceTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getResourceTypesForNamedGraph(
+                    namedGraph = namedGraphIriToQuery,
+                    triplestore = settings.triplestoreType
+                ).toString())
                 resourceTypesInNamedGraphResponse <- (storeManager ? SparqlSelectRequest(resourceTypesInNamedGraphSparql)).mapTo[SparqlSelectResponse]
 
                 resourceClassIrisInNamedGraph = resourceTypesInNamedGraphResponse.results.bindings.map {
                     (row) => row.rowMap("class")
                 }.toVector
 
-                propertyTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getPropertyTypesForNamedGraph(namedGraphIriToQuery).toString())
+                propertyTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getPropertyTypesForNamedGraph(
+                    namedGraph = namedGraphIriToQuery,
+                    triplestore = settings.triplestoreType
+                ).toString())
                 propertyTypesInNamedGraphResponse <- (storeManager ? SparqlSelectRequest(propertyTypesInNamedGraphSparql)).mapTo[SparqlSelectResponse]
 
                 propertyTypeIrisInNamedGraph = propertyTypesInNamedGraphResponse.results.bindings.map {

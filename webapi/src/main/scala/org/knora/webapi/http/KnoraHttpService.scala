@@ -44,7 +44,8 @@ class KnoraHttpService extends Actor with ActorLogging with HttpService with COR
             AssetsRouteV1.rapierPath(system, settings, log) ~
             GraphDataRouteV1.rapierPath(system, settings, log) ~
             ProjectsRouteV1.rapierPath(system, settings, log) ~
-            CkanRouteV1.rapierPath(system, settings, log)
+            CkanRouteV1.rapierPath(system, settings, log) ~
+            StoreRouteV1.rapierPath(system, settings, log)
 
     def actorRefFactory = context
 

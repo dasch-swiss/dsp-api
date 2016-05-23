@@ -20,14 +20,13 @@
 
 @import org.knora.webapi._
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
-@import org.knora.webapi.messages.v1respondermessages.valuemessages._
+@import org.knora.webapi.messages.v1.responder.valuemessages._
 
 @**
  * Inserts a new version of an existing value of a resource property.
  *
  * @param dataNamedGraph the named graph to update.
- * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
-                      results from the WHERE clause of the update.
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource to update.
  * @param propertyIri the IRI of the property that points from the resource to the value.
  * @param currentValueIri the most recent existing version of the value.
@@ -56,9 +55,11 @@
   maybeComment: Option[String],
   linkUpdates: Seq[SparqlTemplateLinkUpdate])
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?dataNamedGraph {
@@ -83,7 +84,8 @@ DELETE {
 } INSERT {
     GRAPH ?dataNamedGraph {
         @* Construct the new value version. *@
-        ?newValue rdf:type ?valueType .
+        ?newValue rdf:type ?valueType ;
+            knora-base:isDeleted "false"^^xsd:boolean .
 
         @value match {
             case textValue: TextValueV1 => {
@@ -182,6 +184,13 @@ DELETE {
                 ?newValue knora-base:valueHasString """@stillImageFileValue.toString""" .
             }
 
+            case listValue: HierarchicalListValueV1 => {
+
+                ?newValue knora-base:valueHasListNode <@listValue.hierarchicalListIri> .
+                ?newValue knora-base:valueHasString """@listValue.toString""" .
+
+            }
+
             case other => {
                 @{throw SparqlGenerationException(s"Value object $other is not supported in this SPARQL template"); ()}
             }
@@ -224,6 +233,8 @@ DELETE {
                 knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
                 @if(linkUpdate.newReferenceCount == 0) {
                     knora-base:isDeleted true ;
+                } else {
+                    knora-base:isDeleted false ;
                 }
                 knora-base:valueCreationDate ?currentTime .
 
@@ -247,19 +258,9 @@ DELETE {
         ?resource knora-base:lastModificationDate ?currentTime .
     }
 }
-@*
-
-GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
-in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
-explicit statements in the WHERE clause here.
-
-*@
-@triplestore match {
-    case "graphdb" | "graphdb-free" => {
-        USING <http://www.ontotext.com/explicit>
-    }
-
-    case other => {}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
 }
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
@@ -294,15 +295,11 @@ WHERE {
 
     @* Do nothing if the resource is marked as deleted. *@
 
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
+    ?resource knora-base:isDeleted false .
 
     @* Don't add a new version of a deleted value. *@
 
-    MINUS {
-        ?currentValue knora-base:isDeleted true .
-    }
+    ?currentValue knora-base:isDeleted false .
 
     @*
 
@@ -319,15 +316,12 @@ WHERE {
 
             *@
 
-            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass .
+            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex .
+            <@linkUpdate.linkTargetIri> knora-base:isDeleted false .
 
-            MINUS {
-                <@linkUpdate.linkTargetIri> knora-base:isDeleted true .
-            }
-
-            ?linkTargetClass rdfs:subClassOf+ knora-base:Resource .
-            <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass .
-            ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
+            ?linkTargetClass@linkValueIndex rdfs:subClassOf+ knora-base:Resource .
+            <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
+            ?linkTargetClass@linkValueIndex rdfs:subClassOf* ?expectedTargetClass@linkValueIndex .
         }
 
         @if(linkUpdate.directLinkExists) {
@@ -352,11 +346,8 @@ WHERE {
                 rdf:subject ?resource ;
                 rdf:predicate <@linkUpdate.linkPropertyIri> ;
                 rdf:object <@linkUpdate.linkTargetIri> ;
-                knora-base:valueHasRefCount @linkUpdate.currentReferenceCount .
-
-            MINUS {
-                ?linkValue@linkValueIndex knora-base:isDeleted true .
-            }
+                knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
+                knora-base:isDeleted false .
         } else {
             @* Make sure there is no such knora-base:LinkValue. *@
             MINUS {
@@ -364,11 +355,8 @@ WHERE {
                 ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
                     rdf:subject ?resource ;
                     rdf:predicate <@linkUpdate.linkPropertyIri> ;
-                    rdf:object <@linkUpdate.linkTargetIri> .
-
-                MINUS {
-                    ?linkValue@linkValueIndex knora-base:isDeleted true .
-                }
+                    rdf:object <@linkUpdate.linkTargetIri> ;
+                    knora-base:isDeleted false .
             }
         }
     }

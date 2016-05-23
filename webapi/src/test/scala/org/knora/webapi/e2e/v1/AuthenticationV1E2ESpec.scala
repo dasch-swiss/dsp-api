@@ -21,13 +21,12 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.LiveActorMaker
 import org.knora.webapi.e2e.E2ESpec
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
-import org.knora.webapi.routing.v1.{ResourcesRouteV1, AuthenticateRouteV1}
+import org.knora.webapi.routing.v1.{AuthenticateRouteV1, ResourcesRouteV1}
 import org.knora.webapi.store._
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
-
 import spray.http.HttpHeaders.{Cookie, `Set-Cookie`}
 import spray.http._
 import spray.httpx.RequestBuilding

@@ -23,10 +23,10 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.ontologymessages.{ResourceEntityInfoV1, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
-import org.knora.webapi.messages.v1respondermessages.searchmessages._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
-import org.knora.webapi.messages.v1respondermessages.valuemessages.KnoraCalendarV1
+import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1, ResourceEntityInfoV1}
+import org.knora.webapi.messages.v1.responder.searchmessages._
+import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.twirl.SearchCriterion
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{DateUtilV1, FormatConstants}
@@ -238,7 +238,7 @@ class SearchResponderV1 extends ResponderV1 {
                     val searchResultRow: SearchResultRowV1 = searchResultRowWithEntityIris.searchResultRow
                     val resourceEntityInfoMap: ResourceEntityInfoV1 = entityInfoResponse.resourceEntityInfoMap(searchResultRowWithEntityIris.resourceClassIri)
                     val resourceClassLabel = resourceEntityInfoMap.getPredicateObject(OntologyConstants.Rdfs.Label)
-                    val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) // TODO: make a Sipi URL.
+                    val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
                     val resourceClassIri = searchResultRowWithEntityIris.resourceClassIri
 
                     val resourceClassIconURL = resourceClassIcon match {

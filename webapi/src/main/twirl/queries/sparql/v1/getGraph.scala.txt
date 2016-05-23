@@ -24,21 +24,25 @@
  * Given the IRI of a resource, gets the graph from which a graph visualization can be generated.
  * This is hardcoded for 2 nested levels at the moment.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.
  *@
-@(resourceIri: IRI)
+@(triplestore: String,
+  resourceIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?resource ?outgoingProp1 ?incomingProp1 ?resource1 ?outgoingProp2 ?incomingProp2 ?resource2
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
+    ?resource knora-base:isDeleted false .
 
     {
         ?outgoingProp1 rdfs:subPropertyOf* knora-base:hasLinkTo .

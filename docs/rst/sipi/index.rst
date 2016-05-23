@@ -32,6 +32,8 @@ to use Sipi for converting and serving media files.
 .. toctree::
    :maxdepth: 2
 
+   setup-sipi-for-knora
    sipi-and-knora
+
 
 .. _International Image Interoperability Framework (IIIF): http://iiif.io/

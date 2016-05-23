@@ -1,0 +1,110 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi._
+@import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
+@import org.knora.webapi.messages.v1.responder.valuemessages._
+
+@**
+ * Generates statements to be added to the WHERE clause of a SPARQL update when creating a new link between resources.
+ *
+ * @param valueIndex the index of the link value in the sequence of values that are being created in the transaction (can
+ *                   be 0 if only one value is being created). This index will be used to make SPARQL variable names
+ *                   specific to the value being created.
+ * @param resourceIri the resource that is the source of the link.
+ * @param linkUpdate a [[LinkUpdate]] object describing the link to insert.
+ *
+ * The SPARQL variable `?resourceClass` (the OWL class of the link source) must already be bound.
+ *@
+@(valueIndex: Int,
+  resourceIri: IRI,
+  linkUpdate: SparqlTemplateLinkUpdate,
+  maybeValueHasOrder: Option[Int])
+
+    # Value @valueIndex
+    # Property: @linkUpdate.linkPropertyIri
+
+    BIND(IRI("@linkUpdate.linkPropertyIri") AS ?linkProperty@valueIndex)
+    BIND(IRI("@{linkUpdate.linkPropertyIri}Value") AS ?linkValueProperty@valueIndex)
+    BIND(IRI("@linkUpdate.newLinkValueIri") AS ?newLinkValue@valueIndex)
+    BIND(IRI("@linkUpdate.linkTargetIri") AS ?linkTarget@valueIndex)
+
+    @* Make sure the link target is a knora-base:Resource. *@
+
+    ?linkTarget@valueIndex rdf:type ?linkTargetClass@valueIndex .
+    ?linkTargetClass@valueIndex rdfs:subClassOf+ knora-base:Resource .
+
+    @* Do nothing if the target resource belongs to the wrong OWL class. *@
+
+    ?linkProperty@valueIndex knora-base:objectClassConstraint ?expectedTargetClass@valueIndex .
+    ?linkTargetClass@valueIndex rdfs:subClassOf* ?expectedTargetClass@valueIndex .
+
+    @* Do nothing if the target resource doesn't exist or is marked as deleted. *@
+
+    ?linkTarget@valueIndex knora-base:isDeleted false .
+
+    @* Do nothing if the source resource's OWL class has no cardinality for the link property. *@
+
+    ?resourceClass rdfs:subClassOf* ?restriction@valueIndex .
+    ?restriction@valueIndex a owl:Restriction .
+    ?restriction@valueIndex owl:onProperty ?linkProperty@valueIndex .
+
+    @if(linkUpdate.directLinkExists) {
+        @{throw SparqlGenerationException(s"linkUpdate.directLinkExists must be false (for valueIndex $valueIndex) in this SPARQL template"); ()}
+    }
+
+    @if(linkUpdate.linkValueExists) {
+        @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be false (for valueIndex $valueIndex) in this SPARQL template"); ()}
+    }
+
+    @*
+
+    Bind a variable for knora-base:valueHasOrder for the new value.
+
+    If this template is being used to create a single value, maybeValueHasOrder will be None, and we have to do a subquery
+    to determine the next available knora-base:valueHasOrder. This works as follows: if the property already has one or more
+    (non-deleted) values in the resource, find the one with the highest order, add 1 to its order, and give the resulting
+    order to the new value. Otherwise, give the new value an order of 0.
+
+    If this template is being used to create a new resource with its initial values, there are no existing values to query in
+    the resource, and maybeValueHasOrder will contain the knora-base:valueHasOrder to be used.
+
+    *@
+
+    @maybeValueHasOrder match {
+        case Some(valueHasOrder) => {
+
+            BIND(@valueHasOrder AS ?nextOrder@valueIndex)
+
+        }
+
+        case None => {
+
+            {
+                SELECT ((MAX(?order@valueIndex)) AS ?maxOrder@valueIndex) (IF(BOUND(?maxOrder@valueIndex), ?maxOrder@valueIndex + 1, 0) AS ?nextOrder@valueIndex)
+                WHERE {
+                    <@resourceIri> <@{linkUpdate.linkPropertyIri}Value> ?otherLinkValue@valueIndex .
+                    ?otherLinkValue@valueIndex knora-base:valueHasOrder ?order@valueIndex ;
+                        knora-base:isDeleted false .
+                }
+            }
+
+        }
+    }

@@ -24,7 +24,7 @@ import akka.actor.Props
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.SettingsConstants._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
+import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.store.{StoreManager, _}
 import org.knora.webapi.{CoreSpec, LiveActorMaker}
 
@@ -32,7 +32,7 @@ import scala.concurrent.duration._
 
 object AllTriplestoreSpec {
 
-    val config = ConfigFactory.parseString(
+    private val config = ConfigFactory.parseString(
         """
          # akka.loglevel = "DEBUG"
          # akka.stdout-loglevel = "DEBUG"
@@ -52,7 +52,7 @@ object AllTriplestoreSpec {
  */
 class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with ImplicitSender {
 
-    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), STORE_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), STORE_MANAGER_ACTOR_NAME)
 
     private val timeout = 30.seconds
     private val tsType = settings.triplestoreType
@@ -260,17 +260,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                 }
 
 
-                storeManager ! BeginUpdateTransaction()
-
-                val transactionID = expectMsgPF(timeout) {
-                    case UpdateTransactionBegun(id) => id
-                }
-
-                storeManager ! SparqlUpdateRequest(transactionID, insertQuery)
-                expectMsg(SparqlUpdateResponse(transactionID))
-
-                storeManager ! CommitUpdateTransaction(transactionID)
-                expectMsg(timeout, UpdateTransactionCommitted(transactionID))
+                storeManager ! SparqlUpdateRequest(insertQuery)
+                expectMsg(SparqlUpdateResponse())
 
                 storeManager ! SparqlSelectRequest(checkInsertQuery)
                 expectMsgPF(timeout) {
@@ -306,17 +297,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                     }
                 }
 
-                storeManager ! BeginUpdateTransaction()
-
-                val transactionID = expectMsgPF(timeout) {
-                    case UpdateTransactionBegun(id) => id
-                }
-
-                storeManager ! SparqlUpdateRequest(transactionID, revertInsertQuery)
-                expectMsg(SparqlUpdateResponse(transactionID))
-
-                storeManager ! CommitUpdateTransaction(transactionID)
-                expectMsg(timeout, UpdateTransactionCommitted(transactionID))
+                storeManager ! SparqlUpdateRequest(revertInsertQuery)
+                expectMsg(SparqlUpdateResponse())
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
                 expectMsgPF(timeout) {

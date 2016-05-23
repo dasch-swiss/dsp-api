@@ -25,21 +25,20 @@ import java.util.UUID
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.graphdatamessages._
-import org.knora.webapi.messages.v1respondermessages.ontologymessages._
-import org.knora.webapi.messages.v1respondermessages.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType}
-import org.knora.webapi.messages.v1respondermessages.resourcemessages._
-import org.knora.webapi.messages.v1respondermessages.sipimessages._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1respondermessages.valuemessages._
+import org.knora.webapi.messages.v1.responder.graphdatamessages.{GraphDataEdgeV1, GraphDataGetResponseV1, GraphNodeV1, GraphV1, GraphDataGetRequestV1}
+import org.knora.webapi.messages.v1.responder.ontologymessages._
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType}
+import org.knora.webapi.messages.v1.responder.sipimessages._
+import org.knora.webapi.messages.v1.responder.resourcemessages._
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.ResourceLocker
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
 import scala.concurrent.{Future, Promise}
-import scala.util.Try
 
 /**
   * Responds to requests for information about resources, and returns responses in Knora API v1 format.
@@ -66,6 +65,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserProfileV1) => future2Message(sender(), getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile), log)
         case ResourceCreateRequestV1(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID) => future2Message(sender(), createNewResource(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID), log)
         case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1) => future2Message(sender(), checkResourceClass(resourceIri, owlClass, userProfile), log)
+        case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -270,7 +270,10 @@ class ResourcesResponderV1 extends ResponderV1 {
         // the template can be of depth n, currently it's hardcoded at level 2
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getGraph(resourceIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getGraph(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri
+            ).toString())
             graphResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             graphResponseRows: Seq[VariableResultsRow] = graphResponse.results.bindings
 
@@ -363,7 +366,10 @@ class ResourcesResponderV1 extends ResponderV1 {
         val maybeIncomingRefsFuture: Future[Option[SparqlSelectResponse]] = if (getIncoming) {
             for {
             // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
-                incomingRefsSparql <- Future(queries.sparql.v1.txt.getIncomingReferences(resourceIri).toString())
+                incomingRefsSparql <- Future(queries.sparql.v1.txt.getIncomingReferences(
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceIri
+                ).toString())
                 response <- (storeManager ? SparqlSelectRequest(incomingRefsSparql)).mapTo[SparqlSelectResponse]
             } yield Some(response)
         } else {
@@ -447,10 +453,15 @@ class ResourcesResponderV1 extends ResponderV1 {
             resourceTypeIri = resInfoWithoutQueryingOntology.restype_id
             resourceTypeEntityInfo = entityInfoResponse.resourceEntityInfoMap(resourceTypeIri)
 
+            maybeResourceTypeIconSrc = resourceTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) match {
+                case Some(resClassIcon) => Some(valueUtilV1.makeResourceClassIconURL(resourceTypeIri, resClassIcon))
+                case _ => None
+            }
+
             resInfo: ResourceInfoV1 = resInfoWithoutQueryingOntology.copy(
                 restype_label = resourceTypeEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
                 restype_description = resourceTypeEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
-                restype_iconsrc = resourceTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
+                restype_iconsrc = maybeResourceTypeIconSrc
             )
 
             // Construct a ResourceDataV1.
@@ -459,7 +470,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 restype_label = resourceTypeEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
                 restype_name = resInfo.restype_id,
                 res_id = resourceIri,
-                iconsrc = resourceTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
+                iconsrc = maybeResourceTypeIconSrc
             )
 
             // Add ontology-based information to incoming references.
@@ -471,7 +482,10 @@ class ResourcesResponderV1 extends ResponderV1 {
                         resinfo = incoming.resinfo.copy(
                             restype_label = incomingResourceTypeEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
                             restype_description = incomingResourceTypeEntityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
-                            restype_iconsrc = incomingResourceTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
+                            restype_iconsrc = incomingResourceTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) match {
+                                case Some(resClassIcon) => Some(valueUtilV1.makeResourceClassIconURL(incoming.resinfo.restype_id, resClassIcon))
+                                case _ => None
+                            }
                         )
                     )
             }
@@ -584,6 +598,90 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @return a [[ResourceContextResponseV1]] describing the context of the resource.
       */
     private def getContextResponseV1(resourceIri: IRI, userProfile: UserProfileV1, resinfo: Boolean): Future[ResourceContextResponseV1] = {
+
+        /**
+          * Represents a source object (e.g. a page of a book).
+          *
+          * @param id          IRI of the source Object.
+          * @param firstprop   first property of the source object.
+          * @param seqnum      sequence number of the source object.
+          * @param permissions the current user's permissions on the source object.
+          * @param fileValues  the file values belonging to the source object.
+          */
+        case class SourceObject(id: IRI,
+                                firstprop: Option[String],
+                                seqnum: Int,
+                                permissions: Option[Int],
+                                fileValues: Vector[StillImageFileValue] = Vector.empty[StillImageFileValue])
+
+        /**
+          * Represents a still image file value belonging to a source object (e.g., an image representation of a page).
+          *
+          * @param id          the file value IRI
+          * @param permissions the current user's permissions on the file value.
+          * @param image       a [[StillImageFileValueV1]]
+          */
+        case class StillImageFileValue(id: IRI,
+                                       permissions: Option[Int],
+                                       image: StillImageFileValueV1)
+
+
+        /**
+          * Creates a [[StillImageFileValue]] from a [[VariableResultsRow]].
+          *
+          * @param row a [[VariableResultsRow]] representing a [[StillImageFileValueV1]]
+          * @return a [[StillImageFileValue]].
+          */
+        def createStillImageFileValueFromResultRow(row: VariableResultsRow): Vector[StillImageFileValue] = {
+            // if the file value has no project, get the project from the source object
+            val fileValueProject = row.rowMap.get("fileValueAttachedToProject") match {
+                case Some(fileValueProjectIri) => fileValueProjectIri
+                case None => row.rowMap("sourceObjectAttachedToProject")
+            }
+
+            val fileValueIri = row.rowMap("fileValue")
+            val authorizationAssertionsForFileValue = PermissionUtilV1.parsePermissions(row.rowMap("fileValuePermissionAssertions"), row.rowMap("fileValueAttachedToUser"), fileValueProject)
+            val fileValuePermissions = PermissionUtilV1.getUserPermissionV1(fileValueIri, authorizationAssertionsForFileValue, userProfile)
+
+            row.rowMap.get("fileValue") match {
+
+                case Some(fileValueIri) => Vector(StillImageFileValue(
+                    id = fileValueIri,
+                    permissions = fileValuePermissions,
+                    image = StillImageFileValueV1(
+                        internalMimeType = row.rowMap("internalMimeType"),
+                        internalFilename = row.rowMap("internalFilename"),
+                        originalFilename = row.rowMap("originalFilename"),
+                        dimX = row.rowMap("dimX").toInt,
+                        dimY = row.rowMap("dimY").toInt,
+                        qualityLevel = row.rowMap("qualityLevel").toInt,
+                        isPreview = InputValidation.optionStringToBoolean(row.rowMap.get("isPreview"))
+                    ))
+                )
+                case None => Vector.empty[StillImageFileValue]
+            }
+        }
+
+        /**
+          * Creates a [[SourceObject]] from a [[VariableResultsRow]].
+          *
+          * @param acc the accumalatur used in the fold left construct.
+          * @param row a [[VariableResultsRow]] representing a [[SourceObject]].
+          * @return a [[SourceObject]].
+          */
+        def createSourceObjectFromResultRow(acc: Vector[SourceObject], row: VariableResultsRow) = {
+            val sourceObjectIri = row.rowMap("sourceObject")
+            val authorizationAssertionsForsourceObject = PermissionUtilV1.parsePermissions(row.rowMap("sourceObjectPermissionAssertions"), row.rowMap("sourceObjectAttachedToUser"), row.rowMap("sourceObjectAttachedToProject"))
+            val sourceObjectPermissions = PermissionUtilV1.getUserPermissionV1(sourceObjectIri, authorizationAssertionsForsourceObject, userProfile)
+
+            acc :+ SourceObject(id = row.rowMap("sourceObject"),
+                firstprop = row.rowMap.get("firstprop"),
+                seqnum = row.rowMap("seqnum").toInt,
+                permissions = sourceObjectPermissions,
+                fileValues = createStillImageFileValueFromResultRow(row)
+            )
+        }
+
         // If the API request asked for a ResourceInfoV1, query for that.
         val resInfoV1Future = if (resinfo) {
             for {
@@ -602,7 +700,10 @@ class ResourcesResponderV1 extends ResponderV1 {
 
         for {
         // If this resource is part of another resource, get its parent resource.
-            isPartOfSparqlQuery <- Future(queries.sparql.v1.txt.isPartOf(resourceIri).toString())
+            isPartOfSparqlQuery <- Future(queries.sparql.v1.txt.isPartOf(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri
+            ).toString())
             isPartOfResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isPartOfSparqlQuery)).mapTo[SparqlSelectResponse]
 
             (parentResourceIriOption, parentResInfoV1Option) <- isPartOfResponse.results.bindings match {
@@ -629,123 +730,158 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 // Do a SPARQL query that returns binary representations of resources that are part of this resource (as
                 // indicated by knora-base:isPartOf).
-                    contextSparqlQuery <- Future(queries.sparql.v1.txt.getContext(resourceIri).toString())
+                    contextSparqlQuery <- Future(queries.sparql.v1.txt.getContext(
+                        triplestore = settings.triplestoreType,
+                        resourceIri = resourceIri
+                    ).toString())
                     contextQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(contextSparqlQuery)).mapTo[SparqlSelectResponse]
                     rows = contextQueryResponse.results.bindings
 
-                    // Filter the component resources by eliminating the ones that the user doesn't have permission to see.
-                    filteredRowsForResourcePermissions <- if (rows.nonEmpty) {
-                        for {
-                            sparqlQuery <- Future(queries.sparql.v1.txt.getAuthorisationInfoForResources(resourceIris = rows.map(_.rowMap("sourceObject"))).toString())
-                            authorizationInfoQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-                            authorizationInfoGroupedByResource: Map[IRI, Seq[VariableResultsRow]] = authorizationInfoQueryResponse.results.bindings.groupBy(_.rowMap("resource"))
-                        } yield rows.filter {
-                            case row =>
-                                val componentIri = row.rowMap("sourceObject")
-                                val authorizationAssertionsForResource = authorizationInfoGroupedByResource(componentIri).map {
-                                    row => row.rowMap("p") -> row.rowMap("o")
-                                }
+                    //
+                    // Use fold left to iterate over the results
+                    //
+                    // Every source object may have one or more file values:
+                    // All the file values belonging to the same source object have to be assigned to the same source object case class
+                    //
+                    sourceObjects: Vector[SourceObject] = rows.foldLeft(Vector.empty[SourceObject]) {
+                        case (acc: Vector[SourceObject], row) =>
+                            if (acc.isEmpty) {
+                                // first run, create a source object containing a still image file value
+                                createSourceObjectFromResultRow(acc, row)
+                            } else {
+                                // get the reference to the last source object
+                                val lastSourceObj = acc.last
 
-                                PermissionUtilV1.getUserPermissionV1(componentIri, authorizationAssertionsForResource, userProfile).nonEmpty
-                        }
-                    } else {
-                        Future(rows)
-                    }
-
-                    // Sort them by the ordering knora-base:seqnum (e.g. the order of pages in a book).
-                    orderedBySeqNum: Seq[VariableResultsRow] = filteredRowsForResourcePermissions.sortWith {
-                        case (firstRow, secondRow) =>
-                            firstRow.rowMap("seqnum").toInt < secondRow.rowMap("seqnum").toInt
-                    }
-
-                    // Filter out the preview images that the user doesn't have permission to see.
-
-                    rowMapsWithFilteredPreviews: Seq[Map[String, String]] <- if (orderedBySeqNum.nonEmpty) {
-                        // Get the IRIs of the preview images of the resources that have preview images.
-                        val previewIris: Vector[IRI] = orderedBySeqNum.foldLeft(Vector.empty[IRI]) {
-                            case (acc, row) =>
-                                row.rowMap.get("preview") match {
-                                    case Some(iri) => acc :+ iri
-                                    case None => acc
-                                }
-                        }
-
-                        // Get the user's permssions on each preview image.
-
-                        for {
-                            sparqlQuery <- Future(queries.sparql.v1.txt.getAuthorisationInfoForValues(previewIris).toString())
-                            authorizationInfoQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-                            authorizationInfoGroupedByFileValue: Map[IRI, Seq[VariableResultsRow]] = authorizationInfoQueryResponse.results.bindings.groupBy(_.rowMap("value"))
-                            permissionCodesForFileValues: Map[IRI, Int] = authorizationInfoGroupedByFileValue.foldLeft(Map.empty[IRI, Int]) {
-                                case (acc, (fileValueIri, permissionRelevantRows)) =>
-                                    val permissionRelevantAssertions: Seq[(String, String)] = permissionRelevantRows.map {
-                                        row => row.rowMap("objPred") -> row.rowMap("objObj")
-                                    }
-
-                                    PermissionUtilV1.getUserPermissionV1(fileValueIri, permissionRelevantAssertions, userProfile) match {
-                                        case Some(permissionCode) => acc + (fileValueIri -> permissionCode)
-                                        case None => acc
-                                    }
-                            }
-                        } yield orderedBySeqNum.map {
-                            row =>
-                                val rowMap = row.rowMap
-                                val preview = rowMap("preview")
-
-                                // Allow the user to see the preview if they have any permissions on it (because the lowest permission
-                                // is restricted view permission).
-                                if (permissionCodesForFileValues.contains(preview)) {
-                                    rowMap
+                                if (lastSourceObj.seqnum == row.rowMap("seqnum").toInt) {
+                                    // processing at least the second still image file value belonging to the same source object
+                                    // add the still image file value to the file values list of the source object
+                                    acc.dropRight(1) :+ lastSourceObj.copy(fileValues = lastSourceObj.fileValues ++ createStillImageFileValueFromResultRow(row))
                                 } else {
-                                    // If the user doesn't have permission to see the preview, just remove the preview's IRI
-                                    // from the results.
-                                    rowMap - "preview"
+                                    // dealing with a new source object, create a source object containing a still image file value (like in the first run of this fold left)
+                                    createSourceObjectFromResultRow(acc, row)
                                 }
-                        }
-                    } else {
-                        Future(orderedBySeqNum.map(_.rowMap))
+                            }
                     }
 
-                    // For each resource, construct a ResourceContextItemV1.
-                    contexts: Seq[ResourceContextItemV1] = rowMapsWithFilteredPreviews.map {
-                        rowMap =>
-                            val sourceObject = rowMap("sourceObject")
+                    // Filter the source objects by eliminating the ones that the user doesn't have permission to see.
+                    sourceObjectsWithPermissions = sourceObjects.filter(sourceObj => sourceObj.permissions.nonEmpty)
 
-                            val preview: Option[LocationV1] = rowMap.get("preview") match {
-                                case Some(previewIri) =>
-                                    val stillImageFileValueV1 = StillImageFileValueV1(
-                                        internalMimeType = rowMap("internalMimeType"),
-                                        internalFilename = rowMap("internalFilename"),
-                                        originalFilename = rowMap("originalFilename"),
-                                        dimX = rowMap("dimX").toInt,
-                                        dimY = rowMap("dimY").toInt,
-                                        qualityLevel = rowMap("qualityLevel").toInt,
-                                        isPreview = true
-                                    )
+                    //_ = println(ScalaPrettyPrinter.prettyPrint(sourceObjectsWithPermissions))
 
-                                    Some(valueUtilV1.fileValueV12LocationV1(stillImageFileValueV1))
+                    contextItems = sourceObjectsWithPermissions.map {
+                        (sourceObj: SourceObject) =>
+
+                            val preview: Option[LocationV1] = sourceObj.fileValues.filter(fileVal => fileVal.permissions.nonEmpty && fileVal.image.isPreview).headOption match {
+                                case Some(preview: StillImageFileValue) =>
+                                    Some(valueUtilV1.fileValueV12LocationV1(preview.image))
+                                case None => None
+                            }
+
+                            val locations: Option[Seq[LocationV1]] = sourceObj.fileValues.filter(fileVal => fileVal.permissions.nonEmpty && !fileVal.image.isPreview).headOption match {
+                                case Some(full: StillImageFileValue) =>
+                                    val fileVals = createMultipleImageResolutions(full.image)
+                                    Some(preview.toVector ++ fileVals.map(valueUtilV1.fileValueV12LocationV1(_)))
+
                                 case None => None
                             }
 
                             ResourceContextItemV1(
-                                res_id = sourceObject,
+                                res_id = sourceObj.id,
                                 preview = preview,
-                                firstprop = rowMap.get("firstprop")
+                                locations = locations,
+                                firstprop = sourceObj.firstprop
                             )
                     }
 
-                } yield contexts
+                //_ = println(ScalaPrettyPrinter.prettyPrint(contextItems))
+
+
+                } yield contextItems
             } else {
                 Future(Nil)
             }
 
             resinfoV1Option: Option[ResourceInfoV1] <- resInfoV1Future
 
+            resinfoV1WithRegionsOption: Option[ResourceInfoV1] <- if (resinfoV1Option.nonEmpty) {
+
+                for {
+                    //
+                    // check if there are regions pointing to this resource
+                    //
+                    regionSparqlQuery <- Future(queries.sparql.v1.txt.getRegions(
+                        triplestore = settings.triplestoreType,
+                        resourceIri = resourceIri
+                    ).toString())
+                    regionQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(regionSparqlQuery)).mapTo[SparqlSelectResponse]
+                    regionRows = regionQueryResponse.results.bindings
+
+                    regionPropertiesSequencedFutures: Seq[Future[PropsGetForRegionV1]] = regionRows.filter {
+                        regionRow =>
+                            val permissionsForRegion = PermissionUtilV1.parsePermissions(regionRow.rowMap("regionObjectPermissionAssertions"), regionRow.rowMap("owner"), regionRow.rowMap("project"))
+                            val sourceObjectPermissions = PermissionUtilV1.getUserPermissionV1(resourceIri, permissionsForRegion, userProfile)
+
+                            // ignore regions the user has no permissions on
+                            sourceObjectPermissions.nonEmpty
+                    }.map {
+                        regionRow =>
+
+                            val regionIri = regionRow.rowMap("region")
+                            val resClass = regionRow.rowMap("resclass") // possibly we deal with a subclass of knora-base:Region
+
+                            // get the properties for each region
+                            for {
+                                propsV1: Seq[PropertyV1] <- getResourceProperties(resourceIri = regionIri, Some(resClass), userProfile = userProfile)
+
+                                propsGetV1 = propsV1.map {
+                                    // convert each PropertyV1 in a PropertyGetV1
+                                    (propV1: PropertyV1) => convertPropertyV1toPropertyGetV1(propV1)
+                                }
+
+                                // get the icon for this region's resource class
+                                entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+                                    resourceClassIris = Set(resClass),
+                                    userProfile = userProfile
+                                )).mapTo[EntityInfoGetResponseV1]
+
+                                regionInfo: ResourceEntityInfoV1 = entityInfoResponse.resourceEntityInfoMap(resClass)
+
+                                resClassIcon: Option[String] = regionInfo.predicates.get(OntologyConstants.KnoraBase.ResourceIcon) match {
+                                    case Some(predicateInfo: PredicateInfoV1) =>
+                                        Some(valueUtilV1.makeResourceClassIconURL(resClass, predicateInfo.objects.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"resourceClass $resClass has no value for ${OntologyConstants.KnoraBase.ResourceIcon}"))))
+                                    case None => None
+                                }
+
+                            } yield PropsGetForRegionV1(
+                                properties = propsGetV1,
+                                res_id = regionIri,
+                                iconsrc = resClassIcon
+                            )
+
+                    }
+
+                    // turn sequenced Futures into one Future of a sequence
+                    regionProperties: Seq[PropsGetForRegionV1] <- Future.sequence(regionPropertiesSequencedFutures)
+
+                    resInfo: Option[ResourceInfoV1] = if (regionProperties.nonEmpty) {
+                        // regions are given, append them to resinfo
+                        Some(resinfoV1Option.get.copy(
+                            regions = Some(regionProperties)))
+                    } else {
+                        // no regions given, just return resinfo
+                        resinfoV1Option
+                    }
+                } yield resInfo
+            } else {
+                // resinfo is not requested
+                Future(resinfoV1Option)
+            }
+
             resourceContextV1 = parentResourceIriOption match {
                 case Some(_) =>
                     // This resource is part of another resource, so return the resource info of the parent.
                     ResourceContextV1(
-                        resinfo = resinfoV1Option,
+                        resinfo = resinfoV1WithRegionsOption,
                         parent_res_id = parentResourceIriOption,
                         parent_resinfo = parentResInfoV1Option,
                         context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_PARTOF,
@@ -757,17 +893,18 @@ class ResourcesResponderV1 extends ResponderV1 {
                     ResourceContextV1(
                         res_id = Some(resourceContexts.map(_.res_id)),
                         preview = Some(resourceContexts.map(_.preview)),
+                        locations = Some(resourceContexts.map(_.locations)),
                         firstprop = Some(resourceContexts.map(_.firstprop)),
                         region = Some(resourceContexts.map(_ => None)),
                         canonical_res_id = resourceIri,
-                        resinfo = resinfoV1Option,
+                        resinfo = resinfoV1WithRegionsOption,
                         resclass_name = Some("image"),
                         context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_COMPOUND
                     )
                 } else {
                     // Indicate that neither of the above is true.
                     ResourceContextV1(
-                        resinfo = resinfoV1Option,
+                        resinfo = resinfoV1WithRegionsOption,
                         canonical_res_id = resourceIri,
                         context = ResourceContextCodeV1.RESOURCE_CONTEXT_NONE
                     )
@@ -832,7 +969,15 @@ class ResourcesResponderV1 extends ResponderV1 {
 
         for {
 
-            searchResourcesSparql <- Future(queries.sparql.v1.txt.getResourceSearchResult(phrase, lastTerm, resourceTypeIri, numberOfProps, limitOfResults, settings.triplestoreType, FormatConstants.INFORMATION_SEPARATOR_ONE).toString())
+            searchResourcesSparql <- Future(queries.sparql.v1.txt.getResourceSearchResult(
+                triplestore = settings.triplestoreType,
+                phrase = phrase,
+                lastTerm = lastTerm,
+                resourceTypeIri = resourceTypeIri,
+                numberOfProps = numberOfProps,
+                limitOfResults = limitOfResults,
+                separator = FormatConstants.INFORMATION_SEPARATOR_ONE
+            ).toString())
             //_ = println(searchResourcesSparql)
             searchResponse <- (storeManager ? SparqlSelectRequest(searchResourcesSparql)).mapTo[SparqlSelectResponse]
 
@@ -906,10 +1051,10 @@ class ResourcesResponderV1 extends ResponderV1 {
           * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `knora-base:objectClassConstraint` of
           * the property that is supposed to point to it.
           *
-          * @param propertyIri the IRI of the property.
+          * @param propertyIri                   the IRI of the property.
           * @param propertyObjectClassConstraint the IRI of the `knora-base:objectClassConstraint` of the property.
-          * @param updateValueV1 the value to be updated.
-          * @param userProfile   the profile of the user making the request.
+          * @param updateValueV1                 the value to be updated.
+          * @param userProfile                   the profile of the user making the request.
           * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
           */
         def checkPropertyObjectClassConstraintForValue(propertyIri: IRI, propertyObjectClassConstraint: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {
@@ -1046,47 +1191,48 @@ class ResourcesResponderV1 extends ResponderV1 {
                     }
                 }
 
-                // Everything looks OK, so we can create an empty resource and add the values to it. This must
-                // happen in an update transaction managed by the store package, to ensure that triplestore
-                // consistency checks are performed on the result of the whole set of updates. We use
-                // TransactionUtil.runInUpdateTransaction to handle the store module's transaction management.
-                // Its first argument is a lambda function that sends all the updates to the store manager,
-                // using a transaction ID provided by TransactionUtil.runInUpdateTransaction.
-                createMultipleValuesResponse <- TransactionUtil.runInUpdateTransaction({
-                    transactionID =>
-                        for {
-                        // Create an empty resource.
-                            createNewResourceSparql <- Future(queries.sparql.v1.txt.createNewResource(
-                                dataNamedGraph = namedGraph,
-                                triplestore = settings.triplestoreType,
-                                resourceIri = resourceIri,
-                                label = label,
-                                resourceClassIri = resourceClassIri,
-                                ownerIri = ownerIri,
-                                projectIri = projectIri,
-                                permissions = permissions).toString())
-                            createResourceResponse <- (storeManager ? SparqlUpdateRequest(transactionID, createNewResourceSparql)).mapTo[SparqlUpdateResponse]
+                // Everything looks OK, so we can create the resource and its values.
 
-                            // Ask the values responder to create the values.
-                            createValuesRequest = CreateMultipleValuesRequestV1(
-                                transactionID = transactionID,
-                                projectIri = projectIri,
-                                resourceIri = resourceIri,
-                                resourceClassIri = resourceClassIri,
-                                values = values ++ fileValuesV1,
-                                userProfile = userProfile,
-                                apiRequestID = apiRequestID
-                            )
-                            createValuesResponse: CreateMultipleValuesResponseV1 <- (responderManager ? createValuesRequest).mapTo[CreateMultipleValuesResponseV1]
-                        } yield createValuesResponse
-                }, storeManager)
+                // Ask the values responder for the SPARQL statements that are needed to create the values.
+                generateSparqlForValuesRequest = GenerateSparqlToCreateMultipleValuesRequestV1(
+                    projectIri = projectIri,
+                    resourceIri = resourceIri,
+                    resourceClassIri = resourceClassIri,
+                    values = values ++ fileValuesV1,
+                    userProfile = userProfile,
+                    apiRequestID = apiRequestID
+                )
+                generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- (responderManager ? generateSparqlForValuesRequest).mapTo[GenerateSparqlToCreateMultipleValuesResponseV1]
+
+                // Generate SPARQL for creating the resource, and include the SPARQL for creating the values.
+                createNewResourceSparql = queries.sparql.v1.txt.createNewResource(
+                    triplestore = settings.triplestoreType,
+                    dataNamedGraph = namedGraph,
+                    resourceIri = resourceIri,
+                    label = label,
+                    resourceClassIri = resourceClassIri,
+                    ownerIri = ownerIri,
+                    projectIri = projectIri,
+                    permissions = permissions,
+                    whereStatementsForValues = generateSparqlForValuesResponse.whereSparql,
+                    insertStatementsForValues = generateSparqlForValuesResponse.insertSparql
+                ).toString()
+
+                // _ = println(createNewResourceSparql)
+
+                // Do the update.
+                createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]
 
                 // Verify that the resource was created.
 
-                createdResourcesSparql <- Future(queries.sparql.v1.txt.getCreatedResource(resourceIri = resourceIri).toString())
+                createdResourcesSparql <- Future(queries.sparql.v1.txt.getCreatedResource(
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceIri
+                ).toString())
                 createdResourceResponse <- (storeManager ? SparqlSelectRequest(createdResourcesSparql)).mapTo[SparqlSelectResponse]
 
                 _ = if (createdResourceResponse.results.bindings.isEmpty) {
+                    log.error(s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$createNewResourceSparql")
                     throw UpdateNotPerformedException(s"Resource $resourceIri was not created. Please report this as a possible bug.")
                 }
 
@@ -1094,7 +1240,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 verifyCreateValuesRequest = VerifyMultipleValueCreationRequestV1(
                     resourceIri = resourceIri,
-                    unverifiedValues = createMultipleValuesResponse.unverifiedValues,
+                    unverifiedValues = generateSparqlForValuesResponse.unverifiedValues,
                     userProfile = userProfile
                 )
 
@@ -1205,7 +1351,11 @@ class ResourcesResponderV1 extends ResponderV1 {
                 throw ForbiddenException(s"User $userIri does not have permission to view resource $resourceIri")
             }
 
-            sparqlQuery = queries.sparql.v1.txt.checkSubClass(superClassIri = owlClass, subClassIri = resourceInfo.restype_id).toString()
+            sparqlQuery = queries.sparql.v1.txt.checkSubClass(
+                triplestore = settings.triplestoreType,
+                superClassIri = owlClass,
+                subClassIri = resourceInfo.restype_id
+            ).toString()
             queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
         } yield ResourceCheckClassResponseV1(isInClass = queryResponse.results.bindings.nonEmpty)
     }
@@ -1225,11 +1375,47 @@ class ResourcesResponderV1 extends ResponderV1 {
       */
     private def getResourceInfoV1(resourceIri: IRI, userProfile: UserProfileV1, queryOntology: Boolean): Future[(Option[Int], ResourceInfoV1)] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getResourceInfo(resourceIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getResourceInfo(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri
+            ).toString())
             resInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             resInfoResponseRows = resInfoResponse.results.bindings
-            resInfo <- makeResourceInfoV1(resourceIri, resInfoResponseRows, userProfile, queryOntology)
+            resInfo: (Option[Int], ResourceInfoV1) <- makeResourceInfoV1(resourceIri, resInfoResponseRows, userProfile, queryOntology)
         } yield resInfo
+    }
+
+    /**
+      *
+      * Queries the properties for the given resource.
+      *
+      * @param resourceIri the Iri of the given resource.
+      * @param userProfile the profile of the user making the request.
+      * @return a [[PropertiesGetResponseV1]] representing the properties of the given resource.
+      */
+    private def getPropertiesV1(resourceIri: IRI, userProfile: UserProfileV1): Future[PropertiesGetResponseV1] = {
+
+        for {
+
+        // get resource class of the specified resource
+            resclassSparqlQuery <- Future(queries.sparql.v1.txt.getResourceClass(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri
+            ).toString())
+            resclassQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resclassSparqlQuery)).mapTo[SparqlSelectResponse]
+            resclass = resclassQueryResponse.results.bindings.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"No resource class given for $resourceIri"))
+
+            properties: Seq[PropertyV1] <- getResourceProperties(resourceIri = resourceIri, maybeResourceTypeIri = Some(resclass.rowMap("resourceClass")), userProfile = userProfile)
+
+            propertiesGetV1: Seq[PropertyGetV1] = properties.map {
+
+                prop =>
+                    convertPropertyV1toPropertyGetV1(prop)
+
+            }
+
+        } yield PropertiesGetResponseV1(PropsGetV1(propertiesGetV1))
+
     }
 
     /**
@@ -1355,7 +1541,10 @@ class ResourcesResponderV1 extends ResponderV1 {
                         entityInfo = entityInfoResponse.resourceEntityInfoMap(resTypeIri)
                         label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label)
                         description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment)
-                        iconsrc = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
+                        iconsrc = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) match {
+                            case Some(resClassIcon) => Some(valueUtilV1.makeResourceClassIconURL(resTypeIri, resClassIcon))
+                            case _ => None
+                        }
                     } yield (label, description, iconsrc)
                 } else {
                     Future(None, None, None)
@@ -1392,7 +1581,10 @@ class ResourcesResponderV1 extends ResponderV1 {
     private def getGroupedProperties(resourceIri: IRI): Future[GroupedPropertiesByType] = {
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getResourcePropertiesAndValues(resourceIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getResourcePropertiesAndValues(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri
+            ).toString())
             // _ = println(sparqlQuery)
             resPropsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
@@ -1437,7 +1629,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         def makePropertyV1(propertyIri: IRI, propertyCardinality: Option[Cardinality.Value], propertyEntityInfo: Option[PropertyEntityInfoV1], valueObjects: Seq[ValueObjectV1]): PropertyV1 = {
             PropertyV1(
                 pid = propertyIri,
-                valuetype_id = propertyEntityInfo.flatMap{
+                valuetype_id = propertyEntityInfo.flatMap {
                     row =>
                         if (row.isLinkProp) {
                             // it is a linking property
@@ -1560,12 +1752,19 @@ class ResourcesResponderV1 extends ResponderV1 {
                             case None => (None, None)
                         }
 
+                        val valueResourceClassOption = predicates(OntologyConstants.Rdf.Type).literals.headOption
+                        // build the correct path to the icon
+                        val maybeValueResourceClassIcon = valueResourceClassOption match {
+                            case Some(resClass) if maybeResourceClassIcon.nonEmpty => Some(valueUtilV1.makeResourceClassIconURL(resClass, maybeResourceClassIcon.get))
+                            case _ => None
+                        }
+
                         val valueV1 = LinkV1(
                             targetResourceIri = targetResourceIri,
                             valueLabel = predicates.get(OntologyConstants.Rdfs.Label).map(_.literals.head),
-                            valueResourceClass = predicates(OntologyConstants.Rdf.Type).literals.headOption,
+                            valueResourceClass = valueResourceClassOption,
                             valueResourceClassLabel = maybeResourceClassLabel,
-                            valueResourceClassIcon = maybeResourceClassIcon
+                            valueResourceClassIcon = maybeValueResourceClassIcon
                         )
 
                         // A direct link between resources has a corresponding LinkValue reification. We use its IRI as the
@@ -1627,6 +1826,36 @@ class ResourcesResponderV1 extends ResponderV1 {
         }.toVector.flatten
 
         valuePropertiesWithData ++ linkPropertiesWithData
+    }
+
+    private def convertPropertyV1toPropertyGetV1(propertyV1: PropertyV1): PropertyGetV1 = {
+
+        val valueObjects: Seq[PropertyGetValueV1] = (propertyV1.value_ids, propertyV1.values, propertyV1.comments).zipped.map {
+            case (id: IRI, value: ApiValueV1, comment: String) =>
+                PropertyGetValueV1(id = id,
+                    value = value,
+                    textval = value.toString,
+                    comment = comment) // TODO: person_id and lastmod are not handled yet. Probably these are never used by the GUI.
+        }
+
+        // TODO: try to unify this with MessageUtil's convertCreateValueResponseV1ToResourceCreateValueResponseV1
+        PropertyGetV1(
+            pid = propertyV1.pid,
+            label = propertyV1.label,
+            valuetype_id = propertyV1.valuetype_id,
+            valuetype = propertyV1.valuetype_id match {
+                // derive valuetype from valuetype_id
+                case Some(OntologyConstants.KnoraBase.IntValue) => Some("ival")
+                case Some(OntologyConstants.KnoraBase.FloatValue) => Some("fval")
+                case Some(OntologyConstants.KnoraBase.DateValue) => Some("dateval")
+                case Some(other: IRI) => Some("textval")
+                case None => None
+            },
+            guielement = propertyV1.guielement,
+            attributes = propertyV1.attributes,
+            is_annotation = propertyV1.is_annotation,
+            values = valueObjects
+        )
     }
 
     /**

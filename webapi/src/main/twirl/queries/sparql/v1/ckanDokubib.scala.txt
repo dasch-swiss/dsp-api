@@ -23,10 +23,12 @@
 @**
  * Gets all images that are part of the Dokubib project.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param projectIri the IRI of the Dokubib project.
  * @param limitOption the maximum number of rows to return.
  *@
-@(projectIri: IRI,
+@(triplestore: String,
+  projectIri: IRI,
   limitOption: Option[Int])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -35,15 +37,16 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 prefix dokubib: <http://www.knora.org/ontology/dokubib#>
 
 SELECT ?bild
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@projectIri") as ?projectIri)
 
-    ?bild knora-base:attachedToProject ?projectIri .
-    ?bild rdf:type dokubib:bild .
-
-    MINUS {
-        ?bild knora-base:isDeleted true .
-    }
+    ?bild knora-base:attachedToProject ?projectIri ;
+        rdf:type dokubib:bild ;
+        knora-base:isDeleted false .
 }
 @limitOption match {
     case Some(limit) => {

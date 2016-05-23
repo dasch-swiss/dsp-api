@@ -708,12 +708,7 @@
 							}
 							case 'date': {
 								var dateObj = $(searchval_ele[index]).dateobj('value');
-								// Knora expects a searchval string: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
-								var dateStr = dateObj.calendar + ":" + dateObj.dateval1;
-								if (dateObj.dateval2 !== undefined) {
-									// period
-									dateStr += ":" + dateObj.dateval2;
-								}
+								var dateStr = SALSAH_API_LEGACY.make_date_string(dateObj);
 								searchval.push(dateStr);
 								break;
 							}

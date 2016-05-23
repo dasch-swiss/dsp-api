@@ -23,31 +23,32 @@
 @**
  * Searches for a resource that has a given value.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param searchValueIri the IRI of the value to look for.
  *@
-@(searchValueIri: IRI)
+@(triplestore: String,
+  searchValueIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?resource ?project ?property
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@searchValueIri") as ?searchValue)
 
+    ?searchValue knora-base:isDeleted false .
+
     @* Find something that links to searchValue, and make sure it's a Resource. *@
 
-    ?resource ?property ?searchValue .
-    ?resource rdf:type ?resourceClass .
+    ?resource ?property ?searchValue ;
+        knora-base:isDeleted false ;
+        rdf:type ?resourceClass .
     ?resourceClass rdfs:subClassOf+ knora-base:Resource .
     ?property rdfs:subPropertyOf+ knora-base:hasValue .
     ?resource knora-base:attachedToProject ?project .
-
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
-
-    MINUS {
-        ?searchValue knora-base:isDeleted true .
-    }
 }

@@ -27,13 +27,13 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.ckanmessages._
-import org.knora.webapi.messages.v1respondermessages.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
-import org.knora.webapi.messages.v1respondermessages.projectmessages.{ProjectInfoByShortnameGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
-import org.knora.webapi.messages.v1respondermessages.resourcemessages._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
+import org.knora.webapi.messages.v1.responder.ckanmessages._
+import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages._
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.duration._
@@ -159,7 +159,7 @@ class CkanResponderV1 extends ResponderV1 {
         implicit val timeout = Timeout(180.seconds)
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.ckanDokubib(projectIri, limit).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.ckanDokubib(settings.triplestoreType, projectIri, limit).toString())
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             responseRows: Seq[VariableResultsRow] = response.results.bindings
 
@@ -264,7 +264,7 @@ class CkanResponderV1 extends ResponderV1 {
     private def getIncunabulaBooksWithPagesIRIs(projectIri: webapi.IRI, limit: Option[Int]): Future[Map[webapi.IRI, Seq[webapi.IRI]]] = {
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.ckanIncunabula(projectIri, limit).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.ckanIncunabula(settings.triplestoreType, projectIri, limit).toString())
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             responseRows: Seq[VariableResultsRow] = response.results.bindings
 
@@ -315,7 +315,11 @@ class CkanResponderV1 extends ResponderV1 {
     private def getIris(projectIri: webapi.IRI, resType: String, limit: Option[Int], userProfile: UserProfileV1): Future[Seq[webapi.IRI]] = {
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getResourcesByProjectAndType(projectIri = projectIri, resType = resType).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getResourcesByProjectAndType(
+                triplestore = settings.triplestoreType,
+                projectIri = projectIri,
+                resType = resType
+            ).toString())
             resourcesResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             resourcesResponseRows: Seq[VariableResultsRow] = resourcesResponse.results.bindings
             resIri = resourcesResponseRows.groupBy(_.rowMap("s")).keys.toVector

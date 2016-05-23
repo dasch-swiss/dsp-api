@@ -29,12 +29,10 @@ import java.util.UUID
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
-import org.knora.webapi
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
-import org.knora.webapi.messages.v1respondermessages.usermessages._
-import org.knora.webapi.store._
-import org.knora.webapi._
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody, SparqlSelectResponseHeader}
+import org.mindrot.jbcrypt.BCrypt
 
 import scala.concurrent.duration._
 import akka.actor.Status.Failure

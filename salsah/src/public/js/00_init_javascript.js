@@ -47,7 +47,7 @@ var searchresult_window_title = "searchresult";
 var extendedsearch_window_title = "Erweiterte Suche";
 var addresource_window_title = "addresource";
 
-var VALTYPE_TEXT = "http://www.knora.org/ontology/knora-base#TextValue";
+var VALTYPE_TEXT = "-"; // obsolete, there is only richtext now
 var VALTYPE_INTEGER = "http://www.knora.org/ontology/knora-base#IntValue";
 var VALTYPE_FLOAT = "http://www.knora.org/ontology/knora-base#FloatValue";
 var VALTYPE_DATE = "http://www.knora.org/ontology/knora-base#DateValue";
@@ -58,9 +58,9 @@ var VALTYPE_INTERVAL = "http://www.knora.org/ontology/knora-base#IntervalValue";
 var VALTYPE_GEOMETRY = "http://www.knora.org/ontology/knora-base#GeomValue";
 var VALTYPE_COLOR = "http://www.knora.org/ontology/knora-base#ColorValue";
 var VALTYPE_HLIST = "http://www.knora.org/ontology/knora-base#ListValue";
-//var VALTYPE_SELECTION = "http://www.knora.org/ontology/knora-base#ListValue"; // VALTYPE_SELECTION can be treated like a hierarchical list
+var VALTYPE_SELECTION = "http://www.knora.org/ontology/knora-base#ListValue"; // VALTYPE_SELECTION can be treated like a hierarchical list
 var VALTYPE_ICONCLASS = 13;
-var VALTYPE_RICHTEXT = 14;
+var VALTYPE_RICHTEXT = "http://www.knora.org/ontology/knora-base#TextValue";
 var VALTYPE_GEONAME = 15;
 
 var RESOURCE_CONTEXT_NONE = 0;
@@ -275,5 +275,20 @@ SALSAH.timecode2seconds = function(tc){
 	secs += parseFloat(tc.substr(3, 2)) * 60.0;
 	secs += parseFloat(tc.substr(6, 6));
 	return secs;
-}
+};
+
+// helper functions for differences between the old and the new API
+
+var SALSAH_API_LEGACY = {
+	make_date_string: function(dateObj) {
+		// Knora expects a searchval string: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
+		var dateStr = dateObj.calendar + ":" + dateObj.dateval1;
+		if (dateObj.dateval2 !== undefined) {
+			// period
+			dateStr += ":" + dateObj.dateval2;
+		}
+		return dateStr;
+	}
+
+};
 

@@ -25,15 +25,15 @@ import java.util.UUID
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.{ResourceFullGetRequestV1, ResourceFullResponseV1}
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1respondermessages.valuemessages._
-import org.knora.webapi.messages.v1respondermessages.sipimessages._
+import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
+import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceFullGetRequestV1, ResourceFullResponseV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.{MutableTestIri, DateUtilV1}
-import org.knora.webapi.util.{ScalaPrettyPrinter}
+import org.knora.webapi.util.{DateUtilV1, MutableTestIri}
+import org.knora.webapi.util.ScalaPrettyPrinter
 
 import scala.concurrent.duration._
 
@@ -96,8 +96,9 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
-        RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
-    )
+        RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"))
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 30.seconds
@@ -112,6 +113,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val linkObjLinkValueIri = new MutableTestIri
     private val currentColorValueIri = new MutableTestIri
     private val currentGeomValueIri = new MutableTestIri
+    private val partOfLinkValueIri = new MutableTestIri
 
     private def checkComment1aResponse(response: CreateValueResponseV1, utf8str: String, textattr: Map[String, Seq[StandoffPositionV1]] = Map.empty[String, Seq[StandoffPositionV1]]): Unit = {
         assert(response.rights == 8, "rights was not 8")
@@ -194,6 +196,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private def getLastModificationDate(resourceIri: IRI): Option[String] = {
         val lastModSparqlQuery = queries.sparql.v1.txt.getLastModificationDate(
+            triplestore = settings.triplestoreType,
             resourceIri = resourceIri
         ).toString()
 
@@ -202,7 +205,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         expectMsgPF(timeout) {
             case response: SparqlSelectResponse =>
                 val rows = response.results.bindings
-                (rows.size <= 1) should ===(true)
+                assert(rows.size <= 1, s"Resource $resourceIri has more than one instance of knora-base:lastModificationDate")
 
                 if (rows.size == 1) {
                     Some(rows.head.rowMap("lastModificationDate"))
@@ -539,7 +542,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
             }
         }
 
@@ -748,6 +752,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri
@@ -827,6 +832,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri
@@ -899,6 +905,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri
@@ -959,6 +966,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri
@@ -1021,6 +1029,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
@@ -1042,7 +1051,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "recreate the hasStandoffLinkTo direct link when the reference count of the corresponding LinkValue is incremented from 0 to 1" in {
+        "recreate the hasStandoffLinkTo direct link when a new standoff resource reference is added" in {
             val textValueWithResourceRef = TextValueV1(
                 utf8str = "This updated comment refers again to another resource",
                 textattr = Map(
@@ -1096,6 +1105,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri
@@ -1222,6 +1232,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // The new LinkValue should have no previous version, and there should be a direct link between the resources.
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = "http://data.knora.org/cb1a74e3e2f6",
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri
@@ -1299,6 +1310,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // The old LinkValue should be deleted now, and the old direct link should have been removed.
 
             val oldLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
                 objectIri = ValuesResponderV1Spec.zeitglöckleinIri,
@@ -1319,6 +1331,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // The new LinkValue should have no previous version, and there should be a direct link between the resources.
 
             val newLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
                 objectIri = linkTargetIri
@@ -1360,6 +1373,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
             val deletedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
                 subjectIri = linkSourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
                 objectIri = linkTargetIri,
@@ -1381,6 +1395,87 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // Check that the link source's last modification date got updated.
             val lastModAfterUpdate = getLastModificationDate(linkSourceIri)
             lastModBeforeUpdate != lastModAfterUpdate should ===(true)
+        }
+
+        "change the partOf property of a page" in {
+            // A test UserDataV1.
+            val userData = UserDataV1(
+                email = Some("test@test.ch"),
+                lastname = Some("Test"),
+                firstname = Some("User"),
+                username = Some("testuser"),
+                token = None,
+                user_id = Some("http://data.knora.org/users/91e19f1e01"),
+                lang = "de"
+            )
+
+            // A test UserProfileV1.
+            val userProfile = UserProfileV1(
+                projects = Vector("http://data.knora.org/projects/77275339"),
+                groups = Nil,
+                userData = userData
+            )
+
+            val linkTargetIri = "http://data.knora.org/e41ab5695c"
+
+            partOfLinkValueIri.set("http://data.knora.org/8a0b1e75/values/3a7b5130-22c2-4400-a794-062b7a3e3436")
+
+            val changeValueRequest = ChangeValueRequestV1(
+                value = LinkUpdateV1(
+                    targetResourceIri = linkTargetIri
+                ),
+                userProfile = userProfile,
+                valueIri = partOfLinkValueIri.get,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! changeValueRequest
+
+            expectMsgPF(timeout) {
+                case ChangeValueResponseV1(linkValue: LinkV1, _, newLinkValueIri: IRI, _, _) =>
+                    // save valueIri for next test
+                    partOfLinkValueIri.set(newLinkValueIri)
+                    linkValue.targetResourceIri should ===(linkTargetIri)
+            }
+
+        }
+
+        "try to change the partOf property of a page, but submit the current target Iri" in {
+            // A test UserDataV1.
+            val userData = UserDataV1(
+                email = Some("test@test.ch"),
+                lastname = Some("Test"),
+                firstname = Some("User"),
+                username = Some("testuser"),
+                token = None,
+                user_id = Some("http://data.knora.org/users/91e19f1e01"),
+                lang = "de"
+            )
+
+            // A test UserProfileV1.
+            val userProfile = UserProfileV1(
+                projects = Vector("http://data.knora.org/projects/77275339"),
+                groups = Nil,
+                userData = userData
+            )
+
+            val linkTargetIri = "http://data.knora.org/e41ab5695c"
+
+            val changeValueRequest = ChangeValueRequestV1(
+                value = LinkUpdateV1(
+                    targetResourceIri = linkTargetIri
+                ),
+                userProfile = userProfile,
+                valueIri = partOfLinkValueIri.get, // use valueIri from previous test
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! changeValueRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+
         }
 
         "add a new text value with a comment" in {
@@ -1451,5 +1546,38 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
         }
+
+        "change the season of a image:bild from summer to winter" in {
+
+            val winter = "http://data.knora.org/lists/eda2792605"
+
+            // A test UserDataV1.
+            val userData = UserDataV1(
+                user_id = Some("http://data.knora.org/users/91e19f1e01"),
+                lang = "de"
+            )
+
+            // A test UserProfileV1.
+            val userProfile = UserProfileV1(
+                projects = Vector("http://data.knora.org/projects/images"),
+                groups = Nil,
+                userData = userData
+            )
+
+            actorUnderTest ! ChangeValueRequestV1(
+                value = HierarchicalListValueV1(winter),
+                userProfile = userProfile,
+                valueIri = "http://data.knora.org/d208fb9357d5/values/bc90a9c5091004",
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case ChangeValueResponseV1(newValue: HierarchicalListValueV1, _, newValueIri: IRI, _, userProfile) =>
+                    newValue should ===(HierarchicalListValueV1(winter))
+            }
+
+        }
+
+        // TODO: add create value request test for list node valuegraphdb:test
     }
 }

@@ -2,8 +2,8 @@ package org.knora.webapi.util
 
 import org.apache.commons.lang3.StringEscapeUtils
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.{LiteralValueType, ResourceCreateValueObjectResponseV1, ResourceCreateValueResponseV1}
-import org.knora.webapi.messages.v1respondermessages.valuemessages._
+import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v1.responder.resourcemessages.{LiteralValueType, ResourceCreateValueObjectResponseV1, ResourceCreateValueResponseV1}
 
 import scala.reflect.runtime.{universe => ru}
 
@@ -96,6 +96,8 @@ object MessageUtil {
                                                                     ownerIri: IRI,
                                                                     propertyIri: IRI,
                                                                     valueResponse: CreateValueResponseV1): ResourceCreateValueResponseV1 = {
+
+        // TODO: see resource responder's convertPropertyV1toPropertyGetV1 that also deals with valuetypes
 
         val basicObjectResponse = ResourceCreateValueObjectResponseV1(
             textval = Map(LiteralValueType.StringValue -> valueResponse.value.toString),

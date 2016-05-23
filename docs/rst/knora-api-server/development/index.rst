@@ -23,7 +23,7 @@ Developing the Knora API Server
 .. toctree::
    :maxdepth: 2
 
-   development-tools
+   build-process
    intellij-config
    documentation
    test-tags

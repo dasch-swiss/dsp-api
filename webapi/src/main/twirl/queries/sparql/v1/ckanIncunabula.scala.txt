@@ -23,10 +23,12 @@
 @**
  * Gets all Incunabula books with their pages.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param projectIri the IRI of the Incunabula project.
  * @param limitOption the maximum number of rows to return.
  *@
-@(projectIri: IRI,
+@(triplestore: String,
+  projectIri: IRI,
   limitOption: Option[Int])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -35,21 +37,19 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 prefix incunabula: <http://www.knora.org/ontology/incunabula#>
 
 SELECT ?book ?page
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@projectIri") as ?projectIri)
 
-    ?book knora-base:attachedToProject ?projectIri .
-    ?book rdf:type incunabula:book .
+    ?book knora-base:attachedToProject ?projectIri ;
+        rdf:type incunabula:book ;
+        knora-base:isDeleted false .
 
-    MINUS {
-        ?book knora-base:isDeleted true .
-    }
-
-    ?page incunabula:partOf ?book .
-
-    MINUS {
-        ?page knora-base:isDeleted true .
-    }
+    ?page incunabula:partOf ?book ;
+        knora-base:isDeleted false .
 }
 @limitOption match {
     case Some(limit) => {

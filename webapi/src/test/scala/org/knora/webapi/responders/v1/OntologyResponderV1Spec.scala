@@ -24,9 +24,9 @@ package org.knora.webapi.responders.v1
 import akka.actor.Props
 import akka.testkit._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.ontologymessages._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.ontologymessages._
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
 import org.knora.webapi.util.MessageUtil
@@ -1003,22 +1003,22 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         assert(expected.vocabularies.size == received.vocabularies.size, "Vocubalaries' sizes did not match.")
 
-        expected.vocabularies.sortBy(_.uri).zip(received.vocabularies.sortBy(_.uri)).map {
+        expected.vocabularies.sortBy(_.uri).zip(received.vocabularies.sortBy(_.uri)).foreach {
             case (expectedVoc, receivedVoc) =>
                 assert(expectedVoc.uri == receivedVoc.uri, "IRIs of vocabularies did not match")
                 assert(expectedVoc.longname == receivedVoc.longname, "Names of vocabularies did not match")
         }
     }
 
-    private def checkResourceTypesForNamedGraphResponseV1(expected: ResourceTypesForNamedGraphResponseV1, received: ResourceTypesForNamedGraphResponseV1): Unit = {
+    private def checkResourceTypesForNamedGraphResponseV1(expected: ResourceTypesForNamedGraphResponseV1, received: ResourceTypesForNamedGraphResponseV1) = {
         assert(expected.resourcetypes.size == received.resourcetypes.size, s"${expected.resourcetypes.size} were expected, but ${received.resourcetypes.size} given.")
 
-        expected.resourcetypes.sortBy(_.id).zip(received.resourcetypes.sortBy(_.id)).map {
+        expected.resourcetypes.sortBy(_.id).zip(received.resourcetypes.sortBy(_.id)).foreach {
             case (expectedResType, receivedResType) =>
                 assert(expectedResType.id == receivedResType.id, s"IRIs of restypes did not match.")
                 assert(expectedResType.label == receivedResType.label, s"Labels of restypes did not match.")
 
-                expectedResType.properties.sortBy(_.id).zip(receivedResType.properties.sortBy(_.id)).map {
+                expectedResType.properties.sortBy(_.id).zip(receivedResType.properties.sortBy(_.id)).foreach {
                     case (expectedProp, receivedProp) =>
                         assert(expectedProp.id == receivedProp.id, "IRIs of properties did not match.")
                         assert(expectedProp.label == receivedProp.label, "Labels of properties did not match.")
@@ -1027,10 +1027,10 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     }
 
-    private def checkPropertyTypesForNamedGraphIncunabula(expected: PropertyTypesForNamedGraphResponseV1, received: PropertyTypesForNamedGraphResponseV1): Vector[Unit] = {
+    private def checkPropertyTypesForNamedGraphIncunabula(expected: PropertyTypesForNamedGraphResponseV1, received: PropertyTypesForNamedGraphResponseV1) = {
         assert(expected.properties.size == received.properties.size, "Sizes of properties did not match.")
 
-        expected.properties.sortBy(_.id).zip(received.properties.sortBy(_.id)).map {
+        expected.properties.sortBy(_.id).zip(received.properties.sortBy(_.id)).foreach {
             case (expectedProp, receivedProp) =>
                 assert(expectedProp.id == receivedProp.id, "The properties' IRIs did not match.")
                 assert(expectedProp.valuetype_id == receivedProp.valuetype_id, "The properties' valuetypes did not match.")

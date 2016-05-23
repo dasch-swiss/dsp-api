@@ -173,6 +173,9 @@ In case of success, a ``ChangeFileValueResponseV1`` is sent back to the client, 
 Retrieving Files from Sipi
 ==========================
 
+URL creation
+------------
+
 Binary representions of Knora locations are served by Sipi. For each file value, Knora creates several locations representing different quality levels:
 
 .. code::
@@ -223,3 +226,13 @@ Sipi responder to get the user's permissions on the requested file. Sipi's reque
 As a response to a successful login, Knora returns the user's session id and this id is automatically sent to Sipi by the browser, setting a second cookie for the communication with Sipi.
 The reason the Knora session id is set in two cookies, is the fact that cookies can not be shared among different domains. Since Knora and Sipi are likely to be running
 under different domains, this solution offers the necessary flexibility.
+
+.. _sharing_sessionid_with_sipi:
+
+Sharing the Session ID with Sipi
+--------------------------------
+
+Whenever a file is requested, Sipi asks Knora about the currents user's permissions on the given file. This is achieved by sharing the Knora session id with Sipi.
+When the user logs in to Knora using his browser, a request is sent to Sipi submitting the session id the user got back from Knora, setting a second session cookie.
+Now the user has two session cookies containing the same session id: one for the communication with Knora and one for the communication with Sipi. However, Sipi does not handle sessions.
+It just sends the given Knora session id to Knora.

@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileByIRIGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
 import org.knora.webapi.{IRI, InvalidCredentialsException, Settings}

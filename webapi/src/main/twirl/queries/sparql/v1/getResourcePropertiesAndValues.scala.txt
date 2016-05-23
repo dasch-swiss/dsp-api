@@ -23,19 +23,26 @@
 @**
  * Gets the values of all the Knora properties of a resource that have values.
  *
+ * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource to be queried.
  *@
-@(resourceIri: IRI)
+@(triplestore: String,
+  resourceIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?prop ?isLinkProp ?isLinkValueProp ?obj ?objPred ?objObj ?predStandoff ?objStandoff
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
-    ?resource rdf:type ?resourceClass .
+    ?resource rdf:type ?resourceClass ;
+        knora-base:isDeleted false .
     ?resourceClass rdfs:subClassOf+ knora-base:Resource .
 
     {
@@ -58,7 +65,8 @@ WHERE {
         {
             @* Get the value's project if it has one, otherwise use the project of the containing resource. *@
 
-            ?resource ?prop ?obj . @* TODO: Why do we need this here? Why can't it be moved up to the top level of the WHERE clause? (Issue 235) *@
+            ?resource ?prop ?obj .
+            ?obj knora-base:isDeleted false .
             ?resource knora-base:attachedToProject ?resourceProject .
 
             OPTIONAL {
@@ -72,7 +80,8 @@ WHERE {
         {
             @* Get the value's Standoff markup nodes if it has any. *@
 
-            ?resource ?prop ?obj . @* TODO: Why do we need this here? Why can't it be moved up to the top level of the WHERE clause? (Issue 235) *@
+            ?resource ?prop ?obj .
+            ?obj knora-base:isDeleted false .
             ?obj a knora-base:TextValue .
             BIND(knora-base:valueHasStandoff AS ?objPred)
 	        ?obj ?objPred ?objObj .
@@ -82,7 +91,8 @@ WHERE {
         {
             @* Get any other statements about the value. *@
 
-            ?resource ?prop ?obj . @* TODO: Why do we need this here? Why can't it be moved up to the top level of the WHERE clause? (Issue 235) *@
+            ?resource ?prop ?obj .
+            ?obj knora-base:isDeleted false .
 	        ?obj ?objPred ?objObj .
 
             FILTER(!(?objPred = knora-base:attachedToProject || ?objPred = knora-base:valueHasStandoff))
@@ -95,16 +105,8 @@ WHERE {
         ?prop rdfs:subPropertyOf* knora-base:hasLinkTo .
         BIND(true AS ?isLinkProp)
 
-        ?resource ?prop ?obj . @* TODO: Why do we need this here? Why can't it be moved up to the top level of the WHERE clause? (Issue 235) *@
-
+        ?resource ?prop ?obj .
+        ?obj knora-base:isDeleted false .
         ?obj ?objPred ?objObj .
-    }
-
-    MINUS {
-        ?resource knora-base:isDeleted true .
-    }
-
-    MINUS {
-        ?obj knora-base:isDeleted true .
     }
 }

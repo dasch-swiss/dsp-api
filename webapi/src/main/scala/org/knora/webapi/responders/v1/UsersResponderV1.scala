@@ -26,9 +26,9 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
-import org.knora.webapi.messages.v1respondermessages.usermessages._
-import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{CacheUtil, KnoraIriUtil, SparqlUtil}
 import org.mindrot.jbcrypt.BCrypt
@@ -45,7 +45,7 @@ class UsersResponderV1 extends ResponderV1 {
     val knoraIriUtil = new KnoraIriUtil
 
     /**
-      * Receives a message extending [[UsersResponderRequestV1]], and returns a message of type [[UserProfileV1]]
+      * Receives a message extending [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]], and returns a message of type [[UserProfileV1]]
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
@@ -65,7 +65,10 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def getUserProfileByIRIV1(userIri: IRI, clean: Boolean): Future[UserProfileV1] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(userIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(
+                triplestore = settings.triplestoreType,
+                userIri = userIri
+            ).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
@@ -88,7 +91,10 @@ class UsersResponderV1 extends ResponderV1 {
     private def getUserProfileByUsernameV1(username: String, clean: Boolean): Future[UserProfileV1] = {
         log.debug(s"getUserProfileByUsernameV1('$username', '$clean') called")
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(username).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(
+                triplestore = settings.triplestoreType,
+                username = username
+            ).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))

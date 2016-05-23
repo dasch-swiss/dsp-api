@@ -22,9 +22,9 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
-import org.knora.webapi.messages.v1respondermessages.projectmessages._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
-import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.projectmessages._
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.{IRI, NotFoundException, OntologyConstants, UnexpectedMessageException}
 
@@ -37,7 +37,7 @@ import scala.concurrent.Future
 class ProjectsResponderV1 extends ResponderV1 {
 
     /**
-      * Receives a message extending [[org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectsResponderRequestV1]], and returns an appropriate response message, or
+      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message, or
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
@@ -77,7 +77,7 @@ class ProjectsResponderV1 extends ResponderV1 {
 
         for {
         // group project result rows by their IRI
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjects().toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getProjects(triplestore = settings.triplestoreType).toString())
             projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
 
@@ -174,7 +174,10 @@ class ProjectsResponderV1 extends ResponderV1 {
       */
     private def getProjectInfoByIRIGetRequest(projectIri: IRI, requestType: ProjectInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(projectIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(
+                triplestore = settings.triplestoreType,
+                projectIri = projectIri
+            ).toString())
             projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             projectInfo = createProjectInfoV1FromProjectResponse(projectResponse = projectResponse.results.bindings, projectIri = projectIri, requestType = requestType, userProfile)
@@ -198,7 +201,10 @@ class ProjectsResponderV1 extends ResponderV1 {
       */
     private def getProjectInfoByShortnameGetRequest(shortname: String, requestType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByShortname(shortname).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByShortname(
+                triplestore = settings.triplestoreType,
+                shortname = shortname
+            ).toString())
             projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             // get project Iri from results rows
