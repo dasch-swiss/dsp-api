@@ -30,6 +30,8 @@ import org.openqa.selenium.{By, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
 import java.io.FileNotFoundException
 
+import org.scalatest.selenium.WebBrowser.RadioButtonGroup
+
 import scala.concurrent.duration._
 
 
@@ -576,6 +578,24 @@ class SalsahPage {
             selections.map(new Select(_)).toList
 
         }
+    }
+
+    /**
+      * Returns the radio buttons.
+      *
+      * @param radioField radio property field.
+      * @return a list of `input` representing the options.
+      */
+    def getRadioButtons(radioField: WebElement) = {
+        eventually {
+            val radios = radioField.findElements(By.xpath("div//input[@type='radio']"))
+
+            if (radios.length < 1) throw new Exception
+
+            radios
+
+        }
+
     }
 
 

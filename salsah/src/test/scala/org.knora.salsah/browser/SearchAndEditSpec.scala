@@ -666,7 +666,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
         }
 
-        "change the season property of a image:bild to winter" in {
+        "change the season property of a image:bild to summer" in {
 
             page.load
 
@@ -694,9 +694,10 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             page.clickEditButton(seasonField)
 
-            val seasonSel: List[Select] = page.getHierarchicalListSelections(seasonField)
+            val seasons = page.getRadioButtons(seasonField)
 
-            seasonSel(0).selectByValue("http://data.knora.org/lists/526f26ed04")
+            // summer is the first item
+            seasons(0).click()
 
             page.clickSaveButton(seasonField)
 
@@ -737,9 +738,10 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             page.clickAddButton(seasonField)
 
-            val seasonSel: List[Select] = page.getHierarchicalListSelections(seasonField)
+            val seasons = page.getRadioButtons(seasonField)
 
-            seasonSel(0).selectByValue("http://data.knora.org/lists/eda2792605")
+            // winter is the second element in the list
+            seasons(1).click
 
             page.clickSaveButton(seasonField)
 

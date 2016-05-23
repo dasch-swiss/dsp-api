@@ -1355,13 +1355,14 @@
 */
 					break;
 				}
-				/*case 'pulldown': {
+				case 'pulldown': {
 					var selection_id;
 					var attrs = propinfo[prop].attributes.split(';');
 					$.each(attrs, function() {
 						var attr = this.split('=');
-						if (attr[0] == 'selection') {
-							selection_id = attr[1];
+						if (attr[0] == 'selection' || attr[0] == 'hlist') {
+							//selection_id = attr[1];
+							selection_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 						}
 					});
 					var tmpele = $('<span>', attributes).appendTo(value_container);
@@ -1382,8 +1383,9 @@
 					var attrs = propinfo[prop].attributes.split(';');
 					$.each(attrs, function() {
 						var attr = this.split('=');
-						if (attr[0] == 'selection') {
-							selection_id = attr[1];
+						if (attr[0] == 'selection' || attr[0] == 'hlist') {
+							//selection_id = attr[1];
+							selection_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 						}
 					});
 					var tmpele = $('<span>', attributes).appendTo(value_container);
@@ -1397,9 +1399,7 @@
 						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, tmpele.selradio('value'), is_new_value);
 					}).css({cursor: 'pointer'}));
 					break;
-				}*/
-				case 'radio':
-				case 'pulldown':
+				}
 				case 'hlist': {
 
 					
