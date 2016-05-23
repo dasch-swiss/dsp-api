@@ -23,8 +23,7 @@ package org.knora.webapi.routing.v1
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import org.apache.commons.validator.routines.UrlValidator
-import org.knora.webapi.messages.v1respondermessages.projectmessages.{ProjectInfoByShortnameGetRequest, ProjectInfoByIRIGetRequest, ProjectInfoType, ProjectsGetRequestV1}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoType, ProjectsGetRequestV1}
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoType, ProjectsGetRequestV1, ProjectInfoByShortnameGetRequest}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}

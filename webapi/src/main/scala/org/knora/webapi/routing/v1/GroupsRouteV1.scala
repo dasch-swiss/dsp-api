@@ -24,8 +24,8 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.SettingsImpl
-import org.knora.webapi.messages.v1respondermessages.groupmessages._
-import org.knora.webapi.messages.v1respondermessages.projectmessages.{ProjectInfoType, ProjectsGetRequestV1}
+import org.knora.webapi.messages.v1.responder.groupmessages._
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoType, ProjectsGetRequestV1}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import spray.routing.Directives._
 import spray.routing._

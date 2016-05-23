@@ -32,7 +32,6 @@ import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 

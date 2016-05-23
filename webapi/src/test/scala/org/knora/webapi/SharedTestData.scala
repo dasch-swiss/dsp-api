@@ -20,7 +20,7 @@
 
 package org.knora.webapi
 
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 
 /**
   * Created by subotic on 01.04.16.

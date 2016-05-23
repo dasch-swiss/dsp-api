@@ -27,8 +27,8 @@ import akka.pattern._
 import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
+import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{CacheUtil, KnoraIriUtil, SparqlUtil}
 import org.mindrot.jbcrypt.BCrypt
@@ -129,7 +129,9 @@ class UsersResponderV1 extends ResponderV1 {
             _ = if (newUserData.password.isEmpty) throw BadRequestException("Password cannot be empty")
 
             // check if the supplied username for the new user is unique, i.e. not already registered
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(newUserData.username).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(
+                triplestore = settings.triplestoreType,
+                newUserData.username).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
@@ -142,30 +144,27 @@ class UsersResponderV1 extends ResponderV1 {
 
             hashedPassword = BCrypt.hashpw(newUserData.password, BCrypt.gensalt())
 
-            // perform update
-            createResourceResponse <- TransactionUtil.runInUpdateTransaction({
-                apiRequestID =>
-                    for {
-                        // Create the user.
-                        createNewUserSparql <- Future(queries.sparql.v1.txt.createNewUser(
-                            adminNamedGraphIri = "http://www.knora.org/data/admin",
-                            triplestore = settings.triplestoreType,
-                            userIri = userIri,
-                            userClassIri = OntologyConstants.KnoraBase.User,
-                            username = newUserData.username,
-                            password = hashedPassword,
-                            givenName = newUserData.givenName,
-                            familyName = newUserData.familyName,
-                            email = newUserData.email,
-                            preferredLanguage = newUserData.lang).toString)
-                        // _ = println(createNewUserSparql)
-                        createResourceResponse <- (storeManager ? SparqlUpdateRequest(apiRequestID, createNewUserSparql)).mapTo[SparqlUpdateResponse]
-                    } yield createResourceResponse
-            }, storeManager)
+            // Create the new user.
+            createNewUserSparql <- Future(queries.sparql.v1.txt.createNewUser(
+                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                triplestore = settings.triplestoreType,
+                userIri = userIri,
+                userClassIri = OntologyConstants.KnoraBase.User,
+                username = newUserData.username,
+                password = hashedPassword,
+                givenName = newUserData.givenName,
+                familyName = newUserData.familyName,
+                email = newUserData.email,
+                preferredLanguage = newUserData.lang).toString)
+            // _ = println(createNewUserSparql)
+            createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparql)).mapTo[SparqlUpdateResponse]
+
 
             // Verify that the user was created.
-
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(userIri = userIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(
+                triplestore = settings.triplestoreType,
+                userIri = userIri
+            ).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             _ = if (userDataQueryResponse.results.bindings.isEmpty) {
@@ -200,7 +199,10 @@ class UsersResponderV1 extends ResponderV1 {
             }
 
             // get current value.
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(userIri = userIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(
+                triplestore = settings.triplestoreType,
+                userIri = userIri
+            ).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             // create the user profile including sensitive information
@@ -232,26 +234,23 @@ class UsersResponderV1 extends ResponderV1 {
                 SparqlUtil.any2SparqlLiteral(newValue)
             }
 
-            // perform the update
-            createResourceResponse <- TransactionUtil.runInUpdateTransaction({
-                apiRequestID =>
-                    for {
-                        // Update user property.
-                        updateUserSparql <- Future(queries.sparql.v1.txt.updateUser(
-                            adminNamedGraphIri = "http://www.knora.org/data/admin",
-                            triplestore = settings.triplestoreType,
-                            userIri = userIri,
-                            propertyIri = propertyIri,
-                            currentValue = currentValueLiteral,
-                            newValue = newValueLiteral
-                        ).toString)
-                        _ = println(updateUserSparql)
-                        createResourceResponse <- (storeManager ? SparqlUpdateRequest(apiRequestID, updateUserSparql)).mapTo[SparqlUpdateResponse]
-                    } yield createResourceResponse
-            }, storeManager)
+            // Update the user
+            updateUserSparql <- Future(queries.sparql.v1.txt.updateUser(
+                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                triplestore = settings.triplestoreType,
+                userIri = userIri,
+                propertyIri = propertyIri,
+                currentValue = currentValueLiteral,
+                newValue = newValueLiteral
+            ).toString)
+            _ = println(updateUserSparql)
+            createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparql)).mapTo[SparqlUpdateResponse]
 
             // Verify that the user was updated.
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(userIri = userIri).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(
+                triplestore = settings.triplestoreType,
+                userIri = userIri
+            ).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
 

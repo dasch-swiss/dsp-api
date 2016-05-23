@@ -22,9 +22,9 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
-import org.knora.webapi.messages.v1respondermessages.groupmessages._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
-import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
+import org.knora.webapi.messages.v1.responder.groupmessages._
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.{IRI, NotFoundException, OntologyConstants, UnexpectedMessageException}
 
@@ -37,7 +37,7 @@ import scala.concurrent.Future
 class GroupsResponderV1 extends ResponderV1 {
 
     /**
-      * Receives a message extending [[org.knora.webapi.messages.v1respondermessages.projectmessages.ProjectsResponderRequestV1]], and returns an appropriate response message, or
+      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message, or
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
@@ -68,16 +68,17 @@ class GroupsResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Gets all the projects and returns them as a [[GroupsResponseV1]].
+      * Gets all the groups and returns them as a [[GroupsResponseV1]].
       *
       * @param userProfile the profile of the user that is making the request.
-      * @return all the projects as a [[GroupsResponseV1]].
+      * @return all the groups as a [[GroupsResponseV1]].
       */
     private def getGroupsResponseV1(userProfile: Option[UserProfileV1]): Future[GroupsResponseV1] = {
 
         for {
-        // group project result rows by their IRI
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjects().toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getProjects(
+                triplestore = settings.triplestoreType
+            ).toString())
             groupsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             groupsResponseRows: Seq[VariableResultsRow] = groupsResponse.results.bindings
 
@@ -111,7 +112,69 @@ class GroupsResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Turns SPARQL result rows into a [[GroupInfoV1]].
+      * Gets the group with the given group Iri and returns the information as a [[GroupInfoResponseV1]].
+      *
+      * @param groupIri the Iri of the group requested.
+      * @param requestType type request: either short or full.
+      * @param userProfile the profile of user that is making the request.
+      * @return information about the group as a [[GroupInfoResponseV1]].
+      */
+    private def getGroupInfoByIRIGetRequest(groupIri: IRI, requestType: GroupInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[GroupInfoResponseV1] = {
+        for {
+            sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByIri(
+                triplestore = settings.triplestoreType,
+                groupIri = groupIri
+            ).toString())
+            groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            groupInfo = createGroupInfoV1FromGroupResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIri, requestType = requestType, userProfile)
+
+        } yield GroupInfoResponseV1(
+            group_info = groupInfo,
+            userdata = userProfile match {
+                case Some(profile) => Some(profile.userData)
+                case None => None
+            }
+        )
+    }
+
+    /**
+      * Gets the group with the given name and returns the information as a [[GroupInfoResponseV1]].
+      *
+      * @param name the name of the project requested.
+      * @param requestType type request: either short or full.
+      * @param userProfile the profile of user that is making the request.
+      * @return information about the project as a [[GroupInfoResponseV1]].
+      */
+    private def getGroupInfoByNameGetRequest(name: String, requestType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
+        for {
+            sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByName(
+                triplestore = settings.triplestoreType,
+                name = name
+            ).toString())
+            groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            // get project Iri from results rows
+            groupIri: IRI = if (groupResponse.results.bindings.nonEmpty) {
+                groupResponse.results.bindings.head.rowMap("s")
+            } else {
+                throw NotFoundException(s"For the given group name $name no information was found")
+            }
+
+            projectInfo = createGroupInfoV1FromGroupResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIri, requestType = requestType, userProfile)
+
+        } yield GroupInfoResponseV1(
+            group_info = projectInfo,
+            userdata = userProfile match {
+                case Some(profile) => Some(profile.userData)
+                case None => None
+            }
+        )
+    }
+
+
+    /**
+      * Helper method that turns SPARQL result rows into a [[GroupInfoV1]].
       *
       * @param groupResponse results from the SPARQL query representing information about the group.
       * @param groupIri the Iri of the group the querid information belong to.
@@ -119,7 +182,7 @@ class GroupsResponderV1 extends ResponderV1 {
       * @param userProfile the profile of the user that is making the request.
       * @return a [[GroupInfoV1]] representing information about the group.
       */
-    private def createGroupInfoV1FromProjectResponse(groupResponse: Seq[VariableResultsRow], groupIri: IRI, requestType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): GroupInfoV1 = {
+    private def createGroupInfoV1FromGroupResponse(groupResponse: Seq[VariableResultsRow], groupIri: IRI, requestType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): GroupInfoV1 = {
 
         if (groupResponse.nonEmpty) {
 
@@ -156,58 +219,5 @@ class GroupsResponderV1 extends ResponderV1 {
 
     }
 
-    /**
-      * Gets the group with the given group Iri and returns the information as a [[GroupInfoResponseV1]].
-      *
-      * @param groupIri the Iri of the group requested.
-      * @param requestType type request: either short or full.
-      * @param userProfile the profile of user that is making the request.
-      * @return information about the group as a [[GroupInfoResponseV1]].
-      */
-    private def getGroupInfoByIRIGetRequest(groupIri: IRI, requestType: GroupInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[GroupInfoResponseV1] = {
-        for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByIri(groupIri).toString())
-            groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
-            groupInfo = createGroupInfoV1FromProjectResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIri, requestType = requestType, userProfile)
-
-        } yield GroupInfoResponseV1(
-            group_info = groupInfo,
-            userdata = userProfile match {
-                case Some(profile) => Some(profile.userData)
-                case None => None
-            }
-        )
-    }
-
-    /**
-      * Gets the group with the given name and returns the information as a [[GroupInfoResponseV1]].
-      *
-      * @param name the name of the project requested.
-      * @param requestType type request: either short or full.
-      * @param userProfile the profile of user that is making the request.
-      * @return information about the project as a [[GroupInfoResponseV1]].
-      */
-    private def getGroupInfoByNameGetRequest(name: String, requestType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
-        for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByName(name).toString())
-            groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-
-            // get project Iri from results rows
-            groupIri: IRI = if (groupResponse.results.bindings.nonEmpty) {
-                groupResponse.results.bindings.head.rowMap("s")
-            } else {
-                throw NotFoundException(s"For the given group name $name no information was found")
-            }
-
-            projectInfo = createGroupInfoV1FromProjectResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIri, requestType = requestType, userProfile)
-
-        } yield GroupInfoResponseV1(
-            group_info = projectInfo,
-            userdata = userProfile match {
-                case Some(profile) => Some(profile.userData)
-                case None => None
-            }
-        )
-    }
 }

@@ -27,16 +27,15 @@ package org.knora.webapi.responders.v1
 import java.util.UUID
 
 import akka.actor.Props
+import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
-import akka.util.Timeout
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody, SparqlSelectResponseHeader}
-import org.mindrot.jbcrypt.BCrypt
+import com.typesafe.config.ConfigFactory
+import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 
 import scala.concurrent.duration._
-import akka.actor.Status.Failure
-import org.mindrot.jbcrypt.BCrypt
 
 
 object UsersResponderV1Spec {

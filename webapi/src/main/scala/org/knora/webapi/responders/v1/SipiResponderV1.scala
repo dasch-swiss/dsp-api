@@ -26,7 +26,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import RepresentationV1JsonProtocol._
 import SipiConstants.FileType
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{ApiValueV1, FileValueV1, StillImageFileValueV1}
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}

@@ -18,7 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1respondermessages.usermessages
+package org.knora.webapi.messages.v1.responder.usermessages
 
 import org.knora.webapi._
 import org.mindrot.jbcrypt.BCrypt

@@ -21,8 +21,8 @@
 package org.knora.webapi.messages.v1.responder.searchmessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,6 +48,7 @@ sealed trait SearchResponderRequestV1 extends KnoraRequestV1 {
 
 /**
   * Requests a fulltext search. A successful response will be a [[SearchGetResponseV1]].
+  *
   * @param userProfile the profile of the user making the request.
   */
 case class FulltextSearchGetRequestV1(searchValue: String,
@@ -59,6 +60,7 @@ case class FulltextSearchGetRequestV1(searchValue: String,
 
 /**
   * Requests an extended search. A successful response will be a [[SearchGetResponseV1]].
+  *
   * @param userProfile the profile of the user making the request.
   */
 case class ExtendedSearchGetRequestV1(filterByRestype: Option[IRI] = None,
@@ -153,6 +155,7 @@ case class SearchResultRowV1(obj_id: IRI,
 
 /**
   * An element in a list of search result pages.
+  *
   * @param current true if this element represents the current page.
   * @param start_at the index of the first search result on the page.
   * @param show_nrows the number of results on the page.
@@ -167,8 +170,6 @@ case class SearchResultPage(current: Boolean, start_at: Int, show_nrows: Int)
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
 object SearchV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
-
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val searchResultPageV1Format: JsonFormat[SearchResultPage] = jsonFormat3(SearchResultPage)
     implicit val searchPreviewDimensionsV1Format: JsonFormat[SearchPreviewDimensionsV1] = jsonFormat2(SearchPreviewDimensionsV1)

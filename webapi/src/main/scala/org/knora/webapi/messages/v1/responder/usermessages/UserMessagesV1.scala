@@ -24,9 +24,10 @@ import java.util.UUID
 
 import org.knora.webapi
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.mindrot.jbcrypt.BCrypt
+import spray.httpx.SprayJsonSupport
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

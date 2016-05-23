@@ -21,8 +21,8 @@
 package org.knora.webapi.messages.v1.responder.ontologymessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -441,8 +441,6 @@ case class PropertyTypeV1(id: IRI, label: String) {
   * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
   */
 object ResourceTypeV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
-
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val propertyDefinitionV1Format: JsonFormat[PropertyDefinitionV1] = jsonFormat9(PropertyDefinitionV1)
     implicit val propertyDefinitionInNamedGraphV1Format: JsonFormat[PropertyDefinitionInNamedGraphV1] = jsonFormat8(PropertyDefinitionInNamedGraphV1)
