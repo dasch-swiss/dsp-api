@@ -1511,7 +1511,8 @@ $(function() {
 				'makeDropable',
 				function(event, dropdata) {
 					// check for occurrence of this resource in the link items of the linkage window
-					if (window_content.find('.links').children('div[data-resid=' + dropdata.resid + ']').length == 0) {
+					// resid is an Iri now (a string)
+					if (window_content.find('.links').children('div[data-resid="' + dropdata.resid + '"]').length == 0) {
 						SALSAH.ApiGet('resources', dropdata.resid, {
 							parent_info: true,
 							reqtype: 'info'
