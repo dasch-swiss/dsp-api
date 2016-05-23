@@ -257,15 +257,16 @@
 								for (var ii in localdata.settings.props) {
 									if ((localdata.settings.props[ii].vocabulary == rtinfo.properties[pinfo].vocabulary) &&
 										(localdata.settings.props[ii].name == rtinfo.properties[pinfo].name)) {
-										propvals[localdata.settings.props[ii].vocabulary + ':' + localdata.settings.props[ii].name] = {};
-										propvals[localdata.settings.props[ii].vocabulary + ':' + localdata.settings.props[ii].name].value = localdata.settings.props[ii].value;
+										propvals[/*localdata.settings.props[ii].vocabulary + ':' + */localdata.settings.props[ii].name] = {};
+										propvals[/*localdata.settings.props[ii].vocabulary + ':' + */localdata.settings.props[ii].name].value = localdata.settings.props[ii].value;
 										propval_found = true;
 										break;
 									}
 								}
 								if (propval_found) continue;
 							}
-							propname = rtinfo.properties[pinfo].vocabulary + ':' + rtinfo.properties[pinfo].name;
+							//propname = rtinfo.properties[pinfo].vocabulary + ':' + rtinfo.properties[pinfo].name;
+							propname = rtinfo.properties[pinfo].name;
 							tline = $('<tr>', {
 								'class': 'propedit'
 							});
@@ -375,8 +376,9 @@
 										var attrs = rtinfo.properties[pinfo].attributes.split(';');
 										$.each(attrs, function() {
 											var attr = this.split('=');
-											if (attr[0] == 'selection') {
-												selection_id = attr[1];
+											if (attr[0] == 'selection' || attr[0] == 'hlist') {
+												//selection_id = attr[1];
+												selection_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
 										create_entry(propname, function(ele, attr) {
@@ -394,8 +396,9 @@
 										var attrs = rtinfo.properties[pinfo].attributes.split(';');
 										$.each(attrs, function() {
 											var attr = this.split('=');
-											if (attr[0] == 'selection') {
-												selection_id = attr[1];
+											if (attr[0] == 'selection' || attr[0] == 'hlist') {
+												//selection_id = attr[1];
+												selection_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
 										create_entry(propname, function(ele, attr) {
@@ -547,7 +550,8 @@
 										$.each(attrs, function() {
 											var attr = this.split('=');
 											if (attr[0] == 'hlist') {
-												hlist_id = attr[1];
+												//hlist_id = attr[1];
+												hlist_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
 										create_entry(propname, function(ele, attr) {
@@ -591,20 +595,37 @@
 							var propname;
 							var ele;
 							var vv;
+
+							create_richtext_value_params = function() {
+								return {
+									textattr: JSON.stringify({}),
+									resource_reference: []
+								};
+							};
+
 							for (var pinfo in rtinfo.properties) {
-								propname = rtinfo.properties[pinfo].vocabulary + ':' + rtinfo.properties[pinfo].name;
+								//propname = rtinfo.properties[pinfo].vocabulary + ':' + rtinfo.properties[pinfo].name;
+								propname = rtinfo.properties[pinfo].name;
 								if (!propvals[propname]) propvals[propname] = {};
+								//console.log(rtinfo.properties[pinfo].gui_name);
 								switch (rtinfo.properties[pinfo].gui_name) {
 									case 'text':
+
 										{
 											ele = form.find('[name="' + propname + '"]');
+
 											if (ele.length == 1) {
-												propvals[propname].value = ele.val();
+												var richtext_value = create_richtext_value_params();
+												richtext_value.utf8str = ele.val();
+												propvals[propname] = [{richtext_value: richtext_value}];
 											} else if (ele.length > 1) {
 												propvals[propname] = []; // initlialize as array
 												ele.each(function() {
+
+													var richtext_value = create_richtext_value_params();
+													richtext_value.utf8str = $(this).val();
 													vv = {
-														value: $(this).val()
+														richtext_value: richtext_value
 													};
 													propvals[propname].push(vv);
 												});
@@ -903,9 +924,18 @@
 										}
 								}
 							}
+
+							/**
+							  Ignore knora-base:Resource properties for the moment
+                             */
+							propvals["http://www.knora.org/ontology/knora-base#hasRepresentation"] = undefined;
+							propvals["http://www.knora.org/ontology/knora-base#seqnum"] = undefined;
+
 							SALSAH.ApiPost('resources', {
 								restype_id: rtinfo.name,
-								properties: propvals
+								properties: propvals,
+								project_id: SALSAH.userdata.projects[0], // TODO: take the user's active project here: https://github.com/dhlab-basel/Knora/issues/118
+								label: "test" // TODO: add the first property's value here
 							}, function(data) {
 								console.log(data);
 								if (data.status == ApiErrors.OK) {
@@ -1015,7 +1045,8 @@
 				var tmp = {};
 				var plist = localdata.settings.rtinfo.properties;
 				for (index in plist) {
-					pp = plist[index].vocabulary + ':' + plist[index].name;
+					//pp = plist[index].vocabulary + ':' + plist[index].name;
+					pp = plist[index].name;
 					tmp[pp] = index;
 				}
 
@@ -1084,7 +1115,8 @@
 				var plist = localdata.settings.rtinfo.properties;
 				var tmp = {};
 				for (index in plist) {
-					pp = plist[index].vocabulary + ':' + plist[index].name;
+					//pp = plist[index].vocabulary + ':' + plist[index].name;
+					pp = plist[index].name;
 					tmp[pp] = index;
 				}
 
