@@ -26,6 +26,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import spray.routing.Directives._
@@ -42,6 +43,11 @@ object UsersRouteV1 extends Authenticator {
     private val urlValidator = new UrlValidator(schemes)
 
     def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+
+        import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
+        import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
+
+
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout

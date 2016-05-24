@@ -125,6 +125,8 @@ object ProjectInfoType extends Enumeration {
   */
 object ProjectV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
+
     implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat8(ProjectInfoV1)
     // we have to use lazyFormat here because `UserV1JsonProtocol` contains an import statement for this object.
     // this results in recursive import statements

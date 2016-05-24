@@ -127,6 +127,8 @@ object GroupInfoType extends Enumeration {
   */
 object GroupV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
+
     implicit val groupInfoV1Format: JsonFormat[GroupInfoV1] = jsonFormat3(GroupInfoV1)
     // we have to use lazyFormat here because `UserV1JsonProtocol` contains an import statement for this object.
     // this results in recursive import statements

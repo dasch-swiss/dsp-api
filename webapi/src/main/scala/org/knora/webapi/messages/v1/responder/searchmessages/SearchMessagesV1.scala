@@ -171,6 +171,8 @@ case class SearchResultPage(current: Boolean, start_at: Int, show_nrows: Int)
   */
 object SearchV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
+
     implicit val searchResultPageV1Format: JsonFormat[SearchResultPage] = jsonFormat3(SearchResultPage)
     implicit val searchPreviewDimensionsV1Format: JsonFormat[SearchPreviewDimensionsV1] = jsonFormat2(SearchPreviewDimensionsV1)
     implicit val searchResultRowV1Format: JsonFormat[SearchResultRowV1] = jsonFormat11(SearchResultRowV1)

@@ -27,6 +27,7 @@ import akka.pattern._
 import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
+import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
@@ -65,11 +66,11 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def getUserProfileByIRIV1(userIri: IRI, clean: Boolean): Future[UserProfileV1] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getUser(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
             ).toString())
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
@@ -91,11 +92,11 @@ class UsersResponderV1 extends ResponderV1 {
     private def getUserProfileByUsernameV1(username: String, clean: Boolean): Future[UserProfileV1] = {
         log.debug(s"getUserProfileByUsernameV1('$username', '$clean') called")
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByUsername(
                 triplestore = settings.triplestoreType,
                 username = username
             ).toString())
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
@@ -129,10 +130,11 @@ class UsersResponderV1 extends ResponderV1 {
             _ = if (newUserData.password.isEmpty) throw BadRequestException("Password cannot be empty")
 
             // check if the supplied username for the new user is unique, i.e. not already registered
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(
+            sparqlQueryString = queries.sparql.v1.txt.getUserByUsername(
                 triplestore = settings.triplestoreType,
-                newUserData.username).toString())
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+                username = newUserData.username
+            ).toString()
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
@@ -145,7 +147,7 @@ class UsersResponderV1 extends ResponderV1 {
             hashedPassword = BCrypt.hashpw(newUserData.password, BCrypt.gensalt())
 
             // Create the new user.
-            createNewUserSparql <- Future(queries.sparql.v1.txt.createNewUser(
+            createNewUserSparqlString = queries.sparql.v1.txt.createNewUser(
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
@@ -155,16 +157,16 @@ class UsersResponderV1 extends ResponderV1 {
                 givenName = newUserData.givenName,
                 familyName = newUserData.familyName,
                 email = newUserData.email,
-                preferredLanguage = newUserData.lang).toString)
-            // _ = println(createNewUserSparql)
-            createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparql)).mapTo[SparqlUpdateResponse]
+                preferredLanguage = newUserData.lang).toString
+            // _ = println(createNewUserSparqlString)
+            createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString)).mapTo[SparqlUpdateResponse]
 
 
             // Verify that the user was created.
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(
+            sparqlQuery = queries.sparql.v1.txt.getUser(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
-            ).toString())
+            ).toString()
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             _ = if (userDataQueryResponse.results.bindings.isEmpty) {
@@ -199,11 +201,11 @@ class UsersResponderV1 extends ResponderV1 {
             }
 
             // get current value.
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(
+            sparqlQueryString = queries.sparql.v1.txt.getUser(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
-            ).toString())
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            ).toString()
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
             // create the user profile including sensitive information
             currentUserProfile = userDataQueryResponse2UserProfile(userDataQueryResponse, false)
@@ -235,23 +237,23 @@ class UsersResponderV1 extends ResponderV1 {
             }
 
             // Update the user
-            updateUserSparql <- Future(queries.sparql.v1.txt.updateUser(
+            updateUserSparqlString = queries.sparql.v1.txt.updateUser(
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
                 propertyIri = propertyIri,
                 currentValue = currentValueLiteral,
                 newValue = newValueLiteral
-            ).toString)
-            _ = println(updateUserSparql)
-            createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparql)).mapTo[SparqlUpdateResponse]
+            ).toString
+            _ = println(updateUserSparqlString)
+            createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
             // Verify that the user was updated.
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(
+            sparqlQueryString = queries.sparql.v1.txt.getUser(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
-            ).toString())
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            ).toString()
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
 
             // create the user profile including sensitive information

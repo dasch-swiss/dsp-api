@@ -1,5 +1,6 @@
 package org.knora.webapi.messages.v1.store.triplestoremessages
 
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{InconsistentTriplestoreDataException, TriplestoreResponseException}
@@ -246,6 +247,8 @@ case class RdfDataObject(path: String, name: String)
   * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
   */
 object TriplestoreJsonProtocol extends DefaultJsonProtocol with NullOptions {
+
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 
     implicit val triplestoreAdminResponseFormat: RootJsonFormat[TriplestoreAdminResponse] = jsonFormat1(TriplestoreAdminResponse)
     implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject)

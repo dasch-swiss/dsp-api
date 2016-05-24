@@ -23,6 +23,7 @@ package org.knora.webapi.responders.v1
 import akka.actor.ActorSystem
 import org.knora.webapi.Settings
 import org.knora.webapi.messages.v1.responder.resourcemessages._
+import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
 
 object ResourcesResponderV1SpecContextData {
 

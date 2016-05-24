@@ -258,6 +258,8 @@ case class SipiFileInfoGetResponseV1(permissionCode: Option[Int],
   */
 object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
+
     implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat3(SipiFileInfoGetResponseV1)
     implicit val sipiErrorConversionResponseFormat = jsonFormat2(SipiErrorConversionResponse)
     implicit val sipiImageConversionResponseFormat = jsonFormat12(SipiImageConversionResponse)

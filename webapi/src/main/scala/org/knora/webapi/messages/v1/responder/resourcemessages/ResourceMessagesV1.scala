@@ -687,6 +687,7 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
 
     import LiteralValueType.LiteralValueTypeV1Protocol._
     import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 
     implicit val locationFormat: JsonFormat[LocationV1] = jsonFormat8(LocationV1)
 
@@ -950,6 +951,7 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
   */
 object ResourceContextV1JsonProtocol extends DefaultJsonProtocol {
 
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
     import ResourceContextCodeV1.ResourceContextCodeV1Protocol._
     import ResourceV1JsonProtocol._
 

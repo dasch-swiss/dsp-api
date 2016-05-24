@@ -24,6 +24,7 @@ import akka.actor.ActorDSL._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByUsernameGetRequestV1, UserProfileV1}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.routing.Authenticator.{INVALID_CREDENTIALS_NON_FOUND, INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED, INVALID_CREDENTIALS_USERNAME_OR_PASSWORD}
 import org.knora.webapi.{CoreSpec, InvalidCredentialsException, SharedTestData}

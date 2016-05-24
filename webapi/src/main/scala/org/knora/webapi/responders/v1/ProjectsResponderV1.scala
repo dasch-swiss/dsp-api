@@ -23,6 +23,7 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi.messages.v1.responder.projectmessages._
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.{IRI, NotFoundException, OntologyConstants, UnexpectedMessageException}
@@ -76,7 +77,9 @@ class ProjectsResponderV1 extends ResponderV1 {
 
         for {
         // group project result rows by their IRI
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjects(triplestore = settings.triplestoreType).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getProjects(
+                triplestore = settings.triplestoreType
+            ).toString())
             projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
 
