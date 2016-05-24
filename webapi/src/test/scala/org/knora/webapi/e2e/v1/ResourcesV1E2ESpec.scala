@@ -70,7 +70,9 @@ class ResourcesV1E2ESpec extends E2ESpec {
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
     "Load test data" in {
@@ -150,13 +152,31 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
             Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
 
-                
-
                 assert(status == StatusCodes.OK)
 
             }
 
+        }
 
+        "create a resource of type anything:Thing" in {
+            val params =
+            """
+              {
+              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
+              	"label": "A thing",
+              	"project_id": "http://data.knora.org/projects/anything",
+              	"properties": {
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test text"}}],
+                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}]
+              	}
+              }
+            """
+
+            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK)
+
+            }
         }
 
     }

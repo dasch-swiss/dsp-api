@@ -10,7 +10,7 @@
 
 # A trivial ontology, used only for testing Knora.
 
-@prefix : <http://www.knora.org/ontology/anything> .
+@prefix : <http://www.knora.org/ontology/anything#> .
 <http://www.knora.org/ontology/anything> rdf:type owl:Ontology .
 
 
