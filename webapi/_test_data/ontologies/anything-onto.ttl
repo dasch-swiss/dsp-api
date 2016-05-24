@@ -3,85 +3,15 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix dc: <http://www.knora.org/ontology/dc#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 
 
 # A trivial ontology, used only for testing Knora.
 
-@base <http://www.knora.org/ontology/test> .
-@prefix : <http://www.knora.org/ontology/test> .
-<http://www.knora.org/ontology/test> rdf:type owl:Ontology .
-
-
-<http://www.knora.org/ontology/test#treeList> rdf:type knora-base:ListNode ;
-
-                                         knora-base:isRootNode "true"^^xsd:boolean ;
-
-                                         rdfs:label "Tree list root"@en ;
-
-                                         knora-base:hasSubListNode <http://www.knora.org/ontology/test#treeList01> ,
-                                                                   <http://www.knora.org/ontology/test#treeList02> ,
-                                                                   <http://www.knora.org/ontology/test#treeList03> .
-
-
-<http://www.knora.org/ontology/test#treeList01> rdf:type knora-base:ListNode ;
-
-                                         knora-base:listNodeName "Tree list node 01" ;
-
-                                         knora-base:hasRootNode <http://www.knora.org/ontology/test#treeList> ;
-
-                                         knora-base:listNodePosition "0"^^xsd:integer ;
-
-                                         rdfs:label "Tree list node 01"@en .
-
-
-<http://www.knora.org/ontology/test#treeList02> rdf:type knora-base:ListNode ;
-
-                                         knora-base:listNodeName "Tree list node 02" ;
-
-                                         knora-base:hasRootNode <http://www.knora.org/ontology/test#treeList> ;
-
-                                         knora-base:listNodePosition "1"^^xsd:integer ;
-
-                                         rdfs:label "Tree list node 02"@en .
-
-
-<http://www.knora.org/ontology/test#treeList03> rdf:type knora-base:ListNode ;
-
-                                         knora-base:listNodeName "Tree list node 03" ;
-
-                                         knora-base:hasRootNode <http://www.knora.org/ontology/test#treeList> ;
-
-                                         knora-base:listNodePosition "2"^^xsd:integer ;
-
-                                         rdfs:label "Tree list node 03"@en ;
-
-                                         knora-base:hasSubListNode <http://www.knora.org/ontology/test#treeList10> ,
-                                                                   <http://www.knora.org/ontology/test#treeList11> .
-
-
-<http://www.knora.org/ontology/test#treeList10> rdf:type knora-base:ListNode ;
-
-                                         knora-base:listNodeName "Tree list node 10" ;
-
-                                         knora-base:hasRootNode <http://www.knora.org/ontology/test#treeList> ;
-
-                                         knora-base:listNodePosition "0"^^xsd:integer ;
-
-                                         rdfs:label "Tree list node 10"@en .
-
-
-<http://www.knora.org/ontology/test#treeList11> rdf:type knora-base:ListNode ;
-
-                                         knora-base:listNodeName "Tree list node 11" ;
-
-                                         knora-base:hasRootNode <http://www.knora.org/ontology/test#treeList> ;
-
-                                         knora-base:listNodePosition "1"^^xsd:integer ;
-
-                                         rdfs:label "Tree list node 11"@en .
+@prefix : <http://www.knora.org/ontology/anything> .
+<http://www.knora.org/ontology/anything> rdf:type owl:Ontology .
 
 
 :hasListItem rdf:type owl:ObjectProperty ;
@@ -101,7 +31,7 @@
 
        salsah-gui:guiElement salsah-gui:List ;
 
-       salsah-gui:guiAttribute "hlist=<http://www.knora.org/ontology/test#treeList>" ;
+       salsah-gui:guiAttribute "hlist=<http://data.knora.org/anything/treeList>" ;
 
        knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
 
