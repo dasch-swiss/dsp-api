@@ -171,13 +171,13 @@
 		.simpledialog('loginbox', {'class': 'loginbox', width: 400, positioning: 'upper', focus: '#user_id'}));
 
 		$('#login_button').on('click', function(){
-			var authorization = {
+			var credentials = {
 				salsah_username: $('#user_id').val(),
 				salsah_password: $('#password').val()
 			};
-			authorization = {};
 
-            SALSAH.ApiPost('session', {username: $('#user_id').val(), password: $('#password').val()}, authorization, function(data) {
+            SALSAH.ApiPost('session', {username: credentials.salsah_username, password: credentials.salsah_password}, function(data) {
+
 				if (data.status == ApiErrors.OK) {
 
 					// The login to Knora is successful.

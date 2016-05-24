@@ -119,7 +119,11 @@ case class UserDataV1(lang: String,
                       password: Option[String] = None,
                       activeProject: Option[IRI] = None,
                       projects: Option[Seq[IRI]] = None, // TODO: we do not need an option here as the list could simply be empty.
-                      projects_info: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1])
+                      projects_info: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1]) {
+
+    def toJsValue = UserDataV1JsonProtocol.userDataV1Format.write(this)
+
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
