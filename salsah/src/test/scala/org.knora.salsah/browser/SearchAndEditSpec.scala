@@ -20,22 +20,19 @@
 
 package org.knora.salsah.browser
 
-import org.openqa.selenium.support.ui.Select
+import akka.actor.ActorSystem
+import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
+import org.knora.salsah.SettingsImpl
 import org.openqa.selenium.{By, WebElement}
 import org.scalatest._
 import org.scalatest.concurrent.Eventually._
 import spray.client.pipelining._
 import spray.http.MediaTypes._
-import spray.http._
-import akka.actor.ActorSystem
-import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
-import org.knora.salsah.{Settings, SettingsImpl}
-import spray.http.{HttpRequest, HttpResponse}
+import spray.http.{HttpRequest, HttpResponse, _}
 
-import scala.concurrent.{Await, Future}
 import scala.collection.JavaConversions._
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 /**
@@ -153,9 +150,8 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // open the second row representing a page
             rows(1).click()
 
-            val window = eventually {
-                page.getWindow(1)
-            }
+            val window = page.getWindow(1)
+
 
             // drag and drop the window
             page.dragWindow(window, 90, 10)
@@ -174,9 +170,8 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // open the first search result representing a book
             rows(0).click()
 
-            val window = eventually {
-                page.getWindow(1)
-            }
+            val window = page.getWindow(1)
+
 
             page.dragWindow(window, 90, 10)
 
@@ -227,9 +222,8 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             rows(1).click()
 
-            val window = eventually {
-                page.getWindow(1)
-            }
+            val window = page.getWindow(1)
+
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
@@ -418,9 +412,8 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // open page of a book
             rows.head.click()
 
-            val window = eventually {
-                page.getWindow(1)
-            }
+            val window = page.getWindow(1)
+
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
@@ -481,9 +474,8 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // open page of a book
             rows(1).click()
 
-            val window = eventually {
-                page.getWindow(1)
-            }
+            val window = page.getWindow(1)
+
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
@@ -550,9 +542,8 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // open a book
             rows(0).click()
 
-            val window = eventually {
-                page.getWindow(1)
-            }
+            val window = page.getWindow(1)
+
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
@@ -595,9 +586,8 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // open a page
             rows(1).click()
 
-            val window = eventually {
-                page.getWindow(1)
-            }
+            val window = page.getWindow(1)
+
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
@@ -635,9 +625,8 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // open a page
             rows(1).click()
 
-            val window = eventually {
-                page.getWindow(1)
-            }
+            val window = page.getWindow(1)
+
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
@@ -680,9 +669,8 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             rows(4).click()
 
-            val window = eventually {
-                page.getWindow(1)
-            }
+            val window = page.getWindow(1)
+
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
@@ -724,9 +712,8 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             rows(4).click()
 
-            val window = eventually {
-                page.getWindow(1)
-            }
+            val window = page.getWindow(1)
+
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)

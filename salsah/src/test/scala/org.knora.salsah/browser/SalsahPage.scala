@@ -25,12 +25,11 @@ import java.io.File
 import scala.collection.JavaConversions._
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.interactions.Actions
-import org.openqa.selenium.support.ui.{ExpectedConditions, Select}
+import org.openqa.selenium.support.ui.Select
 import org.openqa.selenium.{By, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
 import java.io.FileNotFoundException
-
-import org.scalatest.selenium.WebBrowser.RadioButtonGroup
+import java.util
 
 import scala.concurrent.duration._
 
@@ -358,17 +357,6 @@ class SalsahPage {
 
     */
 
-    /**
-      * Ensures the minimum overall amount of windows and returns a list of them.
-      *
-      * @param minSize the minimum amount of windows.
-      * @return a list of [[WebElement]].
-      */
-    private def getWindows(minSize: Int): Seq[WebElement] = {
-
-        val windows = driver.findElements(By.className("win"))
-        if (windows.size < minSize) throw new Exception() else windows
-    }
 
     /**
       * Get the window with the given id.
@@ -377,10 +365,10 @@ class SalsahPage {
       * @return a [[WebElement]] representing the window.
       */
     def getWindow(winId: Int): WebElement = {
-        // make sure that the specified window is ready in the DOM
-        val windows = getWindows(winId + 1)
 
-        driver.findElement(By.id(winId.toString))
+        eventually {
+            driver.findElement(By.id(winId.toString))
+        }
     }
 
     /**
@@ -608,6 +596,32 @@ class SalsahPage {
 
     def clickAddResourceButton() = {
         driver.findElement(By.xpath("//div[@id='addresctrl']/img")).click()
+    }
+
+    def getInputRowsForResourceCreationForm(): List[WebElement] = {
+        eventually {
+            val rows = driver.findElement(By.xpath("//table[@class='propedit']")).findElements(By.xpath("tbody/tr[@class='propedit']")).toList
+
+            if (rows.length < 1) throw new Exception
+
+            rows
+        }
+
+    }
+
+    def getInputForResourceCreationForm(row: WebElement): WebElement = {
+
+        eventually {
+            row.findElement(By.xpath("td/input[@class='propedit']"))
+        }
+    }
+
+    def clickSaveButtonForResourceCreationForm() = {
+
+        eventually {
+            driver.findElement(By.xpath("//form[@class='propedit']//input[@value='Save']")).click()
+        }
+
     }
 
 }

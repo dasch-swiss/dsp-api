@@ -145,6 +145,24 @@ class ResourceCreationSpec extends WordSpecLike with ShouldMatchers {
 
             val restypes = page.selectRestype("http://www.knora.org/ontology/images#person")
 
+            val rows = page.getInputRowsForResourceCreationForm()
+
+            val address = page.getInputForResourceCreationForm(rows(1))
+
+            address.sendKeys("Musterstrasse 32")
+
+            val place = page.getInputForResourceCreationForm(rows(2))
+
+            place.sendKeys("Basel")
+
+            val name = page.getInputForResourceCreationForm(rows(9))
+
+            name.sendKeys("Testperson")
+
+            page.clickSaveButtonForResourceCreationForm()
+
+            val window = page.getWindow(1)
+
 
 
         }
