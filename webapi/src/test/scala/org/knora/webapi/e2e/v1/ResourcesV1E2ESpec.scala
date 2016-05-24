@@ -32,7 +32,8 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.ResourcesRouteV1
 import org.knora.webapi.store._
-import spray.http._
+import spray.http.MediaTypes._
+import spray.http.{HttpEntity, _}
 import spray.json._
 
 import scala.concurrent.Await
@@ -127,6 +128,35 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
                 assert(status == StatusCodes.OK)
             }
+        }
+
+        "create a resource of type images:person" in {
+
+            val params =
+            """
+
+              {
+              	"restype_id": "http://www.knora.org/ontology/images#person",
+              	"label": "Testperson",
+              	"project_id": "http://data.knora.org/projects/images",
+              	"properties": {
+              		"http://www.knora.org/ontology/images#lastname": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Testname"}}],
+                    "http://www.knora.org/ontology/images#firstname": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Name"}}]
+              	}
+              }
+
+
+            """
+
+            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+
+                
+
+                assert(status == StatusCodes.OK)
+
+            }
+
+
         }
 
     }
