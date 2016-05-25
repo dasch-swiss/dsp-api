@@ -230,3 +230,10 @@
 
 :Time rdf:type :Guielement ,
                owl:NamedIndividual .
+
+
+
+###  http://www.knora.org/ontology/salsah-gui#Fileupload
+
+:Fileupload rdf:type :Guielement ,
+                     owl:NamedIndividual .

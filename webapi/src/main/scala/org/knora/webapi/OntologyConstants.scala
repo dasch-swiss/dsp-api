@@ -196,6 +196,8 @@ object OntologyConstants {
         val Time = "http://www.knora.org/ontology/salsah-gui#Time"
         val Interval = "http://www.knora.org/ontology/salsah-gui#Interval"
         val Geonames = "http://www.knora.org/ontology/salsah-gui#Geonames"
+        val Fileupload = "http://www.knora.org/ontology/salsah-gui#Fileupload"
+
         object attributeNames {
             val resourceClass = "restypeid"
             val assignmentOperator = "="

@@ -558,7 +558,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     pid = "__location__",
                     valuetype_id = Some("-1"),
                     guiorder = Some(Int.MaxValue),
-                    guielement = Some("fileupload"),
+                    guielement = Some(SalsahGuiConversions.iri2SalsahGuiElement(OntologyConstants.SalsahGui.Fileupload)),
                     values = Vector(IntegerValueV1(0)),
                     value_ids = Vector("0"),
                     comments = Vector("0"),

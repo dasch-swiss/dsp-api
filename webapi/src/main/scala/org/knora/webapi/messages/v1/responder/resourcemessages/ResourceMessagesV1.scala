@@ -574,7 +574,7 @@ object SalsahGuiConversions {
         OntologyConstants.SalsahGui.Time -> "time",
         OntologyConstants.SalsahGui.Interval -> "interval",
         OntologyConstants.SalsahGui.Geonames -> "geoname",
-        "fileupload" -> "fileupload" // this is hardcoded
+        OntologyConstants.SalsahGui.Fileupload -> "fileupload"
     )
 
     /**
