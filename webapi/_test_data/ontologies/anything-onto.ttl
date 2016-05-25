@@ -25,7 +25,7 @@
 
        knora-base:subjectClassConstraint :Thing ;
 
-       knora-base:objectClassConstraint knora-base:FloatValue ;
+       knora-base:objectClassConstraint knora-base:ListValue ;
 
        salsah-gui:guiOrder "0"^^xsd:integer ;
 
@@ -88,7 +88,7 @@
 
        rdfs:subPropertyOf knora-base:hasValue ;
 
-       rdfs:label "Texte"@de ,
+       rdfs:label "Text"@de ,
                   "Texte"@fr ,
                   "Testo"@it ,
                   "Text"@en ;
@@ -166,10 +166,10 @@
 
        rdfs:subPropertyOf knora-base:hasValue ;
 
-       rdfs:label "Ganzzahl"@de ,
-                  "Nombre entier"@fr ,
-                  "Intero"@it ,
-                  "Integer"@en ;
+       rdfs:label "Gleitkommazahl"@de ,
+                  "Nombre à virgule flottante"@fr ,
+                  "Numero in virgola mobile"@it ,
+                  "Floating-point number"@en ;
 
        knora-base:subjectClassConstraint :Thing ;
 
@@ -280,6 +280,29 @@
 
 
 
+:hasThingPicture rdf:type owl:ObjectProperty ;
+
+    rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+    rdfs:label "Beschreibung"@de ,
+               "Description"@fr ,
+               "Descrizione"@it ,
+               "Description"@en ;
+
+    knora-base:subjectClassConstraint :Thing ;
+
+    knora-base:objectClassConstraint :ThingPicture ;
+
+    salsah-gui:guiOrder "9"^^xsd:integer ;
+
+    salsah-gui:guiElement salsah-gui:Geonames ;
+
+    knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+    knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
 :Thing rdf:type owl:Class ;
 
       rdfs:subClassOf knora-base:Resource ,
@@ -351,3 +374,51 @@
       knora-base:hasDefaultViewPermission knora-base:KnownUser ;
 
       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasPictureTitle rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Titel"@de ,
+                  "Titre"@fr ,
+                  "Titolo"@it ,
+                  "Title"@en ;
+
+       knora-base:subjectClassConstraint :ThingPicture ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:ThingPicture rdf:type owl:Class ;
+
+    rdfs:subClassOf knora-base:StillImageRepresentation ,
+                    [
+                       rdf:type owl:Restriction ;
+                       owl:onProperty :hasPictureTitle ;
+                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ] ;
+
+    knora-base:resourceIcon "thing.png" ;
+
+    rdfs:label "Dingbild"@de ,
+               "Image d'une chose"@fr ,
+               "Immagine di una cosa"@it ,
+               "Picture of a thing"@en ;
+
+    rdfs:comment """Diese Resource-Klasse beschreibt ein Bild eines Dinges"""@de ;
+
+    knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+    knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
