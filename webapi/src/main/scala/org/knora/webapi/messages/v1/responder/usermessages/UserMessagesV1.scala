@@ -80,7 +80,7 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
             olduserdata.lastname,
             olduserdata.email,
             None, // remove password
-            olduserdata.activeProject,
+            olduserdata.active_project,
             olduserdata.projects,
             olduserdata.projects_info
         )
@@ -105,7 +105,7 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
   * @param lastname The user's surname.
   * @param email The user's email address.
   * @param password The user's hashed password.
-  * @param activeProject
+  * @param active_project
   * @param projects
   * @param projects_info
   */
@@ -117,7 +117,7 @@ case class UserDataV1(lang: String,
                       lastname: Option[String] = None,
                       email: Option[String] = None,
                       password: Option[String] = None,
-                      activeProject: Option[IRI] = None,
+                      active_project: Option[IRI] = None,
                       projects: Option[Seq[IRI]] = None, // TODO: we do not need an option here as the list could simply be empty.
                       projects_info: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1]) {
 

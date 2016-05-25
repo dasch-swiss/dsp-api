@@ -105,7 +105,7 @@ object ResourcesResponderV1SpecContextData {
         userdata = UserDataV1(
             projects_info = Nil,
             projects = None,
-            activeProject = None,
+            active_project = None,
             password = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
@@ -5397,7 +5397,7 @@ object ResourcesResponderV1SpecContextData {
         userdata = UserDataV1(
             projects_info = Nil,
             projects = None,
-            activeProject = None,
+            active_project = None,
             password = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
