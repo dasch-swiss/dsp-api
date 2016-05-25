@@ -282,20 +282,43 @@
 
 :hasThingPicture rdf:type owl:ObjectProperty ;
 
-    rdfs:subPropertyOf knora-base:hasLinkTo ;
+    rdfs:subPropertyOf knora-base:hasRepresentation ;
 
-    rdfs:label "Beschreibung"@de ,
-               "Description"@fr ,
-               "Descrizione"@it ,
-               "Description"@en ;
+    rdfs:label "Dingbild"@de ,
+               "Image d'une chose"@fr ,
+               "Immagine di una cosa"@it ,
+               "Picture of a thing"@en ;
 
     knora-base:subjectClassConstraint :Thing ;
 
     knora-base:objectClassConstraint :ThingPicture ;
 
-    salsah-gui:guiOrder "9"^^xsd:integer ;
+    salsah-gui:guiOrder "10"^^xsd:integer ;
 
-    salsah-gui:guiElement salsah-gui:Geonames ;
+    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+    knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+    knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasThingPictureValue rdf:type owl:ObjectProperty ;
+
+    rdfs:subPropertyOf knora-base:hasRepresentationValue ;
+
+    rdfs:label "Dingbild"@de ,
+               "Image d'une chose"@fr ,
+               "Immagine di una cosa"@it ,
+               "Picture of a thing"@en ;
+
+    knora-base:subjectClassConstraint :Thing ;
+
+    knora-base:objectClassConstraint :LinkValue ;
+
+    salsah-gui:guiOrder "11"^^xsd:integer ;
+
+    salsah-gui:guiElement salsah-gui:Searchbox ;
 
     knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
 
@@ -319,6 +342,16 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasOtherThingValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasThingPicture ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasThingPictureValue ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [
