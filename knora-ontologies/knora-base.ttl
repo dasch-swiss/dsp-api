@@ -310,7 +310,7 @@
                          "a Répresentation (File)"@fr ,
                          "ha Rappresentazione (File)"@it ;
 
-              <http://www.knora.org/ontology/salsah-gui#guiElement> salsah-gui:Fileupload ;
+              <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Fileupload> ;
               
               :subjectClassConstraint :Representation ;
 
