@@ -136,6 +136,10 @@ object MessageUtil {
 
             case hlistValue: HierarchicalListValueV1 => basicObjectResponse
 
+            case colorValue: ColorValueV1 => basicObjectResponse
+
+            case geomValue: GeomValueV1 => basicObjectResponse
+
             case other => throw new Exception(s"Resource creation response format not implemented for value type ${other.valueTypeIri}") // TODO: implement remaining types.
         }
 
