@@ -155,9 +155,13 @@ class ResourceCreationSpec extends WordSpecLike with ShouldMatchers {
 
             place.sendKeys("Basel")
 
-            val name = page.getInputForResourceCreationForm(rows(9))
+            val firstName = page.getInputForResourceCreationForm(rows(6))
 
-            name.sendKeys("Testperson")
+            firstName.sendKeys("Testvorname")
+
+            val familyName = page.getInputForResourceCreationForm(rows(9))
+
+            familyName.sendKeys("Testperson")
 
             page.clickSaveButtonForResourceCreationForm()
 
