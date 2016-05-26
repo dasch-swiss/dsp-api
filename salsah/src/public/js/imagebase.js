@@ -20,7 +20,7 @@ $(function() {
 	//var metadataAreaDomCreate = function(topele, winid, tabid, regnum, resource)
 	var metadataAreaDomCreate = function(topele, resource, options)
 	{
-        console.log(resource);
+        //console.log(resource);
 		settings = {
 			winid: undefined,
 			tabid: undefined,
@@ -84,7 +84,7 @@ $(function() {
 			{
 				for (var propname in resource.props)
 				{
-					if (propname == 'salsah:region_of') continue;
+					if (propname == 'http://www.knora.org/ontology/knora-base#isRegionOf') continue;
 					if (propname == '__location__') continue;
 					propedit
 					.append($('<em>').addClass('propedit label').text(resource.props[propname].label + ' :'))
@@ -187,7 +187,7 @@ $(function() {
 			datafield = 'datafield';
 			for (var propname in resource.props)
 			{
-				if (propname == 'salsah:region_of') continue;
+				if (propname == 'http://www.knora.org/ontology/knora-base#isRegionOf') continue;
 				if (propname == '__location__') continue;
 				petable
 				.append(
@@ -816,7 +816,7 @@ $(function() {
 							rtinfo: data.restype_info,
 							geometry_field: figures,
 							viewer: viewer,
-							props: [{vocabulary: 'salsah', name: 'region_of', value: res_id}],
+							props: [{/*vocabulary: 'salsah', */name: 'http://www.knora.org/ontology/knora-base#isRegionOf', value: res_id}],
 							on_cancel_cb: function() {
 								SALSAH.ApiGet('resources', res_id, {resinfo: true, reqtype: 'context'}, function(data) {
 									if (data.status == ApiErrors.OK) {
@@ -946,7 +946,7 @@ $(function() {
 							rtinfo: data.restype_info,
 							geometry_field: {},
 							viewer: viewer,
-							props: [{vocabulary: 'salsah', name: 'region_of', value: res_id}],
+							props: [{/*vocabulary: 'salsah', */name: 'http://www.knora.org/ontology/knora-base#isRegionOf', value: res_id}],
 							on_cancel_cb: function() {
 								SALSAH.ApiGet('resources', res_id, {reqtype: 'context', resinfo: true}, function(data) {
 									if (data.status == ApiErrors.OK) {
@@ -4227,7 +4227,7 @@ $(function() {
 					//
 					// it's NOT a region_of
 					//
-                    console.log("2. calling create_viewer in imagebase.js")
+                    //console.log("2. calling create_viewer in imagebase.js")
 					create_viewer(context);
 				}
 			}

@@ -255,10 +255,13 @@
 							if (localdata.settings.props && (localdata.settings.props instanceof Array)) {
 								propval_found = false;
 								for (var ii in localdata.settings.props) {
-									if ((localdata.settings.props[ii].vocabulary == rtinfo.properties[pinfo].vocabulary) &&
+									if (/*(localdata.settings.props[ii].vocabulary == rtinfo.properties[pinfo].vocabulary) &&*/
 										(localdata.settings.props[ii].name == rtinfo.properties[pinfo].name)) {
-										propvals[/*localdata.settings.props[ii].vocabulary + ':' + */localdata.settings.props[ii].name] = {};
-										propvals[/*localdata.settings.props[ii].vocabulary + ':' + */localdata.settings.props[ii].name].value = localdata.settings.props[ii].value;
+
+										//propvals[/*localdata.settings.props[ii].vocabulary + ':' + */localdata.settings.props[ii].name] = {};
+
+										// TODO: check for different value types here!
+										propvals[/*localdata.settings.props[ii].vocabulary + ':' + */localdata.settings.props[ii].name] = [{link_value: localdata.settings.props[ii].value}];
 										propval_found = true;
 										break;
 									}
@@ -537,7 +540,7 @@
 									{
 										create_entry(propname, function(ele, attr) {
 											var colbox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
-											if (rtinfo.name == 'salsah:generic_region') {
+											if (rtinfo.name == 'http://www.knora.org/ontology/knora-base#Region') {
 												colbox.colorpicker('edit', {
 													color_changed_cb: function(color) {
 														if (localdata.settings.viewer.topCanvas !== undefined) {
@@ -1011,6 +1014,10 @@
                              */
 							propvals["http://www.knora.org/ontology/knora-base#hasRepresentation"] = undefined;
 							propvals["http://www.knora.org/ontology/knora-base#seqnum"] = undefined;
+
+							// TODO: handle GUI  element problem
+							//propvals["http://www.knora.org/ontology/knora-base#hasComment"] = undefined;
+
 
 							SALSAH.ApiPost('resources', {
 								restype_id: rtinfo.name,
