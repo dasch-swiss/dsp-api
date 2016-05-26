@@ -297,7 +297,6 @@
 							prop_status[propname].count = 0;
 							prop_status[propname].td = td;
 
-							//console.log(rtinfo.properties[pinfo].gui_name);
 							switch (rtinfo.properties[pinfo].gui_name) {
 								case 'text':
 									{
@@ -434,7 +433,7 @@
 											$.each(attrs, function() {
 
 												var curAttr = this.split('=');
-												console.log(curAttr)
+												
 												if (curAttr[0] == 'restypeid') {
 													restype_id = curAttr[1];
 												}
