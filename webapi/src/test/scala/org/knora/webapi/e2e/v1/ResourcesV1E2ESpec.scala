@@ -178,32 +178,6 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
             }
         }
-        "create a resource of type RTIproject:PTM" in {
-            val params =
-                """
-              {
-              	"restype_id": "http://www.knora.org/ontology/RTIproject#PTM",
-              	"label": "the web PTM",
-              	"project_id": "http://data.knora.org/projects/RTIproject",
-              	"properties":
-              	{
-              		"http://www.knora.org/ontology/RTIproject#hasPTMCreator": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test name text"}}],
-                  "http://www.knora.org/ontology/RTIproject#hasPTMlocation": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test location text"}}]
-                  "http://www.knora.org/ontology/RTIproject#hasPTMdate": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test date text"}}]
-                  "http://www.knora.org/ontology/RTIproject#hasPTMexib": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test exibition location text"}}],
-                  "http://www.knora.org/ontology/RTIproject#hasPermissions": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test permissions text"}}]
-                  "http://www.knora.org/ontology/RTIproject#setupIs": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test setup description text"}}]
-                  "http://www.knora.org/ontology/RTIproject#hasPTMcomment": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test comment"}}]
-                }
-              }
-                """
-
-            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
-
-                assert(status == StatusCodes.OK)
-
-            }
-        }
 
     }
 
