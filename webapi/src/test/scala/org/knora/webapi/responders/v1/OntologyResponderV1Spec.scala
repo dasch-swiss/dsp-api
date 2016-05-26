@@ -408,7 +408,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         restype_info = ResTypeInfoV1(
             properties = Set(
                 PropertyDefinitionV1(
-                    gui_name = None,
+                    gui_name = Some("richtext"),
                     attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "1-n",
@@ -507,7 +507,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     id = "http://www.knora.org/ontology/knora-base#hasLinkTo"
                 ),
                 PropertyDefinitionV1(
-                    gui_name = None,
+                    gui_name = Some("richtext"),
                     attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
@@ -742,7 +742,16 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 "Images Test Project",
                 "http://data.knora.org/projects/images",
                 "http://www.knora.org/ontology/images",
-                false)
+                false),
+            NamedGraphV1(
+                "http://www.knora.org/ontology/anything",
+                "Anything Test Project",
+                "Anything Test Project",
+                "Anything Test Project",
+                "http://data.knora.org/projects/anything",
+                "http://www.knora.org/ontology/anything",
+                false
+            )
         ),
         userdata = UserDataV1(
             password = None,

@@ -269,6 +269,8 @@
 
             :objectClassConstraint :TextValue ;
 
+			<http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Richtext> ;
+
             rdfs:subPropertyOf :hasValue .
 
 
@@ -2237,6 +2239,12 @@
                         ] ;
 
         :resourceIcon "region.gif"^^xsd:string ;
+
+		:hasDefaultViewPermission :KnownUser ;
+
+      	:hasDefaultModifyPermission :ProjectMember ;
+
+      	:hasDefaultDeletePermission :Owner ;
 
         rdfs:comment "Represents a geometric region of a resource. The geometry is represented currently as JSON string."@en .
 

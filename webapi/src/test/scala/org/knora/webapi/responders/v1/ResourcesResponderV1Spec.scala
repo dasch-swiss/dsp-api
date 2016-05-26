@@ -329,7 +329,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     Some("Kommentar"),
                     Some("http://www.knora.org/ontology/knora-base#TextValue"),
                     Some("textval"),
-                    None,
+                    Some("richtext"),
                     "",
                     "0",
                     Vector(
