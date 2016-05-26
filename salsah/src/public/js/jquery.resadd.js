@@ -297,6 +297,7 @@
 							prop_status[propname].count = 0;
 							prop_status[propname].td = td;
 
+							//console.log(rtinfo.properties[pinfo].gui_name);
 							switch (rtinfo.properties[pinfo].gui_name) {
 								case 'text':
 									{
@@ -427,13 +428,29 @@
 
 											var restype_id = -1;
 											var numprops = 1;
-											$.each(attr, function(name, val) {
+											var attrs = rtinfo.properties[pinfo].attributes.split(';');
+
+
+											$.each(attrs, function() {
+
+												var curAttr = this.split('=');
+												console.log(curAttr)
+												if (curAttr[0] == 'restypeid') {
+													restype_id = curAttr[1];
+												}
+												else if (curAttr[0] == 'numprops') {
+													numprops = curAttr[1];
+												}
+											});
+											/*$.each(attr, function(name, val) {
 												if (name == 'restypeid') {
 													restype_id = val;
 												} else if (name == 'numprops') {
 													numprops = val;
 												}
-											});
+											});*/
+
+
 											tmpele.searchbox({
 												restype_id: restype_id,
 												numprops: numprops,
@@ -615,20 +632,50 @@
 											ele = form.find('[name="' + propname + '"]');
 
 											if (ele.length == 1) {
-												var richtext_value = create_richtext_value_params();
-												richtext_value.utf8str = ele.val();
-												propvals[propname] = [{richtext_value: richtext_value}];
+
+												if (ele.val().trim() == "") {
+													// empty prop
+													propvals[propname] = undefined;
+													break;
+												}
+
+												if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_FLOAT) {
+													// it is a float
+													propvals[propname] = [{float_value: parseFloat(ele.val())}];
+												} else {
+													// it is a text
+													var richtext_value = create_richtext_value_params();
+													richtext_value.utf8str = ele.val();
+													propvals[propname] = [{richtext_value: richtext_value}];
+												}
 											} else if (ele.length > 1) {
 												propvals[propname] = []; // initialize as array
 												ele.each(function() {
 
-													var richtext_value = create_richtext_value_params();
-													richtext_value.utf8str = $(this).val();
-													vv = {
-														richtext_value: richtext_value
-													};
+													if ($(this).val().trim() == "") {
+														// continue
+														return true;
+													}
+
+													if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_FLOAT) {
+														// it is a float
+														vv = {
+															float_value: parseFloat($(this).val())
+														};
+													} else {
+														// it is a text
+														var richtext_value = create_richtext_value_params();
+														richtext_value.utf8str = $(this).val();
+														vv = {
+															richtext_value: richtext_value
+														};
+													}
 													propvals[propname].push(vv);
+
 												});
+												// empty prop
+												if (propvals[propname].length == 0) propvals[propname] = undefined;
+
 											}
 											break;
 										}
@@ -684,15 +731,31 @@
 										{
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
+
+												if (ele.spinbox('value').trim() == "") {
+													// empty prop
+													propvals[propname] = undefined;
+													break;
+												}
+
 												propvals[propname] = [{int_value: parseInt(ele.spinbox('value'))}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
+
+													if ($(this).spinbox('value').trim() == "") {
+														// continue
+														return true;
+													}
+
 													vv = {
 														int_value: parseInt($(this).spinbox('value'))
 													};
 													propvals[propname].push(vv);
 												});
+
+												// empty prop
+												if (propvals[propname].length == 0) propvals[propname] = undefined;
 											}
 											break;
 										}
@@ -701,15 +764,34 @@
 											ele = form.find('[name="' + propname + '"]');
 											if ((rtinfo.name != 'http://www.knora.org/ontology/knora-base#Region') || (propname != 'http://www.knora.org/ontology/knora-base#isRegionOf')) {
 												if (ele.length == 1) {
+
+													if (ele.data('res_id') == undefined) {
+														// no resid selected
+
+														// empty prop
+														propvals[propname] = undefined;
+														break;
+
+													}
+
 													propvals[propname] = [{link_value: ele.data('res_id')}];
 												} else if (ele.length > 1) {
 													propvals[propname] = [];
 													ele.each(function() {
+
+														if ($(this).data('res_id') == undefined) {
+															// continue
+															return true;
+														}
+
 														vv = {
 															link_value: $(this).data('res_id')
 														};
 														propvals[propname].push(vv);
 													});
+
+													// empty prop
+													if (propvals[propname].length == 0) propvals[propname] = undefined;
 												}
 											}
 											break;
@@ -734,12 +816,12 @@
 										{
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
-												propvals[propname].value = ele.timeobj('value');
+												propvals[propname].time_value = ele.timeobj('value');
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
 													vv = {
-														value: $(this).timeobj('value')
+														time_value: $(this).timeobj('value')
 													};
 													propvals[propname].push(vv);
 												});
@@ -751,12 +833,12 @@
 											ele = form.find('[name="' + propname + '"]');
 
                                             if (ele.length == 1) {
-												propvals[propname].value = ele.timeobj('value');
+												propvals[propname].interval_value = ele.timeobj('value');
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
 													vv = {
-														value: $(this).timeobj('value')
+														interval_value: $(this).timeobj('value')
 													};
 													propvals[propname].push(vv);
 												});
@@ -937,7 +1019,6 @@
 								project_id: SALSAH.userdata.projects[0], // TODO: take the user's active project here: https://github.com/dhlab-basel/Knora/issues/118
 								label: "test" // TODO: add the first property's value here
 							}, function(data) {
-								console.log(data);
 								if (data.status == ApiErrors.OK) {
 									if (typeof localdata.settings.on_submit_cb === "function") {
 										localdata.settings.on_submit_cb(data);

@@ -373,27 +373,27 @@
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasFloat ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasTime ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasColor ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasGeometry ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasGeoname ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ;
+                      #[
+                      #   rdf:type owl:Restriction ;
+                      #   owl:onProperty :hasTime ;
+                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      #] ,
+                      #[
+                      #   rdf:type owl:Restriction ;
+                      #   owl:onProperty :hasColor ;
+                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      #] ,
+                      #[
+                      #   rdf:type owl:Restriction ;
+                      #   owl:onProperty :hasGeometry ;
+                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      #] ,
+                      #[
+                      #   rdf:type owl:Restriction ;
+                      #   owl:onProperty :hasGeoname ;
+                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      #] ;
 
       knora-base:resourceIcon "thing.png" ;
 

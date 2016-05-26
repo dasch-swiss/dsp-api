@@ -475,7 +475,7 @@
 						cancel_edit(value_container);
 					});
 				} else {
-					data.float_value = parseInt(value); // it is an float
+					data.float_value = parseFloat(value); // it is an float
 					data.project_id = project_id;
 					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
 						if (data.status == ApiErrors.OK) {
@@ -1137,7 +1137,13 @@
 				case 'text': {
 					attributes.type = 'text';
 					if (!is_new_value) {
-						attributes.value = propinfo[prop].values[value_index].utf8str;
+
+						if (propinfo[prop].valuetype_id == VALTYPE_FLOAT) {
+							// it is a float value
+							attributes.value = propinfo[prop].values[value_index];
+						} else {
+							attributes.value = propinfo[prop].values[value_index].utf8str;
+						}
 					}
 					attributes['style'] = 'width: 95%'; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! should be configurable !!
 					var tmpele = $('<input>', attributes);
@@ -1149,13 +1155,21 @@
 					value_container.append(tmpele);
 					tmpele.focus();
 					value_container.append($('<img>', {src: save_icon.src, title: strings._save, 'class': 'propedit'}).click(function(event) {
-						var richtext_value = {
-							utf8str: value_container.find('input').val(),
-							textattr: JSON.stringify({}),
-							resource_reference: []
-						};
-						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, richtext_value, is_new_value);
-					}).css({cursor: 'pointer'}));
+
+						if (propinfo[prop].valuetype_id == VALTYPE_FLOAT) {
+							// it is a float value
+							postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, value_container.find('input').val(), is_new_value);
+						} else {
+
+							var richtext_value = {
+								utf8str: value_container.find('input').val(),
+								textattr: JSON.stringify({}),
+								resource_reference: []
+							};
+							postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, richtext_value, is_new_value);
+						}
+
+						}).css({cursor: 'pointer'}));
 					break;
 				}
 				case 'textarea': {
@@ -1165,7 +1179,6 @@
 						tmpele.val(front + '<+LINKTO RESID=' + dropdata.resid + '+>'+ back);
 					});*/
 					if (!is_new_value) {
-						console.log("not new value")
 						tmpele.append(propinfo[prop].values[value_index].utf8str);
 					}
 					value_container.append(tmpele);
@@ -1464,7 +1477,7 @@
 					}
 					else {
 						var restype_id = -1;
-						var numprops;
+						var numprops = 1;
 						var attrs = propinfo[prop].attributes.split(';');
 						$.each(attrs, function() {
 							var attr = this.split('=');

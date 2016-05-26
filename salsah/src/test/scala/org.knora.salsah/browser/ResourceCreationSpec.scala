@@ -69,30 +69,13 @@ class ResourceCreationSpec extends WordSpecLike with ShouldMatchers {
                 {"path": "../knora-ontologies/knora-dc.ttl", "name": "http://www.knora.org/ontology/dc"},
                 {"path": "../knora-ontologies/salsah-gui.ttl", "name": "http://www.knora.org/ontology/salsah-gui"},
                 {"path": "_test_data/ontologies/images-demo-onto.ttl", "name": "http://www.knora.org/ontology/images"},
-                {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"}
+                {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"},
+                {"path": "_test_data/ontologies/anything-onto.ttl", "name": "http://www.knora.org/ontology/anything"},
+                {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"}
             ]
         """
 
     // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
-
-
-    def doZeitgloeckleinSearch = {
-
-        val searchField: WebElement = page.getSimpleSearchField
-        searchField.clear()
-        searchField.sendKeys("Zeitglöcklein\n")
-
-        val header = page.getSearchResultHeader
-
-        assert(header.contains("Total of 3 hits"))
-
-        val rows = page.getExtendedSearchResultRows
-
-        val row1Text = page.getSearchResultRowText(rows(0))
-
-        assert(row1Text.contains("Zeitglöcklein des Lebens und Leidens Christi"))
-
-    }
 
     "The SALSAH home page" should {
         "load test data" in {
@@ -139,7 +122,7 @@ class ResourceCreationSpec extends WordSpecLike with ShouldMatchers {
 
         "create a resource of type images:person" in {
 
-
+            page.load()
 
             page.clickAddResourceButton()
 
@@ -171,6 +154,30 @@ class ResourceCreationSpec extends WordSpecLike with ShouldMatchers {
 
         }
 
+        "create a resource of type anything:thing" in {
+
+            page.load()
+
+            page.clickAddResourceButton()
+
+            val restypes = page.selectRestype("http://www.knora.org/ontology/anything#Thing")
+
+            val rows = page.getInputRowsForResourceCreationForm()
+
+            val floatVal =  page.getInputForResourceCreationForm(rows(2))
+
+            floatVal.sendKeys("5.3")
+
+            val textVal =  page.getInputForResourceCreationForm(rows(7))
+
+            textVal.sendKeys("Dies ist ein Test")
+
+            page.clickSaveButtonForResourceCreationForm()
+
+            val window = page.getWindow(1)
+
+
+        }
 
 
         // Uncomment this if you want the browser to close after the test completes.
