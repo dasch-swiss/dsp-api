@@ -73,7 +73,7 @@
 
                knora-base:subjectClassConstraint :Thing ;
 
-               knora-base:objectClassConstraint :LinkValue ;
+               knora-base:objectClassConstraint knora-base:LinkValue ;
 
                salsah-gui:guiOrder "1"^^xsd:integer ;
 
