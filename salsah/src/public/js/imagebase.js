@@ -167,14 +167,14 @@ $(function() {
 						RESVIEW.new_resource_editor(ext_res.ext_res_id.id, ext_res.value);
 					}).on('mouseover', function(event){
 						var ext_res = $(this).data('ext_res');
-						load_infowin(event, ext_res.ext_res_id.id + '_-_local', $(this));
+						load_infowin(event, ext_res.ext_res_id.id /*+ '_-_local'*/, $(this));
 					}).append(
 						$('<img>').attr({
 							src: ext_res.resinfo.restype_iconsrc,
 							title: ext_res.resinfo.restype_label
 						}).addClass('propedit').data({ext_res: ext_res}).on('mouseover', function(event){
 							var ext_res = $(this).data('ext_res');
-							load_infowin(event, ext_res.ext_res_id.id + '_-_local', $(this));
+							load_infowin(event, ext_res.ext_res_id.id/* + '_-_local'*/, $(this));
 						})
 					).append(ext_res.value)
 				);
@@ -260,10 +260,15 @@ $(function() {
 		);
 		$(element).find('.regionheader.winid_' + winid).click(
 			function(event) {
+
 				var section = $(this).next('.section');
+
 				if (section.css('display') == 'none') {
-					$('.regionheader.winid_' + winid + '.regnum_' + open_area_id).next('.section').slideUp();
-					$('.regionheader.winid_' + winid + '.regnum_' + open_area_id).find('img:first').attr('src', SITE_URL + '/app/icons/expand.png');
+
+					var curRegion = $(".regionheader.winid_"+ winid + "[data-reg_id='" + open_area_id + "']");
+
+					curRegion.next('.section').slideUp();
+					curRegion.find('img:first').attr('src', SITE_URL + '/app/icons/expand.png');
 					section.slideDown();
 					$(this).find('img:first').attr('src', SITE_URL + '/app/icons/collapse.png');
 					open_area_id = $(this).data('reg_id');
@@ -273,12 +278,19 @@ $(function() {
 
 		return {
 			openSection: function(index) {
-				var section = $('.regionheader.winid_' + winid + '.regnum_' + index).next('.section');
+
+				var curEle = $(".regionheader.winid_"+ winid + "[data-reg_id='" + index + "']");
+				var section = curEle.next('.section');
+
 				if (open_area_id != index) {
-					$('.regionheader.winid_' + winid + '.regnum_' + open_area_id).next('.section').slideUp();
-					$('.regionheader.winid_' + winid + '.regnum_' + open_area_id).find('img:first').attr('src', SITE_URL + '/app/icons/expand.png');
+
+					var openRegion = $(".regionheader.winid_"+ winid + "[data-reg_id='" + open_area_id + "']");
+
+					openRegion.next('.section').slideUp();
+					openRegion.find('img:first').attr('src', SITE_URL + '/app/icons/expand.png');
 					section.slideDown();
-					$('.regionheader.winid_' + winid + '.regnum_' + index).find('img:first').attr('src', SITE_URL + '/app/icons/collapse.png');
+
+					curEle.find('img:first').attr('src', SITE_URL + '/app/icons/collapse.png');
 					open_area_id = index;
 				}
 			}
@@ -2637,30 +2649,36 @@ $(function() {
 			var regmeta_area = [];
 			var cont = $('<div>');
 			var regsec;
-			for (var rr in resinfo.regions) {
+			//var rr;
+
+			// use jQuery each to loop over the elements (counter can be accessed safely from the callback)
+			$.each(resinfo.regions, function(index, region) {
+
 				//                      var icon = $('<img>', {src: regdata.resdata.iconsrc}).dragndrop('makeDraggable', 'RESID', {resid: region_id[rr]});
 				//                      var label = $('<div>').append(icon).append(regdata.resdata.restype_label);
 				cont.append(
-					$('<div>', {'class': 'propedit regionheader metadata winid_' + winid + ' regnum_' + resinfo.regions[rr].res_id, 'data-reg_id': resinfo.regions[rr].res_id, 'data-reg_num': rr})
+					$('<div>', {'class': 'propedit regionheader metadata winid_' + winid + ' regnum_' + region.res_id, 'data-reg_id': region.res_id, 'data-reg_num': index})
 					.append($('<img>', {src: SITE_URL + '/app/icons/collapse.png'}))
-					.append($('<span>').css({'background-color': resinfo.regions[rr]['http://www.knora.org/ontology/knora-base#hasColor'].values[0].value}).append('REGION ' + rr + ' '))
-					.append($('<img>', {src: resinfo.regions[rr].iconsrc}).dragndrop('makeDraggable', 'RESID', {resid: resinfo.regions[rr].res_id}))
+					.append($('<span>').css({'background-color': region['http://www.knora.org/ontology/knora-base#hasColor'].values[0].value}).append('REGION ' + index + ' '))
+					.append($('<img>', {src: region.iconsrc}).dragndrop('makeDraggable', 'RESID', {resid: region.res_id}))
 				);
-				cont.append(regmeta_area[rr] = $('<div>', {'class':'propedit section metadata winid_' + winid + ' regnum_' + resinfo.regions[rr].res_id}).append(tmpstr));
+				cont.append(regmeta_area[index] = $('<div>', {'class':'propedit section metadata winid_' + winid + ' regnum_' + region.res_id}).append(tmpstr));
 				// $.post(SITE_URL + '/app/helper/rdfresedit.php', {winid: winid, resid: region_id[rr], regnum: rr},  // TO DO, BUT ALREADY IN API DIR
 
-				SALSAH.ApiGet('resources', region_id[rr], {regnum: rr}, function(regdata) {
+				SALSAH.ApiGet('resources', region_id[index], {regnum: index}, function(regdata) {
+
 					if (regdata.status == ApiErrors.OK) {
 						//metadataAreaDomCreate(regmeta_area[regdata.regnum], winid, undefined, rr, regdata);
-						metadataAreaDomCreate(regmeta_area[rr], regdata, {winid: winid, regnum: rr});
-						regmeta_area[rr].find('.datafield.regnum_' + rr).propedit(
+
+						metadataAreaDomCreate(regmeta_area[index], regdata, {winid: winid, regnum: index});
+						regmeta_area[index].find('.datafield.regnum_' + index).propedit(
 							regdata.resdata, regdata.props, regdata.resinfo.project_id, {
 								'canvas': canvas,
 								viewer: viewer
 							}
 						);
 
-						regmeta_area[rr].find('.delres').on(
+						regmeta_area[index].find('.delres').on(
 							'click',
 							function(event) {
 								var res_id = $(event.target).data('res_id');
@@ -2684,7 +2702,7 @@ $(function() {
 						alert(new Error().lineNumber + ' ' + regdata.errormsg);
 					}
 				});
-			}
+			});
 
 			//
 			// now we have to setup the region area and start the detect mode!

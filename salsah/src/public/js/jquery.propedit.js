@@ -1458,7 +1458,6 @@
 					break;
 				}
 				case 'radio': {
-					console.log('radio')
 					var selection_id;
 					var attrs = propinfo[prop].attributes.split(';');
 					$.each(attrs, function() {
