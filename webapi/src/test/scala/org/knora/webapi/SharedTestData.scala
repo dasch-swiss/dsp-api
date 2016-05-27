@@ -43,7 +43,7 @@ object SharedTestData {
             lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects = List[IRI]("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images"),
+        projects = Vector.empty[IRI],
         isGroupAdminFor = Vector.empty[IRI],
         isProjectAdminFor = Vector.empty[IRI],
         sessionId = None
@@ -124,6 +124,7 @@ object SharedTestData {
         sessionId = None
     )
 
+    /* represents 'user02' as found in admin-data.ttl  */
     val user02UserProfileV1 = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/97cec4000f"),
@@ -142,5 +143,27 @@ object SharedTestData {
         isGroupAdminFor = Vector.empty[IRI],
         isProjectAdminFor = Vector.empty[IRI],
         sessionId = None
+    )
+
+    /* represents 'testuser' as found in admin-data.ttl  */
+    val testuserUserProfileV1 = UserProfileV1(
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/b83acc5f05")    ,
+            username = Some("testuser"),
+            firstname = Some("User"),
+            lastname = Some("Test"),
+            email = Some("user.test@example.com"),
+            hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            token = None,
+            isActiveUser = Some(true),
+            isSystemAdmin = Some(false),
+            lang = "de"
+        ),
+        groups = Vector.empty[IRI],
+        projects = List("http://data.knora.org/projects/77275339"),
+        isGroupAdminFor = Vector.empty[IRI],
+        isProjectAdminFor = Vector.empty[IRI],
+        sessionId = None
+
     )
 }

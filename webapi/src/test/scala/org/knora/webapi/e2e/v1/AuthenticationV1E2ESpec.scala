@@ -102,7 +102,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
         "succeed with authentication and correct username / correct password " in {
             /* Correct username and password */
             Get("/v1/authenticate?username=root&password=test") ~> authenticatePath ~> check {
-                log.debug("==>> " + responseAs[String])
+                //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
             }
         }
@@ -121,6 +121,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
             }
         }
     }
+    /*
     "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via Basic Auth " should {
         "succeed with authentication and correct username / correct password " in {
             /* Correct username / correct password */
@@ -252,4 +253,5 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
             }
         }
     }
+    */
 }

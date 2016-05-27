@@ -66,7 +66,7 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def getUserProfileByIRIV1(userIri: IRI, clean: Boolean): Future[UserProfileV1] = {
         // TODO: add caching of user profiles that was removed from [[Authenticator]]
-        log.debug(s"getUserProfileByIRIV1('$userIri', '$clean') called")
+        log.debug(s"getUserProfileByIRIV1: userIri = $userIri', clean = '$clean'")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUser(
                 triplestore = settings.triplestoreType,
@@ -93,7 +93,7 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def getUserProfileByUsernameV1(username: String, clean: Boolean): Future[UserProfileV1] = {
         // TODO: add caching of user profiles that was removed from [[Authenticator]]
-        log.debug(s"getUserProfileByUsernameV1('$username', '$clean') called")
+        log.debug(s"getUserProfileByUsernameV1: username = '$username', clean = '$clean'")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByUsername(
                 triplestore = settings.triplestoreType,
@@ -333,7 +333,6 @@ class UsersResponderV1 extends ResponderV1 {
       * @return a [[UserProfileV1]] containing the user's data.
       */
     private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, clean: Boolean): UserProfileV1 = {
-
         //log.debug(MessageUtil.toSource(userDataQueryResponse))
 
         val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
@@ -386,7 +385,7 @@ class UsersResponderV1 extends ResponderV1 {
             isGroupAdminFor = isGroupAdminForIris,
             isProjectAdminFor = isProjectAdminForIris
         )
-        log.debug(s"UserProfileV1: ${up.toString}")
+        log.debug(s"Retrieved UserProfileV1: ${up.toString}")
 
         if (clean) {
             up.getCleanUserProfileV1

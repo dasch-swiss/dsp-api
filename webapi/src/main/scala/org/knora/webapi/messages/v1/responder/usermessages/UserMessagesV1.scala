@@ -164,6 +164,8 @@ case class UserProfileV1(userData: UserDataV1,
         userData.hashedpassword.exists {
             hashedpassword => hashedpassword match {
                 case hp if hp.startsWith("$2a$") => {
+
+                    println(s"password: $password, hashedpassword: $hashedpassword")
                     import org.mindrot.jbcrypt.BCrypt
                     BCrypt.checkpw(password, hp)
                 }

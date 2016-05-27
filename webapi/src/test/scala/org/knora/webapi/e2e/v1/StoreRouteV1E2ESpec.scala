@@ -79,7 +79,7 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
                 {"path": "../knora-ontologies/salsah-gui.ttl", "name": "http://www.knora.org/ontology/salsah-gui"},
                 {"path": "_test_data/ontologies/incunabula-onto.ttl", "name": "http://www.knora.org/ontology/incunabula"},
                 {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
-                {"path": "_test_data/all_data/admin-data.ttl", "name" = "http://www.knora.org/data/admin"}
+                {"path": "_test_data/all_data/admin-data.ttl", "name": "http://www.knora.org/data/admin"}
             ]
         """
 

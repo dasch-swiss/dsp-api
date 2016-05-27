@@ -149,6 +149,7 @@ trait Authenticator {
 
         extractCredentialsAndAuthenticate(requestContext, false) match {
             case Success(_) => {
+                log.debug(s"extractCredentialsAndAuthenticate returned Success")
                 HttpResponse(
                     status = StatusCodes.OK,
                     entity = HttpEntity(
@@ -161,6 +162,7 @@ trait Authenticator {
                 )
             }
             case Failure(ex) => {
+                log.debug(s"extractCredentialsAndAuthenticate returned Failure: ${ex.toString}")
                 HttpResponse(
                     status = StatusCodes.Unauthorized,
                     entity = HttpEntity(
@@ -304,11 +306,17 @@ object Authenticator {
     private def extractCredentialsAndAuthenticate(requestContext: RequestContext, session: Boolean)(implicit system: ActorSystem): Try[String] = {
         Try {
             extractCredentials(requestContext) match {
-                case Some((u, p)) => authenticateCredentials(u, p, session) match {
-                    case Success(sId) => sId
-                    case Failure(ex) => throw ex
+                case Some((u, p)) => {
+                    log.debug(s"extractCredentials returned 'user: $u', and 'password: $p' ")
+                    authenticateCredentials(u, p, session) match {
+                        case Success(sId) => sId
+                        case Failure(ex) => throw ex
+                    }
                 }
-                case None => throw InvalidCredentialsException(INVALID_CREDENTIALS_NON_FOUND)
+                case None => {
+                    log.debug(s"extractCredentials returned 'None'")
+                    throw InvalidCredentialsException(INVALID_CREDENTIALS_NON_FOUND)
+                }
             }
         }
     }
@@ -329,8 +337,8 @@ object Authenticator {
             getUserProfileByUsername(username) match {
                 case Success(userProfile: UserProfileV1) => {
                     // password needs to match AND user needs to be active
-                    log.debug(s"username: $username")
-                    log.debug(s"password: $password")
+                    log.debug(s"Successfully got UserProfileV1: ${userProfile.toString}")
+                    log.debug(s"Username: $username, password: $password")
                     log.debug(s"Check password match: ${userProfile.passwordMatch(password)}")
                     log.debug(s"Check user active: ${userProfile.userData.isActiveUser.getOrElse(false)}")
                     if (userProfile.passwordMatch(password) && userProfile.userData.isActiveUser.getOrElse(false)) {
@@ -349,6 +357,7 @@ object Authenticator {
                     }
                 }
                 case Failure(ex) => {
+                    log.debug(s"Unsuccessful: ${ex.toString}" )
                     throw ex
                 }
             }
@@ -479,7 +488,7 @@ object Authenticator {
     }
 
     /**
-      * Tries to get a [[UserProfileV1]] from the cache or from the triple store matching the username.
+      * Tries to get a [[UserProfileV1]] from the triple store matching the username.
       *
       * @param username the username of the user to be queried
       * @param system the current akka actor system
@@ -490,31 +499,18 @@ object Authenticator {
     private def getUserProfileByUsername(username: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Try[UserProfileV1] = {
         Try {
             val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-
+            log.debug(s"username: $username")
             if (username.nonEmpty) {
-                // TODO: move caching of user profiles into UsersResponderV1
-                // try to get it from the cache (will always fail, as caching is disabled until moved)
-                CacheUtil.get[UserProfileV1](cacheName, username) match {
-                    case Some(userProfileV1) =>
-                        // found a user profile in the cache
-                        log.debug(s"found this user profile in the cache: $userProfileV1")
+                val userProfileV1Future = responderManager ? UserProfileByUsernameGetRequestV1(username, false)
+                Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
+                    case Some(userProfileV1) => {
+                        log.debug("Found this user in the triplestore: " + userProfileV1.toString)
                         userProfileV1
-                    case None =>
-                        // didn't find a user profile in cache, so I will try to get it from the triple store
-                        log.debug("didn't find a user profile in cache, so I will try to get it from the triple store")
-                        val userProfileV1Future = responderManager ? UserProfileByUsernameGetRequestV1(username, false)
-                        Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
-                            case Some(userProfileV1) => {
-                                log.debug("Found this user in the triplestore: " + userProfileV1.toString)
-                                // TODO: move caching of user profiles into UsersResponderV1
-                                //CacheUtil.put(cacheName, username, userProfileV1)
-                                userProfileV1
-                            }
-                            case None => {
-                                log.debug("No user found by this username inside the triplestore")
-                                throw InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD)
-                            }
-                        }
+                    }
+                    case None => {
+                        log.debug("No user found by this username inside the triplestore")
+                        throw InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD)
+                    }
                 }
             } else {
                 throw InvalidCredentialsException(INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED)
