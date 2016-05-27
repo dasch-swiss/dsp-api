@@ -329,7 +329,11 @@ object Authenticator {
             getUserProfileByUsername(username) match {
                 case Success(userProfile: UserProfileV1) => {
                     // password needs to match AND user needs to be active
-                    if (userProfile.passwordMatch(password) && !userProfile.userData.isActiveUser.getOrElse(false)) {
+                    log.debug(s"username: $username")
+                    log.debug(s"password: $password")
+                    log.debug(s"Check password match: ${userProfile.passwordMatch(password)}")
+                    log.debug(s"Check user active: ${userProfile.userData.isActiveUser.getOrElse(false)}")
+                    if (userProfile.passwordMatch(password) && userProfile.userData.isActiveUser.getOrElse(false)) {
                         // create session id and cache user profile under this id
                         log.debug("password matched")
                         if (session) {
@@ -488,23 +492,26 @@ object Authenticator {
             val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
             if (username.nonEmpty) {
-                // try to get it from the cache
+                // TODO: move caching of user profiles into UsersResponderV1
+                // try to get it from the cache (will always fail, as caching is disabled until moved)
                 CacheUtil.get[UserProfileV1](cacheName, username) match {
                     case Some(userProfileV1) =>
                         // found a user profile in the cache
+                        log.debug(s"found this user profile in the cache: $userProfileV1")
                         userProfileV1
                     case None =>
-                        // didn't found one, so I will try to get it from the triple store
-                        val userProfileV1Future = responderManager ? UserProfileByUsernameGetRequestV1(username)
+                        // didn't find a user profile in cache, so I will try to get it from the triple store
+                        log.debug("didn't find a user profile in cache, so I will try to get it from the triple store")
+                        val userProfileV1Future = responderManager ? UserProfileByUsernameGetRequestV1(username, false)
                         Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
                             case Some(userProfileV1) => {
-                                log.debug("This user was found: " + userProfileV1.toString)
-                                // before I return the found user profile, let's put it into the cache
-                                CacheUtil.put(cacheName, username, userProfileV1)
+                                log.debug("Found this user in the triplestore: " + userProfileV1.toString)
+                                // TODO: move caching of user profiles into UsersResponderV1
+                                //CacheUtil.put(cacheName, username, userProfileV1)
                                 userProfileV1
                             }
                             case None => {
-                                log.debug("No user found by this username")
+                                log.debug("No user found by this username inside the triplestore")
                                 throw InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD)
                             }
                         }

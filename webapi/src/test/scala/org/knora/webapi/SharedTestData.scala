@@ -23,7 +23,8 @@ package org.knora.webapi
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 
 /**
-  * Created by subotic on 01.04.16.
+  * This object holds the same user which are loaded with '_test_data/all_data/admin-data.ttl'. Using this object
+  * in tests, allows easier updating of user details as they change over time.
   */
 object SharedTestData {
 
@@ -41,10 +42,11 @@ object SharedTestData {
             isSystemAdmin = Some(true),
             lang = "de"
         ),
-        Vector.empty[IRI],
-        Vector.empty[IRI],
-        Vector.empty[IRI],
-        Vector.empty[IRI]
+        groups = Vector.empty[IRI],
+        projects = List[IRI]("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images"),
+        isGroupAdminFor = Vector.empty[IRI],
+        isProjectAdminFor = Vector.empty[IRI],
+        sessionId = None
     )
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
@@ -61,10 +63,11 @@ object SharedTestData {
             isSystemAdmin = Some(true),
             lang = "de"
         ),
-        Vector.empty[IRI],
-        Vector.empty[IRI],
-        Vector.empty[IRI],
-        Vector.empty[IRI]
+        groups = Vector.empty[IRI],
+        projects = Vector.empty[IRI],
+        isGroupAdminFor = Vector.empty[IRI],
+        isProjectAdminFor = Vector.empty[IRI],
+        sessionId = None
     )
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
@@ -81,10 +84,11 @@ object SharedTestData {
             isSystemAdmin = Some(false),
             lang = "de"
         ),
-        Vector.empty[IRI],
-        Vector.empty[IRI],
-        Vector.empty[IRI],
-        Vector.empty[IRI]
+        groups = Vector.empty[IRI],
+        projects = Vector.empty[IRI],
+        isGroupAdminFor = Vector.empty[IRI],
+        isProjectAdminFor = Vector.empty[IRI],
+        sessionId = None
     )
 
     /* represents an anonymous user */
@@ -92,11 +96,51 @@ object SharedTestData {
         UserDataV1(
             lang = "de"
         ),
-        Vector.empty[IRI],
-        Vector.empty[IRI],
-        Vector.empty[IRI],
-        Vector.empty[IRI]
+        groups = Vector.empty[IRI],
+        projects = Vector.empty[IRI],
+        isGroupAdminFor = Vector.empty[IRI],
+        isProjectAdminFor = Vector.empty[IRI],
+        sessionId = None
     )
 
+    /* represents 'user01' as found in admin-data.ttl  */
+    val user01UserProfileV1 = UserProfileV1(
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/c266a56709"),
+            username = Some("user01"),
+            firstname = Some("User01"),
+            lastname = Some("User"),
+            email = Some("user01.user1@example.com"),
+            hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            token = None,
+            isActiveUser = Some(true),
+            isSystemAdmin = Some(false),
+            lang = "de"
+        ),
+        groups = List("http://data.knora.org/groups/imgcontri"),
+        projects = List("http://data.knora.org/projects/images"),
+        isGroupAdminFor = List("http://data.knora.org/groups/imgcontri"),
+        isProjectAdminFor = List("http://data.knora.org/projects/images"),
+        sessionId = None
+    )
 
+    val user02UserProfileV1 = UserProfileV1(
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/97cec4000f"),
+            username = Some("user02"),
+            firstname = Some("User02"),
+            lastname = Some("User"),
+            email = Some("user02.user@example.com"),
+            hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            token = None,
+            isActiveUser = Some(true),
+            isSystemAdmin = Some(false),
+            lang = "de"
+        ),
+        groups = List("http://data.knora.org/groups/imgcontri"),
+        projects = List("http://data.knora.org/projects/images"),
+        isGroupAdminFor = Vector.empty[IRI],
+        isProjectAdminFor = Vector.empty[IRI],
+        sessionId = None
+    )
 }

@@ -36,20 +36,15 @@ import scala.util.{Failure, Success, Try}
 object AuthenticatorSpec {
     val config = ConfigFactory.parseString(
         """
-        app {
-
-        }
+          | akka.loglevel = "DEBUG"
+          | akka.stdout-loglevel = "DEBUG"
+          |
         """.stripMargin)
 }
 
-/*
- *  This test needs a running http layer, so that different api access authentication schemes can be tested
- *  - Browser basic auth
- *  - Basic auth over API
- *  - Username/password over API
- *  - API Key based authentication
- */
-
+/**
+  * This test uses the 'PrivateMethodTester' API, to test private methods in [[Authenticator]].
+  */
 class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSender with PrivateMethodTester {
 
     implicit val executionContext = system.dispatcher

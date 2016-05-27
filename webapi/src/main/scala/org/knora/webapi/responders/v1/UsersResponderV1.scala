@@ -65,6 +65,8 @@ class UsersResponderV1 extends ResponderV1 {
       * @return a [[Option[UserProfileV1]] describing the user.
       */
     private def getUserProfileByIRIV1(userIri: IRI, clean: Boolean): Future[UserProfileV1] = {
+        // TODO: add caching of user profiles that was removed from [[Authenticator]]
+        log.debug(s"getUserProfileByIRIV1('$userIri', '$clean') called")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUser(
                 triplestore = settings.triplestoreType,
@@ -90,6 +92,7 @@ class UsersResponderV1 extends ResponderV1 {
       * @return a [[Option[UserProfileV1]] describing the user.
       */
     private def getUserProfileByUsernameV1(username: String, clean: Boolean): Future[UserProfileV1] = {
+        // TODO: add caching of user profiles that was removed from [[Authenticator]]
         log.debug(s"getUserProfileByUsernameV1('$username', '$clean') called")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByUsername(

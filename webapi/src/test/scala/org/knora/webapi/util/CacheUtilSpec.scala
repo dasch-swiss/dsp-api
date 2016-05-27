@@ -22,16 +22,14 @@ package org.knora.webapi.util
 
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.{CoreSpec, SharedTestData}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 
 object CacheUtilSpec {
     val config = ConfigFactory.parseString(
         """
-        app {
-
-        }
+          # akka.loglevel = "DEBUG"
+          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
 
@@ -40,32 +38,32 @@ class CacheUtilSpec extends CoreSpec("CachingTestSystem") with ImplicitSender {
 
     implicit val executionContext = system.dispatcher
 
-    val mockUserProfileV1 = UserProfileV1(
-        UserDataV1(
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            username = Some("dduck"),
-            firstname = Some("Donald"),
-            lastname = Some("Duck"),
-            email = Some("donald.duck@example.com"),
-            hashedpassword = Some("7c4a8d09ca3762af61e59520943dc26494f8941b"),
-            token = None,
-            lang = "en"
-        ), Nil, Nil, Nil, Nil)
-
+    val mockUserProfileV1 = SharedTestData.rootUserProfileV1
+    val username = mockUserProfileV1.userData.username.get
+    val sId = mockUserProfileV1.getDigest
     val cacheName = "authenticationCache"
-    val sessionId = System.currentTimeMillis().toString
 
     "Caching " should {
         "allow to set and get the value " in {
-            CacheUtil.put[UserProfileV1](cacheName, sessionId, mockUserProfileV1)
-            CacheUtil.get[UserProfileV1](cacheName, sessionId) should be(Some(mockUserProfileV1))
+            /* use username as key */
+            CacheUtil.put[UserProfileV1](cacheName, username, mockUserProfileV1)
+            CacheUtil.get[UserProfileV1](cacheName, username) should be(Some(mockUserProfileV1))
+
+            /* use digest as key */
+            CacheUtil.put[UserProfileV1](cacheName, sId, mockUserProfileV1)
+            CacheUtil.get[UserProfileV1](cacheName, sId) should be(Some(mockUserProfileV1))
         }
         "return none if key is not found " in {
-            CacheUtil.get[UserProfileV1](cacheName, 213.toString) should be(None)
+            CacheUtil.get[UserProfileV1](cacheName, "user01") should be(None)
         }
         "allow to delete a set value " in {
-            CacheUtil.remove(cacheName, sessionId)
-            CacheUtil.get[UserProfileV1](cacheName, sessionId) should be(None)
+            /* username case */
+            CacheUtil.remove(cacheName, username)
+            CacheUtil.get[UserProfileV1](cacheName, username) should be(None)
+
+            /* digest case */
+            CacheUtil.remove(cacheName, sId)
+            CacheUtil.get[UserProfileV1](cacheName, sId) should be(None)
         }
     }
 

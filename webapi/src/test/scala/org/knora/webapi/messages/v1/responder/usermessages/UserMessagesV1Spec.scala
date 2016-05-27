@@ -29,15 +29,20 @@ import org.scalatest.{Matchers, WordSpecLike}
   */
 class UserMessagesV1Spec extends WordSpecLike with Matchers {
 
-    val lang = "de"
-    val user_id = Some("http://data.knora.org/users/91e19f1e01")
-    val token = Some("123456")
-    val username = Some("root")
-    val firstname = Some("Administrator")
-    val lastname = Some("Admin")
-    val email = Some("test@test.ch")
-    val password = Some("123456")
-    val projects = List[IRI]("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images")
+    val lang = SharedTestData.rootUserProfileV1.userData.lang
+    val user_id = SharedTestData.rootUserProfileV1.userData.user_id
+    val token = SharedTestData.rootUserProfileV1.userData.token
+    val username = SharedTestData.rootUserProfileV1.userData.username
+    val firstname = SharedTestData.rootUserProfileV1.userData.firstname
+    val lastname = SharedTestData.rootUserProfileV1.userData.lastname
+    val email = SharedTestData.rootUserProfileV1.userData.email
+    val hashedpassword = SharedTestData.rootUserProfileV1.userData.hashedpassword
+    val groups = SharedTestData.rootUserProfileV1.groups
+    val projects = SharedTestData.rootUserProfileV1.projects
+    val isGroupAdminFor = SharedTestData.rootUserProfileV1.isGroupAdminFor
+    val isProjectAdminFor = SharedTestData.rootUserProfileV1.isProjectAdminFor
+    val sessionId = SharedTestData.rootUserProfileV1.sessionId
+
 
     "The UserProfileV1 case class " should {
         "return a clean UserProfileV1 when requested " in {
@@ -48,14 +53,15 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                     firstname = firstname,
                     lastname = lastname,
                     email = email,
-                    hashedpassword = password,
+                    hashedpassword = hashedpassword,
                     token = token,
                     lang = lang
                 ),
-                Vector.empty[IRI],
-                projects,
-                Vector.empty[IRI],
-                Vector.empty[IRI]
+                groups = groups,
+                projects = projects,
+                isGroupAdminFor = isGroupAdminFor,
+                isProjectAdminFor = isProjectAdminFor,
+                sessionId = sessionId
             )
             val rootUserProfileV1Clean = UserProfileV1(
                 UserDataV1(
@@ -68,11 +74,12 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                     token = None,
                     lang = lang
                     ),
-                    Vector.empty[IRI],
-                    projects,
-                    Vector.empty[IRI],
-                    Vector.empty[IRI]
-                )
+                groups = groups,
+                projects = projects,
+                isGroupAdminFor = isGroupAdminFor,
+                isProjectAdminFor = isProjectAdminFor,
+                sessionId = sessionId
+            )
 
             assert(rootUserProfileV1.getCleanUserProfileV1 === rootUserProfileV1Clean)
         }
