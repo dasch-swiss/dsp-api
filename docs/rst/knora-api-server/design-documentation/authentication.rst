@@ -19,6 +19,9 @@
 
 Authentication in the Knora API Server
 ======================================
+.. note:: Documentation Outdated!
+
+.. todo:: update authentication documentation.
 
 Scope
 ------
