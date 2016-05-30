@@ -404,7 +404,7 @@
 
       rdfs:comment """Diese Resource-Klasse beschreibt ein Ding"""@de ;
 
-      knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+      knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
 
       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
 
@@ -452,6 +452,6 @@
 
     rdfs:comment """Diese Resource-Klasse beschreibt ein Bild eines Dinges"""@de ;
 
-    knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+    knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
 
     knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
