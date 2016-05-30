@@ -1554,25 +1554,59 @@ $(function() {
 				}
 			)
 		);
+
+		// create a richtext editor instance for the comment
 		window_content.append('Comment:<br/>');
-		window_content.append($('<textarea>', {rows : 5, cols : 45}).css({marginTop : '10px', marginBottom : '10px'}));
+		var rt_txt = $('<div>').appendTo(window_content);
+
+		//window_content.append($('<textarea>', {rows : 5, cols : 45}).css({marginTop : '10px', marginBottom : '10px'}));
+
+		window_html.win('setFocusLock', true);
+
+		rt_txt.htmleditor('edit', {});
+
+
+
 		var submit_button = $('<button>', {id : 'link', type : 'submit'}).text('link items').bind(
 			'click',
 			function(event) {
-				var commentField = window_content.find('textarea').val();
+				//var commentField = window_content.find('textarea').val();
+
+				var rtdata = rt_txt.htmleditor('value');
+
+				var rt_props = {};
+				rt_props['utf8str'] = rtdata.utf8str;
+				rt_props['textattr'] = JSON.stringify(rtdata.textattr);
+				rt_props['resource_reference'] = [];
+				if (rtdata.textattr['_link'] !== undefined) {
+					for (var link_index in rtdata.textattr['_link']) {
+						if (rtdata.textattr['_link'][link_index].resid !== undefined && rt_props['resource_reference'].indexOf(rtdata.textattr['_link'][link_index].resid) == -1) {
+							rt_props['resource_reference'].push(rtdata.textattr['_link'][link_index].resid);
+						}
+					}
+				}
+
 				var resIdsArr = [];
 				window_content.find('.links div').each(
 					function(index) {
-						resIdsArr.push($(this).attr('data-resid'));
+						resIdsArr.push({link_value: $(this).attr('data-resid')});
 					}
 				);
-				// check if there are at least one items to be linked
-				if (resIdsArr.length >= 1) {
+				// check if there are at least two items to be linked
+				if (resIdsArr.length > 1) {
 					// add the links to the db
-					SALSAH.ApiPost('annotations', {
-						ids: resIdsArr,
-						comment: commentField
+
+
+					SALSAH.ApiPost('resources', { // use resources route because it is a knora-base_linkObject resource that is to be created
+						restype_id: "http://www.knora.org/ontology/knora-base#LinkObj",
+						label: "testlink",
+						project_id: SALSAH.userdata.projects[0],
+						properties: {
+							"http://www.knora.org/ontology/knora-base#hasLinkTo": resIdsArr,
+							"http://www.knora.org/ontology/knora-base#hasComment": [{richtext_value: rt_props}]
+						}
 					}, function(data) {
+						window_html.win('setFocusLock', false);
 						if (data.status == ApiErrors.OK)
 						{
 							window_html.win('deleteWindow');
@@ -1581,6 +1615,9 @@ $(function() {
 							alert(data.errormsg);
 						}
 					});
+				} else {
+					alert("Please add at least two links.")
+
 				}
 			}
 		);

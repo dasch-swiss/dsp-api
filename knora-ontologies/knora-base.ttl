@@ -2077,6 +2077,12 @@
 
          :resourceIcon "link.gif"^^xsd:string ;
 
+		 :hasDefaultViewPermission :KnownUser ;
+
+      	 :hasDefaultModifyPermission :ProjectMember ;
+
+      	 :hasDefaultDeletePermission :Owner ;
+
          rdfs:comment "Verknüpfung mehrerer Resourcen"@de ,
                       "Represents a generic link object"@en .
 
