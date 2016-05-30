@@ -14,18 +14,15 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.e2e.v1
+package org.knora.webapi.routing.v1
 
 import akka.actor.ActorDSL._
 import akka.actor.{ActorSystem, Props}
-import akka.util.Timeout
-import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
-import org.knora.webapi.routing.v1.StoreRouteV1
 import org.knora.webapi.store._
-import org.knora.webapi.{BadRequestException, LiveActorMaker, StartupFlags}
+import org.knora.webapi.{BadRequestException, R2RSpec, LiveActorMaker, StartupFlags}
 import spray.http.MediaTypes._
 import spray.http._
 import spray.httpx.RequestBuilding
@@ -36,10 +33,10 @@ import scala.concurrent.duration._
 
 
 /**
-  * End-to-end test specification for testing [[StoreRouteV1]]. This specification uses the
+  * Route-to-Responder (R2R) test specification for testing [[StoreRouteV1]]. This specification uses the
   * Spray Testkit as documented here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
+class StoreRouteV1R2RSpec extends R2RSpec with RequestBuilding {
 
     override def testConfigSource =
         """

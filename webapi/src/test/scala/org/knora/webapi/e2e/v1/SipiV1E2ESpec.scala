@@ -27,7 +27,6 @@ import java.nio.file.{Files, Paths}
 import akka.actor._
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
@@ -35,7 +34,7 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.{FileWriteException, LiveActorMaker}
+import org.knora.webapi.{R2RSpec, FileWriteException, LiveActorMaker}
 import spray.http._
 
 import scala.concurrent.Await
@@ -45,7 +44,7 @@ import scala.concurrent.duration._
   * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-class SipiV1E2ESpec extends E2ESpec {
+class SipiV1E2ESpec extends R2RSpec {
 
     override def testConfigSource =
         """

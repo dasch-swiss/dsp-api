@@ -16,76 +16,39 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.{ActorSystem, Props}
-import akka.pattern._
-import akka.util.Timeout
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.responders._
-import org.knora.webapi.responders.v1.ResponderManagerV1
-import org.knora.webapi.routing.v1.{AuthenticateRouteV1, ResourcesRouteV1}
-import org.knora.webapi.store._
-import org.knora.webapi.{LiveActorMaker, R2RSpec}
-import spray.http._
+import org.knora.webapi.{KnoraService, R2RSpec, StartupFlags}
 import spray.httpx.RequestBuilding
-import spray.json.DefaultJsonProtocol
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
 
 /**
-  * Represents a response Knora returns when communicating with the 'v1/session' route during the 'login' operation.
-  * @param status is the returned status code.
-  * @param message is the returned message.
-  * @param sid is the returned session id.
-  */
-case class SessionResponse(status: Int, message: String, sid: String)
-
-/**
-  * A spray-json protocol used for turning the JSON responses from the 'login' operation during communication with the
-  * 'v1/session' route into a case classes for easier testing.
-  */
-object JsonSessionResponseProtocol extends DefaultJsonProtocol {
-    implicit val SessionResponseFormat = jsonFormat3(SessionResponse)
-}
-
-/**
-  * Route-to-Responder (R2R) test specification for testing authentication using [[AuthenticateRouteV1]]. This
-  * specification uses the Spray Testkit as documented here: http://spray.io/documentation/1.2.2/spray-testkit/
+  * End-to-End (E2E) test specification for testing authentication.
   *
   * This spec tests the 'v1/authentication' and 'v1/session' route.
   */
-class AuthenticationV1R2RSpec extends R2RSpec with RequestBuilding {
+class AuthenticationV1E2ESpec extends R2RSpec with RequestBuilding {
 
-    override def testConfigSource =
+    /* Set the startup flags and start the Knora Server */
+    StartupFlags.loadDemoData send true
+    KnoraService.start
+
+    val rdfDataObjectsJsonList =
         """
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin
-
-    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
-    val authenticatePath = AuthenticateRouteV1.rapierPath(system, settings, log)
-    val resourcesPath = ResourcesRouteV1.rapierPath(system, settings, log)
-
-    implicit val timeout: Timeout = 300.seconds
-
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(5).second)
-
-    val rdfDataObjects = List(
-        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
-        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
-        RdfDataObject(path = "_test_data/all_data/admin-data.ttl", name = "http://www.knora.org/data/admin")
-    )
+            [
+                {"path": "../knora-ontologies/knora-base.ttl", "name": "http://www.knora.org/ontology/knora-base"},
+                {"path": "../knora-ontologies/knora-dc.ttl", "name": "http://www.knora.org/ontology/dc"},
+                {"path": "../knora-ontologies/salsah-gui.ttl", "name": "http://www.knora.org/ontology/salsah-gui"},
+                {"path": "_test_data/ontologies/incunabula-onto.ttl", "name": "http://www.knora.org/ontology/incunabula"},
+                {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
+                {"path": "_test_data/all_data/admin-data.ttl", "name": "http://www.knora.org/data/admin"}
+            ]
+        """
 
     "Load test data" in {
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
+        // send POST to 'v1/store/ResetTriplestoreContent'
     }
+
+    // TODO: Rewrite to only use HTTP requests
+    /*
     "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via URL parameters " should {
         "succeed with authentication and correct username / correct password " in {
             /* Correct username and password */
@@ -109,7 +72,6 @@ class AuthenticationV1R2RSpec extends R2RSpec with RequestBuilding {
             }
         }
     }
-    /*
     "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via Basic Auth " should {
         "succeed with authentication and correct username / correct password " in {
             /* Correct username / correct password */
