@@ -14,7 +14,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.e2e.v1
+package org.knora.webapi.routing
 
 import akka.actor.{ActorSystem, Props}
 import akka.pattern._
@@ -26,12 +26,8 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.{AuthenticateRouteV1, ResourcesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
-import spray.http.HttpHeaders.{Cookie, `Set-Cookie`}
 import spray.http._
 import spray.httpx.RequestBuilding
-import spray.httpx.unmarshalling._
-import spray.httpx.SprayJsonSupport._
 import spray.json.DefaultJsonProtocol
 
 import scala.concurrent.Await
@@ -54,15 +50,10 @@ object JsonSessionResponseProtocol extends DefaultJsonProtocol {
 }
 
 /**
-  * End-to-end test specification for testing authentication using [[AuthenticateRouteV1]]. This specification uses the
-  * Spray Testkit as documented here: http://spray.io/documentation/1.2.2/spray-testkit/
+  * Route-to-Responder (R2R) test specification for testing authentication using [[AuthenticateRouteV1]]. This
+  * specification uses the Spray Testkit as documented here: http://spray.io/documentation/1.2.2/spray-testkit/
   *
-  * This test needs a running http layer, so that different api access authentication schemes can be tested
-  *  - Browser basic auth
-  *  - Basic auth over API
-  *  - Username/password over API
-  *  - API Key based authentication
-  *
+  * This spec tests the 'v1/authentication' and 'v1/session' route.
   */
 class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
 
@@ -71,8 +62,6 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin
-
-    import JsonSessionResponseProtocol._
 
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
