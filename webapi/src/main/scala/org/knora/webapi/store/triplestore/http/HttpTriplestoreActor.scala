@@ -29,7 +29,7 @@ import dispatch._
 import org.apache.commons.lang3.StringUtils
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
+import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{FakeTriplestore, SparqlUtil}
 

@@ -21,7 +21,7 @@
 package org.knora.webapi.twirl
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.searchmessages.SearchComparisonOperatorV1
+import org.knora.webapi.messages.v1.responder.searchmessages.SearchComparisonOperatorV1
 
 /**
   * The extended search template's representation of an extended search criterion.

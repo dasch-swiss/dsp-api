@@ -20,7 +20,7 @@
 
 @import org.knora.webapi._
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
-@import org.knora.webapi.messages.v1respondermessages.valuemessages._
+@import org.knora.webapi.messages.v1.responder.valuemessages._
 
 @**
  * Generates statements to be added to the INSERT clause of a SPARQL update when creating a new value of a resource
@@ -150,6 +150,13 @@
                 }
 
                 ?newValue@valueIndex knora-base:valueHasString """@stillImageFileValue.toString""" .
+            }
+
+            case listValue: HierarchicalListValueV1 => {
+
+                ?newValue knora-base:valueHasListNode <@listValue.hierarchicalListIri> .
+                ?newValue knora-base:valueHasString """@listValue.toString""" .
+
             }
 
             case other => {

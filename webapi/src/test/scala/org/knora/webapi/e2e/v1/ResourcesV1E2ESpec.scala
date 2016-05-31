@@ -20,21 +20,20 @@
 
 package org.knora.webapi.e2e.v1
 
-import java.io.File
-
 import akka.actor.{ActorSystem, Props}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.LiveActorMaker
 import org.knora.webapi.e2e.E2ESpec
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{CreateFileV1, CreateRichtextV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.ResourcesRouteV1
 import org.knora.webapi.store._
 import spray.http._
+import spray.json._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -77,7 +76,6 @@ class ResourcesV1E2ESpec extends E2ESpec {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
     }
 
-
     "The Resources Endpoint" should {
         "provide a HTML representation of the resource properties " in {
             /* Incunabula resource*/
@@ -93,6 +91,41 @@ class ResourcesV1E2ESpec extends E2ESpec {
                 assert(responseAs[String] contains "Datum der Herausgabe")
                 assert(responseAs[String] contains "Citation/reference")
                 assert(responseAs[String] contains "Publisher")
+            }
+        }
+
+        "get the regions of a page when doing a context query with resinfo set to true" in {
+
+            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2F9d626dc76c03?resinfo=true&reqtype=context") ~> resourcesPath ~> check {
+
+                val response: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+
+                val resourceContext = response("resource_context").asJsObject.fields
+
+                val resinfo: Map[String, JsValue] = resourceContext("resinfo").asJsObject.fields
+
+                val regions = resinfo.get("regions") match {
+                    case Some(JsArray(regionsVector)) =>
+                        val regions: Vector[PropsGetForRegionV1] = regionsVector.map(_.convertTo[PropsGetForRegionV1])
+
+                        val region1 = regions.filter {
+                            region => region.res_id == "http://data.knora.org/021ec18f1735"
+                        }
+
+                        val region2 = regions.filter {
+                            region => region.res_id == "http://data.knora.org/b6b64a62b006"
+                        }
+
+                        assert(region1.length == 1, "No region found with Iri 'http://data.knora.org/021ec18f1735'")
+
+                        assert(region2.length == 1, "No region found with Iri 'http://data.knora.org/b6b64a62b006'")
+
+                    case None => assert(false, "No regions given, but 2 were expected")
+                    case _ => assert(false, "No valid regions given")
+
+                }
+
+                assert(status == StatusCodes.OK)
             }
         }
 

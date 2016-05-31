@@ -20,7 +20,7 @@
 
 @import org.knora.webapi._
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
-@import org.knora.webapi.messages.v1respondermessages.valuemessages._
+@import org.knora.webapi.messages.v1.responder.valuemessages._
 
 @**
  * Inserts a new value of a resource property (as opposed to a new version of an existing value).

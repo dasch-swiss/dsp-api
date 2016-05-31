@@ -25,14 +25,14 @@ import java.util.UUID
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.graphdatamessages._
-import org.knora.webapi.messages.v1respondermessages.ontologymessages._
-import org.knora.webapi.messages.v1respondermessages.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType}
-import org.knora.webapi.messages.v1respondermessages.resourcemessages._
-import org.knora.webapi.messages.v1respondermessages.sipimessages._
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1respondermessages.valuemessages._
+import org.knora.webapi.messages.v1.responder.graphdatamessages.{GraphDataEdgeV1, GraphDataGetResponseV1, GraphNodeV1, GraphV1, GraphDataGetRequestV1}
+import org.knora.webapi.messages.v1.responder.ontologymessages._
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType}
+import org.knora.webapi.messages.v1.responder.sipimessages._
+import org.knora.webapi.messages.v1.responder.resourcemessages._
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.ResourceLocker
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.util.ActorUtil._
@@ -65,6 +65,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserProfileV1) => future2Message(sender(), getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile), log)
         case ResourceCreateRequestV1(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID) => future2Message(sender(), createNewResource(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID), log)
         case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1) => future2Message(sender(), checkResourceClass(resourceIri, owlClass, userProfile), log)
+        case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -601,11 +602,11 @@ class ResourcesResponderV1 extends ResponderV1 {
         /**
           * Represents a source object (e.g. a page of a book).
           *
-          * @param id IRI of the source Object.
-          * @param firstprop first property of the source object.
-          * @param seqnum sequence number of the source object.
+          * @param id          IRI of the source Object.
+          * @param firstprop   first property of the source object.
+          * @param seqnum      sequence number of the source object.
           * @param permissions the current user's permissions on the source object.
-          * @param fileValues the file values belonging to the source object.
+          * @param fileValues  the file values belonging to the source object.
           */
         case class SourceObject(id: IRI,
                                 firstprop: Option[String],
@@ -616,13 +617,13 @@ class ResourcesResponderV1 extends ResponderV1 {
         /**
           * Represents a still image file value belonging to a source object (e.g., an image representation of a page).
           *
-          * @param id the file value IRI
+          * @param id          the file value IRI
           * @param permissions the current user's permissions on the file value.
-          * @param image a [[StillImageFileValueV1]]
+          * @param image       a [[StillImageFileValueV1]]
           */
         case class StillImageFileValue(id: IRI,
-                             permissions: Option[Int],
-                             image: StillImageFileValueV1)
+                                       permissions: Option[Int],
+                                       image: StillImageFileValueV1)
 
 
         /**
@@ -792,7 +793,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                             )
                     }
 
-                    //_ = println(ScalaPrettyPrinter.prettyPrint(contextItems))
+                //_ = println(ScalaPrettyPrinter.prettyPrint(contextItems))
 
 
                 } yield contextItems
@@ -802,11 +803,85 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             resinfoV1Option: Option[ResourceInfoV1] <- resInfoV1Future
 
+            resinfoV1WithRegionsOption: Option[ResourceInfoV1] <- if (resinfoV1Option.nonEmpty) {
+
+                for {
+                    //
+                    // check if there are regions pointing to this resource
+                    //
+                    regionSparqlQuery <- Future(queries.sparql.v1.txt.getRegions(
+                        triplestore = settings.triplestoreType,
+                        resourceIri = resourceIri
+                    ).toString())
+                    regionQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(regionSparqlQuery)).mapTo[SparqlSelectResponse]
+                    regionRows = regionQueryResponse.results.bindings
+
+                    regionPropertiesSequencedFutures: Seq[Future[PropsGetForRegionV1]] = regionRows.filter {
+                        regionRow =>
+                            val permissionsForRegion = PermissionUtilV1.parsePermissions(regionRow.rowMap("regionObjectPermissionAssertions"), regionRow.rowMap("owner"), regionRow.rowMap("project"))
+                            val sourceObjectPermissions = PermissionUtilV1.getUserPermissionV1(resourceIri, permissionsForRegion, userProfile)
+
+                            // ignore regions the user has no permissions on
+                            sourceObjectPermissions.nonEmpty
+                    }.map {
+                        regionRow =>
+
+                            val regionIri = regionRow.rowMap("region")
+                            val resClass = regionRow.rowMap("resclass") // possibly we deal with a subclass of knora-base:Region
+
+                            // get the properties for each region
+                            for {
+                                propsV1: Seq[PropertyV1] <- getResourceProperties(resourceIri = regionIri, Some(resClass), userProfile = userProfile)
+
+                                propsGetV1 = propsV1.map {
+                                    // convert each PropertyV1 in a PropertyGetV1
+                                    (propV1: PropertyV1) => convertPropertyV1toPropertyGetV1(propV1)
+                                }
+
+                                // get the icon for this region's resource class
+                                entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+                                    resourceClassIris = Set(resClass),
+                                    userProfile = userProfile
+                                )).mapTo[EntityInfoGetResponseV1]
+
+                                regionInfo: ResourceEntityInfoV1 = entityInfoResponse.resourceEntityInfoMap(resClass)
+
+                                resClassIcon: Option[String] = regionInfo.predicates.get(OntologyConstants.KnoraBase.ResourceIcon) match {
+                                    case Some(predicateInfo: PredicateInfoV1) =>
+                                        Some(valueUtilV1.makeResourceClassIconURL(resClass, predicateInfo.objects.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"resourceClass $resClass has no value for ${OntologyConstants.KnoraBase.ResourceIcon}"))))
+                                    case None => None
+                                }
+
+                            } yield PropsGetForRegionV1(
+                                properties = propsGetV1,
+                                res_id = regionIri,
+                                iconsrc = resClassIcon
+                            )
+
+                    }
+
+                    // turn sequenced Futures into one Future of a sequence
+                    regionProperties: Seq[PropsGetForRegionV1] <- Future.sequence(regionPropertiesSequencedFutures)
+
+                    resInfo: Option[ResourceInfoV1] = if (regionProperties.nonEmpty) {
+                        // regions are given, append them to resinfo
+                        Some(resinfoV1Option.get.copy(
+                            regions = Some(regionProperties)))
+                    } else {
+                        // no regions given, just return resinfo
+                        resinfoV1Option
+                    }
+                } yield resInfo
+            } else {
+                // resinfo is not requested
+                Future(resinfoV1Option)
+            }
+
             resourceContextV1 = parentResourceIriOption match {
                 case Some(_) =>
                     // This resource is part of another resource, so return the resource info of the parent.
                     ResourceContextV1(
-                        resinfo = resinfoV1Option,
+                        resinfo = resinfoV1WithRegionsOption,
                         parent_res_id = parentResourceIriOption,
                         parent_resinfo = parentResInfoV1Option,
                         context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_PARTOF,
@@ -822,14 +897,14 @@ class ResourcesResponderV1 extends ResponderV1 {
                         firstprop = Some(resourceContexts.map(_.firstprop)),
                         region = Some(resourceContexts.map(_ => None)),
                         canonical_res_id = resourceIri,
-                        resinfo = resinfoV1Option,
+                        resinfo = resinfoV1WithRegionsOption,
                         resclass_name = Some("image"),
                         context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_COMPOUND
                     )
                 } else {
                     // Indicate that neither of the above is true.
                     ResourceContextV1(
-                        resinfo = resinfoV1Option,
+                        resinfo = resinfoV1WithRegionsOption,
                         canonical_res_id = resourceIri,
                         context = ResourceContextCodeV1.RESOURCE_CONTEXT_NONE
                     )
@@ -976,10 +1051,10 @@ class ResourcesResponderV1 extends ResponderV1 {
           * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `knora-base:objectClassConstraint` of
           * the property that is supposed to point to it.
           *
-          * @param propertyIri the IRI of the property.
+          * @param propertyIri                   the IRI of the property.
           * @param propertyObjectClassConstraint the IRI of the `knora-base:objectClassConstraint` of the property.
-          * @param updateValueV1 the value to be updated.
-          * @param userProfile   the profile of the user making the request.
+          * @param updateValueV1                 the value to be updated.
+          * @param userProfile                   the profile of the user making the request.
           * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
           */
         def checkPropertyObjectClassConstraintForValue(propertyIri: IRI, propertyObjectClassConstraint: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {
@@ -1299,9 +1374,6 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @return a tuple (permission, [[ResourceInfoV1]]) describing the resource.
       */
     private def getResourceInfoV1(resourceIri: IRI, userProfile: UserProfileV1, queryOntology: Boolean): Future[(Option[Int], ResourceInfoV1)] = {
-        // TODO: check if there are regions pointing to the queried resource (isRegionOf)
-        // TODO: this should be optional (only do it when required) -> it will be only used for a reqtype=context query with resinfo=true
-        // https://github.com/dhlab-basel/Knora/issues/116
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getResourceInfo(
                 triplestore = settings.triplestoreType,
@@ -1311,6 +1383,39 @@ class ResourcesResponderV1 extends ResponderV1 {
             resInfoResponseRows = resInfoResponse.results.bindings
             resInfo: (Option[Int], ResourceInfoV1) <- makeResourceInfoV1(resourceIri, resInfoResponseRows, userProfile, queryOntology)
         } yield resInfo
+    }
+
+    /**
+      *
+      * Queries the properties for the given resource.
+      *
+      * @param resourceIri the Iri of the given resource.
+      * @param userProfile the profile of the user making the request.
+      * @return a [[PropertiesGetResponseV1]] representing the properties of the given resource.
+      */
+    private def getPropertiesV1(resourceIri: IRI, userProfile: UserProfileV1): Future[PropertiesGetResponseV1] = {
+
+        for {
+
+        // get resource class of the specified resource
+            resclassSparqlQuery <- Future(queries.sparql.v1.txt.getResourceClass(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri
+            ).toString())
+            resclassQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resclassSparqlQuery)).mapTo[SparqlSelectResponse]
+            resclass = resclassQueryResponse.results.bindings.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"No resource class given for $resourceIri"))
+
+            properties: Seq[PropertyV1] <- getResourceProperties(resourceIri = resourceIri, maybeResourceTypeIri = Some(resclass.rowMap("resourceClass")), userProfile = userProfile)
+
+            propertiesGetV1: Seq[PropertyGetV1] = properties.map {
+
+                prop =>
+                    convertPropertyV1toPropertyGetV1(prop)
+
+            }
+
+        } yield PropertiesGetResponseV1(PropsGetV1(propertiesGetV1))
+
     }
 
     /**
@@ -1524,7 +1629,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         def makePropertyV1(propertyIri: IRI, propertyCardinality: Option[Cardinality.Value], propertyEntityInfo: Option[PropertyEntityInfoV1], valueObjects: Seq[ValueObjectV1]): PropertyV1 = {
             PropertyV1(
                 pid = propertyIri,
-                valuetype_id = propertyEntityInfo.flatMap{
+                valuetype_id = propertyEntityInfo.flatMap {
                     row =>
                         if (row.isLinkProp) {
                             // it is a linking property
@@ -1721,6 +1826,36 @@ class ResourcesResponderV1 extends ResponderV1 {
         }.toVector.flatten
 
         valuePropertiesWithData ++ linkPropertiesWithData
+    }
+
+    private def convertPropertyV1toPropertyGetV1(propertyV1: PropertyV1): PropertyGetV1 = {
+
+        val valueObjects: Seq[PropertyGetValueV1] = (propertyV1.value_ids, propertyV1.values, propertyV1.comments).zipped.map {
+            case (id: IRI, value: ApiValueV1, comment: String) =>
+                PropertyGetValueV1(id = id,
+                    value = value,
+                    textval = value.toString,
+                    comment = comment) // TODO: person_id and lastmod are not handled yet. Probably these are never used by the GUI.
+        }
+
+        // TODO: try to unify this with MessageUtil's convertCreateValueResponseV1ToResourceCreateValueResponseV1
+        PropertyGetV1(
+            pid = propertyV1.pid,
+            label = propertyV1.label,
+            valuetype_id = propertyV1.valuetype_id,
+            valuetype = propertyV1.valuetype_id match {
+                // derive valuetype from valuetype_id
+                case Some(OntologyConstants.KnoraBase.IntValue) => Some("ival")
+                case Some(OntologyConstants.KnoraBase.FloatValue) => Some("fval")
+                case Some(OntologyConstants.KnoraBase.DateValue) => Some("dateval")
+                case Some(other: IRI) => Some("textval")
+                case None => None
+            },
+            guielement = propertyV1.guielement,
+            attributes = propertyV1.attributes,
+            is_annotation = propertyV1.is_annotation,
+            values = valueObjects
+        )
     }
 
     /**

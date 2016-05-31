@@ -100,3 +100,83 @@ SBT Build Configuration
 ------------------------
  
 .. literalinclude:: ../../../../webapi/WebapiBuild.sbt
+
+
+.. _webapi-server-startup-flags:
+
+Webapi Server Startup-Flags
+----------------------------
+
+The Webapi-Server can be started with a number of flags. These flags can be supplied either to the ``reStart`` or the
+``run`` command in sbt, e.g.,:
+
+::
+
+    $ sbt
+    > reStart flag
+
+or
+
+::
+
+    $sbt
+    > run flag
+
+
+``loadDemoData`` - Flag
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+When the webapi-server is started with the ``loadDemoData`` flag, then at startup, the data which is configured in
+``application.conf`` under the ``app.triplestore.rdf-data`` key is loaded into the triplestore, and any data in the
+triplestore is removed beforehand.
+
+Usage:
+
+::
+
+    $ sbt
+    > reStart loadDemoData
+
+
+``allowResetTriplestoreContentOperationOverHTTP`` - Flag
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When the webapi.server is started with the ``allowResetTriplestoreContentOperationOverHTTP`` flag, then the
+``v1/store/ResetTriplestoreContent`` route is activated. This route accepts a ``POST`` request, with a json payload
+consisting of the following exemplary content:
+
+::
+
+    [
+      {
+        "path": "../knora-ontologies/knora-base.ttl",
+        "name": "http://www.knora.org/ontology/knora-base"
+      },
+      {
+        "path": "../knora-ontologies/knora-dc.ttl",
+        "name": "http://www.knora.org/ontology/dc"
+      },
+      {
+        "path": "../knora-ontologies/salsah-gui.ttl",
+        "name": "http://www.knora.org/ontology/salsah-gui"
+      },
+      {
+        "path": "_test_data/ontologies/incunabula-onto.ttl",
+        "name": "http://www.knora.org/ontology/incunabula"
+      },
+      {
+        "path": "_test_data/all_data/incunabula-data.ttl",
+        "name": "http://www.knora.org/data/incunabula"
+      }
+    ]
+
+This content corresponds to the payload sent with the ``ResetTriplestoreContent`` message, defined inside the
+``org.knora.webapi.messages.v1.store.triplestoremessages`` package. The ``path`` being the relative path to the ``ttl``
+file which will be loaded into a named graph by the name of ``name``.
+
+Usage:
+
+::
+
+    $ sbt
+    > reStart allowResetTriplestoreContentOperationOverHTTP

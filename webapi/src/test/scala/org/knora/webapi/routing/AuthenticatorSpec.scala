@@ -24,7 +24,7 @@ import akka.actor.ActorDSL._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.v1respondermessages.usermessages._
+import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.routing.Authenticator.{BAD_CRED_PASSWORD_MISMATCH, BAD_CRED_USERNAME_NOT_SUPPLIED, BAD_CRED_USER_NOT_FOUND}
 import org.knora.webapi.{BadCredentialsException, CoreSpec}

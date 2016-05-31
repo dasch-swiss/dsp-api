@@ -151,7 +151,7 @@
 									action: 'delete',
 									value_id: value_id
 								};
-								SALSAH.ApiDelete('values/' + value_id, function(data) {
+								SALSAH.ApiDelete('values/' + encodeURIComponent(value_id), function(data) {
 									if (data.status == ApiErrors.OK) {
 										propinfo[prop].values.splice(value_index, 1);
 										propinfo[prop].value_ids.splice(value_index, 1);
@@ -794,7 +794,7 @@
 				var tmp_active = {};
 				$.extend(tmp_active, active);
 				if (is_new_value) {
-					data._link_value = value;
+					data.link_value = value;
 					data.res_id = res_id;
 					data.prop = prop;
 					data.project_id = project_id;
@@ -944,10 +944,72 @@
 				}
 			};
 
+			postdata[VALTYPE_HLIST] = function(value_container, prop, value_index, value, is_new_value) {
+				var data = {};
+				if (is_new_value) {
+					data.hlist_value = value; // it is a list node
+					data.res_id = res_id;
+					data.prop = prop;
+					data.project_id = project_id;
+					SALSAH.ApiPost('values', data, function(data) {
+						if (data.status == ApiErrors.OK) {
+
+							init_value_structure();
+
+							propinfo[active.prop].values[active.value_index] = data.value;
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+							propinfo[active.prop].value_rights[active.value_index] = data.rights;
+							propinfo[active.prop].value_iconsrcs[active.value_index] = null;
+							propinfo[active.prop].value_firstprops[active.value_index] = null;
+							propinfo[active.prop].value_restype[active.value_index] = null;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				} else {
+					data.hlist_value = value; // it is a list node
+					data.project_id = project_id;
+					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
+						if (data.status == ApiErrors.OK) {
+							propinfo[active.prop].values[active.value_index] = data.value;
+							// set new value Iri
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+
+
+
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				}
+			};
+
+
+			postdata[VALTYPE_SELECTION] = postdata[VALTYPE_HLIST];
 
 			postdata[VALTYPE_COLOR] = postdata[VALTYPE_TEXT];
-			postdata[VALTYPE_SELECTION] = postdata[VALTYPE_TEXT];
-			postdata[VALTYPE_HLIST] = postdata[VALTYPE_TEXT];
 			postdata[VALTYPE_ICONCLASS] = postdata[VALTYPE_TEXT];
 			postdata[VALTYPE_GEONAME] = postdata[VALTYPE_TEXT];
             
@@ -1293,7 +1355,7 @@
 */
 					break;
 				}
-				case 'pulldown': {
+				/*case 'pulldown': {
 					var selection_id;
 					var attrs = propinfo[prop].attributes.split(';');
 					$.each(attrs, function() {
@@ -1315,6 +1377,7 @@
 					break;
 				}
 				case 'radio': {
+					console.log('radio')
 					var selection_id;
 					var attrs = propinfo[prop].attributes.split(';');
 					$.each(attrs, function() {
@@ -1334,14 +1397,20 @@
 						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, tmpele.selradio('value'), is_new_value);
 					}).css({cursor: 'pointer'}));
 					break;
-				}
+				}*/
+				case 'radio':
+				case 'pulldown':
 				case 'hlist': {
+
+					
+
 					var hlist_id;
 					var attrs = propinfo[prop].attributes.split(';');
 					$.each(attrs, function() {
 						var attr = this.split('=');
 						if (attr[0] == 'hlist') {
-							hlist_id = attr[1];
+							//hlist_id = attr[1]; // "<http://data.knora.org/lists/d4f8e79ce2>"
+							hlist_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 						}
 					});
 					var tmpele = $('<span>', attributes).appendTo(value_container);
