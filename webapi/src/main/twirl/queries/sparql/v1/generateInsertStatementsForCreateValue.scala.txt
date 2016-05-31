@@ -146,7 +146,7 @@
                                      knora-base:valueHasQname """@stillImageFileValue.qualityName""" .
 
                 @if(stillImageFileValue.isPreview) {
-                    ?newValue@valueIndex knora-base:valueIsPreview true .
+                    ?newValue@valueIndex knora-base:isPreview true .
                 }
 
                 ?newValue@valueIndex knora-base:valueHasString """@stillImageFileValue.toString""" .

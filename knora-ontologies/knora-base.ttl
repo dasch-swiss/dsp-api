@@ -341,6 +341,13 @@
 
               :subjectClassConstraint :StillImageRepresentation ;
 
+			  :hasDefaultRestrictedViewPermission :UnknownUser ;
+
+      		  :hasDefaultViewPermission :KnownUser ;
+
+      		  :hasDefaultModifyPermission :ProjectMember ,
+                                          :Owner ;
+
               rdfs:subPropertyOf :hasFileValue .
 
 

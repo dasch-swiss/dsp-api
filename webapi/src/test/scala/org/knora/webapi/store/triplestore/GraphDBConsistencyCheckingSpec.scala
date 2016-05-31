@@ -251,7 +251,7 @@ object GraphDBConsistencyCheckingSpec {
           |                                     knora-base:valueHasQname "thumbnail" .
           |
           |
-          |                    ?newValue3 knora-base:valueIsPreview true .
+          |                    ?newValue3 knora-base:isPreview true .
           |
           |
           |                ?newValue3 knora-base:valueHasString "test.jpg" .

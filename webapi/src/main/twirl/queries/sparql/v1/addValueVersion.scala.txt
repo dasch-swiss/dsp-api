@@ -178,7 +178,7 @@ DELETE {
                 ?newValue knora-base:valueHasQname """@stillImageFileValue.qualityName""" .
 
                 @if(stillImageFileValue.isPreview) {
-                    ?newValue knora-base:valueIsPreview true .
+                    ?newValue knora-base:isPreview true .
                 }
 
                 ?newValue knora-base:valueHasString """@stillImageFileValue.toString""" .
