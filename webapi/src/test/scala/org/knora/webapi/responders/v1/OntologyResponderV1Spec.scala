@@ -189,7 +189,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = None,
+                    description = Some("Stellt einen Verweis dar."),
                     label = Some("Verweis"),
                     name = "http://www.knora.org/ontology/incunabula#citation",
                     id = "http://www.knora.org/ontology/incunabula#citation"
@@ -206,13 +206,13 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     id = "http://www.knora.org/ontology/incunabula#transcription"
                 ),
                 PropertyDefinitionV1(
-                    gui_name = None,
+                    gui_name =  Some("fileupload"),
                     attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#StillImageFileValue",
                     occurrence = "1-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = None,
-                    label = Some("hat Repräsentation (Bild)"),
+                    description = Some("Connects a Representation to an image file"),
+                    label =  Some("hat Bilddatei"),
                     name = "http://www.knora.org/ontology/knora-base#hasStillImageFileValue",
                     id = "http://www.knora.org/ontology/knora-base#hasStillImageFileValue"
                 ),
@@ -301,7 +301,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = None,
+                    description = Some("Erzeuger/Autor"),
                     label = Some("Creator"),
                     name = "http://www.knora.org/ontology/incunabula#hasAuthor",
                     id = "http://www.knora.org/ontology/incunabula#hasAuthor"
@@ -323,7 +323,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#DateValue",
                     occurrence = "0-1",
                     vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = None,
+                    description = Some("Datum der Herausgabe"),
                     label = Some("Datum der Herausgabe"),
                     name = "http://www.knora.org/ontology/incunabula#pubdate",
                     id = "http://www.knora.org/ontology/incunabula#pubdate"
@@ -334,7 +334,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "1-n",
                     vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = None,
+                    description = Some("Titel"),
                     label = Some("Titel"),
                     name = "http://www.knora.org/ontology/incunabula#title",
                     id = "http://www.knora.org/ontology/incunabula#title"
@@ -345,7 +345,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = None,
+                    description = Some("Stellt einen Verweis dar."),
                     label = Some("Verweis"),
                     name = "http://www.knora.org/ontology/incunabula#citation",
                     id = "http://www.knora.org/ontology/incunabula#citation"
@@ -413,7 +413,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "1-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = None,
+                    description = Some("Represents a comment"),
                     label = Some("Kommentar"),
                     name = "http://www.knora.org/ontology/knora-base#hasComment",
                     id = "http://www.knora.org/ontology/knora-base#hasComment"
@@ -424,7 +424,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#ColorValue",
                     occurrence = "1",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = None,
+                    description = Some("Represents a color."),
                     label = Some("Farbe"),
                     name = "http://www.knora.org/ontology/knora-base#hasColor",
                     id = "http://www.knora.org/ontology/knora-base#hasColor"
@@ -435,7 +435,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#GeomValue",
                     occurrence = "1-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = None,
+                    description = Some("Represents a geometrical shape."),
                     label = Some("Geometrie"),
                     name = "http://www.knora.org/ontology/knora-base#hasGeometry",
                     id = "http://www.knora.org/ontology/knora-base#hasGeometry"
@@ -512,7 +512,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = None,
+                    description = Some("Represents a comment"),
                     label = Some("Kommentar"),
                     name = "http://www.knora.org/ontology/knora-base#hasComment",
                     id = "http://www.knora.org/ontology/knora-base#hasComment"
@@ -664,7 +664,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                         "Page identifier"),
                     PropertyTypeV1(
                         "http://www.knora.org/ontology/knora-base#hasStillImageFileValue",
-                        "has Representation (Image)"),
+                        "has image file"),
                     PropertyTypeV1(
                         "http://www.knora.org/ontology/incunabula#citation",
                         "Citation/reference"),
@@ -695,7 +695,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                         "Title"),
                     PropertyTypeV1(
                         "http://www.knora.org/ontology/knora-base#hasStillImageFileValue",
-                        "has Representation (Image)"),
+                        "has image file"),
                     PropertyTypeV1(
                         "http://www.knora.org/ontology/incunabula#description",
                         "Beschreibung (Richtext)"))),
