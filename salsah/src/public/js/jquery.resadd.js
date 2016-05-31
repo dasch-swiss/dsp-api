@@ -224,6 +224,7 @@
 						var a1, a2, td;
 						var propname;
 						var propvals = {};
+						var file = undefined;
 						var propval_found;
 
 						var win = formcontainer.parents('.win');
@@ -845,7 +846,7 @@
 													propvals[propname].push(vv);
 												});
 											}
-                                            console.log(propvals[propname]);
+                                            //console.log(propvals[propname]);
 
 											// we're looking for the two input fields
 											//ele = intval_ele.find('input.interval');
@@ -893,7 +894,7 @@
 										}
 									case 'fileupload':
 										{
-											ele = form.find('[name="' + propname + '"]');
+											/*ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
 												propvals[propname].value = ele.location('value');
 											} else if (ele.length > 1) {
@@ -904,7 +905,18 @@
 													};
 													propvals[propname].push(vv);
 												});
-											}
+											}*/
+
+											ele = form.find('[name="' + propname + '"]');
+											var sipi_response = ele.location('value');
+
+											file = {
+												originalFilename: sipi_response["original_filename"],
+												originalMimeType: sipi_response["original_mimetype"],
+												filename: sipi_response["filename"]
+											};
+
+											
 											break;
 										}
 									case 'colorpicker':
@@ -1014,6 +1026,7 @@
                              */
 							propvals["http://www.knora.org/ontology/knora-base#hasRepresentation"] = undefined;
 							propvals["http://www.knora.org/ontology/knora-base#seqnum"] = undefined;
+							propvals["http://www.knora.org/ontology/knora-base#hasStillImageFileValue"] = undefined;
 
 							// TODO: handle GUI  element problem
 							//propvals["http://www.knora.org/ontology/knora-base#hasComment"] = undefined;
@@ -1023,6 +1036,7 @@
 								restype_id: rtinfo.name,
 								properties: propvals,
 								project_id: SALSAH.userdata.projects[0], // TODO: take the user's active project here: https://github.com/dhlab-basel/Knora/issues/118
+								file: file,
 								label: "test" // TODO: add the first property's value here
 							}, function(data) {
 								if (data.status == ApiErrors.OK) {
