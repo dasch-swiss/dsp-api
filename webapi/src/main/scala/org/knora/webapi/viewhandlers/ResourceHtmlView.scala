@@ -81,7 +81,8 @@ object ResourceHtmlView {
 
         val imgpath = properties.find(_.locations.nonEmpty).map(_.locations.head.path).getOrElse("")
         log.debug(s"non-empty locations: ${properties.find(_.locations.nonEmpty)}")
-        log.debug(s"imgpath: $imgpath")
+        log.debug(s"imgpath: $imgpath , nonEmpty: ${imgpath.nonEmpty}")
+
         val content: play.twirl.api.Html = views.html.resource.properties(propMap, imgpath)
         content.toString
     }
