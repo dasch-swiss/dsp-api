@@ -2265,6 +2265,14 @@
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
+                            owl:onProperty :hasStandoffLinkTo ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :hasStandoffLinkToValue ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
                             owl:onProperty :hasRepresentation ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger
                           ] ,

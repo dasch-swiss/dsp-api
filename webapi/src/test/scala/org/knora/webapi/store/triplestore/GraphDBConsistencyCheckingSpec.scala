@@ -13,6 +13,8 @@ import scala.concurrent.duration._
   * Tests the GraphDB triplestore consistency checking rules in webapi/scripts/KnoraRules.pie.
   */
 class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyCheckingSpec.config) with ImplicitSender {
+    import GraphDBConsistencyCheckingSpec._
+
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), STORE_MANAGER_ACTOR_NAME)
 
     private val timeout = 30.seconds
@@ -32,59 +34,58 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
         }
 
         "not create a new resource with a missing property that has owl:cardinality 1" in {
-            storeManager ! SparqlUpdateRequest(GraphDBConsistencyCheckingSpec.missingPartOf)
+            storeManager ! SparqlUpdateRequest(missingPartOf)
 
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    (msg.contains(s"${GraphDBConsistencyCheckingSpec.CONSISTENCY_CHECK_ERROR} content_prop_cardinality_1_not_less") &&
+                    (msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_less_any_object") &&
                         msg.trim.endsWith("http://data.knora.org/missingPartOf http://www.knora.org/ontology/incunabula#partOfValue *")) should ===(true)
             }
         }
 
         "not create a new resource with a missing inherited property that has owl:minCardinality 1" in {
-            storeManager ! SparqlUpdateRequest(GraphDBConsistencyCheckingSpec.missingFileValue)
+            storeManager ! SparqlUpdateRequest(missingFileValue)
 
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    (msg.contains(s"${GraphDBConsistencyCheckingSpec.CONSISTENCY_CHECK_ERROR} content_prop_min_cardinality_1") &&
-                        msg.trim.endsWith("http://data.knora.org/missingFileValue http://www.knora.org/ontology/knora-base#hasFileValue *")) should ===(true)
+                    (msg.contains(s"$CONSISTENCY_CHECK_ERROR min_cardinality_1_any_object") &&
+                        msg.trim.endsWith("http://data.knora.org/missingFileValue http://www.knora.org/ontology/knora-base#hasStillImageFileValue *")) should ===(true)
             }
         }
 
-        /* Commented out because this consistency rule is disabled.
         "not create a new resource with two values for a property that has owl:maxCardinality 1" in {
-            storeManager ! SparqlUpdateRequest(GraphDBConsistencyCheckingSpec.tooManyPublocs)
+            storeManager ! SparqlUpdateRequest(tooManyPublocs)
 
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    msg.contains(s"${GraphDBConsistencyCheckingSpec.CONSISTENCY_CHECK_ERROR} content_prop_max_cardinality_1") should ===(true)
+                    msg.contains(s"$CONSISTENCY_CHECK_ERROR max_cardinality_1_with_deletion_flag") should ===(true)
             }
-        } */
+        }
 
         "not create a new resource with more than one lastModificationDate" in {
-            storeManager ! SparqlUpdateRequest(GraphDBConsistencyCheckingSpec.tooManyLastModificationDates)
+            storeManager ! SparqlUpdateRequest(tooManyLastModificationDates)
 
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    msg.contains(s"${GraphDBConsistencyCheckingSpec.CONSISTENCY_CHECK_ERROR} system_prop_max_cardinality_1") should ===(true)
+                    msg.contains(s"$CONSISTENCY_CHECK_ERROR max_cardinality_1_without_deletion_flag") should ===(true)
             }
         }
 
         "not create a new resource with a property that cannot have a resource as a subject" in {
-            storeManager ! SparqlUpdateRequest(GraphDBConsistencyCheckingSpec.wrongSubjectClass)
+            storeManager ! SparqlUpdateRequest(wrongSubjectClass)
 
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    msg.contains(s"${GraphDBConsistencyCheckingSpec.CONSISTENCY_CHECK_ERROR} subject_class_constraint") should ===(true)
+                    msg.contains(s"$CONSISTENCY_CHECK_ERROR subject_class_constraint") should ===(true)
             }
         }
 
         "not create a new resource with properties whose objects have the wrong types" in {
-            storeManager ! SparqlUpdateRequest(GraphDBConsistencyCheckingSpec.wrongObjectClass)
+            storeManager ! SparqlUpdateRequest(wrongObjectClass)
 
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    msg.contains(s"${GraphDBConsistencyCheckingSpec.CONSISTENCY_CHECK_ERROR} object_class_constraint") should ===(true)
+                    msg.contains(s"$CONSISTENCY_CHECK_ERROR object_class_constraint") should ===(true)
             }
         }
     } else {
