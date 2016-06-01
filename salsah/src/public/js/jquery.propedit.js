@@ -1081,7 +1081,7 @@
 			postdata[VALTYPE_GEONAME] = postdata[VALTYPE_TEXT];
             
 			
-			postdata['LOCATION'] = function(value_container, prop, res_id, tmppath, origname, is_new_value) {
+			postdata['LOCATION'] = function(value_container, prop, res_id, sipi_response, is_new_value) {
 				var data = {};
 				if (is_new_value) {
                     /*
@@ -1129,10 +1129,13 @@
 				}
 				else {
 					data = {
-						tmppath: tmppath,
-						origname: origname
+						file: {
+							originalFilename: sipi_response["original_filename"],
+							originalMimeType: sipi_response["original_mimetype"],
+							filename: sipi_response["filename"]
+						}
 					};
-					SALSAH.ApiPut('resources/' + res_id, data, function(data) {
+					SALSAH.ApiPut('filevalue/' + encodeURIComponent(res_id), data, function(data) {
 						if (data.status == ApiErrors.OK) {
 							// data.value has the following members:
 							//   data.value.geoname_id
@@ -1148,9 +1151,12 @@
 							active.value_container.empty();
 							reset_value(active.value_container, active.prop, active.value_index);
 							*/
+
+							console.log(data);
+
 							active.value_container.empty();
 							active.value_container.append($('<img>').attr({src: resdata.resclass_iconsrc}).css({'vertical-align': 'middle'}).addClass('propedit')).append(' (' + resdata.resclass_name +') ');
-							if (data['locations'] !== undefined) value_container.append($('<a>').attr({href: data['locations'][0]['path']}).text(' ' + data['locations'][0]['origname'] + ' '));
+							if (data['changedFilesValues'] !== undefined) value_container.append($('<a>').attr({href: data['locations'][0]['path']}).text(' ' + data['locations'][0]['origname'] + ' '));
 							if (res_rights >= RESOURCE_ACCESS_MODIFY) {
 								$('<img>', {src: edit_icon.src, 'class': 'propedit'}).click(function(event) {
 									edit_value(active.value_container, '__location__', 0);
@@ -1718,8 +1724,8 @@
 					}
 
 					value_container.append($('<img>', {src: save_icon.src, title: strings._save, 'class': 'propedit'}).click(function(event) {
-						var result = tmpele.location('value');
-						postdata['LOCATION'](value_container, prop, res_id, result.tmp_orig_path, result.orig_fname, is_new_value);
+						var sipi_response = tmpele.location('value');
+						postdata['LOCATION'](value_container, prop, res_id, sipi_response, is_new_value);
 					}).css({cursor: 'pointer'}));
 					break;
 				}
