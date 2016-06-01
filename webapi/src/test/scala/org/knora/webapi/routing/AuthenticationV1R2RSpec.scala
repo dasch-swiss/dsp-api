@@ -22,9 +22,11 @@ import akka.util.Timeout
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
+import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.routing.v1.{AuthenticateRouteV1, ResourcesRouteV1}
 import org.knora.webapi.store._
 import org.knora.webapi.{LiveActorMaker, R2RSpec}
+import spray.http.HttpHeaders.{Cookie, `Set-Cookie`}
 import spray.http._
 import spray.httpx.RequestBuilding
 import spray.json.DefaultJsonProtocol
@@ -61,6 +63,9 @@ class AuthenticationV1R2RSpec extends R2RSpec with RequestBuilding {
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin
+
+    import JsonSessionResponseProtocol._
+    import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
 
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
@@ -109,7 +114,6 @@ class AuthenticationV1R2RSpec extends R2RSpec with RequestBuilding {
             }
         }
     }
-    /*
     "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via Basic Auth " should {
         "succeed with authentication and correct username / correct password " in {
             /* Correct username / correct password */
@@ -236,10 +240,9 @@ class AuthenticationV1R2RSpec extends R2RSpec with RequestBuilding {
             Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test") ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 // assert(status === StatusCodes.OK)
-                assert(responseAs[String] contains "\"password\":null")
+                assert(responseAs[String] contains "\"hashedpassword\":null")
                 assert(responseAs[String] contains "\"token\":null")
             }
         }
     }
-    */
 }

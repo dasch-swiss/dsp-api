@@ -27,7 +27,7 @@ import com.typesafe.scalalogging.Logger
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByIRIGetRequestV1, UserProfileByUsernameGetRequestV1, UserProfileV1}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
-import org.knora.webapi.{IRI, InvalidCredentialsException, Settings}
+import org.knora.webapi.{IRI, InvalidCredentialsException, NotFoundException, Settings}
 import org.slf4j.LoggerFactory
 import spray.http._
 import spray.json.{JsNumber, JsObject, JsString}
@@ -357,7 +357,7 @@ object Authenticator {
                     }
                 }
                 case Failure(ex) => {
-                    log.debug(s"Unsuccessful: ${ex.toString}" )
+                    //log.debug(s"Unsuccessful: ${ex.toString}" )
                     throw ex
                 }
             }
@@ -472,19 +472,27 @@ object Authenticator {
       * @param executionContext the current execution context
       * @return a [[Option(UserProfileV1)]]
       */
-    private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Option[UserProfileV1] = {
-        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-
-        val userProfileV1Future = responderManager ? UserProfileByIRIGetRequestV1(iri)
-        Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
-            case Some(userProfileV1) => {
+    private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Try[UserProfileV1] = {
+        try {
+            val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+            log.debug(s"username: $iri")
+            if (iri.nonEmpty) {
+                val userProfileV1Future = responderManager ? UserProfileByIRIGetRequestV1(iri)
+                val userProfileV1 = Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[UserProfileV1]
                 log.debug("This user was found: " + userProfileV1.toString)
-                Some(userProfileV1)
+                Success(userProfileV1)
+            } else {
+                log.debug("No user IRI supplied")
+                Failure(InvalidCredentialsException(INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED))
             }
-            case None => log.debug("No user found by this IRI"); None
-
-
+        } catch {
+            case nfe: NotFoundException =>  {
+                log.debug("No user found by this IRI inside the triplestore")
+                Failure(InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD))
+            }
         }
+
+
     }
 
     /**
@@ -497,23 +505,22 @@ object Authenticator {
       * @return a [[Success(UserProfileV1)]]
       */
     private def getUserProfileByUsername(username: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Try[UserProfileV1] = {
-        Try {
+        try {
             val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
             log.debug(s"username: $username")
             if (username.nonEmpty) {
                 val userProfileV1Future = responderManager ? UserProfileByUsernameGetRequestV1(username, false)
-                Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
-                    case Some(userProfileV1) => {
-                        log.debug("Found this user in the triplestore: " + userProfileV1.toString)
-                        userProfileV1
-                    }
-                    case None => {
-                        log.debug("No user found by this username inside the triplestore")
-                        throw InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD)
-                    }
-                }
+                val userProfileV1: UserProfileV1 = Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[UserProfileV1]
+                log.debug("Found this user in the triplestore: " + userProfileV1.toString)
+                Success(userProfileV1)
             } else {
-                throw InvalidCredentialsException(INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED)
+                log.debug("No username supplied")
+                Failure(InvalidCredentialsException(INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED))
+            }
+        } catch {
+            case nfe: NotFoundException =>  {
+                log.debug("No user found by this username inside the triplestore")
+                Failure(InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD))
             }
         }
     }

@@ -16,82 +16,90 @@
 
 package org.knora.webapi.routing
 
-import org.knora.webapi.{KnoraService, R2RSpec, StartupFlags}
-import spray.httpx.RequestBuilding
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
+import spray.client.pipelining._
+import spray.http.{BasicHttpCredentials, HttpResponse, StatusCodes}
+import spray.httpx.SprayJsonSupport._
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 /**
   * End-to-End (E2E) test specification for testing authentication.
   *
   * This spec tests the 'v1/authentication' and 'v1/session' route.
   */
-class AuthenticationV1E2ESpec extends R2RSpec with RequestBuilding {
+class AuthenticationV1E2ESpec extends E2ESpec {
 
-    /* Set the startup flags and start the Knora Server */
-    StartupFlags.loadDemoData send true
-    KnoraService.start
+    import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
 
-    val rdfDataObjectsJsonList =
-        """
-            [
-                {"path": "../knora-ontologies/knora-base.ttl", "name": "http://www.knora.org/ontology/knora-base"},
-                {"path": "../knora-ontologies/knora-dc.ttl", "name": "http://www.knora.org/ontology/dc"},
-                {"path": "../knora-ontologies/salsah-gui.ttl", "name": "http://www.knora.org/ontology/salsah-gui"},
-                {"path": "_test_data/ontologies/incunabula-onto.ttl", "name": "http://www.knora.org/ontology/incunabula"},
-                {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
-                {"path": "_test_data/all_data/admin-data.ttl", "name": "http://www.knora.org/data/admin"}
-            ]
-        """
+    val rdfDataObjects = List(
+        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
+        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
+        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
+        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/all_data/admin-data.ttl", name = "http://www.knora.org/data/admin")
+    )
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
+        Await.result(pipe(Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", rdfDataObjects)), 300 seconds)
+    }
+
+    "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via URL parameters " should {
+        "succeed with authentication and correct username / correct password " in {
+            /* Correct username and password */
+            val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/authenticate?username=root&password=test")), 3 seconds)
+            log.debug(s"response: ${response.toString}")
+            assert(response.status === StatusCodes.OK)
+        }
+        "fail with authentication and correct username / wrong password " in {
+            /* Correct username / wrong password */
+            val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/authenticate?username=root&password=wrong")), 3 seconds)
+            log.debug(s"response: ${response.toString}")
+            assert(response.status === StatusCodes.Unauthorized)
+        }
+        "fail with authentication if the user is set as 'not active' " in {
+            /* User not active */
+            val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/authenticate?username=inactiveuser&password=test")), 3 seconds)
+            log.debug(s"response: ${response.toString}")
+            assert(response.status === StatusCodes.Unauthorized)
+        }
+    }
+
+    "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via Basic Auth " should {
+        "succeed with authentication and correct username / correct password " in {
+            /* Correct username / correct password */
+            val request = Get(s"${baseApiUrl}v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "test"))
+            val response = Await.result(pipe(request), 3 seconds)
+            assert(response.status == StatusCodes.OK)
+        }
+        "fail with authentication and correct username / wrong password " in {
+            /* Correct username / wrong password */
+            val request = Get(s"${baseApiUrl}v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "wrong"))
+            val response = Await.result(pipe(request), 3 seconds)
+            assert(response.status == StatusCodes.Unauthorized)
+        }
     }
 
     // TODO: Rewrite to only use HTTP requests
     /*
-    "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via URL parameters " should {
-        "succeed with authentication and correct username / correct password " in {
-            /* Correct username and password */
-            Get("/v1/authenticate?username=root&password=test") ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
-            }
-        }
-        "fail with authentication and correct username / wrong password " in {
-            /* Correct username / wrong password */
-            Get("/v1/authenticate?username=root&password=wrong") ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
-            }
-        }
-        "fail with authentication if the user is set as 'not active' " in {
-            /* User not active */
-            Get("/v1/authenticate?username=inactiveuser&password=test") ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
-            }
-        }
-    }
-    "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via Basic Auth " should {
-        "succeed with authentication and correct username / correct password " in {
-            /* Correct username / correct password */
-            Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
-            }
-        }
-        "fail with authentication and correct username / wrong password " in {
-            /* Correct username / wrong password */
-            Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "wrong")) ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
-            }
-        }
-    }
     "The Session Route ('v1/session') when accessed with credentials supplied via URL parameters " should {
         var sid = ""
         "succeed with 'login' and correct username / correct password " in {
             /* Correct username and correct password */
+            val request = Get(s"${baseApiUrl}v1/session?login&username=root&password=test"))
+            val response = Await.result(pipe(request), 3 seconds)
+            assert(response.status == StatusCodes.OK)
+
+            /* store session */
+            sid = response. responseAs[SessionResponse].sid
+            assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, content = sid))))
+
             Get("/v1/session?login&username=root&password=test") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
