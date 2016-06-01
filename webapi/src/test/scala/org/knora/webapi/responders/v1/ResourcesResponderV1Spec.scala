@@ -454,6 +454,20 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     }
 
+    private def compareNewPageContextResponse(received: ResourceContextResponseV1) = {
+
+        assert(received.resource_context.resinfo.nonEmpty)
+
+        // check that there is a preview
+        assert(received.resource_context.resinfo.get.preview.nonEmpty)
+
+        assert(received.resource_context.resinfo.get.locations.nonEmpty)
+
+        // check that there are 7 locations
+        assert(received.resource_context.resinfo.get.locations.get.length == 7)
+
+    }
+
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
@@ -734,11 +748,11 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 internalFilename = "gaga.jpg",
                 originalFilename = "test.jpg",
                 originalMimeType = Some("image/jpg"),
-                dimX = 1000,
-                dimY = 1000,
-                qualityLevel = 100,
-                qualityName = Some("full"),
-                isPreview = false
+                dimX = 100,
+                dimY = 100,
+                qualityLevel = 10,
+                qualityName = Some("thumbnail"),
+                isPreview = true
             )
 
             val book = newResourceIri.get
@@ -779,6 +793,24 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 case response: ResourceCreateResponseV1 =>
                     newResourceIri.set(response.res_id)
                     checkResourceCreation(expected, response)
+            }
+        }
+
+        "get the context of a newly created incunabula:page and check its locations" in {
+
+            val resIri: IRI = newResourceIri.get
+
+            val pageGetContext = ResourceContextGetRequestV1(
+                iri = resIri,
+                resinfo = true,
+                userProfile = ResourcesResponderV1Spec.userProfile
+            )
+
+            actorUnderTest ! pageGetContext
+
+            expectMsgPF(timeout) {
+                case response: ResourceContextResponseV1 =>
+                    compareNewPageContextResponse(received = response)
             }
         }
 
