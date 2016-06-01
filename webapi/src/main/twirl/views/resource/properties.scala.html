@@ -22,11 +22,13 @@
 
 <table>
 
-    <tr>
-        <td style="border: none">preview</td>
-        <td style="border: none">:</td>
-        <td style="border: none"><img src="@imgpath" style="max-width: 128px; max-height: 128px;"></td>
-    </tr>
+    @if(imgpath.nonEmpty) {
+        <tr>
+            <td style="border: none">preview</td>
+            <td style="border: none">:</td>
+            <td style="border: none"><img src="@imgpath" style="max-width: 128px; max-height: 128px;"></td>
+        </tr>
+    }
 
     @for((k, v) <- properties) {
     <tr>
