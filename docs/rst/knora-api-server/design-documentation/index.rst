@@ -31,5 +31,6 @@ Knora API Server Design Documentation
    shared-packages
    how-to-add-a-route
    triplestore-updates
+   consistency-checking
    authentication
    plans-for-api-v2

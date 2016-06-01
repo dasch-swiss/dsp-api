@@ -271,7 +271,7 @@ Id: rdfs13
  * Inference rules that construct tables used to optimize the consistency rules below.
  */
 
-// Constructs a table of things belonging to classes that have owl:cardinality 1 on some property p.
+// Constructs a table of subjects belonging to classes that have owl:cardinality 1 on some property p.
 Id: cardinality_1_table
     i <rdf:type> r
     r <owl:cardinality> "1"^^xsd:nonNegativeInteger
@@ -279,7 +279,7 @@ Id: cardinality_1_table
     ------------------------------------
     i p r [Context <onto:_cardinality_1_table>]
 
-// Constructs a table of things belonging to classes that have owl:minCardinality 1 on some property p.
+// Constructs a table of subjects belonging to classes that have owl:minCardinality 1 on some property p.
 Id: minCardinality_1_table
     i <rdf:type> r
     r <owl:minCardinality> "1"^^xsd:nonNegativeInteger
@@ -287,7 +287,7 @@ Id: minCardinality_1_table
     ------------------------------------
     i p r [Context <onto:_minCardinality_1_table>]
 
-// Constructs a table of things belonging to classes that have owl:maxCardinality 1 on some property p.
+// Constructs a table of subjects belonging to classes that have owl:maxCardinality 1 on some property p.
 Id: maxCardinality_1_table
     i <rdf:type> r
     r <owl:maxCardinality> "1"^^xsd:nonNegativeInteger
