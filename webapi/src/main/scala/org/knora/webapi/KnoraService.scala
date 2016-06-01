@@ -95,7 +95,7 @@ object KnoraService {
 
 
         IO(Http) ! Http.Bind(knoraHttpServiceManager, settings.httpInterface, port = settings.httpPort)
-        println(s"Knora Webapi started! You can access it on http://${settings.httpInterface}:${settings.httpPort}.")
+        println(s"Knora Webapi started! You can access it under http://${settings.httpInterface}:${settings.httpPort}.")
     }
 
     /**

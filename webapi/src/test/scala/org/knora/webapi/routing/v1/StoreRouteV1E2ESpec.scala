@@ -16,21 +16,39 @@
 
 package org.knora.webapi.routing.v1
 
-import org.knora.webapi._
-import spray.httpx.RequestBuilding
+import org.knora.webapi.{E2ESpec, StartupFlags}
+import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
+import spray.client.pipelining._
+import spray.http.{HttpResponse, StatusCodes}
+import spray.httpx.SprayJsonSupport._
 
-
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 /**
   * End-to-End (E2E) test specification for testing the 'v1/store' route.
+  *
+  * This spec tests the 'v1/store' route.
   */
-class StoreRouteV1E2ESpec extends R2RSpec with RequestBuilding {
+class StoreRouteV1E2ESpec extends E2ESpec {
 
+    import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
 
-    /* Set the startup flags and start the Knora Server */
-    StartupFlags.loadDemoData send true
-    KnoraService.start
+    val rdfDataObjects = List(
+        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
+        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
+        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
+        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/all_data/admin-data.ttl", name = "http://www.knora.org/data/admin")
+    )
 
+    /**
+      * The json string is not used here, as the marshaling is done automatically by spray, hence the import of
+      * the 'TriplestoreJsonProtocol'. This json string could be dropped in instead of 'rdfDataObjects', dough.
+      */
     val rdfDataObjectsJsonList =
         """
             [
@@ -39,11 +57,11 @@ class StoreRouteV1E2ESpec extends R2RSpec with RequestBuilding {
                 {"path": "../knora-ontologies/salsah-gui.ttl", "name": "http://www.knora.org/ontology/salsah-gui"},
                 {"path": "_test_data/ontologies/incunabula-onto.ttl", "name": "http://www.knora.org/ontology/incunabula"},
                 {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
+                {"path": "_test_data/ontologies/images-demo-onto.ttl", "name": "http://www.knora.org/ontology/images"},
+                {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"},
                 {"path": "_test_data/all_data/admin-data.ttl", "name": "http://www.knora.org/data/admin"}
             ]
         """
-
-    // TDOD: Write test only using HTTP
 
     "The ResetTriplestoreContent Route ('v1/store/ResetTriplestoreContent')" should {
         "succeed with resetting if startup flag is set" in {
@@ -51,9 +69,15 @@ class StoreRouteV1E2ESpec extends R2RSpec with RequestBuilding {
               * This test corresponds to the following curl call:
               * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/v1/store/ResetTriplestoreContent
               */
+            val response: HttpResponse = Await.result(pipe(Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", rdfDataObjects)), 300 seconds)
+            log.debug("==>> " + response.toString)
+            assert(response.status === StatusCodes.OK)
         }
         "fail with resetting if startup flag is not set" in {
-
+            StartupFlags.allowResetTriplestoreContentOperationOverHTTP send false
+            val response: HttpResponse = Await.result(pipe(Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", rdfDataObjects)), 300 seconds)
+            log.debug("==>> " + response.toString)
+            assert(response.status === StatusCodes.Forbidden)
         }
     }
 }
