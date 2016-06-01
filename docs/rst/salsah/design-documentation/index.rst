@@ -16,16 +16,11 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-.. _knora-api-server:
-
-####################
-SALSAH
-####################
-
-SALSAH - System for Annotation and Linkage of Sources in Arts and Humanities
+*************************************
+SALSAH Design Documentation
+*************************************
 
 .. toctree::
    :maxdepth: 2
 
-   development/index
-   design-documentation/index
+   design-overview

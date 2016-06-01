@@ -37,6 +37,8 @@ import spray.json._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+
+
 /**
   * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
@@ -78,11 +80,12 @@ class ResourcesV1E2ESpec extends R2RSpec {
 
     "The Resources Endpoint" should {
         "provide a HTML representation of the resource properties " in {
-            /* Incunabula resource*/
+            /* Incunabula resources*/
+
+            /* A Book without a preview image */
             Get("/v1/resources.html/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?noresedit=true&reqtype=properties") ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
-                assert(responseAs[String] contains "preview")
                 assert(responseAs[String] contains "Phyiscal description")
                 assert(responseAs[String] contains "Location")
                 assert(responseAs[String] contains "Publication location")
@@ -91,6 +94,15 @@ class ResourcesV1E2ESpec extends R2RSpec {
                 assert(responseAs[String] contains "Datum der Herausgabe")
                 assert(responseAs[String] contains "Citation/reference")
                 assert(responseAs[String] contains "Publisher")
+            }
+
+            /* A Page with a preview image */
+            Get("/v1/resources.html/http%3A%2F%2Fdata.knora.org%2Fde6c38ce3401?noresedit=true&reqtype=properties") ~> resourcesPath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.OK)
+                assert(responseAs[String] contains "preview")
+                assert(responseAs[String] contains "Ursprünglicher Dateiname")
+                assert(responseAs[String] contains "Page identifier")
             }
         }
 
