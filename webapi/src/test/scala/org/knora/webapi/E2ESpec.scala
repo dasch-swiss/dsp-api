@@ -20,7 +20,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.client.pipelining._
 import spray.http.{HttpRequest, HttpResponse}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 /**
   * This class can be used in End-to-End testing. It starts the Knora server and
@@ -30,7 +30,7 @@ class E2ESpec extends Suite with WordSpecLike with Matchers with BeforeAndAfterA
 
     /* get the actor system Knora is using */
     implicit val system = KnoraService.system
-    implicit val ec = ExecutionContext.fromExecutor(system.dispatcher)
+    import system.dispatcher
 
     val settings = Settings(system)
     val logger = akka.event.Logging(system, this.getClass())
@@ -44,13 +44,15 @@ class E2ESpec extends Suite with WordSpecLike with Matchers with BeforeAndAfterA
 
     override def beforeAll: Unit = {
         /* Set the startup flags and start the Knora Server */
+        log.debug(s"Starting Knora Service")
         StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
-        KnoraService.start
+        KnoraService.startService
     }
 
-    override def afterAll {
+    override def afterAll: Unit = {
         /* Stop the server when everything else has finished */
-        KnoraService.stop
+        log.debug(s"Stopping Knora Service")
+        KnoraService.stopService
     }
 
 }

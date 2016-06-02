@@ -20,20 +20,20 @@
 
 package org.knora.webapi
 
-import shapeless.headOption
-
 /**
   * Starts [[KnoraService]].
   */
 object Main extends App {
     //Kamon.start()
 
+    KnoraService.actorSystemCheck
+
     val arglist = args.toList
 
     if (arglist.contains("loadDemoData")) StartupFlags.loadDemoData send true
     if (arglist.contains("allowResetTriplestoreContentOperationOverHTTP")) StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
 
-    KnoraService.start
+    KnoraService.startService
 
-    sys.addShutdownHook(KnoraService.stop())
+    sys.addShutdownHook(KnoraService.stopService)
 }
