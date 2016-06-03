@@ -70,16 +70,15 @@ class StoreRouteV1E2ESpec extends E2ESpec {
               * This test corresponds to the following curl call:
               * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/v1/store/ResetTriplestoreContent
               */
-            /*
             val response: HttpResponse = Await.result(pipe(Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", rdfDataObjects)), 300 seconds)
             log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)
-            */
         }
 
 
         "fail with resetting if startup flag is not set" in {
-            //StartupFlags.allowResetTriplestoreContentOperationOverHTTP send false
+            StartupFlags.allowResetTriplestoreContentOperationOverHTTP send false
+            //log.debug("==>> before")
             val response: HttpResponse = Await.result(pipe(Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", rdfDataObjects)), 300 seconds)
             //log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.Forbidden)

@@ -24,7 +24,6 @@ import akka.actor._
 import akka.io.IO
 import akka.pattern._
 import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.http._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
@@ -35,19 +34,16 @@ import org.knora.webapi.util.CacheUtil
 import spray.can.Http
 
 import scala.collection.JavaConversions._
-import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 import scala.language.postfixOps
 
-object KnoraService {
+trait Core {
+    implicit val system: ActorSystem
+}
 
-    /*
-        Loads the following (first-listed are higher priority):
-            - system properties (e.g., -Dconfig.resource=fuseki.conf)
-            - test/resources/application.conf
-            - main/resources/application.conf
-    */
-    val defaultConfig: Config = ConfigFactory.load()
+trait LiveCore extends Core {
+    val system = ActorSystem("webapi")
 }
 
 /**
@@ -55,24 +51,8 @@ object KnoraService {
   * is started along with the three main supervisor actors is started. All further actors are started and supervised
   * by those three actors.
   */
-class KnoraService(_system: ActorSystem) {
-
-    /* used if supplied name and config */
-    def this(name: String, config: Config) = this(ActorSystem(name, ConfigFactory.load(config.withFallback(KnoraService.defaultConfig))))
-
-    /* used if only config is supplied */
-    def this(config: Config) = this(ActorSystem("webapi", ConfigFactory.load(config.withFallback(KnoraService.defaultConfig))))
-
-    /* used if only if name is supplied */
-    def this(name: String) = this(ActorSystem(name, ConfigFactory.load()))
-
-    /* used if nothing is supplied */
-    def this() = this(ActorSystem("webapi", ConfigFactory.load()))
-
-    /**
-      * The applications actor system.
-      */
-    implicit lazy val system = _system
+trait KnoraService {
+    this: Core =>
 
     /**
       * The supervisor actor that receives HTTP requests.
@@ -100,18 +80,22 @@ class KnoraService(_system: ActorSystem) {
     val log = akka.event.Logging(system, this.getClass())
 
     /**
-      * Timeout definition
+      * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
       */
-    implicit val timeout = Timeout(5 seconds)
+    implicit val timeout = Timeout(300 seconds)
 
+    /**
+      * Execution Context (needed for StartupFlags)
+      */
+    implicit val ec: ExecutionContext = system.dispatcher
 
     /**
       * Sends messages to all supervisor actors, and checks if they are all ready
       */
-    def startActorSystem() {
+    def checkActorSystem() {
 
         // TODO: Check if HttpServiceManager is ready
-        log.info(s"HttoServiceManager ready: - ")
+        log.info(s"HttpServiceManager ready: - ")
 
         // TODO: Check if ResponderManager is ready
         log.info(s"ResponderManager ready: - ")

@@ -23,17 +23,19 @@ package org.knora.webapi
 /**
   * Starts [[KnoraService]].
   */
-object Main extends App {
+object Main extends App with LiveCore with KnoraService  {
     //Kamon.start()
 
-    KnoraService.actorSystemCheck
+    /* Check and wait until all actors are running */
+    checkActorSystem
 
     val arglist = args.toList
 
     if (arglist.contains("loadDemoData")) StartupFlags.loadDemoData send true
     if (arglist.contains("allowResetTriplestoreContentOperationOverHTTP")) StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
 
-    KnoraService.startService
+    /* Start the HTTP layer, allowing access */
+    startService
 
-    sys.addShutdownHook(KnoraService.stopService)
+    sys.addShutdownHook(stopService)
 }

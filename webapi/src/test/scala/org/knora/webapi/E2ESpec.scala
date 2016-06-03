@@ -16,25 +16,37 @@
 
 package org.knora.webapi
 
+import akka.actor.ActorSystem
+import akka.util.Timeout
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.client.pipelining._
 import spray.http.{HttpRequest, HttpResponse}
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
+
+trait E2ETestCore extends Core {
+    val config = ConfigFactory.parseString(
+        """
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+
+    implicit val system = ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig))
+}
+
+object E2ESpec {
+    val defaultConfig: Config = ConfigFactory.load()
+}
 
 /**
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class E2ESpec extends Suite with WordSpecLike with Matchers with BeforeAndAfterAll {
+class E2ESpec extends E2ETestCore with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll {
 
-    /* get the actor system Knora is using */
-    implicit val system = KnoraService.system
-    import system.dispatcher
-
-    val settings = Settings(system)
-    val logger = akka.event.Logging(system, this.getClass())
-    val log = logger
+    override val log = akka.event.Logging(system, this.getClass())
 
     val pipe: HttpRequest => Future[HttpResponse] = sendReceive
 
@@ -46,13 +58,14 @@ class E2ESpec extends Suite with WordSpecLike with Matchers with BeforeAndAfterA
         /* Set the startup flags and start the Knora Server */
         log.debug(s"Starting Knora Service")
         StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
-        KnoraService.startService
+        checkActorSystem
+        startService
     }
 
     override def afterAll: Unit = {
         /* Stop the server when everything else has finished */
         log.debug(s"Stopping Knora Service")
-        KnoraService.stopService
+        stopService
     }
 
 }
