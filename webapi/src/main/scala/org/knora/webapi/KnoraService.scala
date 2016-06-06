@@ -39,11 +39,11 @@ import scala.concurrent.{Await, ExecutionContext}
 import scala.language.postfixOps
 
 trait Core {
-    implicit val system: ActorSystem
+    implicit def system: ActorSystem
 }
 
 trait LiveCore extends Core {
-    val system = ActorSystem("webapi")
+    implicit def system = ActorSystem("webapi")
 }
 
 /**

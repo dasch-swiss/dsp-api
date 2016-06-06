@@ -16,6 +16,7 @@
 
 package org.knora.webapi.routing.v1
 
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi.{E2ESpec, StartupFlags}
 import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
 import spray.client.pipelining._
@@ -25,15 +26,22 @@ import spray.httpx.SprayJsonSupport._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+object StoreRouteV1E2ESpec {
+    val config = ConfigFactory.parseString(
+        """
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
+
 /**
   * End-to-End (E2E) test specification for testing the 'v1/store' route.
   *
   * This spec tests the 'v1/store' route.
   */
-class StoreRouteV1E2ESpec extends E2ESpec {
+class StoreRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) {
 
     import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
-
 
     /**
       * The marshaling to Json is done automatically by spray, hence the import ot the 'TriplestoreJsonProtocol'.

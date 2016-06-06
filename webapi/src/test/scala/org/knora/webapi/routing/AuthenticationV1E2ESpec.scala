@@ -26,12 +26,20 @@ import spray.httpx.SprayJsonSupport._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+object AuthenticationV1E2ESpec {
+    val config = ConfigFactory.parseString(
+        """
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
+
 /**
   * End-to-End (E2E) test specification for testing authentication.
   *
   * This spec tests the 'v1/authentication' and 'v1/session' route.
   */
-class AuthenticationV1E2ESpec extends E2ESpec {
+class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
 
     import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
 

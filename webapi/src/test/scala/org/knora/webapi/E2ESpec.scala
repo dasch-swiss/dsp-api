@@ -17,24 +17,12 @@
 package org.knora.webapi
 
 import akka.actor.ActorSystem
-import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.client.pipelining._
 import spray.http.{HttpRequest, HttpResponse}
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
-
-trait E2ETestCore extends Core {
-    val config = ConfigFactory.parseString(
-        """
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-
-    implicit val system = ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig))
-}
 
 object E2ESpec {
     val defaultConfig: Config = ConfigFactory.load()
@@ -44,7 +32,15 @@ object E2ESpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class E2ESpec extends E2ETestCore with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll {
+class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll {
+
+    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
+    def this(config: Config) = this(ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig)))
+    def this(name: String) = this(ActorSystem(name, E2ESpec.defaultConfig))
+    def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
+
+    /* needed by the core trait */
+    implicit def system = _system
 
     override val log = akka.event.Logging(system, this.getClass())
 
