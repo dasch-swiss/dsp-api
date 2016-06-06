@@ -40,7 +40,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
     def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
 
     /* needed by the core trait */
-    implicit def system = _system
+    implicit lazy val system = _system
 
     override val log = akka.event.Logging(system, this.getClass())
 

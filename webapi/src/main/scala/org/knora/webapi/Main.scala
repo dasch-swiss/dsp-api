@@ -21,7 +21,9 @@
 package org.knora.webapi
 
 /**
-  * Starts [[KnoraService]].
+  * Starts Knora by bringing everything into scope by using the cake pattern. The [[LiveCore]] trait provides
+  * an actor system, which is used by methods defined in the [[KnoraService]] trait, which itself provides
+  * three methods: ''checkActorSystem'', ''startService'', and ''stopService''.
   */
 object Main extends App with LiveCore with KnoraService  {
     //Kamon.start()

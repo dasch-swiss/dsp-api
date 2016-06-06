@@ -39,17 +39,21 @@ import scala.concurrent.{Await, ExecutionContext}
 import scala.language.postfixOps
 
 trait Core {
-    implicit def system: ActorSystem
+    implicit val system: ActorSystem
 }
 
 trait LiveCore extends Core {
-    implicit def system = ActorSystem("webapi")
+
+    /**
+      * The applications actor system.
+      */
+    implicit lazy val system = ActorSystem("webapi")
 }
 
 /**
   * Provides methods for starting and stopping Knora from within another application. This is where the actor system
-  * is started along with the three main supervisor actors is started. All further actors are started and supervised
-  * by those three actors.
+  * along with the three main supervisor actors is started. All further actors are started and supervised by those
+  * three actors.
   */
 trait KnoraService {
     this: Core =>
@@ -90,7 +94,7 @@ trait KnoraService {
     implicit val ec: ExecutionContext = system.dispatcher
 
     /**
-      * Sends messages to all supervisor actors, and checks if they are all ready
+      * Sends messages to all supervisor actors in a blocking manner, checking if they are all ready.
       */
     def checkActorSystem() {
 

@@ -14,7 +14,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.routing
+package org.knora.webapi.e2e.v1
 
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
