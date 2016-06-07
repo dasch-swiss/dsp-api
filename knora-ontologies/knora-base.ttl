@@ -303,6 +303,7 @@
 
 :hasFileValue rdf:type owl:ObjectProperty ;
 
+              :objectClassConstraint :FileValue ;
 
               rdfs:label "hat Repräsentation (Datei)"@de ,
                          "has Representation (File)"@en ,
@@ -639,6 +640,35 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#hasStandoffLinkTo
+
+:hasStandoffLinkTo rdf:type owl:ObjectProperty ;
+
+                   rdfs:label "hat Standoff Link zu"@de ,
+                              "has Standoff Link to"@en ,
+                              "a standoff lien vers"@fr ,
+                              "ha standoff link verso"@it ;
+                   
+                   :objectClassConstraint :Resource ;
+
+                   :subjectClassConstraint :Resource ;
+
+                   rdfs:subPropertyOf :hasLinkTo .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue
+
+:hasStandoffLinkToValue rdf:type owl:ObjectProperty ;
+
+                        :objectClassConstraint :LinkValue ;
+
+                        :subjectClassConstraint :Resource ;
+
+                        rdfs:subPropertyOf :hasLinkToValue .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#hasSubListNode
 
 :hasSubListNode rdf:type owl:ObjectProperty ;
@@ -690,8 +720,6 @@
 
                 rdfs:subPropertyOf :hasLinkTo .
 
-
-
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOfValue
 
 :isAnnotationOfValue rdf:type owl:ObjectProperty ;
@@ -701,7 +729,6 @@
                :subjectClassConstraint :Annotation ;
 
                rdfs:subPropertyOf :hasLinkToValue .
-
 
 
 ###  http://www.knora.org/ontology/knora-base#isInGroup
@@ -802,7 +829,7 @@
 
 :previousValue rdf:type owl:ObjectProperty ;
 
-               rdfs:subPropertyOf :hasContent ;
+               rdfs:subPropertyOf :systemProperty ;
 
                rdfs:comment "Points to the previous verson of a value"@en ;
 
@@ -829,117 +856,34 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#hasUriValue
+###  http://www.knora.org/ontology/knora-base#standoffHasLink
 
-:hasUriValue rdf:type owl:ObjectProperty ;
+:standoffHasLink rdf:type owl:ObjectProperty ;
 
-             :objectClassConstraint :UriValue ;
+                 rdfs:subPropertyOf :systemProperty ;
 
-             rdfs:subPropertyOf :hasValue ;
+                 :objectClassConstraint :Resource ;
 
-             rdfs:label "URI"@de ,
-                        "URI"@en ,
-                        "URI"@fr ,
-                        "URI"@it ;
-
-             rdfs:comment "Provides a URI"@en .
+                 :subjectClassConstraint :StandoffLink .
 
 
 
-###  http://www.knora.org/ontology/knora-base#hasStyleName
+###  http://www.knora.org/ontology/knora-base#valueHasStandoff
 
-:hasStyleName rdf:type owl:ObjectProperty ;
+:valueHasStandoff rdf:type owl:ObjectProperty ;
 
-              :subjectClassConstraint :StandoffVisualTag ;
+                  rdfs:subPropertyOf :systemProperty ;
 
-              :objectClassConstraint :TextValue ;
+                  :objectClassConstraint :Standoff ;
 
-              rdfs:subPropertyOf :hasValue ;
-
-              rdfs:label "Formatierung"@de ,
-                         "Text style"@en ,
-                         "Mise en forme"@fr ,
-                         "Formattazione"@it ;
-
-              rdfs:comment "Provides the name of a visual text style"@en .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasDefaultStandoffPerspective
-
-:hasDefaultStandoffPerspective rdf:type owl:ObjectProperty ;
-
-                               rdfs:subPropertyOf :hasContent ;
-
-                               :subjectClassConstraint :TextValue ;
-
-                               :objectClassConstraint :StandoffPerspective .
-
-
-
-###  http://www.knora.org/ontology/knora-base#isPerspectiveOnText
-
-:isPerspectiveOnText rdf:type owl:ObjectProperty ;
-
-                     rdfs:subPropertyOf :hasContent ;
-
-                     :subjectClassConstraint :StandoffPerspective ;
-
-                     :objectClassConstraint :TextValue .
-
-
-
-###  http://www.knora.org/ontology/knora-base#isInPerspective
-
-:isInPerspective rdf:type owl:ObjectProperty ;
-
-                 rdfs:subPropertyOf :hasLinkTo ;
-
-                 :subjectClassConstraint :StandoffTag ;
-
-                 :objectClassConstraint :StandoffPerspective .
-
-
-
-###  http://www.knora.org/ontology/knora-base#isInPerspectiveValue
-
-:isInPerspectiveValue rdf:type owl:ObjectProperty ;
-
-                      rdfs:subPropertyOf :hasLinkToValue ;
-
-                      :subjectClassConstraint :StandoffTag ;
-
-                      :objectClassConstraint :LinkValue .
-
-
-
-###  http://www.knora.org/ontology/knora-base#isTagOnText
-
-:isTagOnText rdf:type owl:ObjectProperty ;
-
-             rdfs:subPropertyOf :hasContent ;
-
-             :subjectClassConstraint :StandoffTag ;
-
-             :objectClassConstraint :TextValue .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasStandoffValue
-
-:hasStandoffValue rdf:type owl:ObjectProperty ;
-
-                  rdfs:subPropertyOf :hasValue ;
-
-                  :subjectClassConstraint :StandoffTag ;
-
-                  :objectClassConstraint :StandoffValue .
+                  :subjectClassConstraint :TextValue .
 
 
 
 ###  http://xmlns.com/foaf/0.1/member
 
 <http://xmlns.com/foaf/0.1/member> rdf:type owl:ObjectProperty .
+
 
 
 
@@ -1387,6 +1331,53 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#standoffHasAttribute
+
+:standoffHasAttribute rdf:type owl:DatatypeProperty ;
+
+                      rdfs:subPropertyOf :systemProperty ;
+
+                      :subjectClassConstraint :Standoff ;
+
+                      :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#standoffHasEnd
+
+:standoffHasEnd rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf :systemProperty ;
+
+                :subjectClassConstraint :Standoff ;
+
+                :objectDatatypeConstraint xsd:integer .
+
+
+
+###  http://www.knora.org/ontology/knora-base#standoffHasHref
+
+:standoffHasHref rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf :systemProperty ;
+
+                 :subjectClassConstraint :StandoffHref ;
+
+                 :objectDatatypeConstraint xsd:anyURI .
+
+
+
+###  http://www.knora.org/ontology/knora-base#standoffHasStart
+
+:standoffHasStart rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :systemProperty ;
+
+                  :subjectClassConstraint :Standoff ;
+
+                  :objectDatatypeConstraint xsd:integer .
+
+
 
 ###  http://www.knora.org/ontology/knora-base#userid
 
@@ -1591,6 +1582,17 @@
                :objectDatatypeConstraint xsd:integer .
 
 
+###  http://www.knora.org/ontology/knora-base#valueHasRefCount
+
+:valueHasRefCount rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :valueHas ;
+
+                  :subjectClassConstraint :LinkValue ;
+
+                  :objectDatatypeConstraint xsd:integer .
+
+
 
 ###  http://www.knora.org/ontology/knora-base#valueHasStartJDC
 
@@ -1632,30 +1634,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#valueHasSearchableString
-
-:valueHasSearchableString rdf:type owl:DatatypeProperty ;
-
-                          rdfs:subPropertyOf :valueHasString ;
-
-                          :subjectClassConstraint :Value ;
-
-                          :objectDatatypeConstraint xsd:string .
-
-
-
-###  http://www.knora.org/ontology/knora-base#valueHasBoolean
-
-:valueHasBoolean rdf:type owl:DatatypeProperty ;
-
-                 rdfs:subPropertyOf :valueHas ;
-
-                 :subjectClassConstraint :BooleanValue ;
-
-                 :objectDatatypeConstraint xsd:boolean .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#valueHasTime
 
 :valueHasTime rdf:type owl:DatatypeProperty ;
@@ -1674,7 +1652,7 @@
 
              rdfs:subPropertyOf :valueHas ;
 
-             :subjectClassConstraint :UriValue ;
+             :subjectClassConstraint :Value ;
 
              :objectDatatypeConstraint xsd:anyURI .
 
@@ -1689,102 +1667,6 @@
          rdfs:comment "The URL of a web site"@en ;
 
          :objectDatatypeConstraint xsd:anyURI .
-
-
-
-###  http://www.knora.org/ontology/knora-base#valueHasUUID
-
-:valueHasUUID rdf:type owl:DatatypeProperty ;
-
-              rdfs:subPropertyOf :hasValue ;
-
-              :subjectClassConstraint :StandoffValue ;
-
-              :objectDatatypeConstraint xsd:string ; 
-
-
-
-###  http://www.knora.org/ontology/knora-base#startHasOffset
-
-:startHasOffset rdf:type owl:DatatypeProperty ;
-
-                rdfs:subPropertyOf :hasValue ;
-
-                :subjectClassConstraint :StandoffValue ;
-
-                :objectDatatypeConstraint xsd:nonNegativeInteger ; 
-
-
-
-###  http://www.knora.org/ontology/knora-base#endHasOffset
-
-:endHasOffset rdf:type owl:DatatypeProperty ;
-
-              rdfs:subPropertyOf :hasValue ;
-
-              :subjectClassConstraint :StandoffValue ;
-
-              :objectDatatypeConstraint xsd:nonNegativeInteger .
-
-
-
-###  http://www.knora.org/ontology/knora-base#startHasIndex
-
-:startHasIndex rdf:type owl:DatatypeProperty ;
-
-               rdfs:subPropertyOf :hasValue ;
-
-               :subjectClassConstraint :StandoffValue ;
-
-               :objectDatatypeConstraint xsd:nonNegativeInteger .
-
-
-
-###  http://www.knora.org/ontology/knora-base#endHasIndex
-
-:endHasIndex rdf:type owl:DatatypeProperty ;
-
-             rdfs:subPropertyOf :hasValue ;
-
-             :subjectClassConstraint :StandoffValue ;
-
-             :objectDatatypeConstraint xsd:nonNegativeInteger .
-
-
-
-###  http://www.knora.org/ontology/knora-base#startHasParentIndex
-
-:startHasParentIndex rdf:type owl:DatatypeProperty ;
-
-                     rdfs:subPropertyOf :hasValue ;
-
-                     :subjectClassConstraint :StandoffValue ;
-
-                     :objectDatatypeConstraint xsd:nonNegativeInteger .
-
-
-
-###  http://www.knora.org/ontology/knora-base#endHasParentIndex
-
-:endHasParentIndex rdf:type owl:DatatypeProperty ;
-
-                   rdfs:subPropertyOf :hasValue ;
-
-                   :subjectClassConstraint :StandoffValue ;
-
-                   :objectDatatypeConstraint xsd:nonNegativeInteger .
-
-
-
-###  http://www.knora.org/ontology/knora-base#isHierarchical
-
-:isHierarchical rdf:type owl:DatatypeProperty ;
-
-                rdfs:subPropertyOf :hasValue ;
-
-                :subjectClassConstraint :StandoffValue ;
-
-                :objectDatatypeConstraint xsd:boolean .
 
 
 
@@ -2166,48 +2048,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffValue
-
-:StandoffValue rdf:type owl:Class ;
-
-               rdfs:subClassOf :Value ,
-                               [ rdf:type owl:Restriction ;
-                                 owl:onProperty :valueHasUuid ;
-                                 owl:cardinality "1"^^xsd:nonNegativeInteger
-                               ] ,
-                               [ rdf:type owl:Restriction ;
-                                 owl:onProperty :startHasOffset ;
-                                 owl:cardinality "1"^^xsd:nonNegativeInteger
-                               ] ,
-                               [ rdf:type owl:Restriction ;
-                                 owl:onProperty :endHasOffset ;
-                                 owl:cardinality "1"^^xsd:nonNegativeInteger
-                               ] ,
-                               [ rdf:type owl:Restriction ;
-                                 owl:onProperty :startHasIndex ;
-                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                               ] ,
-                               [ rdf:type owl:Restriction ;
-                                 owl:onProperty :endHasIndex ;
-                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                               ] ,
-                               [ rdf:type owl:Restriction ;
-                                 owl:onProperty :startHasParentIndex ;
-                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                               ] ,
-                               [ rdf:type owl:Restriction ;
-                                 owl:onProperty :endHasParentIndex ;
-                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                               ] ,
-                               [ rdf:type owl:Restriction ;
-                                 owl:onProperty :isHierarchical ;
-                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                               ] ;
-
-                 rdfs:comment "Represents the character offsets and optional hierarchical positions of a standoff tag"@en .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#LinkObj
 
 :LinkObj rdf:type owl:Class ;
@@ -2469,82 +2309,57 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffPerspective
+###  http://www.knora.org/ontology/knora-base#Standoff
 
-:StandoffPerspective rdf:type owl:Class ;
+:Standoff rdf:type owl:Class ;
 
-                     rdfs:subClassOf :Resource,
-                                     [ rdf:type owl:Restriction ;
-                                       owl:onProperty :isPerspectiveOnText ;
-                                       owl:cardinality "1"^^xsd:nonNegativeInteger
-                                     ] ;
-
-                     rdfs:comment "Represents a standoff perspective on a text"@en .
-
-
-
-###  http://www.knora.org/ontology/knora-base#StandoffTag
-
-:StandoffTag rdf:type owl:Class ;
-
-          rdfs:subClassOf :Resource,
-                          [ rdf:type owl:Restriction ;
-                            owl:onProperty :isTagOnText ;
+          rdfs:subClassOf [ rdf:type owl:Restriction ;
+                            owl:onProperty :standoffHasStart ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :isInPerspective ;
+                            owl:onProperty :standoffHasEnd ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :isInPerspectiveValue ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
-                          ] ,
-                          [ rdf:type owl:Restriction ;
-                            owl:onProperty :hasStandoffValue ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                            owl:onProperty :standoffHasAttribute ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
 
-          rdfs:comment "Represents a standoff tag"@en .
+          rdfs:comment "Represents a standoff markup attribute in a TextValue"@en .
 
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffUriTag
+###  http://www.knora.org/ontology/knora-base#StandoffHref
 
-:StandoffUriTag rdf:type owl:Class ;
+:StandoffHref rdf:type owl:Class ;
 
-                rdfs:subClassOf :StandoffTag ,
-                                [ rdf:type owl:Restriction ;
-                                  owl:onProperty :hasUriValue ;
-                                  owl:cardinality "1"^^xsd:nonNegativeInteger
-                                ] ;
-
-                rdfs:comment "Represents a standoff tag that provides a URI"@en .
+              rdfs:subClassOf :Standoff ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :standoffHasHref ;
+                                owl:cardinality "1"^^xsd:nonNegativeInteger
+                              ] .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffLink
 
-:StandoffLinkTag rdf:type owl:Class ;
+:StandoffLink rdf:type owl:Class ;
 
-                 rdfs:subClassOf :StandoffTag ,
-                                 :LinkObj ;
+              rdfs:subClassOf :Standoff ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :standoffHasLink ;
+                                owl:cardinality "1"^^xsd:nonNegativeInteger
+                              ] .
 
-                 rdfs:comment "Represents a standoff tag that provides a link to a Knora resource"@en .
 
 
+###  http://www.knora.org/ontology/knora-base#StandoffVisualAttribute
 
-###  http://www.knora.org/ontology/knora-base#StandoffVisualTag
+:StandoffVisualAttribute rdf:type owl:Class ;
 
-:StandoffVisualTag rdf:type owl:Class ;
+                         rdfs:subClassOf :Standoff .
 
-                   rdfs:subClassOf :StandoffTag ,
-                                   [ rdf:type owl:Restriction ;
-                                     owl:onProperty :hasStyleName ;
-                                     owl:cardinality "1"^^xsd:nonNegativeInteger
-                                   ] ;
-
-                   rdfs:comment "Represents a standoff tag that provides visual text formatting"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StillImageFileValue
@@ -2552,7 +2367,7 @@
 :StillImageFileValue rdf:type owl:Class ;
 
                      rdfs:subClassOf :FileValue ,
-                                     [ rdf:type owl:Restriction ; d
+                                     [ rdf:type owl:Restriction ;
                                        owl:onProperty :hasComment ;
                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
                                      ] ,
@@ -2627,36 +2442,14 @@
 
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasString ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                             owl:onProperty :valueHasStandoff ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
-                             owl:onProperty :hasDefaultStandoffPersepctive ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                             owl:onProperty :valueHasString ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
-
-
-###  http://www.knora.org/ontology/knora-base#BooleanValue
-
-:BooleanValue rdf:type owl:Class ;
-
-              rdfs:subClassOf :Value ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :valueHasBoolean ;
-                                owl:cardinality "1"^^xsd:nonNegativeInteger
-                              ] .
-
-
-###  http://www.knora.org/ontology/knora-base#UriValue
-
-:UriValue rdf:type owl:Class ;
-
-          rdfs:subClassOf :Value ,
-                          [ rdf:type owl:Restriction ;
-                            owl:onProperty :valueHasURI ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
-                          ] .
 
 
 ###  http://www.knora.org/ontology/knora-base#TimeValue
