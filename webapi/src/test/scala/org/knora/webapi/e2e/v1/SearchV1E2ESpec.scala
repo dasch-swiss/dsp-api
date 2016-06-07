@@ -70,7 +70,7 @@ class SearchV1E2ESpec extends E2ESpec(SearchV1E2ESpec.config) {
         }
         "allow (1) extended search" in {
             /* http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http://www.knora.org/ontology/incunabula#book&property_id=http://www.knora.org/ontology/incunabula#title&compop=MATCH&searchval=Zeitglöcklein */
-            val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=MATCH&searchval=Zeitglöcklein")), 5 seconds)
+            val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=MATCH&searchval=Zeitgl%C3%B6cklein%20")), 5 seconds)
             log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)
         }

@@ -43,7 +43,7 @@ object SharedTestData {
             lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects = Vector.empty[IRI],
+        projects = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images"),
         isGroupAdminFor = Vector.empty[IRI],
         isProjectAdminFor = Vector.empty[IRI],
         sessionId = None

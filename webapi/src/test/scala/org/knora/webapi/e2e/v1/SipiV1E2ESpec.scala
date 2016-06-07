@@ -34,7 +34,7 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.{R2RSpec, FileWriteException, LiveActorMaker}
+import org.knora.webapi.{FileWriteException, LiveActorMaker, R2RSpec, SharedTestData}
 import spray.http._
 
 import scala.concurrent.Await

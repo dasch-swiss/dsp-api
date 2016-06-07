@@ -31,6 +31,9 @@
                                    knora-base:isActiveUser "true"^^xsd:boolean ;
 
                                    knora-base:isSystemAdmin "true"^^xsd:boolean ;
+                                   
+                                   knora-base:isInProject <http://data.knora.org/projects/77275339> ,
+                                                          <http://data.knora.org/projects/images> ;
 
                                    knora-base:preferredLanguage "de" .
 
