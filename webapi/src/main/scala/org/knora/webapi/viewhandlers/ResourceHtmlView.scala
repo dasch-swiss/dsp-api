@@ -25,10 +25,10 @@ import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.OntologyConstants
-import org.knora.webapi.messages.v1respondermessages.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
-import org.knora.webapi.messages.v1respondermessages.resourcemessages.ResourceFullResponseV1
-import org.knora.webapi.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
+import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullResponseV1
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
@@ -44,11 +44,12 @@ object ResourceHtmlView {
     val log = Logger(LoggerFactory.getLogger("org.knora.webapi.viewhandlers.ResourceHtmlView"))
 
     def propertiesHtmlView(response: ResourceFullResponseV1, responderManager: ActorSelection): String = {
+
         val properties = response.props.get.properties
 
         val propMap = properties.foldLeft(Map.empty[String, String]) {
             case (acc, propertyV1) =>
-                log.debug("==>>" + propertyV1.toString)
+                log.debug(s"${propertyV1.toString}")
 
                 val label = propertyV1.label match {
                     case Some(value) => value
@@ -79,7 +80,10 @@ object ResourceHtmlView {
         }
 
         val imgpath = properties.find(_.locations.nonEmpty).map(_.locations.head.path).getOrElse("")
-        val content: play.twirl.api.Html = views.html.resource.properties(propMap.toMap, imgpath)
+        log.debug(s"non-empty locations: ${properties.find(_.locations.nonEmpty)}")
+        log.debug(s"imgpath: $imgpath , nonEmpty: ${imgpath.nonEmpty}")
+
+        val content: play.twirl.api.Html = views.html.resource.properties(propMap, imgpath)
         content.toString
     }
 

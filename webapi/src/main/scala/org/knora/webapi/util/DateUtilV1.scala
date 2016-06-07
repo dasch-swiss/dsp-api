@@ -24,7 +24,7 @@ import java.util.{Calendar, Date, GregorianCalendar}
 
 import jodd.datetime.JDateTime
 import org.knora.webapi.BadRequestException
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{DateValueV1, JulianDayCountValueV1, KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, JulianDayCountValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 
 /**
   * Utility functions for converting dates.

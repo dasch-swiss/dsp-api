@@ -221,6 +221,18 @@ object InconsistentTriplestoreDataException {
 }
 
 /**
+  * Indicates that the API server generated invalid JSON in an API response.
+  * @param message a description of the error.
+  * @param cause the original exception representing the cause of the error, if any.
+  */
+case class InvalidApiJsonException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
+
+object InvalidApiJsonException {
+    def apply(message: String, e: Throwable, log: LoggingAdapter): InvalidApiJsonException =
+        InvalidApiJsonException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+}
+
+/**
   * Indicates that an application lock could not be acquired.
   * @param message a description of the error.
   */

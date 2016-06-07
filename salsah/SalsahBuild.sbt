@@ -54,5 +54,14 @@ lazy val salsahLibs = Seq(
     // testing
     "com.typesafe.akka" %% "akka-http-testkit-experimental" % "2.0-M2" % "test",
     "org.scalatest" %% "scalatest" % "2.2.5" % "test",
-    "org.seleniumhq.selenium" % "selenium-java" % "2.35.0" % "test"
+    "org.seleniumhq.selenium" % "selenium-java" % "2.35.0" % "test",
+    "io.spray" %% "spray-http" % "1.3.3",
+    "io.spray" %% "spray-httpx" % "1.3.3",
+    "io.spray" %% "spray-util" % "1.3.3",
+    "io.spray" %% "spray-io" % "1.3.3",
+    "io.spray" %% "spray-can" % "1.3.3",
+    "io.spray" %% "spray-caching" % "1.3.3",
+    "io.spray" %% "spray-routing" % "1.3.3",
+    "io.spray" %% "spray-json" % "1.3.2",
+    "io.spray" %% "spray-client" % "1.3.2"
 )

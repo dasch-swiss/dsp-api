@@ -20,7 +20,7 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.messages.v1respondermessages.valuemessages.{DateValueV1, JulianDayCountValueV1, KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, JulianDayCountValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.scalatest._
 
 /**

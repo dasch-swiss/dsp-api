@@ -24,7 +24,7 @@ import akka.actor.ActorDSL._
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.v1respondermessages.usermessages._
+import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.routing.Authenticator
 
 object CacheUtilSpec {

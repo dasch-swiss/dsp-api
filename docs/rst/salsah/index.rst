@@ -28,4 +28,4 @@ SALSAH - System for Annotation and Linkage of Sources in Arts and Humanities
    :maxdepth: 2
 
    development/index
-
+   design-documentation/index

@@ -25,7 +25,7 @@ import akka.event.LoggingAdapter
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.{ApiStatusCodesV1, KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.{ApiStatusCodesV1, KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.MessageUtil
 import spray.http._
 import spray.json.{JsNumber, JsObject, JsString, JsValue}

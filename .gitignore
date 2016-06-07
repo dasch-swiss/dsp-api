@@ -1,6 +1,6 @@
 /.project
-*/.idea
-target/
+**/.idea
+
 *.iml
 /logs/
 /bin/
@@ -13,9 +13,8 @@ native
 **/.DS_Store
 docs/env
 docs/_build
-webapi/_TMP
-webapi/logs
-webapi/src/main/resources/query-log/
+project/
+target/
 *.aux
 *.bbl
 *.bcf
@@ -27,4 +26,3 @@ webapi/src/main/resources/query-log/
 *.tdo
 *.toc
 .sbtrc
-salsah/lib/chromedriver

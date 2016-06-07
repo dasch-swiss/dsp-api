@@ -23,12 +23,12 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1respondermessages.ontologymessages._
-import org.knora.webapi.messages.v1respondermessages.resourcemessages._
-import org.knora.webapi.messages.v1respondermessages.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
-import org.knora.webapi.messages.v1respondermessages.triplestoremessages._
-import org.knora.webapi.messages.v1respondermessages.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1respondermessages.valuemessages._
+import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
+import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
+import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v1.responder.resourcemessages._
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.ResourceLocker
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.ActorUtil._

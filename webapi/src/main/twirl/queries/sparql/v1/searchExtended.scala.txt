@@ -20,7 +20,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.twirl.SearchCriterion
-@import org.knora.webapi.messages.v1respondermessages.searchmessages.SearchComparisonOperatorV1
+@import org.knora.webapi.messages.v1.responder.searchmessages.SearchComparisonOperatorV1
 @import org.knora.webapi.SparqlGenerationException
 
 @**
