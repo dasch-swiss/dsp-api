@@ -59,8 +59,12 @@ object OntologyConstants {
         )
     }
 
+
     object KnoraBase {
-        val Resource = "http://www.knora.org/ontology/knora-base#Resource"
+
+        val KNORA_BASE_PREFIX = "http://www.knora.org/ontology/knora-base#"
+
+        val Resource = "knora-base#Resource"
 
         val ObjectClassConstraint = "http://www.knora.org/ontology/knora-base#objectClassConstraint"
 
@@ -100,9 +104,6 @@ object OntologyConstants {
         val IsPreview = "http://www.knora.org/ontology/knora-base#isPreview"
         val ResourceIcon = "http://www.knora.org/ontology/knora-base#resourceIcon"
         val PreferredLanguage = "http://www.knora.org/ontology/knora-base#preferredLanguage"
-        val Username = "http://www.knora.org/ontology/knora-base#userid"
-        val Email = "http://www.knora.org/ontology/knora-base#email"
-        val Password = "http://www.knora.org/ontology/knora-base#password"
 
         val InternalMimeType = "http://www.knora.org/ontology/knora-base#internalMimeType"
         val InternalFilename = "http://www.knora.org/ontology/knora-base#internalFilename"
@@ -125,15 +126,16 @@ object OntologyConstants {
         val FileValue = "http://www.knora.org/ontology/knora-base#FileValue"
         val LinkValue = "http://www.knora.org/ontology/knora-base#LinkValue"
 
-        val KnoraAdminPrefix = "http://www.knora.org/ontology/knora-base#"
-        val IsInGroup = "http://www.knora.org/ontology/knora-base#isInGroup"
-        val IsInProject = "http://www.knora.org/ontology/knora-base#isInProject"
         val IsDeleted = "http://www.knora.org/ontology/knora-base#isDeleted"
 
+        /* Built-In Groups */
         val UnknownUser = "http://www.knora.org/ontology/knora-base#UnknownUser"
         val KnownUser = "http://www.knora.org/ontology/knora-base#KnownUser"
         val ProjectMember = "http://www.knora.org/ontology/knora-base#ProjectMember"
         val Owner = "http://www.knora.org/ontology/knora-base#Owner"
+        val SystemAdmin = "http://www.knora.org/ontology/knora-base#SystemAdmin"
+        val ProjectAdmin = "http://www.knora/ontology/knora-base#ProjectAdmin"
+        val GroupAdmin = "http://www.knora.org/ontology/knora-base#GroupAdmin"
 
         val HasRestrictedViewPermission = "http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission"
         val HasViewPermission = "http://www.knora.org/ontology/knora-base#hasViewPermission"
@@ -167,14 +169,46 @@ object OntologyConstants {
         val AttachedToUser = "http://www.knora.org/ontology/knora-base#attachedToUser"
         val AttachedToProject = "http://www.knora.org/ontology/knora-base#attachedToProject"
 
-        val UsersActiveProject = KnoraAdminPrefix + "currentproject"
+        val Description = "http://www.knora.org/ontology/knora-base#description"
 
-        val ProjectShortname = KnoraAdminPrefix + "projectShortname"
-        val ProjectLongname = KnoraAdminPrefix + "projectLongname"
-        val ProjectDescription = KnoraAdminPrefix + "projectDescription"
-        val ProjectKeyword = KnoraAdminPrefix + "projectKeyword"
-        val ProjectBasepath = KnoraAdminPrefix + "projectBasepath"
-        val ProjectLogo = KnoraAdminPrefix + "projectLogo"
+
+        /* User */
+        val User = KNORA_BASE_PREFIX + "User"
+        val Username = KNORA_BASE_PREFIX + "userid"
+        val Email = KNORA_BASE_PREFIX + "email"
+        val Password = KNORA_BASE_PREFIX + "password"
+        val UsersActiveProject = KNORA_BASE_PREFIX + "currentproject"
+        val IsActiveUser = KNORA_BASE_PREFIX + "isActiveUser"
+        val IsSystemAdmin = KNORA_BASE_PREFIX + "isSystemAdmin"
+        val IsInProject = KNORA_BASE_PREFIX + "isInProject"
+        val IsProjectAdmin = KNORA_BASE_PREFIX + "isProjectAdmin"
+        val IsInGroup = KNORA_BASE_PREFIX + "isInGroup"
+        val IsGroupAdmin = KNORA_BASE_PREFIX + "isGroupAdmin"
+
+        /* Project */
+        val Project = KNORA_BASE_PREFIX + "Project"
+        val ProjectShortname = KNORA_BASE_PREFIX + "projectShortname"
+        val ProjectLongname = KNORA_BASE_PREFIX + "projectLongname"
+        val ProjectDescription = KNORA_BASE_PREFIX + "projectDescription"
+        val ProjectKeyword = KNORA_BASE_PREFIX + "projectKeyword"
+        val ProjectBasepath = KNORA_BASE_PREFIX + "projectBasepath"
+        val ProjectLogo = KNORA_BASE_PREFIX + "projectLogo"
+        val ProjectOntolgyGraph = KNORA_BASE_PREFIX + "projectOntologyGraph"
+        val ProjectDataGraph = KNORA_BASE_PREFIX + "projectDataGraph"
+        val IsActiveProject = KNORA_BASE_PREFIX + "isActiveProject"
+        val HasSelfAssignmentEnabled = KNORA_BASE_PREFIX + "hasSelfAssignmentEnabled"
+        val HasProjectAdmin = KNORA_BASE_PREFIX + "hasProjectAdmin"
+
+        /* Group */
+        val Group = KNORA_BASE_PREFIX + "Group"
+        val GroupName = KNORA_BASE_PREFIX + "groupName"
+        val GroupDescription = KNORA_BASE_PREFIX + "groupDescription"
+        val IsActiveGroup = KNORA_BASE_PREFIX + "isActiveGroup"
+        val HasGroupAdmin = KNORA_BASE_PREFIX + "hasGroupAdmin"
+
+        /* Institution */
+        val Institution = KNORA_BASE_PREFIX + "Institution"
+
     }
 
     object SalsahGui {
@@ -205,6 +239,7 @@ object OntologyConstants {
     object Foaf {
         val GivenName = "http://xmlns.com/foaf/0.1/givenName"
         val FamilyName = "http://xmlns.com/foaf/0.1/familyName"
+        val Name = "http://xmlns.com/foaf/0.1/name"
     }
 
 }

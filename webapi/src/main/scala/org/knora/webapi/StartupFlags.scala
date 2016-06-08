@@ -16,13 +16,23 @@
 
 package org.knora.webapi
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import akka.agent.Agent
 
+//TODO: Use the Knora Execution Context
+import scala.concurrent.ExecutionContext.Implicits.global
+
 /**
-  * Holds flags that are passed to the 'webapi' server at startup
+  * Holds flags that are passed to the 'webapi' server at startup.
   */
 object StartupFlags {
+
+    /**
+      * Startup Flag Value: Reset Triplestore Content Operation Over HTTP
+      */
     val allowResetTriplestoreContentOperationOverHTTP = Agent(false)
+
+    /**
+      * Startup Flag Value: Load Demo Data
+      */
     val loadDemoData = Agent(false)
 }

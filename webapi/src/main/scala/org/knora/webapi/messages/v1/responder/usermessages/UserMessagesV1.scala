@@ -20,12 +20,55 @@
 
 package org.knora.webapi.messages.v1.responder.usermessages
 
+import java.util.UUID
+
+import org.knora.webapi
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.mindrot.jbcrypt.BCrypt
+import spray.httpx.SprayJsonSupport
 import spray.json._
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// API requests
+
+/**
+  * Represents an API request payload that asks the Knora API server to create a new user.
+  *
+  * @param username      the username of the user to be created.
+  * @param givenName     the given name of the user to be created.
+  * @param familyName    the family name of the user to be created
+  * @param email         the email of the user to be created.
+  * @param password      the password of the user to be created.
+  * @param isActiveUser  the status of the user to be created.
+  * @param isSystemAdmin the system admin status of the user to be created.
+  * @param lang          the default language of the user to be created.
+  */
+case class CreateUserApiRequestV1(username: String,
+                                  givenName: String,
+                                  familyName: String,
+                                  email: String,
+                                  password: String,
+                                  isActiveUser: Boolean,
+                                  isSystemAdmin: Boolean,
+                                  lang: String) {
+
+    def toJsValue = UserV1JsonProtocol.createUserApiRequestV1Format.write(this)
+
+}
+
+/**
+  * Represents an API request payload that asks the Knora API server to update one property of an existing user.
+  *
+  * @param propertyIri  the property of the user to be updated.
+  * @param newValue     the new value for the property of the user to be updated.
+  */
+case class UpdateUserApiRequestV1(propertyIri: String,
+                                  newValue: String) {
+
+    def toJsValue = UserV1JsonProtocol.updateUserApiRequestV1Format.write(this)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -37,59 +80,177 @@ sealed trait UsersResponderRequestV1 extends KnoraRequestV1
 
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
+  *
   * @param userIri the IRI of the user to be queried.
+  * @param clean   a flag denoting if sensitive information (token, password) should be stripped
   */
-case class UserProfileGetRequestV1(userIri: IRI) extends UsersResponderRequestV1
+case class UserProfileByIRIGetRequestV1(userIri: IRI,
+                                        clean: Boolean = false) extends UsersResponderRequestV1
 
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
+  *
   * @param username the username of the user to be queried.
+  * @param clean    a flag denoting if sensitive information (token, password) should be stripped.
   */
-case class UserProfileByUsernameGetRequestV1(username: String) extends UsersResponderRequestV1
+case class UserProfileByUsernameGetRequestV1(username: String,
+                                             clean: Boolean = false) extends UsersResponderRequestV1
 
 
 /**
-  * Represents a user's profile.
-  * @param userData basic information about the user.
-  * @param groups the groups that the user belongs to.
-  * @param projects the projects that the user belongs to.
+  * Requests the creation of a new user.
+  *
+  * @param newUserData  the [[NewUserDataV1]] information for creating the new user.
+  * @param userProfile  the user profile of the user creating the new user.
+  * @param apiRequestID the ID of the API request.
   */
-case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects: Seq[IRI] = Nil) {
+case class UserCreateRequestV1(newUserData: NewUserDataV1,
+                               userProfile: UserProfileV1,
+                               apiRequestID: UUID) extends UsersResponderRequestV1
+
+/**
+  * Request updating of an existing user.
+  *
+  * @param userIri the IRI of the user to be updated.
+  * @param propertyIri the IRI of the property to be updated.
+  * @param newValue the new value for the property.
+  * @param userProfile the user profile of the user requesting the update.
+  * @param apiRequestID the ID of the API request.
+  */
+case class UserUpdateRequestV1(userIri: webapi.IRI,
+                               propertyIri: webapi.IRI,
+                               newValue: Any,
+                               userProfile: UserProfileV1,
+                               apiRequestID: UUID) extends UsersResponderRequestV1
+
+/**
+  * Describes the answer to an user creating/modifying operation.
+  *
+  * @param userProfile the new user profile of the created/modified user.
+  * @param userData    information about the user that made the request.
+  * @param message     a message describing what went wrong if operation was only partially successful.
+  */
+case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDataV1, message: Option[String] = None) extends KnoraResponseV1 {
+    def toJsValue = UserV1JsonProtocol.userCreateResponseV1Format.write(this)
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Components of messages
+
+/**
+  * Represents a user's profile.
+  *
+  * @param userData basic information about the user.
+  * @param groups   the groups that the user belongs to.
+  * @param projects the projects that the user belongs to.
+  * @param isGroupAdminFor the groups for which the user has administrative privileges.
+  * @param isProjectAdminFor the projects for which the user has administrative privileges.
+  * @param sessionId the sessionId,.
+  */
+case class UserProfileV1(userData: UserDataV1,
+                         groups: Seq[IRI] = Nil,
+                         projects: Seq[IRI] = Nil,
+                         isGroupAdminFor: Seq[IRI] = Nil,
+                         isProjectAdminFor: Seq[IRI] = Nil,
+                         sessionId: Option[String] = None) {
+
+    /**
+      * Check password using either SHA-1 or BCrypt. The BCrypt password always starts with '$2a$'
+      *
+      * @param password the password to check.
+      * @return true if password matches and false if password doesn't match.
+      */
     def passwordMatch(password: String): Boolean = {
-        val md = java.security.MessageDigest.getInstance("SHA-1")
-        userData.password.exists { hp =>
-            md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hp)
+        userData.hashedpassword.exists {
+            hashedpassword => hashedpassword match {
+                case hp if hp.startsWith("$2a$") => {
+                    //println(s"password: $password, hashedpassword: $hashedpassword")
+                    import org.mindrot.jbcrypt.BCrypt
+                    BCrypt.checkpw(password, hp)
+                }
+                case hp => {
+                    val md = java.security.MessageDigest.getInstance("SHA-1")
+                    md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hp)
+                }
+            }
         }
     }
 
-    def passwordMatchBCrypt(password: String): Boolean = userData.password.exists(hp => BCrypt.checkpw(password, hp))
+    /**
+      * Check password hashed using SHA-1.
+      *
+      * @param password the password to check.
+      * @return true if password matches and false if password doesn't match.
+      */
+    private def passwordMatchSha1(password: String): Boolean = {
+        val md = java.security.MessageDigest.getInstance("SHA-1")
+        userData.hashedpassword.exists { hashedPassword =>
+            md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hashedPassword)
+        }
+    }
+
+    /**
+      * Check password hashed using BCrypt.
+      *
+      * @param password the password to check
+      * @return true if password matches and false if password doesn't match.
+      */
+    private def passwordMatchBCrypt(password: String): Boolean = {
+        import org.mindrot.jbcrypt.BCrypt
+        userData.hashedpassword.exists {
+            hashedPassword => BCrypt.checkpw(password, hashedPassword)
+        }
+    }
 
     /**
       * Creating a [[UserProfileV1]] with sensitive information stripped.
+      *
       * @return a [[UserProfileV1]]
       */
     def getCleanUserProfileV1: UserProfileV1 = {
 
         val olduserdata = userData
         val newuserdata = UserDataV1(
-            olduserdata.lang,
-            olduserdata.user_id,
-            None, // remove token
-            olduserdata.username,
-            olduserdata.firstname,
-            olduserdata.lastname,
-            olduserdata.email,
-            None, // remove password
-            olduserdata.activeProject,
-            olduserdata.projects,
-            olduserdata.projects_info
+            user_id = olduserdata.user_id,
+            username = olduserdata.username,
+            firstname = olduserdata.firstname,
+            lastname = olduserdata.lastname,
+            email = olduserdata.email,
+            hashedpassword = None, // remove hashed password
+            token = None, // remove token
+            isActiveUser = olduserdata.isActiveUser,
+            isSystemAdmin = olduserdata.isSystemAdmin,
+            lang = olduserdata.lang
         )
 
-        UserProfileV1(newuserdata, groups, projects)
+        UserProfileV1(
+            userData = newuserdata,
+            groups = groups,
+            projects = projects,
+            isGroupAdminFor = isGroupAdminFor,
+            isProjectAdminFor = isProjectAdminFor,
+            sessionId = None // remove session id
+        )
+    }
+
+    def getDigest: String = {
+        val md = java.security.MessageDigest.getInstance("SHA-1")
+        val time = System.currentTimeMillis().toString
+        val value = (time + userData.toString)getBytes("UTF-8")
+        md.digest(value).map("%02x".format(_)).mkString
+    }
+
+    def setSessionId(sessionId: String): UserProfileV1 = {
+        UserProfileV1(
+            userData = userData,
+            groups = groups,
+            projects = projects,
+            isGroupAdminFor = isGroupAdminFor,
+            isProjectAdminFor = isProjectAdminFor,
+            sessionId = Some(sessionId)
+        )
     }
 }
-
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -97,41 +258,80 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
 
 /**
   * Represents basic information about a user.
-  * @param lang The ISO 639-1 code of the user's preferred language.
-  * @param user_id The user's IRI.
-  * @param token TODO: document this
-  * @param username The user's username.
-  * @param firstname The user's given name.
-  * @param lastname The user's surname.
-  * @param email The user's email address.
-  * @param password The user's hashed password.
-  * @param activeProject
-  * @param projects
-  * @param projects_info
+  *
+  * @param user_id        the user's IRI.
+  * @param username       the user's username.
+  * @param firstname      the user's given name.
+  * @param lastname       the user's surname.
+  * @param email          the user's email address.
+  * @param hashedpassword the user's hashed password.
+  * @param token          the user's API token used as credentials.
+  * @param isActiveUser   the user's status.
+  * @param isSystemAdmin  the user's system admin status.
+  * @param lang           the ISO 639-1 code of the user's preferred language.
   */
-case class UserDataV1(lang: String,
-                      user_id: Option[IRI] = None,
-                      token: Option[String] = None,
+case class UserDataV1(user_id: Option[IRI] = None,
                       username: Option[String] = None,
                       firstname: Option[String] = None,
                       lastname: Option[String] = None,
                       email: Option[String] = None,
-                      password: Option[String] = None,
-                      activeProject: Option[IRI] = None,
-                      projects: Option[Seq[IRI]] = None, // TODO: we do not need an option here as the list could simply be empty.
-                      projects_info: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1])
+                      hashedpassword: Option[String] = None,
+                      token: Option[String] = None,
+                      isActiveUser: Option[Boolean] = None,
+                      isSystemAdmin: Option[Boolean] = None,
+                      lang: String)
 
+
+/**
+  * Represents basic information about the user which needs to be supplied during user creation.
+  *
+  * @param username   the new user's username. Needs to be unique on the server.
+  * @param givenName  the new user's given name.
+  * @param familyName the new user's family name.
+  * @param email      the new users's email address. Needs to be unique on the server.
+  * @param password   the new user's password in clear text.
+  * @param lang       the ISO 639-1 code of the new user's preferred language.
+  */
+case class NewUserDataV1(username: String,
+                         givenName: String,
+                         familyName: String,
+                         email: String,
+                         password: String,
+                         isSystemAdmin: Boolean,
+                         lang: String)
+
+/**
+  * Represents information about the user that need to be updated.
+  *
+  * @param username the new username of the user to be updated.
+  * @param givenName the new given name of the user to be updated.
+  * @param familyName the new family name of the user to be updated.
+  * @param email the new email address of the user to be updated.
+  * @param password the new password of the user to be updated.
+  * @param isActiveUser the new status of the user to be updated.
+  * @param isSystemAdmin the new system admin status of the user to be
+  * @param lang the new default language of the user to be updated.
+  */
+case class UpdatedUserDataV1(username: Option[String] = None,
+                             givenName: Option[String] = None,
+                             familyName: Option[String] = None,
+                             email: Option[String] = None,
+                             password: Option[String] = None,
+                             isActiveUser: Option[Boolean] = None,
+                             isSystemAdmin: Option[Boolean] = None,
+                             lang: Option[String] = None)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
 /**
-  * A spray-json protocol for formatting [[UserDataV1]] objects as JSON.
+  * A spray-json protocol for formatting objects as JSON.
   */
+object UserV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
-
-object UserDataV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
-
-    import ProjectV1JsonProtocol.projectInfoV1Format
-
-    implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat11(UserDataV1)
+    implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat10(UserDataV1)
+    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
+    implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat7(NewUserDataV1)
+    implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat8(CreateUserApiRequestV1)
+    implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat2(UpdateUserApiRequestV1)
+    implicit val userCreateResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat3(UserOperationResponseV1)
 }

@@ -56,7 +56,8 @@ class HierarchicalListsResponderV1Spec extends CoreSpec() with ImplicitSender {
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/dokubib-onto.ttl", name = "http://www.knora.org/ontology/dokubib"),
-        RdfDataObject(path = "_test_data/responders.v1.HierarchicalListsResponderV1Spec/dokubib-data.ttl", name = "http://www.knora.org/data/dokubib")
+        RdfDataObject(path = "_test_data/responders.v1.HierarchicalListsResponderV1Spec/dokubib-data.ttl", name = "http://www.knora.org/data/dokubib"),
+        RdfDataObject(path = "_test_data/all_data/admin-data.ttl", name = "http://www.knora.org/data/admin")
     )
 
     // A test UserDataV1.

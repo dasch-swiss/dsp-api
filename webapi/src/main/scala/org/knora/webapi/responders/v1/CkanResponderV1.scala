@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileV1, UserDataV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 
@@ -264,7 +264,10 @@ class CkanResponderV1 extends ResponderV1 {
     private def getIncunabulaBooksWithPagesIRIs(projectIri: webapi.IRI, limit: Option[Int]): Future[Map[webapi.IRI, Seq[webapi.IRI]]] = {
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.ckanIncunabula(settings.triplestoreType, projectIri, limit).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.ckanIncunabula(
+                settings.triplestoreType,
+                projectIri, limit
+            ).toString())
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             responseRows: Seq[VariableResultsRow] = response.results.bindings
 
@@ -449,7 +452,7 @@ class CkanResponderV1 extends ResponderV1 {
     private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorSelection): String = {
 
 
-        val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, UserProfileV1(UserDataV1("en")))
+        val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, UserProfileV1(UserDataV1(lang = "en")))
         val nodePath = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
 
         val labels = nodePath.nodelist map {

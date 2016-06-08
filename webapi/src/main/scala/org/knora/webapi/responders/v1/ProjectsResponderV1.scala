@@ -77,7 +77,9 @@ class ProjectsResponderV1 extends ResponderV1 {
 
         for {
         // group project result rows by their IRI
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjects(triplestore = settings.triplestoreType).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.getProjects(
+                triplestore = settings.triplestoreType
+            ).toString())
             projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
 
@@ -110,58 +112,6 @@ class ProjectsResponderV1 extends ResponderV1 {
                 case None => None
             }
         )
-    }
-
-    /**
-      * Turns SPARQL result rows into a [[ProjectInfoV1]].
-      *
-      * @param projectResponse results from the SPARQL query representing information about the project.
-      * @param projectIri the Iri of the project the querid information belong to.
-      * @param requestType type request: either short or full.
-      * @param userProfile the profile of user that is making the request.
-      * @return a [[ProjectInfoV1]] representing information about project.
-      */
-    private def createProjectInfoV1FromProjectResponse(projectResponse: Seq[VariableResultsRow], projectIri: IRI, requestType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): ProjectInfoV1 = {
-
-        if (projectResponse.nonEmpty) {
-
-            val projectProperties = projectResponse.foldLeft(Map.empty[IRI, String]) {
-                case (acc, row: VariableResultsRow) =>
-                    acc + (row.rowMap("p") -> row.rowMap("o"))
-            }
-
-            val rightsInProject = userProfile match {
-                case Some(profile) => getUserPermissionV1ForProject(projectIri = projectIri, propertiesForProject = projectProperties, profile)
-                case None => None
-            }
-
-            requestType match {
-                case ProjectInfoType.FULL =>
-                    ProjectInfoV1(
-                        id = projectIri,
-                        longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
-                        shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, ""),
-                        logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
-                        description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
-                        keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeyword),
-                        basepath = projectProperties.get(OntologyConstants.KnoraBase.ProjectBasepath),
-                        rights = rightsInProject
-                    )
-                case ProjectInfoType.SHORT | _ =>
-                    ProjectInfoV1(
-                        id = projectIri,
-                        longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
-                        shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, ""),
-                        logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
-                        rights = rightsInProject
-                    )
-            }
-        } else {
-            // no information was found for the given project Iri
-            throw NotFoundException(s"For the given project Iri $projectIri no information was found")
-
-        }
-
     }
 
     /**
@@ -223,5 +173,57 @@ class ProjectsResponderV1 extends ResponderV1 {
                 case None => None
             }
         )
+    }
+
+    /**
+      * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
+      *
+      * @param projectResponse results from the SPARQL query representing information about the project.
+      * @param projectIri the Iri of the project the querid information belong to.
+      * @param requestType type request: either short or full.
+      * @param userProfile the profile of user that is making the request.
+      * @return a [[ProjectInfoV1]] representing information about project.
+      */
+    private def createProjectInfoV1FromProjectResponse(projectResponse: Seq[VariableResultsRow], projectIri: IRI, requestType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): ProjectInfoV1 = {
+
+        if (projectResponse.nonEmpty) {
+
+            val projectProperties = projectResponse.foldLeft(Map.empty[IRI, String]) {
+                case (acc, row: VariableResultsRow) =>
+                    acc + (row.rowMap("p") -> row.rowMap("o"))
+            }
+
+            val rightsInProject = userProfile match {
+                case Some(profile) => getUserPermissionV1ForProject(projectIri = projectIri, propertiesForProject = projectProperties, profile)
+                case None => None
+            }
+
+            requestType match {
+                case ProjectInfoType.FULL =>
+                    ProjectInfoV1(
+                        id = projectIri,
+                        longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
+                        shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, ""),
+                        logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
+                        description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
+                        keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeyword),
+                        basepath = projectProperties.get(OntologyConstants.KnoraBase.ProjectBasepath),
+                        rights = rightsInProject
+                    )
+                case ProjectInfoType.SHORT | _ =>
+                    ProjectInfoV1(
+                        id = projectIri,
+                        longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
+                        shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, ""),
+                        logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
+                        rights = rightsInProject
+                    )
+            }
+        } else {
+            // no information was found for the given project Iri
+            throw NotFoundException(s"For the given project Iri $projectIri no information was found")
+
+        }
+
     }
 }

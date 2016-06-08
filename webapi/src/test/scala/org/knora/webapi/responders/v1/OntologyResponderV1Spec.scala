@@ -76,7 +76,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula")
+        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/admin-data.ttl", name = "http://www.knora.org/data/admin")
     )
 
     // The default timeout for receiving reply messages from actors.
@@ -84,7 +85,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val page = ResourceTypeResponseV1(
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
             firstname = Some("User"),
@@ -484,7 +485,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val linkObject = ResourceTypeResponseV1(
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("test"),
             firstname = Some("User"),
@@ -582,7 +583,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val resourceTypesForNamedGraphIncunabula = ResourceTypesForNamedGraphResponseV1(
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("test"),
             firstname = Some("User"),
@@ -745,7 +746,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 false)
         ),
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("test"),
             firstname = Some("User"),
@@ -989,7 +990,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 Some("cols=60;wrap=soft;rows=3"),
                 Some("textarea"))),
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("test"),
             firstname = Some("User"),

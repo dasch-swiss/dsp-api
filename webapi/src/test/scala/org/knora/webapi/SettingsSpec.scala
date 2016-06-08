@@ -81,6 +81,10 @@ object SettingsSpec {
                          path = "_test_data/1_export/dokubib-data.ttl"
                          name = "http://www.knora.org/data/dokubib"
                      }
+                     {
+                        path = "_test_data/all_data/admin-data.ttl"
+                        name = "http://www.knora.org/data/admin"
+                     }
                  ]
 
                 // Set to "use" to use a fake triplestore for performance testing. Set to "prepare" to generate a fake triplestore

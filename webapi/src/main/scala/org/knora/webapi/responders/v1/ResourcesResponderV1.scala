@@ -25,7 +25,7 @@ import java.util.UUID
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.graphdatamessages.{GraphDataEdgeV1, GraphDataGetResponseV1, GraphNodeV1, GraphV1, GraphDataGetRequestV1}
+import org.knora.webapi.messages.v1.responder.graphdatamessages.{GraphDataEdgeV1, GraphDataGetRequestV1, GraphDataGetResponseV1, GraphNodeV1, GraphV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType}
 import org.knora.webapi.messages.v1.responder.sipimessages._

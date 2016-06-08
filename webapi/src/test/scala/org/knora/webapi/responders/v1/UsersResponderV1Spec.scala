@@ -24,92 +24,231 @@
   */
 package org.knora.webapi.responders.v1
 
+import java.util.UUID
+
+import akka.actor.Props
+import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
-import akka.util.Timeout
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody, SparqlSelectResponseHeader}
-import org.mindrot.jbcrypt.BCrypt
+import com.typesafe.config.ConfigFactory
+import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 
 import scala.concurrent.duration._
 
 
-/*
- *  This test needs a running http layer, so that different api access authentication schemes can be tested
- *  - Browser basic auth
- *  - Basic auth over API
- *  - Username/password over API
- *  - API Key based authentication
- */
+object UsersResponderV1Spec {
 
-class UsersResponderV1Spec extends CoreSpec() with ImplicitSender {
+    val config = ConfigFactory.parseString(
+        """
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
 
-    implicit val timeout: Timeout = Duration(5, SECONDS)
+/**
+  * This spec is used to test the messages received by the [[UsersResponderV1]] actor.
+  */
+class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with ImplicitSender {
+
     implicit val executionContext = system.dispatcher
+    private val timeout = 5.seconds
 
-    val usernameCorrect = "isubotic"
-    val usernameWrong = "usernamewrong"
-    val usernameEmpty = ""
+    val imagesProjectIri = "http://data.knora.org/projects/images"
+    val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
 
-    val passUnhashed = "123456"
-    // gensalt's log_rounds parameter determines the complexity
-    // the work factor is 2**log_rounds, and the default is 10
-    val passHashed: String = BCrypt.hashpw(passUnhashed, BCrypt.gensalt(12));
-    val passEmpty = ""
+    val rootUserProfileV1 = SharedTestData.rootUserProfileV1
 
-    val lang = "en"
-    val user_id = Some("http://data.knora.org/users/b83acc5f05")
-    val token = None
-    val username = Some(usernameCorrect)
-    val firstname = Some("Ivan")
-    val lastname = Some("Subotic")
-    val email = Some("ivan.subotic@unibas.ch")
-    val password = Some(passHashed)
-
-    val mockUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password), Nil, Nil)
-
-    /*
-    val gaga = new ErrorHandlingMap(Map("x" -> "y"), "No such foo found: {{ key }}")
-
-    gaga("bar")
-
-    val storeResponseUserIdFound = SparqlSelectResponse(
-        SparqlSelectJsonResponse(SparqlSelectJsonResponseHeader(Vector("")), SparqlSelectJsonResponseBody(Vector(VariableResultsRow(gaga)))),
-        "",
-        ""
-    )
-
-    */
-
-    val storeResponseUserIdNotFound = SparqlSelectResponse(
-        SparqlSelectResponseHeader(Vector("p", "o")),
-        SparqlSelectResponseBody(Nil)
-    )
-
-    /*
-        val mockStoreManagerActor = actor(STORE_MANAGER_ACTOR_NAME)(new Act {
-            become {
-                case SparqlPebbleSelectRequest(templatename, templateContext) => {
-                  if (templatename == "get-user-by-username" && templateContext == Map("userId" -> usernameWrong)) {
-                      println(templateContext)
-                      sender ! storeResponseUserIdNotFound
-                  }
-                }
-            }
-        })
-    */
     val actorUnderTest = TestActorRef[UsersResponderV1]
+    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+
+    val rdfDataObjects = List(
+        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
+        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
+        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
+        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/all_data/admin-data.ttl", name = "http://www.knora.org/data/admin")
+    )
+
+    "Load test data" in {
+        storeManager ! ResetTriplestoreContent(rdfDataObjects)
+        expectMsg(300.seconds, ResetTriplestoreContentACK())
+    }
 
     "The UsersResponder " when {
-        "asked about an existing user identified by 'username' " must {
-            "return a profile if user is known " ignore {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1(usernameCorrect)
-                expectMsg(Some(mockUserProfileV1))
+        "asked about an user identified by 'iri' " should {
+            "return a profile if the user is known " in {
+                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/root", true)
+                expectMsg(rootUserProfileV1.getCleanUserProfileV1)
+            }
+            "return 'NotFoundException' when the user is unknown " in {
+                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", true)
+                expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
+            }
+        }
+        "asked about an user identified by 'username' " should {
+            "return a profile if the user is known " in {
+                actorUnderTest ! UserProfileByUsernameGetRequestV1("root", true)
+                expectMsg(rootUserProfileV1.getCleanUserProfileV1)
             }
 
-            "return 'None' when user is unknown " ignore {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1(usernameWrong)
-                expectMsg(None)
+            "return 'NotFoundException' when the user is unknown " in {
+                actorUnderTest ! UserProfileByUsernameGetRequestV1("userwrong", true)
+                expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
+            }
+        }
+        "asked to create a new user " should {
+            "create the user and return it's profile if the supplied username is unique " in {
+                actorUnderTest ! UserCreateRequestV1(
+                    NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "test", false, "en"),
+                    SharedTestData.anonymousUserProfileV1,
+                    UUID.randomUUID
+                )
+                expectMsgPF(timeout) {
+                    case UserOperationResponseV1(newUserProfile, requestingUserData, message) => {
+                        assert(newUserProfile.userData.username.get.equals("dduck"))
+                        assert(newUserProfile.userData.firstname.get.equals("Donald"))
+                        assert(newUserProfile.userData.lastname.get.equals("Duck"))
+                        assert(newUserProfile.userData.email.get.equals("donald.duck@example.com"))
+                        assert(newUserProfile.userData.lang.equals("en"))
+                    }
+                }
+            }
+            "return a 'DuplicateValueException' if the supplied username is not unique " in {
+                actorUnderTest ! UserCreateRequestV1(
+                    NewUserDataV1("root", "", "", "", "test", false, ""),
+                    SharedTestData.anonymousUserProfileV1,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
+            }
+            "return 'BadRequestException' if username or password are missing" in {
+
+                /* missing username */
+                actorUnderTest ! UserCreateRequestV1(
+                    NewUserDataV1("", "", "", "", "test", false, ""),
+                    SharedTestData.anonymousUserProfileV1,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException("Username cannot be empty")))
+
+                /* missing password */
+                actorUnderTest ! UserCreateRequestV1(
+                    NewUserDataV1("dduck", "", "", "", "", false, ""),
+                    SharedTestData.anonymousUserProfileV1,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException("Password cannot be empty")))
+            }
+        }
+        "asked to update a user " should {
+            "update the user " in {
+
+                /* User information is updated by the user */
+                actorUnderTest ! UserUpdateRequestV1(
+                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.Foaf.GivenName,
+                    newValue = "Donald",
+                    userProfile = SharedTestData.normaluserUserProfileV1,
+                    UUID.randomUUID
+                )
+                expectMsgPF(timeout) {
+                    case UserOperationResponseV1(updatedUserProfile, requestingUserData, message) => {
+                        // check if information was changed
+                        assert(updatedUserProfile.userData.firstname.contains("Donald"))
+
+                        // check if correct and updated userdata is returned
+                        assert(requestingUserData.firstname.contains("Donald"))
+                    }
+                }
+
+                /* User information is updated by a system admin */
+                actorUnderTest ! UserUpdateRequestV1(
+                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.Foaf.FamilyName,
+                    newValue = "Duck",
+                    userProfile = SharedTestData.superuserUserProfileV1,
+                    UUID.randomUUID
+                )
+                expectMsgPF(timeout) {
+                    case UserOperationResponseV1(updatedUserProfile, requestingUserData, message) => {
+                        // check if information was changed
+                        assert(updatedUserProfile.userData.lastname.contains("Duck"))
+
+                        // check if the correct userdata is returned
+                        assert(requestingUserData.user_id.contains(SharedTestData.superuserUserProfileV1.userData.user_id.get))
+                    }
+                }
+
+            }
+            "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin " in {
+
+                /* User information is updated by other normal user */
+                actorUnderTest ! UserUpdateRequestV1(
+                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.Foaf.GivenName,
+                    newValue = "Donald",
+                    userProfile = SharedTestData.normaluserUserProfileV1,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
+
+                /* User information is updated by anonymous */
+                actorUnderTest ! UserUpdateRequestV1(
+                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.Foaf.GivenName,
+                    newValue = ("Donald"),
+                    userProfile = SharedTestData.anonymousUserProfileV1,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
+
+            }
+            "return a 'ForbiddenException' if the update gives SA rights but the user requesting the update is not SA " in {
+                /* User information is updated by the user */
+                actorUnderTest ! UserUpdateRequestV1(
+                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.KnoraBase.IsSystemAdmin,
+                    newValue = true,
+                    userProfile = SharedTestData.normaluserUserProfileV1,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(ForbiddenException("Giving an user system admin rights can only be performed by another system admin")))
+            }
+            "update the user, giving him SA rights " in {
+                actorUnderTest ! UserUpdateRequestV1(
+                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.KnoraBase.IsSystemAdmin,
+                    newValue = true,
+                    userProfile = SharedTestData.superuserUserProfileV1,
+                    UUID.randomUUID
+                )
+                expectMsgPF(timeout) {
+                    case UserOperationResponseV1(updatedUserProfile, requestingUserData, message) => {
+                        // check if information was changed
+                        assert(updatedUserProfile.userData.isSystemAdmin.contains(true))
+                    }
+                }
+            }
+            "update the user, (deleting) making him inactive " in {
+                actorUnderTest ! UserUpdateRequestV1(
+                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
+                    propertyIri = OntologyConstants.KnoraBase.IsActiveUser,
+                    newValue = false,
+                    userProfile = SharedTestData.superuserUserProfileV1,
+                    UUID.randomUUID
+                )
+                expectMsgPF(timeout) {
+                    case UserOperationResponseV1(updatedUserProfile, requestingUserData, message) => {
+                        // check if information was changed
+                        assert(updatedUserProfile.userData.isActiveUser.contains(false))
+                    }
+                }
+
             }
         }
     }

@@ -21,13 +21,16 @@
 package org.knora.webapi.routing
 
 import akka.actor.ActorDSL._
+import akka.actor.Props
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByUsernameGetRequestV1, UserProfileV1}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
-import org.knora.webapi.routing.Authenticator.{BAD_CRED_PASSWORD_MISMATCH, BAD_CRED_USERNAME_NOT_SUPPLIED, BAD_CRED_USER_NOT_FOUND}
-import org.knora.webapi.{BadCredentialsException, CoreSpec}
+import org.knora.webapi.responders.v1.ResponderManagerV1
+import org.knora.webapi.routing.Authenticator.{INVALID_CREDENTIALS_NON_FOUND, INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED, INVALID_CREDENTIALS_USERNAME_OR_PASSWORD}
+import org.knora.webapi.store._
+import org.knora.webapi.{CoreSpec, InvalidCredentialsException, LiveActorMaker, SharedTestData}
 import org.scalatest.PrivateMethodTester
 
 import scala.concurrent.duration._
@@ -36,73 +39,63 @@ import scala.util.{Failure, Success, Try}
 object AuthenticatorSpec {
     val config = ConfigFactory.parseString(
         """
-        app {
-
-        }
+          | akka.loglevel = "DEBUG"
+          | akka.stdout-loglevel = "DEBUG"
+          |
         """.stripMargin)
 }
 
-/*
- *  This test needs a running http layer, so that different api access authentication schemes can be tested
- *  - Browser basic auth
- *  - Basic auth over API
- *  - Username/password over API
- *  - API Key based authentication
- */
-
+/**
+  * This test uses the 'PrivateMethodTester' API, to test private methods in [[Authenticator]].
+  */
 class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSender with PrivateMethodTester {
 
     implicit val executionContext = system.dispatcher
     implicit val timeout: Timeout = Duration(5, SECONDS)
 
-    val usernameCorrect = "root"
+    val usernameCorrect = SharedTestData.rootUserProfileV1.userData.username.get
     val usernameWrong = "wrong"
     val usernameEmpty = ""
 
     val passwordCorrect = "test"
-    val passwordCorrectHashed = "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" // hashed with sha-1
+    val passwordCorrectHashed = SharedTestData.rootUserProfileV1.userData.hashedpassword.get
     val passwordWrong = "wrong"
     val passwordEmpty = ""
 
+    val iriCorrect = SharedTestData.rootUserProfileV1.userData.user_id.get
+    val iriWrong = "http://data.knora.org/users/wrongiri"
+    val iriEmpty = ""
 
-    val lang = "en"
-    val user_id = Some("http://data.knora.org/users/91e19f1e01")
-    val token = None
-    val username = Some(usernameCorrect)
-    val firstname = Some("Administrator")
-    val lastname = Some("Admin")
-    val email = Some("test@test.ch")
-    val password = Some(passwordCorrectHashed)
+    val mockUserProfileV1 = SharedTestData.rootUserProfileV1
 
-    val mockUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password), Nil, Nil)
-
-    val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
-        become {
-            case UserProfileByUsernameGetRequestV1(submittedUsername) => {
-                if (submittedUsername == usernameCorrect) {
-                    sender !  Some(mockUserProfileV1)
-                } else {
-                    sender ! None
-                }
-            }
-        }
-    })
+    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val getUserProfileByUsername = PrivateMethod[Try[UserProfileV1]]('getUserProfileByUsername)
+    val getUserProfileByIri = PrivateMethod[Try[UserProfileV1]]('getUserProfileByIri)
     val authenticateCredentials = PrivateMethod[Try[String]]('authenticateCredentials)
 
     "During Authentication " when {
-        "called, the 'getUserProfile' method " should {
+        "called, the 'getUserProfileByUsername' method " should {
             "succeed with the correct 'username' " in {
                 Authenticator invokePrivate getUserProfileByUsername(usernameCorrect, system, timeout, executionContext) should be(Success(mockUserProfileV1))
             }
-
             "fail with the wrong 'username' " in {
-                Authenticator invokePrivate getUserProfileByUsername(usernameWrong, system, timeout, executionContext) should be(Failure(BadCredentialsException(BAD_CRED_USER_NOT_FOUND)))
+                Authenticator invokePrivate getUserProfileByUsername(usernameWrong, system, timeout, executionContext) should be(Failure(InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD)))
             }
-
             "fail when not providing a username " in {
-                Authenticator invokePrivate getUserProfileByUsername(usernameEmpty, system, timeout, executionContext) should be(Failure(BadCredentialsException(BAD_CRED_USERNAME_NOT_SUPPLIED)))
+                Authenticator invokePrivate getUserProfileByUsername(usernameEmpty, system, timeout, executionContext) should be(Failure(InvalidCredentialsException(INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED)))
+            }
+        }
+        "called, the 'getUserProfileByIri' method " should {
+            "succeed with the correct 'iri' " in {
+                Authenticator invokePrivate getUserProfileByIri(iriCorrect, system, timeout, executionContext) should be(Success(mockUserProfileV1))
+            }
+            "fail with the wrong 'iri' " in {
+                Authenticator invokePrivate getUserProfileByIri(iriWrong, system, timeout, executionContext) should be(Failure(InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD)))
+            }
+            "fail when not providing an 'iri' " in {
+                Authenticator invokePrivate getUserProfileByUsername(iriEmpty, system, timeout, executionContext) should be(Failure(InvalidCredentialsException(INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED)))
             }
         }
         "called, the 'authenticateCredentials' method " should {
@@ -110,7 +103,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
                 Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordCorrect, false, system) should be(Success("0"))
             }
             "fail with correct 'username' / wrong 'password' " in {
-                Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordWrong, false, system) should be(Failure(BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)))
+                Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordWrong, false, system) should be(Failure(InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD)))
             }
         }
     }

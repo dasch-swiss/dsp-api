@@ -103,10 +103,7 @@ object ResourcesResponderV1SpecContextData {
     // Therefore, only the first location is checked, see above.
     val expectedBookResourceContextResponse = ResourceContextResponseV1(
         userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
-            activeProject = None,
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
             firstname = Some("User"),
@@ -5395,10 +5392,7 @@ object ResourcesResponderV1SpecContextData {
 
     val expectedPageResourceContextResponse = ResourceContextResponseV1(
         userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
-            activeProject = None,
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
             firstname = Some("User"),

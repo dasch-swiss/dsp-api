@@ -7,6 +7,12 @@ import com.typesafe.sbt.SbtNativePackager.autoImport._
 // Bring the sbt-aspectj settings into this build
 //aspectjSettings
 
+initialize := {
+    val required = "1.8"
+    val current  = sys.props("java.specification.version")
+    assert(current >= required, s"Unsupported JDK: java.specification.version $current != $required")
+}
+
 lazy val webapi = (project in file(".")).
         configs(
             FusekiTest,

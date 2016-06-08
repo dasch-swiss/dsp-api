@@ -37,7 +37,7 @@ object ResourcesResponderV1SpecFullData {
     // The expected response to a "full" resource request for a book.
     val expectedBookResourceFullResponse = ResourceFullResponseV1(
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
             firstname = Some("User"),
@@ -513,10 +513,7 @@ object ResourcesResponderV1SpecFullData {
     // The expected response to a "full" resource request for a page.
     val expectedPageResourceFullResponse = ResourceFullResponseV1(
         userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
-            activeProject = None,
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
             firstname = Some("User"),
@@ -985,7 +982,7 @@ object ResourcesResponderV1SpecFullData {
 
     val expectedRegionFullResource = ResourceFullResponseV1(
         userdata = UserDataV1(
-            password = None,
+            hashedpassword = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
             firstname = Some("User"),

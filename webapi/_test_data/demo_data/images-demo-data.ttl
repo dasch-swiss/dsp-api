@@ -14,17 +14,6 @@
 @prefix : <http://www.knora.org/ontology/images#> .
 
 
-### ###########################################
-### <http://data.knora.org/projects/images>
-
-<http://data.knora.org/projects/images> rdf:type knora-base:knoraProject ;
-
-                                            knora-base:projectBasepath "/imldata/SALSAH-TEST-01/images" ;
-
-                                            knora-base:projectLongname "Images Collection Demo" ;
-
-                                            knora-base:projectShortname "images" .
-
 ##########################################################
 #
 # RESOURCES
@@ -12105,70 +12094,3 @@
 
                                          rdfs:label "WALDWIRTSCHAFT"@de .
 
-
-##########################################################
-#
-# PERSONS
-#
-##########################################################
-
-### ###########################################
-### <http://data.knora.org/users/c266a56709>
-
-<http://data.knora.org/users/c266a56709> rdf:type knora-base:User ;
-
-                                         knora-base:userid "user01" ;
-
-                                         foaf:givenName "User01" ;
-
-                                         foaf:familyName "User" ;
-
-                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
-
-                                         knora-base:email "user.user01@example.com" ;
-
-                                         knora-base:preferredLanguage "de" ;
-
-                                         knora-base:isInProject <http://data.knora.org/projects/images> .
-
-
-### ###########################################
-### <http://data.knora.org/users/97cec4000f>
-
-<http://data.knora.org/users/97cec4000f> rdf:type knora-base:User ;
-
-                                         knora-base:userid "user02" ;
-
-                                         foaf:givenName "User02" ;
-
-                                         foaf:familyName "User" ;
-
-                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
-
-                                         knora-base:email "user.user02@example.com" ;
-
-                                         knora-base:preferredLanguage "de" ;
-
-                                         knora-base:isInProject <http://data.knora.org/projects/images> .
-
-
-### ###########################################
-### <http://data.knora.org/users/91e19f1e01>
-
-<http://data.knora.org/users/91e19f1e01> rdf:type knora-base:User ;
-
-                                         knora-base:userid "root" ;
-
-                                         foaf:familyName "Admin" ;
-
-                                         foaf:givenName "Administrator" ;
-
-                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
-
-                                         knora-base:email "test@test.ch" ;
-
-                                         knora-base:phone "123456" ;
-
-                                         knora-base:preferredLanguage "de" ;
-
-                                         knora-base:isInProject <http://data.knora.org/projects/images> .
