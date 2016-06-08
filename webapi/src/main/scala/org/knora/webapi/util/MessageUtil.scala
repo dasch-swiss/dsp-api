@@ -142,6 +142,12 @@ object MessageUtil {
 
             case geomValue: GeomValueV1 => basicObjectResponse
 
+            case timeValue: TimeValueV1 => basicObjectResponse
+
+            case intervalValue: IntervalValueV1 => basicObjectResponse
+
+            case geonameValue: GeonameValueV1 => basicObjectResponse
+
             case other => throw new Exception(s"Resource creation response format not implemented for value type ${other.valueTypeIri}") // TODO: implement remaining types.
         }
 

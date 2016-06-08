@@ -324,6 +324,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         OntologyConstants.KnoraBase.DateValue -> makeDateValue,
         OntologyConstants.KnoraBase.ColorValue -> makeColorValue,
         OntologyConstants.KnoraBase.GeomValue -> makeGeomValue,
+        OntologyConstants.KnoraBase.GeonameValue -> makeGeonameValue,
         OntologyConstants.KnoraBase.ListValue -> makeListValue,
         OntologyConstants.KnoraBase.IntervalValue -> makeIntervalValue,
         OntologyConstants.KnoraBase.TimeValue -> makeTimeValue,
@@ -530,6 +531,18 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             objectIri = predicates(OntologyConstants.Rdf.Object).literals.head,
             referenceCount = predicates(OntologyConstants.KnoraBase.ValueHasRefCount).literals.head.toInt
         )
+    }
+
+    /**
+      * Converts a [[ValueProps]] into a [[GeonameValueV1]].
+      *
+      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+      * @return a [[GeonameValueV1]].
+      */
+    private def makeGeonameValue(valueProps: ValueProps): ApiValueV1 = {
+        val predicates = valueProps.literalData
+
+        GeonameValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeonameCode).literals.head)
     }
 
     /** Creates an attribute segment for the Salsah GUI from the given resource class.

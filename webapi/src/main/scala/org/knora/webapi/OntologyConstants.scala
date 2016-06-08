@@ -86,6 +86,7 @@ object OntologyConstants {
         val ValueHasOrder = "http://www.knora.org/ontology/knora-base#valueHasOrder"
         val ValueHasRefCount = "http://www.knora.org/ontology/knora-base#valueHasRefCount"
         val ValueHasComment = "http://www.knora.org/ontology/knora-base#valueHasComment"
+        val ValueHasGeonameCode = "http://www.knora.org/ontology/knora-base#valueHasGeonameCode"
 
         val PreviousValue = "http://www.knora.org/ontology/knora-base#previousValue"
 
@@ -124,6 +125,7 @@ object OntologyConstants {
         val MovingImageFileValue = "http://www.knora.org/ontology/knora-base#MovingImageFileValue"
         val FileValue = "http://www.knora.org/ontology/knora-base#FileValue"
         val LinkValue = "http://www.knora.org/ontology/knora-base#LinkValue"
+        val GeonameValue = "http://www.knora.org/ontology/knora-base#GeonameValue"
 
         val KnoraAdminPrefix = "http://www.knora.org/ontology/knora-base#"
         val IsInGroup = "http://www.knora.org/ontology/knora-base#isInGroup"

@@ -206,6 +206,13 @@ DELETE {
 
             }
 
+            case geonameValue: GeonameValueV1 => {
+
+                ?newValue knora-base:valueHasGeonameCode """@geonameValue.geonameCode""" ;
+                          knora-base:valueHasString """@geonameValue.toString""" .
+
+            }
+
             case other => {
                 @{throw SparqlGenerationException(s"Value object $other is not supported in this SPARQL template"); ()}
             }

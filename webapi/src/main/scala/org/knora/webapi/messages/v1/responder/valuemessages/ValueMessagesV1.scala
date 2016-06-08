@@ -60,6 +60,9 @@ case class CreateValueApiRequestV1(project_id: IRI,
                                    geom_value: Option[String] = None,
                                    link_value: Option[IRI] = None,
                                    hlist_value: Option[IRI] = None,
+                                   time_value: Option[BigDecimal] = None,
+                                   interval_value: Option[Seq[BigDecimal]] = None,
+                                   geoname_value: Option[String] = None,
                                    comment: Option[String] = None)
 
 /**
@@ -129,6 +132,9 @@ case class ChangeValueApiRequestV1(project_id: IRI,
                                    geom_value: Option[String] = None,
                                    link_value: Option[IRI] = None,
                                    hlist_value: Option[IRI] = None,
+                                   time_value: Option[BigDecimal] = None,
+                                   interval_value: Option[Seq[BigDecimal]] = None,
+                                   geoname_value: Option[String] = None,
                                    comment: Option[String] = None)
 
 /**
@@ -1052,9 +1058,9 @@ case class ColorValueV1(color: String) extends UpdateValueV1 with ApiValueV1 {
 }
 
 /**
-  * Represents a geometry value. TODO: document this.
+  * Represents a geometric shape.
   *
-  * @param geom A string containing JSON that describes the geometry value. TODO: document this.
+  * @param geom A string containing JSON that describes the shape. TODO: don't use JSON for this (issue 169).
   */
 case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
 
@@ -1065,7 +1071,7 @@ case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
     override def toString = geom
 
     /**
-      * Checks if a new geom value would equal an existing geom value.
+      * Checks if a new geom value would duplicate an existing geom value.
       *
       * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
@@ -1078,7 +1084,7 @@ case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
     }
 
     /**
-      * Checks if a new version of this geom value would equal the existing version of this geom value.
+      * Checks if a new version of a geom value would be redundant given the current version of the value.
       *
       * @param currentVersion the current version of the value.
       * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
@@ -1086,6 +1092,46 @@ case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case geomValueV1: GeomValueV1 => geomValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
+}
+
+/**
+  * Represents a [[http://www.geonames.org/ GeoNames]] code.
+ *
+  * @param geonameCode a string representing the GeoNames code.
+  */
+case class GeonameValueV1(geonameCode: String) extends UpdateValueV1 with ApiValueV1 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.GeonameValue
+
+    def toJsValue = JsString(geonameCode)
+
+    override def toString = geonameCode
+
+    /**
+      * Checks if a new GeoName value would duplicate an existing GeoName value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case geonameValueV1: GeonameValueV1 => geonameValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of a GeoName value would be redundant given the current version of the value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case geonameValueV1: GeonameValueV1 => geonameValueV1 == this
             case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
@@ -1130,7 +1176,7 @@ case class StillImageFileValueV1(internalMimeType: String,
     override def toString = originalFilename
 
     /**
-      * Checks if a new still image file value would equal an existing still image file value.
+      * Checks if a new still image file value would duplicate an existing still image file value.
       *
       * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
@@ -1143,7 +1189,7 @@ case class StillImageFileValueV1(internalMimeType: String,
     }
 
     /**
-      * Checks if a new version of this still image file value would equal the existing version of this still image file value.
+      * Checks if a new version of a still image file value would be redundant given the current version of the value.
       *
       * @param currentVersion the current version of the value.
       * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
@@ -1168,7 +1214,7 @@ case class MovingImageFileValueV1(internalMimeType: String,
     override def toString = originalFilename
 
     /**
-      * Checks if a new moving image file value would equal an existing moving image file value.
+      * Checks if a new moving image file value would duplicate an existing moving image file value.
       *
       * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
@@ -1181,7 +1227,7 @@ case class MovingImageFileValueV1(internalMimeType: String,
     }
 
     /**
-      * Checks if a new version of this moving image file value would equal the existing version of this moving image file value.
+      * Checks if a new version of a moving image file value would be redundant given the current version of the value.
       *
       * @param currentVersion the current version of the value.
       * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
@@ -1316,9 +1362,9 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
     implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat2(ValueVersionHistoryGetResponseV1)
     implicit val createRichtextV1Format: RootJsonFormat[CreateRichtextV1] = jsonFormat3(CreateRichtextV1)
-    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat12(CreateValueApiRequestV1)
+    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat15(CreateValueApiRequestV1)
     implicit val createValueResponseV1Format: RootJsonFormat[CreateValueResponseV1] = jsonFormat5(CreateValueResponseV1)
-    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat10(ChangeValueApiRequestV1)
+    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat13(ChangeValueApiRequestV1)
     implicit val changeValueResponseV1Format: RootJsonFormat[ChangeValueResponseV1] = jsonFormat5(ChangeValueResponseV1)
     implicit val deleteValueResponseV1Format: RootJsonFormat[DeleteValueResponseV1] = jsonFormat2(DeleteValueResponseV1)
     implicit val changeFileValueApiRequestV1Format: RootJsonFormat[ChangeFileValueApiRequestV1] = jsonFormat1(ChangeFileValueApiRequestV1)

@@ -101,33 +101,43 @@ object ResourcesRouteV1 extends Authenticator {
                         case (givenValue: CreateResourceValueV1) =>
                             givenValue match {
                                 // create corresponding UpdateValueV1
-                                case CreateResourceValueV1(_, _, Some(intValue: Int), _, _, _, _, _ , comment) => CreateValueV1WithComment(IntegerValueV1(intValue), comment)
-                                case CreateResourceValueV1(Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, comment) =>
+                                case CreateResourceValueV1(_, _, Some(intValue: Int), _, _, _, _, _, _, _, _, comment) => CreateValueV1WithComment(IntegerValueV1(intValue), comment)
+                                case CreateResourceValueV1(Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, comment) =>
                                     val textattr: Map[String, Seq[StandoffPositionV1]] = InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]])
                                     val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
 
                                     CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
 
-                                case CreateResourceValueV1(_, Some(linkValue: IRI), _, _, _, _, _, _, comment) =>
+                                case CreateResourceValueV1(_, Some(linkValue: IRI), _, _, _, _, _, _, _, _, _, comment) =>
                                     val linkVal = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Invalid Knora resource Iri $linkValue"))
                                     CreateValueV1WithComment(LinkUpdateV1(linkVal), comment)
 
-                                case CreateResourceValueV1(_, _, _, Some(decimalValue: BigDecimal), _, _, _, _, comment) => CreateValueV1WithComment(DecimalValueV1(decimalValue), comment)
+                                case CreateResourceValueV1(_, _, _, Some(decimalValue: BigDecimal), _, _, _, _, _, _, _, comment) =>
+                                    CreateValueV1WithComment(DecimalValueV1(decimalValue), comment)
 
-                                case CreateResourceValueV1(_, _, _, _, Some(dateStr: String), _, _, _, comment) =>
+                                case CreateResourceValueV1(_, _, _, _, Some(dateStr: String), _, _, _, _, _, _, comment) =>
                                     CreateValueV1WithComment(DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)
 
-                                case CreateResourceValueV1(_, _, _, _, _, Some(colorStr: String), _, _, comment) =>
+                                case CreateResourceValueV1(_, _, _, _, _, Some(colorStr: String), _, _, _, _, _, comment) =>
                                     val colorValue = InputValidation.toColor(colorStr, () => throw BadRequestException(s"Invalid color value $colorStr"))
                                     CreateValueV1WithComment(ColorValueV1(colorValue), comment)
 
-                                case CreateResourceValueV1(_, _, _, _, _, _, Some(geomStr: String), _, comment) =>
+                                case CreateResourceValueV1(_, _, _, _, _, _, Some(geomStr: String), _, _, _, _, comment) =>
                                     val geometryValue = InputValidation.toGeometryString(geomStr, () => throw BadRequestException(s"Invalid geometry value geomStr"))
                                     CreateValueV1WithComment(GeomValueV1(geometryValue), comment)
 
-                                case CreateResourceValueV1(_, _, _, _, _, _, _ , Some(hlistValue), comment) =>
-                                    val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given Iri ${hlistValue} is not a valid Knora IRI"))
+                                case CreateResourceValueV1(_, _, _, _, _, _, _, Some(hlistValue: IRI), _, _, _, comment) =>
+                                    val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given IRI $hlistValue is not a valid Knora IRI"))
                                     CreateValueV1WithComment(HierarchicalListValueV1(listNodeIri), comment)
+
+                                case CreateResourceValueV1(_, _, _, _, _, _, _, _, Some(timeValue: BigDecimal), _, _, comment) =>
+                                    CreateValueV1WithComment(TimeValueV1(timeValue), comment)
+
+                                case CreateResourceValueV1(_, _, _, _, _, _, _, _, _, Some(Seq(timeval1: BigDecimal, timeval2: BigDecimal)), _, comment) =>
+                                    CreateValueV1WithComment(IntervalValueV1(timeval1, timeval2), comment)
+
+                                case CreateResourceValueV1(_, _, _, _, _, _, _, _, _, _, Some(geonameStr: String), comment) =>
+                                    CreateValueV1WithComment(GeonameValueV1(geonameStr), comment)
 
                                 case _ => throw BadRequestException(s"No value submitted")
 
