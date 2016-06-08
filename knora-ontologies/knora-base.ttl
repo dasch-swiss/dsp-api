@@ -1038,7 +1038,7 @@
 
           :subjectClassConstraint :FileValue ;
 
-          :objectDatatypeConstraint xsd:float .
+          :objectDatatypeConstraint xsd:decimal .
 
 
 
@@ -1116,7 +1116,7 @@
 
      :subjectClassConstraint :MovingImageFileValue ;
 
-     :objectDatatypeConstraint xsd:float .
+     :objectDatatypeConstraint xsd:decimal .
 
 
 
@@ -1516,15 +1516,15 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#valueHasFloat
+###  http://www.knora.org/ontology/knora-base#valueHasDecimal
 
-:valueHasFloat rdf:type owl:DatatypeProperty ;
+:valueHasDecimal rdf:type owl:DatatypeProperty ;
 
                rdfs:subPropertyOf :valueHas ;
 
-               :subjectClassConstraint :FloatValue ;
+               :subjectClassConstraint :DecimalValue ;
 
-               :objectDatatypeConstraint xsd:float .
+               :objectDatatypeConstraint xsd:decimal .
 
 
 
@@ -1574,7 +1574,7 @@
 
                      :subjectClassConstraint :IntervalValue ;
 
-                     :objectDatatypeConstraint xsd:float .
+                     :objectDatatypeConstraint xsd:decimal .
 
 
 
@@ -1586,7 +1586,7 @@
 
                        :subjectClassConstraint :IntervalValue ;
 
-                       :objectDatatypeConstraint xsd:float .
+                       :objectDatatypeConstraint xsd:decimal .
 
 
 
@@ -1673,7 +1673,7 @@
 
               :subjectClassConstraint :TimeValue ;
 
-              :objectDatatypeConstraint xsd:float .
+              :objectDatatypeConstraint xsd:decimal .
 
 
 
@@ -1957,13 +1957,13 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#FloatValue
+###  http://www.knora.org/ontology/knora-base#DecimalValue
 
-:FloatValue rdf:type owl:Class ;
+:DecimalValue rdf:type owl:Class ;
 
             rdfs:subClassOf :Value ,
                             [ rdf:type owl:Restriction ;
-                              owl:onProperty :valueHasFloat ;
+                              owl:onProperty :valueHasDecimal ;
                               owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ,
                             [ rdf:type owl:Restriction ;
@@ -1971,7 +1971,7 @@
                               owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ;
 
-            rdfs:comment "Represents a float/double value"@en .
+            rdfs:comment "Represents an arbitrary-precision decimal value"@en .
 
 
 

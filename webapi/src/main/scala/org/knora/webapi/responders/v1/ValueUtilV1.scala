@@ -320,7 +320,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     private val valueFunctions: Map[IRI, (ValueProps) => ApiValueV1] = new ErrorHandlingMap(Map(
         OntologyConstants.KnoraBase.TextValue -> makeTextValue,
         OntologyConstants.KnoraBase.IntValue -> makeIntValue,
-        OntologyConstants.KnoraBase.FloatValue -> makeFloatValue,
+        OntologyConstants.KnoraBase.DecimalValue -> makeDecimalValue,
         OntologyConstants.KnoraBase.DateValue -> makeDateValue,
         OntologyConstants.KnoraBase.ColorValue -> makeColorValue,
         OntologyConstants.KnoraBase.GeomValue -> makeGeomValue,
@@ -344,15 +344,15 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[FloatValueV1]].
+      * Converts a [[ValueProps]] into a [[DecimalValueV1]].
       *
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[FloatValueV1]].
+      * @return a [[DecimalValueV1]].
       */
-    private def makeFloatValue(valueProps: ValueProps): ApiValueV1 = {
+    private def makeDecimalValue(valueProps: ValueProps): ApiValueV1 = {
         val predicates = valueProps.literalData
 
-        FloatValueV1(predicates(OntologyConstants.KnoraBase.ValueHasFloat).literals.head.toFloat)
+        DecimalValueV1(BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasDecimal).literals.head))
     }
 
     /**
@@ -385,8 +385,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val predicates = valueProps.literalData
 
         IntervalValueV1(
-            timeval1 = predicates(OntologyConstants.KnoraBase.ValueHasIntervalStart).literals.head,
-            timeval2 = predicates(OntologyConstants.KnoraBase.ValueHasIntervalEnd).literals.head
+            timeval1 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalStart).literals.head),
+            timeval2 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalEnd).literals.head)
         )
     }
 
@@ -399,7 +399,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     private def makeTimeValue(valueProps: ValueProps): ApiValueV1 = {
         val predicates = valueProps.literalData
 
-        TimeValueV1(predicates(OntologyConstants.KnoraBase.ValueHasTime).literals.head)
+        TimeValueV1(BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasTime).literals.head))
     }
 
     /**

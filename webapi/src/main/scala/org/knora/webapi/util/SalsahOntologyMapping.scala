@@ -160,7 +160,7 @@ class SalsahOntologyMappingReader {
     val valueTypeNumericIDs = Map(
         "1" -> OntologyConstants.KnoraBase.TextValue,
         "2" -> OntologyConstants.KnoraBase.IntValue,
-        "3" -> OntologyConstants.KnoraBase.FloatValue,
+        "3" -> OntologyConstants.KnoraBase.DecimalValue,
         "4" -> OntologyConstants.KnoraBase.DateValue,
         "5" -> OntologyConstants.KnoraBase.DateValue,
         "6" -> OntologyConstants.KnoraBase.LinkValue, // for a link to a resource

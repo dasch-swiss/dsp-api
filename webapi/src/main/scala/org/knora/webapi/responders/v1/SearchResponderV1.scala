@@ -60,7 +60,7 @@ class SearchResponderV1 extends ResponderV1 {
             SearchComparisonOperatorV1.LT_EQ,
             SearchComparisonOperatorV1.EXISTS
         ),
-        OntologyConstants.KnoraBase.FloatValue -> Set(
+        OntologyConstants.KnoraBase.DecimalValue -> Set(
             SearchComparisonOperatorV1.EQ,
             SearchComparisonOperatorV1.GT,
             SearchComparisonOperatorV1.GT_EQ,
@@ -398,13 +398,13 @@ class SearchResponderV1 extends ResponderV1 {
                                 )
 
                             case OntologyConstants.KnoraBase.IntValue =>
-                                //check if string is numeric (integer conformant)
+                                // check if string is an integer
                                 val searchString = InputValidation.toInt(searchval, () => throw new BadRequestException(s"Given searchval is not an integer: $searchval")).toString
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
-                            case OntologyConstants.KnoraBase.FloatValue =>
-                                //check if string is numeric (float conformant)
-                                val searchString = InputValidation.toDouble(searchval, () => throw new BadRequestException(s"Given searchval is not a floating-point number: $searchval")).toString
+                            case OntologyConstants.KnoraBase.DecimalValue =>
+                                // check if string is a decimal number
+                                val searchString = InputValidation.toBigDecimal(searchval, () => throw new BadRequestException(s"Given searchval is not a decimal number: $searchval")).toString
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                             case OntologyConstants.KnoraBase.Resource =>

@@ -135,10 +135,10 @@ DELETE {
 
             }
 
-            case floatValue: FloatValueV1 => {
+            case decimalValue: DecimalValueV1 => {
 
-                ?newValue knora-base:valueHasFloat @floatValue.fval .
-                ?newValue knora-base:valueHasString """@floatValue.fval.toString""" .
+                ?newValue knora-base:valueHasDecimal @decimalValue.dval .
+                ?newValue knora-base:valueHasString """@decimalValue.dval.toString""" .
 
             }
 
@@ -188,6 +188,21 @@ DELETE {
 
                 ?newValue knora-base:valueHasListNode <@listValue.hierarchicalListIri> .
                 ?newValue knora-base:valueHasString """@listValue.toString""" .
+
+            }
+
+            case timeValue: TimeValueV1 => {
+
+                ?newValue knora-base:valueHasTime @timeValue.tval ;
+                          knora-base:valueHasString """@timeValue.toString""" .
+
+            }
+
+            case intervalValue: IntervalValueV1 => {
+
+                ?newValue knora-base:valueHasIntervalStart @intervalValue.timeval1 ;
+                          knora-base:valueHasIntervalEnd @intervalValue.timeval2 ;
+                          knora-base:valueHasString """@intervalValue.toString""" .
 
             }
 

@@ -98,7 +98,7 @@ object ValuesRouteV1 extends Authenticator {
 
                 (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, Some(floatValue: Float), _, _, _, _, _, comment) => (FloatValueV1(floatValue), comment)
+            case CreateValueApiRequestV1(_, _, _, _, _, Some(decimalValue: BigDecimal), _, _, _, _, _, comment) => (DecimalValueV1(decimalValue), comment)
 
             case CreateValueApiRequestV1(_, _, _, _, _, _, Some(dateStr: String), _, _, _, _, comment) =>
                 (DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)
@@ -152,7 +152,7 @@ object ValuesRouteV1 extends Authenticator {
 
                 (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
 
-            case ChangeValueApiRequestV1(_, _, _, Some(floatValue: Float), _, _, _, _, _, comment) => (FloatValueV1(floatValue), comment)
+            case ChangeValueApiRequestV1(_, _, _, Some(decimalValue: BigDecimal), _, _, _, _, _, comment) => (DecimalValueV1(decimalValue), comment)
 
             case ChangeValueApiRequestV1(_, _, _, _, Some(dateStr: String), _, _, _, _, comment) =>
                 (DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)
@@ -166,11 +166,11 @@ object ValuesRouteV1 extends Authenticator {
                 (GeomValueV1(geometryValue), comment)
 
             case ChangeValueApiRequestV1(_, _, _, _, _, _, _, Some(linkValue), _, comment) =>
-                val resourceIri = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Given Iri ${linkValue} is not a valid Knora IRI"))
+                val resourceIri = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Given Iri $linkValue is not a valid Knora IRI"))
                 (LinkUpdateV1(targetResourceIri = resourceIri), comment)
 
             case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, Some(hlistValue), comment) =>
-                val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given Iri ${hlistValue} is not a valid Knora IRI"))
+                val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given Iri $hlistValue is not a valid Knora IRI"))
                 (HierarchicalListValueV1(listNodeIri), comment)
 
             case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, Some(comment)) =>

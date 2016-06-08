@@ -53,9 +53,9 @@ object InputValidation {
         }
     }
 
-    def toDouble(s: String, errorFun: () => Nothing): Double = {
+    def toBigDecimal(s: String, errorFun: () => Nothing): BigDecimal = {
         try {
-            s.toDouble
+            BigDecimal(s)
         } catch {
             case e: Exception => errorFun() // value could not be converted to an Float
         }

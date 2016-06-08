@@ -287,7 +287,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     case (expected: ResourceCreateValueResponseV1, received: ResourceCreateValueResponseV1) =>
                         assert(expected.value.textval == received.value.textval, "textval did not match")
                         assert(expected.value.ival == received.value.ival, "ival did not match")
-                        assert(expected.value.fval == received.value.fval, "fval did not match")
+                        assert(expected.value.dval == received.value.dval, "dval did not match")
                         assert(expected.value.dateval1 == received.value.dateval1, "dateval1 did not match")
                         assert(expected.value.dateval2 == received.value.dateval2, "dateval2 did not match")
                         assert(expected.value.calendar == received.value.calendar, "calendar did not match")

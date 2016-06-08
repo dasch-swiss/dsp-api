@@ -1846,7 +1846,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             valuetype = propertyV1.valuetype_id match {
                 // derive valuetype from valuetype_id
                 case Some(OntologyConstants.KnoraBase.IntValue) => Some("ival")
-                case Some(OntologyConstants.KnoraBase.FloatValue) => Some("fval")
+                case Some(OntologyConstants.KnoraBase.DecimalValue) => Some("dval")
                 case Some(OntologyConstants.KnoraBase.DateValue) => Some("dateval")
                 case Some(other: IRI) => Some("textval")
                 case None => None

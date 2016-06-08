@@ -69,7 +69,7 @@ object OntologyConstants {
 
         val ValueHasString = "http://www.knora.org/ontology/knora-base#valueHasString"
         val ValueHasInteger = "http://www.knora.org/ontology/knora-base#valueHasInteger"
-        val ValueHasFloat = "http://www.knora.org/ontology/knora-base#valueHasFloat"
+        val ValueHasDecimal = "http://www.knora.org/ontology/knora-base#valueHasDecimal"
         val ValueHasStandoff = "http://www.knora.org/ontology/knora-base#valueHasStandoff"
         val ValueHasResPtr = "http://www.knora.org/ontology/knora-base#valueHasResPtr"
         val ValueHasStartJDC = "http://www.knora.org/ontology/knora-base#valueHasStartJDC"
@@ -113,7 +113,7 @@ object OntologyConstants {
 
         val TextValue = "http://www.knora.org/ontology/knora-base#TextValue"
         val IntValue = "http://www.knora.org/ontology/knora-base#IntValue"
-        val FloatValue = "http://www.knora.org/ontology/knora-base#FloatValue"
+        val DecimalValue = "http://www.knora.org/ontology/knora-base#DecimalValue"
         val DateValue = "http://www.knora.org/ontology/knora-base#DateValue"
         val ColorValue = "http://www.knora.org/ontology/knora-base#ColorValue"
         val GeomValue = "http://www.knora.org/ontology/knora-base#GeomValue"

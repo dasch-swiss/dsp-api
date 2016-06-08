@@ -103,10 +103,10 @@
 
             }
 
-            case floatValue: FloatValueV1 => {
+            case decimalValue: DecimalValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasFloat @floatValue.fval ;
-                                     knora-base:valueHasString """@floatValue.fval.toString""" .
+                ?newValue@valueIndex knora-base:valueHasDecimal @decimalValue.dval ;
+                                     knora-base:valueHasString """@decimalValue.dval.toString""" .
 
             }
 
@@ -156,6 +156,21 @@
 
                 ?newValue@valueIndex knora-base:valueHasListNode <@listValue.hierarchicalListIri> ;
                                      knora-base:valueHasString """@listValue.toString""" .
+
+            }
+
+            case timeValue: TimeValueV1 => {
+
+                ?newValue@valueIndex knora-base:valueHasTime @timeValue.tval ;
+                                     knora-base:valueHasString """@timeValue.toString""" .
+
+            }
+
+            case intervalValue: IntervalValueV1 => {
+
+                ?newValue@valueIndex knora-base:valueHasIntervalStart @intervalValue.timeval1 ;
+                                     knora-base:valueHasIntervalEnd @intervalValue.timeval2 ;
+                                     knora-base:valueHasString """@intervalValue.toString""" .
 
             }
 

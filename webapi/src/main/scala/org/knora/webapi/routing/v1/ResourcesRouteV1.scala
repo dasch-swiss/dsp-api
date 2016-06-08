@@ -112,7 +112,7 @@ object ResourcesRouteV1 extends Authenticator {
                                     val linkVal = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Invalid Knora resource Iri $linkValue"))
                                     CreateValueV1WithComment(LinkUpdateV1(linkVal), comment)
 
-                                case CreateResourceValueV1(_, _, _, Some(floatValue: Float), _, _, _, _, comment) => CreateValueV1WithComment(FloatValueV1(floatValue), comment)
+                                case CreateResourceValueV1(_, _, _, Some(decimalValue: BigDecimal), _, _, _, _, comment) => CreateValueV1WithComment(DecimalValueV1(decimalValue), comment)
 
                                 case CreateResourceValueV1(_, _, _, _, Some(dateStr: String), _, _, _, comment) =>
                                     CreateValueV1WithComment(DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)

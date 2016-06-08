@@ -162,18 +162,18 @@
 
 
 
-:hasFloat rdf:type owl:ObjectProperty ;
+:hasDecimal rdf:type owl:ObjectProperty ;
 
        rdfs:subPropertyOf knora-base:hasValue ;
 
-       rdfs:label "Gleitkommazahl"@de ,
-                  "Nombre à virgule flottante"@fr ,
-                  "Numero in virgola mobile"@it ,
-                  "Floating-point number"@en ;
+       rdfs:label "Dezimalzahl"@de ,
+                  "Nombre décimal"@fr ,
+                  "Numero decimale"@it ,
+                  "Decimal number"@en ;
 
        knora-base:subjectClassConstraint :Thing ;
 
-       knora-base:objectClassConstraint knora-base:FloatValue ;
+       knora-base:objectClassConstraint knora-base:DecimalValue ;
 
        salsah-gui:guiOrder "5"^^xsd:integer ;
 
@@ -204,6 +204,29 @@
        salsah-gui:guiOrder "6"^^xsd:integer ;
 
        salsah-gui:guiElement salsah-gui:Time ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasInterval rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Sequenz"@de ,
+                  "Séquence"@fr ,
+                  "Sequenza"@it ,
+                  "Time interval"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:IntervalValue ;
+
+       salsah-gui:guiOrder "7"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Interval ;
 
        knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
 
@@ -371,14 +394,19 @@
                       ] ,
                       [
                          rdf:type owl:Restriction ;
-                         owl:onProperty :hasFloat ;
+                         owl:onProperty :hasDecimal ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasTime ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasInterval ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ;
-                      #[
-                      #   rdf:type owl:Restriction ;
-                      #   owl:onProperty :hasTime ;
-                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      #] ,
                       #[
                       #   rdf:type owl:Restriction ;
                       #   owl:onProperty :hasColor ;

@@ -98,7 +98,10 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"))
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+    )
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 30.seconds
@@ -1572,8 +1575,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: HierarchicalListValueV1, _, newValueIri: IRI, _, userProfile) =>
-                    newValue should ===(HierarchicalListValueV1(winter))
+                case ChangeValueResponseV1(newListValue: HierarchicalListValueV1, _, _, _, _) =>
+                    newListValue should ===(HierarchicalListValueV1(winter))
             }
 
         }
@@ -1605,10 +1608,37 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(value, _ , _, _, _) =>
-                    value should ===(HierarchicalListValueV1(summer))
+                case CreateValueResponseV1(newListValue: HierarchicalListValueV1, _ , _, _, _) =>
+                    newListValue should ===(HierarchicalListValueV1(summer))
             }
 
+        }
+
+        "add a decimal value to an anything:Thing" in {
+            val decimalValue = DecimalValueV1(BigDecimal("5.6"))
+
+            val anythingUser = UserProfileV1(
+                projects = Vector("http://data.knora.org/projects/anything"),
+                groups = Nil,
+                userData = UserDataV1(
+                    user_id = Some("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q"),
+                    lang = "de"
+                )
+            )
+
+            actorUnderTest ! CreateValueRequestV1(
+                value = decimalValue,
+                userProfile = anythingUser,
+                propertyIri = "http://www.knora.org/ontology/anything#hasDecimal",
+                resourceIri = "http://data.knora.org/a-thing",
+                projectIri = "http://data.knora.org/projects/anything",
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case CreateValueResponseV1(newDecimalValue: DecimalValueV1, _ , _, _, _) =>
+                    newDecimalValue should ===(decimalValue)
+            }
         }
 
     }

@@ -65,7 +65,7 @@ case class CreateResourceApiRequestV1(restype_id: IRI,
 case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None,
                                  link_value: Option[IRI] = None,
                                  int_value: Option[Int] = None,
-                                 float_value: Option[Float] = None,
+                                 decimal_value: Option[BigDecimal] = None,
                                  date_value: Option[String] = None,
                                  color_value: Option[String] = None,
                                  geom_value: Option[String] = None,
@@ -620,13 +620,14 @@ case class ResourceCreateValueResponseV1(value: ResourceCreateValueObjectRespons
 }
 
 /**
-  * Represents the possible value types to be returned to the client.
+  * Represents the possible value types to be returned to the client after creating a new resource with values.
+  * This isn't used anywhere else in the API, and we're not even sure the SALSAH GUI needs it.
   */
 object LiteralValueType extends Enumeration {
     type ValueType = Value
     val StringValue = Value(0, "string")
     val IntegerValue = Value(1, "integer")
-    val FloatValue = Value(2, "float")
+    val DecimalValue = Value(2, "decimal")
 
     object LiteralValueTypeV1Protocol extends DefaultJsonProtocol {
 
@@ -645,14 +646,14 @@ object LiteralValueType extends Enumeration {
   *
   * @param textval        textual representation of the value.
   * @param ival           integer value if it is an [[IntegerValueV1]].
-  * @param fval           float value if it is a [[FloatValueV1]].
+  * @param dval           decimal value if it is a [[DecimalValueV1]].
   * @param dateval1       start date if it is a [[DateValueV1]].
   * @param dateval2       end date if it is a [[DateValueV1]].
   * @param dateprecision1 the start date's precision if it is a [[DateValueV1]].
   * @param dateprecision2 the end date's precision if it is a [[DateValueV1]].
   * @param calendar       the date's calendar if it is a [[DateValueV1]].
-  * @param timeval1
-  * @param timeval2
+  * @param timeval1       start time value if it is an [[IntervalValueV1]].
+  * @param timeval2       end time value if it is an [[IntervalValueV1]].
   * @param resource_id    the Iri of the new resource.
   * @param property_id    the Iri of the property the value belongs to.
   * @param person_id      the person that created the value.
@@ -660,14 +661,14 @@ object LiteralValueType extends Enumeration {
   */
 case class ResourceCreateValueObjectResponseV1(textval: Map[LiteralValueType.Value, String],
                                                ival: Option[Map[LiteralValueType.Value, Int]] = None,
-                                               fval: Option[Map[LiteralValueType.Value, Float]] = None,
+                                               dval: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
                                                dateval1: Option[Map[LiteralValueType.Value, String]] = None,
                                                dateval2: Option[Map[LiteralValueType.Value, String]] = None,
                                                dateprecision1: Option[Map[LiteralValueType.Value, KnoraPrecisionV1.Value]] = None,
                                                dateprecision2: Option[Map[LiteralValueType.Value, KnoraPrecisionV1.Value]] = None,
                                                calendar: Option[Map[LiteralValueType.Value, KnoraCalendarV1.Value]] = None,
-                                               timeval1: Option[Map[LiteralValueType.Value, Int]] = None,
-                                               timeval2: Option[Map[LiteralValueType.Value, Int]] = None,
+                                               timeval1: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
+                                               timeval2: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
                                                resource_id: Map[LiteralValueType.Value, IRI],
                                                property_id: Map[LiteralValueType.Value, IRI],
                                                person_id: Map[LiteralValueType.Value, IRI],
