@@ -14,7 +14,7 @@
 ##########################################################
 
 
-<http://data.knora.org/users/root> rdf:type knora-base:User^^xsd:string ;
+<http://data.knora.org/users/root> rdf:type knora-base:User ;
 
                                    knora-base:userid "root"^^xsd:string ;
 

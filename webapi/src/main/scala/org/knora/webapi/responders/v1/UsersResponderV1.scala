@@ -97,7 +97,7 @@ class UsersResponderV1 extends ResponderV1 {
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByUsername(
                 triplestore = settings.triplestoreType,
-                username = username
+                username = SparqlUtil.any2SparqlLiteral(username)
             ).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
@@ -135,8 +135,9 @@ class UsersResponderV1 extends ResponderV1 {
             // check if the supplied username for the new user is unique, i.e. not already registered
             sparqlQueryString = queries.sparql.v1.txt.getUserByUsername(
                 triplestore = settings.triplestoreType,
-                username = newUserData.username
+                username = SparqlUtil.any2SparqlLiteral(newUserData.username)
             ).toString()
+            _ = log.debug(s"createNewUser - check duplicate name: $sparqlQueryString")
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
@@ -155,13 +156,14 @@ class UsersResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
                 userClassIri = OntologyConstants.KnoraBase.User,
-                username = newUserData.username,
-                password = hashedPassword,
-                givenName = newUserData.givenName,
-                familyName = newUserData.familyName,
-                email = newUserData.email,
-                preferredLanguage = newUserData.lang).toString
-            // _ = println(createNewUserSparqlString)
+                username = SparqlUtil.any2SparqlLiteral(newUserData.username),
+                password = SparqlUtil.any2SparqlLiteral(hashedPassword),
+                givenName = SparqlUtil.any2SparqlLiteral(newUserData.givenName),
+                familyName = SparqlUtil.any2SparqlLiteral(newUserData.familyName),
+                email = SparqlUtil.any2SparqlLiteral(newUserData.email),
+                preferredLanguage = SparqlUtil.any2SparqlLiteral(newUserData.lang)
+            ).toString
+            _ = log.debug(s"createNewUser: $createNewUserSparqlString")
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString)).mapTo[SparqlUpdateResponse]
 
 

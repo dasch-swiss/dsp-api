@@ -47,6 +47,7 @@
   email: String,
   preferredLanguage: String)
 
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -57,23 +58,23 @@ INSERT {
     GRAPH ?adminNamedGraphIri {
         ?userIri rdf:type ?userClassIri ;
 
-            knora-base:userid "@username" ;
+            knora-base:userid @username ;
 
-            knora-base:password "@password" ;
+            knora-base:password @password ;
 
             @if(givenName.nonEmpty) {
-                foaf:givenName "@givenName" ;
+                foaf:givenName @givenName ;
             }
 
             @if(familyName.nonEmpty) {
-                foaf:familyName "@familyName" ;
+                foaf:familyName @familyName ;
             }
 
             @if(email.nonEmpty) {
-                knora-base:email "@email" ;
+                knora-base:email @email ;
             }
 
-            knora-base:preferredLanguage "@preferredLanguage" .
+            knora-base:preferredLanguage @preferredLanguage .
     }
 }
 @*
