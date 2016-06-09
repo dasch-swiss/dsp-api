@@ -8,6 +8,7 @@ RUN apt-get update && \
 
 # Add Fuseki
 COPY . /fuseki
+WORKDIR /fuseki
 
 EXPOSE 3030
-CMD ["/fuseki/fuseki-server"]
+CMD ["./fuseki-server"]
