@@ -26,6 +26,7 @@ import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByUsernameGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.Authenticator.{INVALID_CREDENTIALS_NON_FOUND, INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED, INVALID_CREDENTIALS_USERNAME_OR_PASSWORD}
@@ -74,6 +75,18 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     val getUserProfileByUsername = PrivateMethod[Try[UserProfileV1]]('getUserProfileByUsername)
     val getUserProfileByIri = PrivateMethod[Try[UserProfileV1]]('getUserProfileByIri)
     val authenticateCredentials = PrivateMethod[Try[String]]('authenticateCredentials)
+
+    val rdfDataObjects = Vector(
+        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
+        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
+        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
+        RdfDataObject(path = "_test_data/all_data/admin-data.ttl", name = "http://www.knora.org/data/admin")
+    )
+
+    "Load test data" in {
+        storeManager ! ResetTriplestoreContent(rdfDataObjects)
+        expectMsg(300.seconds, ResetTriplestoreContentACK())
+    }
 
     "During Authentication " when {
         "called, the 'getUserProfileByUsername' method " should {

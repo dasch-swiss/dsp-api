@@ -884,7 +884,7 @@
 
                 :subjectClassConstraint :User ;
 
-                :objectClassConstraint :knoraProject ;
+                :objectClassConstraint :UserGroup ;
 
                 owl:inverseOf :hasGroupAdmin .
 

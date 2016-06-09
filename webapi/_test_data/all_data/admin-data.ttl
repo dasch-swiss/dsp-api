@@ -241,6 +241,28 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                          knora-base:isActiveUser "true"^^xsd:boolean ;
 
                                          knora-base:isInProject <http://data.knora.org/projects/77275339> .
+                                         
+
+### ###########################################
+### <http://data.knora.org/users/91e19f1e01>
+
+<http://data.knora.org/users/91e19f1e01> rdf:type knora-base:User ;
+
+                                         knora-base:userid "testuser2" ;
+
+                                         foaf:givenName "User" ;
+
+                                         foaf:familyName "Test2" ;
+
+                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
+
+                                         knora-base:email "user.test2@example.com" ;
+
+                                         knora-base:preferredLanguage "de" ;
+
+                                         knora-base:isActiveUser "true"^^xsd:boolean ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/77275339> .
 
 
 
