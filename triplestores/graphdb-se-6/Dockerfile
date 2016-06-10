@@ -1,11 +1,10 @@
-FROM tomcat:8-jre8
+FROM subotic/tomcat:8-jdk8
 
 MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
 
 # Update base installation
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends && \
-    apt-get install -y openjdk-8-jdk
+    apt-get install -y --no-install-recommends
 
 # Add GraphdSB-SE distribution (tar is automatically extracted by ADD command)
 ADD ./graphdb-se-6.6.4-war/*.war /usr/local/tomcat/webapps/
