@@ -35,22 +35,22 @@ import scala.concurrent.duration._
 object FakeTriplestoreSpec {
     val config = ConfigFactory.parseString(
         """
-          app {
-             triplestore {
-                 dbtype = "fake-triplestore"
-
-                 embedded-jena-tdb {
-                    persisted = true // "false" -> memory, "true" -> disk
-                    storage-path = "_TMP" // ignored if "memory"
-                 }
-
-                 fake-jena-tdb {
-                    fake-persisted-storage = true
-                    fake-triplestore-data-dir = "_TMP_FAKE/query-log"
-
-                 }
-             }
-          }
+          # app {
+          #   triplestore {
+          #       dbtype = "fake-triplestore"
+          #
+          #       embedded-jena-tdb {
+          #          persisted = true // "false" -> memory, "true" -> disk
+          #          storage-path = "_TMP" // ignored if "memory"
+          #       }
+          #
+          #       fake-jena-tdb {
+          #          fake-persisted-storage = true
+          #          fake-triplestore-data-dir = "_TMP_FAKE/query-log"
+          #
+          #       }
+          #   }
+          #}
         """.stripMargin)
 }
 
