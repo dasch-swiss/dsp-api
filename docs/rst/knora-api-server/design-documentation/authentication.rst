@@ -140,10 +140,10 @@ Sipi (Media Server)
 ^^^^^^^^^^^^^^^^^^^^^
 
 For authentication to work with the media server, we need to add support
-for cookies. At the moment the SALSAH-App would set BasicAuth heathers,
+for cookies. At the moment the SALSAH-App would set BasicAuth headers,
 but this only works for AJAX requests using ``SALSAH.ApiGet`` (``Put``, etc.).
 Since the medias are embedded as source tags, the browser would get them
-on his own, and doesn't know anything about the needed AuthHeathers.
+on his own, and doesn't know anything about the needed AuthHeaders.
 With cookies, the browser would send those automatically with every
 request. The media server can the use the credentials of the user
 requesting something for accessing the RepresentationsRouteV1, i.e. make
