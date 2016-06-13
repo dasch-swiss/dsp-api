@@ -196,7 +196,7 @@ object OntologyConstants {
         val ProjectOntolgyGraph = KNORA_BASE_PREFIX + "projectOntologyGraph"
         val ProjectDataGraph = KNORA_BASE_PREFIX + "projectDataGraph"
         val IsActiveProject = KNORA_BASE_PREFIX + "isActiveProject"
-        val HasSelfAssignmentEnabled = KNORA_BASE_PREFIX + "hasSelfAssignmentEnabled"
+        val HasSelfJoinEnabled = KNORA_BASE_PREFIX + "hasSelfJoinEnabled"
         val HasProjectAdmin = KNORA_BASE_PREFIX + "hasProjectAdmin"
 
         /* Group */

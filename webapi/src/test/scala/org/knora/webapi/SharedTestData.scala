@@ -20,6 +20,7 @@
 
 package org.knora.webapi
 
+import org.knora.webapi.messages.v1.responder.groupmessages.GroupInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 
 /**
@@ -165,5 +166,12 @@ object SharedTestData {
         isProjectAdminFor = Vector.empty[IRI],
         sessionId = None
 
+    )
+
+    val imgcontriGroupInfoV1 = GroupInfoV1(
+        id = "http://data.knora.org/groups/imgcontri",
+        name = "Images-Demo-Project External Contributors",
+        description = "This group contains contributing users external to the Image-Collection-Demo project",
+        isActiveGroup = true
     )
 }

@@ -122,7 +122,7 @@
 
                                         knora-base:isActiveProject "true"^^xsd:boolean ;
 
-                                        knora-base:hasSelfAssignmentEnabled "false"^^xsd:boolean ;
+                                        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean ;
 
                                         knora-base:hasProjectAdmin <http://data.knora.org/users/c266a56709> .
 
@@ -141,7 +141,7 @@
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                         knora-base:isActiveUser "true"^^xsd:boolean ;
+                                         knora-base:isActive "true"^^xsd:boolean ;
 
                                          knora-base:isInProject <http://data.knora.org/projects/images> ;
 
@@ -166,7 +166,7 @@
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                         knora-base:isActiveUser "true"^^xsd:boolean ;
+                                         knora-base:isActive "true"^^xsd:boolean ;
 
                                          knora-base:isInProject <http://data.knora.org/projects/images> ;
 
@@ -179,9 +179,9 @@
 
                                          knora-base:groupDescription "This group contains contributing users external to the Image-Collection-Demo project"^^xsd:string ;
 
-                                         knora-base:isActiveGroup "true"^^xsd:boolean ;
+                                         knora-base:isActive "true"^^xsd:boolean ;
 
-                                         knora-base:hasSelfAssignmentEnabled "false"^^xsd:boolean ;
+                                         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean ;
 
                                          knora-base:hasGroupAdmin <http://data.knora.org/users/c266a56709> .
 

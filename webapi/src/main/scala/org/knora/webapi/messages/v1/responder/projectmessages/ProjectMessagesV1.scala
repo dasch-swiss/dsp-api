@@ -38,7 +38,7 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
   * @param basePath           the basepath of the project to be created.
   * @param ontologyGraph      the named graph where the ontology of the created project will be stored.
   * @param dataGraph          the named graph where the data of the created project will be stored.
-  * @param isActive           the status of the project to be created.
+  * @param isActiveProject    the status of the project to be created.
   * @param hasSelfJoinEnabled the status of self-join of the project to be created.
   */
 case class CreateProjectApiRequestV1(shortName: String,
@@ -46,7 +46,7 @@ case class CreateProjectApiRequestV1(shortName: String,
                                      basePath: String,
                                      ontologyGraph: String,
                                      dataGraph: String,
-                                     isActive: String,
+                                     isActiveProject: String,
                                      hasSelfJoinEnabled: Boolean) {
     def toJsValue = ProjectV1JsonProtocol.createProjectApiRequestV1Format.write(this)
 }

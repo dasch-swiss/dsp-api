@@ -1827,9 +1827,9 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#hasSelfAssignmentEnabled
+###  http://www.knora.org/ontology/knora-base#hasSelfJoinEnabled
 
-:hasSelfAssignmentEnabled rdf:type owl:DatatypeProperty ;
+:hasSelfJoinEnabled rdf:type owl:DatatypeProperty ;
 
 		  rdfs:subPropertyOf :systemProperty ;
 

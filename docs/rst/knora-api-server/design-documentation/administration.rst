@@ -361,4 +361,31 @@ Example Group Information stored in admin named graph:
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean ;
         knora-base:hasGroupAdmin <User-IRI> .
 
+Redesign / Questions June 2016
+--------------------
 
+**Permissions constrained to groups***
+  - Why this constraint?
+
+**Resource owner permission to desruptive**
+  - knora-base:attachedToUser gives owner status to the person who created the resource.
+  - **Proposed change:** remove this altogether or make institution/project owner of the resource.
+  - Should hiwis be "owners" of resources they create on behalf of their professor?
+  - If the creator should have max permission, then give it explicitly.
+  
+**Resource creation permission to corse**
+  - beeing part of a projects gives resource creation permission. What if some project members are not allowed to create
+    new resources (or only certain types; Lumiere Lausanne requirement), but are only allowed to change existing resources?  
+
+**Support Default Permissions**
+  - Allow for a project to define permissions that a newly created resource inside a project should receive (current Salsah behavior)
+  - Lumiere Lausanne requirement
+  
+**Groups**
+  - Do groups belong to projects, i.e. are they seen as extensions to projects?
+  - Does someone need to be part of a project to belong to a group of that project?
+  
+**root**
+  - Should the 'root' user have 'implicitly' or 'explicitly' all permissions?
+  - Does the has all permissions also extend to projects? Is the root user going to be part of every project?
+    If yes, then again implicitly or explicitly?

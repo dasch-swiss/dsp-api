@@ -34,12 +34,12 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
   *
   * @param name               the name of the group to be created (unique).
   * @param description        the description of the group to be created.
-  * @param isActive           the status of the group to be created.
+  * @param isActiveGroup      the status of the group to be created.
   * @param hasSelfJoinEnabled the status of self-join of the group to be created.
   */
 case class CreateGroupApiRequestV1(name: String,
                                    description: String,
-                                   isActive: String,
+                                   isActiveGroup: String,
                                    hasSelfJoinEnabled: String) {
     def toJsValue = GroupV1JsonProtocol.createGroupApiRequestV1Format.write(this)
 }
@@ -134,7 +134,10 @@ case class GroupOperationResponseV1(group_info: GroupInfoV1, userdata: UserDataV
   */
 case class GroupInfoV1(id: IRI,
                        name: String,
-                       description: Option[String] = None)
+                       description: Option[String] = None,
+                       isActiveGroup: Boolean,
+                       hasSelfJoinEnabled: Boolean,
+                       hasGroupAdmin: Seq[IRI])
 
 object GroupInfoType extends Enumeration {
     val SHORT = Value(0, "short")
