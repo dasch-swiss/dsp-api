@@ -26,6 +26,43 @@ import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.responders.v1.ProjectsResponderV1
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// API requests
+
+/**
+  * Represents an API request payload that asks the Knora API server to create a new project.
+  *
+  * @param shortName          the shortname of the project to be created (unique).
+  * @param longName           the longname of the project to be created.
+  * @param basePath           the basepath of the project to be created.
+  * @param ontologyGraph      the named graph where the ontology of the created project will be stored.
+  * @param dataGraph          the named graph where the data of the created project will be stored.
+  * @param isActive           the status of the project to be created.
+  * @param hasSelfJoinEnabled the status of self-join of the project to be created.
+  */
+case class CreateProjectApiRequestV1(shortName: String,
+                                     longName: String,
+                                     basePath: String,
+                                     ontologyGraph: String,
+                                     dataGraph: String,
+                                     isActive: String,
+                                     hasSelfJoinEnabled: Boolean) {
+    def toJsValue = ProjectV1JsonProtocol.createProjectApiRequestV1Format.write(this)
+}
+
+/**
+  * Represents an API request payload that asks the Knora API server to update one property of an existing project.
+  *
+  * @param propertyIri  the property of the project to be updated.
+  * @param newValue     the new value for the property of the project to be updated.
+  */
+case class UpdateProjectApiRequestV1(propertyIri: String,
+                                     newValue: String) {
+    def toJsValue = ProjectV1JsonProtocol.updateProjectApiRequestV1Format.write(this)
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
@@ -84,6 +121,14 @@ case class ProjectInfoResponseV1(project_info: ProjectInfoV1, userdata: Option[U
     def toJsValue = ProjectV1JsonProtocol.projectInfoResponseV1Format.write(this)
 }
 
+/**
+  * Represents an answer to a project creating/modifying operation.
+  * @param project_info the new project info of the created/modified project.
+  * @param userData     information about the user that made the request.
+  */
+case class ProjectOperationResponseV1(project_info: ProjectInfoV1, userData: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = ProjectV1JsonProtocol.projectOperationResponseV1Format.write(this)
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -117,6 +162,8 @@ object ProjectInfoType extends Enumeration {
     }
 }
 
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formating
 
@@ -134,4 +181,7 @@ object ProjectV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectsResponseV1)))
     implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectInfoResponseV1)))
+    implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat7(CreateProjectApiRequestV1)))
+    implicit val updateProjectApiRequestV1Format: RootJsonFormat[UpdateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat2(UpdateProjectApiRequestV1)))
+    implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectOperationResponseV1)))
 }

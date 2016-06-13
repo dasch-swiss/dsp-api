@@ -105,7 +105,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(newUserProfile, requestingUserData, message) => {
+                    case UserOperationResponseV1(newUserProfile, requestingUserData) => {
                         assert(newUserProfile.userData.username.get.equals("dduck"))
                         assert(newUserProfile.userData.firstname.get.equals("Donald"))
                         assert(newUserProfile.userData.lastname.get.equals("Duck"))
@@ -153,7 +153,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData, message) => {
+                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
                         // check if information was changed
                         assert(updatedUserProfile.userData.firstname.contains("Donald"))
 
@@ -171,7 +171,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData, message) => {
+                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
                         // check if information was changed
                         assert(updatedUserProfile.userData.lastname.contains("Duck"))
 
@@ -224,7 +224,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData, message) => {
+                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
                         // check if information was changed
                         assert(updatedUserProfile.userData.isSystemAdmin.contains(true))
                     }
@@ -239,7 +239,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData, message) => {
+                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
                         // check if information was changed
                         assert(updatedUserProfile.userData.isActiveUser.contains(false))
                     }

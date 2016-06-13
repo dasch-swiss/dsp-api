@@ -293,7 +293,7 @@ Projects Endpoint
     to a list of ``UserGroups`` or if nothing is specified, then to an empty list.
 
 
-**Enable/disable self-assignment**:
+**Enable/disable self-join**:
   - Required permission: SystemAdmin / ProjectAdmin
   - Effects property: ``knora-base:hasSelfAssignmentEnabled`` with value ``true`` or ``false``
 
@@ -309,7 +309,7 @@ Example Project Information stored in admin named graph:
         knora-base:projectOntolgyGraph "http://www.knora.org/ontology/images" ;
         knora-base:projectDataGraph "http://www.knora.org/data/images" ;
         knora-base:isActiveProject "true"^^xsd:boolean ;
-        knora-base:hasSelfAssignmentEnabled "false"^^xsd:boolean ;
+        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean ;
         knora-base:hasProjectAdmin <User-IRI> ;
         knora-base:hasDefaultRestrictedViewPermission <http://data.knora.org/groups/[UUID]> ;
         knora-base:hasDefaultViewPermission <http://data.knora.org/groups/[UUID]> ,
@@ -347,7 +347,7 @@ Groups Endpoint
   - Effects: ``knora-base:hasGroupAdminPermissions``
 
 
-**Enable/disable self-assignment**:
+**Enable/disable self-join**:
   - Required permission: SystemAdmin / GroupAdmin
   - Effects property: ``knora-base:hasSelfAssignmentEnabled`` with value ``true`` or ``false``
 
@@ -358,7 +358,7 @@ Example Group Information stored in admin named graph:
         knora-base:groupName "Name of the group" ;
         knora-base:groupDescription "A description of the group" ;
         knora-base:isActiveGroup "true"^^xsd:boolean ;
-        knora-base:hasSelfAssignmentEnabled "false"^^xsd:boolean ;
+        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean ;
         knora-base:hasGroupAdmin <User-IRI> .
 
 

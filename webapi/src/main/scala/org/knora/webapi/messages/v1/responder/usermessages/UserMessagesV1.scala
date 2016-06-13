@@ -25,8 +25,6 @@ import java.util.UUID
 import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
-import org.mindrot.jbcrypt.BCrypt
 import spray.httpx.SprayJsonSupport
 import spray.json._
 
@@ -36,12 +34,12 @@ import spray.json._
 /**
   * Represents an API request payload that asks the Knora API server to create a new user.
   *
-  * @param username      the username of the user to be created.
+  * @param username      the username of the user to be created (unique).
   * @param givenName     the given name of the user to be created.
   * @param familyName    the family name of the user to be created
   * @param email         the email of the user to be created.
   * @param password      the password of the user to be created.
-  * @param isActiveUser  the status of the user to be created.
+  * @param isActive      the status of the user to be created.
   * @param isSystemAdmin the system admin status of the user to be created.
   * @param lang          the default language of the user to be created.
   */
@@ -50,7 +48,7 @@ case class CreateUserApiRequestV1(username: String,
                                   familyName: String,
                                   email: String,
                                   password: String,
-                                  isActiveUser: Boolean,
+                                  isActive: Boolean,
                                   isSystemAdmin: Boolean,
                                   lang: String) {
 
@@ -124,13 +122,12 @@ case class UserUpdateRequestV1(userIri: webapi.IRI,
                                apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
-  * Describes the answer to an user creating/modifying operation.
+  * Represents an answer to an user creating/modifying operation.
   *
   * @param userProfile the new user profile of the created/modified user.
   * @param userData    information about the user that made the request.
-  * @param message     a message describing what went wrong if operation was only partially successful.
   */
-case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDataV1, message: Option[String] = None) extends KnoraResponseV1 {
+case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = UserV1JsonProtocol.userCreateResponseV1Format.write(this)
 }
 
@@ -333,5 +330,5 @@ object UserV1JsonProtocol extends DefaultJsonProtocol with NullOptions with Spra
     implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat7(NewUserDataV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat8(CreateUserApiRequestV1)
     implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat2(UpdateUserApiRequestV1)
-    implicit val userCreateResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat3(UserOperationResponseV1)
+    implicit val userCreateResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat2(UserOperationResponseV1)
 }

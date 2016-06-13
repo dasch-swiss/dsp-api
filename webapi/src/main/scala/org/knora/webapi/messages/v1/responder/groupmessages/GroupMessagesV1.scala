@@ -27,6 +27,35 @@ import org.knora.webapi.{IRI, InconsistentTriplestoreDataException}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// API requests
+
+/**
+  * Represents an API request payload that asks the Knora API server to create a new group.
+  *
+  * @param name               the name of the group to be created (unique).
+  * @param description        the description of the group to be created.
+  * @param isActive           the status of the group to be created.
+  * @param hasSelfJoinEnabled the status of self-join of the group to be created.
+  */
+case class CreateGroupApiRequestV1(name: String,
+                                   description: String,
+                                   isActive: String,
+                                   hasSelfJoinEnabled: String) {
+    def toJsValue = GroupV1JsonProtocol.createGroupApiRequestV1Format.write(this)
+}
+
+/**
+  * Represents an API request payload that asks the Knora API server to update one property of an existing group.
+  *
+  * @param propertyIri  the property of the group to be updated.
+  * @param newValue     the new value for the property of the group to be updated.
+  */
+case class UpdateGroupApiRequestV1(propertyIri: String,
+                                     newValue: String) {
+    def toJsValue = GroupV1JsonProtocol.updateGroupApiRequestV1Format.write(this)
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
 /**
@@ -84,6 +113,15 @@ case class GroupInfoResponseV1(group_info: GroupInfoV1, userdata: Option[UserDat
     def toJsValue = GroupV1JsonProtocol.groupInfoResponseV1Format.write(this)
 }
 
+/**
+  * Represents an answer to a group creating/modifying operation.
+  *
+  * @param group_info the new group info of the created/modified group.
+  * @param userdata   information about the user that made the request.
+  */
+case class GroupOperationResponseV1(group_info: GroupInfoV1, userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = GroupV1JsonProtocol.groupOperationResponseV1Format.write(this)
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -136,4 +174,7 @@ object GroupV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
     implicit val groupsResponseV1Format: RootJsonFormat[GroupsResponseV1] = rootFormat(lazyFormat(jsonFormat2(GroupsResponseV1)))
     implicit val groupInfoResponseV1Format: RootJsonFormat[GroupInfoResponseV1] = rootFormat(lazyFormat(jsonFormat2(GroupInfoResponseV1)))
+    implicit val createGroupApiRequestV1Format: RootJsonFormat[CreateGroupApiRequestV1] = rootFormat(lazyFormat(jsonFormat4(CreateGroupApiRequestV1)))
+    implicit val updateGroupApiRequestV1Format: RootJsonFormat[UpdateGroupApiRequestV1] = rootFormat(lazyFormat(jsonFormat2(UpdateGroupApiRequestV1)))
+    implicit val groupOperationResponseV1Format: RootJsonFormat[GroupOperationResponseV1] = rootFormat(lazyFormat(jsonFormat2(GroupOperationResponseV1)))
 }
