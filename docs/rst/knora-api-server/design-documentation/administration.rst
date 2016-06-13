@@ -179,6 +179,15 @@ UC04: User "left" Knora
   those places would count as 'rewriting history'. So deleting a user will not be possible, instead the user will be
   set as ``not active``.
 
+UC05: Project restricts possible permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Description**:
+  A project wants to restrict the permissions of newly created resources to a fixed set
+
+**Solution**:
+  Any permissions supplied during the resource creation request need to be checked and if needed overriden.
+
 Webapi Components
 ------------------
 
