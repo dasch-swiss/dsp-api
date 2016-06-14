@@ -31,6 +31,8 @@ import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyCons
   */
 object PermissionUtilV1 {
 
+    // Todo: Add an explain method.
+
     /**
       * A [[Map]] of Knora permission property IRIs to their API v1 codes.
       */

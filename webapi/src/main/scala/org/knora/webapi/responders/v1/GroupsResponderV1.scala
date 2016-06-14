@@ -202,13 +202,17 @@ class GroupsResponderV1 extends ResponderV1 {
                 case GroupInfoType.FULL =>
                     GroupInfoV1(
                         id = groupIri,
-                        name = groupProperties.getOrElse(OntologyConstants.Foaf.Name, ""),
-                        description = groupProperties.get(OntologyConstants.KnoraBase.Description)
+                        name = groupProperties.getOrElse(OntologyConstants.KnoraBase.GroupName, ""),
+                        description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription),
+                        isActiveGroup = groupProperties.get(OntologyConstants.KnoraBase.IsActiveGroup).map(_.toBoolean),
+                        hasSelfJoinEnabled = groupProperties.get(OntologyConstants.KnoraBase.HasSelfJoinEnabled).map(_.toBoolean),
+                        hasGroupAdmin = Vector.empty[IRI]
+
                     )
                 case GroupInfoType.SHORT | _ =>
                     GroupInfoV1(
                         id = groupIri,
-                        name = groupProperties.getOrElse(OntologyConstants.Foaf.Name, ""),
+                        name = groupProperties.getOrElse(OntologyConstants.KnoraBase.GroupName, ""),
                         description = groupProperties.get(OntologyConstants.KnoraBase.Description)
                     )
             }

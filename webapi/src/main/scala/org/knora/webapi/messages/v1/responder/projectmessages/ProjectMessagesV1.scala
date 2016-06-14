@@ -139,6 +139,8 @@ case class ProjectInfoV1(id: IRI,
                          keywords: Option[String] = None,
                          logo: Option[String] = None,
                          basepath: Option[String] = None,
+                         isActiveProject: Option[String] = None,
+                         hasSelfJoinEnabled: Option[Boolean] = None,
                          rights: Option[Int] = None)
 
 object ProjectInfoType extends Enumeration {
@@ -174,7 +176,7 @@ object ProjectV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
     import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 
-    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat8(ProjectInfoV1)
+    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat10(ProjectInfoV1)
     // we have to use lazyFormat here because `UserV1JsonProtocol` contains an import statement for this object.
     // this results in recursive import statements
     // rootFormat makes it return the expected type again.

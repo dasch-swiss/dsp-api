@@ -31,6 +31,7 @@ import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoByNameGetRequest, GroupInfoResponseV1, GroupInfoType}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
@@ -55,8 +56,8 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    val imagesProjectIri = "http://data.knora.org/projects/images"
-    val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
+    val imgcontriFullGroupInfo = SharedTestData.imgcontriFullGroupInfoV1
+    val imgcontriShortGroupInfo = SharedTestData.imgcontriShortGroupInfoV1
 
     val rootUserProfileV1 = SharedTestData.rootUserProfileV1
 
@@ -77,24 +78,31 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
     "The GroupsResponder " when {
         "asked about a group identified by 'iri' " should {
-            "return group info if the group is known " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/root", true)
-                expectMsg(rootUserProfileV1.getCleanUserProfileV1)
+            "return full group info if the group is known " in {
+                actorUnderTest ! GroupInfoByIRIGetRequest(imgcontriFullGroupInfo.id, GroupInfoType.FULL, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imgcontriFullGroupInfo, Some(rootUserProfileV1.userData)))
+            }
+            "return short group info if the group is known " in {
+                actorUnderTest ! GroupInfoByIRIGetRequest(imgcontriShortGroupInfo.id, GroupInfoType.SHORT, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imgcontriShortGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", true)
-                expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
+                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/groups/notexisting", true)
+                expectMsg(Failure(NotFoundException(s"Group 'http://data.knora.org/users/notexisting' not found")))
             }
         }
         "asked about a group identified by 'name' " should {
-            "return group info if the group is known " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1("root", true)
-                expectMsg(rootUserProfileV1.getCleanUserProfileV1)
+            "return full group info if the group is known " in {
+                actorUnderTest ! GroupInfoByNameGetRequest(imgcontriFullGroupInfo.name, GroupInfoType.FULL, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imgcontriFullGroupInfo, Some(rootUserProfileV1.getCleanUserProfileV1.userData)))
             }
-
+            "return short group info if the group is known " in {
+                actorUnderTest ! GroupInfoByNameGetRequest(imgcontriFullGroupInfo.name, GroupInfoType.SHORT, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imgcontriShortGroupInfo, Some(rootUserProfileV1.getCleanUserProfileV1.userData)))
+            }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1("userwrong", true)
-                expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
+                actorUnderTest ! GroupInfoByNameGetRequest("groupwrong", GroupInfoType.FULL, Some(rootUserProfileV1))
+                expectMsg(Failure(NotFoundException(s"Group 'groupwrong' not found")))
             }
         }
         /*

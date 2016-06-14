@@ -131,13 +131,14 @@ case class GroupOperationResponseV1(group_info: GroupInfoV1, userdata: UserDataV
   * @param id the IRI if the group.
   * @param name the name of the group.
   * @param description the description of the group.
+  *
   */
 case class GroupInfoV1(id: IRI,
                        name: String,
                        description: Option[String] = None,
-                       isActiveGroup: Boolean,
-                       hasSelfJoinEnabled: Boolean,
-                       hasGroupAdmin: Seq[IRI])
+                       isActiveGroup: Option[Boolean] = None,
+                       hasSelfJoinEnabled: Option[Boolean] = None,
+                       hasGroupAdmin: Seq[IRI] = Nil)
 
 object GroupInfoType extends Enumeration {
     val SHORT = Value(0, "short")
@@ -170,7 +171,7 @@ object GroupV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
     import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 
-    implicit val groupInfoV1Format: JsonFormat[GroupInfoV1] = jsonFormat3(GroupInfoV1)
+    implicit val groupInfoV1Format: JsonFormat[GroupInfoV1] = jsonFormat6(GroupInfoV1)
     // we have to use lazyFormat here because `UserV1JsonProtocol` contains an import statement for this object.
     // this results in recursive import statements
     // rootFormat makes it return the expected type again.

@@ -168,10 +168,21 @@ object SharedTestData {
 
     )
 
-    val imgcontriGroupInfoV1 = GroupInfoV1(
+    val imgcontriFullGroupInfoV1 = GroupInfoV1(
         id = "http://data.knora.org/groups/imgcontri",
         name = "Images-Demo-Project External Contributors",
-        description = "This group contains contributing users external to the Image-Collection-Demo project",
-        isActiveGroup = true
+        description = Some("This group contains contributing users external to the Image-Collection-Demo project"),
+        isActiveGroup = Some(true),
+        hasSelfJoinEnabled = Some(false),
+        hasGroupAdmin = Vector.empty[IRI]
+    )
+
+    val imgcontriShortGroupInfoV1 = GroupInfoV1(
+        id = "http://data.knora.org/groups/imgcontri",
+        name = "Images-Demo-Project External Contributors",
+        description = Some("This group contains contributing users external to the Image-Collection-Demo project"),
+        isActiveGroup = None,
+        hasSelfJoinEnabled = None,
+        hasGroupAdmin = Vector.empty[IRI]
     )
 }
