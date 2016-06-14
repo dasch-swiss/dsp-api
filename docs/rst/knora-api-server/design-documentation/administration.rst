@@ -179,15 +179,6 @@ UC04: User "left" Knora
   those places would count as 'rewriting history'. So deleting a user will not be possible, instead the user will be
   set as ``not active``.
 
-UC05: Project restricts possible permissions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Description**:
-  A project wants to restrict the permissions of newly created resources to a fixed set
-
-**Solution**:
-  Any permissions supplied during the resource creation request need to be checked and if needed overriden.
-
 Webapi Components
 ------------------
 
@@ -389,3 +380,17 @@ Redesign / Questions June 2016
   - Should the 'root' user have 'implicitly' or 'explicitly' all permissions?
   - Does the has all permissions also extend to projects? Is the root user going to be part of every project?
     If yes, then again implicitly or explicitly?
+    
+**Ivan's Use Case**
+  - The system administrator creates the project and sets Ivan as the project administrator. As the project administrator, I have all permissions
+    on all objects (Resources/Values; Project Groups) belonging to the project (knora-base:attachedToProject). Nobody outside of the project
+    should be allowed to see anything that is created as part of Ivan's project. He wants to be able to create two groups: *Reviewer*, *Creator*.
+    The *Reviewer* group should only give *read-access* to someone inside the group to resources pointing to this group, but allow the creation of
+    annotations. Further, annotations should only be readable by users inside the *Reviewer* group.
+    The *Creator* group should give a user create permission and modify permision on the objects the user has created. Any resources created belong
+    to the project. The *Creator* group is meant for contributors helping out with the project, e.g., Hiwis.
+    
+**Lausanne Projects**
+  - A project wants to restrict the permissions of newly created resources to a fixed set
+  - This means for the current implementation, that any permissions supplied during the resource creation request need to be checked and if needed overriden.
+  - Restrict creation/access of certain classes of resources to certain groups, e.g., group A is able to create/access resources of class A but not of class B.
