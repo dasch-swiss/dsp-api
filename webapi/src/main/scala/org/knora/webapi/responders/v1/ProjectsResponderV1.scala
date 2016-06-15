@@ -42,7 +42,7 @@ class ProjectsResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case ProjectsGetRequestV1(userProfile) => future2Message(sender(), getProjectsResponseV1(userProfile), log)
+        case ProjectsGetRequestV1(infoType, userProfile) => future2Message(sender(), getProjectsResponseV1(infoType, userProfile), log)
         case ProjectInfoByIRIGetRequest(iri, infoType, userProfile) => future2Message(sender(), getProjectInfoByIRIGetRequest(iri, infoType, userProfile), log)
         case ProjectInfoByShortnameGetRequest(shortname, infoType, userProfile) => future2Message(sender(), getProjectInfoByShortnameGetRequest(shortname, infoType, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
@@ -73,7 +73,7 @@ class ProjectsResponderV1 extends ResponderV1 {
       * @param userProfile the profile of the user that is making the request.
       * @return all the projects as a [[ProjectsResponseV1]].
       */
-    private def getProjectsResponseV1(userProfile: Option[UserProfileV1]): Future[ProjectsResponseV1] = {
+    private def getProjectsResponseV1(infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): Future[ProjectsResponseV1] = {
 
         for {
         // group project result rows by their IRI
@@ -118,11 +118,11 @@ class ProjectsResponderV1 extends ResponderV1 {
       * Gets the project with the given project Iri and returns the information as a [[ProjectInfoResponseV1]].
       *
       * @param projectIri the Iri of the project requested.
-      * @param requestType type request: either short or full.
+      * @param infoType type request: either short or full.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */
-    private def getProjectInfoByIRIGetRequest(projectIri: IRI, requestType: ProjectInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
+    private def getProjectInfoByIRIGetRequest(projectIri: IRI, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(
                 triplestore = settings.triplestoreType,
@@ -130,7 +130,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             ).toString())
             projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
-            projectInfo = createProjectInfoV1FromProjectResponse(projectResponse = projectResponse.results.bindings, projectIri = projectIri, requestType = requestType, userProfile)
+            projectInfo = createProjectInfoV1FromProjectResponse(projectResponse = projectResponse.results.bindings, projectIri = projectIri, infoType = infoType, userProfile)
 
         } yield ProjectInfoResponseV1(
             project_info = projectInfo,
@@ -145,11 +145,11 @@ class ProjectsResponderV1 extends ResponderV1 {
       * Gets the project with the given shortname and returns the information as a [[ProjectInfoResponseV1]].
       *
       * @param shortname the shortname of the project requested.
-      * @param requestType type request: either short or full.
+      * @param infoType type request: either short or full.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */
-    private def getProjectInfoByShortnameGetRequest(shortname: String, requestType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
+    private def getProjectInfoByShortnameGetRequest(shortname: String, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByShortname(
                 triplestore = settings.triplestoreType,
@@ -164,7 +164,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                 throw NotFoundException(s"For the given project shortname $shortname no information was found")
             }
 
-            projectInfo = createProjectInfoV1FromProjectResponse(projectResponse = projectResponse.results.bindings, projectIri = projectIri, requestType = requestType, userProfile)
+            projectInfo = createProjectInfoV1FromProjectResponse(projectResponse = projectResponse.results.bindings, projectIri = projectIri, infoType = infoType, userProfile)
 
         } yield ProjectInfoResponseV1(
             project_info = projectInfo,
@@ -180,11 +180,11 @@ class ProjectsResponderV1 extends ResponderV1 {
       *
       * @param projectResponse results from the SPARQL query representing information about the project.
       * @param projectIri the Iri of the project the querid information belong to.
-      * @param requestType type request: either short or full.
+      * @param infoType type request: either short or full.
       * @param userProfile the profile of user that is making the request.
       * @return a [[ProjectInfoV1]] representing information about project.
       */
-    private def createProjectInfoV1FromProjectResponse(projectResponse: Seq[VariableResultsRow], projectIri: IRI, requestType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): ProjectInfoV1 = {
+    private def createProjectInfoV1FromProjectResponse(projectResponse: Seq[VariableResultsRow], projectIri: IRI, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): ProjectInfoV1 = {
 
         if (projectResponse.nonEmpty) {
 
@@ -198,7 +198,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                 case None => None
             }
 
-            requestType match {
+            infoType match {
                 case ProjectInfoType.FULL =>
                     ProjectInfoV1(
                         id = projectIri,

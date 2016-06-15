@@ -75,29 +75,30 @@ sealed trait ProjectsResponderRequestV1 extends KnoraRequestV1
 /**
   * Get all information about all projects.
   *
+  * @param infoType is the type of the project information: full or short.
   * @param userProfile the profile of the user making the request.
   */
-case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class ProjectsGetRequestV1(infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 
 /**
   * Get everything about a single project identified through it's IRI.
   *
   * @param iri Iri of the project.
-  * @param requestType is the type of the project information: full or short.
+  * @param infoType is the type of the project information: full or short.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class ProjectInfoByIRIGetRequest(iri: IRI, requestType: ProjectInfoType.Value, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class ProjectInfoByIRIGetRequest(iri: IRI, infoType: ProjectInfoType.Value, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 
 /**
   * Find everything about a single project identified through it's shortname.
   *
   * @param shortname of the project.
-  * @param requestType is the type of the project information.
+  * @param infoType is the type of the project information.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class ProjectInfoByShortnameGetRequest(shortname: String, requestType: ProjectInfoType.Value, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class ProjectInfoByShortnameGetRequest(shortname: String, infoType: ProjectInfoType.Value, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 
 // Responses

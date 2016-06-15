@@ -22,11 +22,13 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.SparqlUtil
 import org.knora.webapi.{IRI, NotFoundException, OntologyConstants, UnexpectedMessageException}
 
 import scala.concurrent.Future
@@ -43,29 +45,10 @@ class GroupsResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case GroupsGetRequestV1(userProfile) => future2Message(sender(), getGroupsResponseV1(userProfile), log)
+        case GroupsGetRequestV1(infoType, userProfile) => future2Message(sender(), getGroupsResponseV1(infoType, userProfile), log)
         case GroupInfoByIRIGetRequest(iri, infoType, userProfile) => future2Message(sender(), getGroupInfoByIRIGetRequest(iri, infoType, userProfile), log)
         case GroupInfoByNameGetRequest(shortname, infoType, userProfile) => future2Message(sender(), getGroupInfoByNameGetRequest(shortname, infoType, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
-    }
-
-    /**
-      * Gets permissions for the current user on the given project.
-      *
-      * @param groupIri the Iri of the project.
-      * @param propertiesForGroup assertions containing permissions on the project.
-      * @param userProfile the user that is making the request.
-      * @return permission level of the current user on the project.
-      */
-    private def getUserPermissionV1ForGroup(groupIri: IRI, propertiesForGroup: Map[IRI, String], userProfile: UserProfileV1): Option[Int] = {
-
-        // propertiesForProject must contain an owner for the project (knora-base:attachedToUser).
-        propertiesForGroup.get(OntologyConstants.KnoraBase.AttachedToUser) match {
-            case Some(user) => // add statement that `PermissionUtil.getUserPermissionV1` requires but is not present in the data for projects.
-                val assertionsForProject: Seq[(IRI, IRI)] = (OntologyConstants.KnoraBase.AttachedToProject, groupIri) +: propertiesForGroup.toVector
-                PermissionUtilV1.getUserPermissionV1(groupIri, assertionsForProject, userProfile)
-            case None => None // TODO: this is temporary to prevent PermissionUtil.getUserPermissionV1 from failing because owner id is missing in the data for project. See issue 1.
-        }
     }
 
     /**
@@ -74,7 +57,7 @@ class GroupsResponderV1 extends ResponderV1 {
       * @param userProfile the profile of the user that is making the request.
       * @return all the groups as a [[GroupsResponseV1]].
       */
-    private def getGroupsResponseV1(userProfile: Option[UserProfileV1]): Future[GroupsResponseV1] = {
+    private def getGroupsResponseV1(infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): Future[GroupsResponseV1] = {
 
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getProjects(
@@ -91,11 +74,6 @@ class GroupsResponderV1 extends ResponderV1 {
 
             groups = groupsWithProperties.map {
                 case (projIri: String, propsMap: Map[String, String]) =>
-
-                    val rightsInProject = userProfile match {
-                        case Some(profile) => getUserPermissionV1ForGroup(groupIri = projIri, propertiesForGroup = propsMap, profile)
-                        case None => None
-                    }
 
                     GroupInfoV1(
                         id = projIri,
@@ -116,11 +94,11 @@ class GroupsResponderV1 extends ResponderV1 {
       * Gets the group with the given group Iri and returns the information as a [[GroupInfoResponseV1]].
       *
       * @param groupIri the Iri of the group requested.
-      * @param requestType type request: either short or full.
+      * @param infoType type request: either short or full.
       * @param userProfile the profile of user that is making the request.
       * @return information about the group as a [[GroupInfoResponseV1]].
       */
-    private def getGroupInfoByIRIGetRequest(groupIri: IRI, requestType: GroupInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[GroupInfoResponseV1] = {
+    private def getGroupInfoByIRIGetRequest(groupIri: IRI, infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[GroupInfoResponseV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByIri(
                 triplestore = settings.triplestoreType,
@@ -128,7 +106,13 @@ class GroupsResponderV1 extends ResponderV1 {
             ).toString())
             groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
-            groupInfo = createGroupInfoV1FromGroupResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIri, requestType = requestType, userProfile)
+            // check group response
+            _ = if (groupResponse.results.bindings.isEmpty) {
+                throw NotFoundException(s"For the given group iri '$groupIri' no information was found")
+            }
+
+            // get group info
+            groupInfo = createGroupInfoV1FromGroupResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIri, infoType = infoType, userProfile)
 
         } yield GroupInfoResponseV1(
             group_info = groupInfo,
@@ -143,29 +127,33 @@ class GroupsResponderV1 extends ResponderV1 {
       * Gets the group with the given name and returns the information as a [[GroupInfoResponseV1]].
       *
       * @param name the name of the project requested.
-      * @param requestType type request: either short or full.
+      * @param infoType type request: either short or full.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[GroupInfoResponseV1]].
       */
-    private def getGroupInfoByNameGetRequest(name: String, requestType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
+    private def getGroupInfoByNameGetRequest(name: String, infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByName(
                 triplestore = settings.triplestoreType,
-                name = name
+                name = SparqlUtil.any2SparqlLiteral(name)
             ).toString())
+            _ = log.debug(s"sparql query: $sparqlQuery")
             groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
-            // get project Iri from results rows
+            _ = log.debug(s"group response: ${groupResponse.toString}")
+
+            // check group response and get group Iri
             groupIri: IRI = if (groupResponse.results.bindings.nonEmpty) {
                 groupResponse.results.bindings.head.rowMap("s")
             } else {
-                throw NotFoundException(s"For the given group name $name no information was found")
+                throw NotFoundException(s"For the given group name '$name' no information was found")
             }
 
-            projectInfo = createGroupInfoV1FromGroupResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIri, requestType = requestType, userProfile)
+            // get group info
+            groupInfo = createGroupInfoV1FromGroupResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIri, infoType = infoType, userProfile)
 
         } yield GroupInfoResponseV1(
-            group_info = projectInfo,
+            group_info = groupInfo,
             userdata = userProfile match {
                 case Some(profile) => Some(profile.userData)
                 case None => None
@@ -179,49 +167,38 @@ class GroupsResponderV1 extends ResponderV1 {
       *
       * @param groupResponse results from the SPARQL query representing information about the group.
       * @param groupIri the Iri of the group the querid information belong to.
-      * @param requestType type request: either short or full.
+      * @param infoType type request: either short or full.
       * @param userProfile the profile of the user that is making the request.
       * @return a [[GroupInfoV1]] representing information about the group.
       */
-    private def createGroupInfoV1FromGroupResponse(groupResponse: Seq[VariableResultsRow], groupIri: IRI, requestType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): GroupInfoV1 = {
+    private def createGroupInfoV1FromGroupResponse(groupResponse: Seq[VariableResultsRow], groupIri: IRI, infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): GroupInfoV1 = {
 
-        if (groupResponse.nonEmpty) {
-
-            val groupProperties = groupResponse.foldLeft(Map.empty[IRI, String]) {
-                case (acc, row: VariableResultsRow) =>
-                    acc + (row.rowMap("p") -> row.rowMap("o"))
-            }
-
-            val rightsInProject = userProfile match {
-                case Some(profile) => getUserPermissionV1ForGroup(groupIri = groupIri, propertiesForGroup = groupProperties, profile)
-                case None => None
-            }
-
-            requestType match {
-                //TODO: For now both cases return the same information. This should change in the future.
-                case GroupInfoType.FULL =>
-                    GroupInfoV1(
-                        id = groupIri,
-                        name = groupProperties.getOrElse(OntologyConstants.KnoraBase.GroupName, ""),
-                        description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription),
-                        isActiveGroup = groupProperties.get(OntologyConstants.KnoraBase.IsActiveGroup).map(_.toBoolean),
-                        hasSelfJoinEnabled = groupProperties.get(OntologyConstants.KnoraBase.HasSelfJoinEnabled).map(_.toBoolean),
-                        hasGroupAdmin = Vector.empty[IRI]
-
-                    )
-                case GroupInfoType.SHORT | _ =>
-                    GroupInfoV1(
-                        id = groupIri,
-                        name = groupProperties.getOrElse(OntologyConstants.KnoraBase.GroupName, ""),
-                        description = groupProperties.get(OntologyConstants.KnoraBase.Description)
-                    )
-            }
-        } else {
-            // no information was found for the given project Iri
-            throw NotFoundException(s"For the given group Iri $groupIri no information was found")
-
+        val groupProperties = groupResponse.foldLeft(Map.empty[IRI, String]) {
+            case (acc, row: VariableResultsRow) =>
+                acc + (row.rowMap("p") -> row.rowMap("o"))
         }
 
+        log.debug(s"group properties: ${groupProperties.toString}")
+
+        infoType match {
+            //TODO: For now both cases return the same information. This should change in the future.
+            case GroupInfoType.FULL =>
+                GroupInfoV1(
+                    id = groupIri,
+                    name = groupProperties.get(OntologyConstants.KnoraBase.GroupName).get,
+                    description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription),
+                    isActiveGroup = groupProperties.get(OntologyConstants.KnoraBase.IsActiveGroup).map(_.toBoolean),
+                    hasSelfJoinEnabled = groupProperties.get(OntologyConstants.KnoraBase.HasSelfJoinEnabled).map(_.toBoolean),
+                    hasGroupAdmin = Vector.empty[IRI]
+
+                )
+            case GroupInfoType.SHORT | _ =>
+                GroupInfoV1(
+                    id = groupIri,
+                    name = groupProperties.get(OntologyConstants.KnoraBase.GroupName).get,
+                    description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription)
+                )
+        }
     }
 
 

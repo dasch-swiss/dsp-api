@@ -49,7 +49,9 @@ object ProjectsRouteV1 extends Authenticator {
                 requestContext =>
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
-                        ProjectsGetRequestV1(Some(userProfile))
+                        val params = requestContext.request.uri.query.toMap
+                        val infoType = params.getOrElse("infoType", ProjectInfoType.SHORT.toString)
+                        ProjectsGetRequestV1(ProjectInfoType.lookup(infoType), Some(userProfile))
                     }
                     RouteUtilV1.runJsonRoute(
                         requestMessageTry,
@@ -66,7 +68,7 @@ object ProjectsRouteV1 extends Authenticator {
                         val requestMessageTry = Try {
                             val userProfile = getUserProfileV1(requestContext)
                             val params = requestContext.request.uri.query.toMap
-                            val requestType = params.getOrElse("requestType", ProjectInfoType.SHORT.toString)
+                            val requestType = params.getOrElse("infoType", ProjectInfoType.SHORT.toString)
                             if (urlValidator.isValid(value)) {
                                 /* valid URL */
                                 ProjectInfoByIRIGetRequest(value, ProjectInfoType.lookup(requestType), Some(userProfile))

@@ -67,29 +67,30 @@ sealed trait GroupsResponderRequestV1 extends KnoraRequestV1
 /**
   * Get all information about all groups.
   *
+  * @param infoType is the type of the group information: full or short.
   * @param userProfile the profile of the user making the request.
   */
-case class GroupsGetRequestV1(userProfile: Option[UserProfileV1]) extends GroupsResponderRequestV1
+case class GroupsGetRequestV1(infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 
 /**
   * Get everything about a single group identified through it's IRI.
   *
   * @param iri Iri of the group.
-  * @param requestType is the type of the group information: full or short.
+  * @param infoType is the type of the group information: full or short.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class GroupInfoByIRIGetRequest(iri: IRI, requestType: GroupInfoType.Value, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
+case class GroupInfoByIRIGetRequest(iri: IRI, infoType: GroupInfoType.Value, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 
 /**
   * Find everything about a single group identified through it's shortname.
   *
   * @param name of the group.
-  * @param requestType is the type of the project information.
+  * @param infoType is the type of the project information.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class GroupInfoByNameGetRequest(name: String, requestType: GroupInfoType.Value, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
+case class GroupInfoByNameGetRequest(name: String, infoType: GroupInfoType.Value, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 
 // Responses

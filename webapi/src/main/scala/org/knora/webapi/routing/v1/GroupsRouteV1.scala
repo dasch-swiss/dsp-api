@@ -49,7 +49,9 @@ object GroupsRouteV1 extends Authenticator {
                 requestContext =>
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
-                        ProjectsGetRequestV1(Some(userProfile))
+                        val params = requestContext.request.uri.query.toMap
+                        val infoType = params.getOrElse("infoType", GroupInfoType.SHORT.toString)
+                        GroupsGetRequestV1(GroupInfoType.lookup(infoType), Some(userProfile))
                     }
                     RouteUtilV1.runJsonRoute(
                         requestMessageTry,
@@ -67,13 +69,13 @@ object GroupsRouteV1 extends Authenticator {
                         val requestMessageTry = Try {
                             val userProfile = getUserProfileV1(requestContext)
                             val params = requestContext.request.uri.query.toMap
-                            val requestType = params.getOrElse("requestType", GroupInfoType.SHORT.toString)
+                            val infoType = params.getOrElse("infoType", GroupInfoType.SHORT.toString)
                             if (urlValidator.isValid(value)) {
                                 /* valid URL */
-                                GroupInfoByIRIGetRequest(value, GroupInfoType.lookup(requestType), Some(userProfile))
+                                GroupInfoByIRIGetRequest(value, GroupInfoType.lookup(infoType), Some(userProfile))
                             } else {
                                 /* not valid URL so I assume it is an username */
-                                GroupInfoByNameGetRequest(value, GroupInfoType.lookup(requestType), Some(userProfile))
+                                GroupInfoByNameGetRequest(value, GroupInfoType.lookup(infoType), Some(userProfile))
                             }
                         }
                         RouteUtilV1.runJsonRoute(

@@ -87,8 +87,8 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 expectMsg(GroupInfoResponseV1(imgcontriShortGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/groups/notexisting", true)
-                expectMsg(Failure(NotFoundException(s"Group 'http://data.knora.org/users/notexisting' not found")))
+                actorUnderTest ! GroupInfoByIRIGetRequest("http://data.knora.org/groups/notexisting", GroupInfoType.FULL, Some(rootUserProfileV1))
+                expectMsg(Failure(NotFoundException(s"For the given group iri 'http://data.knora.org/groups/notexisting' no information was found")))
             }
         }
         "asked about a group identified by 'name' " should {

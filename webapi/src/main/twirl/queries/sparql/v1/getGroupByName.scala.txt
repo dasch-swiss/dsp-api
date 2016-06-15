@@ -28,6 +28,7 @@
 @(triplestore: String,
   name: String)
 
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-admin#>
@@ -38,9 +39,7 @@ SELECT ?s ?p ?o
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND("@name" as ?name)
-
     ?s rdf:type knora-base:UserGroup .
-    ?s <http://xmlns.com/foaf/0.1/name> ?name .
+    ?s knora-base:groupName @name .
     ?s ?p ?o .
 }
