@@ -364,7 +364,7 @@ Redesign / Questions June 2016
   - Should hiwis be "owners" of resources they create on behalf of their professor?
   - If the creator should have max permission, then give it explicitly.
   
-**Resource creation permission to corse**
+**Resource creation permission to course**
   - beeing part of a projects gives resource creation permission. What if some project members are not allowed to create
     new resources (or only certain types; Lumiere Lausanne requirement), but are only allowed to change existing resources?  
 
@@ -394,3 +394,12 @@ Redesign / Questions June 2016
   - A project wants to restrict the permissions of newly created resources to a fixed set
   - This means for the current implementation, that any permissions supplied during the resource creation request need to be checked and if needed overriden.
   - Restrict creation/access of certain classes of resources to certain groups, e.g., group A is able to create/access resources of class A but not of class B.
+  
+**Results**
+  - Owner -> Creator
+  - Gruppen Permissions: Add Resource (Class), Modify Ontology, 
+  - Resource Permissions: 
+  - Ontologien Benutzung einschränken
+  - System Admin Rechte implizit
+  - Gruppen immer an Projekt gebunden
+  - Keine Gruppen-Admins. Soll über Rollen vom Projekt-Admin geregelt werden können.  
