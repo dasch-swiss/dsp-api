@@ -94,15 +94,15 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
         "asked about a group identified by 'name' " should {
             "return full group info if the group is known " in {
                 actorUnderTest ! GroupInfoByNameGetRequest(imgcontriFullGroupInfo.name, GroupInfoType.FULL, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imgcontriFullGroupInfo, Some(rootUserProfileV1.getCleanUserProfileV1.userData)))
+                expectMsg(GroupInfoResponseV1(imgcontriFullGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return short group info if the group is known " in {
                 actorUnderTest ! GroupInfoByNameGetRequest(imgcontriFullGroupInfo.name, GroupInfoType.SHORT, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imgcontriShortGroupInfo, Some(rootUserProfileV1.getCleanUserProfileV1.userData)))
+                expectMsg(GroupInfoResponseV1(imgcontriShortGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return 'NotFoundException' when the group is unknown " in {
                 actorUnderTest ! GroupInfoByNameGetRequest("groupwrong", GroupInfoType.FULL, Some(rootUserProfileV1))
-                expectMsg(Failure(NotFoundException(s"Group 'groupwrong' not found")))
+                expectMsg(Failure(NotFoundException(s"For the given group name 'groupwrong' no information was found")))
             }
         }
         /*
