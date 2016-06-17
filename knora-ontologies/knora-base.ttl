@@ -933,7 +933,17 @@
            :subjectClassConstraint :knoraProject .
 
 
+###  http://www.knora.org/ontology/knora-base#belongsToProject
 
+:belongsToProject rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf :systemProperty ;
+
+           rdfs:comment "Indicates which knoraProject a UserGroup belongs to"@en ;
+
+           :objectClassConstraint :knoraProject ;
+
+           :subjectClassConstraint :UserGroup .
 
 
 ###
