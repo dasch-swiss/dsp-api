@@ -358,6 +358,120 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             xmlDiff3.hasDifferences should be(false)
 
         }
+
+        "calculate diffs in markup for two versions that are identical on the literal (content) level (1)" in {
+
+            val regionID = UUID.randomUUID
+
+            val documentSpecificIDs = Map(
+                "1" -> regionID
+            )
+
+            val standoffUtil = new StandoffUtil(documentSpecificIDs = documentSpecificIDs)
+
+            val diplomaticTranscription =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<region id="1">
+                  |<rendition type="center underline">CLI</rendition>.<lb/><lb/>
+                  |<rendition type="underline">Examen modi Renaldiniani inscribendi q&#780;vis polygona regularia in circulo,<lb/>
+                  |depromti ex Lib. II. de Resol. &#38; Composi: Mathem: p. 367.</rendition> (<rendition type="underline">vid. Sturmii<lb/>
+                  |Mathesin enucleatam p. 38.</rendition>)
+                  |</region>
+                """.stripMargin
+
+            val criticalText =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                |<region id="1">
+                |CLI<corr repl="">.</corr><lb/><lb/>
+                |Examen modi Renaldiniani inscribendi <corr repl="quaevis">q&#780;vis</corr> polygona regularia in circulo,<lb/>
+                |depromti ex Lib. II. de <abbr expan="Resolutione">Resol.</abbr> &#38; <abbr expan="Compositione">Composi:</abbr> <abbr expan="Mathematica">Mathem:</abbr> p. 367.<lb/> (vid<corr repl="e">.</corr> Sturmii
+                |Mathesin enucleatam p. 38.)
+                |</region>
+                """.stripMargin
+
+            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription)
+            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText)
+
+            val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
+                baseText = diploTextWithStandoff.text,
+                derivedText = criticalTextWithStandoff.text
+            )
+
+            val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
+                baseText = diploTextWithStandoff.text,
+                derivedText = criticalTextWithStandoff.text,
+                standoffDiffs = criticalTextDiffs
+            )
+
+            assert(diploTextWithStandoff.text == criticalTextWithStandoff.text)
+
+            val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
+                oldStandoff = diploTextWithStandoff.standoff,
+                newStandoff = criticalTextWithStandoff.standoff
+            )
+
+            standoffAdded.exists(_.uuid == regionID) should be(false)
+            standoffRemoved.exists(_.uuid == regionID) should be(false)
+
+        }
+
+        "calculate diffs in markup for two versions that are identical on the literal (content) level (2)" in {
+
+            val regionID = UUID.randomUUID
+
+            val documentSpecificIDs = Map(
+                "2" -> regionID
+            )
+
+            val standoffUtil = new StandoffUtil(documentSpecificIDs = documentSpecificIDs)
+
+            val diplomaticTranscription =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                   |<region id="2">
+                  |Modus hic est: Fiat triang: æquil: <formula notation="TeX">ABD</formula>, divisâq́ diametro <formula notation="TeX">AB</formula> in tot partes æquales,<lb/>
+                  |quot laterum est figura inscribenda, duabusq́ earum p̃termissis <rendition type="strike">et</rendition> à <formula notation="TeX">B</formula> versùs <formula notation="TeX">A</formula>, ducat,<lb/>
+                   |per initium tertiæ recta <formula notation="TeX">DF</formula>, &amp; hinc recta <formula notation="TeX">FB</formula>, quam putat esse latus polygoni optati<lb/><lb/>
+                  |<rendition type="underline">Anal</rendition>: Sit secta diameter utcunq́ in <formula notation="TeX">E</formula>, <formula notation="TeX">e</formula> , ductæq́ <formula notation="TeX">DEF</formula>, <rendition type="above"><formula notation="TeX">FA</formula>,</rendition> &amp; <formula notation="TeX">FB</formula> &amp; demissa in diametrum per-<lb/>
+                   |pendicularis <formula notation="TeX">FG</formula>, fiat <formula notation="TeX">CB=a</formula>, <formula notation="TeX">CE</formula> vel <formula notation="TeX">Ce=b</formula>, <formula notation="TeX">FB=x</formula>, unde <formula notation="TeX">AF=\sqrt{\mathstrut}\,\overline{4aa-xx}</formula><lb/>
+                   |</region>
+                """.stripMargin
+
+            val criticalText =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                   |<region id="2">
+                  |Modus hic est: Fiat <abbr expan="triangulum">triang:</abbr> <corr repl="ae">æ</corr>quil: <formula notation="TeX">ABD</formula>, <corr repl="diviasque">divisâq́</corr> diametro <formula notation="TeX">AB</formula> in tot partes <corr repl="ae">æ</corr>quales,<lb/>
+                  |quot laterum est figura inscribenda, <corr repl="duabusque">duabusq́</corr> earum <corr repl="praetermissis">p̃termissis</corr> <del>et</del> <corr repl="a">à</corr> <formula notation="TeX">B</formula> vers<corr repl="u">ù</corr>s <formula notation="TeX">A</formula>, <corr repl="ducatur">ducat</corr>,<lb/>
+                   |per initium terti<corr repl="ae">æ</corr> recta <formula notation="TeX">DF</formula>, &amp; hinc recta <formula notation="TeX">FB</formula>, quam putat esse latus polygoni optati<corr repl="."></corr><lb/><lb/>
+                  |<abbr expan="Analysis">Anal</abbr>: Sit secta diameter <corr repl="utunque">utcunq́</corr> in <formula notation="TeX">E</formula>, <formula notation="TeX">e</formula> , <corr repl="ductaeque">ductæq́</corr> <formula notation="TeX">DEF</formula>, <add><formula notation="TeX">FA</formula>,</add> &amp; <formula notation="TeX">FB</formula> &amp; demissa in diametrum per<corr repl="">-</corr>
+                   |pendicularis <formula notation="TeX">FG</formula>, fiat <formula notation="TeX">CB=a</formula>, <formula notation="TeX">CE</formula> vel <formula notation="TeX">Ce=b</formula>, <formula notation="TeX">FB=x</formula>, unde <formula notation="TeX">AF=\sqrt{\mathstrut}\,\overline{4aa-xx}</formula><lb/>
+                   |</region>
+                """.stripMargin
+
+            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription)
+            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText)
+
+            val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
+                baseText = diploTextWithStandoff.text,
+                derivedText = criticalTextWithStandoff.text
+            )
+
+            val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
+                baseText = diploTextWithStandoff.text,
+                derivedText = criticalTextWithStandoff.text,
+                standoffDiffs = criticalTextDiffs
+            )
+
+            assert(diploTextWithStandoff.text == criticalTextWithStandoff.text)
+
+            val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
+                oldStandoff = diploTextWithStandoff.standoff,
+                newStandoff = criticalTextWithStandoff.standoff
+            )
+
+            standoffAdded.exists(_.uuid == regionID) should be(false)
+            standoffRemoved.exists(_.uuid == regionID) should be(false)
+
+        }
     }
 }
 
