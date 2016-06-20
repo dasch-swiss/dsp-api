@@ -1,0 +1,344 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix dc: <http://www.knora.org/ontology/dc#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@base <http://www.knora.org/ontology/beol> .
+
+@prefix : <http://www.knora.org/ontology/beol#> .
+
+<http://www.knora.org/ontology/beol> rdf:type owl:Ontology .
+
+##########################################################
+#
+# PROPERTIES
+#
+##########################################################
+
+
+### ###########################################
+### beol:title
+
+:title rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf dc:title ;
+
+       rdfs:label "Titel"@de ,
+                  "Titre"@fr ,
+                  "Titolo"@it ,
+                  "Title"@en ;
+
+       rdfs:comment """Titel"""@de ;
+
+       knora-base:subjectClassConstraint :manuscript ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiOrder "1"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" ;
+
+       knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                           knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+       knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+### ###########################################
+### beol:creationDate
+
+:creationDate rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf dc:date ;
+
+              rdfs:label "Datum der Entstehung"@de ;
+
+              knora-base:subjectClassConstraint :manuscript ;
+
+              knora-base:objectClassConstraint knora-base:DateValue ;
+
+              salsah-gui:guiOrder "3"^^xsd:integer ;
+
+              salsah-gui:guiElement salsah-gui:Date ;
+
+              salsah-gui:guiAttribute "size=16" ,
+                                    "maxlength=32" ;
+
+              rdfs:comment """Datum der Entstehung"""@de ;
+
+              knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                                knora-base:UnknownUser ;
+
+              knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+              knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+### ###########################################
+### beol:hasAuthor
+
+:hasAuthor rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf dc:creator ;
+
+           rdfs:label "Creator"@de ;
+
+           rdfs:comment """Erzeuger/Autor"""@de ;
+
+           knora-base:subjectClassConstraint :book ;
+
+           knora-base:objectClassConstraint knora-base:TextValue ;
+
+           salsah-gui:guiOrder "2"^^xsd:integer ;
+
+           salsah-gui:guiElement salsah-gui:SimpleText ;
+
+           salsah-gui:guiAttribute "size=60" ,
+                                   "maxlength=255" ;
+
+           knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+           knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+   ### ###########################################
+   ### beol:location
+
+   :location rdf:type owl:ObjectProperty ;
+
+             rdfs:subPropertyOf knora-base:hasValue ;
+
+             rdfs:label "Standort"@de ,
+                        "Emplacement"@fr ,
+                        "Postazione"@it ,
+                        "Location"@en ;
+
+             rdfs:comment """Der Ort, wo sich das physische Original befindet"""@de ;
+
+             knora-base:subjectClassConstraint :manuscript ;
+
+             knora-base:objectClassConstraint knora-base:TextValue ;
+
+             salsah-gui:guiOrder "4"^^xsd:integer ;
+
+             salsah-gui:guiElement salsah-gui:Textarea ;
+
+             salsah-gui:guiAttribute "cols=60" ,
+                                     "rows=4" ,
+                                     "wrap=soft" ;
+
+             knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                                 knora-base:UnknownUser ;
+
+             knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                   knora-base:Owner .
+
+   ### ###########################################
+   ### beol:partOfValue
+
+   :partOfValue rdf:type owl:ObjectProperty ;
+
+                rdfs:subPropertyOf knora-base:isPartOfValue ;
+
+                knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                rdfs:label "ist ein Teil von"@de ,
+                           "est un part de"@fr ,
+                           "e una parte di"@it ,
+                           "is a part of"@en ;
+
+                rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
+
+                knora-base:subjectClassConstraint :page ;
+
+                salsah-gui:guiOrder "2"^^xsd:integer ;
+
+                salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+   ### ###########################################
+   ### beol:partOf
+
+   :partOf rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf knora-base:isPartOf ;
+
+           rdfs:label "ist ein Teil von"@de ,
+                      "est un part de"@fr ,
+                      "e una parte di"@it ,
+                      "is a part of"@en ;
+
+           rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
+
+           knora-base:subjectClassConstraint :page ;
+
+           knora-base:objectClassConstraint :manuscript ;
+
+           salsah-gui:guiOrder "2"^^xsd:integer ;
+
+           salsah-gui:guiElement salsah-gui:Searchbox ;
+
+           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                               knora-base:UnknownUser ,
+                                               knora-base:ProjectMember ;
+
+           knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+   ### ###########################################
+   ### beol:seqnum
+
+   :seqnum rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf knora-base:seqnum ;
+
+           rdfs:label "Sequenznummer"@de ,
+                      "Numéro de Séquence"@fr ,
+                      "Numero di scala"@it ,
+                      "Sequence number"@en ;
+
+           rdfs:comment """Diese Property bezeichnet die Position in einer geordneten Reihenfolge"""@de ,
+                        """Cette \"property\" dénote la position dans un séquence."""@fr ,
+                        """This property stands for the position within a set of rdered items (resoucres)"""@en ;
+
+           knora-base:subjectClassConstraint :page ;
+
+           knora-base:objectClassConstraint knora-base:IntValue ;
+
+           salsah-gui:guiOrder "1"^^xsd:integer ;
+
+           salsah-gui:guiElement salsah-gui:Spinbox ;
+
+           salsah-gui:guiAttribute "min=0" ,
+                                   "max=-1" ;
+
+           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                               knora-base:UnknownUser ,
+                                               knora-base:ProjectMember ;
+
+           knora-base:hasDefaultModifyPermission knora-base:Owner .
+
+    ### ###########################################
+    ### beol:pagenum
+
+    :pagenum rdf:type owl:ObjectProperty ;
+
+            rdfs:subPropertyOf knora-base:hasValue ;
+
+            rdfs:label "Seitenbezeichnung"@de ,
+                       "Désignation de page"@fr ,
+                       "Page identifier"@en ;
+
+            rdfs:comment """Eine eindeutige numerische Bezeichnung einer Seite"""@de ,
+                         """A distinct identification of a page"""@en ;
+
+            knora-base:subjectClassConstraint :page ;
+
+            knora-base:objectClassConstraint knora-base:TextValue ;
+
+            salsah-gui:guiOrder "3"^^xsd:integer ;
+
+            salsah-gui:guiElement salsah-gui:SimpleText ;
+
+            salsah-gui:guiAttribute "min=4" ,
+                                    "max=8" ;
+
+            knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
+                                                knora-base:KnownUser ;
+
+            knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+            knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+    ##########################################################
+    #
+    # RESOURCES
+    #
+    ##########################################################
+
+
+    ### ###########################################
+    ### beol:manuscript
+
+    :manuscript rdf:type owl:Class ;
+
+          rdfs:subClassOf knora-base:Resource ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :title ;
+                             owl:minCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :hasAuthor ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :creationDate ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :location ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ;
+
+          knora-base:resourceIcon "manuscript.gif" ;
+
+          rdfs:label "Manuskript"@de ,
+                     "Manuscrit"@fr ,
+                     "Manoscritto"@it ,
+                     "Manuscript"@en ;
+
+          rdfs:comment """Diese Resource-Klasse beschreibt ein Manuskript"""@de ;
+
+          knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
+
+          knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+          knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
+                                                knora-base:Owner .
+
+    ### ###########################################
+    ### beol:page
+
+    :page rdf:type owl:Class ;
+
+          rdfs:subClassOf knora-base:StillImageRepresentation ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :pagenum ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :partOfValue ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :partOf ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :seqnum ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ;
+
+          knora-base:resourceIcon "page.gif" ;
+
+          rdfs:label "Seite"@de ,
+                     "Page"@fr ,
+                     "Page"@en ;
+
+          rdfs:comment """Eine Seite ist ein Teil eines Konvoluts"""@de ,
+                       """Une page est une partie d'un convoluté"""@fr ,
+                       """A page is a part of a convolute"""@en ;
+
+          knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
+
+          knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+          knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
+                                                knora-base:Owner .
