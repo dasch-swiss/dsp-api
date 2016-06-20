@@ -92,7 +92,7 @@
 
            rdfs:comment """Erzeuger/Autor"""@de ;
 
-           knora-base:subjectClassConstraint :book ;
+           knora-base:subjectClassConstraint :manuscript ;
 
            knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -103,11 +103,13 @@
            salsah-gui:guiAttribute "size=60" ,
                                    "maxlength=255" ;
 
-           knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                               knora-base:UnknownUser ;
 
            knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
            knora-base:hasDefaultDeletePermission knora-base:Owner .
+
 
    ### ###########################################
    ### beol:location
