@@ -17,13 +17,13 @@
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 
-Administration (Users, Projects, Groups)
+Administration (Users, Projects, Groups, Institutions)
 =========================================
 
 Scope
 ------
 
-This Section includes management (creation, updating, deletion) of *Users*, *Groups*, and *Projects*.
+This Section includes management (creation, updating, deletion) of *Users*, *Projects*, *Groups*, and *Institutions*.
 
 Implementation
 ---------------
@@ -42,9 +42,14 @@ Overview
 During the initial deployment of a Knora server, the main administration user (*root*) is created. This *root* user has
 the right to do anything.
 
-Knora’s concept of access control is that an object (a resource or value) can grant permissions to groups of users (but
-not to individual users). There are six built-in *smart* groups: *UnknownUser*, *KnownUser*, *ProjectMember*, *Cretor*,
-*SystemAdmin*, *ProjectAdmin*. A user becomes implicitly a member of such a group by satisfying some condition.
+Knora’s concept of access control is that permissions can only be granted to groups and not to individual users. There
+are two distinct ways of granting permission. Firstly, an object (a resource or value) can grant permissions to groups
+of users, and secondly, permissions can be granted directly to a group of users (not bound to a specific object). There
+are six built-in *smart* groups: *UnknownUser*, *KnownUser*, *Creator*, *ProjectMember*, *ProjectAdmin*, and
+*SystemAdmin*. These *smart* groups can be used in the same way as normal user created groups for permission managment,
+i.e. can be used to give certain groups of userers, certain permissions, without the need to explicitly create them.
+
+A user becomes implicitly a member of such a group by satisfying certain conditions:
 
 **UnknownUser**:
   Any user who has not logged into the Knora API server is automatically assigned to this group.
@@ -52,43 +57,45 @@ not to individual users). There are six built-in *smart* groups: *UnknownUser*, 
 **KnownUser**:
   Any user who has logged into the Knora API server is automatically assigned to this group.
 
-**ProjectMember**:
-  When checking a user’s permissions on an object, the user is automatically assigned to this group if
-  she is a member of the project that the object belongs to.
-
 **Creator**:
   When checking a user’s permissions on an object, the user is automatically assigned to this group if he is
   the creator of the object.
 
-**SystemAdmin**:
-  The ``root`` user is by default member of this group. Membership is received by setting the property
-  ``knora-base:hasSystemAdminPermissions`` to ``true`` on a ``knora-base:User``.
+**ProjectMember**:
+  When checking a user’s permissions on an object, the user is automatically assigned to this group if
+  she is a member of the project that the object belongs to.
 
 **ProjectAdmin**:
   Membership is received by adding the property ``knora-base:isProjectAdmin`` to the user and by pointing it to the
   project. Received automatically by creating the project.
 
+**SystemAdmin**:
+  The ``root`` user is by default member of this group. Membership is received by setting the property
+  ``knora-base:hasSystemAdminPermissions`` to ``true`` on a ``knora-base:User``.
+
 
 Permissions
 ------------
 
-There are two distinct types of permissions, namely permissions that are put on **objects** (resources/values) which point
-to groups, and permissions that are put on **groups**.
+As mentioned, there are two distinct groups of permissions. The first is called *object permissions* and contains
+permissions that point from explicit **objects** (resources/values) to groups. The second group of permissions is called
+*group permissions* and contains permissions that are put directly on a **group**, i.e. the object giving the permission
+is not explicitly defined (e.g., the permission to modify an ontology).
 
 Object Permissions
 ^^^^^^^^^^^^^^^^^^^
 An object (resource / value) can grant the following permissions:
-  1. *hasRestrictedViewPermission*: Allows a restricted view of the ob- ject, e.g. a view of an image with a watermark.
-  2. *hasViewPermission*: Allows an unrestricted view of the object. Hav- ing view permission on a resource only a ects
+  1. *knora-base:hasRestrictedViewPermission*: Allows a restricted view of the ob- ject, e.g. a view of an image with a watermark.
+  2. *knora-base:hasViewPermission*: Allows an unrestricted view of the object. Hav- ing view permission on a resource only a ects
      the user’s ability to view information about the resource other than its values. To view a value, she must have
      view permission on the value itself.
-  3. *hasModifyPermission*: For values, this permission allows a new version of a value to be created. For resources,
+  3. *knora-base:hasModifyPermission*: For values, this permission allows a new version of a value to be created. For resources,
      this allows the user to create a new value (as opposed to a new version of an existing value), or to change
      information about the resource other than its values. When he wants to make a new version of a value, his
      permissions on the containing resource are not relevant. However, when he wants to change the target of a link,
      the old link must be deleted and a new one created, so he needs modify permission on the resource.
-  4. *hasDeletePermission*: Allows the item to be marked as deleted.
-  5. *hasChangeRightsPermission*: Allows the permissions granted by the object to be changed.
+  4. *knora-base:hasDeletePermission*: Allows the item to be marked as deleted.
+  5. *knora-base:hasChangeRightsPermission*: Allows the permissions granted by the object to be changed.
 
 Each permission in the above list implies all lower-numbered permissions.
 
@@ -96,7 +103,9 @@ A user’s permission level on a particular object is calculated in the followin
 
   1. Make a list of the groups that the user belongs to, including Owner and/or ProjectMember if applicable.
   2. If the user is the owner of the object, give her the highest level of permissions.
-  3. Otherwise, make a list of the permissions that she can obtain on the ob- ject, by iterating over the permissions that the object grants. For each permission, if she is in the speci ed group, add the speci ed permission to the list of permissions she can obtain.
+  3. Otherwise, make a list of the permissions that she can obtain on the ob- ject, by iterating over the permissions
+     that the object grants. For each permission, if she is in the speci ed group, add the speci ed permission to the
+     list of permissions she can obtain.
   4. From the resulting list, select the highest-level permission.
   5. If the result is that she would have no permissions, give her whatever permission *UnknownUser* would have.
 
@@ -104,21 +113,38 @@ A user’s permission level on a particular object is calculated in the followin
 Group Permissions
 ^^^^^^^^^^^^^^^^^^
 
+A group of users can be given the following permissions:
+
+  1. *hasProjectResourceCreatePermission* - can be acompanied by a list of *ResourceClasses*, if the user should only be
+     able to create instances of certain resource classes.
+  2. *hasProjectUserAdminPermission* - unrestricted
+     *hasProjectUserAdminPermissionRestricted* - restricted - must be acompanied by a list of *Groups* if the user
+     should only be able to manage the users of a subset of project groups.
+  3. *hasProjectRightsAdminPermission* - gives the permission to change the permissions on all objects belonging to the
+     project (e.g., default permissions attached to groups and permissions on objects).
+  4. *hasOntologyAdminPermission*
+  5. *knora:base:hasDefaultRestrictedViewPermission* acompanied by a list of groups.
+  6. *knora-base:hasDefaultViewPermission* acompanied by a list of groups.
+  7. *knora-base:hasDefaultModifyPermission* acompanied by a list of groups.
+  8. *knora-base:hasDefaultDeletePermission* acompanied by a list of groups.
+  9. *knora-base:hasDefaultChangeRightsPermission* acompanied by a list of groups.
 
 
-Access Controll Matrix
------------------------
+Administrative Permissions
+---------------------------
 Some changes require administrative permissions. These permissions are given to a user by being a member of a smart
 group. As before, a user becomes implicitly a member of such a group by satisfying some condition, i.e. having a
 special property attached to the user.
 
 **SystemAdmin**:
-  This group gives the user all permissions. 
-  Can be assigned to a user only by the ``root`` user.
+  This group gives the user all permissions.
+  Can be assigned to a user only by the ``root`` user by attaching the property *knora-base:hasSystemAdminPermissions*
+  to a user and giving it the value *true*.
+  ``<http://data.knora.org/users/[UUID]> knora-base:isSystemAdmin "true"^^xsd:boolean``
 
-**ProjectAdmin**:
+**ProjectAdmin** / **ProjectUserAdmin** / **ProjectRightsAdmin** :
   This group gives a single user the administrative permissions for a specific *project*.  Can be assigned to
-  a user by ``SystemAdmin`` or other ``ProjectAdmin``. 
+  a user by ``SystemAdmin`` or other ``ProjectAdmin``.
   
   - User add/remove to/from project
   - User add/remove to/from all groups under project
