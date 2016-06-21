@@ -72,7 +72,7 @@ object GraphProtocolAccessor {
     private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem): String = {
         // url?name= + turtle payload as body
 
-        val log = akka.event.Logging(_system, this.getClass())
+        val log = akka.event.Logging(_system, this.getClass)
         val settings = Settings(_system)
         implicit val executionContext = _system.dispatcher
         val tsType = settings.triplestoreType
@@ -84,9 +84,9 @@ object GraphProtocolAccessor {
 
         /* HTTP paths for the SPARQL 1.1 Graph Store HTTP Protocol */
         val requestPath = tsType match {
-            case HTTP_GRAPH_DB_TS_TYPE => triplestore / "openrdf-sesame" / "repositories" / settings.triplestoreDatabaseName / "rdf-graphs" / "service"
+            case HTTP_GRAPH_DB_TS_TYPE => triplestore / "graphdb-server" / "repositories" / settings.triplestoreDatabaseName / "rdf-graphs" / "service"
             case HTTP_GRAPH_DB_FREE_TS_TYPE => triplestore / "repositories" / settings.triplestoreDatabaseName / "rdf-graphs" / "service"
-            case HTTP_SESAME_TS_TYPE => triplestore / "openrdf-sesame" / "repositories" / settings.triplestoreDatabaseName / "rdf-graphs" / "service"
+            case HTTP_SESAME_TS_TYPE => triplestore / "graphdb-server" / "repositories" / settings.triplestoreDatabaseName / "rdf-graphs" / "service"
             case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => triplestore / settings.triplestoreDatabaseName / "data"
             case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => triplestore / settings.fusekiTomcatContext / settings.triplestoreDatabaseName / "data"
             case ts_type => throw TriplestoreUnsupportedFeatureException(s"GraphProtocolAccessor does not support: $ts_type")

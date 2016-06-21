@@ -1,4 +1,4 @@
-@PREFIX luc: <http://www.ontotext.com/owlim/lucene#> .
+@prefix luc: <http://www.ontotext.com/owlim/lucene#> .
 
 luc:include luc:setParam "literal" .
 luc:index luc:setParam "literal" .
