@@ -18,7 +18,7 @@
 
 
 Administration (Users, Projects, Groups, Institutions)
-=========================================
+=======================================================
 
 Scope
 ------
@@ -46,8 +46,8 @@ Knora’s concept of access control is that permissions can only be granted to g
 are two distinct ways of granting permission. Firstly, an object (a resource or value) can grant permissions to groups
 of users, and secondly, permissions can be granted directly to a group of users (not bound to a specific object). There
 are six built-in *smart* groups: *UnknownUser*, *KnownUser*, *Creator*, *ProjectMember*, *ProjectAdmin*, and
-*SystemAdmin*. These *smart* groups can be used in the same way as normal user created groups for permission managment,
-i.e. can be used to give certain groups of userers, certain permissions, without the need to explicitly create them.
+*SystemAdmin*. These *smart* groups can be used in the same way as normal user created groups for permission management,
+i.e. can be used to give certain groups of users, certain permissions, without the need to explicitly create them.
 
 A user becomes implicitly a member of such a group by satisfying certain conditions:
 
@@ -65,14 +65,15 @@ A user becomes implicitly a member of such a group by satisfying certain conditi
   When checking a user’s permissions on an object, the user is automatically assigned to this group if
   she is a member of the project that the object belongs to.
 
-**ProjectAdmin**:
-  Membership is received by adding the property ``knora-base:isProjectAdmin`` to the user and by pointing it to the
-  project. Received automatically by creating the project.
+**ProjectAdmin** / **ProjectUserAdmin** / **ProjectRightsAdmin** / **ProjectOntologyAdmin**:
+  Membership is received by being part of a group given the corresponding project admin permission.
 
 **SystemAdmin**:
   The ``root`` user is by default member of this group. Membership is received by setting the property
   ``knora-base:hasSystemAdminPermissions`` to ``true`` on a ``knora-base:User``.
 
+To use smart groups as values for properties, the IRI is constructed by appending the name of the built-in smart group
+to ``http://data.knora.org/groups/``, e.g., ``http://data.knora.org/groups/KnownUser``.
 
 Permissions
 ------------
@@ -117,49 +118,72 @@ Group Permissions (Roles)
 The following permissions can be set on a user group:
 
   1. Resource Creation:
+  
       a) *hasProjectResourceCreatePermission*:
+
         - description: gives the permission to create resources inside the project
-        - value: "true"^^xsd:boolean``
-      b) *hasProjectResourceCreatePermissionRestricted*:
+        - value: ``"true"^^xsd:boolean``
+
+      b) *hasProjectResourceCreateRestrictedPermission*:
+      
         - description: restricted resource creation permission
         - value: a list of *ResourceClasses* the user should only be able to create instances of.
 
   2. Project Administration:
-      a) *hasProjectUserAdminPermission*:
+  
+      a) *hasProjectAdminPermission*:
+      
+        - description: gives the user the permission to do anything on project level.
+        - value: ``"true"^^xsd:boolean``
+      
+      b) *hasProjectUserAdminPermission*:
+
         - description: gives the user the permission to add/remove user to/from project, and to/from any project group.
-        - value: "true"^^xsd:boolean``
-      b) *hasProjectUserAdminPermissionRestricted*:
-        - description: restricts permission to certain groups.
-        - value: a list of *UserGroups*.
+        - value: ``"true"^^xsd:boolean``
+
       c). *hasProjectRightsAdminPermission*:
+
         - description: gives the user the permission to change the *permissions* on all objects belonging to the
           project (e.g., default permissions attached to groups and permissions on objects).
-        - value: "true"^^xsd:boolean``
-      d) *hasOntologyAdminPermission*:
+        - value: ``"true"^^xsd:boolean``
+
+      d) *hasProjectOntologyAdminPermission*:
+
         - description: give the user to administer the project ontologies
-        - value: "true"^^xsd:boolean``
-      e) *knora:base:hasDefaultRestrictedViewPermission*:
-        - description: any object, created by a user inside a group holding this permission, is restricted to carry this
-          permission
-        - value: a list of *UserGroups*
+        - value: ``"true"^^xsd:boolean``
 
   3. Default Permissions
-      a) *knora-base:hasDefaultViewPermission*:
+
+      a) *knora:base:hasDefaultRestrictedViewPermission*:
+
         - description: any object, created by a user inside a group holding this permission, is restricted to carry this
           permission
-        - value: a list of *UserGroups*
-      b) *knora-base:hasDefaultModifyPermission* accompanied by a list of groups.
+        - value: a list of ``knora-base:UserGroup``
+
+      b) *knora-base:hasDefaultViewPermission*:
+
         - description: any object, created by a user inside a group holding this permission, is restricted to carry this
           permission
-        - value: a list of *UserGroups*
-      c) *knora-base:hasDefaultDeletePermission* accompanied by a list of groups.
+        - value: a list of ``knora-base:UserGroup``
+
+      c) *knora-base:hasDefaultModifyPermission* accompanied by a list of groups.
+
         - description: any object, created by a user inside a group holding this permission, is restricted to carry this
           permission
-        - value: a list of *UserGroups*
-      d) *knora-base:hasDefaultChangeRightsPermission* accompanied by a list of groups.
+        - value: a list of ``knora-base:UserGroup``
+
+      d) *knora-base:hasDefaultDeletePermission* accompanied by a list of groups.
+
         - description: any object, created by a user inside a group holding this permission, is restricted to carry this
           permission
-        - value: a list of *UserGroups*
+        - value: a list of ``knora-base:UserGroup``
+
+      e) *knora-base:hasDefaultChangeRightsPermission* accompanied by a list of groups.
+
+        - description: any object, created by a user inside a group holding this permission, is restricted to carry this
+          permission
+        - value: a list of ``knora-base:UserGroup``
+
 
 Administrative Permissions
 ---------------------------
@@ -221,19 +245,15 @@ operation abbreviations used are defined as follows:
 | **Creator**       | -       | -       | -                                 | R U D                  | R U D                  |
 +-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
 
+
 Default Permissions
 --------------------
 
-It will be possible to define default permissions for newly created resources / values on the *system*, *project*, and
-*user* level. The following properties need to be defined to point to a list of IRI's of instances of
-'knora-base:UserGroup': ``knora-base:hasDefaultRestrictedViewPermission``, ``knora-base:hasDefaultViewPermission``,
-``knora-base:hasDefaultModifyPermission``, ``knora-base:hasDefaultDeletePermission``. These default permissions can then
-be explicitly submitted by the client with each creation request. The user should be presented with a selection of
-available default permissions, when creating a resource / value in the client.
-
-The smart groups can be also used as values for the properties. The IRI is constructed by appending the name of the
-built-in smart group to ``http://data.knora.org/groups/``, e.g., ``http://data.knora.org/groups/KnownUser``.
-
+As described earlier, it is possible to define default permissions for newly created resources / values by attaching the
+spececial properties to groups. The groups these properties are attached to, can either be user created or the built-in
+smart groups. A the time a resource / value is created, it will be possible to supply a set of permissions, with which
+the resource / value should be created. These supplied permissions will only be used if no default permissions are
+defined. In the case that default permissions are defined, any supplied permissions will be *discarded*.
 
 
 Implementation Examples
@@ -247,7 +267,7 @@ The following table lists all object and group permission properties together wi
 permission properties:
 
 +-------------------+---------+---------+------------------------+------------------------+------------------------+
-|Object | Project   | Group   | User    |                        | Resource               | Value                  |
+|Group  | Project   | Group   | User    |                        | Resource               | Value                  |
 +===================+=========+=========+========================+========================+========================+
 
 
@@ -485,11 +505,13 @@ Example Group Information stored in admin named graph:
 Redesign / Questions June 2016
 -------------------------------
 
-**Permissions constrained to groups***
+**Permissions constrained to groups**
+
   - Why this constraint?
   => This is just the way we are doing it. Makes it a bit simpler.
 
 **Resource owner permission to desruptive**
+
   - knora-base:attachedToUser gives owner status to the person who created the resource.
   - **Proposed change:** remove this altogether or make institution/project owner of the resource.
   - Should hiwis be "owners" of resources they create on behalf of their professor?
@@ -498,21 +520,25 @@ Redesign / Questions June 2016
      permissions depend on what is defined for the project and the *creator* smart group.
   
 **Resource creation permission to course**
+
   - beeing part of a projects gives resource creation permission. What if some project members are not allowed to create
     new resources (or only certain types; Lumiere Lausanne requirement), but are only allowed to change existing resources?
   => These kind of permissions can be set on groups. A project can have different groups, giving different kind of permissions.  
 
 **Support Default Permissions**
+
   - Allow for a project to define permissions that a newly created resource inside a project should receive (current Salsah behavior)
   - Lumiere Lausanne requirement
   => Will be allowed.
   
 **Groups**
+
   - Do groups belong to projects, i.e. are they seen as extensions to projects?
   - Does someone need to be part of a project to belong to a group of that project?
   => Every group needs to belong to a project. No GroupAdmins. ProjectAdmins with additional GroupAdmin permissions.
   
 **root**
+
   - Should the 'root' / SystemAdmin user have 'implicitly' or 'explicitly' all permissions?
   => Has implicitly all permissions.
   
@@ -521,6 +547,7 @@ Redesign / Questions June 2016
   => Since 'root' / SystemAdmin already has all permissions, doesn't realy matter if part of a project or group
     
 **Ivan's Use Case**
+
   - The system administrator creates the project and sets Ivan as the project administrator. As the project administrator, I have all permissions
     on all objects (Resources/Values; Project Groups) belonging to the project (knora-base:attachedToProject). Nobody outside of the project
     should be allowed to see anything that is created as part of Ivan's project. He wants to be able to create two groups: *Reviewer*, *Creator*.
@@ -531,6 +558,7 @@ Redesign / Questions June 2016
   => Covered
   
 **Lausanne Projects**
+
   - A project wants to restrict the permissions of newly created resources to a fixed set
   => Covered. Will be able do define 'default permissions' and restrict the creation of new resources to these permissions
   
@@ -542,6 +570,7 @@ Redesign / Questions June 2016
   => Covered. Will be able to give a certain group only create permission for specific classes
     
 **Results**
+
   - Owner -> Creator
   - Some permissions are attached to groups (e.g., Add Resource (Class), Modify Ontology, etc.),
     and some are attached to resources (e.g., this group has read/modify permission, etc.)
@@ -549,5 +578,3 @@ Redesign / Questions June 2016
   - System Admin Rechte implizit
   - Gruppen immer an Projekt gebunden
   - Keine Gruppen-Admins. Soll über Rollen vom Projekt-Admin geregelt werden können.
-  
-  
