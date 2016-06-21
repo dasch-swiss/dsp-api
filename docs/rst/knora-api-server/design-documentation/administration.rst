@@ -85,13 +85,14 @@ is not explicitly defined (e.g., the permission to modify an ontology).
 Object Permissions
 ^^^^^^^^^^^^^^^^^^^
 An object (resource / value) can grant the following permissions:
-  1. *knora-base:hasRestrictedViewPermission*: Allows a restricted view of the ob- ject, e.g. a view of an image with a watermark.
-  2. *knora-base:hasViewPermission*: Allows an unrestricted view of the object. Hav- ing view permission on a resource only a ects
-     the user’s ability to view information about the resource other than its values. To view a value, she must have
-     view permission on the value itself.
-  3. *knora-base:hasModifyPermission*: For values, this permission allows a new version of a value to be created. For resources,
-     this allows the user to create a new value (as opposed to a new version of an existing value), or to change
-     information about the resource other than its values. When he wants to make a new version of a value, his
+  1. *knora-base:hasRestrictedViewPermission*: Allows a restricted view of the object, e.g. a view of an image with a
+     watermark.
+  2. *knora-base:hasViewPermission*: Allows an unrestricted view of the object. Having view permission on a resource
+     only affects the user’s ability to view information about the resource other than its values. To view a value, she
+     must have view permission on the value itself.
+  3. *knora-base:hasModifyPermission*: For values, this permission allows a new version of a value to be created. For
+     resources, this allows the user to create a new value (as opposed to a new version of an existing value), or to
+     change information about the resource other than its values. When he wants to make a new version of a value, his
      permissions on the containing resource are not relevant. However, when he wants to change the target of a link,
      the old link must be deleted and a new one created, so he needs modify permission on the resource.
   4. *knora-base:hasDeletePermission*: Allows the item to be marked as deleted.
@@ -103,32 +104,62 @@ A user’s permission level on a particular object is calculated in the followin
 
   1. Make a list of the groups that the user belongs to, including Owner and/or ProjectMember if applicable.
   2. If the user is the owner of the object, give her the highest level of permissions.
-  3. Otherwise, make a list of the permissions that she can obtain on the ob- ject, by iterating over the permissions
-     that the object grants. For each permission, if she is in the speci ed group, add the speci ed permission to the
+  3. Otherwise, make a list of the permissions that she can obtain on the object, by iterating over the permissions
+     that the object grants. For each permission, if she is in the specified group, add the specified permission to the
      list of permissions she can obtain.
   4. From the resulting list, select the highest-level permission.
   5. If the result is that she would have no permissions, give her whatever permission *UnknownUser* would have.
 
 
-Group Permissions
-^^^^^^^^^^^^^^^^^^
+Group Permissions (Roles)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A group of users can be given the following permissions:
+The following permissions can be set on a user group:
 
-  1. *hasProjectResourceCreatePermission* - can be acompanied by a list of *ResourceClasses*, if the user should only be
-     able to create instances of certain resource classes.
-  2. *hasProjectUserAdminPermission* - unrestricted
-     *hasProjectUserAdminPermissionRestricted* - restricted - must be acompanied by a list of *Groups* if the user
-     should only be able to manage the users of a subset of project groups.
-  3. *hasProjectRightsAdminPermission* - gives the permission to change the permissions on all objects belonging to the
-     project (e.g., default permissions attached to groups and permissions on objects).
-  4. *hasOntologyAdminPermission*
-  5. *knora:base:hasDefaultRestrictedViewPermission* acompanied by a list of groups.
-  6. *knora-base:hasDefaultViewPermission* acompanied by a list of groups.
-  7. *knora-base:hasDefaultModifyPermission* acompanied by a list of groups.
-  8. *knora-base:hasDefaultDeletePermission* acompanied by a list of groups.
-  9. *knora-base:hasDefaultChangeRightsPermission* acompanied by a list of groups.
+  1. Resource Creation:
+      a) *hasProjectResourceCreatePermission*:
+        - description: gives the permission to create resources inside the project
+        - value: "true"^^xsd:boolean``
+      b) *hasProjectResourceCreatePermissionRestricted*:
+        - description: restricted resource creation permission
+        - value: a list of *ResourceClasses* the user should only be able to create instances of.
 
+  2. Project Administration:
+      a) *hasProjectUserAdminPermission*:
+        - description: gives the user the permission to add/remove user to/from project, and to/from any project group.
+        - value: "true"^^xsd:boolean``
+      b) *hasProjectUserAdminPermissionRestricted*:
+        - description: restricts permission to certain groups.
+        - value: a list of *UserGroups*.
+      c). *hasProjectRightsAdminPermission*:
+        - description: gives the user the permission to change the *permissions* on all objects belonging to the
+          project (e.g., default permissions attached to groups and permissions on objects).
+        - value: "true"^^xsd:boolean``
+      d) *hasOntologyAdminPermission*:
+        - description: give the user to administer the project ontologies
+        - value: "true"^^xsd:boolean``
+      e) *knora:base:hasDefaultRestrictedViewPermission*:
+        - description: any object, created by a user inside a group holding this permission, is restricted to carry this
+          permission
+        - value: a list of *UserGroups*
+
+  3. Default Permissions
+      a) *knora-base:hasDefaultViewPermission*:
+        - description: any object, created by a user inside a group holding this permission, is restricted to carry this
+          permission
+        - value: a list of *UserGroups*
+      b) *knora-base:hasDefaultModifyPermission* accompanied by a list of groups.
+        - description: any object, created by a user inside a group holding this permission, is restricted to carry this
+          permission
+        - value: a list of *UserGroups*
+      c) *knora-base:hasDefaultDeletePermission* accompanied by a list of groups.
+        - description: any object, created by a user inside a group holding this permission, is restricted to carry this
+          permission
+        - value: a list of *UserGroups*
+      d) *knora-base:hasDefaultChangeRightsPermission* accompanied by a list of groups.
+        - description: any object, created by a user inside a group holding this permission, is restricted to carry this
+          permission
+        - value: a list of *UserGroups*
 
 Administrative Permissions
 ---------------------------
@@ -202,6 +233,23 @@ available default permissions, when creating a resource / value in the client.
 
 The smart groups can be also used as values for the properties. The IRI is constructed by appending the name of the
 built-in smart group to ``http://data.knora.org/groups/``, e.g., ``http://data.knora.org/groups/KnownUser``.
+
+
+
+Implementation Examples
+-----------------------
+
+To allow easier and faster queries, all permission properties attached to groups have an inverse property which is
+attached to a user. The price for quick and easy dereferencing of a user's permission is payed by having a more
+complex write operation.
+
+The following table lists all object and group permission properties together with the corresponding inverse user
+permission properties:
+
++-------------------+---------+---------+------------------------+------------------------+------------------------+
+|Object | Project   | Group   | User    |                        | Resource               | Value                  |
++===================+=========+=========+========================+========================+========================+
+
 
 
 Use Cases
