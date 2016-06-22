@@ -45,9 +45,9 @@ the right to do anything.
 Knora’s concept of access control is that permissions can only be granted to groups and not to individual users. There
 are two distinct ways of granting permission. Firstly, an object (a resource or value) can grant permissions to groups
 of users, and secondly, permissions can be granted directly to a group of users (not bound to a specific object). There
-are six built-in *smart* groups: *UnknownUser*, *KnownUser*, *Creator*, *ProjectMember*, *ProjectAdmin*, and
-*SystemAdmin*. These *smart* groups can be used in the same way as normal user created groups for permission management,
-i.e. can be used to give certain groups of users, certain permissions, without the need to explicitly create them.
+are six built-in groups: *UnknownUser*, *KnownUser*, *Creator*, *ProjectMember*, *ProjectAdmin*, and *SystemAdmin*.
+These groups can be used in the same way as normal user created groups for permission management, i.e. can be used to
+give certain groups of users, certain permissions, without the need to explicitly create them.
 
 A user becomes implicitly a member of such a group by satisfying certain conditions:
 
@@ -65,15 +65,16 @@ A user becomes implicitly a member of such a group by satisfying certain conditi
   When checking a user’s permissions on an object, the user is automatically assigned to this group if
   she is a member of the project that the object belongs to.
 
-**ProjectAdmin** / **ProjectUserAdmin** / **ProjectRightsAdmin** / **ProjectOntologyAdmin**:
+**ProjectAdmin**:
   Membership is received by being part of a group given the corresponding project admin permission.
 
 **SystemAdmin**:
   The ``root`` user is by default member of this group. Membership is received by setting the property
-  ``knora-base:hasSystemAdminPermissions`` to ``true`` on a ``knora-base:User``.
+  ``knora-base:isInGroup`` to ``knora-base:SystemAdmin`` on a ``knora-base:User``.
 
-To use smart groups as values for properties, the IRI is constructed by appending the name of the built-in smart group
-to ``http://data.knora.org/groups/``, e.g., ``http://data.knora.org/groups/KnownUser``.
+To use these build-in groups as values for properties, the IRI is constructed by appending the name of the built-in
+group to ``knora-base``, e.g., ``knora-base:KnownUser`` where ``knora-base`` corresponds to ``http://www.knora.org/ontology/knora-base#``.
+
 
 Permissions
 ------------
@@ -119,7 +120,7 @@ The following permissions can be set on a user group:
 
   1. Resource Creation:
   
-      a) *hasProjectResourceCreatePermission*:
+      a) *hasProjectResourceCreateAllPermission*:
 
         - description: gives the permission to create resources inside the project
         - value: ``"true"^^xsd:boolean``
@@ -131,15 +132,20 @@ The following permissions can be set on a user group:
 
   2. Project Administration:
   
-      a) *hasProjectAdminPermission*:
+      a) *hasProjectAllAdminPermission*:
       
         - description: gives the user the permission to do anything on project level.
         - value: ``"true"^^xsd:boolean``
       
-      b) *hasProjectUserAdminPermission*:
+      b) *hasProjectUserAllAdminPermission*:
 
-        - description: gives the user the permission to add/remove user to/from project, and to/from any project group.
+        - description: gives the user the permission to add/remove user to/from project, and to/from *all* project groups.
         - value: ``"true"^^xsd:boolean``
+
+      b) *hasProjectUserRestrictedAdminPermission*:
+
+        - description: gives the user the permission to add/remove user to/from project, and to/from *certain* project groups.
+        - value: a list of ``knora-base:UserGroup``
 
       c). *hasProjectRightsAdminPermission*:
 
@@ -149,7 +155,7 @@ The following permissions can be set on a user group:
 
       d) *hasProjectOntologyAdminPermission*:
 
-        - description: give the user to administer the project ontologies
+        - description: gives the user the permission to administer the project ontologies
         - value: ``"true"^^xsd:boolean``
 
   3. Default Permissions
@@ -184,39 +190,32 @@ The following permissions can be set on a user group:
           permission
         - value: a list of ``knora-base:UserGroup``
 
+Default Permissions
+--------------------
 
-Administrative Permissions
----------------------------
-Some changes require administrative permissions. These permissions are given to a user by being a member of a smart
-group. As before, a user becomes implicitly a member of such a group by satisfying some condition, i.e. having a
-special property attached to the user.
+As described earlier, it is possible to define default permissions for newly created resources / values by attaching the
+special properties to groups. The groups these properties are attached to, can either be user created or one of the
+built-in groups.
 
-**SystemAdmin**:
-  This group gives the user all permissions.
-  Can be assigned to a user only by the ``root`` user by attaching the property *knora-base:hasSystemAdminPermissions*
-  to a user and giving it the value *true*.
-  ``<http://data.knora.org/users/[UUID]> knora-base:isSystemAdmin "true"^^xsd:boolean``
+A the time a resource / value is created, it will be possible to supply a set of permissions, with which
+the resource / value should be created. These supplied permissions will only be used if no default permissions are
+defined. In the case that default permissions are defined, any supplied permissions will be *discarded*.
 
-**ProjectAdmin** / **ProjectUserAdmin** / **ProjectRightsAdmin** :
-  This group gives a single user the administrative permissions for a specific *project*.  Can be assigned to
-  a user by ``SystemAdmin`` or other ``ProjectAdmin``.
-  
-  - User add/remove to/from project
-  - User add/remove to/from all groups under project
-  - User add/remove to/from certain groups under project
-  - Permissions add/change on all groups under project
-  - Permissions add/change on certain groups under project
-  
+If no permissions are defined on the project level, the default system behavior is as follows:
 
-**Group assignable Permissions**:
-  This group gives a single user the administrative permissions for a specific *group*. Membership is received by
-  setting the property ``knora-base:isGroupAdmin`` to the user and by pointing to the group. Can be assigned to a user
-  by ``SystemAdmin`` of other ``GroupAdmin``. Received automatically by creating the group.
+  - ``knora-base:SystemAdmin`` group receives *hasProjectResourceCreateAllPermission* and on all objects *knora-base:hasChangeRightsPermission*
+  - ``knora-base:ProjectAdmin`` group receives *hasProjectResourceCreateAllPermission* and on all objects *knora-base:hasChangeRightsPermission*
+  - ``knora-base:ProjectMember`` group receives *hasProjectResourceCreateAllPermission*
+  - ``knora-base:Creator`` receives *knora-base:hasChangeRightsPermission* on resources he creates
+  - ``knora-base:KnownUser`` receives on all objects *knora-base:hasViewPermission*
 
 
-The access control matrix defines what operations a *subject* (i.e. User), being a member of a special group
-(represented by row headers), is permitted to perform on an *object* (represented by column headers). The different
-operation abbreviations used are defined as follows:
+Default Access Control Matrix
+------------------------------
+
+The access control matrix defines what are the default operations a *subject* (i.e. User), being a member of a built-in
+group (represented by row headers), is permitted to perform on an *object* (represented by column headers). The
+different operation abbreviations used are defined as follows:
 
 *C*:
   *Create* - the subject inside the group is allowed to *create* the object.
@@ -230,46 +229,47 @@ operation abbreviations used are defined as follows:
 *D*:
   *Delete* - the subject inside the group is allowed to *delete* the object.
 
+*P*:
+  *Permission* - the subject inside the group is allowed to change the *permissions* on the object.
 
-+-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
-|                   | Project | Group   | User                              | Resource               | Value                  |
-+===================+=========+=========+===================================+========================+========================+
-| **SystemAdmin**   | C R U D | C R U D | C R U D all                       | C R U D all            | C R U D all            |
-+-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
-| **ProjectAdmin**  | R U     |         | add/remove to/from project        | C R U D inside project | C R U D inside project |
-+-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
-| **GroupAdmin**    |         | R U     | group add/remove                  |                        |                        |
-+-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
-| **KnownUser**     | C       | C       | C R U (D) himself                 | C                      | C (if allowed)         |
-+-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
-| **Creator**       | -       | -       | -                                 | R U D                  | R U D                  |
-+-------------------+---------+---------+-----------------------------------+------------------------+------------------------+
+*-*:
+  *none* - none or not applicable 
 
-
-Default Permissions
---------------------
-
-As described earlier, it is possible to define default permissions for newly created resources / values by attaching the
-spececial properties to groups. The groups these properties are attached to, can either be user created or the built-in
-smart groups. A the time a resource / value is created, it will be possible to supply a set of permissions, with which
-the resource / value should be created. These supplied permissions will only be used if no default permissions are
-defined. In the case that default permissions are defined, any supplied permissions will be *discarded*.
++-------------------+-------------+-----------+----------------------------+--------------------------+--------------------------+
+|                   | Project     | Group     | User                       | Resource                 | Value                    |
++===================+=============+===========+============================+==========================+==========================+
+| **SystemAdmin**   | ``C R U D`` | C R U D P | C R U D all                | C R U D P all            | C R U D P all            |
++-------------------+-------------+-----------+----------------------------+--------------------------+--------------------------+
+| **ProjectAdmin**  | ``- R U D`` | C R U D P | add/remove to/from project | C R U D P inside project | C R U D P inside project |
++-------------------+-------------+-----------+----------------------------+--------------------------+--------------------------+
+| **ProjectMember** | ``- - - -`` | - - - - - |   - -       - -            | C R U D inside project   | C R U D inside project   |
++-------------------+-------------+-----------+----------------------------+--------------------------+--------------------------+
+| **Creator**       |             |           |                            | R U D P (this resource)  | R U D P (this value)     |
++-------------------+-------------+-----------+----------------------------+--------------------------+--------------------------+
+| **KnownUser**     | ``C``       | C         | C R U (D) himself          | R                        | R                        |
++-------------------+-------------+-----------+----------------------------+--------------------------+--------------------------+
 
 
-Implementation Examples
------------------------
+.. table:: Default Permission Matrix
 
-To allow easier and faster queries, all permission properties attached to groups have an inverse property which is
-attached to a user. The price for quick and easy dereferencing of a user's permission is payed by having a more
-complex write operation.
+=================== =========== =============
+ Built-In Group      Project     Group
+=================== =========== =============
+ **SystemAdmin**    ``C R U D`` ``C R U D P``
+ **ProjectAdmin**   ``- R U D`` ``C R U D P``
+ **ProjectMember**  ``- - - -`` ``- - - - -``
+ **Creator**        ``- - - -`` ``- - - - -``
+ **KnownUser**      ``C - - -`` ``C - - - -``
+=================== =========== =============
 
-The following table lists all object and group permission properties together with the corresponding inverse user
-permission properties:
 
-+-------------------+---------+---------+------------------------+------------------------+------------------------+
-|Group  | Project   | Group   | User    |                        | Resource               | Value                  |
-+===================+=========+=========+========================+========================+========================+
+Implementation
+---------------
 
+A the time the ``UserProfile`` is queried, all group memberships and the permissions carried by those groupes are
+queried for all projects the user is a member of. This information is then stored as an easy accessible object inside
+the ``UserProfile`` so that this information is readily available where needed. This is a somewhat expensive operation,
+but will only be executed so often since there is a ``UserProfile`` caching mechanism in place.
 
 
 Use Cases
@@ -421,7 +421,7 @@ Projects Endpoint
   - Effects: ``knora-base:hasProjectAdminPermissions``
 
 
-**Add/remove user as GroupAdmin **:
+**Add/remove user as GroupAdmin**:
   - Required permission: SystemAdmin / GroupAdmin
   - Required information: group IRI, user IRI
   - Effects: ``knora-base:hasGroupAdminPermissions``
@@ -476,7 +476,8 @@ Groups Endpoint
 
 
 **Add/remove user to/from group**:
-  - Required permission: SystemAdmin / ProjectAdmin with GroupAdmin permission for this group / User (if group self-assignment is enabled)
+  - Required permission: SystemAdmin / ProjectAdmin with GroupAdmin permission for this group / User (if group
+    self-assignment is enabled)
   - Required information: group IRI, user IRI
   - Optional information: admin status
   - Effects: ``knora-base:isInGroup``
@@ -506,9 +507,8 @@ Redesign / Questions June 2016
 -------------------------------
 
 **Permissions constrained to groups**
-
   - Why this constraint?
-  => This is just the way we are doing it. Makes it a bit simpler.
+  - => This is just the way we are doing it. Makes it a bit simpler.
 
 **Resource owner permission to desruptive**
 
@@ -516,62 +516,71 @@ Redesign / Questions June 2016
   - **Proposed change:** remove this altogether or make institution/project owner of the resource.
   - Should hiwis be "owners" of resources they create on behalf of their professor?
   - If the creator should have max permission, then give it explicitly.
-  => Owner will be renamed to creator. We need this for provenance. Does not give any permissions automatically. The
-     permissions depend on what is defined for the project and the *creator* smart group.
+  - => Owner will be renamed to creator. We need this for provenance. Does not give any permissions automatically. The
+    permissions depend on what is defined for the project and the *creator* smart group.
   
 **Resource creation permission to course**
 
   - beeing part of a projects gives resource creation permission. What if some project members are not allowed to create
-    new resources (or only certain types; Lumiere Lausanne requirement), but are only allowed to change existing resources?
-  => These kind of permissions can be set on groups. A project can have different groups, giving different kind of permissions.  
+    new resources (or only certain types; Lumiere Lausanne requirement), but are only allowed to change existing
+    resources?
+  - => These kind of permissions can be set on groups. A project can have different groups, giving different kind of
+    permissions.  
 
 **Support Default Permissions**
 
-  - Allow for a project to define permissions that a newly created resource inside a project should receive (current Salsah behavior)
+  - Allow for a project to define permissions that a newly created resource inside a project should receive (current
+    Salsah behavior)
   - Lumiere Lausanne requirement
-  => Will be allowed.
+  - => Will be allowed.
   
 **Groups**
 
   - Do groups belong to projects, i.e. are they seen as extensions to projects?
   - Does someone need to be part of a project to belong to a group of that project?
-  => Every group needs to belong to a project. No GroupAdmins. ProjectAdmins with additional GroupAdmin permissions.
+  - => Every group needs to belong to a project. No GroupAdmins. ProjectAdmins with additional GroupAdmin permissions.
   
 **root**
 
   - Should the 'root' / SystemAdmin user have 'implicitly' or 'explicitly' all permissions?
-  => Has implicitly all permissions.
+  - => Has implicitly all permissions.
   
   - Does the has all permissions also extend to projects? Is the root user going to be part of every project?
     If yes, then again implicitly or explicitly?
-  => Since 'root' / SystemAdmin already has all permissions, doesn't realy matter if part of a project or group
+  - => Since 'root' / SystemAdmin already has all permissions, doesn't realy matter if part of a project or group
     
 **Ivan's Use Case**
 
-  - The system administrator creates the project and sets Ivan as the project administrator. As the project administrator, I have all permissions
-    on all objects (Resources/Values; Project Groups) belonging to the project (knora-base:attachedToProject). Nobody outside of the project
-    should be allowed to see anything that is created as part of Ivan's project. He wants to be able to create two groups: *Reviewer*, *Creator*.
-    The *Reviewer* group should only give *read-access* to someone inside the group to resources pointing to this group, but allow the creation of
-    annotations. Further, annotations should only be readable by users inside the *Reviewer* group.
-    The *Creator* group should give a user create permission and modify permision on the objects the user has created. Any resources created belong
-    to the project. The *Creator* group is meant for contributors helping out with the project, e.g., Hiwis.
-  => Covered
+  - The system administrator creates the project and sets Ivan as the project administrator. As the project
+    administrator, I have all permissions on all objects (Resources/Values; Project Groups) belonging to the project
+    (knora-base:attachedToProject). Nobody outside of the project should be allowed to see anything that is created as
+    part of Ivan's project. He wants to be able to create two groups: *Reviewer*, *Creator*.
+    The *Reviewer* group should only give *read-access* to someone inside the group to resources pointing to this group,
+    but allow the creation of annotations. Further, annotations should only be readable by users inside the *Reviewer*
+    group.
+    The *Creator* group should give a user create permission and modify permission on the objects the user has created.
+    Any resources created belong to the project. The *Creator* group is meant for contributors helping out with the
+    project, e.g., Hiwis.
+  - => Covered
   
 **Lausanne Projects**
 
   - A project wants to restrict the permissions of newly created resources to a fixed set
-  => Covered. Will be able do define 'default permissions' and restrict the creation of new resources to these permissions
+  - => Covered. Will be able do define 'default permissions' and restrict the creation of new resources to these
+    permissions
   
-  - This means for the current implementation, that any permissions supplied during the resource creation request need to be checked and if needed overriden.
-  => Covered. Also in the new design, the backend will need to always check the suplied permissions for newly created resources as we cannot ve sure that the GUI
-     will behave correctly (e.g., many different "Salsah" implementations)
+  - This means for the current implementation, that any permissions supplied during the resource creation request need
+    to be checked and if needed overriden.
+  - => Covered. Also in the new design, the backend will need to always check the suplied permissions for newly created
+    resources as we cannot ve sure that the GUI will behave correctly (e.g., many different "Salsah" implementations)
   
-  - Restrict creation/access of certain classes of resources to certain groups, e.g., group A is able to create/access resources of class A but not of class B.
-  => Covered. Will be able to give a certain group only create permission for specific classes
+  - Restrict creation/access of certain classes of resources to certain groups, e.g., group A is able to create/access
+    resources of class A but not of class B.
+  - => Covered. Will be able to give a certain group only create permission for specific classes
     
 **Results**
 
-  - Owner -> Creator
+  - *Owner* renamed to *Creator*
   - Some permissions are attached to groups (e.g., Add Resource (Class), Modify Ontology, etc.),
     and some are attached to resources (e.g., this group has read/modify permission, etc.)
   - Ontologien Benutzung einschränken (nur auf bestimmte Gruppen, oder frei zur Verfügung)
