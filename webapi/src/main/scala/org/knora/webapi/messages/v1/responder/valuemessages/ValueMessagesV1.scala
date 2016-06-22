@@ -620,7 +620,7 @@ case class TextValueV1(utf8str: String,
       * assume that it doesn't make sense for a resource to have two different text values associated with the
       * same property, containing the same text but different markup.
       *
-      * @param other another [[ApiValueV1]].
+      * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
       */
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
@@ -705,7 +705,7 @@ case class LinkUpdateV1(targetResourceIri: IRI) extends UpdateValueV1 {
     /**
       * It doesn't make sense to add a link to a resource when we already have a link to the same resource.
       *
-      * @param other another [[ApiValueV1]].
+      * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
       */
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
@@ -815,12 +815,83 @@ case class IntegerValueV1(ival: Int) extends UpdateValueV1 with ApiValueV1 {
 }
 
 /**
+  * Represents a boolean value.
+  *
+  * @param bval the boolean value.
+  */
+case class BooleanValueV1(bval: Boolean) extends UpdateValueV1 with ApiValueV1 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.BooleanValue
+
+    def toJsValue = JsBoolean(bval)
+
+    /**
+      * Checks if a new boolean value would duplicate an existing boolean value. Always returns `true`, because it
+      * does not make sense to have two instances of the same boolean property.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = true
+
+    /**
+      * Checks if a new version of an boolean value would be redundant given the current version of the value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case booleanValueV1: BooleanValueV1 => booleanValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
+}
+
+/**
+  * Represents a URI value.
+  *
+  * @param uri the URI value.
+  */
+case class UriValueV1(uri: String) extends UpdateValueV1 with ApiValueV1 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.UriValue
+
+    def toJsValue = JsString(uri)
+
+    /**
+      * Checks if a new URI value would duplicate an existing URI value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case uriValueV1: UriValueV1 => uriValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of an integer value would be redundant given the current version of the value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case uriValueV1: UriValueV1 => uriValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
+}
+
+/**
   * Represents an arbitrary-precision decimal value.
   *
   * @param dval the decimal value.
   */
 case class DecimalValueV1(dval: BigDecimal) extends UpdateValueV1 with ApiValueV1 {
-
     def valueTypeIri = OntologyConstants.KnoraBase.DecimalValue
 
     def toJsValue = JsNumber(dval)

@@ -1566,6 +1566,30 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#valueHasBoolean
+
+:valueHasBoolean rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf :valueHas ;
+
+                 :subjectClassConstraint :BooleanValue ;
+
+                 :objectDatatypeConstraint xsd:boolean .
+
+
+
+###  http://www.knora.org/ontology/knora-base#valueHasUri
+
+:valueHasUri rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf :valueHas ;
+
+                 :subjectClassConstraint :UriValue ;
+
+                 :objectDatatypeConstraint xsd:anyURI .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#valueHasIntervalEnd
 
 :valueHasIntervalEnd rdf:type owl:DatatypeProperty ;
@@ -2054,6 +2078,34 @@
                           ] ;
 
           rdfs:comment "Represents an integer value"@en .
+
+
+
+###  http://www.knora.org/ontology/knora-base#BooleanValue
+
+:BooleanValue rdf:type owl:Class ;
+
+          rdfs:subClassOf :Value ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :valueHasBoolean ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] ;
+
+          rdfs:comment "Represents a boolean value"@en .
+
+
+
+###  http://www.knora.org/ontology/knora-base#UriValue
+
+:UriValue rdf:type owl:Class ;
+
+          rdfs:subClassOf :Value ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :valueHasUri ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] ;
+
+          rdfs:comment "Represents a URI"@en .
 
 
 

@@ -77,6 +77,8 @@ object OntologyConstants {
         val ValueHasCalendar = "http://www.knora.org/ontology/knora-base#valueHasCalendar"
         val ValueHasStartPrecision = "http://www.knora.org/ontology/knora-base#valueHasStartPrecision"
         val ValueHasEndPrecision = "http://www.knora.org/ontology/knora-base#valueHasEndPrecision"
+        val ValueHasBoolean = "http://www.knora.org/ontology/knora-base#valueHasBoolean"
+        val ValueHasUri = "http://www.knora.org/ontology/knora-base#valueHasUri"
         val ValueHasColor = "http://www.knora.org/ontology/knora-base#valueHasColor"
         val ValueHasGeometry = "http://www.knora.org/ontology/knora-base#valueHasGeometry"
         val ValueHasListNode = "http://www.knora.org/ontology/knora-base#valueHasListNode"
@@ -114,6 +116,8 @@ object OntologyConstants {
 
         val TextValue = "http://www.knora.org/ontology/knora-base#TextValue"
         val IntValue = "http://www.knora.org/ontology/knora-base#IntValue"
+        val BooleanValue = "http://www.knora.org/ontology/knora-base#BooleanValue"
+        val UriValue = "http://www.knora.org/ontology/knora-base#UriValue"
         val DecimalValue = "http://www.knora.org/ontology/knora-base#DecimalValue"
         val DateValue = "http://www.knora.org/ontology/knora-base#DateValue"
         val ColorValue = "http://www.knora.org/ontology/knora-base#ColorValue"
