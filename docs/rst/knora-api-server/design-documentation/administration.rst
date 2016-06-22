@@ -201,7 +201,7 @@ A the time a resource / value is created, it will be possible to supply a set of
 the resource / value should be created. These supplied permissions will only be used if no default permissions are
 defined. In the case that default permissions are defined, any supplied permissions will be *discarded*.
 
-If no permissions are defined on the project level, the default system behavior is as follows:
+These default permissions are going to be given for each newly created project:
 
   - ``knora-base:SystemAdmin`` group receives *hasProjectResourceCreateAllPermission* and on all objects *knora-base:hasChangeRightsPermission*
   - ``knora-base:ProjectAdmin`` group receives *hasProjectResourceCreateAllPermission* and on all objects *knora-base:hasChangeRightsPermission*
