@@ -64,7 +64,7 @@ object OntologyConstants {
 
         val KNORA_BASE_PREFIX = "http://www.knora.org/ontology/knora-base#"
 
-        val Resource = "knora-base#Resource"
+        val Resource = "http://www.knora.org/ontology/knora-base#Resource"
 
         val ObjectClassConstraint = "http://www.knora.org/ontology/knora-base#objectClassConstraint"
 
