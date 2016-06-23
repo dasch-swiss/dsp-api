@@ -100,7 +100,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         "asked to create a new user " should {
             "create the user and return it's profile if the supplied username is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "test", false, "en"),
+                    NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "test", "en"),
                     SharedTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
@@ -116,7 +116,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             }
             "return a 'DuplicateValueException' if the supplied username is not unique " in {
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("root", "", "", "", "test", false, ""),
+                    NewUserDataV1("root", "", "", "", "test", ""),
                     SharedTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
@@ -126,7 +126,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
                 /* missing username */
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("", "", "", "", "test", false, ""),
+                    NewUserDataV1("", "", "", "", "test", ""),
                     SharedTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
@@ -134,7 +134,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
                 /* missing password */
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("dduck", "", "", "", "", false, ""),
+                    NewUserDataV1("dduck", "", "", "", "", ""),
                     SharedTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
@@ -226,7 +226,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsgPF(timeout) {
                     case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
                         // check if information was changed
-                        assert(updatedUserProfile.userData.isSystemAdmin.contains(true))
+                        assert(updatedUserProfile.isSystemAdmin equals (true))
                     }
                 }
             }

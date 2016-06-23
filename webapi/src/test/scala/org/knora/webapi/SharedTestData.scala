@@ -40,7 +40,6 @@ object SharedTestData {
             hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            isSystemAdmin = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -61,7 +60,6 @@ object SharedTestData {
             hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            isSystemAdmin = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -82,7 +80,6 @@ object SharedTestData {
             hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            isSystemAdmin = Some(false),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -115,7 +112,6 @@ object SharedTestData {
             hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            isSystemAdmin = Some(false),
             lang = "de"
         ),
         groups = List("http://data.knora.org/groups/imgcontri"),
@@ -136,7 +132,6 @@ object SharedTestData {
             hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            isSystemAdmin = Some(false),
             lang = "de"
         ),
         groups = List("http://data.knora.org/groups/imgcontri"),
@@ -157,7 +152,6 @@ object SharedTestData {
             hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            isSystemAdmin = Some(false),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
