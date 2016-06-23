@@ -30,10 +30,10 @@
 
                                    knora-base:isActiveUser "true"^^xsd:boolean ;
 
-                                   knora-base:isSystemAdmin "true"^^xsd:boolean ;
-                                   
                                    knora-base:isInProject <http://data.knora.org/projects/77275339> ,
                                                           <http://data.knora.org/projects/images> ;
+                                                          
+                                   knora-base:isInGroup <http://www.knora.org/ontology/knora-base#SystemAdmin> ;
 
                                    knora-base:preferredLanguage "de"^^xsd:string .
 
@@ -54,7 +54,7 @@
 
                                         knora-base:isActiveUser "true"^^xsd:boolean ;
 
-                                        knora-base:isSystemAdmin "true"^^xsd:boolean ;
+                                        knora-base:isInGroup <http://www.knora.org/ontology/knora-base#SystemAdmin> ;
 
                                         knora-base:preferredLanguage "de"^^xsd:string .
 
@@ -262,7 +262,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                         knora-base:isInProject <http://data.knora.org/projects/77275339> .
+                                         knora-base:isInProject <http://data.knora.org/projects/77275339> ;
+
+                                         knora-base:isInGroup <http://www.knora.org/ontology/knora-base#SystemAdmin> .
 
 
 

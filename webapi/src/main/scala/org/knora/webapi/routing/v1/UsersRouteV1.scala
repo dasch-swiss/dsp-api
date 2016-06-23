@@ -84,7 +84,6 @@ object UsersRouteV1 extends Authenticator {
                             familyName = apiRequest.familyName,
                             email = apiRequest.email,
                             password = apiRequest.password,
-                            isSystemAdmin = apiRequest.isSystemAdmin,
                             lang = apiRequest.lang)
 
                         UserCreateRequestV1(

@@ -76,6 +76,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
     }
 
     "The ProjectsResponder " when {
+        /*
         "asked about a project identified by 'iri' " should {
             "return project info if the project is known " in {
                 actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/root", true)
@@ -97,7 +98,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
             }
         }
-        /*
+
         "asked to create a new user " should {
             "create the user and return it's profile if the supplied username is unique " in {
                 actorUnderTest ! UserCreateRequestV1(

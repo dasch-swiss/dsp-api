@@ -179,11 +179,8 @@ object OntologyConstants {
         val Password = KNORA_BASE_PREFIX + "password"
         val UsersActiveProject = KNORA_BASE_PREFIX + "currentproject"
         val IsActiveUser = KNORA_BASE_PREFIX + "isActiveUser"
-        val IsSystemAdmin = KNORA_BASE_PREFIX + "isSystemAdmin"
         val IsInProject = KNORA_BASE_PREFIX + "isInProject"
-        val IsProjectAdmin = KNORA_BASE_PREFIX + "isProjectAdmin"
         val IsInGroup = KNORA_BASE_PREFIX + "isInGroup"
-        val IsGroupAdmin = KNORA_BASE_PREFIX + "isGroupAdmin"
 
         /* Project */
         val Project = KNORA_BASE_PREFIX + "Project"

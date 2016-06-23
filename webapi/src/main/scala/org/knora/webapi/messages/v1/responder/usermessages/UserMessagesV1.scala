@@ -245,7 +245,9 @@ case class UserProfileV1(userData: UserDataV1,
         )
     }
 
-    def IsSystemAdmin: Boolean = ???
+    def isSystemAdmin: Boolean = {
+        groups.contains(OntologyConstants.KnoraBase.SystemAdmin)
+    }
 }
 
 

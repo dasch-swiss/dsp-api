@@ -204,6 +204,8 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
 
             }
+            /*
+            Todo: Move both to GroupsResponderV1Spec
             "return a 'ForbiddenException' if the update gives SA rights but the user requesting the update is not SA " in {
                 /* User information is updated by the user */
                 actorUnderTest ! UserUpdateRequestV1(
@@ -230,6 +232,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     }
                 }
             }
+            */
             "update the user, (deleting) making him inactive " in {
                 actorUnderTest ! UserUpdateRequestV1(
                     userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,

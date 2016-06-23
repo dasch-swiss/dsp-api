@@ -42,7 +42,7 @@ object SharedTestData {
             isActiveUser = Some(true),
             lang = "de"
         ),
-        groups = Vector.empty[IRI],
+        groups = List("http://www.knora.org/ontology/knora-base#SystemAdmin"),
         projects = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images"),
         isGroupAdminFor = Vector.empty[IRI],
         isProjectAdminFor = Vector.empty[IRI],
@@ -62,7 +62,7 @@ object SharedTestData {
             isActiveUser = Some(true),
             lang = "de"
         ),
-        groups = Vector.empty[IRI],
+        groups = List("http://www.knora.org/ontology/knora-base#SystemAdmin"),
         projects = Vector.empty[IRI],
         isGroupAdminFor = Vector.empty[IRI],
         isProjectAdminFor = Vector.empty[IRI],

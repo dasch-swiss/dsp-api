@@ -42,12 +42,13 @@ Overview
 During the initial deployment of a Knora server, the main administration user (*root*) is created. This *root* user has
 the right to do anything.
 
-Knora’s concept of access control is that permissions can only be granted to groups and not to individual users. There
-are two distinct ways of granting permission. Firstly, an object (a resource or value) can grant permissions to groups
-of users, and secondly, permissions can be granted directly to a group of users (not bound to a specific object). There
-are six built-in groups: *UnknownUser*, *KnownUser*, *Creator*, *ProjectMember*, *ProjectAdmin*, and *SystemAdmin*.
-These groups can be used in the same way as normal user created groups for permission management, i.e. can be used to
-give certain groups of users, certain permissions, without the need to explicitly create them.
+Knora’s concept of access control is that permissions can only be granted to groups (or the whole project, i.e. all
+members of a project) and not to individual users. There are two distinct ways of granting permission. Firstly, an
+object (a resource or value) can grant permissions to groups of users, and secondly, permissions can be granted directly
+to a group of users (not bound to a specific object). There are six built-in groups: *UnknownUser*, *KnownUser*,
+*Creator*, *ProjectMember*, *ProjectAdmin*, and *SystemAdmin*. These groups can be used in the same way as normal user
+created groups for permission management, i.e. can be used to give certain groups of users, certain permissions, without
+the need to explicitly create them.
 
 A user becomes implicitly a member of such a group by satisfying certain conditions:
 
@@ -79,13 +80,13 @@ group to ``knora-base``, e.g., ``knora-base:KnownUser`` where ``knora-base`` cor
 Permissions
 ------------
 
-As mentioned, there are two distinct groups of permissions. The first is called *object permissions* and contains
+As mentioned, there are two distinct groups of permissions. The first is called *object access permissions* and contains
 permissions that point from explicit **objects** (resources/values) to groups. The second group of permissions is called
-*group permissions* and contains permissions that are put directly on a **group**, i.e. the object giving the permission
-is not explicitly defined (e.g., the permission to modify an ontology).
+*administrative permissions* and contains permissions that are put directly either on a **project** or a **group**
+inside a project.
 
-Object Permissions
-^^^^^^^^^^^^^^^^^^^
+Object Access Permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 An object (resource / value) can grant the following permissions:
   1. *knora-base:hasRestrictedViewPermission*: Allows a restricted view of the object, e.g. a view of an image with a
      watermark.
@@ -104,7 +105,7 @@ Each permission in the above list implies all lower-numbered permissions.
 
 A user’s permission level on a particular object is calculated in the following way:
 
-  1. Make a list of the groups that the user belongs to, including Owner and/or ProjectMember if applicable.
+  1. Make a list of the groups that the user belongs to, including Creator and/or ProjectMember if applicable.
   2. If the user is the owner of the object, give her the highest level of permissions.
   3. Otherwise, make a list of the permissions that she can obtain on the object, by iterating over the permissions
      that the object grants. For each permission, if she is in the specified group, add the specified permission to the
@@ -113,10 +114,12 @@ A user’s permission level on a particular object is calculated in the followin
   5. If the result is that she would have no permissions, give her whatever permission *UnknownUser* would have.
 
 
-Group Permissions (Roles)
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Administrative Permissions (Roles)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following permissions can be set on a user group:
+The following permissions can be set for the whole project (*ProjectMember* group) or any other group belonging to the
+project. For users that are members of a number of groups with permissions, the final set of permissions is additive and
+most permissive:
 
   1. Resource Creation:
   
@@ -190,6 +193,7 @@ The following permissions can be set on a user group:
           permission
         - value: a list of ``knora-base:UserGroup``
 
+
 Default Permissions
 --------------------
 
@@ -210,7 +214,7 @@ These default permissions are going to be given for each newly created project:
   - ``knora-base:KnownUser`` receives on all objects *knora-base:hasViewPermission*
 
 
-Default Permission Matrix for new Projects
+Default Permissions Matrix for new Projects
 -------------------------------------------
 
 The access control matrix defines what are the default operations a *subject* (i.e. User), being a member of a built-in
@@ -236,17 +240,17 @@ different operation abbreviations used are defined as follows:
   *none* - none or not applicable 
 
 
-.. table:: Default Permission Matrix for new Projects
+.. table:: Default Permissions Matrix for new Projects
 
-==================== ======== ========= ===================== ======================== ======================= 
-Built-In Group       Project  Group     User                  Resource                 Value
-==================== ======== ========= ===================== ======================== =======================
-**SystemAdmin**      ``CRUD`` ``CRUDP`` ``CRUDP`` all         ``CRUDP`` all            ``CRUDP`` all
-**ProjectAdmin**     ``-RUD`` ``CRUDP`` ``CRUDP`` +/- project ``CRUDP`` (in project)   ``CRUDP`` (in project)
-**ProjectMember**    ``----`` ``-----`` ``-----``             ``CRUD-`` (in project)   ``-----`` (in project)
-**Creator**          ``----`` ``-----`` ``-----``             ``-RUDP`` (his resource) ``-----`` (his value)
-**KnownUser**        ``C---`` ``C----`` ``CRUD-`` himself     ``R----`` (in project)   ``R----`` (in project)
-==================== ======== ========= ===================== ======================== =======================
+   ==================== ======== ========= ===================== ======================== ======================= 
+   Built-In Group       Project  Group     User                  Resource                 Value
+   ==================== ======== ========= ===================== ======================== =======================
+   **SystemAdmin**      ``CRUD`` ``CRUDP`` ``CRUDP`` all         ``CRUDP`` all            ``CRUDP`` all
+   **ProjectAdmin**     ``-RUD`` ``CRUDP`` ``CRUDP`` +/- project ``CRUDP`` (in project)   ``CRUDP`` (in project)
+   **ProjectMember**    ``----`` ``-----`` ``-----``             ``CRUD-`` (in project)   ``-----`` (in project)
+   **Creator**          ``----`` ``-----`` ``-----``             ``-RUDP`` (his resource) ``-----`` (his value)
+   **KnownUser**        ``C---`` ``C----`` ``CRUD-`` himself     ``R----`` (in project)   ``R----`` (in project)
+   ==================== ======== ========= ===================== ======================== =======================
 
 
 Implementation

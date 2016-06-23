@@ -196,14 +196,18 @@ class UsersResponderV1 extends ResponderV1 {
             _ = if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
             // check if the requesting user is allowed to perform updates
-            _ = if (!userProfile.userData.user_id.contains(userIri) && !userProfile.userData.isSystemAdmin.contains(true)) {
+            _ = if (!userProfile.userData.user_id.contains(userIri) && !userProfile.isSystemAdmin) {
                 // not the user and not a system admin
                 throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
             }
-            _ = if (propertyIri.equals(OntologyConstants.KnoraBase.IsSystemAdmin) && !userProfile.userData.isSystemAdmin.contains(true)) {
+
+            /*
+            Check needs to be moved into GroupsResponder.
+            _ = if (newValue.equals(OntologyConstants.KnoraBase.SystemAdmin) && !userProfile.isSystemAdmin) {
                 // the operation of promoting to system admin is only allowed by another system admin
                 throw ForbiddenException("Giving an user system admin rights can only be performed by another system admin")
             }
+            */
 
             // get current value.
             sparqlQueryString = queries.sparql.v1.txt.getUser(
@@ -223,7 +227,6 @@ class UsersResponderV1 extends ResponderV1 {
                 case OntologyConstants.KnoraBase.Email => currentUserProfile.userData.email.getOrElse("")
                 case OntologyConstants.KnoraBase.Password => currentUserProfile.userData.hashedpassword.getOrElse("")
                 case OntologyConstants.KnoraBase.IsActiveUser => currentUserProfile.userData.isActiveUser.getOrElse(false)
-                case OntologyConstants.KnoraBase.IsSystemAdmin => currentUserProfile.userData.isSystemAdmin.getOrElse(false)
                 case OntologyConstants.KnoraBase.PreferredLanguage => currentUserProfile.userData.lang
                 case x => throw BadRequestException(s"The property $propertyIri is not allowed")
             }
@@ -297,11 +300,6 @@ class UsersResponderV1 extends ResponderV1 {
                         throw UpdateNotPerformedException("User's 'active status' was not updated. Please report this as a possible bug.")
                     }
                 }
-                case OntologyConstants.KnoraBase.IsSystemAdmin => {
-                    if (!updatedUserProfile.userData.isSystemAdmin.contains(newValue.asInstanceOf[Boolean])) {
-                        throw UpdateNotPerformedException("User's 'admin status' was not updated. Please report this as a possible bug.")
-                    }
-                }
                 case OntologyConstants.KnoraBase.PreferredLanguage => {
                     if (!updatedUserProfile.userData.lang.equals(newValue.asInstanceOf[String])) {
                         throw UpdateNotPerformedException("User's 'preferred language' was not updated. Please report this as a possible bug.")
@@ -353,7 +351,6 @@ class UsersResponderV1 extends ResponderV1 {
             email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
             hashedpassword = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
             isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.IsActiveUser).map(_.head.toBoolean),
-            isSystemAdmin = groupedUserData.get(OntologyConstants.KnoraBase.IsSystemAdmin).map(_.head.toBoolean),
             lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
                 case Some(langList) => langList.head
                 case None => settings.fallbackLanguage
@@ -370,22 +367,13 @@ class UsersResponderV1 extends ResponderV1 {
             case None => Vector.empty[IRI]
         }
 
-        val isGroupAdminForIris = groupedUserData.get(OntologyConstants.KnoraBase.IsGroupAdmin) match {
-            case Some(groups) => groups
-            case None => Vector.empty[IRI]
-        }
-
-        val isProjectAdminForIris = groupedUserData.get(OntologyConstants.KnoraBase.IsProjectAdmin) match {
-            case Some(projects) => projects
-            case None => Vector.empty[IRI]
-        }
 
         val up = UserProfileV1(
             userData = userDataV1,
             groups = groupIris,
             projects = projectIris,
-            isGroupAdminFor = isGroupAdminForIris,
-            isProjectAdminFor = isProjectAdminForIris
+            isGroupAdminFor = Vector.empty[IRI],
+            isProjectAdminFor = Vector.empty[IRI]
         )
         log.debug(s"Retrieved UserProfileV1: ${up.toString}")
 
