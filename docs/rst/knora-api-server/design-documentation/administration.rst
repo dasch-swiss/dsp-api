@@ -344,7 +344,7 @@ Users Endpoint
 **Add/remove SystemAdmin status (-> update user)**:
   - Required permission: ``root``
   - Required information: user IRI
-  - Effects: ``knora-base:hasSystemAdminPermissions`` with value ``true`` or ``false``
+  - Effects: ``knora-base:isInGroup`` with value ``http://www.knora.org/ontology/knora-base#SystemAdmin``
 
 
 **Add/Update/Remove default permissions for new resources / values (-> update user)**:
@@ -367,7 +367,7 @@ Example User Information stored in admin graph:
        knora-base:phone "123456" ;
        knora-base:preferredLanguage "de" ;
        knora-base:isActiveUser "true"^^xsd:boolean ;
-       knora-base:isSystemAdmin "true"^^xsd:boolean ;
+       knora-base:isInGroup <http://www.knora.org/ontology/knora-base#SystemAdmin> ;
        knora-base:isInProject <http://data.knora.org/projects/[UUID]> ;
        knora-base:isProjectAdmin <http://data.knora.org/projects/[UUID]> ;
        knora-base:isInGroup <http://data.knora.org/groups/[UUID]> ;

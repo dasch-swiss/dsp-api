@@ -846,20 +846,6 @@
              rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> .
 
 
-###  http://www.knora.org/ontology/knora-base#isProjectAdmin
-
-:isProjectAdmin rdf:type owl:ObjectProperty ;
-
-			rdfs:subPropertyOf :systemProperty ;				
-
-            rdfs:comment "Connects a User to a Project and implies administrative privileges"@en ;
-
-            :subjectClassConstraint :User ;
-
-            :objectClassConstraint :knoraProject ;
-
-            owl:inverseOf :hasProjectAdmin .
-
 
 ###  http://www.knora.org/ontology/knora-base#isInGroup
 
@@ -874,19 +860,6 @@
            :objectClassConstraint :UserGroup ;
 
            rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> .
-
-
-###  http://www.knora.org/ontology/knora-base#isGroupAdmin
-
-:isGroupAdmin rdf:type owl:ObjectProperty ;
-
-                rdfs:comment "Connects a User to a Group and implies administrative privileges"@en ;
-
-                :subjectClassConstraint :User ;
-
-                :objectClassConstraint :UserGroup ;
-
-                owl:inverseOf :hasGroupAdmin .
 
 
 
@@ -907,17 +880,6 @@
 ###
 ### Project Object Properties
 ###
-
-###  http://www.knora.org/ontology/knora-base#hasProjectAdmin
-
-:hasProjectAdmin rdf:type owl:ObjectProperty ;
-
-                rdfs:comment "Implies granting project administrative privileges to the connected user"@en ;
-
-                :subjectClassConstraint :knoraProject ;
-
-                :objectClassConstraint :User .
-
 
 
 ###  http://www.knora.org/ontology/knora-base#belongsTo
@@ -946,19 +908,6 @@
            :subjectClassConstraint :UserGroup .
 
 
-###
-### Group Object Properties
-###
-
-###  http://www.knora.org/ontology/knora-base#hasGroupAdmin
-
-:hasGroupAdmin rdf:type owl:ObjectProperty ;
-
-                rdfs:comment "Implies granting group administrative privileges to the connected user"@en ;
-
-                :subjectClassConstraint :UserGroup ;
-
-                :objectClassConstraint :User .
 
 
 
@@ -978,19 +927,6 @@
 
          rdfs:comment "Address of a person or an institution"@en .
 
-
-
-###  http://www.knora.org/ontology/knora-base#projectBasepath
-
-:projectBasepath rdf:type owl:DatatypeProperty ;
-
-          rdfs:subPropertyOf :systemProperty ;
-
-          rdfs:comment "Basepath for digital objects which belong to this project"@en ;
-
-          :subjectClassConstraint :knoraProject ;
-
-          :objectDatatypeConstraint xsd:string .
 
 
 ###  http://www.knora.org/ontology/knora-base#creationDate
@@ -2747,39 +2683,11 @@
                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
-                        owl:onProperty :isSystemAdmin ;
-                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                      ] ,
-                      [ rdf:type owl:Restriction ;
                         owl:onProperty :isInProject ;
                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
-                        owl:onProperty :isProjectAdmin ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [ rdf:type owl:Restriction ;
                         owl:onProperty :isInGroup ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [ rdf:type owl:Restriction ;
-                        owl:onProperty :isGroupAdmin ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [ rdf:type owl:Restriction ;
-                        owl:onProperty :hasDefaultRestrictedViewPermission ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [ rdf:type owl:Restriction ;
-                        owl:onProperty :hasDefaultViewPermission ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [ rdf:type owl:Restriction ;
-                        owl:onProperty :hasDefaultModifyPermission ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [ rdf:type owl:Restriction ;
-                        owl:onProperty :hasDefaultDeletePermission ;
                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ;
 
@@ -2819,10 +2727,6 @@
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLogo ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                              ] ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :hasProjectAdmin ;
-                                owl:minCardinality "0"^^xsd:nonNegativeInteger
                               ] ;
 
               rdfs:comment "Represents a project that uses Knora"@en .
@@ -2843,10 +2747,26 @@
                              owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
-                             owl:onProperty :hasGroupAdmin ;
+                             owl:onProperty :hasDefaultRestrictedViewPermission ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :hasDefaultViewPermission ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :hasDefaultModifyPermission ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :hasDefaultChangeRightsPermission ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :hasDefaultDeletePermission ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger
                            ] ;
-           
+                           
            rdfs:comment "A group of Knora users"@en .
 
 
