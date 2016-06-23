@@ -321,6 +321,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         OntologyConstants.KnoraBase.TextValue -> makeTextValue,
         OntologyConstants.KnoraBase.IntValue -> makeIntValue,
         OntologyConstants.KnoraBase.DecimalValue -> makeDecimalValue,
+        OntologyConstants.KnoraBase.BooleanValue -> makeBooleanValue,
+        OntologyConstants.KnoraBase.UriValue -> makeUriValue,
         OntologyConstants.KnoraBase.DateValue -> makeDateValue,
         OntologyConstants.KnoraBase.ColorValue -> makeColorValue,
         OntologyConstants.KnoraBase.GeomValue -> makeGeomValue,
@@ -354,6 +356,30 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val predicates = valueProps.literalData
 
         DecimalValueV1(BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasDecimal).literals.head))
+    }
+
+    /**
+      * Converts a [[ValueProps]] into a [[BooleanValueV1]].
+      *
+      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+      * @return a [[BooleanValueV1]].
+      */
+    private def makeBooleanValue(valueProps: ValueProps): ApiValueV1 = {
+        val predicates = valueProps.literalData
+
+        BooleanValueV1(predicates(OntologyConstants.KnoraBase.ValueHasBoolean).literals.head.toBoolean)
+    }
+
+    /**
+      * Converts a [[ValueProps]] into a [[UriValueV1]].
+      *
+      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+      * @return a [[UriValueV1]].
+      */
+    private def makeUriValue(valueProps: ValueProps): ApiValueV1 = {
+        val predicates = valueProps.literalData
+
+        UriValueV1(predicates(OntologyConstants.KnoraBase.ValueHasUri).literals.head)
     }
 
     /**

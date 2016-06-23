@@ -1715,5 +1715,42 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     newGeonameValue should ===(geonameValue)
             }
         }
+
+        "add a boolean value to an anything:Thing" in {
+            val booleanValue = BooleanValueV1(true)
+
+            actorUnderTest ! CreateValueRequestV1(
+                value = booleanValue,
+                userProfile = anythingUser,
+                propertyIri = "http://www.knora.org/ontology/anything#hasBoolean",
+                resourceIri = aThingIri,
+                projectIri = anythingProjectIri,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case CreateValueResponseV1(newBooleanValue: BooleanValueV1, _ , _, _, _) =>
+                    newBooleanValue should ===(booleanValue)
+            }
+        }
+
+        "add a URI value to an anything:Thing" in {
+            val uriValue = UriValueV1("http://dhlab.unibas.ch")
+
+            actorUnderTest ! CreateValueRequestV1(
+                value = uriValue,
+                userProfile = anythingUser,
+                propertyIri = "http://www.knora.org/ontology/anything#hasUri",
+                resourceIri = aThingIri,
+                projectIri = anythingProjectIri,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case CreateValueResponseV1(newUriValue: UriValueV1, _ , _, _, _) =>
+                    newUriValue should ===(uriValue)
+            }
+        }
+
     }
 }

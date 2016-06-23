@@ -2121,10 +2121,6 @@
                                [ rdf:type owl:Restriction ;
                                  owl:onProperty :valueHasIntervalStart ;
                                  owl:cardinality "1"^^xsd:nonNegativeInteger
-                               ] ,
-                               [ rdf:type owl:Restriction ;
-                                 owl:onProperty :valueHasString ;
-                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                                ] ;
 
                rdfs:comment "Represents a time interval, e.g. in an audio recording"@en .
@@ -2554,10 +2550,6 @@
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasTime ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasString ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 

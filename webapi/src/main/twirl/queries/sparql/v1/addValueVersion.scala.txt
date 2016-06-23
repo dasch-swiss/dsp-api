@@ -131,14 +131,27 @@ DELETE {
             case intValue: IntegerValueV1 => {
 
                 ?newValue knora-base:valueHasInteger @intValue.ival .
-                ?newValue knora-base:valueHasString """@intValue.ival.toString""" .
+                ?newValue knora-base:valueHasString """@intValue.toString""" .
 
             }
 
             case decimalValue: DecimalValueV1 => {
 
-                ?newValue knora-base:valueHasDecimal @decimalValue.dval .
-                ?newValue knora-base:valueHasString """@decimalValue.dval.toString""" .
+                ?newValue knora-base:valueHasDecimal "@decimalValue.dval"^^xsd:decimal .
+                ?newValue knora-base:valueHasString """@decimalValue.toString""" .
+
+            }
+
+            case booleanValue: BooleanValueV1 => {
+
+                ?newValue knora-base:valueHasBoolean @booleanValue.bval .
+
+            }
+
+            case uriValue: UriValueV1 => {
+
+                ?newValue knora-base:valueHasUri """@uriValue.uri""" .
+                ?newValue knora-base:valueHasString """@uriValue.toString""" .
 
             }
 
@@ -193,16 +206,14 @@ DELETE {
 
             case timeValue: TimeValueV1 => {
 
-                ?newValue knora-base:valueHasTime @timeValue.tval ;
-                          knora-base:valueHasString """@timeValue.toString""" .
+                ?newValue knora-base:valueHasTime @timeValue.tval .
 
             }
 
             case intervalValue: IntervalValueV1 => {
 
                 ?newValue knora-base:valueHasIntervalStart @intervalValue.timeval1 ;
-                          knora-base:valueHasIntervalEnd @intervalValue.timeval2 ;
-                          knora-base:valueHasString """@intervalValue.toString""" .
+                          knora-base:valueHasIntervalEnd @intervalValue.timeval2 .
 
             }
 

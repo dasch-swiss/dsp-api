@@ -66,6 +66,8 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
                                  link_value: Option[IRI] = None,
                                  int_value: Option[Int] = None,
                                  decimal_value: Option[BigDecimal] = None,
+                                 boolean_value: Option[Boolean] = None,
+                                 uri_value: Option[String] = None,
                                  date_value: Option[String] = None,
                                  color_value: Option[String] = None,
                                  geom_value: Option[String] = None,
@@ -933,7 +935,7 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
         }
     }
 
-    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat12(CreateResourceValueV1)
+    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat14(CreateResourceValueV1)
     implicit val createResourceApiRequestV1Format: RootJsonFormat[CreateResourceApiRequestV1] = jsonFormat5(CreateResourceApiRequestV1)
     implicit val resourceInfoResponseV1Format: RootJsonFormat[ResourceInfoResponseV1] = jsonFormat3(ResourceInfoResponseV1)
     implicit val resourceDataV1Format: JsonFormat[ResourceDataV1] = jsonFormat5(ResourceDataV1)

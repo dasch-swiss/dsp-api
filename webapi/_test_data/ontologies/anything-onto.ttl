@@ -188,6 +188,58 @@
 
 
 
+:hasBoolean rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Boolescher Wert"@de ,
+                  "Valeur booléenne"@fr ,
+                  "Valore booleano"@it ,
+                  "Boolean value"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:BooleanValue ;
+
+       salsah-gui:guiOrder "6"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasUri rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "URI"@de ,
+                  "URI"@fr ,
+                  "URI"@it ,
+                  "URI"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:UriValue ;
+
+       salsah-gui:guiOrder "7"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
 :hasTime rdf:type owl:ObjectProperty ;
 
        rdfs:subPropertyOf knora-base:hasValue ;
@@ -201,7 +253,7 @@
 
        knora-base:objectClassConstraint knora-base:TimeValue ;
 
-       salsah-gui:guiOrder "6"^^xsd:integer ;
+       salsah-gui:guiOrder "8"^^xsd:integer ;
 
        salsah-gui:guiElement salsah-gui:Time ;
 
@@ -224,7 +276,7 @@
 
        knora-base:objectClassConstraint knora-base:IntervalValue ;
 
-       salsah-gui:guiOrder "7"^^xsd:integer ;
+       salsah-gui:guiOrder "9"^^xsd:integer ;
 
        salsah-gui:guiElement salsah-gui:Interval ;
 
@@ -247,7 +299,7 @@
 
        knora-base:objectClassConstraint knora-base:ColorValue ;
 
-       salsah-gui:guiOrder "7"^^xsd:integer ;
+       salsah-gui:guiOrder "10"^^xsd:integer ;
 
        salsah-gui:guiElement salsah-gui:Colorpicker ;
 
@@ -270,7 +322,7 @@
 
        knora-base:objectClassConstraint knora-base:GeomValue ;
 
-       salsah-gui:guiOrder "8"^^xsd:integer ;
+       salsah-gui:guiOrder "11"^^xsd:integer ;
 
        salsah-gui:guiElement salsah-gui:Geometry ;
 
@@ -293,7 +345,7 @@
 
        knora-base:objectClassConstraint knora-base:GeonameValue ;
 
-       salsah-gui:guiOrder "9"^^xsd:integer ;
+       salsah-gui:guiOrder "12"^^xsd:integer ;
 
        salsah-gui:guiElement salsah-gui:Geonames ;
 
@@ -316,7 +368,7 @@
 
     knora-base:objectClassConstraint :ThingPicture ;
 
-    salsah-gui:guiOrder "10"^^xsd:integer ;
+    salsah-gui:guiOrder "13"^^xsd:integer ;
 
     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -339,7 +391,7 @@
 
     knora-base:objectClassConstraint :LinkValue ;
 
-    salsah-gui:guiOrder "11"^^xsd:integer ;
+    salsah-gui:guiOrder "14"^^xsd:integer ;
 
     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -390,6 +442,16 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasInteger ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasBoolean ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasUri ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [

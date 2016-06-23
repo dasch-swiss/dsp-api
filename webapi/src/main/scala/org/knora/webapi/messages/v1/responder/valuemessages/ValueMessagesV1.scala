@@ -55,6 +55,8 @@ case class CreateValueApiRequestV1(project_id: IRI,
                                    richtext_value: Option[CreateRichtextV1] = None,
                                    int_value: Option[Int] = None,
                                    decimal_value: Option[BigDecimal] = None,
+                                   boolean_value: Option[Boolean] = None,
+                                   uri_value: Option[String] = None,
                                    date_value: Option[String] = None,
                                    color_value: Option[String] = None,
                                    geom_value: Option[String] = None,
@@ -127,6 +129,8 @@ case class ChangeValueApiRequestV1(project_id: IRI,
                                    richtext_value: Option[CreateRichtextV1] = None,
                                    int_value: Option[Int] = None,
                                    decimal_value: Option[BigDecimal] = None,
+                                   boolean_value: Option[Boolean] = None,
+                                   uri_value: Option[String] = None,
                                    date_value: Option[String] = None,
                                    color_value: Option[String] = None,
                                    geom_value: Option[String] = None,
@@ -630,9 +634,7 @@ case class TextValueV1(utf8str: String,
         }
     }
 
-    override def toString = {
-        utf8str
-    }
+    override def toString = utf8str
 
     /**
       * It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup.
@@ -668,9 +670,7 @@ case class LinkV1(targetResourceIri: IRI,
 
     def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
 
-    override def toString = {
-        targetResourceIri
-    }
+    override def toString = targetResourceIri
 
     def toJsValue = JsString(targetResourceIri)
 }
@@ -717,9 +717,7 @@ case class LinkUpdateV1(targetResourceIri: IRI) extends UpdateValueV1 {
         }
     }
 
-    override def toString = {
-        targetResourceIri
-    }
+    override def toString = targetResourceIri
 
     /**
       * A link isn't really changed if the new version points to the same resource as the old version.
@@ -787,6 +785,8 @@ case class IntegerValueV1(ival: Int) extends UpdateValueV1 with ApiValueV1 {
 
     def toJsValue = JsNumber(ival)
 
+    override def toString = ival.toString
+
     /**
       * Checks if a new integer value would duplicate an existing integer value.
       *
@@ -825,6 +825,8 @@ case class BooleanValueV1(bval: Boolean) extends UpdateValueV1 with ApiValueV1 {
 
     def toJsValue = JsBoolean(bval)
 
+    override def toString = bval.toString
+
     /**
       * Checks if a new boolean value would duplicate an existing boolean value. Always returns `true`, because it
       * does not make sense to have two instances of the same boolean property.
@@ -858,6 +860,8 @@ case class UriValueV1(uri: String) extends UpdateValueV1 with ApiValueV1 {
     def valueTypeIri = OntologyConstants.KnoraBase.UriValue
 
     def toJsValue = JsString(uri)
+
+    override def toString = uri
 
     /**
       * Checks if a new URI value would duplicate an existing URI value.
@@ -895,6 +899,8 @@ case class DecimalValueV1(dval: BigDecimal) extends UpdateValueV1 with ApiValueV
     def valueTypeIri = OntologyConstants.KnoraBase.DecimalValue
 
     def toJsValue = JsNumber(dval)
+
+    override def toString = dval.toString
 
     /**
       * Checks if a new decimal value would duplicate an existing decimal value.
@@ -1433,9 +1439,9 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
     implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat2(ValueVersionHistoryGetResponseV1)
     implicit val createRichtextV1Format: RootJsonFormat[CreateRichtextV1] = jsonFormat3(CreateRichtextV1)
-    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat15(CreateValueApiRequestV1)
+    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat17(CreateValueApiRequestV1)
     implicit val createValueResponseV1Format: RootJsonFormat[CreateValueResponseV1] = jsonFormat5(CreateValueResponseV1)
-    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat13(ChangeValueApiRequestV1)
+    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat15(ChangeValueApiRequestV1)
     implicit val changeValueResponseV1Format: RootJsonFormat[ChangeValueResponseV1] = jsonFormat5(ChangeValueResponseV1)
     implicit val deleteValueResponseV1Format: RootJsonFormat[DeleteValueResponseV1] = jsonFormat2(DeleteValueResponseV1)
     implicit val changeFileValueApiRequestV1Format: RootJsonFormat[ChangeFileValueApiRequestV1] = jsonFormat1(ChangeFileValueApiRequestV1)

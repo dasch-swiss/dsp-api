@@ -148,6 +148,10 @@ object MessageUtil {
 
             case geonameValue: GeonameValueV1 => basicObjectResponse
 
+            case booleanValue: BooleanValueV1 => basicObjectResponse
+
+            case uriValue: UriValueV1 => basicObjectResponse
+
             case other => throw new Exception(s"Resource creation response format not implemented for value type ${other.valueTypeIri}") // TODO: implement remaining types.
         }
 
