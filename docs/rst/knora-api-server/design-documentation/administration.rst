@@ -210,8 +210,8 @@ These default permissions are going to be given for each newly created project:
   - ``knora-base:KnownUser`` receives on all objects *knora-base:hasViewPermission*
 
 
-Default Access Control Matrix
-------------------------------
+Default Permission Matrix for new Projects
+-------------------------------------------
 
 The access control matrix defines what are the default operations a *subject* (i.e. User), being a member of a built-in
 group (represented by row headers), is permitted to perform on an *object* (represented by column headers). The
@@ -235,32 +235,18 @@ different operation abbreviations used are defined as follows:
 *-*:
   *none* - none or not applicable 
 
-+-------------------+-------------+-----------+----------------------------+--------------------------+--------------------------+
-|                   | Project     | Group     | User                       | Resource                 | Value                    |
-+===================+=============+===========+============================+==========================+==========================+
-| **SystemAdmin**   | ``C R U D`` | C R U D P | C R U D all                | C R U D P all            | C R U D P all            |
-+-------------------+-------------+-----------+----------------------------+--------------------------+--------------------------+
-| **ProjectAdmin**  | ``- R U D`` | C R U D P | add/remove to/from project | C R U D P inside project | C R U D P inside project |
-+-------------------+-------------+-----------+----------------------------+--------------------------+--------------------------+
-| **ProjectMember** | ``- - - -`` | - - - - - |   - -       - -            | C R U D inside project   | C R U D inside project   |
-+-------------------+-------------+-----------+----------------------------+--------------------------+--------------------------+
-| **Creator**       |             |           |                            | R U D P (this resource)  | R U D P (this value)     |
-+-------------------+-------------+-----------+----------------------------+--------------------------+--------------------------+
-| **KnownUser**     | ``C``       | C         | C R U (D) himself          | R                        | R                        |
-+-------------------+-------------+-----------+----------------------------+--------------------------+--------------------------+
 
+.. table:: Default Permission Matrix for new Projects
 
-.. table:: Default Permission Matrix
-
-=================== =========== =============
- Built-In Group      Project     Group
-=================== =========== =============
- **SystemAdmin**    ``C R U D`` ``C R U D P``
- **ProjectAdmin**   ``- R U D`` ``C R U D P``
- **ProjectMember**  ``- - - -`` ``- - - - -``
- **Creator**        ``- - - -`` ``- - - - -``
- **KnownUser**      ``C - - -`` ``C - - - -``
-=================== =========== =============
+==================== ======== ========= ===================== ======================== ======================= 
+Built-In Group       Project  Group     User                  Resource                 Value
+==================== ======== ========= ===================== ======================== =======================
+**SystemAdmin**      ``CRUD`` ``CRUDP`` ``CRUDP`` all         ``CRUDP`` all            ``CRUDP`` all
+**ProjectAdmin**     ``-RUD`` ``CRUDP`` ``CRUDP`` +/- project ``CRUDP`` (in project)   ``CRUDP`` (in project)
+**ProjectMember**    ``----`` ``-----`` ``-----``             ``CRUD-`` (in project)   ``-----`` (in project)
+**Creator**          ``----`` ``-----`` ``-----``             ``-RUDP`` (his resource) ``-----`` (his value)
+**KnownUser**        ``C---`` ``C----`` ``CRUD-`` himself     ``R----`` (in project)   ``R----`` (in project)
+==================== ======== ========= ===================== ======================== =======================
 
 
 Implementation
