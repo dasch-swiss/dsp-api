@@ -1,0 +1,284 @@
+# Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+# Tobias Schweizer, André Kilchenmann, and André Fatton.
+#
+# This file is part of Knora.
+#
+# Knora is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Knora is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public
+# License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+
+@prefix : <http://www.knora.org/ontology/knora-base#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@base <http://www.knora.org/ontology/knora-base> .
+
+<http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology .
+
+#
+## "Forward imports as knora-base.ttl is loaded after this file"
+#
+
+:systemProperty rdf:type rdf:Property .
+:UserGroup rdf:type owl:Class .
+
+
+
+#
+##
+### Base Permission Property
+##
+#
+###  http://www.knora.org/ontology/knora-base#hasPermission
+
+:hasPermission rdf:type rdf:Property ;
+
+               rdfs:comment "Base permission property."@en ;
+               
+               rdfs:subPropertyOf :systemProperty .
+
+
+
+#
+##
+### Object Access Permissions
+##
+#
+###  http://www.knora.org/ontology/knora-base#hasChangeRightsPermission
+
+:hasChangeRightsPermission rdf:type owl:ObjectProperty ;
+
+                           :objectClassConstraint :UserGroup ;
+
+                           rdfs:subPropertyOf :hasDeletePermission .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasDeletePermission
+
+:hasDeletePermission rdf:type owl:ObjectProperty ;
+
+                     :objectClassConstraint :UserGroup ;
+
+                     rdfs:subPropertyOf :hasModifyPermission .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasModifyPermission
+
+:hasModifyPermission rdf:type owl:ObjectProperty ;
+
+                     :objectClassConstraint :UserGroup ;
+
+                     rdfs:subPropertyOf :hasViewPermission .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasViewPermission
+
+:hasViewPermission rdf:type owl:ObjectProperty ;
+
+                   :objectClassConstraint :UserGroup ;
+
+                   rdfs:subPropertyOf :hasRestrictedViewPermission .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission
+
+:hasRestrictedViewPermission rdf:type owl:ObjectProperty ;
+
+                             :objectClassConstraint :UserGroup ;
+
+                             rdfs:subPropertyOf :hasPermission .
+
+
+
+
+#
+##
+### Administrative Permissions
+##
+#
+
+#
+## Resource Creation
+#
+
+### http://www.knora.org/ontology/knora-base#hasResourceCreateAllPermission
+
+:hasResourceCreateAllPermission rdf:type owl:DatatypeProperty ;
+
+                                rdfs:comment "Exists and true allows the UserGroup to create resources in any project"@en ;
+
+                                rdfs:subPropertyOf :hasProjectResourceCreateAllPermission ;
+
+                                :subjectClassConstraint :UserGroup;
+
+                                :objectDatatypeConstrained xsd:boolean .
+
+
+
+### http://www.knora.org/ontology/knora-base#hasProjectResourceCreateAllPermission
+
+:hasProjectResourceCreateAllPermission rdf:type owl:DatatypeProperty ;
+
+                                       rdfs:comment "Exists and true allows the UserGroup to create resources in the project the group belongs to"@en ;
+
+                                       rdfs:subPropertyOf :hasPermission ;
+
+                                       :objectDatatypeConstrained xsd:boolean .
+
+
+
+### http://www.knora.org/ontology/knora-base#hasProjectResourceCreateRestrictedPermission
+
+:hasProjectResourceCreateRestrictedPermission rdf:type owl:ObjectProperty ;
+
+                                              rdfs:comment "Allows the UserGroup to create resources of the specified class in the project the group belongs to"@en ;
+
+                                              rdfs:subPropertyOf :hasPermission ;
+
+                                              :objectClassConstraint owl:Class .
+
+
+
+#
+## Project Administration
+#
+
+### http://www.knora.org/ontology/knora-base#hasProjectAllAdminPermission
+
+:hasProjectAllAdminPermission rdf:type owl:DatatypeProperty ;
+
+                              rdfs:comment ""@en ;
+
+                              rdfs:subPropertyOf :hasPermission ;
+
+                              :objectClassConstraint :UserGroup ;
+
+                              :objectDatatypeConstrained xsd:boolean .
+
+
+
+### http://www.knora.org/ontology/knora-base#hasProjectUserAllAdminPermission
+
+:hasProjectUserAllAdminPermission rdf:type owl:DatatypeProperty ;
+
+                                  rdfs:comment ""@en ;
+
+                                  rdfs:subPropertyOf :hasPermission ;
+
+                                  :objectClassConstraint :UserGroup ;
+
+                                  :objectDatatypeConstrained xsd:boolean .
+
+
+
+
+### http://www.knora.org/ontology/knora-base#hasProjectUserRestrictedAdminPermission
+
+:hasProjectUserRestrictedAdminPermission rdf:type owl:ObjectProperty ;
+
+                                         rdfs:comment ""@en ;
+
+                                         rdfs:subPropertyOf :hasPermission ;
+
+                                         :objectClassConstraint :UserGroup .
+
+
+
+### http://www.knora.org/ontology/knora-base#hasProjectRightsAdminPermission
+
+:hasProjectRightsAdminPermission rdf:type owl:ObjectProperty ;
+
+                                 rdfs:comment ""@en ;
+
+                                 rdfs:subPropertyOf :hasPermission ;
+
+                                 :objectDatatypeConstrained xsd:boolean .
+
+
+
+### http://www.knora.org/ontology/knora-base#hasProjectOntologyAdminPermission
+
+:hasProjectOntologyAdminPermission rdf:type owl:ObjectProperty ;
+
+                                   rdfs:comment ""@en ;
+
+                                   rdfs:subPropertyOf :hasPermission ;
+
+                                   :objectDatatypeConstrained xsd:boolean .
+
+
+
+#
+## Default Permissions
+#
+
+###  http://www.knora.org/ontology/knora-base#hasDefaultChangeRightsPermission
+
+:hasDefaultChangeRightsPermission rdf:type owl:ObjectProperty ;
+
+                                  :objectClassConstraint :UserGroup ;
+
+                                  rdfs:subPropertyOf :hasDefaultDeletePermission .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasDefaultDeletePermission
+
+:hasDefaultDeletePermission rdf:type owl:ObjectProperty ;
+
+                            :objectClassConstraint :UserGroup ;
+
+                            rdfs:subPropertyOf :hasDefaultModifyPermission .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasDefaultModifyPermission
+
+:hasDefaultModifyPermission rdf:type owl:ObjectProperty ;
+
+                            :objectClassConstraint :UserGroup ;
+
+                            rdfs:subPropertyOf :hasDefaultViewPermission .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasDefaultViewPermission
+
+:hasDefaultViewPermission rdf:type owl:ObjectProperty ;
+
+                          rdfs:subPropertyOf :hasDefaultRestrictedViewPermission .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasDefaultRestrictedViewPermission
+
+:hasDefaultRestrictedViewPermission rdf:type owl:ObjectProperty ;
+
+                                    :objectClassConstraint :UserGroup ;
+
+                                    rdfs:subPropertyOf :hasDefaultPermission .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasDefaultPermission
+
+:hasDefaultPermission rdf:type owl:ObjectProperty ;
+
+                      rdfs:subPropertyOf :hasPermission ;
+
+                      :objectClassConstraint :UserGroup .

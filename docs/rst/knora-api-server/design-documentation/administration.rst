@@ -150,7 +150,7 @@ most permissive:
         - description: gives the user the permission to add/remove user to/from project, and to/from *certain* project groups.
         - value: a list of ``knora-base:UserGroup``
 
-      c). *hasProjectRightsAdminPermission*:
+      c) *hasProjectRightsAdminPermission*:
 
         - description: gives the user the permission to change the *permissions* on all objects belonging to the
           project (e.g., default permissions attached to groups and permissions on objects).
