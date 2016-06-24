@@ -105,11 +105,10 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 expectMsg(Failure(NotFoundException(s"For the given group name 'groupwrong' no information was found")))
             }
         }
-        /*
-        "asked to create a new user " should {
-            "create the user and return it's profile if the supplied username is unique " in {
+        "asked to create a new group " should {
+            "create the group and return the group's full info if the supplied group name is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "test", false, "en"),
+                    NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "test", "en"),
                     SharedTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
@@ -125,7 +124,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
             }
             "return a 'DuplicateValueException' if the supplied username is not unique " in {
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("root", "", "", "", "test", false, ""),
+                    NewUserDataV1("root", "", "", "", "test", ""),
                     SharedTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
@@ -135,7 +134,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
                 /* missing username */
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("", "", "", "", "test", false, ""),
+                    NewUserDataV1("", "", "", "", "test", ""),
                     SharedTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
@@ -143,13 +142,14 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
                 /* missing password */
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("dduck", "", "", "", "", false, ""),
+                    NewUserDataV1("dduck", "", "", "", "", ""),
                     SharedTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Password cannot be empty")))
             }
         }
+        /*
         "asked to update a user " should {
             "update the user " in {
 

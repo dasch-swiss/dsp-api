@@ -64,7 +64,9 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List(
+        RdfDataObject(path = "../knora-ontologies/knora-base-permissions.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
+        RdfDataObject(path = "../knora-ontologies/knora-base-admin.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/all_data/admin-data.ttl", name = "http://www.knora.org/data/admin")
@@ -204,35 +206,6 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
 
             }
-            /*
-            Todo: Move both to GroupsResponderV1Spec
-            "return a 'ForbiddenException' if the update gives SA rights but the user requesting the update is not SA " in {
-                /* User information is updated by the user */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.IsSystemAdmin,
-                    newValue = true,
-                    userProfile = SharedTestData.normaluserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(ForbiddenException("Giving an user system admin rights can only be performed by another system admin")))
-            }
-            "update the user, giving him SA rights " in {
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.IsSystemAdmin,
-                    newValue = true,
-                    userProfile = SharedTestData.superuserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.isSystemAdmin equals (true))
-                    }
-                }
-            }
-            */
             "update the user, (deleting) making him inactive " in {
                 actorUnderTest ! UserUpdateRequestV1(
                     userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,

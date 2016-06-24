@@ -189,7 +189,7 @@ class GroupsResponderV1 extends ResponderV1 {
                     description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription),
                     isActiveGroup = groupProperties.get(OntologyConstants.KnoraBase.IsActiveGroup).map(_.toBoolean),
                     hasSelfJoinEnabled = groupProperties.get(OntologyConstants.KnoraBase.HasSelfJoinEnabled).map(_.toBoolean),
-                    hasGroupAdmin = Vector.empty[IRI]
+                    hasPermissions = Vector.empty[Map[IRI, IRI]]
 
                 )
             case GroupInfoType.SHORT | _ =>

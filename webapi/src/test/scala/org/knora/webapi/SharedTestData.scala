@@ -168,7 +168,7 @@ object SharedTestData {
         description = Some("This group contains contributing users external to the Image-Collection-Demo project"),
         isActiveGroup = Some(true),
         hasSelfJoinEnabled = Some(false),
-        hasGroupAdmin = Vector.empty[IRI]
+        hasPermissions = Vector.empty[Map[IRI,IRI]]
     )
 
     val imgcontriShortGroupInfoV1 = GroupInfoV1(
@@ -177,6 +177,6 @@ object SharedTestData {
         description = Some("This group contains contributing users external to the Image-Collection-Demo project"),
         isActiveGroup = None,
         hasSelfJoinEnabled = None,
-        hasGroupAdmin = Vector.empty[IRI]
+        hasPermissions = Vector.empty[Map[IRI,IRI]]
     )
 }

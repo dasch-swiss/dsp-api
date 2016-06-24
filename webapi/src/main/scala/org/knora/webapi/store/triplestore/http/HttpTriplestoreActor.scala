@@ -276,7 +276,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
             for (elem <- rdfDataObjects) {
 
-                GraphProtocolAccessor.put(elem.name, elem.path)
+                GraphProtocolAccessor.post(elem.name, elem.path)
 
                 if (tsType == HTTP_GRAPH_DB_TS_TYPE || tsType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
                     /* need to update the lucene index */

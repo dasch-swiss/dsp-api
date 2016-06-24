@@ -139,7 +139,7 @@ case class GroupInfoV1(id: IRI,
                        description: Option[String] = None,
                        isActiveGroup: Option[Boolean] = None,
                        hasSelfJoinEnabled: Option[Boolean] = None,
-                       hasGroupAdmin: Seq[IRI] = Nil)
+                       hasPermissions: Seq[Map[IRI, IRI]] = Nil)
 
 object GroupInfoType extends Enumeration {
     val SHORT = Value(0, "short")
