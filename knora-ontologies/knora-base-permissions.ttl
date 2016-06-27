@@ -155,7 +155,7 @@
 
 
 #
-## Project Administration
+## Project Administration Permissions
 #
 
 ### http://www.knora.org/ontology/knora-base#hasProjectAllAdminPermission
@@ -172,30 +172,30 @@
 
 
 
-### http://www.knora.org/ontology/knora-base#hasProjectUserAllAdminPermission
+### http://www.knora.org/ontology/knora-base#hasProjectAllGroupAdminPermission
 
-:hasProjectUserAllAdminPermission rdf:type owl:DatatypeProperty ;
+:hasProjectAllGroupAdminPermission rdf:type owl:DatatypeProperty ;
 
-                                  rdfs:comment ""@en ;
+                                   rdfs:comment ""@en ;
 
-                                  rdfs:subPropertyOf :hasPermission ;
+                                   rdfs:subPropertyOf :hasPermission ;
 
-                                  :objectClassConstraint :UserGroup ;
+                                   :objectClassConstraint :UserGroup ;
 
-                                  :objectDatatypeConstrained xsd:boolean .
-
-
+                                   :objectDatatypeConstrained xsd:boolean .
 
 
-### http://www.knora.org/ontology/knora-base#hasProjectUserRestrictedAdminPermission
 
-:hasProjectUserRestrictedAdminPermission rdf:type owl:ObjectProperty ;
 
-                                         rdfs:comment ""@en ;
+### http://www.knora.org/ontology/knora-base#hasProjectRestrictedGroupAdminPermission
 
-                                         rdfs:subPropertyOf :hasPermission ;
+:hasProjectRestrictedGroupAdminPermission rdf:type owl:ObjectProperty ;
 
-                                         :objectClassConstraint :UserGroup .
+                                          rdfs:comment ""@en ;
+
+                                          rdfs:subPropertyOf :hasPermission ;
+
+                                          :objectClassConstraint :UserGroup .
 
 
 

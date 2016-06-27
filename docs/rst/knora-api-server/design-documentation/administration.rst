@@ -133,21 +133,25 @@ most permissive:
         - description: restricted resource creation permission
         - value: a list of *ResourceClasses* the user should only be able to create instances of.
 
-  2. Project Administration:
+  2. Project Administration Permissions:
   
       a) *hasProjectAllAdminPermission*:
       
-        - description: gives the user the permission to do anything on project level.
+        - description: gives the user the permission to do anything on project level, i.e. create new groups, modify all
+          existing groups (*group info*, *group membership*, *resource creation permission*, *project administration
+          permissions*, and *default permissions*)
         - value: ``"true"^^xsd:boolean``
       
-      b) *hasProjectUserAllAdminPermission*:
+      b) *hasProjectAllGroupAdminPermission*:
 
-        - description: gives the user the permission to add/remove user to/from project, and to/from *all* project groups.
+        - description: gives the user the permission to modify *group info* and *group membership* on *all* groups belonging
+          to the project.
         - value: ``"true"^^xsd:boolean``
 
-      b) *hasProjectUserRestrictedAdminPermission*:
+      b) *hasProjectRestrictedGroupAdminPermission*:
 
-        - description: gives the user the permission to add/remove user to/from project, and to/from *certain* project groups.
+        - description: gives the user the permission to modify *group info* and *group membership* on *certain* groups
+          belonging to the project.
         - value: a list of ``knora-base:UserGroup``
 
       c) *hasProjectRightsAdminPermission*:
@@ -343,12 +347,6 @@ Users Endpoint
 **Delete user (-> update user)**:
   - Required permission: SystemAdmin / User
   - Effects property: ``knora-base:isActiveUser`` with value ``true`` or ``false``
-  
-  
-**Add/remove SystemAdmin status (-> update user)**:
-  - Required permission: ``root``
-  - Required information: user IRI
-  - Effects: ``knora-base:isInGroup`` with value ``http://www.knora.org/ontology/knora-base#SystemAdmin``
 
 
 **Add/Update/Remove default permissions for new resources / values (-> update user)**:
@@ -371,16 +369,9 @@ Example User Information stored in admin graph:
        knora-base:phone "123456" ;
        knora-base:preferredLanguage "de" ;
        knora-base:isActiveUser "true"^^xsd:boolean ;
-       knora-base:isInGroup <http://www.knora.org/ontology/knora-base#SystemAdmin> ;
        knora-base:isInProject <http://data.knora.org/projects/[UUID]> ;
-       knora-base:isProjectAdmin <http://data.knora.org/projects/[UUID]> ;
-       knora-base:isInGroup <http://data.knora.org/groups/[UUID]> ;
-       knora-base:isGroupAdmin <http://data.knora.org/groups/[UUID]> ;
-       knora-base:hasDefaultRestrictedViewPermission <http://data.knora.org/groups/[UUID]> ;
-       knora-base:hasDefaultViewPermission <http://data.knora.org/groups/[UUID]> ,
-                                           <http://data.knora.org/groups/KnownUser> ;
-       knora-base:hasDefaultModifyPermission <http://data.knora.org/groups/[UUID]> ;
-       knora-base:hasDefaultDeletePermission <http://data.knora.org/groups/[UUID]> .
+       knora-base:isInGroup <http://www.knora.org/ontology/knora-base#SystemAdmin> ,
+                            <http://data.knora.org/projects/[UUID]> .
 
 
 Projects Endpoint
@@ -388,8 +379,12 @@ Projects Endpoint
 **Create project**:
   - Required permission: SystemAdmin / KnownUser
   - Required information: projectShortname (unique; used for named graphs), projectBasepath
-  - Optional information: projectLongname, projectDescription, belongsTo, projectKeyword, projectLogo
+  - Optional information: projectLongname, projectDescription, projectKeyword, projectLogo
   - Returns IRI of newly created project
+  - Effects:
+      - create project
+      - create group named projectShortName + Administrators, add user if not system admin, give group *hasProjectAllAdminPermission*
+      - create group named projectShortName + Members, add user if not system admin, give group *hasProjectResourceCreateAllPermission*
 
 
 **Update project information**:
@@ -441,45 +436,63 @@ Example Project Information stored in admin named graph:
         knora-base:projectDataGraph "http://www.knora.org/data/images" ;
         knora-base:isActiveProject "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean ;
-        knora-base:hasProjectAdmin <User-IRI> ;
+        knora-base:hasProjectResourceCreateAllPermission "true"^^xsd:boolean ;
+        knora-base:hasProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/knora-base#Resource>
+        knora-base:hasProjectAllAdminPermission "true"^^xsd:boolean ;
+        knora-base:hasProjectRestrictedGroupAdminPermission <http://data.knora.org/groups/[UUID]> ;
+        knora-base:hasProjectRightsAdminPermission "true"^^xsd:boolean ;
+        knora-base:hasProjectOntologyAdminPermission "true"^^xsd:boolean ;
         knora-base:hasDefaultRestrictedViewPermission <http://data.knora.org/groups/[UUID]> ;
-        knora-base:hasDefaultViewPermission <http://data.knora.org/groups/[UUID]> ,
-                                            <http://data.knora.org/groups/KnownUser> ;
+        knora-base:hasDefaultViewPermission <http://data.knora.org/groups/[UUID]> ;
         knora-base:hasDefaultModifyPermission <http://data.knora.org/groups/[UUID]> ;
-        knora-base:hasDefaultDeletePermission <http://data.knora.org/groups/[UUID]> .
+        knora-base:hasDefaultDeletePermission <http://data.knora.org/groups/[UUID]> ;
+        knora-base:hasDefaultChangeRightsPermission <http://data.knora.org/groups/[UUID]> .
 
 
 Groups Endpoint
 ^^^^^^^^^^^^^^^^
 
 **Create group**:
-  - Required permission: SystemAdmin / ProjectAdmin
+  - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission
   - Required information: group name, project
   - Optional information: group description
   - Returns IRI of newly created group
 
 
 **Update group information**:
-  - Required permission: SystemAdmin / ProjectAdmin with a least GroupAdmin permission for this group
+  - Required permission: SystemAdmin / hasProjectAllAdminPermission /  hasProjectAllGroupAdminPermission /
+    hasProjectRestrictedGroupAdminPermission (for this group)
   - Changeable information: name, group description
   - Effects property: ``<http://xmlns.com/foaf/0.1/name>``, ``knora-base:groupDescription``
 
 
-**Add/remove user to/from group**:
-  - Required permission: SystemAdmin / ProjectAdmin with GroupAdmin permission for this group / User (if group
-    self-assignment is enabled)
+**Add/remove user to/from group** (not *SystemAdmin*):
+  - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission /
+    hasProjectRestrictedGroupAdminPermission (for this group) / User (if group self-assignment is enabled)
   - Required information: group IRI, user IRI
-  - Optional information: admin status
+  - Effects: ``knora-base:isInGroup``
+
+
+**Add/remove user to/from group** (*SystemAdmin* group):
+  - Required permission: SystemAdmin
+  - Required information: group IRI, user IRI
   - Effects: ``knora-base:isInGroup``
 
 
 **Enable/disable self-join**:
-  - Required permission: SystemAdmin / ProjectAdmin
+  - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission /
+    hasProjectRestrictedGroupAdminPermission (for this group)
   - Effects property: ``knora-base:hasSelfAssignmentEnabled`` with value ``true`` or ``false``
 
 
 **Add/change permissions attached to group**
-  - Required permission: SystemAdmin / ProjectAdmin
+  - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectRightsAdminPermission (for this group)
+
+
+**Delete group**:
+  - Required permission: SystemAdmin / hasProjectAllAdminPermission
+  - Effect: ``knora-base:isInGroup`` / removes group from any object permissions
+
 
 Example Group Information stored in admin named graph:
 ::
@@ -488,9 +501,18 @@ Example Group Information stored in admin named graph:
         knora-base:groupName "Name of the group" ;
         knora-base:groupDescription "A description of the group" ;
         knora-base:belongsToProject <http://data.knora.org/projects/[UUID]> ;
-        knora-base:isActiveGroup "true"^^xsd:boolean ;
-        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
-
+        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean ;
+        knora-base:hasProjectResourceCreateAllPermission "true"^^xsd:boolean ;
+        knora-base:hasProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/knora-base#Resource>
+        knora-base:hasProjectAllAdminPermission "true"^^xsd:boolean ;
+        knora-base:hasProjectRestrictedGroupAdminPermission <http://data.knora.org/groups/[UUID]> ;
+        knora-base:hasProjectRightsAdminPermission "true"^^xsd:boolean ;
+        knora-base:hasProjectOntologyAdminPermission "true"^^xsd:boolean ;
+        knora-base:hasDefaultRestrictedViewPermission <http://data.knora.org/groups/[UUID]> ;
+        knora-base:hasDefaultViewPermission <http://data.knora.org/groups/[UUID]> ;
+        knora-base:hasDefaultModifyPermission <http://data.knora.org/groups/[UUID]> ;
+        knora-base:hasDefaultDeletePermission <http://data.knora.org/groups/[UUID]> ;
+        knora-base:hasDefaultChangeRightsPermission <http://data.knora.org/groups/[UUID]> .
 
 
 Redesign / Questions June 2016
