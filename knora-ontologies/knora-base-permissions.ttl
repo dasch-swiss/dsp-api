@@ -113,22 +113,8 @@
 #
 
 #
-## Resource Creation
+## Resource Creation Permissions
 #
-
-### http://www.knora.org/ontology/knora-base#hasResourceCreateAllPermission
-
-:hasResourceCreateAllPermission rdf:type owl:DatatypeProperty ;
-
-                                rdfs:comment "Exists and true allows the UserGroup to create resources in any project"@en ;
-
-                                rdfs:subPropertyOf :hasProjectResourceCreateAllPermission ;
-
-                                :subjectClassConstraint :UserGroup;
-
-                                :objectDatatypeConstrained xsd:boolean .
-
-
 
 ### http://www.knora.org/ontology/knora-base#hasProjectResourceCreateAllPermission
 

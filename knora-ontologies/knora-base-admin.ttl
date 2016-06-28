@@ -669,18 +669,8 @@
 :SystemAdmin rdf:type :UserGroup ,
                       owl:NamedIndividual ;
 
-             <http://xmlns.com/foaf/0.1/name> "system admin" ;
+             <http://xmlns.com/foaf/0.1/name> "system admin" .
 
-             :hasResourceCreateAllPermission "true"^^xsd:boolean .
-
-
-
-###  http://www.knora.org/ontology/knora-base#ProjectAdmin
-
-:ProjectAdmin rdf:type :UserGroup ,
-                      owl:NamedIndividual ;
-
-             <http://xmlns.com/foaf/0.1/name> "project admin" .
 
 
 
