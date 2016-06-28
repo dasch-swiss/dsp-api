@@ -460,7 +460,7 @@ Groups Endpoint
 
 **Create group**:
   - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission
-  - Required information: group name, project IRI
+  - Required information: group name (unique inside project), project IRI
   - Optional information: group description
   - Returns IRI of newly created group
 
@@ -547,7 +547,7 @@ Redesign / Questions June 2016
   
 **Resource creation permission to course**
 
-  - beeing part of a projects gives resource creation permission. What if some project members are not allowed to create
+  - being part of a projects gives resource creation permission. What if some project members are not allowed to create
     new resources (or only certain types; Lumiere Lausanne requirement), but are only allowed to change existing
     resources?
   - => These kind of permissions can be set on groups. A project can have different groups, giving different kind of
