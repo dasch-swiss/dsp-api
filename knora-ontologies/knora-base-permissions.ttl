@@ -152,8 +152,6 @@
 
                               rdfs:subPropertyOf :hasPermission ;
 
-                              :objectClassConstraint :UserGroup ;
-
                               :objectDatatypeConstrained xsd:boolean .
 
 
@@ -165,8 +163,6 @@
                                    rdfs:comment ""@en ;
 
                                    rdfs:subPropertyOf :hasPermission ;
-
-                                   :objectClassConstraint :UserGroup ;
 
                                    :objectDatatypeConstrained xsd:boolean .
 

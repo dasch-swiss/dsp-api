@@ -47,7 +47,7 @@ class GroupsResponderV1 extends ResponderV1 {
     def receive = {
         case GroupsGetRequestV1(infoType, userProfile) => future2Message(sender(), getGroupsResponseV1(infoType, userProfile), log)
         case GroupInfoByIRIGetRequest(iri, infoType, userProfile) => future2Message(sender(), getGroupInfoByIRIGetRequest(iri, infoType, userProfile), log)
-        case GroupInfoByNameGetRequest(shortname, infoType, userProfile) => future2Message(sender(), getGroupInfoByNameGetRequest(shortname, infoType, userProfile), log)
+        case GroupInfoByNameGetRequest(projectIri, groupName, infoType, userProfile) => future2Message(sender(), getGroupInfoByNameGetRequest(projectIri, groupName, infoType, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -131,7 +131,7 @@ class GroupsResponderV1 extends ResponderV1 {
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[GroupInfoResponseV1]].
       */
-    private def getGroupInfoByNameGetRequest(name: String, infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
+    private def getGroupInfoByNameGetRequest(projectIri: IRI, name: String, infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByName(
                 triplestore = settings.triplestoreType,
@@ -187,9 +187,10 @@ class GroupsResponderV1 extends ResponderV1 {
                     id = groupIri,
                     name = groupProperties.get(OntologyConstants.KnoraBase.GroupName).get,
                     description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription),
+                    belongsToProject = groupProperties.get(OntologyConstants.KnoraBase.BelongsToProject),
                     isActiveGroup = groupProperties.get(OntologyConstants.KnoraBase.IsActiveGroup).map(_.toBoolean),
                     hasSelfJoinEnabled = groupProperties.get(OntologyConstants.KnoraBase.HasSelfJoinEnabled).map(_.toBoolean),
-                    hasPermissions = Vector.empty[Map[IRI, IRI]]
+                    hasPermissions = Vector.empty[GroupPermissionV1]
 
                 )
             case GroupInfoType.SHORT | _ =>

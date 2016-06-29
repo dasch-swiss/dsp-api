@@ -20,7 +20,7 @@
 
 package org.knora.webapi
 
-import org.knora.webapi.messages.v1.responder.groupmessages.GroupInfoV1
+import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1, GroupPermissionV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 
 /**
@@ -162,21 +162,43 @@ object SharedTestData {
 
     )
 
-    val imgcontriFullGroupInfoV1 = GroupInfoV1(
-        id = "http://data.knora.org/groups/imgcontri",
-        name = "Images-Demo-Project External Contributors",
-        description = Some("This group contains contributing users external to the Image-Collection-Demo project"),
+    val imagesProjectAdminFullGroupInfoV1 = GroupInfoV1(
+        id = "http://data.knora.org/groups/images/ProjectAdmin",
+        name = "ProjectAdmin",
+        description = Some("Default Project Admin Group"),
+        belongsToProject = Some("http://data.knora.org/projects/images"),
         isActiveGroup = Some(true),
         hasSelfJoinEnabled = Some(false),
-        hasPermissions = Vector.empty[Map[IRI,IRI]]
+        hasPermissions = Vector.empty[GroupPermissionV1]
     )
 
-    val imgcontriShortGroupInfoV1 = GroupInfoV1(
-        id = "http://data.knora.org/groups/imgcontri",
-        name = "Images-Demo-Project External Contributors",
-        description = Some("This group contains contributing users external to the Image-Collection-Demo project"),
+    val imagesProjectAdminShortGroupInfoV1 = GroupInfoV1(
+        id = "http://data.knora.org/groups/images/ProjectAdmin",
+        name = "ProjectAdmin",
+        description = Some("Default Project Admin Group"),
+        belongsToProject = None,
         isActiveGroup = None,
         hasSelfJoinEnabled = None,
-        hasPermissions = Vector.empty[Map[IRI,IRI]]
+        hasPermissions = Vector.empty[GroupPermissionV1]
+    )
+
+    val imagesProjectMemberFullGroupInfoV1 = GroupInfoV1(
+        id = "http://data.knora.org/groups/images/ProjectMember",
+        name = "ProjectMember",
+        description = Some("Default Project Member Group"),
+        belongsToProject = Some("http://data.knora.org/projects/images"),
+        isActiveGroup = Some(true),
+        hasSelfJoinEnabled = Some(false),
+        hasPermissions = Vector.empty[GroupPermissionV1]
+    )
+
+    val imagesProjectMemberShortGroupInfoV1 = GroupInfoV1(
+        id = "http://data.knora.org/groups/images/ProjectMember",
+        name = "ProjectMember",
+        description = Some("Default Project Member Group"),
+        belongsToProject = None,
+        isActiveGroup = None,
+        hasSelfJoinEnabled = None,
+        hasPermissions = Vector.empty[GroupPermissionV1]
     )
 }

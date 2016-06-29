@@ -56,8 +56,11 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    val imgcontriFullGroupInfo = SharedTestData.imgcontriFullGroupInfoV1
-    val imgcontriShortGroupInfo = SharedTestData.imgcontriShortGroupInfoV1
+    val imagesProjectAdminFullGroupInfo = SharedTestData.imagesProjectAdminFullGroupInfoV1
+    val imagesProjectAdminShortGroupInfo = SharedTestData.imagesProjectAdminShortGroupInfoV1
+
+    val imagesProjectMemberFullGroupInfo = SharedTestData.imagesProjectMemberFullGroupInfoV1
+    val imagesProjectMemberShortGroupInfo = SharedTestData.imagesProjectMemberShortGroupInfoV1
 
     val rootUserProfileV1 = SharedTestData.rootUserProfileV1
 
@@ -65,7 +68,9 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List(
+        RdfDataObject(path = "../knora-ontologies/knora-base-permissions.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
+        RdfDataObject(path = "../knora-ontologies/knora-base-admin.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/all_data/admin-data.ttl", name = "http://www.knora.org/data/admin")
@@ -79,12 +84,12 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     "The GroupsResponder " when {
         "asked about a group identified by 'iri' " should {
             "return full group info if the group is known " in {
-                actorUnderTest ! GroupInfoByIRIGetRequest(imgcontriFullGroupInfo.id, GroupInfoType.FULL, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imgcontriFullGroupInfo, Some(rootUserProfileV1.userData)))
+                actorUnderTest ! GroupInfoByIRIGetRequest(imagesProjectAdminFullGroupInfo.id, GroupInfoType.FULL, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imagesProjectAdminFullGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return short group info if the group is known " in {
-                actorUnderTest ! GroupInfoByIRIGetRequest(imgcontriShortGroupInfo.id, GroupInfoType.SHORT, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imgcontriShortGroupInfo, Some(rootUserProfileV1.userData)))
+                actorUnderTest ! GroupInfoByIRIGetRequest(imagesProjectAdminShortGroupInfo.id, GroupInfoType.SHORT, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imagesProjectAdminShortGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return 'NotFoundException' when the group is unknown " in {
                 actorUnderTest ! GroupInfoByIRIGetRequest("http://data.knora.org/groups/notexisting", GroupInfoType.FULL, Some(rootUserProfileV1))
@@ -93,18 +98,19 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
         }
         "asked about a group identified by 'name' " should {
             "return full group info if the group is known " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imgcontriFullGroupInfo.name, GroupInfoType.FULL, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imgcontriFullGroupInfo, Some(rootUserProfileV1.userData)))
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectAdminFullGroupInfo.belongsToProject.get, imagesProjectAdminFullGroupInfo.name, GroupInfoType.FULL, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imagesProjectAdminFullGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return short group info if the group is known " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imgcontriFullGroupInfo.name, GroupInfoType.SHORT, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imgcontriShortGroupInfo, Some(rootUserProfileV1.userData)))
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberFullGroupInfo.belongsToProject.get, imagesProjectMemberShortGroupInfo.name, GroupInfoType.SHORT, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imagesProjectMemberShortGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! GroupInfoByNameGetRequest("groupwrong", GroupInfoType.FULL, Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByNameGetRequest("images","groupwrong", GroupInfoType.FULL, Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"For the given group name 'groupwrong' no information was found")))
             }
         }
+        /*
         "asked to create a new group " should {
             "create the group and return the group's full info if the supplied group name is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
@@ -149,6 +155,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 expectMsg(Failure(BadRequestException("Password cannot be empty")))
             }
         }
+        */
         /*
         "asked to update a user " should {
             "update the user " in {

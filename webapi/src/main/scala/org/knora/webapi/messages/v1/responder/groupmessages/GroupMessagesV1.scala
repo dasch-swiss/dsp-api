@@ -34,13 +34,15 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
   *
   * @param name               the name of the group to be created (unique).
   * @param description        the description of the group to be created.
+  * @param belongsToProject   the project inside which the group will be created.
   * @param isActiveGroup      the status of the group to be created.
   * @param hasSelfJoinEnabled the status of self-join of the group to be created.
   */
 case class CreateGroupApiRequestV1(name: String,
                                    description: String,
-                                   isActiveGroup: String,
-                                   hasSelfJoinEnabled: String) {
+                                   belongsToProject: Option[IRI],
+                                   isActiveGroup: Boolean,
+                                   hasSelfJoinEnabled: Boolean) {
     def toJsValue = GroupV1JsonProtocol.createGroupApiRequestV1Format.write(this)
 }
 
@@ -84,13 +86,15 @@ case class GroupInfoByIRIGetRequest(iri: IRI, infoType: GroupInfoType.Value, use
 
 
 /**
-  * Find everything about a single group identified through it's shortname.
+  * Find everything about a single group identified through it's shortname. Because it is only required to have unique
+  * names inside a project, it is required to supply the name of the project.
   *
-  * @param name of the group.
+  * @param projectIri the IRI of the project the group is part of.
+  * @param groupName the name of the group.
   * @param infoType is the type of the project information.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class GroupInfoByNameGetRequest(name: String, infoType: GroupInfoType.Value, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
+case class GroupInfoByNameGetRequest(projectIri: IRI, groupName: String, infoType: GroupInfoType.Value, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 
 // Responses
@@ -137,9 +141,17 @@ case class GroupOperationResponseV1(group_info: GroupInfoV1, userdata: UserDataV
 case class GroupInfoV1(id: IRI,
                        name: String,
                        description: Option[String] = None,
+                       belongsToProject: Option[IRI] = None,
                        isActiveGroup: Option[Boolean] = None,
                        hasSelfJoinEnabled: Option[Boolean] = None,
-                       hasPermissions: Seq[Map[IRI, IRI]] = Nil)
+                       hasPermissions: Seq[GroupPermissionV1] = Nil)
+
+/**
+  * Represents a group permission.
+  * @param name the name of the permission.
+  * @param value the value of the permission.
+  */
+case class GroupPermissionV1(name: IRI, value: Either[Boolean, List[IRI]])
 
 object GroupInfoType extends Enumeration {
     val SHORT = Value(0, "short")
@@ -172,14 +184,15 @@ object GroupV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
     import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 
-    implicit val groupInfoV1Format: JsonFormat[GroupInfoV1] = jsonFormat6(GroupInfoV1)
+    implicit val groupPermissionV1Format: JsonFormat[GroupPermissionV1] = jsonFormat2(GroupPermissionV1)
+    implicit val groupInfoV1Format: JsonFormat[GroupInfoV1] = jsonFormat7(GroupInfoV1)
     // we have to use lazyFormat here because `UserV1JsonProtocol` contains an import statement for this object.
     // this results in recursive import statements
     // rootFormat makes it return the expected type again.
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
     implicit val groupsResponseV1Format: RootJsonFormat[GroupsResponseV1] = rootFormat(lazyFormat(jsonFormat2(GroupsResponseV1)))
     implicit val groupInfoResponseV1Format: RootJsonFormat[GroupInfoResponseV1] = rootFormat(lazyFormat(jsonFormat2(GroupInfoResponseV1)))
-    implicit val createGroupApiRequestV1Format: RootJsonFormat[CreateGroupApiRequestV1] = rootFormat(lazyFormat(jsonFormat4(CreateGroupApiRequestV1)))
+    implicit val createGroupApiRequestV1Format: RootJsonFormat[CreateGroupApiRequestV1] = rootFormat(lazyFormat(jsonFormat5(CreateGroupApiRequestV1)))
     implicit val updateGroupApiRequestV1Format: RootJsonFormat[UpdateGroupApiRequestV1] = rootFormat(lazyFormat(jsonFormat2(UpdateGroupApiRequestV1)))
     implicit val groupOperationResponseV1Format: RootJsonFormat[GroupOperationResponseV1] = rootFormat(lazyFormat(jsonFormat2(GroupOperationResponseV1)))
 }

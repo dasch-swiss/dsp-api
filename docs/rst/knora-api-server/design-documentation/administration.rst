@@ -225,6 +225,7 @@ These default permissions are going to be given for each newly created project:
   - ``ProjectMember`` Group:
      - receives *hasProjectResourceCreateAllPermission*
      - receives *knora-base:hasDefaultChangeRightsPermission* for *knora-base:Creator*
+     - receives *knora-base:hasDefaultModifyPermission* for this *ProjectMember* group
      - receives *knora-base:hasDefaultViewPermission* for *knora-base:KnownUser*
 
 
@@ -359,13 +360,6 @@ Users Endpoint
   - Effects property: ``knora-base:isActiveUser`` with value ``true`` or ``false``
 
 
-**Add/Update/Remove default permissions for new resources / values (-> update user)**:
-  - Required permission: SystemAdmin / User
-  - Required information: ``knora-base:hasDefaultRestrictedViewPermission``, ``knora-base:hasDefaultViewPermission``,
-    ``knora-base:hasDefaultModifyPermission``, ``knora-base:hasDefaultDeletePermission``. Each property needs to point
-    to a list of ``UserGroups`` or if nothing is specified, then to an empty list.
-
-
 Example User Information stored in admin graph:
 ::
 
@@ -395,7 +389,8 @@ Projects Endpoint
       - create project
       - create group named *ProjectAdmin*, give group *hasProjectAllAdminPermission* and *hasProjectResourceCreateAllPermission*
       - create group named *ProjectMember*, give group *hasProjectResourceCreateAllPermission*,
-        *knora-base:hasDefaultChangeRightsPermission* for *knora-base:Creator*, and
+        *knora-base:hasDefaultChangeRightsPermission* for *knora-base:Creator*,
+        *knora-base:hasDefaultModifyPermission* for this *ProjectMember* group, and
         *knora-base:hasDefaultViewPermission* for *knora-base:KnownUser*
 
 
@@ -450,7 +445,7 @@ Example Project Information stored in admin named graph:
         knora-base:groupName "ProjectMember" ;
         knora-base:groupDescription "Default Project Member Group" ;
         knora-base:belongsToProject <http://data.knora.org/projects/[UUID]> ;
-        hasProjectResourceCreateAllPermission "true"^^xsd:boolean ;
+        knora-base:hasProjectResourceCreateAllPermission "true"^^xsd:boolean ;
         knora-base:hasDefaultChangeRightsPermission knora-base:Creator ;
         knora-base:hasDefaultViewPermission knora-base:KnownUser .
 
