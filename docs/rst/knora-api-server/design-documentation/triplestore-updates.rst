@@ -500,7 +500,7 @@ Creating the initial version of a value
                   knora-base:valueHasString """Comment 1""" ;
                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
                   knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-                  knora-base:hasDeletePermisson knora-admin:Owner ;
+                  knora-base:hasDeletePermisson knora-admin:Creator ;
                   knora-base:hasModifyPermission knora-admin:ProjectMember ;
                   knora-base:hasViewPermission knora-admin:KnownUser ,
                                                knora-admin:UnknownUser ;
@@ -543,7 +543,7 @@ Adding a new version of a value
                   knora-base:previousValue ?currentValue ;
                   knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
                   knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-                  knora-base:hasDeletePermisson knora-admin:Owner ;
+                  knora-base:hasDeletePermisson knora-admin:Creator ;
                   knora-base:hasModifyPermission knora-admin:ProjectMember ;
                   knora-base:hasViewPermission knora-admin:KnownUser ,
                                                knora-admin:UnknownUser ;

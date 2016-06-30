@@ -36,7 +36,7 @@
                                  knora-base:hasViewPermission knora-base:KnownUser ;
 
                                  knora-base:hasModifyPermission knora-base:ProjectMember ,
-                                                                knora-base:Owner ;
+                                                                knora-base:Creator ;
 
                                  incunabula:title <http://data.knora.org/c5058f3a/values/c3295339> ;
 
@@ -76,7 +76,7 @@
 
                                                  knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
 
-                                                 knora-base:hasDeletePermission knora-base:Owner ;
+                                                 knora-base:hasDeletePermission knora-base:Creator ;
 
                                                  knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -97,7 +97,7 @@
 
                                                  knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
 
-                                                 knora-base:hasDeletePermission knora-base:Owner ;
+                                                 knora-base:hasDeletePermission knora-base:Creator ;
 
                                                  knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -117,7 +117,7 @@
 
                                                  knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
 
-                                                 knora-base:hasDeletePermission knora-base:Owner ;
+                                                 knora-base:hasDeletePermission knora-base:Creator ;
 
                                                  knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -138,7 +138,7 @@
 
                                                  knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
 
-                                                 knora-base:hasDeletePermission knora-base:Owner ;
+                                                 knora-base:hasDeletePermission knora-base:Creator ;
 
                                                  knora-base:hasViewPermission knora-base:ProjectMember ,
                                                                               knora-base:KnownUser ,
@@ -168,7 +168,7 @@
 
                                                    knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner ;
+                                                   knora-base:hasDeletePermission knora-base:Creator ;
 
                                                    knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -189,7 +189,7 @@
 
                                                    knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner ,
+                                                   knora-base:hasDeletePermission knora-base:Creator ,
                                                                                  knora-base:ProjectMember ;
 
                                                    knora-base:hasViewPermission knora-base:KnownUser ,
@@ -209,7 +209,7 @@
 
                                                        knora-base:valueCreationDate "2014-05-18T02:08:23"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ,
+                                                       knora-base:hasDeletePermission knora-base:Creator ,
                                                                                      knora-base:ProjectMember ;
 
                                                        knora-base:hasViewPermission knora-base:KnownUser ,
@@ -229,7 +229,7 @@
 
                                                    knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner ;
+                                                   knora-base:hasDeletePermission knora-base:Creator ;
 
                                                    knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -250,7 +250,7 @@
 
                                                    knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner ;
+                                                   knora-base:hasDeletePermission knora-base:Creator ;
 
                                                    knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -271,7 +271,7 @@
 
                                                    knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner ;
+                                                   knora-base:hasDeletePermission knora-base:Creator ;
 
                                                    knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -292,7 +292,7 @@
 
                                                    knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner ;
+                                                   knora-base:hasDeletePermission knora-base:Creator ;
 
                                                    knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -314,7 +314,7 @@
                                  knora-base:hasViewPermission knora-base:KnownUser ;
 
                                  knora-base:hasModifyPermission knora-base:ProjectMember ,
-                                                                knora-base:Owner ;
+                                                                knora-base:Creator ;
 
                                  incunabula:pagenum <http://data.knora.org/8a0b1e75/values/61cb927602> ;
 
@@ -356,7 +356,7 @@
 
                                                    knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner .
+                                                   knora-base:hasDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -378,7 +378,7 @@
                                                                                 knora-base:KnownUser ,
                                                                                 knora-base:ProjectMember ;
 
-                                                   knora-base:hasModifyPermission knora-base:Owner .
+                                                   knora-base:hasModifyPermission knora-base:Creator .
 
 
 ### ###########################################
@@ -403,7 +403,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                      knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                     knora-base:hasDeletePermission knora-base:Owner .
+                                                     knora-base:hasDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -423,7 +423,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                                                   knora-base:KnownUser ;
 
                                                      knora-base:hasDeletePermission knora-base:ProjectMember ,
-                                                                                   knora-base:Owner .
+                                                                                   knora-base:Creator .
 
 
 ### ###########################################
@@ -442,7 +442,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                    knora-base:hasViewPermission knora-base:UnknownUser ,
                                                                                 knora-base:KnownUser ,
                                                                                 knora-base:ProjectMember ,
-                                                                                knora-base:Owner .
+                                                                                knora-base:Creator .
 
 
 ### ###########################################
@@ -481,7 +481,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 					       knora-base:attachedToProject <http://data.knora.org/projects/666> ;
 
                                                knora-base:hasModifyPermission knora-base:ProjectMember ,
-                                                                              knora-base:Owner .
+                                                                              knora-base:Creator .
 
 
 ### ###########################################
@@ -516,7 +516,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                knora-base:hasViewPermission knora-base:KnownUser ;
 
                                                knora-base:hasModifyPermission knora-base:ProjectMember ,
-   					       				      knora-base:Owner .
+   					       				      knora-base:Creator .
 
 
 ### ###########################################
@@ -538,7 +538,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                                                                           knora-base:KnownUser ,
                                                                                                           knora-base:ProjectMember ;
 
-                                                                             knora-base:hasDeletePermission knora-base:Owner ;
+                                                                             knora-base:hasDeletePermission knora-base:Creator ;
 
                                                                              knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 

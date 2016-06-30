@@ -257,9 +257,9 @@ object PermissionUtilV1 {
         val userGroups: Seq[IRI] = userProfile.userData.user_id match {
             case Some(userIri) =>
                 // The user is a known user.
-                // If the user owns the subject, put the user in the "owner" built-in group.
+                // If the user created the subject, put the user in the "creator" built-in group.
                 val ownerOption = if (userIri == subjectOwner) {
-                    Some(OntologyConstants.KnoraBase.Owner)
+                    Some(OntologyConstants.KnoraBase.Creator)
                 } else {
                     None
                 }
@@ -285,7 +285,7 @@ object PermissionUtilV1 {
 
         // If the user is in the "owner" group, don't bother calculating permissions, just give them the maximum
         // permission.
-        val permissionCodeOption = if (userGroups.contains(OntologyConstants.KnoraBase.Owner)) {
+        val permissionCodeOption = if (userGroups.contains(OntologyConstants.KnoraBase.Creator)) {
             Some(MaxPermissionCode)
         } else {
             // Find the highest permission that can be granted to the user.

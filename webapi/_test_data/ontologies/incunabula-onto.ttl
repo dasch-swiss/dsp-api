@@ -48,7 +48,7 @@
 
        knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-       knora-base:hasDefaultDeletePermission knora-base:Owner .
+       knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -75,7 +75,7 @@
 
            knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-           knora-base:hasDefaultDeletePermission knora-base:Owner .
+           knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -110,7 +110,7 @@
 
            knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-           knora-base:hasDefaultDeletePermission knora-base:Owner .
+           knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -140,7 +140,7 @@
                                             knora-base:UnknownUser ,
                                             knora-base:ProjectMember ;
 
-        knora-base:hasDefaultDeletePermission knora-base:Owner .
+        knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -168,7 +168,7 @@
 
          knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-         knora-base:hasDefaultDeletePermission knora-base:Owner .
+         knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -201,7 +201,7 @@
                                               knora-base:UnknownUser ;
 
           knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                knora-base:Owner .
+                                                knora-base:Creator .
 
 
 ### ###########################################
@@ -234,7 +234,7 @@
                                          knora-base:UnknownUser ;
 
      knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                           knora-base:Owner .
+                                           knora-base:Creator .
 
 
 ### ###########################################
@@ -260,7 +260,7 @@
 
              knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-             knora-base:hasDefaultDeletePermission knora-base:Owner .
+             knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -292,7 +292,7 @@
 
                knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-               knora-base:hasDefaultDeletePermission knora-base:Owner .
+               knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -325,7 +325,7 @@
 
       knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-      knora-base:hasDefaultDeletePermission knora-base:Owner .
+      knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -355,7 +355,7 @@
 
           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-          knora-base:hasDefaultDeletePermission knora-base:Owner .
+          knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -389,7 +389,7 @@
 
               knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-              knora-base:hasDefaultDeletePermission knora-base:Owner .
+              knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -422,7 +422,7 @@
 
          knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-         knora-base:hasDefaultDeletePermission knora-base:Owner .
+         knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -474,7 +474,7 @@
                                             knora-base:UnknownUser ,
                                             knora-base:ProjectMember ;
 
-        knora-base:hasDefaultDeletePermission knora-base:Owner .
+        knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -508,7 +508,7 @@
                                             knora-base:UnknownUser ,
                                             knora-base:ProjectMember ;
 
-        knora-base:hasDefaultModifyPermission knora-base:Owner .
+        knora-base:hasDefaultModifyPermission knora-base:Creator .
 
 
 ### ###########################################
@@ -541,7 +541,7 @@
                                                   knora-base:KnownUser ;
 
               knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                    knora-base:Owner .
+                                                    knora-base:Creator .
 
 
 ### ###########################################
@@ -570,7 +570,7 @@
           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
                                               knora-base:UnknownUser ,
                                               knora-base:ProjectMember ,
-                                              knora-base:Owner .
+                                              knora-base:Creator .
 
 
 ### ###########################################
@@ -618,7 +618,7 @@
 
                  knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-                 knora-base:hasDefaultDeletePermission knora-base:Owner .
+                 knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -665,7 +665,7 @@
 
                   knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-                  knora-base:hasDefaultDeletePermission knora-base:Owner .
+                  knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -694,7 +694,7 @@
 
                knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-               knora-base:hasDefaultDeletePermission knora-base:Owner .
+               knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -724,7 +724,7 @@
 
          knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-         knora-base:hasDefaultDeletePermission knora-base:Owner .
+         knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -750,7 +750,7 @@
 
                   knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-                  knora-base:hasDefaultDeletePermission knora-base:Owner .
+                  knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -774,7 +774,7 @@
 
                         knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-                        knora-base:hasDefaultDeletePermission knora-base:Owner .
+                        knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -798,7 +798,7 @@
 
                            knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-                           knora-base:hasDefaultDeletePermission knora-base:Owner .
+                           knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -822,7 +822,7 @@
 
                            knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-                           knora-base:hasDefaultDeletePermission knora-base:Owner .
+                           knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ##########################################################
@@ -901,7 +901,7 @@
       knora-base:hasDefaultViewPermission knora-base:KnownUser ;
 
       knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
-                                            knora-base:Owner .
+                                            knora-base:Creator .
 
 
 ### ###########################################
@@ -978,7 +978,7 @@
       knora-base:hasDefaultViewPermission knora-base:KnownUser ;
 
       knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
-                                            knora-base:Owner .
+                                            knora-base:Creator .
 
 
 ### ###########################################
@@ -1008,7 +1008,7 @@
 
           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-          knora-base:hasDefaultDeletePermission knora-base:Owner .
+          knora-base:hasDefaultDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -1041,4 +1041,4 @@
 
       knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-      knora-base:hasDefaultDeletePermission knora-base:Owner .
+      knora-base:hasDefaultDeletePermission knora-base:Creator .

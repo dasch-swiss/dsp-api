@@ -29,7 +29,7 @@
 
                                  knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
-                                 knora-base:hasModifyPermission knora-base:Owner ,
+                                 knora-base:hasModifyPermission knora-base:Creator ,
                                                                  knora-base:ProjectMember ;
 
                                  knora-base:hasViewPermission knora-base:KnownUser ;
@@ -76,9 +76,9 @@
 
                                                  knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                 knora-base:hasDeletePermission knora-base:Owner ;
+                                                 knora-base:hasDeletePermission knora-base:Creator ;
 
-                                                 knora-base:hasModifyPermission knora-base:Owner ;
+                                                 knora-base:hasModifyPermission knora-base:Creator ;
 
                                                  knora-base:hasViewPermission knora-base:KnownUser ,
                                                                                knora-base:UnknownUser .
@@ -104,7 +104,7 @@
 
                                                  knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                 knora-base:hasDeletePermission knora-base:Owner .
+                                                 knora-base:hasDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -122,7 +122,7 @@
 
                                                  knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                 knora-base:hasDeletePermission knora-base:Owner ;
+                                                 knora-base:hasDeletePermission knora-base:Creator ;
 
                                                  knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -145,7 +145,7 @@
 
                                                  knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                 knora-base:hasDeletePermission knora-base:Owner ;
+                                                 knora-base:hasDeletePermission knora-base:Creator ;
 
                                                  knora-base:hasViewPermission knora-base:ProjectMember ,
                                                                                knora-base:KnownUser ,
@@ -177,7 +177,7 @@
 
                                                    knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner ;
+                                                   knora-base:hasDeletePermission knora-base:Creator ;
 
                                                    knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -200,7 +200,7 @@
 
                                                    knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner ,
+                                                   knora-base:hasDeletePermission knora-base:Creator ,
                                                                                   knora-base:ProjectMember ;
 
                                                    knora-base:hasViewPermission knora-base:KnownUser ,
@@ -226,7 +226,7 @@
                                                                                      knora-base:KnownUser ;
 
                                                        knora-base:hasDeletePermission knora-base:ProjectMember ,
-                                                                                      knora-base:Owner .
+                                                                                      knora-base:Creator .
 
 
 ### ###########################################
@@ -249,7 +249,7 @@
 
                                                    knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner .
+                                                   knora-base:hasDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -267,7 +267,7 @@
 
                                                    knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner ;
+                                                   knora-base:hasDeletePermission knora-base:Creator ;
 
                                                    knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -290,7 +290,7 @@
 
                                                    knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner ;
+                                                   knora-base:hasDeletePermission knora-base:Creator ;
 
                                                    knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -313,7 +313,7 @@
 
                                                    knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner ;
+                                                   knora-base:hasDeletePermission knora-base:Creator ;
 
                                                    knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -334,7 +334,7 @@
 
                                      knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                     knora-base:hasChangeRightsPermisson knora-base:Owner ;
+                                     knora-base:hasChangeRightsPermisson knora-base:Creator ;
 
                                      knora-base:hasComment <http://data.knora.org/cb1a74e3e2f6/values/dfe0ce1e099e04> ;
 
@@ -365,7 +365,7 @@
 
                                                            knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                           knora-base:hasDeletePermission knora-base:Owner .
+                                                           knora-base:hasDeletePermission knora-base:Creator .
 
 
 
@@ -388,7 +388,7 @@
                                                                                                               knora-base:KnownUser ,
                                                                                                               knora-base:ProjectMember ;
 
-                                                                                 knora-base:hasDeletePermission knora-base:Owner ;
+                                                                                 knora-base:hasDeletePermission knora-base:Creator ;
 
                                                                                  knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
@@ -411,7 +411,7 @@
                                  knora-base:hasViewPermission knora-base:KnownUser ;
 
                                  knora-base:hasModifyPermission knora-base:ProjectMember ,
-                                                                knora-base:Owner ;
+                                                                knora-base:Creator ;
 
                                  incunabula:pagenum <http://data.knora.org/8a0b1e75/values/61cb927602> ;
 
@@ -451,7 +451,7 @@
 
                                                    knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner .
+                                                   knora-base:hasDeletePermission knora-base:Creator .
 
 
 
@@ -478,7 +478,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                      knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                     knora-base:hasDeletePermission knora-base:Owner .
+                                                     knora-base:hasDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -498,7 +498,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                                                   knora-base:KnownUser ;
 
                                                      knora-base:hasDeletePermission knora-base:ProjectMember ,
-                                                                                    knora-base:Owner .
+                                                                                    knora-base:Creator .
 
 
 ### ###########################################
@@ -517,7 +517,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                    knora-base:hasViewPermission knora-base:UnknownUser ,
                                                                                 knora-base:KnownUser ,
                                                                                 knora-base:ProjectMember ,
-                                                                                knora-base:Owner .
+                                                                                knora-base:Creator .
 
 
 ### ###########################################
@@ -552,7 +552,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                knora-base:hasViewPermission knora-base:KnownUser ;
 
                                                knora-base:hasModifyPermission knora-base:ProjectMember ,
-                                                                              knora-base:Owner .
+                                                                              knora-base:Creator .
 
 
 ### ###########################################
@@ -585,7 +585,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                knora-base:hasViewPermission knora-base:KnownUser ;
 
                                                knora-base:hasModifyPermission knora-base:ProjectMember ,
-                                                                              knora-base:Owner .
+                                                                              knora-base:Creator .
 
 
 ### ###########################################
@@ -607,7 +607,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                                                                           knora-base:KnownUser ,
                                                                                                           knora-base:ProjectMember ;
 
-                                                                             knora-base:hasDeletePermission knora-base:Owner ;
+                                                                             knora-base:hasDeletePermission knora-base:Creator ;
 
                                                                              knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
@@ -628,7 +628,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                      knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                     knora-base:hasChangeRightsPermisson knora-base:Owner ;
+                                     knora-base:hasChangeRightsPermisson knora-base:Creator ;
 
                                      knora-base:hasComment <http://data.knora.org/5e51519c4407/values/d35ca8aeec2a> ;
 
@@ -666,7 +666,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                          knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                         knora-base:hasDeletePermission knora-base:Owner .
+                                                         knora-base:hasDeletePermission knora-base:Creator .
 
 
 
@@ -688,7 +688,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                          knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                         knora-base:hasDeletePermission knora-base:Owner .
+                                                         knora-base:hasDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -711,7 +711,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                          knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                         knora-base:hasDeletePermission knora-base:Owner .
+                                                         knora-base:hasDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -734,7 +734,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                                                  knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                                                 knora-base:hasDeletePermission knora-base:Owner ;
+                                                                                 knora-base:hasDeletePermission knora-base:Creator ;
 
                                                                                  knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 
@@ -755,7 +755,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                  knora-base:hasViewPermission knora-base:KnownUser ;
 
                                  knora-base:hasModifyPermission knora-base:ProjectMember ,
-                                                                knora-base:Owner ;
+                                                                knora-base:Creator ;
 
                                  incunabula:pagenum <http://data.knora.org/4f11adaf/values/6d72df5b03> ;
 
@@ -795,7 +795,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                    knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                   knora-base:hasDeletePermission knora-base:Owner .
+                                                   knora-base:hasDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -817,7 +817,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                                                 knora-base:KnownUser ,
                                                                                 knora-base:ProjectMember ;
 
-                                                   knora-base:hasModifyPermission knora-base:Owner .
+                                                   knora-base:hasModifyPermission knora-base:Creator .
 
 
 ### ###########################################
@@ -838,7 +838,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                      knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                     knora-base:hasDeletePermission knora-base:Owner .
+                                                     knora-base:hasDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -857,7 +857,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                    knora-base:hasViewPermission knora-base:UnknownUser ,
                                                                                 knora-base:KnownUser ,
                                                                                 knora-base:ProjectMember ,
-                                                                                knora-base:Owner .
+                                                                                knora-base:Creator .
 
 
 ### ###########################################
@@ -892,7 +892,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                knora-base:hasViewPermission knora-base:KnownUser ;
 
                                                knora-base:hasModifyPermission knora-base:ProjectMember ,
-                                                                              knora-base:Owner .
+                                                                              knora-base:Creator .
 
 
 ### ###########################################
@@ -925,7 +925,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                knora-base:hasViewPermission knora-base:KnownUser ;
 
                                                knora-base:hasModifyPermission knora-base:ProjectMember ,
-                                                                              knora-base:Owner .
+                                                                              knora-base:Creator .
 
 
 ### ###########################################
@@ -947,7 +947,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                                                                           knora-base:KnownUser ,
                                                                                                           knora-base:ProjectMember ;
 
-                                                                             knora-base:hasDeletePermission knora-base:Owner ;
+                                                                             knora-base:hasDeletePermission knora-base:Creator ;
 
                                                                              knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 
@@ -964,7 +964,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
-                                   knora-base:hasModifyPermission knora-base:Owner ;
+                                   knora-base:hasModifyPermission knora-base:Creator ;
 
                                    knora-base:hasViewPermission knora-base:KnownUser ;
 
@@ -1014,7 +1014,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1037,7 +1037,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1060,7 +1060,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1083,7 +1083,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1106,7 +1106,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasViewPermission knora-base:ProjectMember ,
                                                                                      knora-base:KnownUser ,
@@ -1143,7 +1143,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner .
+                                                       knora-base:hasDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -1159,7 +1159,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ,
+                                                       knora-base:hasDeletePermission knora-base:Creator ,
                                                                                       knora-base:ProjectMember ;
 
                                                        knora-base:hasViewPermission knora-base:KnownUser ,
@@ -1181,7 +1181,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                          knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                         knora-base:hasDeletePermission knora-base:Owner ,
+                                                         knora-base:hasDeletePermission knora-base:Creator ,
                                                                                         knora-base:ProjectMember ;
 
                                                          knora-base:hasViewPermission knora-base:KnownUser ,
@@ -1203,7 +1203,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1233,7 +1233,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                          knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                         knora-base:hasDeletePermission knora-base:Owner ;
+                                                         knora-base:hasDeletePermission knora-base:Creator ;
 
                                                          knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1256,7 +1256,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1279,7 +1279,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1302,7 +1302,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1319,7 +1319,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                    knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 
-                                   knora-base:hasModifyPermission knora-base:Owner ,
+                                   knora-base:hasModifyPermission knora-base:Creator ,
                                                                    knora-base:ProjectMember ;
 
                                    knora-base:hasViewPermission knora-base:KnownUser ;
@@ -1368,7 +1368,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:previousValue <http://data.knora.org/21abac2162/values/22222222> ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1393,9 +1393,9 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:previousValue <http://data.knora.org/21abac2162/values/11111111> ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
-                                                       knora-base:hasViewPermission knora-base:Owner .
+                                                       knora-base:hasViewPermission knora-base:Creator .
 
 
 ### ###########################################
@@ -1413,7 +1413,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-20T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1440,7 +1440,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner .
+                                                       knora-base:hasDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -1458,7 +1458,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1481,7 +1481,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasViewPermission knora-base:ProjectMember ,
                                                                                      knora-base:KnownUser ,
@@ -1503,7 +1503,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ,
+                                                       knora-base:hasDeletePermission knora-base:Creator ,
                                                                                       knora-base:ProjectMember ;
 
                                                        knora-base:hasViewPermission knora-base:KnownUser ,
@@ -1525,7 +1525,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                          knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                         knora-base:hasDeletePermission knora-base:Owner ,
+                                                         knora-base:hasDeletePermission knora-base:Creator ,
                                                                                         knora-base:ProjectMember ;
 
                                                          knora-base:hasViewPermission knora-base:KnownUser ,
@@ -1547,7 +1547,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1570,7 +1570,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                          knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                         knora-base:hasDeletePermission knora-base:Owner ;
+                                                         knora-base:hasDeletePermission knora-base:Creator ;
 
                                                          knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1593,7 +1593,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1616,7 +1616,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1639,7 +1639,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                          knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 
-                                                         knora-base:hasDeletePermission knora-base:Owner ;
+                                                         knora-base:hasDeletePermission knora-base:Creator ;
 
                                                          knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1662,7 +1662,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                    knora-base:hasViewPermission knora-base:KnownUser ;
 
                                    knora-base:hasModifyPermission knora-base:ProjectMember ,
-                                                                  knora-base:Owner ;
+                                                                  knora-base:Creator ;
 
                                    incunabula:title <http://data.knora.org/9935159f67/values/e6e02fe39801> ;
 
@@ -1691,7 +1691,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner .
+                                                       knora-base:hasDeletePermission knora-base:Creator .
 
 
 ### ###########################################
@@ -1708,7 +1708,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                    knora-base:hasRestrictedViewPermission knora-base:UnknownUser ;
 
                                    knora-base:hasModifyPermission knora-base:ProjectMember ,
-                                                                  knora-base:Owner ;
+                                                                  knora-base:Creator ;
 
                                    incunabula:title <http://data.knora.org/c3f913666f/values/8ab7aa3cb801> ,
                                                     <http://data.knora.org/c3f913666f/values/4de1fd75b801> ;
@@ -1778,7 +1778,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1799,7 +1799,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1820,7 +1820,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1840,7 +1840,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1861,7 +1861,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasViewPermission knora-base:ProjectMember ,
                                                                                     knora-base:KnownUser ,
@@ -1891,7 +1891,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1912,7 +1912,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ,
+                                                       knora-base:hasDeletePermission knora-base:Creator ,
                                                                                       knora-base:ProjectMember ;
 
                                                        knora-base:hasViewPermission knora-base:KnownUser ,
@@ -1932,7 +1932,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ,
+                                                       knora-base:hasDeletePermission knora-base:Creator ,
                                                                                       knora-base:ProjectMember ;
 
                                                        knora-base:hasViewPermission knora-base:KnownUser ,
@@ -1952,7 +1952,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1973,7 +1973,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -1994,7 +1994,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2015,7 +2015,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2036,7 +2036,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2057,7 +2057,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2078,7 +2078,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2099,7 +2099,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2120,7 +2120,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2141,7 +2141,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2162,7 +2162,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2183,7 +2183,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2204,7 +2204,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2225,7 +2225,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2246,7 +2246,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2267,7 +2267,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2288,7 +2288,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2309,7 +2309,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2330,7 +2330,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2351,7 +2351,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2372,7 +2372,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2393,7 +2393,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2414,7 +2414,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2435,7 +2435,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2456,7 +2456,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2477,7 +2477,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2498,7 +2498,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2519,7 +2519,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2540,7 +2540,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2561,7 +2561,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2582,7 +2582,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2603,7 +2603,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                        knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 
-                                                       knora-base:hasDeletePermission knora-base:Owner ;
+                                                       knora-base:hasDeletePermission knora-base:Creator ;
 
                                                        knora-base:hasModifyPermission knora-base:ProjectMember ;
 
@@ -2626,7 +2626,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                      knora-base:hasRestrictedViewPermission knora-base:UnknownUser ;
 
                                      knora-base:hasModifyPermission knora-base:ProjectMember ,
-                                                                    knora-base:Owner ;
+                                                                    knora-base:Creator ;
 
                                      rdfs:label """Empty resource for testing optional properties""" ;
 

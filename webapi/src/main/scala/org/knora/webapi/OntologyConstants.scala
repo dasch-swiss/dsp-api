@@ -132,7 +132,7 @@ object OntologyConstants {
         val UnknownUser = "http://www.knora.org/ontology/knora-base#UnknownUser"
         val KnownUser = "http://www.knora.org/ontology/knora-base#KnownUser"
         val ProjectMember = "http://www.knora.org/ontology/knora-base#ProjectMember"
-        val Owner = "http://www.knora.org/ontology/knora-base#Owner"
+        val Creator = "http://www.knora.org/ontology/knora-base#Creator"
         val SystemAdmin = "http://www.knora.org/ontology/knora-base#SystemAdmin"
         val ProjectAdmin = "http://www.knora/ontology/knora-base#ProjectAdmin"
         val GroupAdmin = "http://www.knora.org/ontology/knora-base#GroupAdmin"
