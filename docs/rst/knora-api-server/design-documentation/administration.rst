@@ -207,6 +207,10 @@ As described earlier, it is possible to define default permissions for newly cre
 special properties to groups. The groups these properties are attached to, can either be user created or one of the
 built-in groups.
 
+TODO: Allow setting default permissions to values inside a project ontology. This will require a bit more calculation,
+as now for each value that is created, not only the user's group's default permission needs to be taken into account, but
+also the value's default permission. The employed rule will be **least permissive**.
+
 A the time a resource / value is created, it will be possible to supply a set of permissions, with which
 the resource / value should be created. These supplied permissions will only be used if no default permissions are
 defined. In the case that default permissions are defined, any supplied permissions will be *discarded*.
