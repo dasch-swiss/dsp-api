@@ -76,12 +76,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     val getUserProfileByIri = PrivateMethod[Try[UserProfileV1]]('getUserProfileByIri)
     val authenticateCredentials = PrivateMethod[Try[String]]('authenticateCredentials)
 
-    val rdfDataObjects = Vector(
-        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
-        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
-        RdfDataObject(path = "_test_data/all_data/admin-data.ttl", name = "http://www.knora.org/data/admin")
-    )
+    val rdfDataObjects = Vector()
 
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
