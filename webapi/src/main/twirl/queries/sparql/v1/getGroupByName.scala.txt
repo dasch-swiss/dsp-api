@@ -21,13 +21,15 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets all information about a single project, given the project's name.
+ * Gets all information about a single group, given the group's name and project association.
  *
  * @param triplestore the name of the triplestore being used.
  * @param name the group's `<http://www.knora.org/ontology/knora-base#groupName>`.
+ * @param projectIri the group's `<http://www.knora.org/ontology/knora-base#belongsToProject>` project association.
  *@
 @(triplestore: String,
-  name: String)
+  name: String,
+  projectIri: IRI)
 
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -42,5 +44,10 @@ SELECT ?s ?p ?o
 WHERE {
     ?s rdf:type knora-base:UserGroup .
     ?s knora-base:groupName @name .
+
+    @if(projectIri.nonEmpty) {
+        ?s knora-base:belongsToProject <@projectIri> .
+    }
+
     ?s ?p ?o .
 }

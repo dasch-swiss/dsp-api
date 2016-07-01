@@ -20,8 +20,11 @@
 
 package org.knora.webapi.messages.v1.responder.groupmessages
 
+import java.util.UUID
+
+import org.knora.webapi
 import org.knora.webapi.messages.v1.responder._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{NewUserDataV1, UserDataV1, UserProfileV1}
 import org.knora.webapi.responders.v1.GroupsResponderV1
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
@@ -97,6 +100,42 @@ case class GroupInfoByIRIGetRequest(iri: IRI, infoType: GroupInfoType.Value, use
 case class GroupInfoByNameGetRequest(projectIri: IRI, groupName: String, infoType: GroupInfoType.Value, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 
+/**
+  * Requests the creation of a new group.
+  *
+  * @param newGroupInfo the [[NewGroupInfoV1]] information for creating the new group.
+  * @param userProfile the user profile of the user creating the new group.
+  * @param apiRequestID the ID of the API request.
+  */
+case class GroupCreateRequestV1(newGroupInfo: NewGroupInfoV1,
+                                userProfile: UserProfileV1,
+                                apiRequestID: UUID) extends GroupsResponderRequestV1
+
+/**
+  * Request updating of an existing group.
+  *
+  * @param groupIri the IRI of the group to be updated.
+  * @param propertyIri the IRI of the property to be updated.
+  * @param newValue the new value for the property.
+  * @param userProfile the user profile of the user requesting the update.
+  * @param apiRequestID the ID of the API request.
+  */
+case class GroupInfoUpdateRequestV1(groupIri: webapi.IRI,
+                                    propertyIri: webapi.IRI,
+                                    newValue: Any,
+                                    userProfile: UserProfileV1,
+                                    apiRequestID: UUID) extends GroupsResponderRequestV1
+
+/**
+  * Request updating the group's permissions.
+  *
+  * @param userProfile the user profile of the user requesting the update.
+  * @param apiRequestID the ID of the API request.
+  */
+case class GroupPermissionUpdateRequest(userProfile: UserProfileV1,
+                                        apiRequestID: UUID) extends GroupsResponderRequestV1
+
+
 // Responses
 /**
   * Represents the Knora API v1 JSON response to a request for information about all groups.
@@ -136,6 +175,10 @@ case class GroupOperationResponseV1(group_info: GroupInfoV1, userdata: UserDataV
   * @param id the IRI if the group.
   * @param name the name of the group.
   * @param description the description of the group.
+  * @param belongsToProject the project this group belongs to.
+  * @param isActiveGroup the group's status.
+  * @param hasSelfJoinEnabled the group's self-join status.
+  * @param hasPermissions the permissions attached to the group.
   *
   */
 case class GroupInfoV1(id: IRI,
@@ -145,6 +188,22 @@ case class GroupInfoV1(id: IRI,
                        isActiveGroup: Option[Boolean] = None,
                        hasSelfJoinEnabled: Option[Boolean] = None,
                        hasPermissions: Seq[GroupPermissionV1] = Nil)
+
+
+/**
+  * Represents basic information about the group which need to be supplied during group creation.
+  *
+  * @param name the name of the group.
+  * @param description the optional description of the group
+  * @param belongsToProject the project this group belongs to.
+  * @param isActiveGroup the group's status.
+  * @param hasSelfJoinEnabled the group's self-join status.
+  */
+case class NewGroupInfoV1(name: String,
+                          description: Option[String] = None,
+                          belongsToProject: IRI,
+                          isActiveGroup: Boolean = true,
+                          hasSelfJoinEnabled: Boolean = false)
 
 /**
   * Represents a group permission.

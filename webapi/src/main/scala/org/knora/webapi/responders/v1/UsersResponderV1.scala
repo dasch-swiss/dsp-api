@@ -324,6 +324,9 @@ class UsersResponderV1 extends ResponderV1 {
         } yield userOperationResponseV1
 
 
+    ////////////////////
+    // Helper Methods //
+    ////////////////////
 
     /**
       * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResponse]] containing user data.

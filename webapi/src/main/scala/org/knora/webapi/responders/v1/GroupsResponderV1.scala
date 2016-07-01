@@ -20,16 +20,18 @@
 
 package org.knora.webapi.responders.v1
 
+import java.util.UUID
+
 import akka.actor.Status
 import akka.pattern._
-import org.apache.jena.sparql.function.library.leviathan.log
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
+import org.knora.webapi
 import org.knora.webapi.messages.v1.responder.groupmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
+import org.knora.webapi.messages.v1.responder.usermessages.{UserOperationResponseV1, UserProfileV1}
+import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.SparqlUtil
-import org.knora.webapi.{IRI, NotFoundException, OntologyConstants, UnexpectedMessageException}
+import org.knora.webapi.util.{KnoraIriUtil, SparqlUtil}
+import org.knora.webapi.{DuplicateValueException, _}
 
 import scala.concurrent.Future
 
@@ -38,6 +40,9 @@ import scala.concurrent.Future
   * Returns information about Knora projects.
   */
 class GroupsResponderV1 extends ResponderV1 {
+
+    // Creates IRIs for new Knora user objects.
+    val knoraIriUtil = new KnoraIriUtil
 
     /**
       * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message, or
@@ -48,6 +53,7 @@ class GroupsResponderV1 extends ResponderV1 {
         case GroupsGetRequestV1(infoType, userProfile) => future2Message(sender(), getGroupsResponseV1(infoType, userProfile), log)
         case GroupInfoByIRIGetRequest(iri, infoType, userProfile) => future2Message(sender(), getGroupInfoByIRIGetRequest(iri, infoType, userProfile), log)
         case GroupInfoByNameGetRequest(projectIri, groupName, infoType, userProfile) => future2Message(sender(), getGroupInfoByNameGetRequest(projectIri, groupName, infoType, userProfile), log)
+        case GroupCreateRequestV1(newGroupInfo, userProfile, apiRequestID) => future2Message(sender(), createGroupV1(newGroupInfo, userProfile, apiRequestID), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -135,9 +141,10 @@ class GroupsResponderV1 extends ResponderV1 {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByName(
                 triplestore = settings.triplestoreType,
-                name = SparqlUtil.any2SparqlLiteral(name)
+                name = SparqlUtil.any2SparqlLiteral(name),
+                projectIri = projectIri
             ).toString())
-            _ = log.debug(s"sparql query: $sparqlQuery")
+            _ = log.debug(s"getGroupInfoByNameGetRequest - getGroupByName: $sparqlQuery")
             groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             _ = log.debug(s"group response: ${groupResponse.toString}")
@@ -161,6 +168,83 @@ class GroupsResponderV1 extends ResponderV1 {
         )
     }
 
+
+    private def createGroupV1(newGroupInfo: NewGroupInfoV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[GroupOperationResponseV1] = {
+
+        for {
+            a <- Future("")
+
+            /* check if username or password are not empty */
+            _ = if (newGroupInfo.name.isEmpty) throw BadRequestException("Group name cannot be empty")
+            _ = if (newGroupInfo.belongsToProject.isEmpty) throw BadRequestException("Project IRI cannot be empty")
+
+            /* check if the supplied group name is unique inside the project, i.e. not already registered */
+            sparqlQueryString = queries.sparql.v1.txt.getGroupByName(
+                triplestore = settings.triplestoreType,
+                name = SparqlUtil.any2SparqlLiteral(newGroupInfo.name),
+                projectIri = newGroupInfo.belongsToProject
+            ).toString()
+            _ = log.debug(s"createGroupV1 - check duplicate name: $sparqlQueryString")
+            groupQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+
+            //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
+
+            _ = if (groupQueryResponse.results.bindings.nonEmpty) {
+                throw DuplicateValueException(s"Group with the name: '${newGroupInfo.name}' already exists")
+            }
+
+            /* generate a new random group IRI */
+            groupIri = knoraIriUtil.makeRandomGroupIri
+
+            /* create the group */
+            createNewGroupSparqlString = queries.sparql.v1.txt.createNewGroup(
+                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                triplestore = settings.triplestoreType,
+                groupIri = groupIri,
+                groupClassIri = OntologyConstants.KnoraBase.Group,
+                name = SparqlUtil.any2SparqlLiteral(newGroupInfo.name),
+                description = SparqlUtil.any2SparqlLiteral(newGroupInfo.description.getOrElse("")),
+                projectIri = newGroupInfo.belongsToProject,
+                isActiveGroup = SparqlUtil.any2SparqlLiteral(newGroupInfo.isActiveGroup),
+                hasSelfJoinEnabled = SparqlUtil.any2SparqlLiteral(newGroupInfo.hasSelfJoinEnabled)
+            ).toString
+            _ = log.debug(s"createGroupV1 - createNewGroup: $createNewGroupSparqlString")
+            createGroupResponse <- (storeManager ? SparqlUpdateRequest(createNewGroupSparqlString)).mapTo[SparqlUpdateResponse]
+
+            /* Verify that the group was created */
+            sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByIri(
+                triplestore = settings.triplestoreType,
+                groupIri = groupIri
+            ).toString())
+            groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            // check group response
+            _ = if (groupResponse.results.bindings.isEmpty) {
+                throw NotFoundException(s"User $groupIri was not created. Please report this as a possible bug.")
+            }
+
+            // create group info from group response
+            groupInfo = createGroupInfoV1FromGroupResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIri, infoType = GroupInfoType.FULL, Some(userProfile))
+
+            /* create the group operation response */
+            groupOperationResponseV1 = GroupOperationResponseV1(groupInfo, userProfile.userData)
+
+        } yield groupOperationResponseV1
+    }
+
+
+    private def updateGroupInfoV1(groupIri: webapi.IRI,
+                                  propertyIri: webapi.IRI,
+                                  newValue: Any,
+                                  userProfile: UserProfileV1,
+                                  apiRequestID: UUID) = ???
+
+    private def updateGroupPermissionV1(userProfile: UserProfileV1,
+                                        apiRequestID: UUID) = ???
+
+    ////////////////////
+    // Helper Methods //
+    ////////////////////
 
     /**
       * Helper method that turns SPARQL result rows into a [[GroupInfoV1]].

@@ -207,7 +207,7 @@ As described earlier, it is possible to define default permissions for newly cre
 special properties to groups. The groups these properties are attached to, can either be user created or one of the
 built-in groups.
 
-TODO: Allow setting default permissions to values inside a project ontology. This will require a bit more calculation,
+TODO: Allow setting default permissions to values (and probably resources also) inside a project ontology. This will require a bit more calculation,
 as now for each value that is created, not only the user's group's default permission needs to be taken into account, but
 also the value's default permission. The employed rule will be **least permissive**.
 
@@ -471,20 +471,20 @@ Groups Endpoint
   - Effects property: ``<http://xmlns.com/foaf/0.1/name>``, ``knora-base:groupDescription``
 
 
-**Add/remove user to/from group** (not *SystemAdmin*):
+**Add/remove user to/from 'normal' group** (not *SystemAdmin* or *ProjectAdmin*):
   - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission /
     hasProjectRestrictedGroupAdminPermission (for this group) / User (if group self-assignment is enabled)
   - Required information: group IRI, user IRI
   - Effects: ``knora-base:isInGroup``
 
 
-**Add/remove user to/from group** (*SystemAdmin* group):
+**Add/remove user to/from SystemAdmin group**:
   - Required permission: SystemAdmin
   - Required information: group IRI (http://www.knora.org/ontology/knora-base#SystemAdmin), user IRI
   - Effects: ``knora-base:isInGroup``
 
 
-**Add/remove user to/from group** (*ProjectAdmin* group):
+**Add/remove user to/from ProjectAdmin group**:
   - Required permission: SystemAdmin, ProjectAdmin
   - Required information: project IRI, group IRI, user IRI
   - Effects: ``knora-base:isInGroup``

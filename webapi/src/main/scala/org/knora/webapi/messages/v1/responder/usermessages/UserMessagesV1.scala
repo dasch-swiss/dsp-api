@@ -119,6 +119,9 @@ case class UserUpdateRequestV1(userIri: webapi.IRI,
                                userProfile: UserProfileV1,
                                apiRequestID: UUID) extends UsersResponderRequestV1
 
+
+// Responses
+
 /**
   * Represents an answer to an user creating/modifying operation.
   *
@@ -313,6 +316,7 @@ case class UpdatedUserDataV1(username: Option[String] = None,
                              password: Option[String] = None,
                              isActiveUser: Option[Boolean] = None,
                              lang: Option[String] = None)
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 

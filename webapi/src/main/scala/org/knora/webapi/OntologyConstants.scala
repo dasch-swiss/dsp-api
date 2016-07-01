@@ -197,7 +197,7 @@ object OntologyConstants {
         val HasProjectAdmin = KNORA_BASE_PREFIX + "hasProjectAdmin"
 
         /* Group */
-        val Group = KNORA_BASE_PREFIX + "Group"
+        val Group = KNORA_BASE_PREFIX + "UserGroup"
         val GroupName = KNORA_BASE_PREFIX + "groupName"
         val GroupDescription = KNORA_BASE_PREFIX + "groupDescription"
         val BelongsToProject = KNORA_BASE_PREFIX + "belongsToProject"

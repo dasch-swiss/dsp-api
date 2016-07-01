@@ -31,7 +31,7 @@ import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoByNameGetRequest, GroupInfoResponseV1, GroupInfoType}
+import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
@@ -99,56 +99,54 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 expectMsg(GroupInfoResponseV1(imagesProjectMemberShortGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! GroupInfoByNameGetRequest("images","groupwrong", GroupInfoType.FULL, Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberFullGroupInfo.belongsToProject.get,"groupwrong", GroupInfoType.FULL, Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"For the given group name 'groupwrong' no information was found")))
             }
         }
-        /*
         "asked to create a new group " should {
             "create the group and return the group's full info if the supplied group name is unique " in {
-                actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "test", "en"),
-                    SharedTestData.anonymousUserProfileV1,
+                actorUnderTest ! GroupCreateRequestV1(
+                    NewGroupInfoV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
+                    SharedTestData.user01UserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(newUserProfile, requestingUserData) => {
-                        assert(newUserProfile.userData.username.get.equals("dduck"))
-                        assert(newUserProfile.userData.firstname.get.equals("Donald"))
-                        assert(newUserProfile.userData.lastname.get.equals("Duck"))
-                        assert(newUserProfile.userData.email.get.equals("donald.duck@example.com"))
-                        assert(newUserProfile.userData.lang.equals("en"))
+                    case GroupOperationResponseV1(newGroupInfo, requestingUserData) => {
+                        assert(newGroupInfo.name.equals("NewGroup"))
+                        assert(newGroupInfo.description.contains("NewGroupDescription"))
+                        assert(newGroupInfo.belongsToProject.contains("http://data.knora.org/projects/images"))
+                        assert(newGroupInfo.isActiveGroup.contains(true))
+                        assert(newGroupInfo.hasSelfJoinEnabled.contains(false))
                     }
                 }
             }
-            "return a 'DuplicateValueException' if the supplied username is not unique " in {
-                actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("root", "", "", "", "test", ""),
-                    SharedTestData.anonymousUserProfileV1,
+            "return a 'DuplicateValueException' if the supplied group name is not unique " in {
+                actorUnderTest ! GroupCreateRequestV1(
+                    NewGroupInfoV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
+                    SharedTestData.user01UserProfileV1,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
+                expectMsg(Failure(DuplicateValueException(s"Group with the name: 'NewGroup' already exists")))
             }
-            "return 'BadRequestException' if username or password are missing" in {
+            "return 'BadRequestException' if group name or project IRI are missing" in {
 
-                /* missing username */
-                actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("", "", "", "", "test", ""),
-                    SharedTestData.anonymousUserProfileV1,
+                /* missing group name */
+                actorUnderTest ! GroupCreateRequestV1(
+                    NewGroupInfoV1("", Some("NoNameGroupDescription"), "http://data.knora.org/projects/images", true, false),
+                    SharedTestData.user01UserProfileV1,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(BadRequestException("Username cannot be empty")))
+                expectMsg(Failure(BadRequestException("Group name cannot be empty")))
 
-                /* missing password */
-                actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("dduck", "", "", "", "", ""),
-                    SharedTestData.anonymousUserProfileV1,
+                /* missing project */
+                actorUnderTest ! GroupCreateRequestV1(
+                    NewGroupInfoV1("OtherNewGroup", Some("OtherNewGroupDescription"), "", true, false),
+                    SharedTestData.user01UserProfileV1,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(BadRequestException("Password cannot be empty")))
+                expectMsg(Failure(BadRequestException("Project IRI cannot be empty")))
             }
         }
-        */
         /*
         "asked to update a user " should {
             "update the user " in {

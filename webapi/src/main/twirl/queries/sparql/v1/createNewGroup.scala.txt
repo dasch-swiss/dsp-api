@@ -1,0 +1,92 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@*
+ * Creates a new group.
+ *
+ * @param adminNamedGraphIri the IRI of the admin graph.
+ * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
+                      results from the WHERE clause of the update.
+ * @param groupIri the Iri of the new group
+ * @param groupClassIri the IRI of the OWL class that the new group should belong to.
+ * @param name the new group's name.
+ * @param description the new group's description.
+ * @param projectIri the new group's project association.
+ * @param isActiveGroup the new group's status.
+ * @param hasSelfJoinEnabled the new group's self-join status.
+ *@
+@(adminNamedGraphIri: IRI,
+  triplestore: String,
+  groupIri: IRI,
+  groupClassIri: IRI,
+  name: String,
+  description: String,
+  projectIri: IRI,
+  isActiveGroup: String,
+  hasSelfJoinEnabled: String)
+
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+INSERT {
+    GRAPH ?adminNamedGraphIri {
+        ?groupIri rdf:type ?groupClassIri ;
+
+            knora-base:groupName @name ;
+
+            @if(description.nonEmpty) {
+                knora-base:groupDescription @description ;
+            }
+
+            knora-base:belongsToProject ?projectIri ;
+
+            @if(isActiveGroup.nonEmpty) {
+                knora-base:isActiveGroup @isActiveGroup ;
+            }
+
+            knora-base:hasSelfJoinEnabled @hasSelfJoinEnabled .
+    }
+}
+@*
+
+GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
+in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
+explicit statements in the WHERE clause here.
+
+*@
+@triplestore match {
+    case "graphdb" | "graphdb-free" => {
+        USING <http://www.ontotext.com/explicit>
+    }
+
+    case other => {}
+}
+WHERE {
+    BIND(IRI("@adminNamedGraphIri") AS ?adminNamedGraphIri)
+    BIND(IRI("@groupIri") AS ?groupIri)
+    BIND(IRI("@groupClassIri") AS ?groupClassIri)
+    BIND(IRI("@projectIri") AS ?projectIri)
+}
