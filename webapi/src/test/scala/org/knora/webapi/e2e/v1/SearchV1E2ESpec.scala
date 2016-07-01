@@ -50,13 +50,13 @@ class SearchV1E2ESpec extends E2ESpec(SearchV1E2ESpec.config) {
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
     )
 
-    "Load test data" in {
+    "Load test data" ignore {
         // send POST to 'v1/store/ResetTriplestoreContent'
         Await.result(pipe(Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", rdfDataObjects)), 300 seconds)
     }
 
     "The Search Route ('v1/search')" should {
-        "allow simple search" in {
+        "allow simple search" ignore {
             /* http://localhost:3333/v1/search/Zeitglöcklein?searchtype=fulltext */
             val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/search/Zeitgl%C3%B6cklein?searchtype=fulltext")), 5 seconds)
             log.debug(s"==>> ${response.toString}")
@@ -64,13 +64,13 @@ class SearchV1E2ESpec extends E2ESpec(SearchV1E2ESpec.config) {
             assert(response.status === StatusCodes.OK)
 
         }
-        "allow (1) extended search" in {
+        "allow (1) extended search" ignore {
             /* http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http://www.knora.org/ontology/incunabula#book&property_id=http://www.knora.org/ontology/incunabula#title&compop=MATCH&searchval=Zeitglöcklein */
             val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=MATCH&searchval=Zeitgl%C3%B6cklein%20")), 5 seconds)
             log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)
         }
-        "allow (2) extended search" in {
+        "allow (2) extended search" ignore {
             /* http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Fdata.knora.org%2Fc5058f3a */
             val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Fdata.knora.org%2Fc5058f3a")), 5 seconds)
             log.debug("==>> " + response.toString)

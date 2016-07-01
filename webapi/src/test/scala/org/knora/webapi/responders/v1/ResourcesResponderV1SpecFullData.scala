@@ -489,7 +489,7 @@ object ResourcesResponderV1SpecFullData {
             restype_id = "http://www.knora.org/ontology/incunabula#book",
             permissions = Vector(
                 Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#Owner",
+                    _2 = "http://www.knora.org/ontology/knora-base#Creator",
                     _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
                 ),
                 Tuple2(
@@ -971,7 +971,7 @@ object ResourcesResponderV1SpecFullData {
                     _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
                 ),
                 Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#Owner",
+                    _2 = "http://www.knora.org/ontology/knora-base#Creator",
                     _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
                 )
             ),

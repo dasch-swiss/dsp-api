@@ -143,7 +143,7 @@ object ResourcesResponderV1SpecContextData {
                         _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
                     ),
                     Tuple2(
-                        _2 = "http://www.knora.org/ontology/knora-base#Owner",
+                        _2 = "http://www.knora.org/ontology/knora-base#Creator",
                         _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
                     )
                 ),
@@ -5430,7 +5430,7 @@ object ResourcesResponderV1SpecContextData {
                         _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
                     ),
                     Tuple2(
-                        _2 = "http://www.knora.org/ontology/knora-base#Owner",
+                        _2 = "http://www.knora.org/ontology/knora-base#Creator",
                         _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
                     )
                 ),
@@ -5555,7 +5555,7 @@ object ResourcesResponderV1SpecContextData {
                         _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
                     ),
                     Tuple2(
-                        _2 = "http://www.knora.org/ontology/knora-base#Owner",
+                        _2 = "http://www.knora.org/ontology/knora-base#Creator",
                         _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
                     )
                 ),

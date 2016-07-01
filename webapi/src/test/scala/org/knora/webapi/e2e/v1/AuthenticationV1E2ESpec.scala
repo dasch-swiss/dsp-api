@@ -50,25 +50,25 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
     )
 
-    "Load test data" in {
+    "Load test data" ignore {
         // send POST to 'v1/store/ResetTriplestoreContent'
         Await.result(pipe(Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", rdfDataObjects)), 300 seconds)
     }
 
     "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via URL parameters " should {
-        "succeed with authentication and correct username / correct password " in {
+        "succeed with authentication and correct username / correct password " ignore {
             /* Correct username and password */
             val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/authenticate?username=root&password=test")), 3 seconds)
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.OK)
         }
-        "fail with authentication and correct username / wrong password " in {
+        "fail with authentication and correct username / wrong password " ignore {
             /* Correct username / wrong password */
             val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/authenticate?username=root&password=wrong")), 3 seconds)
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.Unauthorized)
         }
-        "fail with authentication if the user is set as 'not active' " in {
+        "fail with authentication if the user is set as 'not active' " ignore {
             /* User not active */
             val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/authenticate?username=inactiveuser&password=test")), 3 seconds)
             log.debug(s"response: ${response.toString}")
@@ -77,13 +77,13 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
     }
 
     "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via Basic Auth " should {
-        "succeed with authentication and correct username / correct password " in {
+        "succeed with authentication and correct username / correct password " ignore {
             /* Correct username / correct password */
             val request = Get(s"${baseApiUrl}v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "test"))
             val response = Await.result(pipe(request), 3 seconds)
             assert(response.status == StatusCodes.OK)
         }
-        "fail with authentication and correct username / wrong password " in {
+        "fail with authentication and correct username / wrong password " ignore {
             /* Correct username / wrong password */
             val request = Get(s"${baseApiUrl}v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "wrong"))
             val response = Await.result(pipe(request), 3 seconds)
