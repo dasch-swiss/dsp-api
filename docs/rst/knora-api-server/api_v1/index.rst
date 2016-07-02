@@ -24,7 +24,7 @@ Using API V1
    :maxdepth: 2
 
    api-general
-   reading-resources
+   reading-search-resources
    adding-resources
    adding-values
    changing-values
