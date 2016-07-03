@@ -45,6 +45,12 @@ In the following sections, the diverse API operations are described including th
  - :ref:`adding-values`: Add values to a resource
  - :ref:`changing-values`: Change the values of a resource
 
+Knora API Response Format
+-------------------------
+In case an API request could be handled successfully, Knora responds with a 200 HTTP status code. The actual answer from Knora (the representation of the requested resource or information about the executed API operation)
+is sent in the HTTP body, encoded as JSON (using UTF-8). In this JSON, an API specific status code is sent (member ``status``).
+
+
 Authentication
 --------------
 
