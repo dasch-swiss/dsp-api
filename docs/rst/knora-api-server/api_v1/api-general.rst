@@ -45,6 +45,12 @@ In the following sections, the diverse API operations are described including th
  - :ref:`adding-values`: Add values to a resource
  - :ref:`changing-values`: Change the values of a resource
 
+V1 Path Segment
+---------------
+
+Every request to API V1 includes ``v1`` as a path segment, e.g. ``http://www.knora.org/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a``.
+Accordingly requests to another version of the API will require another path segment.
+
 Knora API Response Format
 -------------------------
 In case an API request could be handled successfully, Knora responds with a 200 HTTP status code. The actual answer from Knora (the representation of the requested resource or information about the executed API operation)
@@ -59,5 +65,3 @@ so that the API server can authenticate the user making the request. When using 
 When using the API with another client application, credentials can be sent as a part of the HTTP header or as parts of the URL (see :ref:`authentication`).
 
 Also when reading resources authentication my be needed as resources and their values have restricted viewing permissions.
-
-

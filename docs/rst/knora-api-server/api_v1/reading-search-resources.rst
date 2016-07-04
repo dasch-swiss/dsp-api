@@ -35,7 +35,7 @@ Get the resource with the IRI ``http://data.knora.org/c5058f3a`` (an incunabula 
 
 ::
 
-    curl http://www.knora.org/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
+    curl http://www.knora.org/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
 
 As an answer, the client receives a JSON that represents the requested resource. It has the following members:
  - ``status``: The Knora status code, ``0`` if everything went well
@@ -61,7 +61,7 @@ In order to get a HTML representation of a resource (not a JSON), the path segme
 
 ::
 
-    curl http://www.knora.org/resources.html/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?reqtype=properties
+    curl http://www.knora.org/v1/resources.html/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?reqtype=properties
 
 The request returns the properties of the requested resource as an HTML document.
 
@@ -73,7 +73,7 @@ In order to get only the properties of a resource without any other information,
 
 ::
 
-    curl http://www.knora.org/properties/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
+    curl http://www.knora.org/v1/properties/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
 
 The JSON contains just the member ``properties`` representing the requested resources properties.
 
@@ -143,7 +143,7 @@ The response will list all the available vocabularies.
 Search for Resources by their Label
 ***********************************
 
-This is a simplified way for searching for resources just by theit label. It is a simple string-based method.
+This is a simplified way for searching for resources just by their label. It is a simple string-based method.
 In the following example, all resources that contain ``Zeitglöcklein`` in their label are returned:
 
 ::
@@ -154,3 +154,12 @@ Additionally, the following parameters can be appended to the URL:
  - ``restype_id=resource class IRI``: This restricts the search to resources of the specified class. ``-1`` is the default value and means no restriction to a specific class. If a resource class IRI is specified, it has to be URL encoded (e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitglöcklein&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book``).
  - ``numprops=Integer``: Specifies the number of properties returned for each resource that was found (sorted by GUI order), e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitglöcklein&numprops=4``.
  - ``limit=Integer``: Lmits the amount of results returned (e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitgl%C3%B6cklein&limit=1``).
+
+
+*****************************
+Fulltext Search for Resources
+*****************************
+
+*****************************
+Extended Search for Resources
+*****************************
