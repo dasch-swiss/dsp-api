@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="region">
+        <xs:complexType mixed="true">
+            <xs:choice maxOccurs="unbounded" minOccurs="0">
+                <xs:element name="rendition">
+                    <xs:complexType mixed="true">
+                        <xs:choice maxOccurs="unbounded" minOccurs="0">
+                            <xs:element name="lb"/>
+                        </xs:choice>
+                        <xs:attribute name="type" type="rendition_type"></xs:attribute>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="lb"/>
+            </xs:choice>
+            <xs:attribute name="id" type="xs:decimal"></xs:attribute>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:simpleType name="rendition_type">
+
+        <xs:restriction base="xs:string">
+
+            <xs:pattern value="(\s?underline|\s?center)+"></xs:pattern>
+
+        </xs:restriction>
+
+    </xs:simpleType>
+</xs:schema> 
