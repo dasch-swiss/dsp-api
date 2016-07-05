@@ -87,13 +87,20 @@
 			// special treatment of __location__
 			//
 			if (prop == '__location__') { // VERY SPECIAL !!
-				value_container.append($('<img>').attr({src: resdata.resclass_iconsrc}).css({'vertical-align': 'middle'}).addClass('propedit')).append(' (' + resdata.resclass_name +') ');
-				if (propinfo[prop]['locations'] !== undefined) value_container.append($('<a>').attr({href: propinfo[prop]['locations'][0]['path']}).text(' ' + propinfo[prop]['locations'][0]['origname'] + ' '));
+    			var locations = propinfo[prop]['locations'];
+
+				if (locations !== undefined) {
+                    // Provide a link to the full-size image.
+                    var fullSize = locations[locations.length - 1];
+ 				    value_container.append($('<a>').attr({href: fullSize['path'], target: "_blank"}).text(' ' + fullSize['origname'] + ' '));
+				}
+
 				if (res_rights >= RESOURCE_ACCESS_MODIFY) {
 					$('<img>', {src: edit_icon.src, 'class': 'propedit'}).click(function(event) {
 						edit_value(value_container, prop, value_index);
 					}).css({cursor: 'pointer'}).appendTo(value_container);
 				}
+
 				return; // Ok and done...
 			}
 
@@ -1152,15 +1159,24 @@
 							reset_value(active.value_container, active.prop, active.value_index);
 							*/
 
-							console.log(data);
-
 							active.value_container.empty();
-							active.value_container.append($('<img>').attr({src: resdata.resclass_iconsrc}).css({'vertical-align': 'middle'}).addClass('propedit')).append(' (' + resdata.resclass_name +') ');
-							if (data['changedFilesValues'] !== undefined) value_container.append($('<a>').attr({href: data['locations'][0]['path']}).text(' ' + data['locations'][0]['origname'] + ' '));
+							var locations = data['locations'];
+
+							if (locations !== undefined) {
+							    // Provide a link to the full-size image.
+							    var fullSize = locations[locations.length - 1];
+                                value_container.append($('<a>').attr({href: fullSize['path'], target: "_blank"}).text(' ' + fullSize['origname'] + ' '));
+							}
+
 							if (res_rights >= RESOURCE_ACCESS_MODIFY) {
 								$('<img>', {src: edit_icon.src, 'class': 'propedit'}).click(function(event) {
 									edit_value(active.value_container, '__location__', 0);
 								}).css({cursor: 'pointer'}).appendTo(value_container);
+
+                                // Reload the window to display the new image.
+                                var window_html = active.value_container.parents(".win")
+                                window_html.win('deleteWindow');
+                                RESVIEW.new_resource_editor(resdata.res_id, 'NEW RESOURCE');
 							}
 						}
 						else {

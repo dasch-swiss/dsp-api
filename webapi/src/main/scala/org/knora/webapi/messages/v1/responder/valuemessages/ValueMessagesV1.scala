@@ -23,6 +23,7 @@ package org.knora.webapi.messages.v1.responder.valuemessages
 import java.util.UUID
 
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
@@ -426,10 +427,10 @@ case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiResponderConvers
   * Represents a response to a [[ChangeFileValueRequestV1]].
   * Possibly, two file values have been changed (thumb and full quality).
   *
-  * @param changedFilesValues the updated file value(s).
+  * @param locations the updated file value(s).
   * @param userdata           information about the user that made the request.
   */
-case class ChangeFileValueResponseV1(changedFilesValues: Vector[ChangeValueResponseV1],
+case class ChangeFileValueResponseV1(locations: Vector[LocationV1],
                                      userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ApiValueV1JsonProtocol.changeFileValueresponseV1Format.write(this)
 }
@@ -1343,6 +1344,7 @@ case class ValueVersionV1(valueObjectIri: IRI,
 object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
     import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 
     /**
       * Converts between [[StandoffPositionV1]] objects and [[JsValue]] objects.

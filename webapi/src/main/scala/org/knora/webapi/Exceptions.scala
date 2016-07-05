@@ -178,8 +178,7 @@ object TriplestoreUnsupportedFeatureException {
 }
 
 /**
-  * Indicates that something went wrong. This is an exception which can be used if something inside the Triplestore package went wrong,
-  * but does not warrant its own exception type. More details can be given in the message parameter.
+  * Indicates that something inside the Triplestore package went wrong. More details can be given in the message parameter.
   * @param message a description of the error.
   * @param cause the original exception representing the cause of the error, if any.
   */
@@ -188,6 +187,18 @@ case class TriplestoreInternalException(message: String, cause: Option[Throwable
 object TriplestoreInternalException {
     def apply(message: String, e: Throwable, log: LoggingAdapter): TriplestoreInternalException =
         TriplestoreInternalException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+}
+
+/**
+  * Indicates that something happened that should be impossible.
+  * @param message a description of the error.
+  * @param cause the original exception representing the cause of the error, if any.
+  */
+case class AssertionException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
+
+object AssertionException {
+    def apply(message: String, e: Throwable, log: LoggingAdapter): AssertionException =
+        AssertionException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
 
