@@ -378,7 +378,7 @@ case class ResourceInfoV1(project_id: IRI,
   * @param restype_name  the IRI of the resource's OWL class.
   * @param restype_label the `rdfs:label` of the resource's OWL class.
   * @param iconsrc       the icon of the resource's OWL class.
-  * @param rights        a numeric code represting the permissions that the requesting user has on the resource.
+  * @param rights        a numeric code representing the permissions that the requesting user has on the resource.
   */
 case class ResourceDataV1(res_id: IRI,
                           restype_name: IRI,
