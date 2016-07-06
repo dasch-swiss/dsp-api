@@ -1,4 +1,4 @@
-# Documentation Generation #
+# Knora Documentation Generation #
 
 ## 1 Install Python 3 ##
 
@@ -81,9 +81,9 @@ export LC_ALL=de_CH.UTF-8
 export LANG=de_CH.UTF-8
 ```
 
-## Documentation of the Knora JSON API V1 Request and Response Format
+## 4 Documentation of the Knora JSON API V1 Request and Response Format
 
-### 1 Requirements
+### 4.1 Requirements
 
 The JSON request and response format is formally described using typescript interfaces. To create the docuemntation from these interfaces, we use `typedoc`.
 
@@ -95,7 +95,7 @@ npm install --global typedoc
 
 If you do not have `npm` (node package manager), install it first. You will find more information about `npm` here: <https://www.npmjs.com/>.
 
-### 2 Building the Documentation
+### 4.2 Building the Documentation
 
 Inside the docs folder type for the html documentation type
 
