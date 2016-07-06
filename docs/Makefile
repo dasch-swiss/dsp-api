@@ -61,7 +61,7 @@ html:
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 jsonformat:
-	$(TYPEDOC) --out $(FORMATDOC) $(FORMATSRC)
+	$(TYPEDOC) --out $(FORMATDOC) --module commonjs $(FORMATSRC)
 	@echo "Format Docs Build finished. The HTML pages are in $(FORMATDOC)/html."
 
 dirhtml:

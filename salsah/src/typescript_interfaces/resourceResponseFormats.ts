@@ -1,124 +1,8 @@
+
+import { basicResponseComponents } from "./basicResponseComponents"
+
 export module resourceResponseFormats {
 
-    /**
-     * Basic members of the Knora API V1 response format.
-     */
-    interface basicResponse {
-        /**
-         * Knora status code
-         */
-        status:number;
-
-        /**
-         * The current user's data
-         */
-        userdata:userdata;
-    }
-
-    /**
-     * Represents a Knora project
-     */
-    interface projectItem {
-        /**
-         * Path to the project's files
-         */
-        basepath:string;
-
-        /**
-         * Project's short name
-         */
-        shortname:string;
-
-        /**
-         * Description of the project
-         */
-        description:string;
-
-        /**
-         * The project's logo
-         */
-        logo:string;
-
-        /**
-         * The project's IRI
-         */
-        id:string;
-
-        /**
-         * Keywords describing the project
-         */
-        keywords:string;
-
-        /**
-         * obsolete
-         */
-        rights:string;
-
-        /**
-         * Project's long name
-         */
-        longname:string;
-    }
-
-    /**
-     * Represents the current user's data
-     */
-    interface userdata {
-        /**
-         * User's email address
-         */
-        email:string;
-
-        /**
-         * User's unique name
-         */
-        username:string;
-
-        /**
-         * User's first name
-         */
-        firstname:string;
-
-        /**
-         * User's last name
-         */
-        lastname:string;
-
-        /**
-         * List of project descriptions the user is member of
-         */
-        projects_info:Array<projectItem>;
-
-        /**
-         * User's IRI
-         */
-        user_id:string;
-
-        /**
-         * User's preferred language
-         */
-        lang:string;
-
-        /**
-         * User's active project
-         */
-        activeProject?:string;
-
-        /**
-         * Session token
-         */
-        token:string;
-
-        /**
-         * List of project IRIs the user is member of
-         */
-        projects?:Array<string>;
-
-        /**
-         * obsolete
-         */
-        password:string;
-    }
 
 //
 // Resource full response
@@ -592,7 +476,7 @@ export module resourceResponseFormats {
     /**
      * Represents the Knora API V1 response to a full resource request
      */
-    export interface resourceFullResponse extends basicResponse {
+    export interface resourceFullResponse extends basicResponseComponents.basicResponse {
         /**
          * Description of the resource and its class
          */
@@ -625,7 +509,7 @@ export module resourceResponseFormats {
     /**
      * Represents the Knora API V1 response to a resource info request (reqtype=info)
      */
-    export interface resourceInfoResponse extends basicResponse {
+    export interface resourceInfoResponse extends basicResponseComponents.basicResponse {
         /**
          * The current user's permissions on the resource
          */
@@ -641,7 +525,7 @@ export module resourceResponseFormats {
     /**
      * Represents the Knora API V1 response to a resource rights request (reqtype=rights)
      */
-    export interface resourceRightsResponse extends basicResponse {
+    export interface resourceRightsResponse extends basicResponseComponents.basicResponse {
         /**
          * The current user's permissions on the resource
          */
@@ -652,115 +536,11 @@ export module resourceResponseFormats {
     /**
      * Represents the Knora API V1 response to a context request (reqtype=context) with or without resinfo (resinfo=true)
      */
-    export interface resourceContextResponse extends basicResponse {
+    export interface resourceContextResponse extends basicResponseComponents.basicResponse {
         /**
          * Context of the requested resource
          */
         resource_context:context;
-
-    }
-
-    interface subjectItem {
-        /**
-         * Description of the resource's class
-         */
-        iconlabel: string;
-
-        /**
-         * IRI of the resource's class
-         */
-        valuetype_id: Array<string>;
-
-        /**
-         * X dimension of the preview representation
-         */
-        preview_nx: number;
-
-        /**
-         * Y dimension of the preview representation
-         */
-        preview_ny: number;
-
-        /**
-         * Description of the resource's class
-         */
-        icontitle: string;
-
-        /**
-         * Iri of the retrieved resource
-         */
-        obj_id: string;
-
-        /**
-         * Icon representing the resource's class
-         */
-        iconsrc: string;
-
-        /**
-         * Path to a preview representation
-         */
-        preview_path: string;
-
-        /**
-         * The user's permission on the retrieved resource
-         */
-        rights: number;
-
-        /**
-         * Values of the retrieved resource
-         */
-        value: Array<string>;
-
-        /**
-         * Labels of the retrieved resource's values
-         */
-        valuelabel: Array<string>;
-
-    }
-
-    interface pagingItem {
-
-        /**
-         * Current page
-         */
-        current: Boolean;
-
-        /**
-         * The index of the first search result on the page
-         */
-        start_at: number;
-
-        /**
-         * The number of results on the page
-         */
-        show_nrows: number;
-
-    }
-
-    export interface searchResponse extends basicResponse {
-
-        /**
-         * List of search result items
-         */
-        subjects: Array<subjectItem>;
-
-        /**
-         * maximal dimensions of preview representations
-         */
-        thumb_max: {
-            nx: number;
-            ny: number;
-        }
-
-        /**
-         * Information for paging
-         */
-        paging: Array<pagingItem>;
-
-        /**
-         * Total number of hits
-         */
-        nhits: string;
 
     }
 
