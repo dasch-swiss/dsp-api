@@ -548,16 +548,16 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         )
     )
 
-    private def checkResourceTypeResponseV1(expected: ResourceTypeResponseV1, received: ResourceTypeResponseV1): Boolean = {
-        val sortedExpectedProperties: Seq[PropertyDefinitionV1] = expected.restype_info.properties.toList.sortBy(_.id)
+    private def checkResourceTypeResponseV1(received: ResourceTypeResponseV1, expected: ResourceTypeResponseV1): Boolean = {
         val sortedReceivedProperties = received.restype_info.properties.toList.sortBy(_.id)
+        val sortedExpectedProperties: Seq[PropertyDefinitionV1] = expected.restype_info.properties.toList.sortBy(_.id)
 
         assert(sortedReceivedProperties.size == sortedExpectedProperties.size,
-            s"\n********** expected these properties:\n${MessageUtil.toSource(sortedExpectedProperties)}\n********** received these properties:\n${MessageUtil.toSource(sortedReceivedProperties)}")
+            s"\n********** received these properties:\n${MessageUtil.toSource(sortedReceivedProperties)}\n********** expected these properties:\n${MessageUtil.toSource(sortedExpectedProperties)}")
 
 
-        sortedExpectedProperties.zip(sortedReceivedProperties).foreach {
-            case (expectedProp: PropertyDefinitionV1, receivedProp: PropertyDefinitionV1) =>
+        sortedReceivedProperties.zip(sortedExpectedProperties).foreach {
+            case (receivedProp: PropertyDefinitionV1, expectedProp: PropertyDefinitionV1) =>
 
                 // sort property attributes
                 val expectedPropWithSortedAttr = expectedProp.copy(
@@ -574,7 +574,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     }
                 )
 
-                assert(expectedPropWithSortedAttr == receivedPropWithSortedAttr, s"These props do not match:\n*** Expected:\n${MessageUtil.toSource(expectedProp)}\n*** Received:\n${MessageUtil.toSource(receivedProp)}")
+                assert(receivedPropWithSortedAttr == expectedPropWithSortedAttr, s"These props do not match:\n*** Received:\n${MessageUtil.toSource(receivedProp)}\n*** Expected:\n${MessageUtil.toSource(expectedProp)}")
         }
 
         true
@@ -726,7 +726,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 "Knora-Base",
                 "http://data.knora.org/projects/knora-base",
                 "http://www.knora.org/ontology/knora-base",
-                false),
+                active = false),
             NamedGraphV1(
                 "http://www.knora.org/ontology/incunabula",
                 "Incunabula",
@@ -734,7 +734,15 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 "Incunabula",
                 "http://data.knora.org/projects/77275339",
                 "http://www.knora.org/ontology/incunabula",
-                false),
+                active = false),
+            NamedGraphV1(
+                "http://www.knora.org/ontology/beol",
+                "Bernoulli-Euler Online",
+                "Bernoulli-Euler Online",
+                "Bernoulli-Euler Online",
+                "http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF",
+                "http://www.knora.org/ontology/beol",
+                active = false),
             NamedGraphV1(
                 "http://www.knora.org/ontology/images",
                 "Images Test Project",
@@ -742,7 +750,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 "Images Test Project",
                 "http://data.knora.org/projects/images",
                 "http://www.knora.org/ontology/images",
-                false),
+                active = false),
             NamedGraphV1(
                 "http://www.knora.org/ontology/anything",
                 "Anything Test Project",
@@ -750,7 +758,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 "Anything Test Project",
                 "http://data.knora.org/projects/anything",
                 "http://www.knora.org/ontology/anything",
-                false
+                active = false
             )
         ),
         userdata = UserDataV1(
@@ -1008,42 +1016,42 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             lang = "en")
     )
 
-    private def checkVocabularies(expected: NamedGraphsResponseV1, received: NamedGraphsResponseV1) = {
+    private def checkVocabularies(received: NamedGraphsResponseV1, expected: NamedGraphsResponseV1) = {
 
-        assert(expected.vocabularies.size == received.vocabularies.size, "Vocubalaries' sizes did not match.")
+        assert(received.vocabularies.size == expected.vocabularies.size, "Vocabularies' sizes did not match.")
 
-        expected.vocabularies.sortBy(_.uri).zip(received.vocabularies.sortBy(_.uri)).foreach {
-            case (expectedVoc, receivedVoc) =>
-                assert(expectedVoc.uri == receivedVoc.uri, "IRIs of vocabularies did not match")
-                assert(expectedVoc.longname == receivedVoc.longname, "Names of vocabularies did not match")
+        received.vocabularies.sortBy(_.uri).zip(expected.vocabularies.sortBy(_.uri)).foreach {
+            case (receivedVoc, expectedVoc) =>
+                assert(receivedVoc.uri == expectedVoc.uri, "IRIs of vocabularies did not match")
+                assert(receivedVoc.longname == expectedVoc.longname, "Names of vocabularies did not match")
         }
     }
 
-    private def checkResourceTypesForNamedGraphResponseV1(expected: ResourceTypesForNamedGraphResponseV1, received: ResourceTypesForNamedGraphResponseV1) = {
-        assert(expected.resourcetypes.size == received.resourcetypes.size, s"${expected.resourcetypes.size} were expected, but ${received.resourcetypes.size} given.")
+    private def checkResourceTypesForNamedGraphResponseV1(received: ResourceTypesForNamedGraphResponseV1, expected: ResourceTypesForNamedGraphResponseV1) = {
+        assert(received.resourcetypes.size == expected.resourcetypes.size, s"${expected.resourcetypes.size} were expected, but ${received.resourcetypes.size} given.")
 
-        expected.resourcetypes.sortBy(_.id).zip(received.resourcetypes.sortBy(_.id)).foreach {
-            case (expectedResType, receivedResType) =>
-                assert(expectedResType.id == receivedResType.id, s"IRIs of restypes did not match.")
-                assert(expectedResType.label == receivedResType.label, s"Labels of restypes did not match.")
+        received.resourcetypes.sortBy(_.id).zip(expected.resourcetypes.sortBy(_.id)).foreach {
+            case (receivedResType, expectedResType) =>
+                assert(receivedResType.id == expectedResType.id, s"IRIs of restypes did not match.")
+                assert(receivedResType.label == expectedResType.label, s"Labels of restypes did not match.")
 
-                expectedResType.properties.sortBy(_.id).zip(receivedResType.properties.sortBy(_.id)).foreach {
-                    case (expectedProp, receivedProp) =>
-                        assert(expectedProp.id == receivedProp.id, "IRIs of properties did not match.")
-                        assert(expectedProp.label == receivedProp.label, "Labels of properties did not match.")
+                receivedResType.properties.sortBy(_.id).zip(expectedResType.properties.sortBy(_.id)).foreach {
+                    case (receivedProp, expectedProp) =>
+                        assert(receivedProp.id == expectedProp.id, "IRIs of properties did not match.")
+                        assert(receivedProp.label == expectedProp.label, "Labels of properties did not match.")
                 }
         }
 
     }
 
-    private def checkPropertyTypesForNamedGraphIncunabula(expected: PropertyTypesForNamedGraphResponseV1, received: PropertyTypesForNamedGraphResponseV1) = {
-        assert(expected.properties.size == received.properties.size, "Sizes of properties did not match.")
+    private def checkPropertyTypesForNamedGraphIncunabula(received: PropertyTypesForNamedGraphResponseV1, expected: PropertyTypesForNamedGraphResponseV1) = {
+        assert(received.properties.size == expected.properties.size, "Sizes of properties did not match.")
 
-        expected.properties.sortBy(_.id).zip(received.properties.sortBy(_.id)).foreach {
-            case (expectedProp, receivedProp) =>
-                assert(expectedProp.id == receivedProp.id, "The properties' IRIs did not match.")
-                assert(expectedProp.valuetype_id == receivedProp.valuetype_id, "The properties' valuetypes did not match.")
-                assert(expectedProp.attributes == receivedProp.attributes, "The properties' attributes did not match.")
+        received.properties.sortBy(_.id).zip(expected.properties.sortBy(_.id)).foreach {
+            case (receivedProp, expectedProp) =>
+                assert(receivedProp.id == expectedProp.id, "The properties' IRIs did not match.")
+                assert(receivedProp.valuetype_id == expectedProp.valuetype_id, "The properties' valuetypes did not match.")
+                assert(receivedProp.attributes == expectedProp.attributes, "The properties' attributes did not match.")
         }
 
     }
@@ -1063,7 +1071,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ResourceTypeResponseV1 if checkResourceTypeResponseV1(page, msg) => ()
+                case msg: ResourceTypeResponseV1 if checkResourceTypeResponseV1(received = msg, expected = page) => ()
             }
         }
 
@@ -1075,7 +1083,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ResourceTypeResponseV1 if checkResourceTypeResponseV1(book, msg) => ()
+                case msg: ResourceTypeResponseV1 if checkResourceTypeResponseV1(received = msg, expected = book) => ()
             }
         }
 
@@ -1087,7 +1095,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ResourceTypeResponseV1 if checkResourceTypeResponseV1(region, msg) => ()
+                case msg: ResourceTypeResponseV1 if checkResourceTypeResponseV1(received = msg, expected = region) => ()
             }
         }
 
@@ -1099,7 +1107,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ResourceTypeResponseV1 if checkResourceTypeResponseV1(linkObject, msg) => ()
+                case msg: ResourceTypeResponseV1 if checkResourceTypeResponseV1(received = msg, expected = linkObject) => ()
             }
         }
 
@@ -1132,7 +1140,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: NamedGraphsResponseV1 =>
-                    checkVocabularies(vocabulariesResponseV1, msg)
+                    checkVocabularies(received = msg, expected = vocabulariesResponseV1)
 
             }
 
@@ -1146,7 +1154,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ResourceTypesForNamedGraphResponseV1 =>
-                    checkResourceTypesForNamedGraphResponseV1(resourceTypesForNamedGraphIncunabula, msg)
+                    checkResourceTypesForNamedGraphResponseV1(received = msg, expected = resourceTypesForNamedGraphIncunabula)
             }
 
         }
@@ -1159,7 +1167,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: PropertyTypesForNamedGraphResponseV1 =>
-                    checkPropertyTypesForNamedGraphIncunabula(propertyTypesForNamedGraphIncunabula, msg)
+                    checkPropertyTypesForNamedGraphIncunabula(received = msg, expected = propertyTypesForNamedGraphIncunabula)
             }
         }
     }

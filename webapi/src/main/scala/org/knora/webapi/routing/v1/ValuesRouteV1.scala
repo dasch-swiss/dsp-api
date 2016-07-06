@@ -25,17 +25,15 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
-import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
-import org.knora.webapi.messages.v1.responder.resourcemessages.CreateResourceApiRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.routing.v1.ResourcesRouteV1._
+import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 import spray.http.HttpEntity.NonEmpty
 import spray.http.{BodyPart, MultipartFormData}
-import spray.json.{DeserializationException, JsonParser}
+import spray.json.JsonParser
 import spray.routing.Directives._
 import spray.routing._
 
@@ -115,9 +113,9 @@ object ValuesRouteV1 extends Authenticator {
                 val geometryValue = InputValidation.toGeometryString(geomStr, () => throw BadRequestException(s"Invalid geometry value $geomStr"))
                 (GeomValueV1(geometryValue), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, Some(linkValue: IRI), _, _, _, _, comment) =>
-                val resourceIRI = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Given IRI $linkValue is not a valid Knora IRI"))
-                (LinkUpdateV1(targetResourceIri = resourceIri), comment)
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, Some(targetResourceIri: IRI), _, _, _, _, comment) =>
+                val resourceIRI = InputValidation.toIri(targetResourceIri, () => throw BadRequestException(s"Given IRI $targetResourceIri is not a valid Knora IRI"))
+                (LinkUpdateV1(targetResourceIri = targetResourceIri), comment)
 
             case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, Some(hlistValue), _, _, _, comment) =>
                 val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given IRI $hlistValue is not a valid Knora IRI"))
@@ -129,7 +127,7 @@ object ValuesRouteV1 extends Authenticator {
             case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, _, Some(Seq(timeval1: BigDecimal, timeval2: BigDecimal)), _, comment) =>
                 (IntervalValueV1(timeval1, timeval2), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _,  _, _, Some(geonameStr: String), comment) =>
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, Some(geonameStr: String), comment) =>
                 (GeonameValueV1(geonameStr), comment)
 
             case _ => throw BadRequestException(s"No value submitted")
@@ -368,23 +366,23 @@ object ValuesRouteV1 extends Authenticator {
         } ~
             // Link value request requires 3 URL path segments: subject IRI, predicate IRI, and object IRI
             path("v1" / "links" / Segments) { iris =>
-            get {
-                requestContext => {
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        makeLinkValueGetRequestMessage(userProfile, iris)
-                    }
+                get {
+                    requestContext => {
+                        val requestMessageTry = Try {
+                            val userProfile = getUserProfileV1(requestContext)
+                            makeLinkValueGetRequestMessage(userProfile, iris)
+                        }
 
-                    RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                        RouteUtilV1.runJsonRoute(
+                            requestMessageTry,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                    }
                 }
-            }
-        } ~ path("v1" / "filevalue" / Segment) { (resIri: IRI) =>
+            } ~ path("v1" / "filevalue" / Segment) { (resIri: IRI) =>
             put {
                 entity(as[ChangeFileValueApiRequestV1]) { apiRequest => requestContext =>
                     val requestMessageTry = Try {

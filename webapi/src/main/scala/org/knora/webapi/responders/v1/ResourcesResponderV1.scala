@@ -1528,9 +1528,11 @@ class ResourcesResponderV1 extends ResponderV1 {
             )
 
             // group the SPARQL results by the predicate "p" and map each row to a Seq of objects "o", etc. (getting rid of VariableResultsRow).
-            val groupedByPredicate: Map[IRI, Seq[Map[String, String]]] = resInfoResponseRows.groupBy(row => row.rowMap("p")).map {
+            val groupedByPredicateToWrap: Map[IRI, Seq[Map[String, String]]] = resInfoResponseRows.groupBy(row => row.rowMap("p")).map {
                 case (predicate: IRI, rows: Seq[VariableResultsRow]) => (predicate, rows.map(_.rowMap - "p"))
             }
+
+            val groupedByPredicate = new ErrorHandlingMap(groupedByPredicateToWrap, { key: IRI => s"Resource $resourceIri has no $key" })
 
             for {
             // Query the ontology about the resource's OWL class.

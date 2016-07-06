@@ -27,7 +27,7 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceFullGetRequestV1, ResourceFullResponseV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
@@ -185,7 +185,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         commentIri.set(response.id)
     }
 
-    private def checkTextValue(expected: TextValueV1, received: TextValueV1): Unit = {
+    private def checkTextValue(received: TextValueV1, expected: TextValueV1): Unit = {
         def orderPositions(left: StandoffPositionV1, right: StandoffPositionV1): Boolean = {
             if (left.start != right.start) {
                 left.start < right.start
@@ -194,8 +194,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        assert(expected.utf8str == received.utf8str)
-        assert(expected.resource_reference == received.resource_reference)
+        assert(received.utf8str == expected.utf8str)
+        assert(received.resource_reference == expected.resource_reference)
         assert(received.textattr.keys == expected.textattr.keys)
 
         for (attribute <- expected.textattr.keys) {
@@ -204,14 +204,14 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             assert(receivedPositions.length == expectedPositions.length)
 
-            for ((expectedPosition, receivedPosition) <- expectedPositions.zip(receivedPositions)) {
-                assert(expectedPosition.start == receivedPosition.start)
-                assert(expectedPosition.end == receivedPosition.end)
+            for ((receivedPosition, expectedPosition) <- receivedPositions.zip(expectedPositions)) {
+                assert(receivedPosition.start == expectedPosition.start)
+                assert(receivedPosition.end == expectedPosition.end)
 
-                assert(expectedPosition.resid == receivedPosition.resid)
+                assert(receivedPosition.resid == expectedPosition.resid)
 
                 if (expectedPosition.resid.isEmpty) {
-                    assert(expectedPosition.href == receivedPosition.href)
+                    assert(receivedPosition.href == expectedPosition.href)
                 }
             }
         }
@@ -251,15 +251,11 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private def checkImageFileValueChange(received: ChangeFileValueResponseV1, request: ChangeFileValueRequestV1): Unit = {
-        assert(received.changedFilesValues.size == 2, "Expected two file values to have been changed (thumb and full quality)")
+        assert(received.locations.size == 2, "Expected two file values to have been changed (thumb and full quality)")
 
-        received.changedFilesValues.foreach {
-            (changeResponse: ChangeValueResponseV1) =>
-                assert(changeResponse.value.isInstanceOf[StillImageFileValueV1], "created value is not of type StillImageFileValue1")
-                assert(changeResponse.value.asInstanceOf[StillImageFileValueV1].originalFilename == request.file.originalFilename, "wrong original file name")
+        received.locations.foreach {
+            location: LocationV1 => assert(location.origname == request.file.originalFilename, "wrong original file name")
         }
-
-
     }
 
     "Load test data" in {
@@ -744,9 +740,9 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, incunabulaUserData) =>
+                case CreateValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, _) =>
                     firstValueIriWithResourceRef.set(newValueIri)
-                    checkTextValue(textValueWithResourceRef, newValue)
+                    checkTextValue(received = newValue, expected = textValueWithResourceRef)
             }
 
             actorUnderTest ! LinkValueGetRequestV1(
@@ -824,9 +820,9 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, incunabulaUserData) =>
+                case ChangeValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, _) =>
                     firstValueIriWithResourceRef.set(newValueIri)
-                    checkTextValue(textValueWithResourceRef, newValue)
+                    checkTextValue(received = newValue, expected = textValueWithResourceRef)
             }
 
             actorUnderTest ! LinkValueGetRequestV1(
@@ -897,9 +893,9 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, incunabulaUserData) =>
+                case CreateValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, _) =>
                     secondValueIriWithResourceRef.set(newValueIri)
-                    checkTextValue(textValueWithResourceRef, newValue)
+                    checkTextValue(received = newValue, expected = textValueWithResourceRef)
             }
 
             actorUnderTest ! LinkValueGetRequestV1(
@@ -959,9 +955,9 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, incunabulaUserData) =>
+                case ChangeValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, _) =>
                     firstValueIriWithResourceRef.set(newValueIri)
-                    checkTextValue(textValue, newValue)
+                    checkTextValue(received = textValue, expected = newValue)
             }
 
             actorUnderTest ! LinkValueGetRequestV1(
@@ -1033,9 +1029,9 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, incunabulaUserData) =>
+                case ChangeValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, _) =>
                     secondValueIriWithResourceRef.set(newValueIri)
-                    checkTextValue(textValue, newValue)
+                    checkTextValue(received = newValue, expected = textValue)
             }
 
             // The new version of the LinkValue should be marked as deleted.
@@ -1097,9 +1093,9 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, incunabulaUserData) =>
+                case ChangeValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, _) =>
                     firstValueIriWithResourceRef.set(newValueIri)
-                    checkTextValue(textValueWithResourceRef, newValue)
+                    checkTextValue(received = newValue, expected = textValueWithResourceRef)
             }
 
             actorUnderTest ! LinkValueGetRequestV1(

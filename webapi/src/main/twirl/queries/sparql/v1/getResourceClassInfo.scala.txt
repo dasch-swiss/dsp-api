@@ -54,6 +54,7 @@ WHERE {
             *@
 
             BIND(IRI("@entityIri") as ?s)
+            ?s rdfs:subClassOf+ knora-base:Resource .
             ?s ?p ?o .
             FILTER(?p != rdfs:subClassOf)
             BIND(lang(?o) as ?lang)
