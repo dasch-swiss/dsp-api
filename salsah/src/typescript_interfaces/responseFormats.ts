@@ -367,6 +367,9 @@ interface permissionItem {
     granted_to: string;
 }
 
+/**
+ * Represents the regions attached to a resource
+ */
 interface region {
     /**
      * A map of propety types to property values and res_id and iconsrc
@@ -464,6 +467,9 @@ interface resinfo {
     restype_name: string;
 }
 
+/**
+ * Represents information about a resource
+ */
 interface resdata {
     /**
      * IRI of the resource
@@ -521,6 +527,9 @@ interface incomingItem {
     value: string;
 }
 
+/**
+ * Represents the context of a resource
+ */
 interface context {
     /**
      * Context code: 0 for none, 1 for is partOf (e.g. a page of a book), 2 for isCompound (e.g. a book that has pages)
@@ -543,7 +552,7 @@ interface context {
     parent_resinfo?: resinfo;
 
     /**
-     * Resinfo of the requested resource
+     * Resinfo of the requested resource (if requested)
      */
     resinfo?: resinfo;
 
@@ -579,7 +588,7 @@ interface context {
 }
 
 /**
- * Represents the Knora API V1response to a full resource request.
+ * Represents the Knora API V1 response to a full resource request.
  */
 interface resourceFullResponse extends basicResponse {
     /**
@@ -611,7 +620,9 @@ interface resourceFullResponse extends basicResponse {
 
 }
 
-
+/**
+ * Represents the Knora API V1 response to a context request (reqtype=context) with or without resinfo (resinfo=true)
+ */
 interface resourceContextResponse extends basicResponse {
     /**
      * Context of the requested resource
@@ -619,4 +630,6 @@ interface resourceContextResponse extends basicResponse {
     resource_context: context;
 
 }
+
+
 

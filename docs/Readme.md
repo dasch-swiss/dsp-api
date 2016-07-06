@@ -66,7 +66,7 @@ few times, so that the index is properly generated.
 
 The generated documentation can be found under  ```_build/latex```
 
-### Problems with Locales ###
+### 3.2 Problems with Locales ###
 
 Error message when trying to generate the documentation:
 
@@ -80,3 +80,27 @@ Set the locales as environment variables (e.g. in ~/.bash_profile):
 export LC_ALL=de_CH.UTF-8
 export LANG=de_CH.UTF-8
 ```
+
+## Documentation of the Knora JSON API V1 Request and Response Format
+
+### 1 Requirements
+
+The JSON request and response format is formally described using typescript interfaces. To create the docuemntation from these interfaces, we use `typedoc`.
+
+Install `typedoc` using `npm`:
+
+```
+npm install --global typedoc    
+```
+
+If you do not have `npm` (node package manager), install it first. You will find more information about `npm` here: <https://www.npmjs.com/>.
+
+### 2 Building the Documentation
+
+Inside the docs folder type for the html documentation type
+
+```
+$ make jsonformat
+```
+
+You will then find the documentation in `_format_docu`.
