@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="region">
+        <xs:complexType mixed="true">
+            <xs:choice maxOccurs="unbounded" minOccurs="0">
+                <xs:element name="rendition">
+                    <xs:complexType mixed="true">
+                        <xs:choice maxOccurs="unbounded" minOccurs="0">
+                            <xs:element name="lb"/>
+                            <xs:element name="formula" type="formula_element"></xs:element>
+                        </xs:choice>
+                        <xs:attribute name="type" type="rendition_attribute" use="required"></xs:attribute>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="lb"/>
+                <xs:element name="formula" type="formula_element"></xs:element>
+            </xs:choice>
+            <xs:attribute name="id" type="xs:decimal"></xs:attribute>
+            <xs:attribute name="regiontype" type="regiontype_attribute" use="required"></xs:attribute>
+        </xs:complexType>
+    </xs:element>
+
+
+
+    <!--
+
+    Type definitions to be reused
+
+    -->
+
+    <xs:simpleType name="rendition_attribute">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="(\s?underline|\s?center|\s?strike|\s?above)+"></xs:pattern>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="notation_attribute">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="TeX"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="regiontype_attribute">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="TT"/> <!-- Title Text -->
+            <xs:enumeration value="T"/> <!-- Text -->
+            <xs:enumeration value="M"/> <!-- Math -->
+            <xs:enumeration value="F"/> <!-- Figure -->
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="formula_element" mixed="true">
+        <xs:attribute name="notation" type="notation_attribute" use="required"></xs:attribute>
+    </xs:complexType>
+
+
+
+</xs:schema>
