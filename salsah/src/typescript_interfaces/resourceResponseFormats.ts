@@ -595,6 +595,40 @@ export module resourceResponseFormats {
     }
 
     /**
+     * Represents a property type attached to a resource class.
+     */
+    interface propItemForResType {
+
+        id: string;
+
+        label: string;
+    }
+
+    /**
+     * Represents a resource class
+     */
+    interface resTypeItem {
+
+        id: string;
+
+        label: string;
+
+        properties: Array<propItemForResType>
+
+    }
+
+    /**
+     * Represents the Knora API V1 response to a resource type request for a vocabulary
+     *
+     * http://localhost:3333/v1/resourcetypes?vocabulary=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula
+     */
+    export interface resourceTypesInVocabularyResponse extends basicResponseComponents.basicResponse {
+
+        resourcetypes: Array<resTypeItem>;
+
+    }
+
+    /**
      * Represents the Knora API V1 response to a resource type request
      */
     export interface resourceTypeResponse extends basicResponseComponents.basicResponse {
