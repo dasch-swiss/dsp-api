@@ -606,11 +606,19 @@ export module resourceResponseFormats {
      * Represents a resource class
      */
     interface resTypeItem {
-
+        /**
+         * IRI of the resource class
+         */
         id:string;
 
+        /**
+         * Label of the resource class
+         */
         label:string;
 
+        /**
+         * Property Types that this resource class may have
+         */
         properties:Array<propItemForResType>
 
     }
@@ -682,8 +690,10 @@ export module resourceResponseFormats {
      *
      * http://www.knora.org/v1/propertylists?vocabulary=vocabularyIRI
      */
-    export interface propertyTypesInResourceClass extends basicResponseComponents.basicResponse {
-
+    export interface propertyTypesInResourceClassResponse extends basicResponseComponents.basicResponse {
+        /**
+         * Lists the property types the indicated resource class or vocabulary may have.
+         */
         properties:Array<propertyDefinition>;
 
     }
@@ -694,7 +704,9 @@ export module resourceResponseFormats {
      * http://www.knora.org/v1/resourcetypes?vocabulary=vocabularyIRI
      */
     export interface resourceTypesInVocabularyResponse extends basicResponseComponents.basicResponse {
-
+        /**
+         * Lists the resource classes that are defined for the given vocabulary.
+         */
         resourcetypes:Array<resTypeItem>;
 
     }
@@ -720,6 +732,9 @@ export module resourceResponseFormats {
      */
     export interface resourcePropertiesResponse extends basicResponseComponents.basicResponse {
 
+        /**
+         * A map of property type IRIs to property instances
+         */
         properties:{
             [index:string]:prop;
         }
