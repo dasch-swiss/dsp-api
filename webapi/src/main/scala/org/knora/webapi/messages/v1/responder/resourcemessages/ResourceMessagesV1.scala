@@ -254,7 +254,7 @@ case class PropertiesGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends 
   *
   * @param properties the properties of the specified resource.
   */
-case class PropertiesGetResponseV1(properties: PropsGetV1) extends KnoraResponseV1 {
+case class PropertiesGetResponseV1(properties: PropsGetV1, userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceV1JsonProtocol.propertiesGetResponseV1Format.write(this)
 }
 
@@ -937,7 +937,7 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val incomingV1Format: JsonFormat[IncomingV1] = jsonFormat3(IncomingV1)
     implicit val resourceFullResponseV1Format: RootJsonFormat[ResourceFullResponseV1] = jsonFormat6(ResourceFullResponseV1)
     implicit val propertiesGetValueV1Format: JsonFormat[PropertyGetValueV1] = jsonFormat7(PropertyGetValueV1)
-    implicit val propertiesGetResponseV1Format: RootJsonFormat[PropertiesGetResponseV1] = jsonFormat1(PropertiesGetResponseV1)
+    implicit val propertiesGetResponseV1Format: RootJsonFormat[PropertiesGetResponseV1] = jsonFormat2(PropertiesGetResponseV1)
     implicit val resourceRightsResponseV1Format: RootJsonFormat[ResourceRightsResponseV1] = jsonFormat2(ResourceRightsResponseV1)
     implicit val resourceSearchResultV1Format: RootJsonFormat[ResourceSearchResultRowV1] = jsonFormat3(ResourceSearchResultRowV1)
     implicit val resourceSearchResponseV1Format: RootJsonFormat[ResourceSearchResponseV1] = jsonFormat2(ResourceSearchResponseV1)
