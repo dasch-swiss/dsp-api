@@ -216,13 +216,11 @@ export module resourceResponseFormats {
          * Comments on the property's values
          */
         comments?:Array<string>;
-    }
 
-    /**
-     * Represents a list of locationItems in a resource full response
-     */
-    interface __location__ {
-        locations: Array<locationItem>;
+        /**
+         * List of binary representations attached to the requested resource (when doing a full resource request)
+         */
+        locations?: Array<locationItem>;
     }
 
     /**
@@ -688,7 +686,7 @@ export module resourceResponseFormats {
          * The resource's properties
          */
         props:{
-            [index:string]:property|__location__;
+            [index:string]:property;
         }
 
         /**
