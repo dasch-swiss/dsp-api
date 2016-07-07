@@ -1,12 +1,6 @@
-
-import { basicResponseComponents } from "./basicResponseComponents"
+import {basicResponseComponents} from "./basicResponseComponents"
 
 export module resourceResponseFormats {
-
-
-//
-// Resource full response
-//
 
     /**
      * Represents a rich text value
@@ -35,17 +29,17 @@ export module resourceResponseFormats {
         /**
          * Start date in string format
          */
-        dateval1: string;
+        dateval1:string;
 
         /**
          * End end in string format
          */
-        dateval2: string;
+        dateval2:string;
 
         /**
          * Calendar used
          */
-        calendar: string;
+        calendar:string;
 
     }
 
@@ -518,47 +512,47 @@ export module resourceResponseFormats {
         /**
          * IRI of the property type
          */
-        name: string;
+        name:string;
 
         /**
          * Description of the property type
          */
-        description: string;
+        description:string;
 
         /**
          * IRI of the property type's value
          */
-        valuetype_id: string;
+        valuetype_id:string;
 
         /**
          * Label of the property type
          */
-        label: string;
+        label:string;
 
         /**
          * IRI of the vocabulary the property type belongs to
          */
-        vocabulary: string;
+        vocabulary:string;
 
         /**
          * GUI attributes (HTML) of the property type
          */
-        attributes: string;
+        attributes:string;
 
         /**
          * Cardinality of the property type for the requested resource class (not given if property type is requested for a vocabulary)
          */
-        occurrence?: string;
+        occurrence?:string;
 
         /**
          * IRI of the property type
          */
-        id: string;
+        id:string;
 
         /**
          * Name of the GUI element used for the property type
          */
-        gui_name: string;
+        gui_name:string;
 
     }
 
@@ -570,27 +564,27 @@ export module resourceResponseFormats {
         /**
          * IRI of the resource class
          */
-        name: string;
+        name:string;
 
         /**
          * Description of the resource class
          */
-        description: string;
+        description:string;
 
         /**
          * Label of the resource class
          */
-        label: string;
+        label:string;
 
         /**
          * Property types that the resource class may have
          */
-        properties: Array<propertyDefinition>;
+        properties:Array<propertyDefinition>;
 
         /**
          * Path to the resource class icon
          */
-        iconsrc: string;
+        iconsrc:string;
 
     }
 
@@ -599,9 +593,9 @@ export module resourceResponseFormats {
      */
     interface propItemForResType {
 
-        id: string;
+        id:string;
 
-        label: string;
+        label:string;
     }
 
     /**
@@ -609,11 +603,11 @@ export module resourceResponseFormats {
      */
     interface resTypeItem {
 
-        id: string;
+        id:string;
 
-        label: string;
+        label:string;
 
-        properties: Array<propItemForResType>
+        properties:Array<propItemForResType>
 
     }
 
@@ -626,7 +620,7 @@ export module resourceResponseFormats {
      */
     export interface propertyTypesInResourceClass extends basicResponseComponents.basicResponse {
 
-        properties: Array<propertyDefinition>;
+        properties:Array<propertyDefinition>;
 
     }
 
@@ -637,7 +631,7 @@ export module resourceResponseFormats {
      */
     export interface resourceTypesInVocabularyResponse extends basicResponseComponents.basicResponse {
 
-        resourcetypes: Array<resTypeItem>;
+        resourcetypes:Array<resTypeItem>;
 
     }
 
@@ -650,7 +644,7 @@ export module resourceResponseFormats {
         /**
          * Represents information about the requested resource class
          */
-        restype_info: restype;
+        restype_info:restype;
 
     }
 
@@ -662,8 +656,8 @@ export module resourceResponseFormats {
      */
     export interface resourcePropertiesResponse extends basicResponseComponents.basicResponse {
 
-        properties: {
-            [index:string]: prop;
+        properties:{
+            [index:string]:prop;
         }
 
     }

@@ -104,7 +104,7 @@ export module basicResponseComponents {
         /**
          * User's active project
          */
-        active_project?:string;
+        active_project:string;
 
         /**
          * Session token
@@ -114,7 +114,7 @@ export module basicResponseComponents {
         /**
          * List of project IRIs the user is member of
          */
-        projects?:Array<string>;
+        projects:Array<string>;
 
         /**
          * obsolete
