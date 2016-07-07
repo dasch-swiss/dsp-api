@@ -616,7 +616,67 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents a list of property types for the requested resource class or vocabulary
+     * Represents a vocabulary
+     */
+    interface vocabularyItem {
+        /**
+         * The vocabulay's short name
+         */
+        shortname: string;
+
+        /**
+         * Description of the vocbulary
+         */
+        description: string;
+
+        /**
+         * The vocabulay's IRI
+         */
+        uri: string;
+
+        /**
+         * The vocabulay's IRI
+         */
+        id: string;
+
+        /**
+         * The project the vocabulary belongs to
+         */
+        project_id:string;
+
+        /**
+         * The vocabulay's long name
+         */
+        longname: string;
+
+        /**
+         * Indicates if this is the vocabulary the user's project belongs to
+         */
+        active: Boolean;
+
+    }
+
+    interface resourceLabelSearchItem {
+
+        /**
+         * The IRI of the retrieved resource
+         */
+        id: string;
+
+        /**
+         * Values representing the retrieved resource
+         */
+        value: Array<string>;
+
+        /**
+         * The user's permissions on the retrieved resource
+         */
+        rights: number;
+
+    }
+
+    /**
+     * Represents a list of property types for the requested resource class or vocabulary.
      *
      * http://www.knora.org/v1/propertylists?restype=resourceClassIRI
      *
@@ -629,7 +689,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a resource type request for a vocabulary
+     * Represents the Knora API V1 response to a resource type request for a vocabulary.
      *
      * http://www.knora.org/v1/resourcetypes?vocabulary=vocabularyIRI
      */
@@ -640,7 +700,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a resource type request
+     * Represents the Knora API V1 response to a resource type request.
      *
      * http://www.knora.org/v1/resourcetypes/resourceClassIRI
      */
@@ -653,8 +713,8 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a properties request for a resource
-     * This response just returns a resource's properties
+     * Represents the Knora API V1 response to a properties request for a resource.
+     * This response just returns a resource's properties.
      *
      * http://www.knora.org/v1/properties/resourceIRI
      */
@@ -667,7 +727,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a full resource request
+     * Represents the Knora API V1 response to a full resource request.
      *
      * http://www.knora.org/v1/resources/resourceIRI
      */
@@ -702,7 +762,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a resource info request (reqtype=info)
+     * Represents the Knora API V1 response to a resource info request (reqtype=info).
      *
      * http://www.knora.org/v1/resources/resourceIRI?reqtype=info
      */
@@ -720,7 +780,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a resource rights request (reqtype=rights)
+     * Represents the Knora API V1 response to a resource rights request (reqtype=rights).
      *
      * http://www.knora.org/v1/resources/resourceIRI?reqtype=rights
      */
@@ -733,7 +793,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a context request (reqtype=context) with or without resinfo (resinfo=true)
+     * Represents the Knora API V1 response to a context request (reqtype=context) with or without resinfo (resinfo=true).
      *
      * http://www.knora.org/v1/resources/resourceIRI?reqtype=context[&resinfo=true]
      */
@@ -742,6 +802,30 @@ export module resourceResponseFormats {
          * Context of the requested resource
          */
         resource_context:context;
+
+    }
+
+    /**
+     * Represents the available vocabularies
+     *
+     * http://www.knora.org/v1/vocabularies
+     */
+    export interface vocabularyResponse extends basicResponseComponents.basicResponse {
+
+        vocabularies: Array<vocabularyItem>;
+
+    }
+
+    /**
+     * Represents resources that matched the search term in their label.
+     * The search can be restricted to resource classes and a limit can be defined for the results to be returned.
+     * The amount of values values to be returned for each retrieved resource can also be defined.
+     *
+     * http://www.knora.org/v1/resources?searchstr=searchValue[&restype_id=resourceClassIRI][&numprops=Integer][&limit=Integer]
+     */
+    export interface resourceLabelSearchResponse extends basicResponseComponents.basicResponse {
+
+        resources: Array<resourceLabelSearchItem>;
 
     }
 
