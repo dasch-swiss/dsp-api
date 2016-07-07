@@ -144,28 +144,34 @@ export module resourceResponseFormats {
          * obsolete
          */
         regular_property:number;
+
         /**
          * If the property's value is another resource, contains the `rdfs:label` of the OWL class
          * of each resource referred to.
          */
         value_restype?:Array<string>;
+
         /**
          * Order of property type in GUI
          */
         guiorder:number;
+
         /**
          * If the property's value is another resource, contains the `rdfs:label` of each resource
          * referred to.
          */
         value_firstprops?:Array<string>;
+
         /**
          * obsolote
          */
         is_annotation:string;
+
         /**
          * The type of this property's values
          */
         valuetype_id:string;
+
         /**
          * The label of thi property type
          */
@@ -174,35 +180,44 @@ export module resourceResponseFormats {
          * if the property's value is another resource, contains the icon representing the OWL
          * class of each resource referred to.
          */
+
         value_iconsrcs?:Array<string>;
         /**
          * the type of GUI element used to render this property.
          */
+
         guielement:string;
         /**
          * HTML attributes for the GUI element used to render this property
          */
+
         attributes:string;
         /**
          * The cardinality of this property type for the given resource class
          */
+
         occurrence:string;
         /**
          * The IRIs of the value objects representing the property's values for this resource
          */
+
         value_ids?:Array<string>;
+
         /**
          * The given user's permissions on the value objects.
          */
         value_rights?:Array<number>;
+
         /**
          * The IRI of the property type
          */
         pid:string;
+
         /**
          * The property's values
          */
         values?:Array<string|number|richtext>;
+
         /**
          * Comments on the property's values
          */
@@ -497,7 +512,101 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a properties request for a resource.
+     * Represents information about a property type
+     */
+    interface propertyDefinition {
+        /**
+         * IRI of the property type
+         */
+        name: string;
+
+        /**
+         * Description of the property type
+         */
+        description: string;
+
+        /**
+         * IRI of the property type's value
+         */
+        valuetype_id: string;
+
+        /**
+         * Label of the property type
+         */
+        label: string;
+
+        /**
+         * IRI of the vocabulary the property type belongs to
+         */
+        vocabulary: string;
+
+        /**
+         * GUI attributes (HTML) of the property type
+         */
+        attributes: string;
+
+        /**
+         * Cardinality of the property type for the requested resource class
+         */
+        occurrence: string;
+
+        /**
+         * IRI of the property type
+         */
+        id: string;
+
+        /**
+         * Name of the GUI element used for the property type
+         */
+        gui_name: string;
+
+    }
+
+    /**
+     * Represents information about the requested resource class
+     */
+    interface restype {
+
+        /**
+         * IRI of the resource class
+         */
+        name: string;
+
+        /**
+         * Description of the resource class
+         */
+        description: string;
+
+        /**
+         * Label of the resource class
+         */
+        label: string;
+
+        /**
+         * Property types that the resource class may have
+         */
+        properties: Array<propertyDefinition>;
+
+        /**
+         * Path to the resource class icon
+         */
+        iconsrc: string;
+
+    }
+
+    /**
+     * Represents the Knora API V1 response to a resource type request
+     */
+    export interface resourceTypeResponse extends basicResponseComponents.basicResponse {
+        /**
+         * Represents information about the requested resource class
+         */
+        restype_info: restype;
+
+    }
+
+    /**
+     * Represents the Knora API V1 response to a properties request for a resource
      */
     export interface resourcePropertiesResponse extends basicResponseComponents.basicResponse {
 
