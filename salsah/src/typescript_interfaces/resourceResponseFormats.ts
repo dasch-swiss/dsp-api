@@ -618,6 +618,19 @@ export module resourceResponseFormats {
     }
 
     /**
+     * Represents a list of property types for the requested resource class or vocabulary
+     *
+     * http://www.knora.org/v1/propertylists?restype=resourceClassIRI
+     *
+     * http://www.knora.org/v1/propertylists?vocabulary=vocabularyIRI
+     */
+    export interface propertyTypesInResourceClass extends basicResponseComponents.basicResponse {
+
+        properties: Array<propertyDefinition>;
+
+    }
+
+    /**
      * Represents the Knora API V1 response to a resource type request for a vocabulary
      *
      * http://www.knora.org/v1/resourcetypes?vocabulary=vocabularyIRI
