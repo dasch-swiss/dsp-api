@@ -210,7 +210,7 @@ export module resourceResponseFormats {
         /**
          * The property's values
          */
-        values?:Array<string|number|richtext>;
+        values?:Array<string|number|richtext|date>;
 
         /**
          * Comments on the property's values
@@ -218,6 +218,12 @@ export module resourceResponseFormats {
         comments?:Array<string>;
     }
 
+    /**
+     * Represents a list of locationItems in a resource full response
+     */
+    interface __location__ {
+        locations: Array<locationItem>;
+    }
 
     /**
      * Binary representation of a resource (location)
@@ -682,7 +688,7 @@ export module resourceResponseFormats {
          * The resource's properties
          */
         props:{
-            [index:string]:property|Array<locationItem>;
+            [index:string]:property|__location__;
         }
 
         /**
