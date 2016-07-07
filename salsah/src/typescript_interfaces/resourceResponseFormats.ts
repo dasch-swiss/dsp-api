@@ -29,6 +29,27 @@ export module resourceResponseFormats {
     }
 
     /**
+     * Represents a date value
+     */
+    interface date {
+        /**
+         * Start date in string format
+         */
+        dateval1: string;
+
+        /**
+         * End end in string format
+         */
+        dateval2: string;
+
+        /**
+         * Calendar used
+         */
+        calendar: string;
+
+    }
+
+    /**
      * Represents a property value (no parallel arrays)
      */
     interface propval {
@@ -65,7 +86,7 @@ export module resourceResponseFormats {
         /**
          * typed representation of the value.
          */
-        value:string|number|richtext;
+        value:string|number|richtext|date;
     }
 
     /**
@@ -73,7 +94,7 @@ export module resourceResponseFormats {
      */
     interface prop {
         /**
-         * type of the value as a string
+         * Type of the value as a string
          */
         valuetype:string;
 
@@ -108,9 +129,11 @@ export module resourceResponseFormats {
         pid:string;
 
         /**
-         * the property's values
+         * The property's values if given.
+         * If an instance of this property type does not exists for the requested resource,
+         * only the information about the property type is returned.
          */
-        values:Array<propval>;
+        values?:Array<propval>;
     }
 
     /**
@@ -258,7 +281,7 @@ export module resourceResponseFormats {
      */
     interface region {
         /**
-         * A map of propety types to property values and res_id and iconsrc
+         * A map of property types to property values and res_id and iconsrc
          */
         [index:string]:prop|string;
     }
@@ -471,6 +494,17 @@ export module resourceResponseFormats {
          * Iris of dependent resources (e.g. pages of a book)
          */
         res_id?:Array<string>;
+    }
+
+    /**
+     * Represents the Knora API V1 response to a properties request for a resource.
+     */
+    export interface resourcePropertiesResponse extends basicResponseComponents.basicResponse {
+
+        properties: {
+            [index:string]: prop;
+        }
+
     }
 
     /**
