@@ -104,7 +104,7 @@ export module basicResponseComponents {
         /**
          * User's active project
          */
-        activeProject?:string;
+        active_project?:string;
 
         /**
          * Session token

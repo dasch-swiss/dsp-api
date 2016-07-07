@@ -546,9 +546,9 @@ export module resourceResponseFormats {
         attributes: string;
 
         /**
-         * Cardinality of the property type for the requested resource class
+         * Cardinality of the property type for the requested resource class (not given if property type is requested for a vocabulary)
          */
-        occurrence: string;
+        occurrence?: string;
 
         /**
          * IRI of the property type
