@@ -79,6 +79,13 @@ export module searchResponseFormats {
 
     }
 
+    /**
+     * Represents the response to a fulltext or an extended search
+     *
+     * http://www.knora.org/v1/search/searchTerm?searchtype=fulltext
+     *
+     * http://www.knora.org/v1/search/?searchtype=extended[&filter_by_restype=resourceClassIRI](&property_id=propertyIRI&compop=comparisonOperator&searchval=searchTerm)+
+      */
     export interface searchResponse extends basicResponseComponents.basicResponse {
 
         /**

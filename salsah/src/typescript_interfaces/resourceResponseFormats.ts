@@ -476,7 +476,7 @@ export module resourceResponseFormats {
         parent_resinfo?:resinfo;
 
         /**
-         * Resinfo of the requested resource (if requested)
+         * Resinfo of the requested resource (if requested: resinfo=true)
          */
         resinfo?:resinfo;
 
@@ -652,6 +652,8 @@ export module resourceResponseFormats {
 
     /**
      * Represents the Knora API V1 response to a full resource request
+     *
+     * http://www.knora.org/v1/resources/resourceIRI
      */
     export interface resourceFullResponse extends basicResponseComponents.basicResponse {
         /**
@@ -685,6 +687,8 @@ export module resourceResponseFormats {
 
     /**
      * Represents the Knora API V1 response to a resource info request (reqtype=info)
+     *
+     * http://www.knora.org/v1/resources/resourceIRI?reqtype=info
      */
     export interface resourceInfoResponse extends basicResponseComponents.basicResponse {
         /**
@@ -701,6 +705,8 @@ export module resourceResponseFormats {
 
     /**
      * Represents the Knora API V1 response to a resource rights request (reqtype=rights)
+     *
+     * http://www.knora.org/v1/resources/resourceIRI?reqtype=rights
      */
     export interface resourceRightsResponse extends basicResponseComponents.basicResponse {
         /**
@@ -712,6 +718,8 @@ export module resourceResponseFormats {
 
     /**
      * Represents the Knora API V1 response to a context request (reqtype=context) with or without resinfo (resinfo=true)
+     *
+     * http://www.knora.org/v1/resources/resourceIRI?reqtype=context[&resinfo=true]
      */
     export interface resourceContextResponse extends basicResponseComponents.basicResponse {
         /**
