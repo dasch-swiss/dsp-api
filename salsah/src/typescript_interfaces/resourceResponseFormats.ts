@@ -620,7 +620,7 @@ export module resourceResponseFormats {
     /**
      * Represents the Knora API V1 response to a resource type request for a vocabulary
      *
-     * http://localhost:3333/v1/resourcetypes?vocabulary=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula
+     * http://www.knora.org/v1/resourcetypes?vocabulary=vocabularyIRI
      */
     export interface resourceTypesInVocabularyResponse extends basicResponseComponents.basicResponse {
 
@@ -630,6 +630,8 @@ export module resourceResponseFormats {
 
     /**
      * Represents the Knora API V1 response to a resource type request
+     *
+     * http://www.knora.org/v1/resourcetypes/resourceClassIRI
      */
     export interface resourceTypeResponse extends basicResponseComponents.basicResponse {
         /**
@@ -641,6 +643,9 @@ export module resourceResponseFormats {
 
     /**
      * Represents the Knora API V1 response to a properties request for a resource
+     * This response just returns a resource's properties
+     *
+     * http://www.knora.org/v1/properties/resourceIRI
      */
     export interface resourcePropertiesResponse extends basicResponseComponents.basicResponse {
 
