@@ -54,7 +54,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
     // How long to wait for results obtained using the 'eventually' function
     implicit val patienceConfig = page.patienceConfig
 
-    implicit val timeout = Timeout(180 seconds)
+    implicit val timeout = Timeout(180.seconds)
 
     implicit val system = ActorSystem()
 
@@ -80,7 +80,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
     // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
 
 
-    def doZeitgloeckleinSearch = {
+    def doZeitgloeckleinSearch() = {
 
         val searchField: WebElement = page.getSimpleSearchField
         searchField.clear()
@@ -92,7 +92,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
         val rows = page.getExtendedSearchResultRows
 
-        val row1Text = page.getSearchResultRowText(rows(0))
+        val row1Text = page.getSearchResultRowText(rows.head)
 
         assert(row1Text.contains("Zeitglöcklein des Lebens und Leidens Christi"))
 
@@ -129,7 +129,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
         "log in as root" in {
 
-            page.load
+            page.load()
 
             page.doLogin("root", "test")
 
@@ -145,7 +145,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             page.load()
 
-            doZeitgloeckleinSearch
+            doZeitgloeckleinSearch()
 
             val rows = page.getExtendedSearchResultRows
 
@@ -165,12 +165,12 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             page.load()
 
-            doZeitgloeckleinSearch
+            doZeitgloeckleinSearch()
 
             val rows = page.getExtendedSearchResultRows
 
             // open the first search result representing a book
-            rows(0).click()
+            rows.head.click()
 
             val window = page.getWindow(1)
 
@@ -191,7 +191,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             page.load()
 
-            page.clickExtendedSearchButton
+            page.clickExtendedSearchButton()
 
             page.selectRestype("http://www.knora.org/ontology/incunabula#book")
 
@@ -214,7 +214,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             page.load()
 
-            page.clickExtendedSearchButton
+            page.clickExtendedSearchButton()
 
             page.selectRestype("http://www.knora.org/ontology/knora-base#Region")
 
@@ -235,9 +235,9 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
         "do an extended search for restype page with seqnum 1 belonging to a book containing 'Narrenschiff' in its title" in {
 
-            page.load
+            page.load()
 
-            page.clickExtendedSearchButton
+            page.clickExtendedSearchButton()
 
             page.selectRestype("http://www.knora.org/ontology/incunabula#page")
 
@@ -267,9 +267,9 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
         "do an extended search for images:bild involving a hierarchical list selection for its title" in {
 
-            page.load
+            page.load()
 
-            page.clickExtendedSearchButton
+            page.clickExtendedSearchButton()
 
             page.selectRestype("http://www.knora.org/ontology/images#bild")
 
@@ -277,7 +277,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             var selections = page.getHierarchicalListSelectionsInExtendedSearch(1)
 
-            val firstSel = selections(0)
+            val firstSel = selections.head
 
             firstSel.selectByValue("http://data.knora.org/lists/71a1543cce")
 
@@ -297,9 +297,9 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
         }
 
         "do an extended search for a book with the exact publication date Julian 1497-08-01" in {
-            page.load
+            page.load()
 
-            page.clickExtendedSearchButton
+            page.clickExtendedSearchButton()
 
             page.selectRestype("http://www.knora.org/ontology/incunabula#book")
 
@@ -319,11 +319,11 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             val days = page.getDaysInExtendedSearchForm(dateForm = dateForm)
 
-            days(0).click()
+            days.head.click()
 
             val yearsel = page.getYearFieldInExtendedSearchForm(dateForm)
 
-            yearsel.clear
+            yearsel.clear()
             yearsel.sendKeys("1497")
 
             page.submitExtendedSearch
@@ -337,9 +337,9 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
         "do an extended search for a book with the period Julian 1495 as publication date" in {
 
-            page.load
+            page.load()
 
-            page.clickExtendedSearchButton
+            page.clickExtendedSearchButton()
 
             page.selectRestype("http://www.knora.org/ontology/incunabula#book")
 
@@ -366,11 +366,11 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             val days1 = page.getDaysInExtendedSearchForm(dateForm, 1)
 
             // choose the first day of the month
-            days1(0).click()
+            days1.head.click()
 
             val yearsel1 = page.getYearFieldInExtendedSearchForm(dateForm, 1)
 
-            yearsel1.clear
+            yearsel1.clear()
             yearsel1.sendKeys("1495")
 
 
@@ -388,7 +388,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             val yearsel2 = page.getYearFieldInExtendedSearchForm(dateForm, 2)
 
-            yearsel2.clear
+            yearsel2.clear()
             yearsel2.sendKeys("1495")
 
             page.submitExtendedSearch
@@ -401,9 +401,9 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
         "change the publication date of a book" in {
 
-            page.load
+            page.load()
 
-            page.clickExtendedSearchButton
+            page.clickExtendedSearchButton()
 
             page.selectRestype("http://www.knora.org/ontology/incunabula#book")
 
@@ -442,7 +442,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             val yearsel1 = page.getYearField(pubdateField, 1)
 
-            yearsel1.clear
+            yearsel1.clear()
             yearsel1.sendKeys("1495")
 
             page.clickSaveButton(pubdateField)
@@ -469,7 +469,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             page.load()
 
-            doZeitgloeckleinSearch
+            doZeitgloeckleinSearch()
 
             val rows = page.getExtendedSearchResultRows
 
@@ -518,7 +518,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // get the input field
             val input = page.getInputField(pagenumField)
 
-            input.clear
+            input.clear()
 
             input.sendKeys("test")
 
@@ -537,12 +537,12 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             page.load()
 
-            doZeitgloeckleinSearch
+            doZeitgloeckleinSearch()
 
             val rows = page.getExtendedSearchResultRows
 
             // open a book
-            rows(0).click()
+            rows.head.click()
 
             val window = page.getWindow(1)
 
@@ -561,7 +561,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // get the input field
             val input = page.getInputField(creatorField)
 
-            input.clear
+            input.clear()
 
             input.sendKeys("Tobiasus")
 
@@ -581,7 +581,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             page.load()
 
-            doZeitgloeckleinSearch
+            doZeitgloeckleinSearch()
 
             val rows = page.getExtendedSearchResultRows
 
@@ -620,7 +620,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             page.load()
 
-            doZeitgloeckleinSearch
+            doZeitgloeckleinSearch()
 
             val rows = page.getExtendedSearchResultRows
 
@@ -659,9 +659,9 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
         "change the season property of a image:bild to summer" in {
 
-            page.load
+            page.load()
 
-            page.clickExtendedSearchButton
+            page.clickExtendedSearchButton()
 
             page.selectRestype("http://www.knora.org/ontology/images#bild")
 
@@ -702,9 +702,9 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
         "add a season to a image:bild" in {
 
-            page.load
+            page.load()
 
-            page.clickExtendedSearchButton
+            page.clickExtendedSearchButton()
 
             page.selectRestype("http://www.knora.org/ontology/images#bild")
 
@@ -730,7 +730,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             val seasons = page.getRadioButtons(seasonField)
 
             // winter is the second element in the list
-            seasons(1).click
+            seasons(1).click()
 
             page.clickSaveButton(seasonField)
 

@@ -144,7 +144,7 @@ class SalsahPage {
     /**
       * Clicks the SALSAH extended search button.
       */
-    def clickExtendedSearchButton = {
+    def clickExtendedSearchButton() = {
         driver.findElement(By.xpath("//div[@id='searchctrl']/img[2][@class='link']")).click()
     }
 

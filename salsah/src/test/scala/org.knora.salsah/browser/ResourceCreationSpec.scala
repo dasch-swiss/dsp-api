@@ -24,16 +24,15 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.salsah.SettingsImpl
-import org.openqa.selenium.support.ui.Select
-import org.openqa.selenium.{By, WebElement}
+import org.openqa.selenium.By
 import org.scalatest._
 import org.scalatest.concurrent.Eventually._
 import spray.client.pipelining._
 import spray.http.MediaTypes._
 import spray.http.{HttpRequest, HttpResponse, _}
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 /**
   * Tests the SALSAH web interface using Selenium.
@@ -54,7 +53,7 @@ class ResourceCreationSpec extends WordSpecLike with ShouldMatchers {
     // How long to wait for results obtained using the 'eventually' function
     implicit val patienceConfig = page.patienceConfig
 
-    implicit val timeout = Timeout(180 seconds)
+    implicit val timeout = Timeout(180.seconds)
 
     implicit val system = ActorSystem()
 
@@ -110,7 +109,7 @@ class ResourceCreationSpec extends WordSpecLike with ShouldMatchers {
 
         "log in as root" in {
 
-            page.load
+            page.load()
 
             page.doLogin("root", "test")
 
