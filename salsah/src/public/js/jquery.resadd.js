@@ -644,7 +644,7 @@
 
 												if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_FLOAT) {
 													// it is a float
-													propvals[propname] = [{float_value: parseFloat(ele.val())}];
+													propvals[propname] = [{decimal_value: parseFloat(ele.val())}];
 												} else {
 													// it is a text
 													var richtext_value = create_richtext_value_params();
@@ -663,7 +663,7 @@
 													if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_FLOAT) {
 														// it is a float
 														vv = {
-															float_value: parseFloat($(this).val())
+															decimal_value: parseFloat($(this).val())
 														};
 													} else {
 														// it is a text
@@ -819,7 +819,7 @@
 										{
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
-												propvals[propname].time_value = ele.timeobj('value');
+												propvals[propname] = [{time_value:  ele.timeobj('value')}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
@@ -836,7 +836,7 @@
 											ele = form.find('[name="' + propname + '"]');
 
                                             if (ele.length == 1) {
-												propvals[propname].interval_value = ele.timeobj('value');
+												propvals[propname] = [{interval_value: ele.timeobj('value')}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {

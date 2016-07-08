@@ -451,7 +451,7 @@
 			postdata[VALTYPE_FLOAT] = function(value_container, prop, value_index, value, is_new_value) {
 				var data = {};
 				if (is_new_value) {
-					data.float_value = parseFloat(value); // it is an float
+					data.decimal_value = parseFloat(value); // it is an float
 					data.res_id = res_id;
 					data.prop = prop;
 					data.project_id = project_id;
@@ -482,7 +482,7 @@
 						cancel_edit(value_container);
 					});
 				} else {
-					data.float_value = parseFloat(value); // it is an float
+					data.decimal_value = parseFloat(value); // it is an float
 					data.project_id = project_id;
 					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
 						if (data.status == ApiErrors.OK) {

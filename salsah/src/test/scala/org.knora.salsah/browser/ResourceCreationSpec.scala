@@ -139,11 +139,11 @@ class ResourceCreationSpec extends WordSpecLike with ShouldMatchers {
 
             place.sendKeys("Basel")
 
-            val firstName = page.getInputForResourceCreationForm(rows(6))
+            val firstName = page.getInputForResourceCreationForm(rows(5))
 
             firstName.sendKeys("Testvorname")
 
-            val familyName = page.getInputForResourceCreationForm(rows(9))
+            val familyName = page.getInputForResourceCreationForm(rows(8))
 
             familyName.sendKeys("Testperson")
 
@@ -165,11 +165,11 @@ class ResourceCreationSpec extends WordSpecLike with ShouldMatchers {
 
             val rows = page.getInputRowsForResourceCreationForm()
 
-            val floatVal =  page.getInputForResourceCreationForm(rows(2))
+            val floatVal =  page.getInputForResourceCreationForm(rows(6))
 
             floatVal.sendKeys("5.3")
 
-            val textVal =  page.getInputForResourceCreationForm(rows(7))
+            val textVal =  page.getInputForResourceCreationForm(rows(10))
 
             textVal.sendKeys("Dies ist ein Test")
 
