@@ -6,8 +6,8 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
-FORMATDOC     = _format_docu
-FORMATSRC     = ../salsah/src/typescript_interfaces
+FORMATDOCDIR  = _format_docu
+FORMATSRCDIR  = ../salsah/src/typescript_interfaces
 TYPEDOC       = typedoc
 
 # User-friendly check for sphinx-build
@@ -54,6 +54,7 @@ help:
 
 clean:
 	rm -rf $(BUILDDIR)/*
+	rm -rf $(FORMATDOCDIR)/*
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
@@ -61,7 +62,7 @@ html:
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 jsonformat:
-	$(TYPEDOC) --out $(FORMATDOC) --module commonjs $(FORMATSRC)
+	$(TYPEDOC) --out $(FORMATDOCDIR) --module commonjs $(FORMATSRCDIR)
 	@echo "Format Docs Build finished. The HTML pages are in $(FORMATDOC)/html."
 
 dirhtml:

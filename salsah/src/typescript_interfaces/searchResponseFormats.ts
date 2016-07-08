@@ -60,10 +60,13 @@ export module searchResponseFormats {
 
     }
 
+    /**
+     * Represents a page in a collection of pages.
+     */
     interface pagingItem {
 
         /**
-         * Current page
+         * True if this item represents the current page of search results
          */
         current: Boolean;
 
@@ -73,7 +76,7 @@ export module searchResponseFormats {
         start_at: number;
 
         /**
-         * The number of results on the page
+         * The number of results shown on the page
          */
         show_nrows: number;
 
@@ -82,9 +85,9 @@ export module searchResponseFormats {
     /**
      * Represents the response to a fulltext or an extended search
      *
-     * http://www.knora.org/v1/search/searchTerm?searchtype=fulltext
+     * http://www.knora.org/v1/search/searchTerm?searchtype=fulltext[&filter_by_restype=resourceClassIRI][&filter_by_project=projectIRI][&show_nrows=Integer]{[&start_at=Integer]
      *
-     * http://www.knora.org/v1/search/?searchtype=extended[&filter_by_restype=resourceClassIRI](&property_id=propertyIRI&compop=comparisonOperator&searchval=searchTerm)+
+     * http://www.knora.org/v1/search/?searchtype=extended[&filter_by_restype=resourceClassIRI][&filter_by_project=projectIRI][&filter_by_owner=userIRI](&property_id=propertyTypeIRI&compop=comparisonOperator&searchval=searchValue)+[&show_nrows=Integer]{[&start_at=Integer]
       */
     export interface searchResponse extends basicResponseComponents.basicResponse {
 
@@ -102,7 +105,8 @@ export module searchResponseFormats {
         }
 
         /**
-         * Information for paging
+         * Represents Information for paging.
+         * Go through all the results page by page (by going through the items of the array).
          */
         paging: Array<pagingItem>;
 

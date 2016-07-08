@@ -153,9 +153,13 @@ To get a list of all available vocabularies, the path segment ``vocabularies`` c
 
 The response will list all the available vocabularies. See TypeScript interface ``vocabularyResponse`` in module ``resourceResponseFormats``.
 
-***********************************
+********************
+Search for Resources
+********************
+
+-----------------------------------
 Search for Resources by their Label
-***********************************
+-----------------------------------
 
 This is a simplified way for searching for resources just by their label. It is a simple string-based method:
 
@@ -171,10 +175,88 @@ Additionally, the following parameters can be appended to the URL (search value 
 
 The response lists the resources that matched the search criteria (see TypeScript interface ``resourceLabelSearchResponse`` in module ``resourceResponseFormats``).
 
-*****************************
-Fulltext Search for Resources
-*****************************
+---------------
+Fulltext Search
+---------------
 
-*****************************
+Knora offers a fulltext search that searches through all textual representations of values. You can separate search terms by a white space and they will be combined using the Boolean ``AND`` operator.
+Please note that the search terms have to be URL encoded.
+
+::
+
+    curl http://localhost:3333/v1/search/searchValue?searchtype=fulltext[&filter_by_restype=resourceClassIRI]
+    [&filter_by_project=projectIRI][&show_nrows=Integer]{[&start_at=Integer]
+
+The parameter ``searchtype`` is required and has to be set to ``fulltext``. Additionally, these parameters can be set:
+  - ``filter_by_restype=resourceClassIRI``: restricts the search to resources of the specified resource class.
+  - ``filter_by_project=projectIRI``: restricts the search to resources of the specified project.
+  - ``show_nrows=Integer``: Indicates how many reults should be presented on one page. If omitted, the default value ``25`` is used.
+  - ``start_at=Integer``: Used to enable paging and go through all the results request by request.
+
+The response presents the retrieved resources (according to ``show_nrows`` and ``start_at``) and information about paging.
+If not all resources could be presented on one page (``nhits`` is greater than ``shown_nrows``), the next page can be requested (by increasing ``start_at`` by the number of ``show_nrows``).
+You can simply go through the elements of ``paging`` to request the single pages one by one.
+See TypeScript interface ``searchResponse`` in module ``searchResponseFormats``.
+
+-----------------------------
 Extended Search for Resources
-*****************************
+-----------------------------
+
+::
+
+    curl http://www.knora.org/v1/search/?searchtype=extended
+    [&filter_by_restype=resourceClassIRI][&filter_by_project=projectIRI][&filter_by_owner=userIRI]
+    (&property_id=propertyTypeIRI&compop=comparisonOperator&searchval=searchValue)+
+    [&show_nrows=Integer][&start_at=Integer]
+
+The parameter ``searchtype`` is required and has to be set to ``extended``. An extended search requires at least one set of parameters consisting of:
+  - ``property_id=propertyTypeIRI``: the type of property the resource has to have
+  - ``compop=comparisonOperator``: the comparison operator to be used to match between the resource's property value and the search term.
+  - ``searchval=searchTerm``: the search value to look for.
+
+You can also provide several of these sets to make your query more specific.
+
+The following table indicates the possible combinations of value types and comparison operators:
+
++------------------+-----------------------------------------------------+
+| Value Type       | Comparison Operator                                 |
++==================+=====================================================+
+| Date Value       | EQ, !EQ, GT, GT_EQ, LT, LT_EQ, EXISTS               |
++------------------+-----------------------------------------------------+
+| Integer Value    | EQ, !EQ, GT, GT_EQ, LT, LT_EQ, EXISTS               |
++------------------+-----------------------------------------------------+
+| Float Value      | EQ, !EQ, GT, GT_EQ, LT, LT_EQ, EXISTS               |
++------------------+-----------------------------------------------------+
+| Text Value       | MATCH_BOOLEAN, MATCH, EQ, !EQ, LIKE, !LIKE, EXISTS  |
++------------------+-----------------------------------------------------+
+| Geometry Value   | EXISTS                                              |
++------------------+-----------------------------------------------------+
+| Resource Pointer | EQ, EXISTS                                          |
++------------------+-----------------------------------------------------+
+| Color Value      | EQ, EXISTS                                          |
++------------------+-----------------------------------------------------+
+| List Value       | EQ, EXISTS                                          |
++------------------+-----------------------------------------------------+
+
+Explanation of the comparison operators:
+  - ``EQ``: checks if the searched resource's value *equals* the search value. In case of a text value type, it checks for identity of the strings compared. In case of a date value type, it checks if the dates are equal or if the specified date encompasses it (internally, dates are always treated as periods).
+  - ``!EQ``: checks if the searched resource's value *does not equal* the search value. In case of a text value type, it checks if the compared strings are different. In case of a date value type, it checks if the dates are not equal or if the specified date does not encompass it (internally, dates are always treated as periods).
+  - ``GT``: checks if the searched resource's value is *greater than* the search value. In case of a date value type, it checks if the resource's period begins after the indicated date.
+  - ``GT_EQ``: checks if the searched resource's value *equals or is greater than* the search value. In case of a date value type, it checks if the resource's period equals the end of the indicated period or begins after the indicated period.
+  - ``LT``: checks if the searched resource's value is *lower than* the search value. In case of a date value type, it checks if the resource's period begins before the indicated date.
+  - ``LT_EQ``: checks if the searched resource's value *equals or is lower than* the search value. In case of a date value type, it checks if the resource's period equals the begin of the indicated period or begins before the indicated period.
+  - ``EXISTS``: checks if an instance of the indicated property type *exists* for the search resource. **Please always provide an empty search value when using EXISTS: "searchval="**. Otherwise, the query syntax rules would be violated.
+  - ``MATCH``: checks if the searched resource's text value *matches* the search value. The behaviour depends on the used triplestore's full text index.
+  - ``MATCH_BOOLEAN``: check if the searched resource's text value *matches* the provided list of positive (exist) and negative (do not exist) terms. The list takes this form: ``([+-]term\s)+``.
+
+Additionally, these parameters can be set:
+  - ``filter_by_restype=resourceClassIRI``: restricts the search to resources of the specified resource class.
+  - ``filter_by_project=projectIRI``: restricts the search to resources of the specified project.
+  - ``filter_by_owner``: restricts the search to resources owned by the specified user.
+  - ``show_nrows=Integer``: Indicates how many reults should be presented on one page. If omitted, the default value ``25`` is used.
+  - ``start_at=Integer``: Used to enable paging and go through all the results request by request.
+
+The response presents the retrieved resources (according to ``show_nrows`` and ``start_at``) and information about paging.
+If not all resources could be presented on one page (``nhits`` is greater than ``shown_nrows``), the next page can be requested (by increasing ``start_at`` by the number of ``show_nrows``).
+You can simply go through the elements of ``paging`` to request the single pages one by one.
+See TypeScript interface ``searchResponse`` in module ``searchResponseFormats``.
