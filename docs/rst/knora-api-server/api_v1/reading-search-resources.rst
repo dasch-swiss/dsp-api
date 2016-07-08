@@ -256,6 +256,11 @@ Additionally, these parameters can be set:
   - ``show_nrows=Integer``: Indicates how many reults should be presented on one page. If omitted, the default value ``25`` is used.
   - ``start_at=Integer``: Used to enable paging and go through all the results request by request.
 
+Some sample searches:
+  - ``http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=!EQ&searchval=Zeitgl%C3%B6cklein%20des%20Lebens%20und%20Leidens%20Christi``: searches for books that have a title that does not equal "Zeitglöcklein des Lebens und Leidens Christi".
+  - ``http://www.knora.org/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=MATCH&searchval=Zeitgl%C3%B6cklein&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23pubdate&compop=EQ&searchval=JULIAN:1490``: searches for resources of type ``incunabula:book`` whose titles match "Zeitglöcklein" and were published in the year 1490 (according to the Julian calendar).
+
+
 The response presents the retrieved resources (according to ``show_nrows`` and ``start_at``) and information about paging.
 If not all resources could be presented on one page (``nhits`` is greater than ``shown_nrows``), the next page can be requested (by increasing ``start_at`` by the number of ``show_nrows``).
 You can simply go through the elements of ``paging`` to request the single pages one by one.
