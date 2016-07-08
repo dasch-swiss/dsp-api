@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<region id="2" regiontype="T" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="diplomatic.xsd">
+<region id="2" regiontype="T" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../XML-schemas/diplomatic.xsd">
     Modus hic est: Fiat triang: æquil: <formula notation="TeX">ABD</formula>, divisâq́  diametro <formula notation="TeX">AB</formula> in tot partes æquales,<lb/>
     quot laterum est figura inscribenda, duabusq́ earum p̃termissis <rendition type="strike">et</rendition> à <formula notation="TeX">B</formula> versùs <formula notation="TeX">A</formula>, ducat,<lb/>
     per initium tertiæ recta <formula notation="TeX">DF</formula>, &amp; hinc recta <formula notation="TeX">FB</formula>, quam putat esse latus polygoni optati<lb/><lb/>

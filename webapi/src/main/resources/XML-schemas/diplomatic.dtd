@@ -4,3 +4,6 @@
 <!ENTITY pp "[pp.]">
 <!ENTITY ndot "." >
 <!ENTITY egrav "è">
+<!ENTITY par "<lb/>" >
+<!ENTITY est "[è]" >
+<!ENTITY quod "[q/]" >
