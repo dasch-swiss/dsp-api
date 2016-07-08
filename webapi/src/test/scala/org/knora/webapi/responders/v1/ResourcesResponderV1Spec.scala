@@ -398,7 +398,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                                 None),
                             "http://data.knora.org/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
                             None,
-                            None))))))
+                            None))))), userdata = ResourcesResponderV1Spec.userProfile.userData)
 
 
     private def comparePropertiesGetResponse(expected: PropertiesGetResponseV1, received: PropertiesGetResponseV1) = {
