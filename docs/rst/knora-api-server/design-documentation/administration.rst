@@ -275,6 +275,17 @@ different operation abbreviations used are defined as follows:
 Implementation
 ---------------
 
+.. graphviz::
+
+   digraph permissions {
+     "Permission" -> "Group" [ label="forGroup" ];
+     "Permission" -> "ResourceClass" [ label="forResourceClass" ];
+     "Permission" -> "Property" [ label="forProperty" ];
+     "Permission" -> "hasViewPermission" [ label="hasDefaultPermission" ];
+   }
+
+
+
 A the time the ``UserProfile`` is queried, all group memberships and the permissions carried by those groupes are
 queried for all projects the user is a member of. This information is then stored as an easy accessible object inside
 the ``UserProfile`` so that this information is readily available where needed. This is a somewhat expensive operation,
