@@ -265,3 +265,28 @@ The response presents the retrieved resources (according to ``show_nrows`` and `
 If not all resources could be presented on one page (``nhits`` is greater than ``shown_nrows``), the next page can be requested (by increasing ``start_at`` by the number of ``show_nrows``).
 You can simply go through the elements of ``paging`` to request the single pages one by one.
 See TypeScript interface ``searchResponse`` in module ``searchResponseFormats``.
+
+
+**********************
+Get hierarchical Lists
+**********************
+
+The knora-base ontology allows for the definition of hierarchical lists. These can be queried by providing the IRI of the root node.
+Selections are hierarchical list that are just one level deep. Internally, they are represented as hierarchical lists.
+
+You can get a hierarchical by using the path segment ``hlists`` and appending the hierarchical list's IRI (URL encoded):
+
+::
+
+    curl http://www.knora.org/v1/hlists/rootNodeIRI
+
+The response shows all of the list nodes that are element of the requested hierarchical list as a tree structure. See TypeScript interface ``hierarchicalListResponse`` in module ``hierarchicalListResponseFormats``.
+
+For each node, the full path leading to it from the top level can be requested by making a query providing the node's IRI and setting the param ``reqtype=node``:
+
+::
+
+    curl http://www.knora.org/v1/hlists/nodeIri?reqtype=node
+
+
+The response presents the full path to the current node. See TypeScript interface ``nodePathResponse`` in module ``hierarchicalListResponseFormats``.
