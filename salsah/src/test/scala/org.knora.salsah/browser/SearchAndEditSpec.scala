@@ -279,14 +279,20 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
             val firstSel = selections.head
 
-            firstSel.selectByValue("http://data.knora.org/lists/71a1543cce")
+            // list node from selection "HIERARCHICAL LISTS" in images-demo-data
+            val listNodeSport = "http://data.knora.org/lists/71a1543cce"
+
+            firstSel.selectByValue(listNodeSport)
 
             // refresh the selection
             selections = page.getHierarchicalListSelectionsInExtendedSearch(1)
 
             val secondSel = selections(1)
 
-            secondSel.selectByValue("http://data.knora.org/lists/d1fa87bbe3")
+            // list node from selection "HIERARCHICAL LISTS" in images-demo-data
+            val listNodeFliegen = "http://data.knora.org/lists/d1fa87bbe3"
+
+            secondSel.selectByValue(listNodeFliegen)
 
             page.submitExtendedSearch
 
