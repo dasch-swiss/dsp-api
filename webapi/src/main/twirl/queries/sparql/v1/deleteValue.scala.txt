@@ -69,7 +69,7 @@ DELETE {
 } INSERT {
     @* Mark the value as deleted. *@
     ?value knora-base:isDeleted true ;
-        ?value knora-base:deleteDate ?currentTime .
+        knora-base:deleteDate ?currentTime .
 
     @* Add the delete comment, if any. *@
     @maybeDeleteComment match {
@@ -131,7 +131,9 @@ WHERE {
     BIND(NOW() AS ?currentTime)
 
     ?resource ?property ?value .
-    ?value knora-base:isDeleted false .
+    ?value rdf:type ?valueClass ;
+        knora-base:isDeleted false .
+    ?valueClass rdfs:subClassOf+ knora-base:Value .
 
     @*
 

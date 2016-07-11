@@ -25,11 +25,11 @@ import java.util.UUID
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.graphdatamessages.{GraphDataEdgeV1, GraphDataGetResponseV1, GraphNodeV1, GraphV1, GraphDataGetRequestV1}
+import org.knora.webapi.messages.v1.responder.graphdatamessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType}
-import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
+import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
@@ -66,6 +66,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         case ResourceCreateRequestV1(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID) => future2Message(sender(), createNewResource(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID), log)
         case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1) => future2Message(sender(), checkResourceClass(resourceIri, owlClass, userProfile), log)
         case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile), log)
+        case resourceDeleteRequest: ResourceDeleteRequestV1 => future2Message(sender(), deleteResourceV1(resourceDeleteRequest), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -627,58 +628,59 @@ class ResourcesResponderV1 extends ResponderV1 {
 
 
         /**
-          * Creates a [[StillImageFileValue]] from a [[VariableResultsRow]].
+          * Creates a [[StillImageFileValue]] from a [[VariableResultsRow]] representing a row of context query results.
+          * If the row doesn't contain a file value IRI, returns [[None]].
           *
-          * @param row a [[VariableResultsRow]] representing a [[StillImageFileValueV1]]
+          * @param row a [[VariableResultsRow]] representing a [[StillImageFileValueV1]].
           * @return a [[StillImageFileValue]].
           */
-        def createStillImageFileValueFromResultRow(row: VariableResultsRow): Vector[StillImageFileValue] = {
+        def createStillImageFileValueFromResultRow(row: VariableResultsRow): Option[StillImageFileValue] = {
             // if the file value has no project, get the project from the source object
             val fileValueProject = row.rowMap.get("fileValueAttachedToProject") match {
                 case Some(fileValueProjectIri) => fileValueProjectIri
                 case None => row.rowMap("sourceObjectAttachedToProject")
             }
 
-            val fileValueIri = row.rowMap("fileValue")
-            val authorizationAssertionsForFileValue = PermissionUtilV1.parsePermissions(row.rowMap("fileValuePermissionAssertions"), row.rowMap("fileValueAttachedToUser"), fileValueProject)
-            val fileValuePermissions = PermissionUtilV1.getUserPermissionV1(fileValueIri, authorizationAssertionsForFileValue, userProfile)
-
+            // The row may or may not contain a file value IRI.
             row.rowMap.get("fileValue") match {
+                case Some(fileValueIri) =>
+                    val authorizationAssertionsForFileValue = PermissionUtilV1.parsePermissions(row.rowMap("fileValuePermissionAssertions"), row.rowMap("fileValueAttachedToUser"), fileValueProject)
+                    val fileValuePermissions = PermissionUtilV1.getUserPermissionV1(fileValueIri, authorizationAssertionsForFileValue, userProfile)
 
-                case Some(fileValueIri) => Vector(StillImageFileValue(
-                    id = fileValueIri,
-                    permissions = fileValuePermissions,
-                    image = StillImageFileValueV1(
-                        internalMimeType = row.rowMap("internalMimeType"),
-                        internalFilename = row.rowMap("internalFilename"),
-                        originalFilename = row.rowMap("originalFilename"),
-                        dimX = row.rowMap("dimX").toInt,
-                        dimY = row.rowMap("dimY").toInt,
-                        qualityLevel = row.rowMap("qualityLevel").toInt,
-                        isPreview = InputValidation.optionStringToBoolean(row.rowMap.get("isPreview"))
-                    ))
-                )
-                case None => Vector.empty[StillImageFileValue]
+                    Some(StillImageFileValue(
+                        id = fileValueIri,
+                        permissions = fileValuePermissions,
+                        image = StillImageFileValueV1(
+                            internalMimeType = row.rowMap("internalMimeType"),
+                            internalFilename = row.rowMap("internalFilename"),
+                            originalFilename = row.rowMap("originalFilename"),
+                            dimX = row.rowMap("dimX").toInt,
+                            dimY = row.rowMap("dimY").toInt,
+                            qualityLevel = row.rowMap("qualityLevel").toInt,
+                            isPreview = InputValidation.optionStringToBoolean(row.rowMap.get("isPreview"))
+                        ))
+                    )
+
+                case None => None
             }
         }
 
         /**
           * Creates a [[SourceObject]] from a [[VariableResultsRow]].
           *
-          * @param acc the accumalatur used in the fold left construct.
           * @param row a [[VariableResultsRow]] representing a [[SourceObject]].
           * @return a [[SourceObject]].
           */
-        def createSourceObjectFromResultRow(acc: Vector[SourceObject], row: VariableResultsRow) = {
+        def createSourceObjectFromResultRow(row: VariableResultsRow): SourceObject = {
             val sourceObjectIri = row.rowMap("sourceObject")
             val authorizationAssertionsForsourceObject = PermissionUtilV1.parsePermissions(row.rowMap("sourceObjectPermissionAssertions"), row.rowMap("sourceObjectAttachedToUser"), row.rowMap("sourceObjectAttachedToProject"))
             val sourceObjectPermissions = PermissionUtilV1.getUserPermissionV1(sourceObjectIri, authorizationAssertionsForsourceObject, userProfile)
 
-            acc :+ SourceObject(id = row.rowMap("sourceObject"),
+            SourceObject(id = row.rowMap("sourceObject"),
                 firstprop = row.rowMap.get("firstprop"),
                 seqnum = row.rowMap("seqnum").toInt,
                 permissions = sourceObjectPermissions,
-                fileValues = createStillImageFileValueFromResultRow(row)
+                fileValues = createStillImageFileValueFromResultRow(row).toVector
             )
         }
 
@@ -726,10 +728,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             resourceContexts: Seq[ResourceContextItemV1] <- if (parentResInfoV1Option.isEmpty) {
                 for {
-                // Otherwise, see if this resource has parts.
-
-                // Do a SPARQL query that returns binary representations of resources that are part of this resource (as
-                // indicated by knora-base:isPartOf).
+                // Otherwise, do a SPARQL query that returns resources that are part of this resource (as indicated by knora-base:isPartOf).
                     contextSparqlQuery <- Future(queries.sparql.v1.txt.getContext(
                         triplestore = settings.triplestoreType,
                         resourceIri = resourceIri
@@ -737,28 +736,25 @@ class ResourcesResponderV1 extends ResponderV1 {
                     contextQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(contextSparqlQuery)).mapTo[SparqlSelectResponse]
                     rows = contextQueryResponse.results.bindings
 
-                    //
-                    // Use fold left to iterate over the results
-                    //
-                    // Every source object may have one or more file values:
-                    // All the file values belonging to the same source object have to be assigned to the same source object case class
-                    //
+                    // The results consist of one or more rows per source object. If there is more than one row per source object,
+                    // each row provides a different file value. For each source object, create a SourceObject containing a Vector
+                    // of file values.
                     sourceObjects: Vector[SourceObject] = rows.foldLeft(Vector.empty[SourceObject]) {
                         case (acc: Vector[SourceObject], row) =>
                             if (acc.isEmpty) {
-                                // first run, create a source object containing a still image file value
-                                createSourceObjectFromResultRow(acc, row)
+                                // This is the first row, so create the first SourceObject containing the first file value, if any.
+                                acc :+ createSourceObjectFromResultRow(row)
                             } else {
-                                // get the reference to the last source object
-                                val lastSourceObj = acc.last
+                                // Get the current SourceObject.
+                                val currentSourceObj = acc.last
 
-                                if (lastSourceObj.seqnum == row.rowMap("seqnum").toInt) {
-                                    // processing at least the second still image file value belonging to the same source object
-                                    // add the still image file value to the file values list of the source object
-                                    acc.dropRight(1) :+ lastSourceObj.copy(fileValues = lastSourceObj.fileValues ++ createStillImageFileValueFromResultRow(row))
+                                // Does the current row refer to the current SourceObject?
+                                if (currentSourceObj.seqnum == row.rowMap("seqnum").toInt) {
+                                    // Yes. Add the additional file value to the existing SourceObject.
+                                    acc.dropRight(1) :+ currentSourceObj.copy(fileValues = currentSourceObj.fileValues ++ createStillImageFileValueFromResultRow(row))
                                 } else {
-                                    // dealing with a new source object, create a source object containing a still image file value (like in the first run of this fold left)
-                                    createSourceObjectFromResultRow(acc, row)
+                                    // No. Make a new SourceObject.
+                                    acc :+ createSourceObjectFromResultRow(row)
                                 }
                             }
                     }
@@ -771,16 +767,16 @@ class ResourcesResponderV1 extends ResponderV1 {
                     contextItems = sourceObjectsWithPermissions.map {
                         (sourceObj: SourceObject) =>
 
-                            val preview: Option[LocationV1] = sourceObj.fileValues.filter(fileVal => fileVal.permissions.nonEmpty && fileVal.image.isPreview).headOption match {
+                            val preview: Option[LocationV1] = sourceObj.fileValues.find(fileVal => fileVal.permissions.nonEmpty && fileVal.image.isPreview) match {
                                 case Some(preview: StillImageFileValue) =>
                                     Some(valueUtilV1.fileValueV12LocationV1(preview.image))
                                 case None => None
                             }
 
-                            val locations: Option[Seq[LocationV1]] = sourceObj.fileValues.filter(fileVal => fileVal.permissions.nonEmpty && !fileVal.image.isPreview).headOption match {
+                            val locations: Option[Seq[LocationV1]] = sourceObj.fileValues.find(fileVal => fileVal.permissions.nonEmpty && !fileVal.image.isPreview) match {
                                 case Some(full: StillImageFileValue) =>
                                     val fileVals = createMultipleImageResolutions(full.image)
-                                    Some(preview.toVector ++ fileVals.map(valueUtilV1.fileValueV12LocationV1(_)))
+                                    Some(preview.toVector ++ fileVals.map(valueUtilV1.fileValueV12LocationV1))
 
                                 case None => None
                             }
@@ -806,9 +802,9 @@ class ResourcesResponderV1 extends ResponderV1 {
             resinfoV1WithRegionsOption: Option[ResourceInfoV1] <- if (resinfoV1Option.nonEmpty) {
 
                 for {
-                    //
-                    // check if there are regions pointing to this resource
-                    //
+                //
+                // check if there are regions pointing to this resource
+                //
                     regionSparqlQuery <- Future(queries.sparql.v1.txt.getRegions(
                         triplestore = settings.triplestoreType,
                         resourceIri = resourceIri
@@ -1331,6 +1327,66 @@ class ResourcesResponderV1 extends ResponderV1 {
                     case None => ()
                 }
         }
+    }
+
+    /**
+      * Marks a resource as deleted.
+      *
+      * @param resourceDeleteRequest a [[ResourceDeleteRequestV1]].
+      * @return a [[ResourceDeleteResponseV1]].
+      */
+    private def deleteResourceV1(resourceDeleteRequest: ResourceDeleteRequestV1): Future[ResourceDeleteResponseV1] = {
+
+        def makeTaskFuture(userIri: IRI): Future[ResourceDeleteResponseV1] = {
+            for {
+            // Check that the user has permission to delete the resource.
+                (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceDeleteRequest.resourceIri, userProfile = resourceDeleteRequest.userProfile, queryOntology = false)
+
+                _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermissionIri = OntologyConstants.KnoraBase.HasDeletePermission)) {
+                    throw ForbiddenException(s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted")
+                }
+
+                sparqlUpdate = queries.sparql.v1.txt.deleteResource(
+                    dataNamedGraph = settings.projectNamedGraphs(resourceInfo.project_id).data,
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceDeleteRequest.resourceIri,
+                    maybeDeleteComment = resourceDeleteRequest.deleteComment
+                ).toString()
+
+                // Do the update.
+                sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+
+                // Check whether the update succeeded.
+                sparqlQuery = queries.sparql.v1.txt.checkResourceDeletion(
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceDeleteRequest.resourceIri
+                ).toString()
+                sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+                rows = sparqlSelectResponse.results.bindings
+
+                _ = if (rows.isEmpty || !InputValidation.optionStringToBoolean(rows.head.rowMap.get("isDeleted"))) {
+                    throw UpdateNotPerformedException(s"Resource ${resourceDeleteRequest.resourceIri} was not deleted. Please report this as a possible bug.")
+                }
+            } yield ResourceDeleteResponseV1(
+                id = resourceDeleteRequest.resourceIri,
+                userdata = resourceDeleteRequest.userProfile.userData
+            )
+        }
+
+        for {
+        // Don't allow anonymous users to delete resources.
+            userIri <- resourceDeleteRequest.userProfile.userData.user_id match {
+                case Some(iri) => Future(iri)
+                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to mark resources as deleted"))
+            }
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the resource.
+            taskResult <- ResourceLocker.runWithResourceLock(
+                resourceDeleteRequest.apiRequestID,
+                resourceDeleteRequest.resourceIri,
+                () => makeTaskFuture(userIri)
+            )
+        } yield taskResult
     }
 
     /**

@@ -272,6 +272,7 @@ WHERE {
     BIND(NOW() AS ?currentTime)
 
     ?resource ?property ?currentValue .
+    ?currentValue rdf:type ?valueType .
     ?property knora-base:objectClassConstraint ?valueType .
 
     @*

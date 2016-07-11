@@ -933,7 +933,7 @@ class ValuesResponderV1 extends ResponderV1 {
           * @return a [[Future]] that does pre-update checks and performs the update.
           */
         def makeTaskFuture(userIri: IRI, findResourceWithValueResult: FindResourceWithValueResult): Future[DeleteValueResponseV1] = for {
-        // Ensure that the user has permission to modify the value.
+        // Ensure that the user has permission to mark the value as deleted.
             currentValueResponse <- getValueResponseV1(deleteValueRequest.valueIri, deleteValueRequest.userProfile)
 
             _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = Some(currentValueResponse.rights), userNeedsPermissionIri = OntologyConstants.KnoraBase.HasDeletePermission)) {
@@ -1004,7 +1004,7 @@ class ValuesResponderV1 extends ResponderV1 {
             sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
             // Check whether the update succeeded.
-            sparqlQuery = queries.sparql.v1.txt.checkDeletion(
+            sparqlQuery = queries.sparql.v1.txt.checkValueDeletion(
                 triplestore = settings.triplestoreType,
                 valueIri = deleteValueRequest.valueIri
             ).toString()
