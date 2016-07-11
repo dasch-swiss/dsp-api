@@ -181,18 +181,20 @@ class ResourcesV1E2ESpec extends E2ESpec {
               		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test text"}}],
                     "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
                     "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                    "http://www.knora.org/ontology/anything#hasBoolean": [{"boolean_value":true}],
                     "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
                     "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
                     "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                    "http://www.knora.org/ontology/anything#hasGeometry": [{"geom_value":"{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"}],
                     "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                    "http://www.knora.org/ontology/anything#hasTime": [{"time_value":1.2345}],
-                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}],
-                    "http://www.knora.org/ontology/anything#hasGeoname": [{"geoname_value": "2661602"}]
+                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
               	}
               }
             """
+
+            // TODO: these properties have been commented out in the thing test ontology because of compatibility with the GUI
+            // "http://www.knora.org/ontology/anything#hasGeoname": [{"geoname_value": "2661602"}]
+            // "http://www.knora.org/ontology/anything#hasTime": [{"time_value":1.2345}],
+            //  "http://www.knora.org/ontology/anything#hasBoolean": [{"boolean_value":true}],
+            // "http://www.knora.org/ontology/anything#hasGeometry": [{"geom_value":"{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"}],
 
             Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
 
