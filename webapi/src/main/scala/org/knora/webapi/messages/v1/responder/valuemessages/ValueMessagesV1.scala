@@ -23,9 +23,9 @@ package org.knora.webapi.messages.v1.responder.valuemessages
 import java.util.UUID
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.DateUtilV1
 import spray.httpx.SprayJsonSupport
 import spray.json._
@@ -379,23 +379,22 @@ case class ChangeValueResponseV1(value: ApiValueV1,
 }
 
 /**
-  * Represents a request to mark a value as deleted. This will create a new version of the value, consisting of a
-  * copy of the current version plus the `knora-base:isDeleted` flag.
+  * Represents a request to mark a value as deleted.
   *
-  * @param valueIri     the IRI of the value to be marked as deleted.
-  * @param comment      an optional comment explaining why the value is being deleted.
-  * @param userProfile  the profile of the user making the request.
-  * @param apiRequestID the ID of this API request.
+  * @param valueIri      the IRI of the value to be marked as deleted.
+  * @param deleteComment an optional comment explaining why the value is being deleted.
+  * @param userProfile   the profile of the user making the request.
+  * @param apiRequestID  the ID of this API request.
   */
 case class DeleteValueRequestV1(valueIri: IRI,
-                                comment: Option[String] = None,
+                                deleteComment: Option[String] = None,
                                 userProfile: UserProfileV1,
                                 apiRequestID: UUID) extends ValuesResponderRequestV1
 
 /**
   * Represents a response to a [[DeleteValueRequestV1]].
   *
-  * @param id       the IRI of the value version that was added.
+  * @param id       the IRI of the value that was marked as deleted.
   * @param userdata information about the user that made the request.
   */
 case class DeleteValueResponseV1(id: IRI,

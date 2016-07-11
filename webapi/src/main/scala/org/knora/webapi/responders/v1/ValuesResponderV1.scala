@@ -917,7 +917,7 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Creates a new version of a value and marks it as deleted.
+      * Marks a value as deleted.
       *
       * @param deleteValueRequest the request message.
       * @return a [[DeleteValueResponseV1]].
@@ -927,7 +927,6 @@ class ValuesResponderV1 extends ResponderV1 {
           * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
           * called by [[ResourceLocker]] once it has acquired an update lock on the resource.
           *
-
           * @param userIri                     the IRI of the user making the request.
           * @param findResourceWithValueResult a [[FindResourceWithValueResult]] indicating which resource contains the value
           *                                    to be updated.
@@ -943,7 +942,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // The way we delete the value depends on whether it's a link value or an ordinary value.
 
-            (newValueIri, sparqlUpdate) <- currentValueResponse.value match {
+            sparqlUpdate: String <- currentValueResponse.value match {
                 case linkValue: LinkValueV1 =>
                     // It's a link value. Make a SparqlTemplateLinkUpdate describing how to delete it.
 
@@ -962,24 +961,43 @@ class ValuesResponderV1 extends ResponderV1 {
                             triplestore = settings.triplestoreType,
                             linkSourceIri = findResourceWithValueResult.resourceIri,
                             linkUpdate = sparqlTemplateLinkUpdate,
-                            maybeComment = deleteValueRequest.comment
+                            maybeComment = deleteValueRequest.deleteComment
                         ).toString()
-                    } yield (sparqlTemplateLinkUpdate.newLinkValueIri, sparqlUpdate)
 
-                case _ =>
-                    // Generate an IRI for the new value.
-                    val newValueIri = knoraIriUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
-                    val sparqlUpdate = queries.sparql.v1.txt.deleteValue(
-                        dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
-                        triplestore = settings.triplestoreType,
-                        resourceIri = findResourceWithValueResult.resourceIri,
-                        propertyIri = findResourceWithValueResult.propertyIri,
-                        currentValueIri = deleteValueRequest.valueIri,
-                        newValueIri = newValueIri,
-                        maybeComment = deleteValueRequest.comment
-                    ).toString()
+                    } yield sparqlUpdate
 
-                    Future(newValueIri, sparqlUpdate)
+                case other =>
+                    // If we're marking a text value as deleted, make SparqlTemplateLinkUpdates for updating LinkValues representing
+                    // links in standoff markup.
+                    val linkUpdatesFuture: Future[Seq[SparqlTemplateLinkUpdate]] = other match {
+                        case textValue: TextValueV1 =>
+                            val linkUpdateFutures = textValue.resource_reference.map {
+                                targetResourceIri => decrementLinkValue(
+                                    sourceResourceIri = findResourceWithValueResult.resourceIri,
+                                    linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                                    removedTargetResourceIri = targetResourceIri,
+                                    userProfile = deleteValueRequest.userProfile
+                                )
+                            }
+
+                            Future.sequence(linkUpdateFutures)
+
+                        case _ => Future(Seq.empty[SparqlTemplateLinkUpdate])
+                    }
+
+                    for {
+                        linkUpdates <- linkUpdatesFuture
+
+                        sparqlUpdate = queries.sparql.v1.txt.deleteValue(
+                            dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
+                            triplestore = settings.triplestoreType,
+                            resourceIri = findResourceWithValueResult.resourceIri,
+                            propertyIri = findResourceWithValueResult.propertyIri,
+                            valueIri = deleteValueRequest.valueIri,
+                            maybeDeleteComment = deleteValueRequest.deleteComment,
+                            linkUpdates = linkUpdates
+                        ).toString()
+                    } yield sparqlUpdate
             }
 
             // Do the update.
@@ -988,7 +1006,7 @@ class ValuesResponderV1 extends ResponderV1 {
             // Check whether the update succeeded.
             sparqlQuery = queries.sparql.v1.txt.checkDeletion(
                 triplestore = settings.triplestoreType,
-                valueIri = newValueIri
+                valueIri = deleteValueRequest.valueIri
             ).toString()
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = sparqlSelectResponse.results.bindings
@@ -997,7 +1015,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 throw UpdateNotPerformedException(s"Value ${deleteValueRequest.valueIri} was not deleted. Please report this as a possible bug.")
             }
         } yield DeleteValueResponseV1(
-                id = newValueIri,
+                id = deleteValueRequest.valueIri,
                 userdata = deleteValueRequest.userProfile.userData
             )
 

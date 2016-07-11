@@ -36,8 +36,8 @@
  *        the form of a list of tuples (predicate, object).
  * @param value the value to insert.
  * @param an optional comment on the new value.
- * @param linkUpdates a list of [[linkUpdate]] objects describing links and LinkValues that need to be
- *        updated for resource references.
+ * @param linkUpdates a list of [[SparqlTemplateLinkUpdate]] objects describing links and LinkValues that need to be
+ *        updated for resource references in standoff markup.
  *
  * This operation will do nothing if `currentValueIri` is not in fact the most recent version, if `valueTypeIri` is
  * the wrong type for the property, or if the resource or the current value are nonexistent or marked as deleted. To

@@ -1362,7 +1362,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! DeleteValueRequestV1(
                 valueIri = linkObjLinkValueIri.get,
-                comment = Some(comment),
+                deleteComment = Some(comment),
                 userProfile = ValuesResponderV1Spec.userProfile,
                 apiRequestID = UUID.randomUUID
             )

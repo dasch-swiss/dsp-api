@@ -941,9 +941,7 @@
 
             rdfs:subPropertyOf :systemProperty ;
 
-            rdfs:comment "Indicates when a resource was deleted"@en ;
-
-            :subjectClassConstraint :Resource ;
+            rdfs:comment "Indicates when a resource or value was deleted"@en ;
 
             :objectDatatypeConstraint xsd:dateTimeStamp .
 
@@ -1402,6 +1400,18 @@
               rdfs:subPropertyOf :valueHas ;
 
               :subjectClassConstraint :Value ;
+
+              :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#deleteComment
+
+:deleteComment rdf:type owl:DatatypeProperty ;
+
+              rdfs:comment "A comment explaining why a resource or value was marked as deleted"@en ;
+
+              rdfs:subPropertyOf :systemProperty ;
 
               :objectDatatypeConstraint xsd:string .
 
@@ -2298,6 +2308,10 @@
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :deleteDate ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :deleteComment ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
 
           rdfs:label "Ressource"@de ,
@@ -2545,8 +2559,20 @@
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
+                         owl:onProperty :valueHasComment ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
                          owl:onProperty :isDeleted ;
                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :deleteDate ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :deleteComment ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :previousValue ;
