@@ -23,9 +23,10 @@ package org.knora.webapi.messages.v1.responder.valuemessages
 import java.util.UUID
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.DateUtilV1
 import spray.httpx.SprayJsonSupport
 import spray.json._
@@ -43,7 +44,7 @@ import spray.json._
   * @param prop           the property that is to receive the value.
   * @param richtext_value a rich-text object to be used in the value.
   * @param int_value      an integer literal to be used in the value.
-  * @param float_value    a floating-point literal to be used in the value.
+  * @param decimal_value  a decimal literal to be used in the value.
   * @param date_value     a date object to be used in the value.
   * @param color_value    a colour literal to be used in the value.
   * @param geom_value     a geometry literal to be used in the value.
@@ -54,12 +55,16 @@ case class CreateValueApiRequestV1(project_id: IRI,
                                    prop: IRI,
                                    richtext_value: Option[CreateRichtextV1] = None,
                                    int_value: Option[Int] = None,
-                                   float_value: Option[Float] = None,
+                                   decimal_value: Option[BigDecimal] = None,
+                                   boolean_value: Option[Boolean] = None,
+                                   uri_value: Option[String] = None,
                                    date_value: Option[String] = None,
                                    color_value: Option[String] = None,
                                    geom_value: Option[String] = None,
                                    link_value: Option[IRI] = None,
                                    hlist_value: Option[IRI] = None,
+                                   interval_value: Option[Seq[BigDecimal]] = None,
+                                   geoname_value: Option[String] = None,
                                    comment: Option[String] = None)
 
 /**
@@ -114,7 +119,7 @@ case class CreateFileQualityLevelV1(path: String,
   * @param project_id     the IRI of the project to be updated.
   * @param richtext_value a rich-text object to be used in the value.
   * @param int_value      an integer literal to be used in the value.
-  * @param float_value    a floating-point literal to be used in the value.
+  * @param decimal_value  a decimal literal to be used in the value.
   * @param date_value     a date object to be used in the value.
   * @param color_value    a colour literal to be used in the value.
   * @param geom_value     a geometry literal to be used in the value.
@@ -123,12 +128,16 @@ case class CreateFileQualityLevelV1(path: String,
 case class ChangeValueApiRequestV1(project_id: IRI,
                                    richtext_value: Option[CreateRichtextV1] = None,
                                    int_value: Option[Int] = None,
-                                   float_value: Option[Float] = None,
+                                   decimal_value: Option[BigDecimal] = None,
+                                   boolean_value: Option[Boolean] = None,
+                                   uri_value: Option[String] = None,
                                    date_value: Option[String] = None,
                                    color_value: Option[String] = None,
                                    geom_value: Option[String] = None,
                                    link_value: Option[IRI] = None,
                                    hlist_value: Option[IRI] = None,
+                                   interval_value: Option[Seq[BigDecimal]] = None,
+                                   geoname_value: Option[String] = None,
                                    comment: Option[String] = None)
 
 /**
@@ -416,10 +425,10 @@ case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiResponderConvers
   * Represents a response to a [[ChangeFileValueRequestV1]].
   * Possibly, two file values have been changed (thumb and full quality).
   *
-  * @param changedFilesValues the updated file value(s).
+  * @param locations the updated file value(s).
   * @param userdata           information about the user that made the request.
   */
-case class ChangeFileValueResponseV1(changedFilesValues: Vector[ChangeValueResponseV1],
+case class ChangeFileValueResponseV1(locations: Vector[LocationV1],
                                      userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ApiValueV1JsonProtocol.changeFileValueresponseV1Format.write(this)
 }
@@ -614,7 +623,7 @@ case class TextValueV1(utf8str: String,
       * assume that it doesn't make sense for a resource to have two different text values associated with the
       * same property, containing the same text but different markup.
       *
-      * @param other another [[ApiValueV1]].
+      * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
       */
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
@@ -624,9 +633,7 @@ case class TextValueV1(utf8str: String,
         }
     }
 
-    override def toString = {
-        utf8str
-    }
+    override def toString = utf8str
 
     /**
       * It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup.
@@ -662,9 +669,7 @@ case class LinkV1(targetResourceIri: IRI,
 
     def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
 
-    override def toString = {
-        targetResourceIri
-    }
+    override def toString = targetResourceIri
 
     def toJsValue = JsString(targetResourceIri)
 }
@@ -699,7 +704,7 @@ case class LinkUpdateV1(targetResourceIri: IRI) extends UpdateValueV1 {
     /**
       * It doesn't make sense to add a link to a resource when we already have a link to the same resource.
       *
-      * @param other another [[ApiValueV1]].
+      * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
       */
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
@@ -711,9 +716,7 @@ case class LinkUpdateV1(targetResourceIri: IRI) extends UpdateValueV1 {
         }
     }
 
-    override def toString = {
-        targetResourceIri
-    }
+    override def toString = targetResourceIri
 
     /**
       * A link isn't really changed if the new version points to the same resource as the old version.
@@ -744,7 +747,7 @@ case class HierarchicalListValueV1(hierarchicalListIri: IRI) extends UpdateValue
     }
 
     /**
-      * Checks if a new list value would equal an existing list value.
+      * Checks if a new list value would duplicate an existing list value.
       *
       * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
@@ -757,7 +760,7 @@ case class HierarchicalListValueV1(hierarchicalListIri: IRI) extends UpdateValue
     }
 
     /**
-      * Checks if a new version of this list value would equal the existing version of this list value.
+      * Checks if a new version of a list value would be redundant given the current version of the value.
       *
       * @param currentVersion the current version of the value.
       * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
@@ -781,8 +784,10 @@ case class IntegerValueV1(ival: Int) extends UpdateValueV1 with ApiValueV1 {
 
     def toJsValue = JsNumber(ival)
 
+    override def toString = ival.toString
+
     /**
-      * Checks if a new integer value would equal an existing integer value.
+      * Checks if a new integer value would duplicate an existing integer value.
       *
       * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
@@ -795,7 +800,7 @@ case class IntegerValueV1(ival: Int) extends UpdateValueV1 with ApiValueV1 {
     }
 
     /**
-      * Checks if a new version of this integer value would equal the existing version of this integer value.
+      * Checks if a new version of an integer value would be redundant given the current version of the value.
       *
       * @param currentVersion the current version of the value.
       * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
@@ -809,38 +814,115 @@ case class IntegerValueV1(ival: Int) extends UpdateValueV1 with ApiValueV1 {
 }
 
 /**
-  * Represents a floating-point value.
+  * Represents a boolean value.
   *
-  * @param fval the floating-point value.
+  * @param bval the boolean value.
   */
-case class FloatValueV1(fval: Float) extends UpdateValueV1 with ApiValueV1 {
+case class BooleanValueV1(bval: Boolean) extends UpdateValueV1 with ApiValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.FloatValue
+    def valueTypeIri = OntologyConstants.KnoraBase.BooleanValue
 
-    def toJsValue = JsNumber(fval)
+    def toJsValue = JsBoolean(bval)
+
+    override def toString = bval.toString
 
     /**
-      * Checks if a new float value would equal an existing float value.
+      * Checks if a new boolean value would duplicate an existing boolean value. Always returns `true`, because it
+      * does not make sense to have two instances of the same boolean property.
       *
       * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
       */
-    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
-        other match {
-            case floatValueV1: FloatValueV1 => floatValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
-        }
-    }
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = true
 
     /**
-      * Checks if a new version of this float value would equal the existing version of this float value.
+      * Checks if a new version of an boolean value would be redundant given the current version of the value.
       *
       * @param currentVersion the current version of the value.
       * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
       */
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
-            case floatValueV1: FloatValueV1 => floatValueV1 == this
+            case booleanValueV1: BooleanValueV1 => booleanValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
+}
+
+/**
+  * Represents a URI value.
+  *
+  * @param uri the URI value.
+  */
+case class UriValueV1(uri: String) extends UpdateValueV1 with ApiValueV1 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.UriValue
+
+    def toJsValue = JsString(uri)
+
+    override def toString = uri
+
+    /**
+      * Checks if a new URI value would duplicate an existing URI value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case uriValueV1: UriValueV1 => uriValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of an integer value would be redundant given the current version of the value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case uriValueV1: UriValueV1 => uriValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
+}
+
+/**
+  * Represents an arbitrary-precision decimal value.
+  *
+  * @param dval the decimal value.
+  */
+case class DecimalValueV1(dval: BigDecimal) extends UpdateValueV1 with ApiValueV1 {
+    def valueTypeIri = OntologyConstants.KnoraBase.DecimalValue
+
+    def toJsValue = JsNumber(dval)
+
+    override def toString = dval.toString
+
+    /**
+      * Checks if a new decimal value would duplicate an existing decimal value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case decimalValueV1: DecimalValueV1 => decimalValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of a decimal value would be redundant given the current version of the value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case decimalValueV1: DecimalValueV1 => decimalValueV1 == this
             case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
@@ -850,20 +932,20 @@ case class FloatValueV1(fval: Float) extends UpdateValueV1 with ApiValueV1 {
 /**
   * Represents a time interval value.
   *
-  * @param timeval1 an `xsd:dateTimeStamp` representing the beginning of the interval.
-  * @param timeval2 an `xsd:dateTimeStamp` representing the end of the interval.
+  * @param timeval1 an `xsd:decimal` representing the beginning of the interval.
+  * @param timeval2 an `xsd:decimal` representing the end of the interval.
   */
-case class IntervalValueV1(timeval1: String, timeval2: String) extends UpdateValueV1 with ApiValueV1 {
+case class IntervalValueV1(timeval1: BigDecimal, timeval2: BigDecimal) extends UpdateValueV1 with ApiValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.IntervalValue
 
     def toJsValue = JsObject(
-        "timeval1" -> JsString(timeval1),
-        "timeval2" -> JsString(timeval2)
+        "timeval1" -> JsNumber(timeval1),
+        "timeval2" -> JsNumber(timeval2)
     )
 
     /**
-      * Checks if a new interval value would equal an existing interval value.
+      * Checks if a new interval value would duplicate an existing interval value.
       *
       * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
@@ -876,7 +958,7 @@ case class IntervalValueV1(timeval1: String, timeval2: String) extends UpdateVal
     }
 
     /**
-      * Checks if a new version of this interval value would equal the existing version of this interval value.
+      * Checks if a new version of this interval value would be redundant given the current version of the value.
       *
       * @param currentVersion the current version of the value.
       * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
@@ -888,44 +970,6 @@ case class IntervalValueV1(timeval1: String, timeval2: String) extends UpdateVal
         }
     }
 
-}
-
-/**
-  * Represents a point in time.
-  *
-  * @param tval an `xsd:dateTime`.
-  */
-case class TimeValueV1(tval: String) extends UpdateValueV1 with ApiValueV1 {
-
-    def valueTypeIri = OntologyConstants.KnoraBase.TimeValue
-
-    def toJsValue = JsString(tval)
-
-    /**
-      * Checks if a new time value would equal an existing time value.
-      *
-      * @param other another [[ValueV1]].
-      * @return `true` if `other` is a duplicate of `this`.
-      */
-    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
-        other match {
-            case timeValueV1: TimeValueV1 => timeValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
-        }
-    }
-
-    /**
-      * Checks if a new version of this time value would equal the existing version of this time value.
-      *
-      * @param currentVersion the current version of the value.
-      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
-      */
-    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
-        currentVersion match {
-            case timeValueV1: TimeValueV1 => timeValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
-        }
-    }
 }
 
 /**
@@ -1052,9 +1096,9 @@ case class ColorValueV1(color: String) extends UpdateValueV1 with ApiValueV1 {
 }
 
 /**
-  * Represents a geometry value. TODO: document this.
+  * Represents a geometric shape.
   *
-  * @param geom A string containing JSON that describes the geometry value. TODO: document this.
+  * @param geom A string containing JSON that describes the shape. TODO: don't use JSON for this (issue 169).
   */
 case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
 
@@ -1065,7 +1109,7 @@ case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
     override def toString = geom
 
     /**
-      * Checks if a new geom value would equal an existing geom value.
+      * Checks if a new geom value would duplicate an existing geom value.
       *
       * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
@@ -1078,7 +1122,7 @@ case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
     }
 
     /**
-      * Checks if a new version of this geom value would equal the existing version of this geom value.
+      * Checks if a new version of a geom value would be redundant given the current version of the value.
       *
       * @param currentVersion the current version of the value.
       * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
@@ -1086,6 +1130,46 @@ case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case geomValueV1: GeomValueV1 => geomValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
+}
+
+/**
+  * Represents a [[http://www.geonames.org/ GeoNames]] code.
+ *
+  * @param geonameCode a string representing the GeoNames code.
+  */
+case class GeonameValueV1(geonameCode: String) extends UpdateValueV1 with ApiValueV1 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.GeonameValue
+
+    def toJsValue = JsString(geonameCode)
+
+    override def toString = geonameCode
+
+    /**
+      * Checks if a new GeoName value would duplicate an existing GeoName value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case geonameValueV1: GeonameValueV1 => geonameValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of a GeoName value would be redundant given the current version of the value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case geonameValueV1: GeonameValueV1 => geonameValueV1 == this
             case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
@@ -1130,7 +1214,7 @@ case class StillImageFileValueV1(internalMimeType: String,
     override def toString = originalFilename
 
     /**
-      * Checks if a new still image file value would equal an existing still image file value.
+      * Checks if a new still image file value would duplicate an existing still image file value.
       *
       * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
@@ -1143,7 +1227,7 @@ case class StillImageFileValueV1(internalMimeType: String,
     }
 
     /**
-      * Checks if a new version of this still image file value would equal the existing version of this still image file value.
+      * Checks if a new version of a still image file value would be redundant given the current version of the value.
       *
       * @param currentVersion the current version of the value.
       * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
@@ -1168,7 +1252,7 @@ case class MovingImageFileValueV1(internalMimeType: String,
     override def toString = originalFilename
 
     /**
-      * Checks if a new moving image file value would equal an existing moving image file value.
+      * Checks if a new moving image file value would duplicate an existing moving image file value.
       *
       * @param other another [[ValueV1]].
       * @return `true` if `other` is a duplicate of `this`.
@@ -1181,7 +1265,7 @@ case class MovingImageFileValueV1(internalMimeType: String,
     }
 
     /**
-      * Checks if a new version of this moving image file value would equal the existing version of this moving image file value.
+      * Checks if a new version of a moving image file value would be redundant given the current version of the value.
       *
       * @param currentVersion the current version of the value.
       * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
@@ -1220,6 +1304,7 @@ case class ValueVersionV1(valueObjectIri: IRI,
 object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
     import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 
     /**
       * Converts between [[StandoffPositionV1]] objects and [[JsValue]] objects.
@@ -1316,9 +1401,9 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
     implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat2(ValueVersionHistoryGetResponseV1)
     implicit val createRichtextV1Format: RootJsonFormat[CreateRichtextV1] = jsonFormat3(CreateRichtextV1)
-    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat12(CreateValueApiRequestV1)
+    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat16(CreateValueApiRequestV1)
     implicit val createValueResponseV1Format: RootJsonFormat[CreateValueResponseV1] = jsonFormat5(CreateValueResponseV1)
-    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat10(ChangeValueApiRequestV1)
+    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat14(ChangeValueApiRequestV1)
     implicit val changeValueResponseV1Format: RootJsonFormat[ChangeValueResponseV1] = jsonFormat5(ChangeValueResponseV1)
     implicit val deleteValueResponseV1Format: RootJsonFormat[DeleteValueResponseV1] = jsonFormat2(DeleteValueResponseV1)
     implicit val changeFileValueApiRequestV1Format: RootJsonFormat[ChangeFileValueApiRequestV1] = jsonFormat1(ChangeFileValueApiRequestV1)

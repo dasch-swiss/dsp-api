@@ -224,6 +224,7 @@
 						var a1, a2, td;
 						var propname;
 						var propvals = {};
+						var file = undefined;
 						var propval_found;
 
 						var win = formcontainer.parents('.win');
@@ -255,17 +256,21 @@
 							if (localdata.settings.props && (localdata.settings.props instanceof Array)) {
 								propval_found = false;
 								for (var ii in localdata.settings.props) {
-									if ((localdata.settings.props[ii].vocabulary == rtinfo.properties[pinfo].vocabulary) &&
+									if (/*(localdata.settings.props[ii].vocabulary == rtinfo.properties[pinfo].vocabulary) &&*/
 										(localdata.settings.props[ii].name == rtinfo.properties[pinfo].name)) {
-										propvals[localdata.settings.props[ii].vocabulary + ':' + localdata.settings.props[ii].name] = {};
-										propvals[localdata.settings.props[ii].vocabulary + ':' + localdata.settings.props[ii].name].value = localdata.settings.props[ii].value;
+
+										//propvals[/*localdata.settings.props[ii].vocabulary + ':' + */localdata.settings.props[ii].name] = {};
+
+										// TODO: check for different value types here!
+										propvals[/*localdata.settings.props[ii].vocabulary + ':' + */localdata.settings.props[ii].name] = [{link_value: localdata.settings.props[ii].value}];
 										propval_found = true;
 										break;
 									}
 								}
 								if (propval_found) continue;
 							}
-							propname = rtinfo.properties[pinfo].vocabulary + ':' + rtinfo.properties[pinfo].name;
+							//propname = rtinfo.properties[pinfo].vocabulary + ':' + rtinfo.properties[pinfo].name;
+							propname = rtinfo.properties[pinfo].name;
 							tline = $('<tr>', {
 								'class': 'propedit'
 							});
@@ -375,8 +380,9 @@
 										var attrs = rtinfo.properties[pinfo].attributes.split(';');
 										$.each(attrs, function() {
 											var attr = this.split('=');
-											if (attr[0] == 'selection') {
-												selection_id = attr[1];
+											if (attr[0] == 'selection' || attr[0] == 'hlist') {
+												//selection_id = attr[1];
+												selection_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
 										create_entry(propname, function(ele, attr) {
@@ -394,8 +400,9 @@
 										var attrs = rtinfo.properties[pinfo].attributes.split(';');
 										$.each(attrs, function() {
 											var attr = this.split('=');
-											if (attr[0] == 'selection') {
-												selection_id = attr[1];
+											if (attr[0] == 'selection' || attr[0] == 'hlist') {
+												//selection_id = attr[1];
+												selection_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
 										create_entry(propname, function(ele, attr) {
@@ -424,13 +431,29 @@
 
 											var restype_id = -1;
 											var numprops = 1;
-											$.each(attr, function(name, val) {
+											var attrs = rtinfo.properties[pinfo].attributes.split(';');
+
+
+											$.each(attrs, function() {
+
+												var curAttr = this.split('=');
+												
+												if (curAttr[0] == 'restypeid') {
+													restype_id = curAttr[1];
+												}
+												else if (curAttr[0] == 'numprops') {
+													numprops = curAttr[1];
+												}
+											});
+											/*$.each(attr, function(name, val) {
 												if (name == 'restypeid') {
 													restype_id = val;
 												} else if (name == 'numprops') {
 													numprops = val;
 												}
-											});
+											});*/
+
+
 											tmpele.searchbox({
 												restype_id: restype_id,
 												numprops: numprops,
@@ -518,7 +541,7 @@
 									{
 										create_entry(propname, function(ele, attr) {
 											var colbox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
-											if (rtinfo.name == 'salsah:generic_region') {
+											if (rtinfo.name == 'http://www.knora.org/ontology/knora-base#Region') {
 												colbox.colorpicker('edit', {
 													color_changed_cb: function(color) {
 														if (localdata.settings.viewer.topCanvas !== undefined) {
@@ -547,7 +570,8 @@
 										$.each(attrs, function() {
 											var attr = this.split('=');
 											if (attr[0] == 'hlist') {
-												hlist_id = attr[1];
+												//hlist_id = attr[1];
+												hlist_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
 										create_entry(propname, function(ele, attr) {
@@ -591,27 +615,74 @@
 							var propname;
 							var ele;
 							var vv;
+
+							create_richtext_value_params = function() {
+								return {
+									textattr: JSON.stringify({}),
+									resource_reference: []
+								};
+							};
+
 							for (var pinfo in rtinfo.properties) {
-								propname = rtinfo.properties[pinfo].vocabulary + ':' + rtinfo.properties[pinfo].name;
+								//propname = rtinfo.properties[pinfo].vocabulary + ':' + rtinfo.properties[pinfo].name;
+								propname = rtinfo.properties[pinfo].name;
 								if (!propvals[propname]) propvals[propname] = {};
+								//console.log(rtinfo.properties[pinfo].gui_name);
 								switch (rtinfo.properties[pinfo].gui_name) {
 									case 'text':
+									case 'textarea':
 										{
 											ele = form.find('[name="' + propname + '"]');
+
 											if (ele.length == 1) {
-												propvals[propname].value = ele.val();
+
+												if (ele.val().trim() == "") {
+													// empty prop
+													propvals[propname] = undefined;
+													break;
+												}
+
+												if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_FLOAT) {
+													// it is a float
+													propvals[propname] = [{decimal_value: parseFloat(ele.val())}];
+												} else {
+													// it is a text
+													var richtext_value = create_richtext_value_params();
+													richtext_value.utf8str = ele.val();
+													propvals[propname] = [{richtext_value: richtext_value}];
+												}
 											} else if (ele.length > 1) {
-												propvals[propname] = []; // initlialize as array
+												propvals[propname] = []; // initialize as array
 												ele.each(function() {
-													vv = {
-														value: $(this).val()
-													};
+
+													if ($(this).val().trim() == "") {
+														// continue
+														return true;
+													}
+
+													if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_FLOAT) {
+														// it is a float
+														vv = {
+															decimal_value: parseFloat($(this).val())
+														};
+													} else {
+														// it is a text
+														var richtext_value = create_richtext_value_params();
+														richtext_value.utf8str = $(this).val();
+														vv = {
+															richtext_value: richtext_value
+														};
+													}
 													propvals[propname].push(vv);
+
 												});
+												// empty prop
+												if (propvals[propname].length == 0) propvals[propname] = undefined;
+
 											}
 											break;
 										}
-									case 'textarea':
+									/*case 'textarea':
 										{
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
@@ -626,17 +697,17 @@
 												});
 											}
 											break;
-										}
+										}*/
 									case 'pulldown':
 										{
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
-												propvals[propname].value = ele.selection('value');
+												propvals[propname] = [{hlist_value: ele.selection('value')}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
 													vv = {
-														value: $(this).selection('value')
+														hlist_value: $(this).selection('value')
 													};
 													propvals[propname].push(vv);
 												});
@@ -647,12 +718,12 @@
 										{
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
-												propvals[propname].value = ele.selradio('value');
+												propvals[propname] = [{hlist_value: ele.selradio('value')}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
 													vv = {
-														value: $(this).selradio('value')
+									 					hlist_value: $(this).selradio('value')
 													};
 													propvals[propname].push(vv);
 												});
@@ -663,32 +734,67 @@
 										{
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
-												propvals[propname].value = ele.spinbox('value');
+
+												if (ele.spinbox('value').trim() == "") {
+													// empty prop
+													propvals[propname] = undefined;
+													break;
+												}
+
+												propvals[propname] = [{int_value: parseInt(ele.spinbox('value'))}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
+
+													if ($(this).spinbox('value').trim() == "") {
+														// continue
+														return true;
+													}
+
 													vv = {
-														value: $(this).spinbox('value')
+														int_value: parseInt($(this).spinbox('value'))
 													};
 													propvals[propname].push(vv);
 												});
+
+												// empty prop
+												if (propvals[propname].length == 0) propvals[propname] = undefined;
 											}
 											break;
 										}
 									case 'searchbox':
 										{
 											ele = form.find('[name="' + propname + '"]');
-											if ((rtinfo.name != 'salsah:generic_region') || (propname != 'salsah:region_of')) {
+											if ((rtinfo.name != 'http://www.knora.org/ontology/knora-base#Region') || (propname != 'http://www.knora.org/ontology/knora-base#isRegionOf')) {
 												if (ele.length == 1) {
-													propvals[propname].value = ele.data('res_id');
+
+													if (ele.data('res_id') == undefined) {
+														// no resid selected
+
+														// empty prop
+														propvals[propname] = undefined;
+														break;
+
+													}
+
+													propvals[propname] = [{link_value: ele.data('res_id')}];
 												} else if (ele.length > 1) {
 													propvals[propname] = [];
 													ele.each(function() {
+
+														if ($(this).data('res_id') == undefined) {
+															// continue
+															return true;
+														}
+
 														vv = {
-															value: $(this).data('res_id')
+															link_value: $(this).data('res_id')
 														};
 														propvals[propname].push(vv);
 													});
+
+													// empty prop
+													if (propvals[propname].length == 0) propvals[propname] = undefined;
 												}
 											}
 											break;
@@ -697,50 +803,50 @@
 										{
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
-												propvals[propname].value = ele.dateobj('value');
+												propvals[propname] = [{date_value: SALSAH_API_LEGACY.make_date_string(ele.dateobj('value'))}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
 													vv = {
-														value: $(this).dateobj('value')
+														date_value: SALSAH_API_LEGACY.make_date_string($(this).dateobj('value'))
 													};
 													propvals[propname].push(vv);
 												});
 											}
 											break;
 										}
-									case 'time':
+									case 'time': // TODO: to be adapted
 										{
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
-												propvals[propname].value = ele.timeobj('value');
+												propvals[propname] = [{time_value:  ele.timeobj('value')}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
 													vv = {
-														value: $(this).timeobj('value')
+														time_value: $(this).timeobj('value')
 													};
 													propvals[propname].push(vv);
 												});
 											}
 											break;
 										}
-									case 'interval':
+									case 'interval': // TODO: to be adapted
 										{
 											ele = form.find('[name="' + propname + '"]');
 
                                             if (ele.length == 1) {
-												propvals[propname].value = ele.timeobj('value');
+												propvals[propname] = [{interval_value: ele.timeobj('value')}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
 													vv = {
-														value: $(this).timeobj('value')
+														interval_value: $(this).timeobj('value')
 													};
 													propvals[propname].push(vv);
 												});
 											}
-                                            console.log(propvals[propname]);
+                                            //console.log(propvals[propname]);
 
 											// we're looking for the two input fields
 											//ele = intval_ele.find('input.interval');
@@ -768,8 +874,8 @@
 										}
 									case 'geometry':
 										{
-											if (rtinfo.name == 'salsah:generic_region') {
-												var col = form.find('[name="salsah:color"]').colorpicker('value');
+											if (rtinfo.name == 'http://www.knora.org/ontology/knora-base#Region') {
+												var col = form.find('[name="http://www.knora.org/ontology/knora-base#hasColor"]').colorpicker('value');
 												propvals[propname] = [];
 												var geos = localdata.settings.viewer.topCanvas().regions('returnObjects', 'active');
 												if (geos.length < 1) {
@@ -779,7 +885,7 @@
 												for (var idx in geos) {
 													geos[idx].lineColor = col;
 													vv = {
-														value: JSON.stringify(geos[idx])
+														geom_value: JSON.stringify(geos[idx])
 													};
 													propvals[propname].push(vv);
 												}
@@ -788,7 +894,7 @@
 										}
 									case 'fileupload':
 										{
-											ele = form.find('[name="' + propname + '"]');
+											/*ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
 												propvals[propname].value = ele.location('value');
 											} else if (ele.length > 1) {
@@ -799,19 +905,30 @@
 													};
 													propvals[propname].push(vv);
 												});
-											}
+											}*/
+
+											ele = form.find('[name="' + propname + '"]');
+											var sipi_response = ele.location('value');
+
+											file = {
+												originalFilename: sipi_response["original_filename"],
+												originalMimeType: sipi_response["original_mimetype"],
+												filename: sipi_response["filename"]
+											};
+
+											
 											break;
 										}
 									case 'colorpicker':
 										{
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
-												propvals[propname].value = ele.colorpicker('value');
+												propvals[propname] = [{color_value: ele.colorpicker('value')}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
 													vv = {
-														value: $(this).colorpicker('value')
+														color_value: $(this).colorpicker('value')
 													};
 													propvals[propname].push(vv);
 												});
@@ -839,7 +956,7 @@
 														}
 													}
 												}
-												propvals[propname].value = props;
+												propvals[propname] = [{richtext_value: props}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
@@ -858,7 +975,7 @@
 														}
 													}
 													vv = {
-														value: props
+														richtext_value: props
 													};
 													propvals[propname].push(vv);
 												});
@@ -869,19 +986,19 @@
 										{
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
-												propvals[propname].value = ele.hlist('value');
+												propvals[propname] = [{hlist_value: ele.hlist('value')}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
 													vv = {
-														value: $(this).hlist('value')
+														hlist_value: $(this).hlist('value')
 													};
 													propvals[propname].push(vv);
 												});
 											}
 											break;
 										}
-									case 'geoname':
+									case 'geoname': // TODO: to be adapted
 										{
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
@@ -903,11 +1020,25 @@
 										}
 								}
 							}
+
+							/**
+							  Ignore knora-base:Resource properties for the moment
+                             */
+							propvals["http://www.knora.org/ontology/knora-base#hasRepresentation"] = undefined;
+							propvals["http://www.knora.org/ontology/knora-base#seqnum"] = undefined;
+							propvals["http://www.knora.org/ontology/knora-base#hasStillImageFileValue"] = undefined;
+
+							// TODO: handle GUI  element problem
+							//propvals["http://www.knora.org/ontology/knora-base#hasComment"] = undefined;
+
+
 							SALSAH.ApiPost('resources', {
 								restype_id: rtinfo.name,
-								properties: propvals
+								properties: propvals,
+								project_id: SALSAH.userdata.projects[0], // TODO: take the user's active project here: https://github.com/dhlab-basel/Knora/issues/118
+								file: file,
+								label: "test" // TODO: add the first property's value here
 							}, function(data) {
-								console.log(data);
 								if (data.status == ApiErrors.OK) {
 									if (typeof localdata.settings.on_submit_cb === "function") {
 										localdata.settings.on_submit_cb(data);
@@ -1015,7 +1146,8 @@
 				var tmp = {};
 				var plist = localdata.settings.rtinfo.properties;
 				for (index in plist) {
-					pp = plist[index].vocabulary + ':' + plist[index].name;
+					//pp = plist[index].vocabulary + ':' + plist[index].name;
+					pp = plist[index].name;
 					tmp[pp] = index;
 				}
 
@@ -1084,7 +1216,8 @@
 				var plist = localdata.settings.rtinfo.properties;
 				var tmp = {};
 				for (index in plist) {
-					pp = plist[index].vocabulary + ':' + plist[index].name;
+					//pp = plist[index].vocabulary + ':' + plist[index].name;
+					pp = plist[index].name;
 					tmp[pp] = index;
 				}
 

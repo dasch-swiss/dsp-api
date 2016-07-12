@@ -99,14 +99,27 @@
             case intValue: IntegerValueV1 => {
 
                 ?newValue@valueIndex knora-base:valueHasInteger @intValue.ival ;
-                                     knora-base:valueHasString """@intValue.ival.toString""" .
+                                     knora-base:valueHasString """@intValue.toString""" .
 
             }
 
-            case floatValue: FloatValueV1 => {
+            case decimalValue: DecimalValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasFloat @floatValue.fval ;
-                                     knora-base:valueHasString """@floatValue.fval.toString""" .
+                ?newValue@valueIndex knora-base:valueHasDecimal "@decimalValue.dval"^^xsd:decimal ;
+                                     knora-base:valueHasString """@decimalValue.toString""" .
+
+            }
+
+            case booleanValue: BooleanValueV1 => {
+
+                ?newValue@valueIndex knora-base:valueHasBoolean @booleanValue.bval .
+
+            }
+
+            case uriValue: UriValueV1 => {
+
+                ?newValue@valueIndex knora-base:valueHasUri """@uriValue.uri""" .
+                ?newValue@valueIndex knora-base:valueHasString """@uriValue.toString""" .
 
             }
 
@@ -146,7 +159,7 @@
                                      knora-base:valueHasQname """@stillImageFileValue.qualityName""" .
 
                 @if(stillImageFileValue.isPreview) {
-                    ?newValue@valueIndex knora-base:valueIsPreview true .
+                    ?newValue@valueIndex knora-base:isPreview true .
                 }
 
                 ?newValue@valueIndex knora-base:valueHasString """@stillImageFileValue.toString""" .
@@ -154,8 +167,22 @@
 
             case listValue: HierarchicalListValueV1 => {
 
-                ?newValue knora-base:valueHasListNode <@listValue.hierarchicalListIri> .
-                ?newValue knora-base:valueHasString """@listValue.toString""" .
+                ?newValue@valueIndex knora-base:valueHasListNode <@listValue.hierarchicalListIri> ;
+                                     knora-base:valueHasString """@listValue.toString""" .
+
+            }
+
+            case intervalValue: IntervalValueV1 => {
+
+                ?newValue@valueIndex knora-base:valueHasIntervalStart @intervalValue.timeval1 ;
+                                     knora-base:valueHasIntervalEnd @intervalValue.timeval2 .
+
+            }
+
+            case geonameValue: GeonameValueV1 => {
+
+                ?newValue@valueIndex knora-base:valueHasGeonameCode """@geonameValue.geonameCode""" ;
+                                     knora-base:valueHasString """@geonameValue.toString""" .
 
             }
 

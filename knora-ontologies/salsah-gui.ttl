@@ -226,7 +226,7 @@
 
 
 
-###  http://www.knora.org/ontology/salsah-gui#Time
+###  http://www.knora.org/ontology/salsah-gui#Fileupload
 
-:Time rdf:type :Guielement ,
-               owl:NamedIndividual .
+:Fileupload rdf:type :Guielement ,
+                     owl:NamedIndividual .

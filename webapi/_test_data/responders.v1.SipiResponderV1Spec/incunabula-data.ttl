@@ -513,7 +513,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
                                                knora-base:valueHasQname "thumbnail" ;
 
-                                               knora-base:valueIsPreview "true"^^xsd:boolean ;
+                                               knora-base:isPreview "true"^^xsd:boolean ;
 
                                                knora-base:isDeleted "false"^^xsd:boolean ; knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 

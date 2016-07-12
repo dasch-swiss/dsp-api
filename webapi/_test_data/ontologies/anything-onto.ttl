@@ -1,0 +1,517 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+
+
+# A trivial ontology, used only for testing Knora.
+
+@prefix : <http://www.knora.org/ontology/anything#> .
+<http://www.knora.org/ontology/anything> rdf:type owl:Ontology .
+
+
+:hasListItem rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Listenelement"@de ,
+                  "Elément de liste"@fr ,
+                  "Elemento di lista"@it ,
+                  "List element"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:ListValue ;
+
+       salsah-gui:guiOrder "0"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:List ;
+
+       salsah-gui:guiAttribute "hlist=<http://data.knora.org/anything/treeList>" ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasOtherThing rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+               rdfs:label "Ein anderes Ding"@de ,
+                          "Une autre chose"@fr ,
+                          "Un'altra cosa"@it ,
+                          "Another thing"@en ;
+
+               knora-base:subjectClassConstraint :Thing ;
+
+               knora-base:objectClassConstraint :Thing ;
+
+               salsah-gui:guiOrder "1"^^xsd:integer ;
+
+               salsah-gui:guiElement salsah-gui:Searchbox ;
+
+               knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+               knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasOtherThingValue rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+               rdfs:label "Ein anderes Ding"@de ,
+                          "Une autre chose"@fr ,
+                          "Un'altra cosa"@it ,
+                          "Another thing"@en ;
+
+               knora-base:subjectClassConstraint :Thing ;
+
+               knora-base:objectClassConstraint knora-base:LinkValue ;
+
+               salsah-gui:guiOrder "1"^^xsd:integer ;
+
+               salsah-gui:guiElement salsah-gui:Searchbox ;
+
+               knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+               knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+:hasText rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Text"@de ,
+                  "Texte"@fr ,
+                  "Testo"@it ,
+                  "Text"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiOrder "2"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasDate rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Datum"@de ,
+                  "Date"@fr ,
+                  "Data"@it ,
+                  "Date"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:DateValue ;
+
+       salsah-gui:guiOrder "3"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Date ;
+
+       salsah-gui:guiAttribute "size=16" ,
+                               "maxlength=32" ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasInteger rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Ganzzahl"@de ,
+                  "Nombre entier"@fr ,
+                  "Intero"@it ,
+                  "Integer"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:IntValue ;
+
+       salsah-gui:guiOrder "4"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Spinbox ;
+
+       salsah-gui:guiAttribute "min=0" ,
+                                "max=-1" ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasDecimal rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Dezimalzahl"@de ,
+                  "Nombre décimal"@fr ,
+                  "Numero decimale"@it ,
+                  "Decimal number"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:DecimalValue ;
+
+       salsah-gui:guiOrder "5"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasBoolean rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Boolescher Wert"@de ,
+                  "Valeur booléenne"@fr ,
+                  "Valore booleano"@it ,
+                  "Boolean value"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:BooleanValue ;
+
+       salsah-gui:guiOrder "6"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasUri rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "URI"@de ,
+                  "URI"@fr ,
+                  "URI"@it ,
+                  "URI"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:UriValue ;
+
+       salsah-gui:guiOrder "7"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+:hasInterval rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Sequenz"@de ,
+                  "Séquence"@fr ,
+                  "Sequenza"@it ,
+                  "Time interval"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:IntervalValue ;
+
+       salsah-gui:guiOrder "9"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Interval ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasColor rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Farbe"@de ,
+                  "Couleur"@fr ,
+                  "Colore"@it ,
+                  "Color"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:ColorValue ;
+
+       salsah-gui:guiOrder "10"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Colorpicker ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasGeometry rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Geometrie"@de ,
+                  "Géométrie"@fr ,
+                  "Geometria"@it ,
+                  "Geometry"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:GeomValue ;
+
+       salsah-gui:guiOrder "11"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Geometry ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasGeoname rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Geometrie"@de ,
+                  "Géométrie"@fr ,
+                  "Geometria"@it ,
+                  "Geometry"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:GeonameValue ;
+
+       salsah-gui:guiOrder "12"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Geonames ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasThingPicture rdf:type owl:ObjectProperty ;
+
+    rdfs:subPropertyOf knora-base:hasRepresentation ;
+
+    rdfs:label "Dingbild"@de ,
+               "Image d'une chose"@fr ,
+               "Immagine di una cosa"@it ,
+               "Picture of a thing"@en ;
+
+    knora-base:subjectClassConstraint :Thing ;
+
+    knora-base:objectClassConstraint :ThingPicture ;
+
+    salsah-gui:guiOrder "13"^^xsd:integer ;
+
+    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+    knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+    knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasThingPictureValue rdf:type owl:ObjectProperty ;
+
+    rdfs:subPropertyOf knora-base:hasRepresentationValue ;
+
+    rdfs:label "Dingbild"@de ,
+               "Image d'une chose"@fr ,
+               "Immagine di una cosa"@it ,
+               "Picture of a thing"@en ;
+
+    knora-base:subjectClassConstraint :Thing ;
+
+    knora-base:objectClassConstraint :LinkValue ;
+
+    salsah-gui:guiOrder "14"^^xsd:integer ;
+
+    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+    knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+    knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:Thing rdf:type owl:Class ;
+
+      rdfs:subClassOf knora-base:Resource ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasListItem ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasOtherThing ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasOtherThingValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasThingPicture ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasThingPictureValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasText ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasDate ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasInteger ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      #[
+                      #   rdf:type owl:Restriction ;
+                      #   owl:onProperty :hasBoolean ;
+                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      #] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasUri ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasDecimal ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasInterval ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasColor ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ;
+                      #[
+                      #   rdf:type owl:Restriction ;
+                      #   owl:onProperty :hasGeometry ;
+                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      #] ,
+                      #[
+                      #   rdf:type owl:Restriction ;
+                      #   owl:onProperty :hasGeoname ;
+                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      #] ;
+
+      knora-base:resourceIcon "thing.png" ;
+
+      rdfs:label "Ding"@de ,
+                 "Chose"@fr ,
+                 "Cosa"@it ,
+                 "Thing"@en ;
+
+      rdfs:comment """Diese Resource-Klasse beschreibt ein Ding"""@de ;
+
+      knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+      knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:hasPictureTitle rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Titel"@de ,
+                  "Titre"@fr ,
+                  "Titolo"@it ,
+                  "Title"@en ;
+
+       knora-base:subjectClassConstraint :ThingPicture ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" ;
+
+       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:ThingPicture rdf:type owl:Class ;
+
+    rdfs:subClassOf knora-base:StillImageRepresentation ,
+                    [
+                       rdf:type owl:Restriction ;
+                       owl:onProperty :hasPictureTitle ;
+                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ] ;
+
+    knora-base:resourceIcon "thing.png" ;
+
+    rdfs:label "Dingbild"@de ,
+               "Image d'une chose"@fr ,
+               "Immagine di una cosa"@it ,
+               "Picture of a thing"@en ;
+
+    rdfs:comment """Diese Resource-Klasse beschreibt ein Bild eines Dinges"""@de ;
+
+    knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+    knora-base:hasDefaultModifyPermission knora-base:ProjectMember .

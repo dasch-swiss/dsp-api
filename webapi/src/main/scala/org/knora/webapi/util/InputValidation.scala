@@ -30,6 +30,7 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.valuemessages.{CreateRichtextV1, StandoffPositionV1}
+import spray.json.JsonParser
 
 
 /**
@@ -53,9 +54,9 @@ object InputValidation {
         }
     }
 
-    def toDouble(s: String, errorFun: () => Nothing): Double = {
+    def toBigDecimal(s: String, errorFun: () => Nothing): BigDecimal = {
         try {
-            s.toDouble
+            BigDecimal(s)
         } catch {
             case e: Exception => errorFun() // value could not be converted to an Float
         }
@@ -105,14 +106,18 @@ object InputValidation {
         )
     }
 
-    def toGeometryString(s: String, errorFun: () => Nothing) = {
-        // TODO: here, we expect a serialized JSON object
+    def toGeometryString(s: String, errorFun: () => Nothing): String = {
+        // TODO: For now, we just make sure that the string is valid JSON. We should stop JSON in the triplestore, and represent geometry in RDF instead (issue 169).
 
-        s
-
+        try {
+            JsonParser(s)
+            s
+        } catch {
+            case e: Exception => errorFun()
+        }
     }
 
-    def toColor(s: String, errorFun: () => Nothing) = {
+    def toColor(s: String, errorFun: () => Nothing): String = {
 
         val pattern = "^#(?:[0-9a-fA-F]{3}){1,2}$".r // http://stackoverflow.com/questions/1636350/how-to-identify-a-given-string-is-hex-color-format
 
