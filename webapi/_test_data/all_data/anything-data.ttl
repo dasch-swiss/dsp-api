@@ -89,7 +89,7 @@
 
 <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> rdf:type knora-base:User ;
 
-                                         knora-base:userid "root" ;
+                                         knora-base:userid "anything-user" ;
 
                                          foaf:givenName "Anything" ;
 
