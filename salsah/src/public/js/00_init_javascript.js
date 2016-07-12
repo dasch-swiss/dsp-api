@@ -49,7 +49,7 @@ var addresource_window_title = "addresource";
 
 var VALTYPE_TEXT = "-"; // obsolete, there is only richtext now
 var VALTYPE_INTEGER = "http://www.knora.org/ontology/knora-base#IntValue";
-var VALTYPE_FLOAT = "http://www.knora.org/ontology/knora-base#FloatValue";
+var VALTYPE_FLOAT = "http://www.knora.org/ontology/knora-base#DecimalValue";
 var VALTYPE_DATE = "http://www.knora.org/ontology/knora-base#DateValue";
 var VALTYPE_PERIOD = 5;
 var VALTYPE_RESPTR = "http://www.knora.org/ontology/knora-base#LinkValue";

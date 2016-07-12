@@ -48,6 +48,7 @@ class UsersResponderV1 extends ResponderV1 {
 
     /**
       * Gets information about a Knora user, and returns it in a [[Option[UserProfileV1]].
+      *
       * @param userIri the IRI of the user.
       * @return a [[Option[UserProfileV1]] describing the user.
       */
@@ -74,7 +75,7 @@ class UsersResponderV1 extends ResponderV1 {
                 lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
                 email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-                activeProject = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head)
+                active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head)
             )
 
             groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
@@ -101,6 +102,7 @@ class UsersResponderV1 extends ResponderV1 {
 
     /**
       * Gets information about a Knora user, and returns it in a [[Option[UserProfileV1]].
+      *
       * @param username the username of the user.
       * @return a [[Option[UserProfileV1]] describing the user.
       */
@@ -151,7 +153,7 @@ class UsersResponderV1 extends ResponderV1 {
                 lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
                 email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-                activeProject = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head),
+                active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head),
                 projects = if (projectIris.nonEmpty) Some(projectIris) else None,
                 projects_info = projectInfos
             )

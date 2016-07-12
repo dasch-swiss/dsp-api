@@ -10,9 +10,9 @@ try:
     base_url = "http://localhost/v1/"
 
 
-    filename = 'Chlaus.jpg'
+    filename = 'marbles.tif'
     path = 'images/'
-    mimetype = 'image/jpeg'
+    mimetype = 'image/tiff'
 
     files = {'file': (filename, open(path + filename, 'rb'), mimetype)}
 

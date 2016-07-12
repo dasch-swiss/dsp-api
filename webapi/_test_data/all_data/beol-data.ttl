@@ -1,0 +1,50 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmln.com/foaf/0.1/> .
+@prefix dc: <http://www.knora.org/ontology/dc#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@base <http://www.knora.org/ontology/beol> .
+
+@prefix beol: <http://www.knora.org/ontology/beol#> .
+@prefix : <http://www.knora.org/ontology/beol#> .
+
+### ###########################################
+### <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF>
+
+<http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> rdf:type knora-base:knoraProject ;
+
+                                          knora-base:projectBasepath "/imldata/SALSAH-TEST-01/BEOL" ;
+
+                                          knora-base:projectLongname "BEOL" ;
+
+                                          knora-base:projectShortname "beol" ;
+
+                                          knora-base:projectDescription """BEOL""" ;
+
+                                          knora-base:projectKeyword """BEOL""" ;
+
+                                          knora-base:projectLogo "beol_logo.png" .
+
+### ###########################################
+### <http://data.knora.org/users/PSGbemdjZi4kQ6GHJVkLGF>
+
+<http://data.knora.org/users/PSGbemdjZi4kQ6GHJVkLGF> rdf:type knora-base:User ;
+
+                                         knora-base:userid "beol" ;
+
+                                         foaf:lastName "BEOL" ;
+
+                                         foaf:firstName "BEOL" ;
+
+                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+
+                                         knora-base:email "t.schweizer@unibas.ch" ;
+
+                                         knora-base:preferredLanguage "de" ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> .

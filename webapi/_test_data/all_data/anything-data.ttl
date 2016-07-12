@@ -1,0 +1,121 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix anything: <http://www.knora.org/ontology/anything#> .
+
+
+<http://data.knora.org/projects/anything> rdf:type knora-base:knoraProject ;
+
+                                            knora-base:projectBasepath "/foo/bar/baz" ;
+
+                                            knora-base:projectLongname "Anything Project" ;
+
+                                            knora-base:projectShortname "anything" .
+
+
+<http://data.knora.org/anything/treeList> rdf:type knora-base:ListNode ;
+
+                                         knora-base:isRootNode "true"^^xsd:boolean ;
+
+                                         rdfs:label "Tree list root"@en ;
+
+                                         knora-base:hasSubListNode <http://data.knora.org/anything/treeList01> ,
+                                                                   <http://data.knora.org/anything/treeList02> ,
+                                                                   <http://data.knora.org/anything/treeList03> .
+
+
+<http://data.knora.org/anything/treeList01> rdf:type knora-base:ListNode ;
+
+                                         knora-base:listNodeName "Tree list node 01" ;
+
+                                         knora-base:hasRootNode <http://data.knora.org/anything/treeList> ;
+
+                                         knora-base:listNodePosition "0"^^xsd:integer ;
+
+                                         rdfs:label "Tree list node 01"@en .
+
+
+<http://data.knora.org/anything/treeList02> rdf:type knora-base:ListNode ;
+
+                                         knora-base:listNodeName "Tree list node 02" ;
+
+                                         knora-base:hasRootNode <http://data.knora.org/anything/treeList> ;
+
+                                         knora-base:listNodePosition "1"^^xsd:integer ;
+
+                                         rdfs:label "Tree list node 02"@en .
+
+
+<http://data.knora.org/anything/treeList03> rdf:type knora-base:ListNode ;
+
+                                         knora-base:listNodeName "Tree list node 03" ;
+
+                                         knora-base:hasRootNode <http://data.knora.org/anything/treeList> ;
+
+                                         knora-base:listNodePosition "2"^^xsd:integer ;
+
+                                         rdfs:label "Tree list node 03"@en ;
+
+                                         knora-base:hasSubListNode <http://data.knora.org/anything/treeList10> ,
+                                                                   <http://data.knora.org/anything/treeList11> .
+
+
+<http://data.knora.org/anything/treeList10> rdf:type knora-base:ListNode ;
+
+                                         knora-base:listNodeName "Tree list node 10" ;
+
+                                         knora-base:hasRootNode <http://data.knora.org/anything/treeList> ;
+
+                                         knora-base:listNodePosition "0"^^xsd:integer ;
+
+                                         rdfs:label "Tree list node 10"@en .
+
+
+<http://data.knora.org/anything/treeList11> rdf:type knora-base:ListNode ;
+
+                                         knora-base:listNodeName "Tree list node 11" ;
+
+                                         knora-base:hasRootNode <http://data.knora.org/anything/treeList> ;
+
+                                         knora-base:listNodePosition "1"^^xsd:integer ;
+
+                                         rdfs:label "Tree list node 11"@en .
+
+
+<http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> rdf:type knora-base:User ;
+
+                                         knora-base:userid "root" ;
+
+                                         foaf:givenName "Anything" ;
+
+                                         foaf:familyName "User01" ;
+
+                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+
+                                         knora-base:email "anything.user01@example.org" ;
+
+                                         knora-base:preferredLanguage "de" ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/anything> .
+
+
+<http://data.knora.org/a-thing> rdf:type anything:Thing ;
+
+    knora-base:isDeleted false ;
+
+    knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+
+    knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
+
+    rdfs:label "A thing"@en ;
+
+    knora-base:hasViewPermission knora-base:UnknownUser ;
+
+    knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+    knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
