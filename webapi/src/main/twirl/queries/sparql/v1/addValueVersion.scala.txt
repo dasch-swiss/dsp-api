@@ -233,6 +233,7 @@ DELETE {
                 knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
                 @if(linkUpdate.newReferenceCount == 0) {
                     knora-base:isDeleted true ;
+                    knora-base:deleteDate ?currentTime ;
                 } else {
                     knora-base:isDeleted false ;
                 }

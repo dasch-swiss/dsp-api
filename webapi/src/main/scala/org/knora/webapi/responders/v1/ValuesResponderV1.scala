@@ -942,9 +942,10 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // The way we delete the value depends on whether it's a link value or an ordinary value.
 
-            sparqlUpdate: String <- currentValueResponse.value match {
+            (sparqlUpdate, deletedValueIri) <- currentValueResponse.value match {
                 case linkValue: LinkValueV1 =>
-                    // It's a link value. Make a SparqlTemplateLinkUpdate describing how to delete it.
+                    // It's a LinkValue. Make a new version of it with a reference count of 0, and mark the new
+                    // version as deleted.
 
                     val linkPropertyIri = knoraIriUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
 
@@ -964,10 +965,12 @@ class ValuesResponderV1 extends ResponderV1 {
                             maybeComment = deleteValueRequest.deleteComment
                         ).toString()
 
-                    } yield sparqlUpdate
+                    } yield (sparqlUpdate, sparqlTemplateLinkUpdate.newLinkValueIri)
 
                 case other =>
-                    // If we're marking a text value as deleted, make SparqlTemplateLinkUpdates for updating LinkValues representing
+                    // It's not a LinkValue. Mark the existing version as deleted.
+
+                    // If it's a TextValue, make SparqlTemplateLinkUpdates for updating LinkValues representing
                     // links in standoff markup.
                     val linkUpdatesFuture: Future[Seq[SparqlTemplateLinkUpdate]] = other match {
                         case textValue: TextValueV1 =>
@@ -997,7 +1000,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             maybeDeleteComment = deleteValueRequest.deleteComment,
                             linkUpdates = linkUpdates
                         ).toString()
-                    } yield sparqlUpdate
+                    } yield (sparqlUpdate, deleteValueRequest.valueIri)
             }
 
             // Do the update.
@@ -1006,16 +1009,16 @@ class ValuesResponderV1 extends ResponderV1 {
             // Check whether the update succeeded.
             sparqlQuery = queries.sparql.v1.txt.checkValueDeletion(
                 triplestore = settings.triplestoreType,
-                valueIri = deleteValueRequest.valueIri
+                valueIri = deletedValueIri
             ).toString()
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = sparqlSelectResponse.results.bindings
 
             _ = if (rows.isEmpty || !InputValidation.optionStringToBoolean(rows.head.rowMap.get("isDeleted"))) {
-                throw UpdateNotPerformedException(s"Value ${deleteValueRequest.valueIri} was not deleted. Please report this as a possible bug.")
+                throw UpdateNotPerformedException(s"The request to mark value ${deleteValueRequest.valueIri} (or a new version of that value) as deleted did not succeed. Please report this as a possible bug.")
             }
         } yield DeleteValueResponseV1(
-                id = deleteValueRequest.valueIri,
+                id = deletedValueIri,
                 userdata = deleteValueRequest.userProfile.userData
             )
 
@@ -1023,7 +1026,7 @@ class ValuesResponderV1 extends ResponderV1 {
         // Don't allow anonymous users to update values.
             userIri <- deleteValueRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
-                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to update values"))
+                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to mark values as deleted"))
             }
 
             // Find the resource containing the value.

@@ -1365,7 +1365,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 rows = sparqlSelectResponse.results.bindings
 
                 _ = if (rows.isEmpty || !InputValidation.optionStringToBoolean(rows.head.rowMap.get("isDeleted"))) {
-                    throw UpdateNotPerformedException(s"Resource ${resourceDeleteRequest.resourceIri} was not deleted. Please report this as a possible bug.")
+                    throw UpdateNotPerformedException(s"Resource ${resourceDeleteRequest.resourceIri} was not marked as deleted. Please report this as a possible bug.")
                 }
             } yield ResourceDeleteResponseV1(
                 id = resourceDeleteRequest.resourceIri,

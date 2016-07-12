@@ -47,84 +47,88 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-WITH <@dataNamedGraph>
 DELETE {
-    @* Delete the resource's last modification date so we can update it. *@
-    ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+    GRAPH ?dataNamedGraph {
+        @* Delete the resource's last modification date so we can update it. *@
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
 
-    @* Delete the value's isDeleted flag so we can update it. *@
-    ?value knora-base:isDeleted false .
+        @* Delete the value's isDeleted flag so we can update it. *@
+        ?value knora-base:isDeleted false .
 
-    @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
-        @* Delete direct links for standoff resource references that no longer exist. *@
-        @if(linkUpdate.deleteDirectLink) {
-            ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
-        }
+        @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
+            @* Delete direct links for standoff resource references that no longer exist. *@
+            @if(linkUpdate.deleteDirectLink) {
+                ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+            }
 
-        @* If any LinkValues need to be updated, detach them from the resource. *@
-        @if(linkUpdate.linkValueExists) {
-            ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+            @* If any LinkValues need to be updated, detach them from the resource. *@
+            @if(linkUpdate.linkValueExists) {
+                ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+            }
         }
     }
 } INSERT {
-    @* Mark the value as deleted. *@
-    ?value knora-base:isDeleted true ;
-        knora-base:deleteDate ?currentTime .
+    GRAPH ?dataNamedGraph {
+        @* Mark the value as deleted. *@
+        ?value knora-base:isDeleted true ;
+            knora-base:deleteDate ?currentTime .
 
-    @* Add the delete comment, if any. *@
-    @maybeDeleteComment match {
-        case Some(comment) => {
+        @* Add the delete comment, if any. *@
+        @maybeDeleteComment match {
+            case Some(comment) => {
 
-            ?value knora-base:deleteComment """@comment""" .
+                ?value knora-base:deleteComment """@comment""" .
 
-        }
-
-        case None => {}
-    }
-
-    @* If we're marking a text value as deleted, update LinkValues for resource references in standoff markup. *@
-
-    @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
-        @* Insert a direct link for the resource reference if necessary. *@
-        @if(linkUpdate.insertDirectLink) {
-            @{throw SparqlGenerationException(s"linkUpdate.insertDirectLink must be false in this SPARQL template"); ()}
-        }
-
-        @* Insert a LinkValue for the resource reference. *@
-        <@linkUpdate.newLinkValueIri> rdf:type knora-base:LinkValue ;
-            rdf:subject ?resource ;
-            rdf:predicate <@linkUpdate.linkPropertyIri> ;
-            rdf:object <@linkUpdate.linkTargetIri> ;
-            knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
-            @if(linkUpdate.newReferenceCount == 0) {
-                knora-base:isDeleted true ;
-                knora-base:deleteDate ?currentTime ;
-            } else {
-                knora-base:isDeleted false ;
             }
-            knora-base:valueCreationDate ?currentTime .
 
-        @for(assertion <- linkUpdate.permissionRelevantAssertions) {
-            <@linkUpdate.newLinkValueIri> <@assertion._1> <@assertion._2> .
+            case None => {}
         }
 
-        @* If we're inserting a new version of an existing LinkValue, attach it to the previous version. *@
-        @if(linkUpdate.linkValueExists) {
-            <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex .
+        @* If we're marking a text value as deleted, update LinkValues for resource references in standoff markup. *@
+
+        @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
+            @* Insert a direct link for the resource reference if necessary. *@
+            @if(linkUpdate.insertDirectLink) {
+                @{throw SparqlGenerationException(s"linkUpdate.insertDirectLink must be false in this SPARQL template"); ()}
+            }
+
+            @* Insert a LinkValue for the resource reference. *@
+            <@linkUpdate.newLinkValueIri> rdf:type knora-base:LinkValue ;
+                rdf:subject ?resource ;
+                rdf:predicate <@linkUpdate.linkPropertyIri> ;
+                rdf:object <@linkUpdate.linkTargetIri> ;
+                knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
+                @if(linkUpdate.newReferenceCount == 0) {
+                    knora-base:isDeleted true ;
+                    knora-base:deleteDate ?currentTime ;
+                } else {
+                    knora-base:isDeleted false ;
+                }
+                knora-base:valueCreationDate ?currentTime .
+
+            @for(assertion <- linkUpdate.permissionRelevantAssertions) {
+                <@linkUpdate.newLinkValueIri> <@assertion._1> <@assertion._2> .
+            }
+
+            @* If we're inserting a new version of an existing LinkValue, attach it to the previous version. *@
+            @if(linkUpdate.linkValueExists) {
+                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex .
+            }
+
+            @* Attach the new LinkValue to its containing resource. *@
+            ?resource <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
         }
 
-        @* Attach the new LinkValue to its containing resource. *@
-        ?resource <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
+        @* Update the resource's last modification date. *@
+        ?resource knora-base:lastModificationDate ?currentTime .
     }
-
-    @* Update the resource's last modification date. *@
-    ?resource knora-base:lastModificationDate ?currentTime .
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
 @if(triplestore.startsWith("graphdb")) {
     USING <http://www.ontotext.com/explicit>
 }
 WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
     BIND(IRI("@resourceIri") AS ?resource)
     BIND(IRI("@propertyIri") AS ?property)
     BIND(IRI("@valueIri") AS ?value)

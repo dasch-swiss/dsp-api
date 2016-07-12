@@ -158,10 +158,6 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         ), "Values of book_comment did not match")
     }
 
-    private def checkDeletion(response: DeleteValueResponseV1): Unit = {
-        commentIri.set(response.id)
-    }
-
     private def checkTextValue(expected: TextValueV1, received: TextValueV1): Unit = {
         def orderPositions(left: StandoffPositionV1, right: StandoffPositionV1): Boolean = {
             if (left.start != right.start) {
@@ -429,9 +425,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            expectMsgPF(timeout) {
-                case msg: DeleteValueResponseV1 => checkDeletion(msg)
-            }
+            expectMsg(timeout, DeleteValueResponseV1(commentIri.get, ValuesResponderV1Spec.userProfile.userData))
 
             actorUnderTest ! ValueGetRequestV1(
                 valueIri = commentIri.get,
@@ -1578,6 +1572,6 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        // TODO: add create value request test for list node valuegraphdb:test
+        // TODO: add create value request test for list node value
     }
 }

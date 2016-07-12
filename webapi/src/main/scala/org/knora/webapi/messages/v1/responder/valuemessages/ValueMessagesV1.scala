@@ -394,7 +394,8 @@ case class DeleteValueRequestV1(valueIri: IRI,
 /**
   * Represents a response to a [[DeleteValueRequestV1]].
   *
-  * @param id       the IRI of the value that was marked as deleted.
+  * @param id       the IRI of the value that was marked as deleted. This may be the same value IRI that was given in
+  *                 the [[DeleteValueRequestV1]], or it may be the IRI of a new version of that value.
   * @param userdata information about the user that made the request.
   */
 case class DeleteValueResponseV1(id: IRI,

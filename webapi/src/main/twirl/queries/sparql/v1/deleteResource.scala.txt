@@ -39,37 +39,41 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-WITH <@dataNamedGraph>
 DELETE {
-    @* Delete the resource's last modification date so we can update it. *@
-    ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+    GRAPH ?dataNamedGraph {
+        @* Delete the resource's last modification date so we can update it. *@
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
 
-    @* Delete the resource's isDeleted flag so we can update it. *@
-    ?resource knora-base:isDeleted false .
+        @* Delete the resource's isDeleted flag so we can update it. *@
+        ?resource knora-base:isDeleted false .
+    }
 } INSERT {
-    @* Mark the resource as deleted. *@
-    ?resource knora-base:isDeleted true ;
-        knora-base:deleteDate ?currentTime .
+    GRAPH ?dataNamedGraph {
+        @* Mark the resource as deleted. *@
+        ?resource knora-base:isDeleted true ;
+            knora-base:deleteDate ?currentTime .
 
-    @* Add the delete comment, if any. *@
-    @maybeDeleteComment match {
-        case Some(comment) => {
+        @* Add the delete comment, if any. *@
+        @maybeDeleteComment match {
+            case Some(comment) => {
 
-            ?resource knora-base:deleteComment """@comment""" .
+                ?resource knora-base:deleteComment """@comment""" .
 
+            }
+
+            case None => {}
         }
 
-        case None => {}
+        @* Update the resource's last modification date. *@
+        ?resource knora-base:lastModificationDate ?currentTime .
     }
-
-    @* Update the resource's last modification date. *@
-    ?resource knora-base:lastModificationDate ?currentTime .
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
 @if(triplestore.startsWith("graphdb")) {
     USING <http://www.ontotext.com/explicit>
 }
 WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
     BIND(IRI("@resourceIri") AS ?resource)
     BIND(NOW() AS ?currentTime)
 

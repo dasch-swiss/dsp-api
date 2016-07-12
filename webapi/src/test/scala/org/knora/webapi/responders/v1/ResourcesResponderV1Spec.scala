@@ -84,7 +84,8 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
     // The default timeout for receiving reply messages from actors.
     private val timeout = 60.seconds
 
-    private val newResourceIri = new MutableTestIri
+    private val newBookResourceIri = new MutableTestIri
+    private val newPageResourceIri = new MutableTestIri
 
     private def compareResourceFullResponses(expected: ResourceFullResponseV1, received: ResourceFullResponseV1): Unit = {
         // println(MessageUtil.toSource(received))
@@ -152,7 +153,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         assert(expectedContext.preview == receivedContext.preview, "preview does not match")
         assert(receivedContext.locations.nonEmpty, "no locations given")
         assert(receivedContext.locations.get.size == 402, "the length of locations did not match")
-        assert(receivedContext.locations.get(0) == ResourcesResponderV1SpecContextData.expectedFirstLocationOfBookResourceContextResponse, "first location did not match")
+        assert(receivedContext.locations.get.head == ResourcesResponderV1SpecContextData.expectedFirstLocationOfBookResourceContextResponse, "first location did not match")
         assert(expectedContext.canonical_res_id == receivedContext.canonical_res_id, "canonical_res_id does not match")
         assert(expectedContext.region == receivedContext.region, "region does not match")
         assert(expectedContext.res_id == receivedContext.res_id, "res_id does not match")
@@ -696,16 +697,16 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: ResourceCreateResponseV1 =>
-                    newResourceIri.set(response.res_id)
+                    newBookResourceIri.set(response.res_id)
                     checkResourceCreation(valuesExpected, response)
             }
 
             // Check that the resource doesn't have more than one lastModificationDate.
-            getLastModificationDate(newResourceIri.get)
+            getLastModificationDate(newBookResourceIri.get)
 
             // See if we can query the resource.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = newResourceIri.get, userProfile = ResourcesResponderV1Spec.userProfile)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = newBookResourceIri.get, userProfile = ResourcesResponderV1Spec.userProfile)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => () // If we got a ResourceFullResponseV1, the operation succeeded.
@@ -741,7 +742,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 isPreview = false
             )
 
-            val book = newResourceIri.get
+            val book = newBookResourceIri.get
 
             val valuesToBeCreated = Map(
                 "http://www.knora.org/ontology/incunabula#hasRightSideband" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://data.knora.org/482a33d65c36"))),
@@ -777,19 +778,45 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: ResourceCreateResponseV1 =>
-                    newResourceIri.set(response.res_id)
+                    newPageResourceIri.set(response.res_id)
                     checkResourceCreation(expected, response)
             }
         }
 
+        "mark a resource as deleted" in {
+            val lastModBeforeUpdate = getLastModificationDate(newPageResourceIri.get)
+
+            val resourceDeleteRequest = ResourceDeleteRequestV1(
+                resourceIri = newPageResourceIri.get,
+                deleteComment = Some("This page was deleted as a test"),
+                userProfile = ResourcesResponderV1Spec.userProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! resourceDeleteRequest
+
+            expectMsg(timeout, ResourceDeleteResponseV1(id = newPageResourceIri.get, userdata = ResourcesResponderV1Spec.userProfile.userData))
+
+            // Check that the resource is marked as deleted.
+            actorUnderTest ! ResourceInfoGetRequestV1(iri = newPageResourceIri.get, userProfile = ResourcesResponderV1Spec.userProfile)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+
+            // Check that the resource's last modification date got updated.
+            val lastModAfterUpdate = getLastModificationDate(newPageResourceIri.get)
+            lastModBeforeUpdate != lastModAfterUpdate should ===(true)
+        }
+
         "get the properties of a resource" in {
 
-            val PropertiesGetRequest = PropertiesGetRequestV1(
+            val propertiesGetRequest = PropertiesGetRequestV1(
                 "http://data.knora.org/021ec18f1735",
                 ResourcesResponderV1Spec.userProfile
             )
 
-            actorUnderTest ! PropertiesGetRequest
+            actorUnderTest ! propertiesGetRequest
 
             expectMsgPF(timeout) {
                 case response: PropertiesGetResponseV1 => comparePropertiesGetResponse(propertiesGetResponseV1Region, response)
