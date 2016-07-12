@@ -46,22 +46,24 @@ import scala.util.Try
   */
 object ResourcesRouteV1 extends Authenticator {
 
-    def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        def makeResourceRequestMessage(iri: String,
+        def makeResourceRequestMessage(resIri: String,
                                        resinfo: Boolean,
                                        requestType: String,
                                        userProfile: UserProfileV1): ResourcesResponderRequestV1 = {
+            val validResIri = InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: $resIri"))
+
             requestType match {
-                case "info" => ResourceInfoGetRequestV1(iri = iri, userProfile = userProfile)
-                case "rights" => ResourceRightsGetRequestV1(iri, userProfile)
-                case "context" => ResourceContextGetRequestV1(iri, userProfile, resinfo)
-                case "" => ResourceFullGetRequestV1(iri, userProfile)
+                case "info" => ResourceInfoGetRequestV1(iri = validResIri, userProfile = userProfile)
+                case "rights" => ResourceRightsGetRequestV1(validResIri, userProfile)
+                case "context" => ResourceContextGetRequestV1(validResIri, userProfile, resinfo)
+                case "" => ResourceFullGetRequestV1(validResIri, userProfile)
                 case other => throw BadRequestException(s"Invalid request type: $other")
             }
         }
@@ -126,7 +128,7 @@ object ResourcesRouteV1 extends Authenticator {
                                     CreateValueV1WithComment(GeomValueV1(geometryValue), comment)
 
                                 case CreateResourceValueV1(_, _, _, _, _, _, _ , Some(hlistValue), comment) =>
-                                    val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given Iri ${hlistValue} is not a valid Knora IRI"))
+                                    val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given Iri $hlistValue is not a valid Knora IRI"))
                                     CreateValueV1WithComment(HierarchicalListValueV1(listNodeIri), comment)
 
                                 case _ => throw BadRequestException(s"No value submitted")
@@ -159,7 +161,16 @@ object ResourcesRouteV1 extends Authenticator {
             PropertiesGetRequestV1(resIri, userProfile)
         }
 
-        path("v1" / "resources" / Segment) { iri =>
+        def makeResourceDeleteMessage(resIri: IRI, deleteComment: Option[String], userProfile: UserProfileV1) = {
+            ResourceDeleteRequestV1(
+                resourceIri = InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: $resIri")),
+                deleteComment = deleteComment.map(comment => InputValidation.toSparqlEncodedString(comment)),
+                userProfile = userProfile,
+                apiRequestID = UUID.randomUUID
+            )
+        }
+
+        path("v1" / "resources" / Segment) { resIri =>
             get {
                 requestContext =>
                     val requestMessageTry = Try {
@@ -167,8 +178,23 @@ object ResourcesRouteV1 extends Authenticator {
                         val params = requestContext.request.uri.query.toMap
                         val requestType = params.getOrElse("reqtype", "")
                         val resinfo: Boolean = params.getOrElse("resinfo", "") == "true"
-                        val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
-                        makeResourceRequestMessage(resIri, resinfo, requestType, userProfile)
+                        makeResourceRequestMessage(resIri = resIri, resinfo = resinfo, requestType = requestType, userProfile = userProfile)
+                    }
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            } ~ delete {
+                requestContext =>
+                    val requestMessageTry = Try {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val params = requestContext.request.uri.query.toMap
+                        val deleteComment = params.get("deleteComment")
+                        makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteComment, userProfile = userProfile)
                     }
 
                     RouteUtilV1.runJsonRoute(

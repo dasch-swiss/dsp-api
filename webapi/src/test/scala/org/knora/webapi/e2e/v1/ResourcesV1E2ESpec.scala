@@ -55,7 +55,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val resourcesPath = ResourcesRouteV1.rapierPath(system, settings, log)
+    val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
 
     implicit val timeout: Timeout = 300.seconds
 
@@ -116,7 +116,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
                 val resinfo: Map[String, JsValue] = resourceContext("resinfo").asJsObject.fields
 
-                val regions = resinfo.get("regions") match {
+                resinfo.get("regions") match {
                     case Some(JsArray(regionsVector)) =>
                         val regions: Vector[PropsGetForRegionV1] = regionsVector.map(_.convertTo[PropsGetForRegionV1])
 
@@ -141,6 +141,10 @@ class ResourcesV1E2ESpec extends E2ESpec {
             }
         }
 
+        "mark a resource as deleted" in {
+            Delete("/v1/resources/http%3A%2F%2Fdata.knora.org%2F9d626dc76c03?deleteComment=%22deleted%20for%20testing%22") ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK)
+            }
+        }
     }
-
 }

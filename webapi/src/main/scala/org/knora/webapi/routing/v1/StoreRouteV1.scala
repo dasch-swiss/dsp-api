@@ -37,7 +37,7 @@ case class Test(path: String, name: String)
   */
 object StoreRouteV1 extends Authenticator {
 
-    def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
         import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
         import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller

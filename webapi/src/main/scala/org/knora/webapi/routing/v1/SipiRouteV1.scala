@@ -40,7 +40,7 @@ object SipiRouteV1 extends Authenticator with Proxy {
     /**
       * A spray-routing function for the API routes that Sipi connects to.
       */
-    def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
