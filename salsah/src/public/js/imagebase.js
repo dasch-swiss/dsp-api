@@ -378,6 +378,27 @@ $(function() {
 		//$.post(SITE_URL +'/app/helper/rdfresedit.php', {winid: winid, resid: res_id, tabid: tabid}, // TO DO, BUT ALREADY IN API DIR
 		SALSAH.ApiGet('resources', res_id, function(data2) {
 			if (data2.status == ApiErrors.OK) {
+
+				// TODO: Add this to other types of metadata areas, too.
+				data2.props.__label__ = {
+					attributes: "size=64;maxlength=64",
+					comments: [],
+					guielement: "text",
+					guiorder: 0,
+					is_annotation: 0,
+					label: "Label",
+					occurrence: "1",
+					pid: "http://www.w3.org/2000/01/rdf-schema#label",
+					regular_property: 1,
+					value_firstprops: [null],
+					value_iconsrcs: [null],
+					value_ids: ["http://data.knora.org/fcac0fe61801/values/993b75ec5a04"],
+					value_restype: [null],
+					value_rights: [3], // ToDo: Take the rights from resdata !!!!!!!!!!!!
+					values: [resinfo.firstproperty],
+					valuetype_id: 'LABEL'
+				};
+
 				var metadata_area_tabs = viewer.metadataArea();
 				var icon = $('<img>', {src: data2.resdata.iconsrc});//.dragndrop('makeDraggable', 'RESID', {resid: res_id});
 				var label = $('<div>').append(icon).append(data2.resdata.restype_label);

@@ -74,6 +74,10 @@
 			simple_view_action: function() {}
 		};
 
+
+		console.log("PROPINFO");
+		console.log(propinfo);
+
 		$.extend(options, optpar);
 		/**
 		* private metthod used to reset just one value of a given property
@@ -102,6 +106,11 @@
 				}
 
 				return; // Ok and done...
+			}
+
+			if (prop == '__label__') {
+				console.log("Hoppla, das ist nicht !egelkonform!");
+				console.log(propinfo[prop].values);
 			}
 
 			//
@@ -1190,6 +1199,9 @@
 				}
 			};
 
+			postdata['LABEL'] = function(value_container, prop, res_id, sipi_response, is_new_value) {
+				alert('NOW WE WOULD POST THE DATA!');
+			}
 			
 			if (active !== undefined) {
 				if (!confirm(strings._canceditquest)) return;
@@ -1229,6 +1241,9 @@
 
 						if (propinfo[prop].valuetype_id == VALTYPE_FLOAT) {
 							// it is a float value
+							attributes.value = propinfo[prop].values[value_index];
+						}
+						else if (propinfo[prop].valuetype_id == 'LABEL') {
 							attributes.value = propinfo[prop].values[value_index];
 						} else {
 							attributes.value = propinfo[prop].values[value_index].utf8str;
@@ -1824,6 +1839,7 @@
 		var prop_index = 0;
 		return this.each(function() {
 			var prop = $(this).data('propname');
+			console.log(prop);
 			reset_field(prop, prop_index, options.readonly);
 			prop_index++;
 		});

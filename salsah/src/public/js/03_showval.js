@@ -26,6 +26,10 @@ SALSAH.showval = function(value_container, prop, value_index, options)
 			value_container.append(prop.values[value_index]);
 			break;
 		}*/
+		case 'LABEL': {
+			value_container.append(prop.values[value_index]);
+			break;
+		}
 		case VALTYPE_INTEGER: {
 			value_container.append(prop.values[value_index]);
 			break;
