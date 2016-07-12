@@ -329,7 +329,6 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         OntologyConstants.KnoraBase.GeonameValue -> makeGeonameValue,
         OntologyConstants.KnoraBase.ListValue -> makeListValue,
         OntologyConstants.KnoraBase.IntervalValue -> makeIntervalValue,
-        OntologyConstants.KnoraBase.TimeValue -> makeTimeValue,
         OntologyConstants.KnoraBase.StillImageFileValue -> makeStillImageValue,
         OntologyConstants.KnoraBase.LinkValue -> makeLinkValue
     ), { key: IRI => s"Unknown value type: $key" })
@@ -415,18 +414,6 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             timeval1 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalStart).literals.head),
             timeval2 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalEnd).literals.head)
         )
-    }
-
-    /**
-      * Converts a [[ValueProps]] into a [[TimeValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[TimeValueV1]].
-      */
-    private def makeTimeValue(valueProps: ValueProps): ApiValueV1 = {
-        val predicates = valueProps.literalData
-
-        TimeValueV1(BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasTime).literals.head))
     }
 
     /**

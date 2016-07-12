@@ -1622,25 +1622,6 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        // TODO: commented out because of compaibility issues with the GUI
-        /*"add a time value to an anything:Thing" in {
-            val timeValue = TimeValueV1(BigDecimal("1.2345"))
-
-            actorUnderTest ! CreateValueRequestV1(
-                value = timeValue,
-                userProfile = anythingUser,
-                propertyIri = "http://www.knora.org/ontology/anything#hasTime",
-                resourceIri = aThingIri,
-                projectIri = anythingProjectIri,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case CreateValueResponseV1(newTimeValue: TimeValueV1, _ , _, _, _) =>
-                    newTimeValue should ===(timeValue)
-            }
-        }*/
-
         "add an interval value to an anything:Thing" in {
             val intervalValue = IntervalValueV1(timeval1 = BigDecimal("1000000000000000.0000000000000001"), timeval2 = BigDecimal("1000000000000000.0000000000000002"))
 

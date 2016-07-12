@@ -204,12 +204,6 @@ DELETE {
 
             }
 
-            case timeValue: TimeValueV1 => {
-
-                ?newValue knora-base:valueHasTime @timeValue.tval .
-
-            }
-
             case intervalValue: IntervalValueV1 => {
 
                 ?newValue knora-base:valueHasIntervalStart @intervalValue.timeval1 ;

@@ -72,7 +72,6 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
                                  color_value: Option[String] = None,
                                  geom_value: Option[String] = None,
                                  hlist_value: Option[IRI] = None,
-                                 time_value: Option[BigDecimal] = None,
                                  interval_value: Option[Seq[BigDecimal]] = None,
                                  geoname_value: Option[String] = None,
                                  comment: Option[String] = None)
@@ -576,7 +575,6 @@ object SalsahGuiConversions {
         OntologyConstants.SalsahGui.List -> "hlist",
         OntologyConstants.SalsahGui.Radio -> "radio",
         OntologyConstants.SalsahGui.Richtext -> "richtext",
-        OntologyConstants.SalsahGui.Time -> "time",
         OntologyConstants.SalsahGui.Interval -> "interval",
         OntologyConstants.SalsahGui.Geonames -> "geoname",
         OntologyConstants.SalsahGui.Fileupload -> "fileupload"
@@ -935,7 +933,7 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
         }
     }
 
-    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat14(CreateResourceValueV1)
+    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat13(CreateResourceValueV1)
     implicit val createResourceApiRequestV1Format: RootJsonFormat[CreateResourceApiRequestV1] = jsonFormat5(CreateResourceApiRequestV1)
     implicit val resourceInfoResponseV1Format: RootJsonFormat[ResourceInfoResponseV1] = jsonFormat3(ResourceInfoResponseV1)
     implicit val resourceDataV1Format: JsonFormat[ResourceDataV1] = jsonFormat5(ResourceDataV1)

@@ -1689,18 +1689,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#valueHasTime
-
-:valueHasTime rdf:type owl:DatatypeProperty ;
-
-              rdfs:subPropertyOf :valueHas ;
-
-              :subjectClassConstraint :TimeValue ;
-
-              :objectDatatypeConstraint xsd:decimal .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#valueHasURI
 
 :valueHasURI rdf:type owl:DatatypeProperty ;
@@ -2540,19 +2528,6 @@
                              owl:onProperty :valueHasString ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
-
-
-
-###  http://www.knora.org/ontology/knora-base#TimeValue
-
-:TimeValue rdf:type owl:Class ;
-
-           rdfs:subClassOf :Value ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasTime ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] .
-
 
 
 ###  http://www.knora.org/ontology/knora-base#User

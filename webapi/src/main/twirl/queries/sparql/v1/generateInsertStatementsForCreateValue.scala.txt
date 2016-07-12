@@ -172,12 +172,6 @@
 
             }
 
-            case timeValue: TimeValueV1 => {
-
-                ?newValue@valueIndex knora-base:valueHasTime @timeValue.tval .
-
-            }
-
             case intervalValue: IntervalValueV1 => {
 
                 ?newValue@valueIndex knora-base:valueHasIntervalStart @intervalValue.timeval1 ;

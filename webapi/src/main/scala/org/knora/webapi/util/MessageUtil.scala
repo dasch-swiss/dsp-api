@@ -142,8 +142,6 @@ object MessageUtil {
 
             case geomValue: GeomValueV1 => basicObjectResponse
 
-            case timeValue: TimeValueV1 => basicObjectResponse
-
             case intervalValue: IntervalValueV1 => basicObjectResponse
 
             case geonameValue: GeonameValueV1 => basicObjectResponse

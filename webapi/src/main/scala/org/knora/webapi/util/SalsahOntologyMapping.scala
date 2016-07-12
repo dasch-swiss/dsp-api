@@ -165,7 +165,6 @@ class SalsahOntologyMappingReader {
         "5" -> OntologyConstants.KnoraBase.DateValue,
         "6" -> OntologyConstants.KnoraBase.LinkValue, // for a link to a resource
         "7" -> OntologyConstants.KnoraBase.ListValue, // TODO: is this correct?
-        "8" -> OntologyConstants.KnoraBase.TimeValue,
         "9" -> OntologyConstants.KnoraBase.IntervalValue,
         "10" -> OntologyConstants.KnoraBase.GeomValue,
         "11" -> OntologyConstants.KnoraBase.ColorValue,

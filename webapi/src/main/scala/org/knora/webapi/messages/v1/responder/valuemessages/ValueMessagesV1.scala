@@ -63,7 +63,6 @@ case class CreateValueApiRequestV1(project_id: IRI,
                                    geom_value: Option[String] = None,
                                    link_value: Option[IRI] = None,
                                    hlist_value: Option[IRI] = None,
-                                   time_value: Option[BigDecimal] = None,
                                    interval_value: Option[Seq[BigDecimal]] = None,
                                    geoname_value: Option[String] = None,
                                    comment: Option[String] = None)
@@ -137,7 +136,6 @@ case class ChangeValueApiRequestV1(project_id: IRI,
                                    geom_value: Option[String] = None,
                                    link_value: Option[IRI] = None,
                                    hlist_value: Option[IRI] = None,
-                                   time_value: Option[BigDecimal] = None,
                                    interval_value: Option[Seq[BigDecimal]] = None,
                                    geoname_value: Option[String] = None,
                                    comment: Option[String] = None)
@@ -975,44 +973,6 @@ case class IntervalValueV1(timeval1: BigDecimal, timeval2: BigDecimal) extends U
 }
 
 /**
-  * Represents a point in time.
-  *
-  * @param tval an `xsd:decimal`.
-  */
-case class TimeValueV1(tval: BigDecimal) extends UpdateValueV1 with ApiValueV1 {
-
-    def valueTypeIri = OntologyConstants.KnoraBase.TimeValue
-
-    def toJsValue = JsNumber(tval)
-
-    /**
-      * Checks if a new time value would duplicate an existing time value.
-      *
-      * @param other another [[ValueV1]].
-      * @return `true` if `other` is a duplicate of `this`.
-      */
-    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
-        other match {
-            case timeValueV1: TimeValueV1 => timeValueV1 == this
-            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
-        }
-    }
-
-    /**
-      * Checks if a new version of this time value would be redundant given the current version of the value.
-      *
-      * @param currentVersion the current version of the value.
-      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
-      */
-    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
-        currentVersion match {
-            case timeValueV1: TimeValueV1 => timeValueV1 == this
-            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
-        }
-    }
-}
-
-/**
   * Represents a date value as a period bounded by Julian Day Counts. Knora stores dates internally in this format.
   *
   * @param dateval1       the beginning of the date (a Julian day count).
@@ -1441,9 +1401,9 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
     implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat2(ValueVersionHistoryGetResponseV1)
     implicit val createRichtextV1Format: RootJsonFormat[CreateRichtextV1] = jsonFormat3(CreateRichtextV1)
-    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat17(CreateValueApiRequestV1)
+    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat16(CreateValueApiRequestV1)
     implicit val createValueResponseV1Format: RootJsonFormat[CreateValueResponseV1] = jsonFormat5(CreateValueResponseV1)
-    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat15(ChangeValueApiRequestV1)
+    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat14(ChangeValueApiRequestV1)
     implicit val changeValueResponseV1Format: RootJsonFormat[ChangeValueResponseV1] = jsonFormat5(ChangeValueResponseV1)
     implicit val deleteValueResponseV1Format: RootJsonFormat[DeleteValueResponseV1] = jsonFormat2(DeleteValueResponseV1)
     implicit val changeFileValueApiRequestV1Format: RootJsonFormat[ChangeFileValueApiRequestV1] = jsonFormat1(ChangeFileValueApiRequestV1)

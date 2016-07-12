@@ -238,31 +238,6 @@
 
        knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
 
-
-
-:hasTime rdf:type owl:ObjectProperty ;
-
-       rdfs:subPropertyOf knora-base:hasValue ;
-
-       rdfs:label "Zeitpunkt"@de ,
-                  "Référence temporelle"@fr ,
-                  "Referenza temporale"@it ,
-                  "Time"@en ;
-
-       knora-base:subjectClassConstraint :Thing ;
-
-       knora-base:objectClassConstraint knora-base:TimeValue ;
-
-       salsah-gui:guiOrder "8"^^xsd:integer ;
-
-       salsah-gui:guiElement salsah-gui:Time ;
-
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
-
-
-
 :hasInterval rdf:type owl:ObjectProperty ;
 
        rdfs:subPropertyOf knora-base:hasValue ;
@@ -459,11 +434,6 @@
                          owl:onProperty :hasDecimal ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
-                      #[
-                      #   rdf:type owl:Restriction ;
-                      #   owl:onProperty :hasTime ;
-                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      #] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasInterval ;
