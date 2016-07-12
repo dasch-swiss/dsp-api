@@ -275,19 +275,136 @@ different operation abbreviations used are defined as follows:
 Implementation
 ---------------
 
+The requirements for defining default permissions imposed by all the different use cases are very broad. Potentially, we
+need to be able to define default permissions per project, per group, per resource class, per resource property, and
+all their possible combinations.
+
+For this reason, we introduce the *Permission* class, which instances will carry all the necessary information. The
+following graph, shows the structure:
+
+
 .. graphviz::
 
    digraph permissions {
+     "Permission" -> "Project" [ label="forProject" ];
      "Permission" -> "Group" [ label="forGroup" ];
      "Permission" -> "ResourceClass" [ label="forResourceClass" ];
      "Permission" -> "Property" [ label="forProperty" ];
-     "Permission" -> "hasViewPermission" [ label="hasDefaultPermission" ];
+     "Permission" -> "has[*]Permission" [ label="hasPermission" ];
+     "Permission" -> "<Group IRI>" [ label="hasDefault[*]Permission"]
    }
 
 
+The properties **forProject**, **forGroup**, **forResourceClass**, and **forProperty** form together a kind of a
+*compound key*, allowing finding existing permission instances, that address the same set of Project / Group /
+ResourceClass / Property combination, thus making it possible to extend or change the attached permissions.
+
+Example Data stored in the DefaultPermissions graph
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Permissions on a ProjectAdmin group:
+::
+
+  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:Permission ;
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forGroup knora-base:ProjectAdmin ; 
+       knora-base:forResourceClass <http://data.knora.org/permissions/NoResourceClass> ;
+       knora-base:forProperty <http://data.knora.org/permissions/NoProperty> ;
+       
+       knora-base:hasPermission <http://data.knora.org/permissions/ProjectResourceCreateAllPermission> ,
+                                <http://data.knora.org/permissions/ProjectAllAdminPermission> .
+
+
+Permissions on a ProjectMember group:
+::
+
+  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:Permission ;
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forGroup knora-base:ProjectMember ;
+       knora-base:forResourceClass <http://data.knora.org/permissions/NoResourceClass> ;
+       knora-base:forProperty <http://data.knora.org/permissions/NoProperty> ;
+       
+       knora-base:hasPermission <http://data.knora.org/permissions/hasProjectResourceCreateAllPermission> :
+
+       knora-base:hasDefaultChangeRightsPermission knora-base:Creator ;
+       knora-base:hasDefaultModifyPermission <http://data.knora.org/permissions/[UUID]> ;
+       knora-base:hasDefaultViewPermission* knora-base:KnownUser .
+
+
+Default permission on a resource class:
+::
+
+  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:Permission ;
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forGroup <http://data.knora.org/permissions/NoGroup> ;
+       knora-base:forResourceClass <http://www.knora.org/ontology/images#person> ;
+       knora-base:forProperty <http://data.knora.org/permissions/NoProperty> ;
+       
+       knora-base:hasDefaultChangeRightsPermission knora-base:Creator ,
+                                                   knora-base:ProjectMember ;
+
+       knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                           knora-base:UnknownUser .
+
+
+Default permission on a resource property:
+::
+
+  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:Permission ;
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forGroup <http://data.knora.org/permissions/NoGroup> ;
+       knora-base:forResourceClass <http://data.knora.org/permissions/NoResourceClass> ;
+       knora-base:forProperty <http://www.knora.org/ontology/images#lastname> ;
+       
+       knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                             knora-base:Creator ;
+
+       knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                           knora-base:UnknownUser .
+       
+       
+       
+Default permission on a knora-base property:
+::
+
+  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:Permission ;
+       knora-base:forProject <http://data.knora.org/permissions/NoProject> ;
+       knora-base:forGroup <http://data.knora.org/permissions/NoGroup> ;
+       knora-base:forResourceClass <http://data.knora.org/permissions/NoResourceClass> ;
+       knora-base:forProperty <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> ;
+       
+       knora-base:hasDefaultRestrictedViewPermission :UnknownUser ;
+       knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+       knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
+                                             knora-base:Creator .
+
+
+Restricted resource creation permission on a group:
+::
+
+  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:Permission ;
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forGroup <http://data.knora.org/groups/[UUID]> ;
+       knora-base:forResourceClass <http://data.knora.org/permissions/NoResourceClass> ;
+       knora-base:forProperty <http://data.knora.org/permissions/NoProperty> ;
+       
+       knora-base:hasProjectResourceCreateRestrictedPermission <images#Person> .
+
+
+Restricted project admin permission on a group:
+::
+
+  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:Permission ;
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forGroup <http://data.knora.org/groups/[UUID]> ;
+       knora-base:forResourceClass <http://data.knora.org/permissions/NoResourceClass> ;
+       knora-base:forProperty <http://data.knora.org/permissions/NoProperty> ;
+       
+       knora-base:hasProjectRestrictedGroupAdminPermission <http://data.knora.org/groups/[UUID]> .
+
 
 A the time the ``UserProfile`` is queried, all group memberships and the permissions carried by those groupes are
-queried for all projects the user is a member of. This information is then stored as an easy accessible object inside
+queried for all groups the user is a member of. This information is then stored as an easy accessible object inside
 the ``UserProfile`` so that this information is readily available where needed. This is a somewhat expensive operation,
 but will only be executed so often since there is a ``UserProfile`` caching mechanism in place.
 
