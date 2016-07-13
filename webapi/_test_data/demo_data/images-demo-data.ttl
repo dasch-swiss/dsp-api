@@ -51,7 +51,7 @@
 
                                      knora-base:hasRestrictedViewPermission knora-base:UnknownUser ;
 
-                                     knora-base:hasChangeRightsPermisson knora-base:ProjectMember ,
+                                     knora-base:hasModifyPermission knora-base:ProjectMember ,
                                                                          knora-base:Owner ;
 
                                      images:titel <http://data.knora.org/691e7e2244d5/values/36f485595d0f04> ;

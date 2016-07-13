@@ -67,8 +67,12 @@ trait Authenticator {
       *         the generated session id.
       */
     def doLogin(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
+
         extractCredentialsAndAuthenticate(requestContext, true) match {
             case Success(sId) =>
+
+                val userProfile = getUserProfileV1(requestContext)
+
                 HttpResponse(
                     headers = List(HttpHeaders.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sId))),
                     status = StatusCodes.OK,
@@ -77,7 +81,8 @@ trait Authenticator {
                         JsObject(
                             "status" -> JsNumber(0),
                             "message" -> JsString("credentials are OK"),
-                            "sid" -> JsString(sId)
+                            "sid" -> JsString(sId),
+                            "userdata" -> userProfile.userData.toJsValue
                         ).compactPrint
                     )
                 )
@@ -115,7 +120,8 @@ trait Authenticator {
                         ContentTypes.`application/json`,
                         JsObject(
                             "status" -> JsNumber(0),
-                            "message" -> JsString("session credentials are OK")
+                            "message" -> JsString("session credentials are OK"),
+                            "userdata" -> userProfile.userData.toJsValue
                         ).compactPrint
                     )
                 )
@@ -149,13 +155,17 @@ trait Authenticator {
 
         extractCredentialsAndAuthenticate(requestContext, false) match {
             case Success(_) => {
+
+                val userProfile = getUserProfileV1(requestContext)
+
                 HttpResponse(
                     status = StatusCodes.OK,
                     entity = HttpEntity(
                         ContentTypes.`application/json`,
                         JsObject(
                             "status" -> JsNumber(0),
-                            "message" -> JsString("credentials are OK")
+                            "message" -> JsString("credentials are OK"),
+                            "userdata" -> userProfile.userData.toJsValue
                         ).compactPrint
                     )
                 )

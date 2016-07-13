@@ -558,7 +558,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     pid = "__location__",
                     valuetype_id = Some("-1"),
                     guiorder = Some(Int.MaxValue),
-                    guielement = Some("fileupload"),
+                    guielement = Some(SalsahGuiConversions.iri2SalsahGuiElement(OntologyConstants.SalsahGui.Fileupload)),
                     values = Vector(IntegerValueV1(0)),
                     value_ids = Vector("0"),
                     comments = Vector("0"),
@@ -863,7 +863,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     // turn sequenced Futures into one Future of a sequence
                     regionProperties: Seq[PropsGetForRegionV1] <- Future.sequence(regionPropertiesSequencedFutures)
 
-                    resInfo: Option[ResourceInfoV1] = if (regionProperties.nonEmpty) {
+                    resinfoWithRegions: Option[ResourceInfoV1] = if (regionProperties.nonEmpty) {
                         // regions are given, append them to resinfo
                         Some(resinfoV1Option.get.copy(
                             regions = Some(regionProperties)))
@@ -871,7 +871,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         // no regions given, just return resinfo
                         resinfoV1Option
                     }
-                } yield resInfo
+                } yield resinfoWithRegions
             } else {
                 // resinfo is not requested
                 Future(resinfoV1Option)
@@ -1528,9 +1528,11 @@ class ResourcesResponderV1 extends ResponderV1 {
             )
 
             // group the SPARQL results by the predicate "p" and map each row to a Seq of objects "o", etc. (getting rid of VariableResultsRow).
-            val groupedByPredicate: Map[IRI, Seq[Map[String, String]]] = resInfoResponseRows.groupBy(row => row.rowMap("p")).map {
+            val groupedByPredicateToWrap: Map[IRI, Seq[Map[String, String]]] = resInfoResponseRows.groupBy(row => row.rowMap("p")).map {
                 case (predicate: IRI, rows: Seq[VariableResultsRow]) => (predicate, rows.map(_.rowMap - "p"))
             }
+
+            val groupedByPredicate = new ErrorHandlingMap(groupedByPredicateToWrap, { key: IRI => s"Resource $resourceIri has no $key" })
 
             for {
             // Query the ontology about the resource's OWL class.
@@ -1846,7 +1848,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             valuetype = propertyV1.valuetype_id match {
                 // derive valuetype from valuetype_id
                 case Some(OntologyConstants.KnoraBase.IntValue) => Some("ival")
-                case Some(OntologyConstants.KnoraBase.FloatValue) => Some("fval")
+                case Some(OntologyConstants.KnoraBase.DecimalValue) => Some("dval")
                 case Some(OntologyConstants.KnoraBase.DateValue) => Some("dateval")
                 case Some(other: IRI) => Some("textval")
                 case None => None

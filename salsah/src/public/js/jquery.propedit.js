@@ -87,13 +87,20 @@
 			// special treatment of __location__
 			//
 			if (prop == '__location__') { // VERY SPECIAL !!
-				value_container.append($('<img>').attr({src: resdata.resclass_iconsrc}).css({'vertical-align': 'middle'}).addClass('propedit')).append(' (' + resdata.resclass_name +') ');
-				if (propinfo[prop]['locations'] !== undefined) value_container.append($('<a>').attr({href: propinfo[prop]['locations'][0]['path']}).text(' ' + propinfo[prop]['locations'][0]['origname'] + ' '));
+    			var locations = propinfo[prop]['locations'];
+
+				if (locations !== undefined) {
+                    // Provide a link to the full-size image.
+                    var fullSize = locations[locations.length - 1];
+ 				    value_container.append($('<a>').attr({href: fullSize['path'], target: "_blank"}).text(' ' + fullSize['origname'] + ' '));
+				}
+
 				if (res_rights >= RESOURCE_ACCESS_MODIFY) {
 					$('<img>', {src: edit_icon.src, 'class': 'propedit'}).click(function(event) {
 						edit_value(value_container, prop, value_index);
 					}).css({cursor: 'pointer'}).appendTo(value_container);
 				}
+
 				return; // Ok and done...
 			}
 
@@ -444,7 +451,7 @@
 			postdata[VALTYPE_FLOAT] = function(value_container, prop, value_index, value, is_new_value) {
 				var data = {};
 				if (is_new_value) {
-					data.float_value = parseFloat(value); // it is an float
+					data.decimal_value = parseFloat(value); // it is an float
 					data.res_id = res_id;
 					data.prop = prop;
 					data.project_id = project_id;
@@ -475,7 +482,7 @@
 						cancel_edit(value_container);
 					});
 				} else {
-					data.float_value = parseInt(value); // it is an float
+					data.decimal_value = parseFloat(value); // it is an float
 					data.project_id = project_id;
 					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
 						if (data.status == ApiErrors.OK) {
@@ -923,6 +930,11 @@
 					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
 						if (data.status == ApiErrors.OK) {
 							propinfo[active.prop].values[active.value_index] = data.value;
+							// set new value Iri
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+
+							// update the value id in the regions plugin
+							options.canvas.regions('setObjectAttribute', 'val_id', data.id, value_container.find('span').data('figure_index'));
 
 							active.value_container.empty();
 							reset_value(active.value_container, active.prop, active.value_index);
@@ -931,8 +943,6 @@
 								make_add_button(prop_container, active.prop);
 							}
 
-							// set new value Iri
-							propinfo[prop].value_ids[value_index] = data.id;
 						}
 						else {
 							alert(status.errormsg);
@@ -1009,12 +1019,76 @@
 
 			postdata[VALTYPE_SELECTION] = postdata[VALTYPE_HLIST];
 
-			postdata[VALTYPE_COLOR] = postdata[VALTYPE_TEXT];
+			postdata[VALTYPE_COLOR] = function(value_container, prop, value_index, value, is_new_value) {
+				var data = {};
+				if (is_new_value) {
+					data.color_value = value;
+					data.res_id = res_id;
+					data.prop = prop;
+					data.project_id = project_id;
+					SALSAH.ApiPost('values', data, function(data) {
+						if (data.status == ApiErrors.OK) {
+
+							init_value_structure();
+
+							propinfo[active.prop].values[active.value_index] = data.value;
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+							propinfo[active.prop].value_rights[active.value_index] = data.rights;
+							propinfo[active.prop].value_iconsrcs[active.value_index] = null;
+							propinfo[active.prop].value_firstprops[active.value_index] = null;
+							propinfo[active.prop].value_restype[active.value_index] = null;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				} else {
+					data.color_value = value;
+					data.project_id = project_id;
+					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
+						if (data.status == ApiErrors.OK) {
+							propinfo[active.prop].values[active.value_index] = data.value;
+							// set new value Iri
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+
+
+
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				}
+			};
+
+
+
+
 			postdata[VALTYPE_ICONCLASS] = postdata[VALTYPE_TEXT];
 			postdata[VALTYPE_GEONAME] = postdata[VALTYPE_TEXT];
             
 			
-			postdata['LOCATION'] = function(value_container, prop, res_id, tmppath, origname, is_new_value) {
+			postdata['LOCATION'] = function(value_container, prop, res_id, sipi_response, is_new_value) {
 				var data = {};
 				if (is_new_value) {
                     /*
@@ -1062,10 +1136,13 @@
 				}
 				else {
 					data = {
-						tmppath: tmppath,
-						origname: origname
+						file: {
+							originalFilename: sipi_response["original_filename"],
+							originalMimeType: sipi_response["original_mimetype"],
+							filename: sipi_response["filename"]
+						}
 					};
-					SALSAH.ApiPut('resources/' + res_id, data, function(data) {
+					SALSAH.ApiPut('filevalue/' + encodeURIComponent(res_id), data, function(data) {
 						if (data.status == ApiErrors.OK) {
 							// data.value has the following members:
 							//   data.value.geoname_id
@@ -1081,13 +1158,25 @@
 							active.value_container.empty();
 							reset_value(active.value_container, active.prop, active.value_index);
 							*/
+
 							active.value_container.empty();
-							active.value_container.append($('<img>').attr({src: resdata.resclass_iconsrc}).css({'vertical-align': 'middle'}).addClass('propedit')).append(' (' + resdata.resclass_name +') ');
-							if (data['locations'] !== undefined) value_container.append($('<a>').attr({href: data['locations'][0]['path']}).text(' ' + data['locations'][0]['origname'] + ' '));
+							var locations = data['locations'];
+
+							if (locations !== undefined) {
+							    // Provide a link to the full-size image.
+							    var fullSize = locations[locations.length - 1];
+                                value_container.append($('<a>').attr({href: fullSize['path'], target: "_blank"}).text(' ' + fullSize['origname'] + ' '));
+							}
+
 							if (res_rights >= RESOURCE_ACCESS_MODIFY) {
 								$('<img>', {src: edit_icon.src, 'class': 'propedit'}).click(function(event) {
 									edit_value(active.value_container, '__location__', 0);
 								}).css({cursor: 'pointer'}).appendTo(value_container);
+
+                                // Reload the window to display the new image.
+                                var window_html = active.value_container.parents(".win")
+                                window_html.win('deleteWindow');
+                                RESVIEW.new_resource_editor(resdata.res_id, 'NEW RESOURCE');
 							}
 						}
 						else {
@@ -1137,7 +1226,13 @@
 				case 'text': {
 					attributes.type = 'text';
 					if (!is_new_value) {
-						attributes.value = propinfo[prop].values[value_index].utf8str;
+
+						if (propinfo[prop].valuetype_id == VALTYPE_FLOAT) {
+							// it is a float value
+							attributes.value = propinfo[prop].values[value_index];
+						} else {
+							attributes.value = propinfo[prop].values[value_index].utf8str;
+						}
 					}
 					attributes['style'] = 'width: 95%'; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! should be configurable !!
 					var tmpele = $('<input>', attributes);
@@ -1149,13 +1244,21 @@
 					value_container.append(tmpele);
 					tmpele.focus();
 					value_container.append($('<img>', {src: save_icon.src, title: strings._save, 'class': 'propedit'}).click(function(event) {
-						var richtext_value = {
-							utf8str: value_container.find('input').val(),
-							textattr: JSON.stringify({}),
-							resource_reference: []
-						};
-						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, richtext_value, is_new_value);
-					}).css({cursor: 'pointer'}));
+
+						if (propinfo[prop].valuetype_id == VALTYPE_FLOAT) {
+							// it is a float value
+							postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, value_container.find('input').val(), is_new_value);
+						} else {
+
+							var richtext_value = {
+								utf8str: value_container.find('input').val(),
+								textattr: JSON.stringify({}),
+								resource_reference: []
+							};
+							postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, richtext_value, is_new_value);
+						}
+
+						}).css({cursor: 'pointer'}));
 					break;
 				}
 				case 'textarea': {
@@ -1165,7 +1268,6 @@
 						tmpele.val(front + '<+LINKTO RESID=' + dropdata.resid + '+>'+ back);
 					});*/
 					if (!is_new_value) {
-						console.log("not new value")
 						tmpele.append(propinfo[prop].values[value_index].utf8str);
 					}
 					value_container.append(tmpele);
@@ -1355,13 +1457,14 @@
 */
 					break;
 				}
-				/*case 'pulldown': {
+				case 'pulldown': {
 					var selection_id;
 					var attrs = propinfo[prop].attributes.split(';');
 					$.each(attrs, function() {
 						var attr = this.split('=');
-						if (attr[0] == 'selection') {
-							selection_id = attr[1];
+						if (attr[0] == 'selection' || attr[0] == 'hlist') {
+							//selection_id = attr[1];
+							selection_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 						}
 					});
 					var tmpele = $('<span>', attributes).appendTo(value_container);
@@ -1377,13 +1480,13 @@
 					break;
 				}
 				case 'radio': {
-					console.log('radio')
 					var selection_id;
 					var attrs = propinfo[prop].attributes.split(';');
 					$.each(attrs, function() {
 						var attr = this.split('=');
-						if (attr[0] == 'selection') {
-							selection_id = attr[1];
+						if (attr[0] == 'selection' || attr[0] == 'hlist') {
+							//selection_id = attr[1];
+							selection_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 						}
 					});
 					var tmpele = $('<span>', attributes).appendTo(value_container);
@@ -1397,9 +1500,7 @@
 						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, tmpele.selradio('value'), is_new_value);
 					}).css({cursor: 'pointer'}));
 					break;
-				}*/
-				case 'radio':
-				case 'pulldown':
+				}
 				case 'hlist': {
 
 					
@@ -1464,7 +1565,7 @@
 					}
 					else {
 						var restype_id = -1;
-						var numprops;
+						var numprops = 1;
 						var attrs = propinfo[prop].attributes.split(';');
 						$.each(attrs, function() {
 							var attr = this.split('=');
@@ -1554,7 +1655,7 @@
 					if (is_new_value) {
 						value_container.append($('<span>', attributes).css({color: 'red'}).append('Select a figure type and draw...'));
 
-						options.viewer.topCanvas().regions('setObjectStatus', 'inactive').regions('setDefaultLineColor', propinfo['salsah:color'].values[0]);
+						options.viewer.topCanvas().regions('setObjectStatus', 'inactive').regions('setDefaultLineColor', propinfo['http://www.knora.org/ontology/knora-base#hasColor'].values[0]);
 
 						RESVIEW.figure_drawing (options.viewer, function(figure, index) {
 							value_container.find('span').empty().append(figure.type); // add text to show what figure type willbe drawn...
@@ -1639,8 +1740,8 @@
 					}
 
 					value_container.append($('<img>', {src: save_icon.src, title: strings._save, 'class': 'propedit'}).click(function(event) {
-						var result = tmpele.location('value');
-						postdata['LOCATION'](value_container, prop, res_id, result.tmp_orig_path, result.orig_fname, is_new_value);
+						var sipi_response = tmpele.location('value');
+						postdata['LOCATION'](value_container, prop, res_id, sipi_response, is_new_value);
 					}).css({cursor: 'pointer'}));
 					break;
 				}

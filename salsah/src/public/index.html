@@ -109,17 +109,23 @@
 		}
 		else {
 			if (SALSAH.userdata.projects_info.length > 1) {
+
+				//  set the user's active project
+				SALSAH.userdata.active_project = SALSAH.userdata.projects[0];
+
 				var psel = $('<select>').appendTo('#projectctrl').on('change', function(event){
 					SALSAH.userdata.active_project = $(this).val();
-					SALSAH.ApiPost('userdata', {project: $(this).val()}, function(data) {
+					// TODO: https://github.com/dhlab-basel/Knora/issues/147
+					/*SALSAH.ApiPost('userdata', {project: $(this).val()}, function(data) {
 						if (data.status == ApiErrors.OK) {
 							SALSAH.reload_css();
 						}
 						else {
 							alert(data.errormsg);
 						}
-					});
+					});*/
 				});
+
 				for(var i in SALSAH.userdata.projects_info) {
 					if (SALSAH.userdata.projects_info[i].id == SALSAH.userdata.active_project) {
 						psel.append($('<option>').attr({selected: true}).val(SALSAH.userdata.projects_info[i].id).text(SALSAH.userdata.projects_info[i].shortname));
@@ -131,6 +137,8 @@
 			}
 			else if (SALSAH.userdata.projects_info.length == 1) {
 				$('#projectctrl').append(SALSAH.userdata.projects_info[0].shortname);
+				//  set the user's active project
+				SALSAH.userdata.active_project = SALSAH.userdata.projects[0];
 			}
 			else {
 				$('#projectctrl').append('-');
@@ -171,13 +179,13 @@
 		.simpledialog('loginbox', {'class': 'loginbox', width: 400, positioning: 'upper', focus: '#user_id'}));
 
 		$('#login_button').on('click', function(){
-			var authorization = {
+			var credentials = {
 				salsah_username: $('#user_id').val(),
 				salsah_password: $('#password').val()
 			};
-			authorization = {};
 
-            SALSAH.ApiPost('session', {username: $('#user_id').val(), password: $('#password').val()}, authorization, function(data) {
+            SALSAH.ApiPost('session', {username: credentials.salsah_username, password: credentials.salsah_password}, function(data) {
+
 				if (data.status == ApiErrors.OK) {
 
 					// The login to Knora is successful.
@@ -205,7 +213,10 @@
 					});
 
 					$('#dologin').simpledialog('loginbox', 'close');
-					SALSAH.reload_css();
+
+
+					//SALSAH.reload_css();
+
 					$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userdata.username)
 						.append($('<img>').attr({id: 'dologout', src: 'app/icons/24x24/delete_user.png', title: s_('_logout')})
 						.simpledialog('logoutbox', {'class': 'loginbox', width: 400, positioning: 'upper'})
@@ -242,7 +253,7 @@
 					});
 
 					$('#dologut').simpledialog('logoutbox', 'close');
-					SALSAH.reload_css();
+					//SALSAH.reload_css();
 					$('#userctrl').empty().append($('<img>').attr({id: 'dologin', src: 'app/icons/24x24/user.png', title: s_('_login')})
 						.simpledialog('loginbox', {'class': 'loginbox', width: 400, positioning: 'upper', focus: '#user_id'})
 					);

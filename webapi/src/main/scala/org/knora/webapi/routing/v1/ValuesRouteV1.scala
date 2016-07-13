@@ -25,17 +25,15 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
-import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
-import org.knora.webapi.messages.v1.responder.resourcemessages.CreateResourceApiRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.routing.v1.ResourcesRouteV1._
+import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 import spray.http.HttpEntity.NonEmpty
 import spray.http.{BodyPart, MultipartFormData}
-import spray.json.{DeserializationException, JsonParser}
+import spray.json.JsonParser
 import spray.routing.Directives._
 import spray.routing._
 
@@ -89,35 +87,46 @@ object ValuesRouteV1 extends Authenticator {
 
         // TODO: Support the rest of the value types.
         val (value: UpdateValueV1, commentStr: Option[String]) = apiRequest match {
-            case CreateValueApiRequestV1(_, _, _, _, Some(intValue: Int), _, _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)
 
-            case CreateValueApiRequestV1(_, _, _, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, comment) =>
+            case CreateValueApiRequestV1(_, _, _, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
                 // textattr is a string that can be parsed into Map[String, Seq[StandoffPositionV1]]
                 val textattr: Map[String, Seq[StandoffPositionV1]] = InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]])
                 val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
 
                 (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, Some(floatValue: Float), _, _, _, _, _, comment) => (FloatValueV1(floatValue), comment)
+            case CreateValueApiRequestV1(_, _, _, _, Some(intValue: Int), _, _, _, _, _, _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, _, Some(dateStr: String), _, _, _, _, comment) =>
+            case CreateValueApiRequestV1(_, _, _, _, _, Some(decimalValue: BigDecimal), _, _, _, _, _, _, _, _, _, comment) => (DecimalValueV1(decimalValue), comment)
+
+            case CreateValueApiRequestV1(_, _, _, _, _, _, Some(booleanValue: Boolean), _, _, _, _, _, _, _, _, comment) => (BooleanValueV1(booleanValue), comment)
+
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, Some(uriValue: String), _, _, _, _, _, _, _, comment) => (UriValueV1(InputValidation.toIri(uriValue, () => throw BadRequestException(s"Invalid URI: $uriValue"))), comment)
+
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, Some(dateStr: String), _, _, _, _, _, _, comment) =>
                 (DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, _, _, Some(colorStr: String), _, _, _, comment) =>
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, Some(colorStr: String), _, _, _, _, _, comment) =>
                 val colorValue = InputValidation.toColor(colorStr, () => throw BadRequestException(s"Invalid color value $colorStr"))
                 (ColorValueV1(colorValue), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, Some(geomStr: String), _, _, comment) =>
-                val geometryValue = InputValidation.toGeometryString(geomStr, () => throw BadRequestException(s"Invalid geometry value geomStr"))
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, Some(geomStr: String), _, _, _, _, comment) =>
+                val geometryValue = InputValidation.toGeometryString(geomStr, () => throw BadRequestException(s"Invalid geometry value $geomStr"))
                 (GeomValueV1(geometryValue), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, Some(linkValue: IRI), _, comment) =>
-                val resourceIRI = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Given Iri ${linkValue} is not a valid Knora IRI"))
-                (LinkUpdateV1(targetResourceIri = resourceIri), comment)
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, Some(targetResourceIri: IRI), _, _, _, comment) =>
+                val resourceIRI = InputValidation.toIri(targetResourceIri, () => throw BadRequestException(s"Given IRI $targetResourceIri is not a valid Knora IRI"))
+                (LinkUpdateV1(targetResourceIri = targetResourceIri), comment)
 
-            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, Some(hlistValue), comment) =>
-                val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given Iri ${hlistValue} is not a valid Knora IRI"))
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, Some(hlistValue), _, _, comment) =>
+                val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given IRI $hlistValue is not a valid Knora IRI"))
                 (HierarchicalListValueV1(listNodeIri), comment)
+
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(Seq(timeval1: BigDecimal, timeval2: BigDecimal)), _, comment) =>
+                (IntervalValueV1(timeval1, timeval2), comment)
+
+            case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, _, Some(geonameStr: String), comment) =>
+                (GeonameValueV1(geonameStr), comment)
 
             case _ => throw BadRequestException(s"No value submitted")
         }
@@ -143,37 +152,47 @@ object ValuesRouteV1 extends Authenticator {
 
         // TODO: Support the rest of the value types.
         val (value: UpdateValueV1, commentStr: Option[String]) = apiRequest match {
-            case ChangeValueApiRequestV1(_, _, Some(intValue: Int), _, _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)
-
-            case ChangeValueApiRequestV1(_, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, comment) =>
+            case ChangeValueApiRequestV1(_, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
                 // textattr is a string that can be parsed into Map[String, Seq[StandoffPositionV1]]
                 val textattr: Map[String, Seq[StandoffPositionV1]] = InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]])
                 val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
 
                 (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
 
-            case ChangeValueApiRequestV1(_, _, _, Some(floatValue: Float), _, _, _, _, _, comment) => (FloatValueV1(floatValue), comment)
+            case ChangeValueApiRequestV1(_, _, Some(intValue: Int), _, _, _, _, _, _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)
 
-            case ChangeValueApiRequestV1(_, _, _, _, Some(dateStr: String), _, _, _, _, comment) =>
+            case ChangeValueApiRequestV1(_, _, _, Some(decimalValue: BigDecimal), _, _, _, _, _, _, _, _, _, comment) => (DecimalValueV1(decimalValue), comment)
+
+            case ChangeValueApiRequestV1(_, _, _, _, Some(booleanValue: Boolean), _, _, _, _, _, _, _, _, comment) => (BooleanValueV1(booleanValue), comment)
+
+            case ChangeValueApiRequestV1(_, _, _, _, _, Some(uriValue: String), _, _, _, _, _, _, _, comment) => (UriValueV1(InputValidation.toIri(uriValue, () => throw BadRequestException(s"Invalid URI: $uriValue"))), comment)
+
+            case ChangeValueApiRequestV1(_, _, _, _, _, _, Some(dateStr: String), _, _, _, _, _, _, comment) =>
                 (DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)
 
-            case ChangeValueApiRequestV1(_, _, _, _, _, Some(colorStr: String), _, _, _, comment) =>
+            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, Some(colorStr: String), _, _, _, _, _, comment) =>
                 val colorValue = InputValidation.toColor(colorStr, () => throw BadRequestException(s"Invalid color value $colorStr"))
                 (ColorValueV1(colorValue), comment)
 
-            case ChangeValueApiRequestV1(_, _, _, _, _, _, Some(geomStr), _, _, comment) =>
+            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, Some(geomStr: String), _, _, _, _, comment) =>
                 val geometryValue = InputValidation.toGeometryString(geomStr, () => throw BadRequestException(s"Invalid geometry value geomStr"))
                 (GeomValueV1(geometryValue), comment)
 
-            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, Some(linkValue), _, comment) =>
-                val resourceIri = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Given Iri ${linkValue} is not a valid Knora IRI"))
+            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, Some(linkValue: IRI), _, _, _, comment) =>
+                val resourceIri = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Given Iri $linkValue is not a valid Knora IRI"))
                 (LinkUpdateV1(targetResourceIri = resourceIri), comment)
 
-            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, Some(hlistValue), comment) =>
-                val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given Iri ${hlistValue} is not a valid Knora IRI"))
+            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, Some(hlistValue: IRI), _, _, comment) =>
+                val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Given Iri $hlistValue is not a valid Knora IRI"))
                 (HierarchicalListValueV1(listNodeIri), comment)
 
-            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, Some(comment)) =>
+            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, Some(Seq(timeval1: BigDecimal, timeval2: BigDecimal)), _, comment) =>
+                (IntervalValueV1(timeval1, timeval2), comment)
+
+            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, Some(geonameStr: String), comment) =>
+                (GeonameValueV1(geonameStr), comment)
+
+            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) =>
                 throw BadRequestException(s"No value was submitted")
 
             case _ => throw BadRequestException(s"No value or comment was submitted")
@@ -310,7 +329,7 @@ object ValuesRouteV1 extends Authenticator {
                         val userProfile = getUserProfileV1(requestContext)
 
                         apiRequest match {
-                            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, Some(comment)) => makeChangeCommentRequestMessage(userProfile, valueIri, comment)
+                            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) => makeChangeCommentRequestMessage(userProfile, valueIri, comment)
                             case _ => makeAddValueVersionRequestMessage(userProfile, valueIri, apiRequest)
                         }
                     }
@@ -342,23 +361,23 @@ object ValuesRouteV1 extends Authenticator {
         } ~
             // Link value request requires 3 URL path segments: subject IRI, predicate IRI, and object IRI
             path("v1" / "links" / Segments) { iris =>
-            get {
-                requestContext => {
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        makeLinkValueGetRequestMessage(userProfile, iris)
-                    }
+                get {
+                    requestContext => {
+                        val requestMessageTry = Try {
+                            val userProfile = getUserProfileV1(requestContext)
+                            makeLinkValueGetRequestMessage(userProfile, iris)
+                        }
 
-                    RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                        RouteUtilV1.runJsonRoute(
+                            requestMessageTry,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                    }
                 }
-            }
-        } ~ path("v1" / "filevalue" / Segment) { (resIri: IRI) =>
+            } ~ path("v1" / "filevalue" / Segment) { (resIri: IRI) =>
             put {
                 entity(as[ChangeFileValueApiRequestV1]) { apiRequest => requestContext =>
                     val requestMessageTry = Try {

@@ -574,7 +574,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 //
 
                 // create the apt case class depending on the file type returned by Sipi
-                changedFileValues: Vector[ChangeValueResponseV1] <- sipiResponse.file_type match {
+                changeValueResponses: Vector[ChangeValueResponseV1] <- sipiResponse.file_type match {
                     case SipiConstants.FileType.IMAGE =>
                         // we deal with hasStillImageFileValue, so there need to be two file values:
                         // one for the full and one for the thumb
@@ -612,7 +612,15 @@ class ValuesResponderV1 extends ResponderV1 {
                 }
 
             } yield ChangeFileValueResponseV1(// return the response(s) of the call(s) of changeValueV1
-                changedFilesValues = changedFileValues,
+                locations = changeValueResponses.map {
+                    changeValueResponse =>
+                        val fileValue: FileValueV1 = changeValueResponse.value match {
+                            case fileValueV1: FileValueV1 => fileValueV1
+                            case other => throw AssertionException(s"Expected Sipi to change a file value, but it changed one of these: ${other.valueTypeIri}")
+                        }
+
+                        valueUtilV1.fileValueV12LocationV1(fileValue)
+                },
                 userdata = changeFileValueRequest.userProfile.userData
             )
 

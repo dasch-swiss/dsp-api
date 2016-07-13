@@ -282,7 +282,7 @@
 					if (data.status == ApiErrors.OK) {
 						$this.resadd({
 							rtinfo: data.restype_info,
-							props: [{vocabulary: 'salsah', name: 'sequence_of', value: localdata.settings.film_resid}],
+							props: [{/*vocabulary: 'salsah', */name: 'sequence_of', value: localdata.settings.film_resid}], // TODO: use knora-base IRI for sequence_of
 							options: {no_title: true},
 							viewer: localdata.settings.viewer,
 							defaultvalues: localdata.settings.defaultvalues,
