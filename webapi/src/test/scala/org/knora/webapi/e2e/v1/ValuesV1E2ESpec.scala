@@ -42,6 +42,8 @@ class ValuesV1E2ESpec extends E2ESpec {
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
 
     private val integerValueIri = new MutableTestIri
+    private val textValueIri = new MutableTestIri
+    private val linkValueIri = new MutableTestIri
 
     val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
@@ -56,7 +58,7 @@ class ValuesV1E2ESpec extends E2ESpec {
     }
 
     "The Values Endpoint" should {
-        "add a value to a resource" in {
+        "add an integer value to a resource" in {
             val params =
                 """
                   |{
@@ -75,8 +77,96 @@ class ValuesV1E2ESpec extends E2ESpec {
             }
         }
 
-        "mark a value as deleted" in {
+        "change an integer value" in {
+            val params =
+                """
+                  |{
+                  |    "project_id": "http://data.knora.org/projects/anything",
+                  |    "res_id": "http://data.knora.org/a-thing",
+                  |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
+                  |    "int_value": 4321
+                  |}
+                """.stripMargin
+
+            Put(s"/v1/values/${URLEncoder.encode(integerValueIri.get, "UTF-8")}", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+                val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+                integerValueIri.set(valueIri)
+            }
+        }
+
+        "mark an integer value as deleted" in {
             Delete(s"/v1/values/${URLEncoder.encode(integerValueIri.get, "UTF-8")}?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+            }
+        }
+
+        "add a text value containing a standoff reference to another resource" in {
+            val params =
+                """
+                  |{
+                  |    "project_id": "http://data.knora.org/projects/anything",
+                  |    "res_id": "http://data.knora.org/a-thing",
+                  |    "prop": "http://www.knora.org/ontology/anything#hasText",
+                  |    "richtext_value": {"utf8str":"This comment refers to another resource","textattr":"{\"_link\":[{\"start\":31,\"end\":39,\"resid\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
+                  |}
+                """.stripMargin
+
+            Post("/v1/values", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+                val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+                textValueIri.set(valueIri)
+            }
+        }
+
+        "change a text value containing a standoff reference to another resource" in {
+            val params =
+                """
+                  |{
+                  |    "project_id": "http://data.knora.org/projects/anything",
+                  |    "res_id": "http://data.knora.org/a-thing",
+                  |    "prop": "http://www.knora.org/ontology/anything#hasText",
+                  |    "richtext_value": {"utf8str":"This remark refers to another resource","textattr":"{\"_link\":[{\"start\":30,\"end\":38,\"resid\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
+                  |}
+                """.stripMargin
+
+            Put(s"/v1/values/${URLEncoder.encode(textValueIri.get, "UTF-8")}", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+                val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+                textValueIri.set(valueIri)
+            }
+        }
+
+        "mark as deleted a text value containing a standoff reference to another resource" in {
+            Delete(s"/v1/values/${URLEncoder.encode(textValueIri.get, "UTF-8")}?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+            }
+        }
+
+        "add a link value to a resource" in {
+            val params =
+                """
+                  |{
+                  |    "project_id": "http://data.knora.org/projects/anything",
+                  |    "res_id": "http://data.knora.org/a-thing",
+                  |    "prop": "http://www.knora.org/ontology/anything#hasOtherThing",
+                  |    "link_value": "http://data.knora.org/another-thing"
+                  |}
+                """.stripMargin
+
+            Post("/v1/values", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+                val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+                linkValueIri.set(valueIri)
+            }
+        }
+
+        "mark a link value as deleted" in {
+            Delete(s"/v1/values/${URLEncoder.encode(linkValueIri.get, "UTF-8")}?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
             }
         }
