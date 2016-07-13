@@ -320,13 +320,15 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     private val valueFunctions: Map[IRI, (ValueProps) => ApiValueV1] = new ErrorHandlingMap(Map(
         OntologyConstants.KnoraBase.TextValue -> makeTextValue,
         OntologyConstants.KnoraBase.IntValue -> makeIntValue,
-        OntologyConstants.KnoraBase.FloatValue -> makeFloatValue,
+        OntologyConstants.KnoraBase.DecimalValue -> makeDecimalValue,
+        OntologyConstants.KnoraBase.BooleanValue -> makeBooleanValue,
+        OntologyConstants.KnoraBase.UriValue -> makeUriValue,
         OntologyConstants.KnoraBase.DateValue -> makeDateValue,
         OntologyConstants.KnoraBase.ColorValue -> makeColorValue,
         OntologyConstants.KnoraBase.GeomValue -> makeGeomValue,
+        OntologyConstants.KnoraBase.GeonameValue -> makeGeonameValue,
         OntologyConstants.KnoraBase.ListValue -> makeListValue,
         OntologyConstants.KnoraBase.IntervalValue -> makeIntervalValue,
-        OntologyConstants.KnoraBase.TimeValue -> makeTimeValue,
         OntologyConstants.KnoraBase.StillImageFileValue -> makeStillImageValue,
         OntologyConstants.KnoraBase.LinkValue -> makeLinkValue
     ), { key: IRI => s"Unknown value type: $key" })
@@ -344,15 +346,39 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[FloatValueV1]].
+      * Converts a [[ValueProps]] into a [[DecimalValueV1]].
       *
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[FloatValueV1]].
+      * @return a [[DecimalValueV1]].
       */
-    private def makeFloatValue(valueProps: ValueProps): ApiValueV1 = {
+    private def makeDecimalValue(valueProps: ValueProps): ApiValueV1 = {
         val predicates = valueProps.literalData
 
-        FloatValueV1(predicates(OntologyConstants.KnoraBase.ValueHasFloat).literals.head.toFloat)
+        DecimalValueV1(BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasDecimal).literals.head))
+    }
+
+    /**
+      * Converts a [[ValueProps]] into a [[BooleanValueV1]].
+      *
+      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+      * @return a [[BooleanValueV1]].
+      */
+    private def makeBooleanValue(valueProps: ValueProps): ApiValueV1 = {
+        val predicates = valueProps.literalData
+
+        BooleanValueV1(predicates(OntologyConstants.KnoraBase.ValueHasBoolean).literals.head.toBoolean)
+    }
+
+    /**
+      * Converts a [[ValueProps]] into a [[UriValueV1]].
+      *
+      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+      * @return a [[UriValueV1]].
+      */
+    private def makeUriValue(valueProps: ValueProps): ApiValueV1 = {
+        val predicates = valueProps.literalData
+
+        UriValueV1(predicates(OntologyConstants.KnoraBase.ValueHasUri).literals.head)
     }
 
     /**
@@ -385,21 +411,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val predicates = valueProps.literalData
 
         IntervalValueV1(
-            timeval1 = predicates(OntologyConstants.KnoraBase.ValueHasIntervalStart).literals.head,
-            timeval2 = predicates(OntologyConstants.KnoraBase.ValueHasIntervalEnd).literals.head
+            timeval1 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalStart).literals.head),
+            timeval2 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalEnd).literals.head)
         )
-    }
-
-    /**
-      * Converts a [[ValueProps]] into a [[TimeValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[TimeValueV1]].
-      */
-    private def makeTimeValue(valueProps: ValueProps): ApiValueV1 = {
-        val predicates = valueProps.literalData
-
-        TimeValueV1(predicates(OntologyConstants.KnoraBase.ValueHasTime).literals.head)
     }
 
     /**
@@ -530,6 +544,18 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             objectIri = predicates(OntologyConstants.Rdf.Object).literals.head,
             referenceCount = predicates(OntologyConstants.KnoraBase.ValueHasRefCount).literals.head.toInt
         )
+    }
+
+    /**
+      * Converts a [[ValueProps]] into a [[GeonameValueV1]].
+      *
+      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+      * @return a [[GeonameValueV1]].
+      */
+    private def makeGeonameValue(valueProps: ValueProps): ApiValueV1 = {
+        val predicates = valueProps.literalData
+
+        GeonameValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeonameCode).literals.head)
     }
 
     /** Creates an attribute segment for the Salsah GUI from the given resource class.

@@ -86,11 +86,11 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val newResourceIri = new MutableTestIri
 
-    private def compareResourceFullResponses(expected: ResourceFullResponseV1, received: ResourceFullResponseV1): Unit = {
+    private def compareResourceFullResponses(received: ResourceFullResponseV1, expected: ResourceFullResponseV1): Unit = {
         // println(MessageUtil.toSource(received))
 
-        assert(expected.access == received.access, "access does not match")
-        assert(expected.userdata == received.userdata, "userdata does not match")
+        assert(received.access == expected.access, "access does not match")
+        assert(received.userdata == expected.userdata, "userdata does not match")
 
         val expectedResinfoWithSortedPermissions = expected.resinfo.get.copy(
             permissions = expected.resinfo.get.permissions.sorted
@@ -100,8 +100,8 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             permissions = received.resinfo.get.permissions.sorted
         )
 
-        assert(expectedResinfoWithSortedPermissions == receivedResInfoWithSortedPermissions, "resinfo does not match")
-        assert(expected.resdata == received.resdata, "resdata does not match")
+        assert(receivedResInfoWithSortedPermissions == expectedResinfoWithSortedPermissions , "resinfo does not match")
+        assert(received.resdata == expected.resdata, "resdata does not match")
 
         // sort permissions in incoming resinfo
         val expectedIncomingWithSortedPermissions = expected.incoming.map {
@@ -120,10 +120,10 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
         }
 
-        assert(expectedIncomingWithSortedPermissions == receivedIncomingWithSortedPermissions, "incoming does not match")
+        assert(receivedIncomingWithSortedPermissions == expectedIncomingWithSortedPermissions, "incoming does not match")
 
-        val sortedExpectedProps = expected.props.get.properties.sortBy(_.pid)
         val sortedReceivedProps = received.props.get.properties.sortBy(_.pid)
+        val sortedExpectedProps = expected.props.get.properties.sortBy(_.pid)
 
         assert(sortedReceivedProps.length == sortedExpectedProps.length, s"\n********** expected these properties:\n${MessageUtil.toSource(sortedExpectedProps)}\n********** received these properties:\n${MessageUtil.toSource(sortedReceivedProps)}")
 
@@ -139,28 +139,28 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = receivedProp.attributes.sorted
                 )
 
-                assert(expectedPropWithSortedAttr == receivedPropWithSortedAttr, s"These props do not match:\n********** Expected:\n${MessageUtil.toSource(expectedProp)}\n********** Received:\n${MessageUtil.toSource(receivedProp)}")
+                assert(receivedPropWithSortedAttr == expectedPropWithSortedAttr, s"These props do not match:\n********** Expected:\n${MessageUtil.toSource(expectedProp)}\n********** Received:\n${MessageUtil.toSource(receivedProp)}")
         }
     }
 
-    private def compareResourceCompoundContextResponses(expected: ResourceContextResponseV1, received: ResourceContextResponseV1): Unit = {
-        val expectedContext = expected.resource_context
+    private def compareResourceCompoundContextResponses(received: ResourceContextResponseV1, expected: ResourceContextResponseV1): Unit = {
         val receivedContext = received.resource_context
+        val expectedContext = expected.resource_context
 
-        assert(expectedContext.firstprop == receivedContext.firstprop, "firstprop does not match")
-        assert(expectedContext.context == receivedContext.context, "context does not match")
-        assert(expectedContext.preview == receivedContext.preview, "preview does not match")
+        assert(receivedContext.firstprop == expectedContext.firstprop, "firstprop does not match")
+        assert(receivedContext.context == expectedContext.context, "context does not match")
+        assert(receivedContext.preview == expectedContext.preview, "preview does not match")
         assert(receivedContext.locations.nonEmpty, "no locations given")
         assert(receivedContext.locations.get.size == 402, "the length of locations did not match")
-        assert(receivedContext.locations.get(0) == ResourcesResponderV1SpecContextData.expectedFirstLocationOfBookResourceContextResponse, "first location did not match")
-        assert(expectedContext.canonical_res_id == receivedContext.canonical_res_id, "canonical_res_id does not match")
-        assert(expectedContext.region == receivedContext.region, "region does not match")
-        assert(expectedContext.res_id == receivedContext.res_id, "res_id does not match")
+        assert(receivedContext.locations.get.head == ResourcesResponderV1SpecContextData.expectedFirstLocationOfBookResourceContextResponse, "first location did not match")
+        assert(receivedContext.canonical_res_id == expectedContext.canonical_res_id, "canonical_res_id does not match")
+        assert(receivedContext.region == expectedContext.region, "region does not match")
+        assert(receivedContext.res_id == expectedContext.res_id, "res_id does not match")
     }
 
-    private def compareResourcePartOfContextResponses(expected: ResourceContextResponseV1, received: ResourceContextResponseV1): Unit = {
-        val expectedContext = expected.resource_context
+    private def compareResourcePartOfContextResponses(received: ResourceContextResponseV1, expected: ResourceContextResponseV1): Unit = {
         val receivedContext = received.resource_context
+        val expectedContext = expected.resource_context
 
         val expectexResinfoWithSortedPermissions = expectedContext.resinfo match {
             case Some(resinfo: ResourceInfoV1) =>
@@ -178,10 +178,10 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             case None => None
         }
 
-        assert(expectexResinfoWithSortedPermissions == receivedResinfoWithSortedPermissions, "resinfo does not match")
-        assert(expectedContext.parent_res_id == receivedContext.parent_res_id, "parent_res_id does not match")
-        assert(expectedContext.context == receivedContext.context, "context does not match")
-        assert(expectedContext.canonical_res_id == receivedContext.canonical_res_id, "canonical_res_id does not match")
+        assert(receivedResinfoWithSortedPermissions == expectexResinfoWithSortedPermissions , "resinfo does not match")
+        assert(receivedContext.parent_res_id == expectedContext.parent_res_id, "parent_res_id does not match")
+        assert(receivedContext.context == expectedContext.context, "context does not match")
+        assert(receivedContext.canonical_res_id == expectedContext.canonical_res_id, "canonical_res_id does not match")
 
         val expectexParentResinfoWithSortedPermissions = expectedContext.parent_resinfo match {
             case Some(resinfo: ResourceInfoV1) =>
@@ -199,7 +199,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             case None => None
         }
 
-        assert(expectexParentResinfoWithSortedPermissions == receivedParentResinfoWithSortedPermissions, "parent_resinfo does not match")
+        assert(receivedParentResinfoWithSortedPermissions == expectexParentResinfoWithSortedPermissions, "parent_resinfo does not match")
     }
 
     val ReiseInsHeiligelandThreeValues = ResourceSearchResponseV1(
@@ -238,12 +238,12 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         )
     )
 
-    private def compareResourceSearchResults(expected: ResourceSearchResponseV1, received: ResourceSearchResponseV1): Unit = {
+    private def compareResourceSearchResults(received: ResourceSearchResponseV1, expected: ResourceSearchResponseV1): Unit = {
 
-        assert(expected.resources == received.resources, "resources did not match")
+        assert(received.resources == expected.resources, "resources did not match")
     }
 
-    private def checkResourceCreation(expected: Map[IRI, Seq[ApiValueV1]], received: ResourceCreateResponseV1): Unit = {
+    private def checkResourceCreation(received: ResourceCreateResponseV1, expected: Map[IRI, Seq[ApiValueV1]]): Unit = {
         // sort values by their string representation
         val sortedValuesReceived: Map[IRI, Seq[ResourceCreateValueResponseV1]] = received.results.map {
             case (propIri, propValues: Seq[ResourceCreateValueResponseV1]) => (propIri, propValues.sortBy {
@@ -285,16 +285,16 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             case (propIri, propValuesExpected) =>
                 (propValuesExpected, sortedValuesReceived(propIri)).zipped.foreach {
                     case (expected: ResourceCreateValueResponseV1, received: ResourceCreateValueResponseV1) =>
-                        assert(expected.value.textval == received.value.textval, "textval did not match")
-                        assert(expected.value.ival == received.value.ival, "ival did not match")
-                        assert(expected.value.fval == received.value.fval, "fval did not match")
-                        assert(expected.value.dateval1 == received.value.dateval1, "dateval1 did not match")
-                        assert(expected.value.dateval2 == received.value.dateval2, "dateval2 did not match")
-                        assert(expected.value.calendar == received.value.calendar, "calendar did not match")
-                        assert(expected.value.dateprecision1 == received.value.dateprecision1, "dateprecision1 did not match")
-                        assert(expected.value.dateprecision2 == received.value.dateprecision2, "dateprecision2 did not match")
-                        assert(expected.value.timeval1 == received.value.timeval1, "timeval1 did not match")
-                        assert(expected.value.timeval2 == received.value.timeval2, "timeval2 did not match")
+                        assert(received.value.textval == expected.value.textval, "textval did not match")
+                        assert(received.value.ival == expected.value.ival, "ival did not match")
+                        assert(received.value.dval == expected.value.dval, "dval did not match")
+                        assert(received.value.dateval1 == expected.value.dateval1, "dateval1 did not match")
+                        assert(received.value.dateval2 == expected.value.dateval2, "dateval2 did not match")
+                        assert(received.value.calendar == expected.value.calendar, "calendar did not match")
+                        assert(received.value.dateprecision1 == expected.value.dateprecision1, "dateprecision1 did not match")
+                        assert(received.value.dateprecision2 == expected.value.dateprecision2, "dateprecision2 did not match")
+                        assert(received.value.timeval1 == expected.value.timeval1, "timeval1 did not match")
+                        assert(received.value.timeval2 == expected.value.timeval2, "timeval2 did not match")
                 }
         }
 
@@ -329,7 +329,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     Some("Kommentar"),
                     Some("http://www.knora.org/ontology/knora-base#TextValue"),
                     Some("textval"),
-                    None,
+                    Some("richtext"),
                     "",
                     "0",
                     Vector(
@@ -401,9 +401,9 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                             None))))), userdata = ResourcesResponderV1Spec.userProfile.userData)
 
 
-    private def comparePropertiesGetResponse(expected: PropertiesGetResponseV1, received: PropertiesGetResponseV1) = {
+    private def comparePropertiesGetResponse(received: PropertiesGetResponseV1, expected: PropertiesGetResponseV1) = {
 
-        assert(expected.properties.properties.length == received.properties.properties.length, "The length of given properties is not correct.")
+        assert(received.properties.properties.length == expected.properties.properties.length, "The length of given properties is not correct.")
 
         expected.properties.properties.sortBy { // sort by property Iri
             prop => prop.pid
@@ -426,7 +426,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     values = receivedPropValuesSorted
                 )
 
-                assert(expectedPropSorted == receivedPropSorted, "Property did not match")
+                assert(receivedPropSorted == expectedPropSorted, "Property did not match")
         }
     }
 
@@ -454,6 +454,20 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     }
 
+    private def compareNewPageContextResponse(received: ResourceContextResponseV1) = {
+
+        assert(received.resource_context.resinfo.nonEmpty)
+
+        // check that there is a preview
+        assert(received.resource_context.resinfo.get.preview.nonEmpty)
+
+        assert(received.resource_context.resinfo.get.locations.nonEmpty)
+
+        // check that there are 7 locations
+        assert(received.resource_context.resinfo.get.locations.get.length == 7)
+
+    }
+
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
@@ -465,7 +479,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/c5058f3a", userProfile = ResourcesResponderV1Spec.userProfile)
 
             expectMsgPF(timeout) {
-                case response: ResourceFullResponseV1 => compareResourceFullResponses(ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse, response)
+                case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse)
             }
         }
 
@@ -474,7 +488,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/8a0b1e75", userProfile = ResourcesResponderV1Spec.userProfile)
 
             expectMsgPF(timeout) {
-                case response: ResourceFullResponseV1 => compareResourceFullResponses(ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse, response)
+                case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse)
             }
         }
 
@@ -485,7 +499,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
                     println(s"${FormatConstants.ANSI_YELLOW}TODO: this test is temporarily disabled because of issue 17.${FormatConstants.ANSI_RESET}")
-                    compareResourceFullResponses(ResourcesResponderV1SpecFullData.expectedRegionFullResource, response)
+                    compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedRegionFullResource)
             }
         }
 
@@ -494,7 +508,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/c5058f3a", resinfo = true, userProfile = ResourcesResponderV1Spec.userProfile)
 
             expectMsgPF(timeout) {
-                case response: ResourceContextResponseV1 => compareResourceCompoundContextResponses(ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse, response)
+                case response: ResourceContextResponseV1 => compareResourceCompoundContextResponses(received = response, expected = ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse)
             }
         }
 
@@ -503,7 +517,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/8a0b1e75", resinfo = true, userProfile = ResourcesResponderV1Spec.userProfile)
 
             expectMsgPF(timeout) {
-                case response: ResourceContextResponseV1 => compareResourcePartOfContextResponses(ResourcesResponderV1SpecContextData.expectedPageResourceContextResponse, response)
+                case response: ResourceContextResponseV1 => compareResourcePartOfContextResponses(received = response, expected = ResourcesResponderV1SpecContextData.expectedPageResourceContextResponse)
             }
         }
 
@@ -518,7 +532,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case response: ResourceSearchResponseV1 => compareResourceSearchResults(ReiseInsHeiligelandThreeValues, response)
+                case response: ResourceSearchResponseV1 => compareResourceSearchResults(received = response, expected = ReiseInsHeiligelandThreeValues)
             }
         }
 
@@ -533,7 +547,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case response: ResourceSearchResponseV1 => compareResourceSearchResults(ReiseInsHeiligelandOneValueRestrictedToBook, response)
+                case response: ResourceSearchResponseV1 => compareResourceSearchResults(received = response, expected = ReiseInsHeiligelandOneValueRestrictedToBook)
             }
         }
 
@@ -697,7 +711,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case response: ResourceCreateResponseV1 =>
                     newResourceIri.set(response.res_id)
-                    checkResourceCreation(valuesExpected, response)
+                    checkResourceCreation(received = response, expected = valuesExpected)
             }
 
             // Check that the resource doesn't have more than one lastModificationDate.
@@ -734,11 +748,11 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 internalFilename = "gaga.jpg",
                 originalFilename = "test.jpg",
                 originalMimeType = Some("image/jpg"),
-                dimX = 1000,
-                dimY = 1000,
-                qualityLevel = 100,
-                qualityName = Some("full"),
-                isPreview = false
+                dimX = 100,
+                dimY = 100,
+                qualityLevel = 10,
+                qualityName = Some("thumbnail"),
+                isPreview = true
             )
 
             val book = newResourceIri.get
@@ -778,7 +792,25 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case response: ResourceCreateResponseV1 =>
                     newResourceIri.set(response.res_id)
-                    checkResourceCreation(expected, response)
+                    checkResourceCreation(received = response, expected = expected)
+            }
+        }
+
+        "get the context of a newly created incunabula:page and check its locations" in {
+
+            val resIri: IRI = newResourceIri.get
+
+            val pageGetContext = ResourceContextGetRequestV1(
+                iri = resIri,
+                resinfo = true,
+                userProfile = ResourcesResponderV1Spec.userProfile
+            )
+
+            actorUnderTest ! pageGetContext
+
+            expectMsgPF(timeout) {
+                case response: ResourceContextResponseV1 =>
+                    compareNewPageContextResponse(received = response)
             }
         }
 
@@ -792,7 +824,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! PropertiesGetRequest
 
             expectMsgPF(timeout) {
-                case response: PropertiesGetResponseV1 => comparePropertiesGetResponse(propertiesGetResponseV1Region, response)
+                case response: PropertiesGetResponseV1 => comparePropertiesGetResponse(received = response, expected = propertiesGetResponseV1Region)
             }
 
         }
@@ -804,7 +836,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! resourceContextPage
 
             expectMsgPF(timeout) {
-                case response: ResourceContextResponseV1 => comparePageContextRegionResponse(response)
+                case response: ResourceContextResponseV1 => comparePageContextRegionResponse(received = response)
             }
 
         }

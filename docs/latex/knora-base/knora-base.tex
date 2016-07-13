@@ -328,12 +328,12 @@ Represents an integer. Property:
 	\item[valueHasInteger (1)] An \texttt{xsd:integer}.
 \end{description}
 
-\subsubsection{FloatValue}
+\subsubsection{DecimalValue}
 
-Represents a floating-point number. Property:
+Represents an arbitrary-precision decimal number. Property:
 
 \begin{description}
-	\item[valueHasFloat (1)] An \texttt{xsd:float}.
+	\item[valueHasDecimal (1)] An \texttt{xsd:decimal}.
 \end{description}
 
 \subsubsection{TimeValue}
@@ -341,7 +341,7 @@ Represents a floating-point number. Property:
 Represents a precise point on a timeline, e.g. relative to the beginning of an audio or video file. Property:
 
 \begin{description}
-	\item[valueHasTime (1)]	An \texttt{xsd:float} representing a number of seconds from the beginning of the timeline.
+	\item[valueHasTime (1)]	An \texttt{xsd:decimal} representing a number of seconds from the beginning of the timeline.
 \end{description}
 
 \subsubsection{GeomValue}
@@ -365,8 +365,8 @@ Represents a geolocation, using the numerical codes found at \url{http://geoname
 Represents a time interval, with precise start and end times on a timeline, e.g. relative to the beginning of an audio or video file. Properties:
 
 \begin{description}
-	\item[valueHasIntervalStart (1)] An \texttt{xsd:float} representing the start of the interval in seconds.
-	\item[valueHasIntervalEnd (1)]	An \texttt{xsd:float} representing the end of the interval in seconds.
+	\item[valueHasIntervalStart (1)] An \texttt{xsd:decimal} representing the start of the interval in seconds.
+	\item[valueHasIntervalEnd (1)]	An \texttt{xsd:decimal} representing the end of the interval in seconds.
 \end{description}
 
 \subsubsection{ListValue}

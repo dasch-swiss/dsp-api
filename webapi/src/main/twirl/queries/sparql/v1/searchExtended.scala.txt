@@ -214,9 +214,9 @@ WHERE {
 
                     }
 
-                    case "http://www.knora.org/ontology/knora-base#FloatValue" => {
+                    case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasFloat @searchCriterion.searchValue .
+                        ?valueObjectIri@index knora-base:valueHasDecimal @searchCriterion.searchValue .
 
                         BIND('@searchCriterion.searchValue' AS ?anyLiteral@index)
 
@@ -283,9 +283,9 @@ WHERE {
 
                     }
 
-                    case "http://www.knora.org/ontology/knora-base#FloatValue" => {
+                    case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasFloat ?anyLiteral@index .
+                        ?valueObjectIri@index knora-base:valueHasDecimal ?anyLiteral@index .
 
                         FILTER (?anyLiteral@index != @searchCriterion.searchValue)
 
@@ -320,9 +320,9 @@ WHERE {
 
                     }
 
-                    case "http://www.knora.org/ontology/knora-base#FloatValue" => {
+                    case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasFloat ?anyLiteral@index .
+                        ?valueObjectIri@index knora-base:valueHasDecimal ?anyLiteral@index .
 
                         FILTER (?anyLiteral@index > searchCriterion.searchValue )
 
@@ -356,9 +356,9 @@ WHERE {
 
                     }
 
-                    case "http://www.knora.org/ontology/knora-base#FloatValue" => {
+                    case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasFloat ?anyLiteral@index .
+                        ?valueObjectIri@index knora-base:valueHasDecimal ?anyLiteral@index .
 
                         FILTER (?anyLiteral@index >= @searchCriterion.searchValue)
 
@@ -392,7 +392,7 @@ WHERE {
 
                     }
 
-                    case "http://www.knora.org/ontology/knora-base#FloatValue" => {
+                    case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
                         ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
 
@@ -428,7 +428,7 @@ WHERE {
 
                     }
 
-                    case "http://www.knora.org/ontology/knora-base#FloatValue" => {
+                    case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
                         ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
 

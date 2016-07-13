@@ -81,9 +81,45 @@
 							//
 							//alertObjectContent($this.find('.fileToUpload').get(0).files[0]);
 							var fd = new FormData();
-							fd.append('fileToUpload', $this.find('.fileToUpload').get(0).files[0]);
-							fd.append('MAX_FILE_SIZE', '268435456');
-							var xhr = new XMLHttpRequest();
+							//fd.append('fileToUpload', $this.find('.fileToUpload').get(0).files[0]);
+							//fd.append('MAX_FILE_SIZE', '268435456');
+
+							fd.append('file', $this.find('.fileToUpload').get(0).files[0]);
+
+							$.ajax({
+								type:'POST',
+								url: SIPI_URL + "/make_thumbnail",
+								data: fd,
+								cache: false,
+								contentType: false,
+								processData: false,
+								success:function(data) {
+
+									$this.find('.fileName').remove();
+									$this.find('.fileType').remove();
+									$this.find('.fileSize').remove();
+									$this.find('.progressNumber').remove();
+									$this.find('.uploadButton').remove();
+
+									$this.append($('<div>').addClass('thumbNail')
+										.append($('<img>', {src: data.preview_path}))
+										.append($('<br>'))
+										.append(data.original_filename)
+									);
+
+									//$this.append($('<input>').attr({'type': 'hidden'}).addClass('fileData').val(event.target.responseText));
+
+
+									localdata.sipi_response = data;
+								},
+								error: function(data) {
+
+									console.log("error");
+									console.log(data)
+								}
+							});
+
+							/*var xhr = new XMLHttpRequest();
 							
 							//
 							// on progress...
@@ -146,8 +182,11 @@
 							xhr.addEventListener('abort', function(event) {
 							  alert("The upload has been canceled by the user or the browser dropped the connection.");
 							}, false);
-							xhr.open('POST', SITE_URL + '/api/imageuploader.php');
-							xhr.send(fd);
+
+							xhr.withCredentials = true;
+
+							xhr.open('POST', SIPI_URL + "/make_thumbnail");
+							xhr.send(fd);*/
 						}));
 					}
 				}));
@@ -157,7 +196,10 @@
 		/*===========================================================================*/
 		
 		value: function(options) {
-			var jsonstr = $(this).find('.fileData').val();
+			var $this = $(this);
+			var localdata = $this.data('localdata');
+
+			/*var jsonstr = $(this).find('.fileData').val();
 			var res;
 			try {
 				res = $.parseJSON(jsonstr);
@@ -165,8 +207,13 @@
 			catch(event) {
 				alert(event.target.responseText);
 				return;
+			}*/
+
+			if (localdata.sipi_response !== undefined) {
+				return localdata.sipi_response;
+			} else {
+				return false;
 			}
-			return res;
 		},
 		/*===========================================================================*/
 
