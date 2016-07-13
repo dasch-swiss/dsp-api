@@ -127,7 +127,8 @@ export module createResourceFormats {
     }
 
     /**
-     * Represents a resource creation request for a resource without a digital representation.
+     * Represents a resource creation request without providing information about a digital representation.
+     * However, this format may part of a HTTP Multipart request.
      *
      * This definition describes the JSON to be sent as the HTTP body in a POST request to http://www.knora.org/v1/resources
      *
@@ -162,5 +163,23 @@ export module createResourceFormats {
         label: string;
 
     }
+
+    /**
+     * Represents a resource creation request 
+     */
+    export interface createResourceWithRepresentationRequest extends createResourceWithoutRepresentationRequest {
+
+        file: {
+
+            originalFilename: string;
+
+            originalMimeType: string;
+
+            filename: string;
+
+        }
+
+    }
+
 
 }

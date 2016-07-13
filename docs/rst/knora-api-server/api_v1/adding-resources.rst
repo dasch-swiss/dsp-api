@@ -21,6 +21,8 @@
 Adding Resources
 ================
 
+.. _adding_resources_without_representation:
+
 *************************************************
 Adding Resources without a digital Representation
 *************************************************
@@ -34,12 +36,65 @@ in the TypeScript interface ``createResourceWithoutRepresentationRequest`` in mo
 It requires the IRI of the resource class the new resource belongs to, a label describing the new resource,
 the IRI of the project the new resource belongs to, and the properties to be assigned to the new resource.
 
+The request header's content type has to set to ``application/json``.
+
 Creating resources requires authentication since only known users may add resources.
-
- 
-
 
 
 **********************************************
 Adding Resources with a digital Representation
 **********************************************
+
+Certain resource classes allow for digital representations (e.g. an image). There are two ways to attach a file to a resource:
+Either by submitting directly the binaries of the file in a HTTP Multipart request or by indicating the location of the file.
+The two cases are referred to as Non GUI-case and GUI-case (see :ref:`sipi_and_knora`).
+
+-------------------------------------
+Including the binaries (Non GUI-case)
+-------------------------------------
+
+In order to include the binaries, a HTTP Multipart request has to be sent. One part contains the JSON (same format as described for :ref:`adding_resources_without_representation`) and has to be named ``json``.
+The other part contains the file's name, its binaries, and its mime type. The following example illustrates how to make this type of request using Python3:
+
+::
+
+    #!/usr/bin/env python3
+
+    # a Python dictionary that will be turned into a JSON object
+    resourceParams = {
+       'restype_id': 'http://www.knora.org/ontology/test#testType',
+       'properties': {
+           'http://www.knora.org/ontology/test#testtext': [
+               {'richtext_value': {'utf8str': "test", 'textattr': json.dumps({}), 'resource_reference': []}}
+           ],
+           'http://www.knora.org/ontology/test#testnumber': [
+               {'int_value': 1}
+           ]
+       },
+       'label': "test resource",
+       'project_id': 'http://data.knora.org/projects/testproject'
+    }
+
+    # the name of the file to be submitted
+    filename = "myimage.jpg"
+
+    # a tuple containing the file's name, its binaries and its mimetype
+    file = {'file': (filename, open(filename, 'rb'), "image/jpeg")}
+
+    # do a POST request providing both the JSON and the binaries
+    r = requests.post("http://www.knora.org/v1/resources",
+                      data={'json': json.dumps(resourceParams)},
+                      files=file,
+                      auth=('user', 'password'))
+
+
+Please note that the file has to be read in binary mode (by default it would be read in text mode).
+
+--------------------------------------------
+Indicating the location of a file (GUI-case)
+--------------------------------------------
+
+This request works similarly to :ref:`adding_resources_without_representation`. The JSON format is described in
+the TypeScript interface ``createResourceWithRepresentationRequest`` in module ``createResourceFormats``.
+
+In addition to :ref:`adding_resources_without_representation`, the (temporary) name of the file, its original name, and mime type have to be provided (see :ref:`gui_case`).

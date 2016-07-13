@@ -31,3 +31,28 @@ let thing: createResourceFormats.createResourceWithoutRepresentationRequest = {
         "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
     }
 };
+
+let thingWithFile: createResourceFormats.createResourceWithRepresentationRequest = {
+    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+    "label": "A thing",
+    "project_id": "http://data.knora.org/projects/anything",
+    "properties": {
+        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test text"}}],
+        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}, {"decimal_value":5.7}],
+        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+    },
+    "file": {
+        'originalFilename' : "myfile.jpg",
+        'originalMimeType' : "image/jpeg",
+        'filename' : "tmp.jpg"
+    }
+};
+
+
+
+

@@ -16,6 +16,8 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
+.. _sipi_and_knora:
+
 ***********************************
 Interaction Between Sipi and Knora
 ***********************************
@@ -34,6 +36,8 @@ Adding Files to Knora: Using the GUI or directly the API
 ========================================================
 To create a resource with a digital representation attached to, either the browser-based GUI (SALSAH) can be used
 or this can be done by *directly* [#]_ addressing the API. The same applies for changing an existing digital representation for a resource. Subsequently, the first case will be called the *GUI-case* and the second the *non GUI-case*.
+
+.. _gui_case:
 
 GUI-Case
 --------
