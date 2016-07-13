@@ -14,51 +14,10 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import {basicResponseComponents} from "./basicResponseComponents"
+import {basicMessageComponents} from "./basicMessageComponents"
 
 export module resourceResponseFormats {
-
-    /**
-     * Represents a rich text value
-     */
-    interface richtext {
-        /**
-         * Mere string representation
-         */
-        utf8str:string;
-
-        /**
-         * Markup information in standoff format
-         */
-        textattr:string;
-
-        /**
-         * References to Knora resources from the text
-         */
-        resource_reference:Array<string>
-    }
-
-    /**
-     * Represents a date value
-     */
-    interface date {
-        /**
-         * Start date in string format
-         */
-        dateval1:string;
-
-        /**
-         * End end in string format
-         */
-        dateval2:string;
-
-        /**
-         * Calendar used
-         */
-        calendar:string;
-
-    }
-
+    
     /**
      * Represents a property value (no parallel arrays)
      */
@@ -96,7 +55,7 @@ export module resourceResponseFormats {
         /**
          * typed representation of the value.
          */
-        value:string|number|richtext|date;
+        value:string|number|basicMessageComponents.richtext|basicMessageComponents.date|basicMessageComponents.interval;
     }
 
     /**
@@ -226,7 +185,7 @@ export module resourceResponseFormats {
         /**
          * The property's values
          */
-        values?:Array<string|number|richtext|date>;
+        values?:Array<string|number|basicMessageComponents.richtext|basicMessageComponents.date|basicMessageComponents.interval>;
 
         /**
          * Comments on the property's values
@@ -706,7 +665,7 @@ export module resourceResponseFormats {
      *
      * http://www.knora.org/v1/propertylists?vocabulary=vocabularyIRI
      */
-    export interface propertyTypesInResourceClassResponse extends basicResponseComponents.basicResponse {
+    export interface propertyTypesInResourceClassResponse extends basicMessageComponents.basicResponse {
         /**
          * Lists the property types the indicated resource class or vocabulary may have.
          */
@@ -719,7 +678,7 @@ export module resourceResponseFormats {
      *
      * http://www.knora.org/v1/resourcetypes?vocabulary=vocabularyIRI
      */
-    export interface resourceTypesInVocabularyResponse extends basicResponseComponents.basicResponse {
+    export interface resourceTypesInVocabularyResponse extends basicMessageComponents.basicResponse {
         /**
          * Lists the resource classes that are defined for the given vocabulary.
          */
@@ -732,7 +691,7 @@ export module resourceResponseFormats {
      *
      * http://www.knora.org/v1/resourcetypes/resourceClassIRI
      */
-    export interface resourceTypeResponse extends basicResponseComponents.basicResponse {
+    export interface resourceTypeResponse extends basicMessageComponents.basicResponse {
         /**
          * Represents information about the requested resource class
          */
@@ -746,7 +705,7 @@ export module resourceResponseFormats {
      *
      * http://www.knora.org/v1/properties/resourceIRI
      */
-    export interface resourcePropertiesResponse extends basicResponseComponents.basicResponse {
+    export interface resourcePropertiesResponse extends basicMessageComponents.basicResponse {
 
         /**
          * A map of property type IRIs to property instances
@@ -762,7 +721,7 @@ export module resourceResponseFormats {
      *
      * http://www.knora.org/v1/resources/resourceIRI
      */
-    export interface resourceFullResponse extends basicResponseComponents.basicResponse {
+    export interface resourceFullResponse extends basicMessageComponents.basicResponse {
         /**
          * Description of the resource and its class
          */
@@ -797,7 +756,7 @@ export module resourceResponseFormats {
      *
      * http://www.knora.org/v1/resources/resourceIRI?reqtype=info
      */
-    export interface resourceInfoResponse extends basicResponseComponents.basicResponse {
+    export interface resourceInfoResponse extends basicMessageComponents.basicResponse {
         /**
          * The current user's permissions on the resource
          */
@@ -815,7 +774,7 @@ export module resourceResponseFormats {
      *
      * http://www.knora.org/v1/resources/resourceIRI?reqtype=rights
      */
-    export interface resourceRightsResponse extends basicResponseComponents.basicResponse {
+    export interface resourceRightsResponse extends basicMessageComponents.basicResponse {
         /**
          * The current user's permissions on the resource
          */
@@ -828,7 +787,7 @@ export module resourceResponseFormats {
      *
      * http://www.knora.org/v1/resources/resourceIRI?reqtype=context[&resinfo=true]
      */
-    export interface resourceContextResponse extends basicResponseComponents.basicResponse {
+    export interface resourceContextResponse extends basicMessageComponents.basicResponse {
         /**
          * Context of the requested resource
          */
@@ -841,7 +800,7 @@ export module resourceResponseFormats {
      *
      * http://www.knora.org/v1/vocabularies
      */
-    export interface vocabularyResponse extends basicResponseComponents.basicResponse {
+    export interface vocabularyResponse extends basicMessageComponents.basicResponse {
 
         vocabularies: Array<vocabularyItem>;
 
@@ -854,7 +813,7 @@ export module resourceResponseFormats {
      *
      * http://www.knora.org/v1/resources?searchstr=searchValue[&restype_id=resourceClassIRI][&numprops=Integer][&limit=Integer]
      */
-    export interface resourceLabelSearchResponse extends basicResponseComponents.basicResponse {
+    export interface resourceLabelSearchResponse extends basicMessageComponents.basicResponse {
 
         resources: Array<resourceLabelSearchItem>;
 

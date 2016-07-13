@@ -14,7 +14,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export module basicResponseComponents {
+export module basicMessageComponents {
 
     /**
      * Basic members of the Knora API V1 response format.
@@ -134,6 +134,65 @@ export module basicResponseComponents {
          * obsolete
          */
         password:string;
+    }
+
+    /**
+     * Represents a rich text value
+     */
+    export interface richtext {
+        /**
+         * Mere string representation
+         */
+        utf8str:string;
+
+        /**
+         * Markup information in standoff format
+         */
+        textattr:string;
+
+        /**
+         * References to Knora resources from the text
+         */
+        resource_reference:Array<string>
+    }
+
+    /**
+     * Represents a date value
+     */
+    export interface date {
+        /**
+         * Start date in string format
+         */
+        dateval1:string;
+
+        /**
+         * End end in string format
+         */
+        dateval2:string;
+
+        /**
+         * Calendar used
+         */
+        calendar:string;
+
+    }
+
+    /**
+     * Represents an interval value
+     */
+    export interface interval {
+
+        /**
+         * Begin of the interval in seconds
+         */
+        timeval1: number;
+
+        /**
+         * End ofg the interval in seconds
+         */
+        timeval2: number;
+
+
     }
 
 }

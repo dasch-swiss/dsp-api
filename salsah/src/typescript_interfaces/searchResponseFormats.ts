@@ -14,7 +14,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { basicResponseComponents } from "./basicResponseComponents"
+import { basicMessageComponents } from "./basicMessageComponents"
 
 export module searchResponseFormats {
 
@@ -105,7 +105,7 @@ export module searchResponseFormats {
      *
      * http://www.knora.org/v1/search/?searchtype=extended[&filter_by_restype=resourceClassIRI][&filter_by_project=projectIRI][&filter_by_owner=userIRI](&property_id=propertyTypeIRI&compop=comparisonOperator&searchval=searchValue)+[&show_nrows=Integer]{[&start_at=Integer]
       */
-    export interface searchResponse extends basicResponseComponents.basicResponse {
+    export interface searchResponse extends basicMessageComponents.basicResponse {
 
         /**
          * List of search result items

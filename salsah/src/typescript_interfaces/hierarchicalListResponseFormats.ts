@@ -14,7 +14,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import {basicResponseComponents} from "./basicResponseComponents"
+import {basicMessageComponents} from "./basicMessageComponents"
 
 export module hierarchicalListResponseFormats {
 
@@ -79,7 +79,7 @@ export module hierarchicalListResponseFormats {
      * http://www.knora.org/v1/hlists/nodeIRI?reqtype=node
      *
      */
-    export interface nodePathResponse extends basicResponseComponents.basicResponse {
+    export interface nodePathResponse extends basicMessageComponents.basicResponse {
 
         /**
          * Represents the path to the requested node.
@@ -95,7 +95,7 @@ export module hierarchicalListResponseFormats {
      * http://www.knora.org/v1/hlists/listIRI
 
      */
-    export interface hierarchicalListResponse extends basicResponseComponents.basicResponse {
+    export interface hierarchicalListResponse extends basicMessageComponents.basicResponse {
 
         /**
          * Represents the elements of the requested hierarchical list.
