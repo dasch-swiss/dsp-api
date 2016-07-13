@@ -75,8 +75,8 @@
 		};
 
 
-		console.log("PROPINFO");
-		console.log(propinfo);
+		// console.log("PROPINFO");
+		// console.log(propinfo);
 
 		$.extend(options, optpar);
 		/**
@@ -106,11 +106,6 @@
 				}
 
 				return; // Ok and done...
-			}
-
-			if (prop == '__label__') {
-				console.log("Hoppla, das ist nicht !egelkonform!");
-				console.log(propinfo[prop].values);
 			}
 
 			//
@@ -1839,7 +1834,7 @@
 		var prop_index = 0;
 		return this.each(function() {
 			var prop = $(this).data('propname');
-			console.log(prop);
+			// console.log(prop);
 			reset_field(prop, prop_index, options.readonly);
 			prop_index++;
 		});

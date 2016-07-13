@@ -363,6 +363,31 @@ $(function() {
 
 
 	/**
+	 * Adds a special property called __label__ to the properties of a resource, to enable viewing and editing 
+	 * of the resource's rdfs:label.
+	 */
+	var resource_label = function(props, resinfo) {
+		props.__label__ = {
+			attributes: "size=64;maxlength=64",
+			comments: [],
+			guielement: "text",
+			guiorder: 0,
+			is_annotation: 0,
+			label: "Label",
+			occurrence: "1",
+			pid: "http://www.w3.org/2000/01/rdf-schema#label",
+			regular_property: 1,
+			value_firstprops: [null],
+			value_iconsrcs: [null],
+			value_ids: [null],
+			value_restype: [null],
+			value_rights: [3], // TODO: Take the rights from resdata !!!!!!!!!!!!
+			values: [resinfo.firstproperty],
+			valuetype_id: 'LABEL'
+		};
+	}
+
+	/**
 	* This function fills the Metadata area with the image specific information including regions
 	*
 	* @param {Object} viewer The viewer object
@@ -379,26 +404,7 @@ $(function() {
 		SALSAH.ApiGet('resources', res_id, function(data2) {
 			if (data2.status == ApiErrors.OK) {
 
-				// TODO: Add this to other types of metadata areas, too.
-				data2.props.__label__ = {
-					attributes: "size=64;maxlength=64",
-					comments: [],
-					guielement: "text",
-					guiorder: 0,
-					is_annotation: 0,
-					label: "Label",
-					occurrence: "1",
-					pid: "http://www.w3.org/2000/01/rdf-schema#label",
-					regular_property: 1,
-					value_firstprops: [null],
-					value_iconsrcs: [null],
-					value_ids: ["http://data.knora.org/fcac0fe61801/values/993b75ec5a04"],
-					value_restype: [null],
-					value_rights: [3], // ToDo: Take the rights from resdata !!!!!!!!!!!!
-					values: [resinfo.firstproperty],
-					valuetype_id: 'LABEL'
-				};
-
+				resource_label(data2.props, resinfo);
 				var metadata_area_tabs = viewer.metadataArea();
 				var icon = $('<img>', {src: data2.resdata.iconsrc});//.dragndrop('makeDraggable', 'RESID', {resid: res_id});
 				var label = $('<div>').append(icon).append(data2.resdata.restype_label);
@@ -461,6 +467,7 @@ $(function() {
 	var movieMetadataArea = function(viewer, winid, res_id, resinfo, tabid) {
 		SALSAH.ApiGet('resources', res_id, function(data2) {
 			if (data2.status == ApiErrors.OK) {
+				resource_label(data2.props, resinfo);
 				var metadata_area_tabs = viewer.metadataArea();
 				var icon = $('<img>', {src: data2.resdata.iconsrc}); //.dragndrop('makeDraggable', 'RESID', {resid: res_id});
 				var label1 = $('<div>').append(icon).append(data2.resdata.restype_label);
@@ -1410,6 +1417,7 @@ $(function() {
 						alert(strings._err_res_noacess); // comes from LocalAccess::showedit_properties....
 						window_html.win('unsetBusy');
 					}
+					resource_label(data.props, data.resinfo);
 					window_html.win('contentElement').css('overflow', 'auto'); // we have to set overlfow=auto to have a scrollbar, if the content does not fit....
 
 					metadataAreaDomCreate(window_html.win('content'), data, {winid: window_html.win('getId')});
@@ -1551,6 +1559,7 @@ $(function() {
 							reqtype: 'info'
 						}, function(data) {
 							if (data.status == ApiErrors.OK) {
+								resource_label(data.props, data.resinfo);
 								var resinfo = data.resource_info;
 								var linkitem = $('<div>', {title: 'remove on click', 'data-resid': dropdata.resid});
 								linkitem.append($('<img>', {src: resinfo.restype_iconsrc})).append(' ');
@@ -3128,6 +3137,8 @@ $(function() {
 			// $.post(SITE_URL +'/app/helper/rdfresedit.php', // TO DO, BUT ALREADY IN API DIR
 			SALSAH.ApiGet('resources', compound_res_id, function(data) {
 				if (data.status == ApiErrors.OK) {
+
+					resource_label(data.props, data.resinfo);
 					var icon = $('<img>', {src: data.resdata.iconsrc});
 					var label = $('<div>').append(icon).append(data.resdata.restype_label);
 
