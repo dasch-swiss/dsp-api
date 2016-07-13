@@ -160,6 +160,20 @@
            :objectClassConstraint :UserGroup .
 
 
+###  http://www.knora.org/ontology/knora-base#isAdminForProject
+
+:isAdminForProject rdf:type owl:ObjectProperty ;
+
+                   rdfs:comment "The given User is part of the given Project's ProjectAdmin group"@en ;
+
+                   rdfs:subPropertyOf :systemProperty ;
+                   rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> ;
+
+                   :subjectClassConstraint :User ;
+
+                   :objectClassConstraint :knoraProject .
+
+
 
 ###  http://www.knora.org/ontology/knora-base#currentproject
 

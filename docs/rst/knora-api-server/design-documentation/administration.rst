@@ -52,30 +52,29 @@ the need to explicitly create them.
 
 A user becomes implicitly a member of such a group by satisfying certain conditions:
 
-**UnknownUser**:
+**knora-base:UnknownUser**:
   Any user who has not logged into the Knora API server is automatically assigned to this group.
 
-**KnownUser**:
+**knora-base:KnownUser**:
   Any user who has logged into the Knora API server is automatically assigned to this group.
 
-**Creator**:
+**knora-base:Creator**:
   When checking a user’s permissions on an object, the user is automatically assigned to this group if he is
   the creator of the object.
 
-**ProjectMember**:
-  Membership by a user is received by being a member (```knora-base:isInGroup```) of a specific *ProjectMember* group
-  attached to a project. This group is automatically created for each project at project creation time. Adding a user
-  to a project, automatically adds him to this group.
+**knora-base:ProjectMember**:
+  When checking a user’s permissions, the user is automatically assigned to this group by beeing a member of a
+  project designated by the ```knora-base:isInProject``` property.
 
-**ProjectAdmin**:
-  Membership by a user is received by being a member (```knora-base:isInGroup```) of a specific *ProjectAdmin* group
-  attached to a project. This group is automatically created for each project at project creation time.
+**knora-base:ProjectAdmin**:
+  When checking a user's permission, the user is automatically assigned to this group through the
+  ```knora-base:isAdminForProject``` property, which points to the project in question.
 
-**SystemAdmin**:
+**knora-base:SystemAdmin**:
   The ``root`` user is by default member of this group. Membership is received by setting the property
   ``knora-base:isInGroup`` to ``knora-base:SystemAdmin`` on a ``knora-base:User``.
 
-To use these build-in groups as values for properties, the IRI is constructed by appending the name of the built-in
+To use these build-in groups as values for properties (Object Access and Default Permissions), the IRI is constructed by appending the name of the built-in
 group to ``knora-base``, e.g., ``knora-base:KnownUser`` where ``knora-base`` corresponds to ``http://www.knora.org/ontology/knora-base#``.
 
 
@@ -84,7 +83,7 @@ Permissions
 
 As mentioned, there are two distinct groups of permissions. The first is called *object access permissions* and contains
 permissions that point from explicit **objects** (resources/values) to groups. The second group of permissions is called
-*administrative permissions* and contains permissions that are put directly either on a **project** or a **group**
+*administrative permissions* and contains permissions that are put on **Permission** objects.
 inside a project.
 
 Object Access Permissions
@@ -108,16 +107,15 @@ Each permission in the above list implies all lower-numbered permissions.
 A user’s permission level on a particular object is calculated in the following way:
 
   1. Make a list of the groups that the user belongs to, including Creator and/or ProjectMember if applicable.
-  2. If the user is the owner of the object, give her the highest level of permissions.
-  3. Otherwise, make a list of the permissions that she can obtain on the object, by iterating over the permissions
+  2  Make a list of the permissions that she can obtain on the object, by iterating over the permissions
      that the object grants. For each permission, if she is in the specified group, add the specified permission to the
      list of permissions she can obtain.
-  4. From the resulting list, select the highest-level permission.
-  5. If the result is that she would have no permissions, give her whatever permission *UnknownUser* would have.
+  3. From the resulting list, select the highest-level permission.
+  4. If the result is that she would have no permissions, give her whatever permission *UnknownUser* would have.
 
 
-Administrative Permissions (Roles)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Administrative Permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following permissions can be set for the whole project (*ProjectMember* group) or any other group belonging to the
 project. For users that are members of a number of groups with permissions, the final set of permissions is additive and
@@ -125,51 +123,53 @@ most permissive:
 
   1. Resource Creation Permissions:
   
-      a) *hasProjectResourceCreateAllPermission*:
+      a) *knora-base:ProjectResourceCreateAllPermission*:
 
-        - description: gives the permission to create resources inside the project
-        - value: ``"true"^^xsd:boolean``
+        - description: gives the permission to create resources inside the project.
+        - usage: used as a value for *hasPermission*.
 
-      b) *hasProjectResourceCreateRestrictedPermission*:
+      b) *knora-base:hasRestrictedProjectResourceCreatePermission*:
       
-        - description: restricted resource creation permission
-        - value: a list of *ResourceClasses* the user should only be able to create instances of.
+        - description: restricted resource creation permission.
+        - usage: attached as a property to a Permission object.
+        - value: list of *ResourceClasses* the user should only be able to create instances of.
 
   2. Project Administration Permissions:
   
-      a) *hasProjectAllAdminPermission*:
+      a) *knora-base:ProjectAllAdminPermission*:
       
         - description: gives the user the permission to do anything on project level, i.e. create new groups, modify all
           existing groups (*group info*, *group membership*, *resource creation permissions*, *project administration
-          permissions*, and *default permissions*)
-        - value: ``"true"^^xsd:boolean``
+          permissions*, and *default permissions*).
+        - usage: used as a value for the *hasPermission* property.
       
-      b) *hasProjectAllGroupAdminPermission*:
+      b) *knora-base:ProjectAllGroupAdminPermission*:
 
         - description: gives the user the permission to modify *group info* and *group membership* on *all* groups belonging
           to the project.
-        - value: ``"true"^^xsd:boolean``
+        - usage: used as a value for the *hasPermission* property.
 
-      b) *hasProjectRestrictedGroupAdminPermission*:
+      b) *knora-base:hasRestrictedProjectGroupAdminPermission*:
 
         - description: gives the user the permission to modify *group info* and *group membership* on *certain* groups
           belonging to the project.
-        - value: a list of ``knora-base:UserGroup``
+        - usage: attached as a property to a Permission object.
+        - value: a list of ``knora-base:UserGroup``.
 
-      c) *hasProjectRightsAdminPermission*:
+      c) *ProjectRightsAdminPermission*:
 
         - description: gives the user the permission to change the *permissions* on all objects belonging to the
           project (e.g., default permissions attached to groups and permissions on objects).
-        - value: ``"true"^^xsd:boolean``
+        - usage: used as a value for the *hasPermission* property.
 
-      d) *hasProjectOntologyAdminPermission*:
+      d) *ProjectOntologyAdminPermission*:
 
         - description: gives the user the permission to administer the project ontologies
-        - value: ``"true"^^xsd:boolean``
+        - usage: used as a value for the *hasPermission* property.
 
   3. Default Permissions:
 
-      a) *knora:base:hasDefaultRestrictedViewPermission*:
+      a) *knora-base:hasDefaultRestrictedViewPermission*:
 
         - description: any object, created by a user inside a group holding this permission, is restricted to carry this
           permission
@@ -272,6 +272,100 @@ different operation abbreviations used are defined as follows:
    ==================== ======== ========= ===================== ======================== =======================
 
 
+Basic Workflows involving Permissions
+--------------------------------------
+
+Creating a new Resource
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. graphviz::
+
+   digraph G {
+     a [label="Start"];
+     
+     b [label="Get all groups for user"];
+     
+     c1 [label="Get all Resource Creation Permissions"];
+     c2 [label="Decide if user is allowed to create the resource type"];
+     
+     d1 [label="Get all Default Permissions"];
+     d2 [label="Get Default Permissions attached to Groups"];
+     d3 [label="Get Default Permissions attached to Resources/Values"];
+     d4 [label="Calculate maximum Default Permissions"];
+     
+     e [label="Create Resource/Values with maximum Default Permissions"];
+     
+     z [label="End"];
+     
+     a -> b;
+     b -> c1;
+     c1 -> c2;
+     c2 -> e;
+     
+     b -> d1;
+     d1 -> d2;
+     d2 -> d3;
+     d3 -> d4;
+     d4 -> e;
+     
+     e -> z;
+   }
+
+TODO: Text describing the graph.
+
+
+Accessing a Resource/Value
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. graphviz::
+
+   digraph G {
+     a [label="Start"];
+     
+     b [label="Get all groups for user"];
+     c [label="Get all permissions attached to Resource/Value"];
+     d [label="Calculate max permission user has on Resource/Value through group membership"];
+     e [label="Decide if user is allowed to perform operation"];
+     
+     z [label="End"];
+     
+     a -> b;
+     a -> c;
+     b -> d;
+     c -> d;
+     d -> e;
+     
+     e -> z;
+   }
+
+
+TODO: Text describing the graph.
+
+
+Project / Group Administration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. graphviz::
+
+   digraph G {
+     a [label="Start"];
+     
+     b [label="Get all groups for user"];
+     c [label="Get all Project Administration Permissions received through group membership"];
+     d [label="Decide if user is allowed to perform operation"];
+        
+     z [label="End"];
+     
+     a -> b;
+     b -> c;
+     c -> d;
+     d -> z;
+   }
+
+
+TODO: Text describing the graph.
+
+
 Implementation
 ---------------
 
@@ -290,8 +384,9 @@ following graph, shows the structure:
      "Permission" -> "Group" [ label="forGroup" ];
      "Permission" -> "ResourceClass" [ label="forResourceClass" ];
      "Permission" -> "Property" [ label="forProperty" ];
-     "Permission" -> "has[*]Permission" [ label="hasPermission" ];
-     "Permission" -> "<Group IRI>" [ label="hasDefault[*]Permission"]
+     "Permission" -> "hasProject[*]Permission" [ label="hasPermission" ];
+     "Permission" -> 
+     "Permission" -> "<Group IRI>" [ label="hasDefault[*]Permission"];
    }
 
 
