@@ -113,7 +113,7 @@
                                              
 
 
-                                SALSAH.ApiGet('selections/' + localdata.settings.selection_id, {}, function(data) {
+                                SALSAH.ApiGet('selections/' + encodeURIComponent(localdata.settings.selection_id), {}, function(data) {
                                   var dataval;
 			          var radioname = 'selradio' + String(Math.floor(Math.random()*10000));
 			              if (data.status == 0) {

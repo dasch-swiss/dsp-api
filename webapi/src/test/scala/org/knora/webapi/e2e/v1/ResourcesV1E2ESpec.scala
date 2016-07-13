@@ -32,7 +32,8 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.ResourcesRouteV1
 import org.knora.webapi.store._
-import spray.http._
+import spray.http.MediaTypes._
+import spray.http.{HttpEntity, _}
 import spray.json._
 
 import scala.concurrent.Await
@@ -71,7 +72,9 @@ class ResourcesV1E2ESpec extends E2ESpec {
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
     "Load test data" in {
@@ -137,7 +140,65 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
                 }
 
-                assert(status == StatusCodes.OK)
+                assert(status == StatusCodes.OK, response.toString)
+            }
+        }
+
+        "create a resource of type images:person" in {
+
+            val params =
+            """
+
+              {
+              	"restype_id": "http://www.knora.org/ontology/images#person",
+              	"label": "Testperson",
+              	"project_id": "http://data.knora.org/projects/images",
+              	"properties": {
+              		"http://www.knora.org/ontology/images#lastname": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Testname"}}],
+                    "http://www.knora.org/ontology/images#firstname": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Name"}}]
+              	}
+              }
+
+
+            """
+
+            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+            }
+
+        }
+
+        "create a resource of type anything:Thing" in {
+            val params =
+            """
+              {
+              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
+              	"label": "A thing",
+              	"project_id": "http://data.knora.org/projects/anything",
+              	"properties": {
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test text"}}],
+                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+              	}
+              }
+            """
+
+            // TODO: these properties have been commented out in the thing test ontology because of compatibility with the GUI
+            // "http://www.knora.org/ontology/anything#hasGeoname": [{"geoname_value": "2661602"}]
+            //  "http://www.knora.org/ontology/anything#hasBoolean": [{"boolean_value":true}],
+            // "http://www.knora.org/ontology/anything#hasGeometry": [{"geom_value":"{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"}],
+
+            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
             }
         }
 
