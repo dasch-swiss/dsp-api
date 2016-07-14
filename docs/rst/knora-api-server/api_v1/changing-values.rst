@@ -100,7 +100,9 @@ Please note that the file has to be read in binary mode (by default it would be 
 Indicating the location of a file (GUI-case)
 --------------------------------------------
 
-
+Here, simply the location of the new file has to be submitted as JSON.
+The JSON format is described in the TypeScript interface ``changeFileValueRequest`` in module ``changeValueFormats``.
+The request header's content type has to set to ``application/json``.
 
 ************************
 Response on Value Change
