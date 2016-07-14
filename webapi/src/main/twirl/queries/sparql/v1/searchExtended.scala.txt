@@ -513,6 +513,7 @@ WHERE {
         }
     }
 
+    ?resource knora-base:isDeleted false .
     ?resource rdfs:label ?resourceLabel .
     ?resource a ?resourceClass .
 
