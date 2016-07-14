@@ -16,16 +16,37 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-******************************
-Using API V1
-******************************
+.. _delete-resources-and-values:
 
-.. toctree::
-   :maxdepth: 2
+Deleting Resources and Values
+=============================
 
-   api-general
-   reading-and-searching-resources
-   adding-resources
-   adding-values
-   changing-values
-   delete-resources-and-values
+In order to delete a resource or a value, the HTTP method ``DELETE`` has to be used.
+Deleting resources or values requires authentication.
+
+*****************
+Delete a Resource
+*****************
+
+The delete request has to be sent to the Knora server using the ``resources`` path segment.
+
+::
+
+    curl -X DELETE http://www.knora.org/resources/resourceIRI
+
+
+
+Please note that the resource IRI has to be URL encoded.
+
+**************
+Delete a Value
+**************
+
+The delete request has to be sent to the Knora server using the ``values`` path segment, providing the valueIRI:
+
+::
+
+    curl -X DELETE http://www.knora.org/values/valueIRI
+
+
+Please note that the value IRI has to be URL encoded.

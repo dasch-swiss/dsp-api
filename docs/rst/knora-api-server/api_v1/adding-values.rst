@@ -23,13 +23,18 @@ Adding a Value
 
 In order to add values to an existing resource, the HTTP method ``POST`` has to be used.
 The request has to be sent to the Knora server using the ``values`` path segment.
+Creating values requires authentication since only known users may add values.
 
 ***********************
 Adding a Property Value
 ***********************
 
-In order to add a value to a resource, its property type, value, and project has to be indicated.
-Also the IRI of the resource the new value belongs has to be provided.
+In order to add a value to a resource, its property type, value, and project has to be indicated in the JSON.
+Also the IRI of the resource the new value belongs has to be provided in the JSON.
+
+::
+
+    curl -X POST ... http://www.knora.org/v1/values
 
 Depending on the type of the new value, one of the following formats (all TypeScript interfaces defined in module ``addValueFormats``) has to be used in order to create a new value:
   - ``addRichtextValueRequest``

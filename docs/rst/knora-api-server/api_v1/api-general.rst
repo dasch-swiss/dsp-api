@@ -25,7 +25,7 @@ RESTful API
 
 Knora API V1 is a RESTful API that allows for reading and adding of resources from and to Knora and changing their values
 using HTTP requests. The actual data is submitted as JSON (request and response format). The diverse HTTP methods are applied
-according to the widespread practice of RESTful APIs: GET for reading, POST for adding, and PUT for changing resources and values (see RESTful_API_).
+according to the widespread practice of RESTful APIs: GET for reading, POST for adding, PUT for changing resources and values, and DELETE to delete resources or values (see RESTful_API_).
 
 .. _RESTful_API: http://www.restapitutorial.com/lessons/httpmethods.html
 
@@ -44,6 +44,7 @@ In the following sections, the diverse API operations are described including th
  - :ref:`adding-resources`: Create a new resource
  - :ref:`adding-values`: Add values to a resource
  - :ref:`changing-values`: Change the values of a resource
+ - :ref:`delete-resources-and-values`: Delete resources and values
 
 V1 Path Segment
 ---------------

@@ -22,6 +22,7 @@ Changing a Value
 ================
 
 In order to add values to an existing resource, the HTTP method ``PUT`` has to be used.
+Changing values requires authentication since only known users may change values.
 
 **************************
 Modifying a Property Value
