@@ -53,8 +53,7 @@ As an answer, the client receives a JSON that represents the requested resource.
  - ``props``: Properties of the requested resource.
 
 
-For a complete and more formalized description of a full resource request, look  at the TypeScript interface ``resourceFullResponse`` in the module ``resourceResponseFormats`` (in ``salsah/src/typescript_interfaces``).
-Build the HTML documentation like follows ``make jsonformat`` (see README for further instructions).
+For a complete and more formalized description of a full resource request, look  at the TypeScript interface ``resourceFullResponse`` in the module ``resourceResponseFormats``.
 
 Provide Request Parameters
 --------------------------

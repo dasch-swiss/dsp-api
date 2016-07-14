@@ -127,8 +127,129 @@ export module createResourceFormats {
     }
 
     /**
+     * Represents a property value in the response of a newly created resource.
+     */
+    interface resultItem {
+
+        /**
+         * The property's value
+         */
+        value:{
+            /**
+             * Text representation of the value
+             */
+            textval: {
+                string: string;
+            }
+
+            /**
+             * Set if value is of type integer value
+             */
+            ival?: {
+                integer: number;
+            }
+
+            /**
+             * Set if value is of type decimal value (floating point number)
+             */
+            dval?: {
+                decimal: number;
+            }
+
+            /**
+             * Set if value is of type date value.
+             * Represents the start date.
+             */
+            dateval1?: {
+                string: string;
+            }
+
+            /**
+             * Set if value is of type date value.
+             * Represents the end date.
+             */
+            dateval2?: {
+                string: string;
+            }
+
+            /**
+             * Set if value is of type date value.
+             * Represents the precision of the start date.
+             */
+            dateprecision1?: {
+                string: string;
+            }
+
+            /**
+             * Set if value is of type date value.
+             * Represents the precision of the end date.
+             */
+            dateprecision2?: {
+                string: string;
+            }
+
+            /**
+             * Set if value is of type date value.
+             * Represents the date's calendar.
+             */
+            calendar?: {
+                string: string;
+            }
+
+            /**
+             * Set if value is of type interval value.
+             * Represents the start of the interval.
+             */
+            timeval1?:{
+                decimal: number;
+            }
+
+            /**
+             * Set if value is of type interval value.
+             * Represents the end of the interval.
+             */
+            timeval2?:{
+                decimal: number;
+            }
+
+            /**
+             * The IRI of the property type the value belongs to
+             */
+            property_id: {
+                string: string;
+            }
+
+            /**
+             * The IRI of the person that created the value
+             */
+            person_id: {
+                string: string;
+            }
+
+            /**
+             * The order of the value
+             */
+            order: {
+                integer: number;
+            }
+
+            /**
+             * The IRI of the resource the value belongs to.
+             */
+            resource_id: {
+                string: string;
+            }
+        }
+
+        /**
+         * The property value's IRI
+         */
+        id: string;
+    }
+
+    /**
      * Represents a resource creation request without providing information about a digital representation.
-     * However, this format may part of a HTTP Multipart request.
+     * However, this format may part of a HTTP Multipart request (in that case, do not set the content type to "application/json").
      *
      * This definition describes the JSON to be sent as the HTTP body in a POST request to http://www.knora.org/v1/resources
      *
@@ -165,7 +286,9 @@ export module createResourceFormats {
     }
 
     /**
-     * Represents a resource creation request 
+     * Represents a resource creation request .
+     *
+     * This definition describes the JSON to be sent as the HTTP body in a POST request to http://www.knora.org/v1/resources
      */
     export interface createResourceWithRepresentationRequest extends createResourceWithoutRepresentationRequest {
 
@@ -177,6 +300,22 @@ export module createResourceFormats {
 
             filename: string;
 
+        }
+
+    }
+
+    export interface createResourceResponse extends basicMessageComponents.basicResponse {
+
+        /**
+         * The IRI of the new resource
+         */
+        res_id: string;
+
+        /**
+         * A map of property types to property values
+         */
+        results: {
+            [index:string]:Array<resultItem>
         }
 
     }

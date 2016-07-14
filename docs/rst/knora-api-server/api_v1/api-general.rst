@@ -49,12 +49,14 @@ V1 Path Segment
 ---------------
 
 Every request to API V1 includes ``v1`` as a path segment, e.g. ``http://www.knora.org/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a``.
-Accordingly requests to another version of the API will require another path segment.
+Accordingly, requests to another version of the API will require another path segment.
 
 Knora API Response Format
 -------------------------
 In case an API request could be handled successfully, Knora responds with a 200 HTTP status code. The actual answer from Knora (the representation of the requested resource or information about the executed API operation)
 is sent in the HTTP body, encoded as JSON (using UTF-8). In this JSON, an API specific status code is sent (member ``status``).
+
+The JSON formats are formally defined as TypeScript interfaces  (located in ``salsah/src/typescript_interfaces``). Build the HTML documentation of these interfaces by executing ``make jsonformat`` (see ``docs/Readme.md`` for further instructions).
 
 
 Authentication
@@ -64,4 +66,4 @@ For all API operations that target at changing resources or values, the client h
 so that the API server can authenticate the user making the request. When using the SALSAH web interface, after logging in a session is established (cookie based).
 When using the API with another client application, credentials can be sent as a part of the HTTP header or as parts of the URL (see :ref:`authentication`).
 
-Also when reading resources authentication my be needed as resources and their values have restricted viewing permissions.
+Also when reading resources authentication my be needed as resources and their values may have restricted view permissions.
