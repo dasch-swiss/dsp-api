@@ -80,7 +80,7 @@ The other part contains the file's name, its binaries, and its mime type and has
     filename = "myimage.jpg"
 
     # a tuple containing the file's name, its binaries and its mimetype
-    file = {'file': (filename, open(filename, 'rb'), "image/jpeg")}
+    file = {'file': (filename, open(filename, 'rb'), "image/jpeg")} # use name "file"
 
     # do a POST request providing both the JSON and the binaries
     r = requests.post("http://www.knora.org/v1/resources",

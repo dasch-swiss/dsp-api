@@ -18,5 +18,38 @@
 
 .. _adding-values:
 
-Adding Values
-=============
+Adding a Value
+==============
+
+In order to add values to an existing resource, the HTTP method ``POST`` has to be used.
+The request has to be sent to the Knora server using the ``values`` path segment.
+
+***********************
+Adding a Property Value
+***********************
+
+In order to add a value to a resource, its property type, value, and project has to be indicated.
+Also the IRI of the resource the new value belongs has to be provided.
+
+Depending on the type of the new value, one of the following formats (all TypeScript interfaces defined in module ``addValueFormats``) has to be used in order to create a new value:
+  - ``addRichtextValueRequest``
+  - ``addLinkValueRequest``
+  - ``addIntegerValueRequest``
+  - ``addDecimalValueRequest``
+  - ``addBooleanValueRequest``
+  - ``addUriValueRequest``
+  - ``addDateValueRequest``
+  - ``addColorValueRequest``
+  - ``addGeometryValueRequest``
+  - ``addHierarchicalListValueRequest``
+  - ``addintervalValueRequest``
+  - ``addGeonameValueRequest``
+
+**************************
+Response on Value Creation
+**************************
+
+When a value has been successfully created, Knora sends back a JSON with new value's IRI.
+The value IRI identifies the value and can be used to perform future Knora API V1 operations.
+
+The JSON format of the response is described in the TypeScript interface ``addValueResponse`` in module ``addValueFormats``.

@@ -192,6 +192,113 @@ export module basicMessageComponents {
          */
         timeval2: number;
 
+    }
+
+    /**
+     * A richtext value
+     */
+    export interface richtextValue {
+
+        richtext_value: basicMessageComponents.richtext;
+
+    }
+
+    /**
+     * A link to another Knora resource. Value must be a Knora IRI.
+     */
+    export interface linkValue {
+
+        link_value: string;
+
+    }
+
+    /**
+     * An integer value
+     */
+    export interface integerValue {
+
+        int_value: number;
+
+    }
+
+    /**
+     * A decimal value (floating point)
+     */
+    export interface decimalValue {
+
+        decimal_value: number;
+
+    }
+
+    /**
+     * A boolean value
+     */
+    export interface booleanValue {
+
+        boolean_value: boolean;
+
+    }
+
+    /**
+     * A URI value
+     */
+    export interface uriValue {
+
+        uri_value: string;
+
+    }
+
+    /**
+     * A date value. This must have the following format: (GREGORIAN|JULIAN):YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]
+     * E.g. an exact date like GREGORIAN:2015-12-03 or a period like GREGORIAN:2015-12-03-2015-12-04.
+     * Dates may also have month or year precision, e.g. GREGORIAN:2015-12 (the whole month of december) or GREGORIAN:2015 (the whole year 2015).
+     */
+    export interface dateValue {
+
+        date_value: string;
+    }
+
+    /**
+     * A color value
+     * Value must be a hexadecimal RGB color code, e.g. "#4169E1"
+     */
+    export interface colorValue {
+
+        color_value: string;
+    }
+
+    /**
+     * A geometry value representing a region on a 2D surface.
+     */
+    export interface geometryValue {
+
+        geom_value: string;
+    }
+
+    /**
+     * A list node IRI
+     */
+    export interface hierarchicalListValue {
+
+        hlist_value: string;
+
+    }
+
+    /**
+     * An interval value consisting of two time values
+     */
+    export interface intervalValue {
+
+        interval_value: Array<number>;
+
+    }
+
+    /**
+     * A geoname value
+     */
+    export interface geonameValue {
+
+        geoname_value: string;
 
     }
 

@@ -19,114 +19,6 @@ import {basicMessageComponents} from "./basicMessageComponents"
 export module createResourceFormats {
 
     /**
-     * A richtext value
-     */
-    interface richtextValue {
-
-        richtext_value: basicMessageComponents.richtext;
-
-    }
-
-    /**
-     * A link to another Knora resource. Value must be a Knora IRI.
-     */
-    interface linkValue {
-
-        link_value: string;
-
-    }
-
-    /**
-     * An integer value
-     */
-    interface integerValue {
-
-        int_value: number;
-
-    }
-
-    /**
-     * A decimal value (floating point)
-     */
-    interface decimalValue {
-
-        decimal_value: number;
-
-    }
-
-    /**
-     * A boolean value
-     */
-    interface booleanValue {
-
-        boolean_value: boolean;
-
-    }
-
-    /**
-     * A URI value
-     */
-    interface uriValue {
-
-        uri_value: string;
-
-    }
-
-    /**
-     * A date value. This must have the following format: (GREGORIAN|JULIAN):YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]
-     * E.g. an exact date like GREGORIAN:2015-12-03 or a period like GREGORIAN:2015-12-03-2015-12-04.
-     * Dates may also have month or year precision, e.g. GREGORIAN:2015-12 (the whole month of december) or GREGORIAN:2015 (the whole year 2015).
-     */
-    interface dateValue {
-
-        date_value: string;
-    }
-
-    /**
-     * A color value
-     * Value must be a hexadecimal RGB color code "#4169E1", e.g. ""
-     */
-    interface colorValue {
-
-        color_value: string;
-    }
-
-    /**
-     * A geometry value representing a region on a 2D surface.
-     */
-    interface geometryValue {
-
-        geom_value: string;
-    }
-
-    /**
-     * A list node IRI
-     */
-    interface hierarchicalListValue {
-
-        hlist_value: string;
-
-    }
-
-    /**
-     * An interval value consisting of two time values
-     */
-    interface intervalValue {
-
-        interval_value: Array<number>;
-
-    }
-
-    /**
-     * A geoname value
-     */
-    interface geonameValue {
-
-        geoname_value: string;
-
-    }
-
-    /**
      * Represents a property value in the response of a newly created resource.
      */
     interface resultItem {
@@ -267,10 +159,10 @@ export module createResourceFormats {
          *
          */
         properties:{
-            [index:string]:Array<richtextValue>|Array<linkValue>|Array<integerValue>
-                |Array<decimalValue>|Array<booleanValue>|Array<uriValue>
-                |Array<dateValue>|Array<colorValue>|Array<geometryValue>
-                |Array<hierarchicalListValue>|Array<intervalValue>|Array<geonameValue>;
+            [index:string]:Array<basicMessageComponents.richtextValue>|Array<basicMessageComponents.linkValue>|Array<basicMessageComponents.integerValue>
+                |Array<basicMessageComponents.decimalValue>|Array<basicMessageComponents.booleanValue>|Array<basicMessageComponents.uriValue>
+                |Array<basicMessageComponents.dateValue>|Array<basicMessageComponents.colorValue>|Array<basicMessageComponents.geometryValue>
+                |Array<basicMessageComponents.hierarchicalListValue>|Array<basicMessageComponents.intervalValue>|Array<basicMessageComponents.geonameValue>;
         }
 
         /**
