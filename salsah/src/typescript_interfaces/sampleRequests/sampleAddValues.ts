@@ -16,7 +16,7 @@
 
 import { addValueFormats } from "../addValueFormats"
 
-let addIntervalValueRequest: addValueFormats.addintervalValueRequest = {"interval_value":[0,0],"res_id":"http://data.knora.org/a-thing","prop":"http://www.knora.org/ontology /anything#hasInterval","project_id":"http://data.knora.org/projects/anything"};
+let addIntervalValueRequest: addValueFormats.addIntervalValueRequest = {"interval_value":[0,0],"res_id":"http://data.knora.org/a-thing","prop":"http://www.knora.org/ontology /anything#hasInterval","project_id":"http://data.knora.org/projects/anything"};
 
 let addIntervalValueResponse: addValueFormats.addValueResponse = {"userdata":{"email":"test@test.ch","username":"root","firstname":"Administrator","projects_info":[{"basepath":null,"shortname":"incunabula","description":null,"logo":"incunabula_logo.png","id":"http://data.knora.org/projects/77275339","keywords":null,"rights":null,"longname":"Bilderfolgen Basler Frühdrucke"},{"basepath":null,"shortname":"images","description":null,"logo":null,"id":"http://data.knora.org/projects/images","keywords":null,"rights":null,"longname":"Images Collection Demo"},{"basepath":null,"shortname":"anything","description":null,"logo":null,"id":"http://data.knora.org/projects/anything","keywords":null,"rights":null,"longname":"Anything Project"}],"user_id":"http://data.knora.org/users/91e19f1e01","lastname":"Admin","token":null,"active_project":null,"projects":["http://data.knora.org/projects/77275339","http://data.knora.org/projects/images","http://data.knora.org/projects/anything"],"lang":"de","password":null},"id":"http://data.knora.org/a-thing/values/7iX8sKUGQMiInDP9PF_bOw","status":0,"comment":null,"rights":8,"value":{"timeval1":0,"timeval2":0}};
 

@@ -61,6 +61,8 @@ The other part contains the file's name, its binaries, and its mime type and has
 
     #!/usr/bin/env python3
 
+    import requests, json
+
     # a Python dictionary that will be turned into a JSON object
     resourceParams = {
        'restype_id': 'http://www.knora.org/ontology/test#testType',

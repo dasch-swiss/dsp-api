@@ -130,7 +130,7 @@ export module addValueFormats {
      * HTTP POST request to http://www.knora.org/v1/values
      *
      */
-    export interface addintervalValueRequest extends addValueRequestBase, basicMessageComponents.intervalValue {}
+    export interface addIntervalValueRequest extends addValueRequestBase, basicMessageComponents.intervalValue {}
 
 
     /**

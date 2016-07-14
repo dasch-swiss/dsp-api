@@ -302,4 +302,71 @@ export module basicMessageComponents {
 
     }
 
+    /**
+     * Describes a file value (for GUI-case)
+     */
+    export interface createOrChangeFileValueRequest {
+
+        file: {
+
+            originalFilename: string;
+
+            originalMimeType: string;
+
+            filename: string;
+
+        }
+    }
+
+    /**
+     * Binary representation of a resource (location)
+     */
+    export interface locationItem {
+        /**
+         * Duration of a movie or an audio file
+         */
+        duration:number;
+
+        /**
+         * X dimension of an image representation
+         */
+        nx:number;
+
+        /**
+         * Y dimension of an image representation
+         */
+        ny:number;
+
+        /**
+         * Path to the binary representation
+         */
+        path:string;
+
+        /**
+         * Frames per second (movie)
+         */
+        fps:number;
+
+        /**
+         * Format of the binary representation
+         */
+        format_name:string;
+
+        /**
+         * Original file name of the binary representation (before import to Knora)
+         */
+        origname:string;
+
+        /**
+         * Protocol used
+         */
+        protocol:protocolOptions;
+    }
+
+    /**
+     * Represents how a binary representation (location) can be accessed.
+     * Either locally stored (file) or referenced from an external location (url)
+     */
+    type protocolOptions = "file" | "url";
+
 }

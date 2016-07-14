@@ -195,59 +195,8 @@ export module resourceResponseFormats {
         /**
          * List of binary representations attached to the requested resource (when doing a full resource request)
          */
-        locations?: Array<locationItem>;
+        locations?: Array<basicMessageComponents.locationItem>;
     }
-
-    /**
-     * Binary representation of a resource (location)
-     */
-    interface locationItem {
-        /**
-         * Duration of a movie or an audio file
-         */
-        duration:number;
-
-        /**
-         * X dimension of an image representation
-         */
-        nx:number;
-
-        /**
-         * Y dimension of an image representation
-         */
-        ny:number;
-
-        /**
-         * Path to the binary representation
-         */
-        path:string;
-
-        /**
-         * Frames per second (movie)
-         */
-        fps:number;
-
-        /**
-         * Format of the binary representation
-         */
-        format_name:string;
-
-        /**
-         * Original file name of the binary representation (before import to Knora)
-         */
-        origname:string;
-
-        /**
-         * Protocol used
-         */
-        protocol:protocolOptions;
-    }
-
-    /**
-     * Represents how a binary representation (location) can be accessed.
-     * Either locally stored (file) or referenced from an external location (url)
-     */
-    type protocolOptions = "file" | "url";
 
     /**
      * Represents a permission assertion for the current user
@@ -281,7 +230,7 @@ export module resourceResponseFormats {
         /**
          * Digital representations of the resource
          */
-        locations:Array<locationItem>;
+        locations:Array<basicMessageComponents.locationItem>;
 
         /**
          * Label of the resource's class
@@ -296,7 +245,7 @@ export module resourceResponseFormats {
         /**
          * Preview representation of the resource: Thumbnail or Icon
          */
-        preview:locationItem;
+        preview:basicMessageComponents.locationItem;
 
         /**
          * The owner of the resource
@@ -341,7 +290,7 @@ export module resourceResponseFormats {
         /**
          * Full quality representation of the resource
          */
-        locdata:locationItem;
+        locdata:basicMessageComponents.locationItem;
 
         /**
          * The Knora IRI identifying the resource's class
@@ -456,12 +405,12 @@ export module resourceResponseFormats {
         /**
          * Locations of depending resources (e.g. representation of pages of a book)
          */
-        locations?:Array<Array<locationItem>>;
+        locations?:Array<Array<basicMessageComponents.locationItem>>;
 
         /**
          * Preview locations of depending resources (e.g. representation of pages of a book)
          */
-        preview?:Array<locationItem>
+        preview?:Array<basicMessageComponents.locationItem>
 
         /**
          * First properties of depending resources (e.g. of pages of a book)
