@@ -15,7 +15,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { hierarchicalListResponseFormats } from "./hierarchicalListResponseFormats"
+import { hierarchicalListResponseFormats } from "../hierarchicalListResponseFormats"
 
 // "Hierarchische Stichwortliste" images demo project
 // http://localhost:3333/v1/hlists/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302

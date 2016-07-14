@@ -14,7 +14,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { createResourceFormats } from "./createResourceFormats"
+import { createResourceFormats } from "../createResourceFormats"
 
 let thing: createResourceFormats.createResourceWithoutRepresentationRequest = {
     "restype_id": "http://www.knora.org/ontology/anything#Thing",

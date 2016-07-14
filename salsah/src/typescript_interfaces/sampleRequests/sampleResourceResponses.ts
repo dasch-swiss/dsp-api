@@ -14,8 +14,8 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { resourceResponseFormats } from "./resourceResponseFormats"
-import { searchResponseFormats } from "./searchResponseFormats"
+import { resourceResponseFormats } from "../resourceResponseFormats"
+import { searchResponseFormats } from "../searchResponseFormats"
 
 // book Zeitglöcklein
 // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a

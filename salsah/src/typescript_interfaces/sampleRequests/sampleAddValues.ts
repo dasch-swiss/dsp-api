@@ -14,7 +14,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { addValueFormats } from "./addValueFormats"
+import { addValueFormats } from "../addValueFormats"
 
 let addIntervalValueRequest: addValueFormats.addintervalValueRequest = {"interval_value":[0,0],"res_id":"http://data.knora.org/a-thing","prop":"http://www.knora.org/ontology /anything#hasInterval","project_id":"http://data.knora.org/projects/anything"};
 
