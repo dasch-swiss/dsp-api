@@ -86,8 +86,8 @@ permissions that point from explicit **objects** (resources/values) to groups. T
 *administrative permissions* and contains permissions that are put on **Permission** objects.
 inside a project.
 
-Object Access Permissions
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Object Access Permissions (sub-properties of *hasObjectAccessPermission*)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 An object (resource / value) can grant the following permissions:
   1. *knora-base:hasRestrictedViewPermission*: Allows a restricted view of the object, e.g. a view of an image with a
      watermark.
@@ -105,9 +105,8 @@ An object (resource / value) can grant the following permissions:
 Each permission in the above list implies all lower-numbered permissions.
 
 A user’s permission level on a particular object is calculated in the following way:
-
   1. Make a list of the groups that the user belongs to, including Creator and/or ProjectMember if applicable.
-  2  Make a list of the permissions that she can obtain on the object, by iterating over the permissions
+  2. Make a list of the permissions that she can obtain on the object, by iterating over the permissions
      that the object grants. For each permission, if she is in the specified group, add the specified permission to the
      list of permissions she can obtain.
   3. From the resulting list, select the highest-level permission.
@@ -126,28 +125,28 @@ most permissive:
       a) *knora-base:ProjectResourceCreateAllPermission*:
 
         - description: gives the permission to create resources inside the project.
-        - usage: used as a value for *hasPermission*.
+        - usage: used as a value for *knora-base:hasResourceCreationPermission* (rdfs:subPropertyOf knora-base:hasAdministrativePermission).
 
-      b) *knora-base:hasRestrictedProjectResourceCreatePermission*:
+      b) *knora-base:hasRestrictedProjectResourceCreatePermission* (rdfs:subPropertyOf knora-base:hasResourceCreationPermission):
       
         - description: restricted resource creation permission.
         - usage: attached as a property to a Permission object.
         - value: list of *ResourceClasses* the user should only be able to create instances of.
 
-  2. Project Administration Permissions:
+  2. Project Administration Permissions (sub-properties of *hasProjectAdministrationPermission*):
   
       a) *knora-base:ProjectAllAdminPermission*:
       
         - description: gives the user the permission to do anything on project level, i.e. create new groups, modify all
           existing groups (*group info*, *group membership*, *resource creation permissions*, *project administration
           permissions*, and *default permissions*).
-        - usage: used as a value for the *hasPermission* property.
+        - usage: used as a value for *hasProjectAdministrationPermission* (rdfs:subPropertyOf knora-base:hasProjectAdministrationPermission).
       
       b) *knora-base:ProjectAllGroupAdminPermission*:
 
         - description: gives the user the permission to modify *group info* and *group membership* on *all* groups belonging
           to the project.
-        - usage: used as a value for the *hasPermission* property.
+        - usage: used as a value for the *hasProjectAdministrationPermission* property.
 
       b) *knora-base:hasRestrictedProjectGroupAdminPermission*:
 
@@ -160,52 +159,51 @@ most permissive:
 
         - description: gives the user the permission to change the *permissions* on all objects belonging to the
           project (e.g., default permissions attached to groups and permissions on objects).
-        - usage: used as a value for the *hasPermission* property.
+        - usage: used as a value for the *hasProjectAdministrationPermission* property.
 
-      d) *ProjectOntologyAdminPermission*:
+  3. Ontology Administration Permissions (sub-properties of *hasOntologyAdministrationPermission*):
+
+      a) *ProjectOntologyAdminPermission*:
 
         - description: gives the user the permission to administer the project ontologies
-        - usage: used as a value for the *hasPermission* property.
+        - usage: used as a value for the *hasOntologyAdministrationPermission* property.
 
-  3. Default Permissions:
+Default Permissions (sub-properties of *hasDefaultPermission*)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-      a) *knora-base:hasDefaultRestrictedViewPermission*:
-
-        - description: any object, created by a user inside a group holding this permission, is restricted to carry this
-          permission
-        - value: a list of ``knora-base:UserGroup``
-
-      b) *knora-base:hasDefaultViewPermission*:
+      1. *knora-base:hasDefaultRestrictedViewPermission*:
 
         - description: any object, created by a user inside a group holding this permission, is restricted to carry this
           permission
         - value: a list of ``knora-base:UserGroup``
 
-      c) *knora-base:hasDefaultModifyPermission* accompanied by a list of groups.
+      2. *knora-base:hasDefaultViewPermission*:
 
         - description: any object, created by a user inside a group holding this permission, is restricted to carry this
           permission
         - value: a list of ``knora-base:UserGroup``
 
-      d) *knora-base:hasDefaultDeletePermission* accompanied by a list of groups.
+      3. *knora-base:hasDefaultModifyPermission* accompanied by a list of groups.
 
         - description: any object, created by a user inside a group holding this permission, is restricted to carry this
           permission
         - value: a list of ``knora-base:UserGroup``
 
-      e) *knora-base:hasDefaultChangeRightsPermission* accompanied by a list of groups.
+      4. *knora-base:hasDefaultDeletePermission* accompanied by a list of groups.
+
+        - description: any object, created by a user inside a group holding this permission, is restricted to carry this
+          permission
+        - value: a list of ``knora-base:UserGroup``
+
+      5. *knora-base:hasDefaultChangeRightsPermission* accompanied by a list of groups.
 
         - description: any object, created by a user inside a group holding this permission, is restricted to carry this
           permission
         - value: a list of ``knora-base:UserGroup``
 
 
-Default Permissions
---------------------
-
-As described earlier, it is possible to define default permissions for newly created resources / values by attaching the
-special properties to groups. The groups these properties are attached to, can either be user created or one of the
-built-in groups.
+It is possible to define default permissions for newly created resources / values by attaching the special properties
+to groups. The groups these properties are attached to, can either be user created or one of the built-in groups.
 
 TODO: Allow setting default permissions to values (and probably resources also) inside a project ontology. This will require a bit more calculation,
 as now for each value that is created, not only the user's group's default permission needs to be taken into account, but
@@ -221,12 +219,12 @@ These default permissions are going to be given for each newly created project:
      - receives implicitly *hasProjectResourceCreateAllPermission* for all projects
      - receives implicitly *knora-base:hasChangeRightsPermission* on all objects from all projects
 
-  - ``ProjectAdmin`` Group:
+  - ``knora-base:ProjectAdmin`` Group:
      - receives *hasProjectResourceCreateAllPermission*
      - receives *hasProjectAllAdminPermission*
      - receives implicitly *knora-base:hasChangeRightsPermission* on all objects
 
-  - ``ProjectMember`` Group:
+  - ``knora-base:ProjectMember`` Group:
      - receives *hasProjectResourceCreateAllPermission*
      - receives *knora-base:hasDefaultChangeRightsPermission* for *knora-base:Creator*
      - receives *knora-base:hasDefaultModifyPermission* for this *ProjectMember* group
@@ -393,6 +391,42 @@ following graph, shows the structure:
 The properties **forProject**, **forGroup**, **forResourceClass**, and **forProperty** form together a kind of a
 *compound key*, allowing finding existing permission instances, that address the same set of Project / Group /
 ResourceClass / Property combination, thus making it possible to extend or change the attached permissions.
+
+
+Permission Class and Property Hierarchy
+----------------------------------------
+
+For space saving purposes we use here ':' instead of 'knora-base:'.
+
+.. graphviz::
+
+   digraph G {
+     hP [label=":hasPermission"]
+     
+     hOAP [label=":hasObjectAccessPermission"]
+     hRVP [label=":hasRestrictedViewPermission"]
+     hVP [label=":hasViewPermission"]
+     hMP [label=":hasModifyPermission"]
+     hDP [label=":hasDeletePermission"]
+     hCRP [label=":hasChangeRightsPermission"]
+     
+     hAP [label=":hasAdministrativePermission"]
+     
+     hRCP [label=":hasResourceCreationPermission"]
+     hRPRCP [label=":hasRestrictedProjectResourceCreatePermission"]
+     
+     hPAP [label=":hasProjectAdministrationPermission"]
+     hRPGAP [label="hasRestrictedProjectGroupAdminPermission"]
+     
+     hOAP [label=":hasOntologyAdministrationPermission"]
+   }
+
+
+Administrative permission values:
+::
+  <http://data.knora.org/permissions/
+
+
 
 Example Data stored in the DefaultPermissions graph
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
