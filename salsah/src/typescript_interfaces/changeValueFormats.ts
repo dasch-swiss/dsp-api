@@ -132,6 +132,21 @@ export module changeValueFormats {
     export interface changeGeonameValueRequest extends changeValueRequestBase, basicMessageComponents.geonameValue {}
 
     /**
+     * Represents a request to change a value's comment without changing the value itself.
+     *
+     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     *
+     */
+    export interface changeValueCommentRequest extends changeValueRequestBase {
+
+        /**
+         * Comment on the existing value
+         */
+        comment:string;
+
+    }
+
+    /**
      * Represents a request to change the file value (digital representation) of a resource (GUI-case).
      *
      * HTTP PUT to http://www.knora.org/v1/fielvalue/resourceIRI
