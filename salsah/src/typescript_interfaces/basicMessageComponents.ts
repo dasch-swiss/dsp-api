@@ -247,7 +247,7 @@ export module basicMessageComponents {
         /**
          * References to Knora resources from the text
          */
-        resource_reference:Array<string>
+        resource_reference:Array<basicMessageComponents.KnoraIRI>
     }
 
     /**
