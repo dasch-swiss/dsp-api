@@ -26,6 +26,7 @@ Using API V1
    api-general
    reading-and-searching-resources
    adding-resources
+   reading-values
    adding-values
    changing-values
    delete-resources-and-values

@@ -21,6 +21,10 @@
 Reading and Searching Resources
 ===============================
 
+In order to get an existing resource, the HTTP method ``GET`` has to be used.
+The request has to be sent to the Knora server using the ``resources`` path segment (depending on the type of request, this segment has to be exchanged, see below).
+Reading resources may require authentication since some resources may have restricted viewing permissions.
+
 ***********************************************
 Get the Representation of a Resource by its IRI
 ***********************************************

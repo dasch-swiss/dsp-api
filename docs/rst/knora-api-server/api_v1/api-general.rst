@@ -42,6 +42,7 @@ Different API Operations
 In the following sections, the diverse API operations are described including their request and response formats:
  - :ref:`reading-and-searching-resources`: Get a specific resource or resource class by its IRI or search for resources
  - :ref:`adding-resources`: Create a new resource
+ - :ref:`reading-values`: Get a specific value or its version history
  - :ref:`adding-values`: Add values to a resource
  - :ref:`changing-values`: Change the values of a resource
  - :ref:`delete-resources-and-values`: Delete resources and values
