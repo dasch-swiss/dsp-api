@@ -139,7 +139,7 @@ export module basicMessageComponents {
     /**
      * Represents a rich text value
      */
-    export interface richtext {
+    interface richtext {
         /**
          * Mere string representation
          */
@@ -159,7 +159,7 @@ export module basicMessageComponents {
     /**
      * Represents a date value
      */
-    export interface date {
+    interface date {
         /**
          * Start date in string format
          */
@@ -180,7 +180,7 @@ export module basicMessageComponents {
     /**
      * Represents an interval value
      */
-    export interface interval {
+    interface interval {
 
         /**
          * Begin of the interval in seconds
@@ -194,12 +194,18 @@ export module basicMessageComponents {
 
     }
 
+    /**
+     * Describes a Knora Value.
+     * Either a simple type or a complex represented by an interface.
+     */
+    export type knoraValue = number|string|boolean|richtext|interval|date;
+
     export interface richtextValue {
 
         /**
          * A richtext value
          */
-        richtext_value: basicMessageComponents.richtext;
+        richtext_value: richtext;
 
     }
 

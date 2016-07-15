@@ -38,7 +38,7 @@ export module valueResponseFormats {
         /**
          * The value's value
          */
-        value: string|number|basicMessageComponents.richtext|basicMessageComponents.date|basicMessageComponents.interval;
+        value: basicMessageComponents.knoraValue;
 
     }
 

@@ -167,7 +167,7 @@ export module changeValueFormats {
         /**
          * The value that has been added
          */
-        value: string|number|basicMessageComponents.richtext|basicMessageComponents.date|basicMessageComponents.interval;
+        value: basicMessageComponents.knoraValue;
 
         /**
          * The value's comment (if given)

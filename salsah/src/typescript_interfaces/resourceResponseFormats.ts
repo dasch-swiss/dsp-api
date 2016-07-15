@@ -55,7 +55,7 @@ export module resourceResponseFormats {
         /**
          * typed representation of the value.
          */
-        value:string|number|basicMessageComponents.richtext|basicMessageComponents.date|basicMessageComponents.interval;
+        value:basicMessageComponents.knoraValue;
     }
 
     /**
@@ -185,7 +185,7 @@ export module resourceResponseFormats {
         /**
          * The property's values
          */
-        values?:Array<string|number|basicMessageComponents.richtext|basicMessageComponents.date|basicMessageComponents.interval>;
+        values?:Array<basicMessageComponents.knoraValue>;
 
         /**
          * Comments on the property's values

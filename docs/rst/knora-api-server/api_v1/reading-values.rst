@@ -64,9 +64,9 @@ In order to get information about a link between two resources, the path segment
 The IRI of the source object, the IRI of the property type linking the the two objects, and the IRI of the target object have to be provided in the URL separated by slashes.
 Each of these has to be URL encoded.
 
- ::
+::
 
-     curl http://www.knora.org/links/sourceObjectIRI/linkingPropertyIRI/targetObjectIRI
+    curl http://www.knora.org/links/sourceObjectIRI/linkingPropertyIRI/targetObjectIRI
 
 
 In the response, information about the link is returned such as a reference count indicating how many links of the specified direction
