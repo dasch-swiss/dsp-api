@@ -47,7 +47,7 @@ object ValuesRouteV1 extends Authenticator {
     private def makeVersionHistoryRequestMessage(userProfile: UserProfileV1, iris: Seq[IRI]): ValueVersionHistoryGetRequestV1 = {
         if (iris.length != 3) throw BadRequestException("Version history request requires resource IRI, property IRI, and current value IRI")
 
-        val Vector(resourceIriStr, propertyIriStr, currentValueIriStr) = iris
+        val Vector(resourceIriStr, propertyIriStr, currentValueIriStr) = iris.toVector
 
         val resourceIri = InputValidation.toIri(resourceIriStr, () => throw BadRequestException(s"Invalid resource IRI $resourceIriStr"))
         val propertyIri = InputValidation.toIri(propertyIriStr, () => throw BadRequestException(s"Invalid property IRI $propertyIriStr"))
