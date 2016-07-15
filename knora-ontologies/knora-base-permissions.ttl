@@ -63,16 +63,7 @@
 
 
 
-#
-##
-### Permission Value Class
-##
-#
-### http://www.knora.org/ontology/knora-base#PermissionValue
 
-:PermissionValue rdf:type owl:Class ;
-
-                 rdfs:comment "Permission values class."@en.
 
 
 
@@ -143,12 +134,57 @@
 
 #
 ##
+### Administrative Permission Value Class
+##
+#
+### http://www.knora.org/ontology/knora-base#PermissionValue
+
+:AdministrativePermissionValue rdf:type owl:Class ;
+
+                               rdfs:comment "Administrative permission values class."@en.
+
+
+
+#
+##
 ### Administrative Permissions
 ##
 #
 
+###  http://www.knora.org/ontology/knora-base#hasDefaultObjectAccessPermission
+
+:hasAdministrativePermission rdf:type owl:ObjectProperty ;
+
+                             rdfs:comment "Base Administrative Permission property."@en ;
+
+                             rdfs:subPropertyOf :hasPermission .
+
+
+
 #
-## Resource Creation Permission Properties and Individuals
+## Resource Creation Permission Value Class and Instance
+#
+
+###  Class
+###  http://www.knora.org/ontology/knora-base#ResourceCreationPermissionValue
+
+:ResourceCreationPermissionValue rdf:type owl:Class ;
+
+                                 rdf:subClassOf :AdministrativePermissionValue ;
+                                 
+                                 rdfs:comment "Base Resource Creation Permission Value class."@en .
+
+
+###  Instance
+<http://data.knora.org/permissions/ProjectResourceCreateAllPermission>
+
+                        rdf:type :ResourceCreationPermissionValue ;
+
+                        rdfs:comment "Gives the permission to create resources inside the project."@en .
+
+
+#
+## Resource Creation Permission Properties
 #
 
 ###  http://www.knora.org/ontology/knora-base#hasResourceCreationPermission
@@ -157,20 +193,11 @@
 
                                rdfs:comment "Base Object Access Permission property."@en ;
 
-                               rdfs:subPropertyOf :hasPermission ;
+                               rdfs:subPropertyOf :hasAdministrativePermission ;
 
                                :subjectClassConstraint :Permission ;
 
-                               :objectClassConstraint :PermissionValue .
-
-
-### http://data.knora.org/permissions/ProjectResourceCreateAllPermission
-
-<http://data.knora.org/permissions/ProjectResourceCreateAllPermission>
-
-                        rdf:type :PermissionValue ;
-
-                        rdfs:comment "Gives the permission to create resources inside the project."@en ;
+                               :objectClassConstraint :ResourceCreationPermissionValue .
 
 
 
@@ -189,31 +216,60 @@
 
 
 #
-## Project Administration Permissions
+## Project Administration Permission Value Class and Instances
 #
 
-### http://www.knora.org/ontology/knora-base#hasProjectAllAdminPermission
+###  Class
+###  http://www.knora.org/ontology/knora-base#ProjectAdministrationPermissionValue
 
-:ProjectAllAdminPermission rdf:type owl:DatatypeProperty ;
+:ProjectAdministrationPermissionValue rdf:type owl:Class ;
 
-                           rdfs:comment ""@en ;
-
-                              rdfs:subPropertyOf :hasPermission ;
-
-                              :objectDatatypeConstrained xsd:boolean .
-
+                                      rdf:subClassOf :AdministrativePermissionValue ;
+                                      
+                                      rdfs:comment "Base Project Administration Permission Value class."@en .
 
 
-### http://www.knora.org/ontology/knora-base#hasProjectAllGroupAdminPermission
 
-:hasProjectAllGroupAdminPermission rdf:type owl:DatatypeProperty ;
+###  Instances
+<http://data.knora.org/permissions/ProjectAllAdminPermission>
 
-                                   rdfs:comment ""@en ;
+                      rdf:type :ProjectAdministrationPermissionValue ;
 
-                                   rdfs:subPropertyOf :hasPermission ;
+                      rdfs:comment ""@en .
 
-                                   :objectDatatypeConstrained xsd:boolean .
 
+
+<http://data.knora.org/permissions/ProjectAllGroupAdminPermission>
+
+                      rdf:type :ProjectAdministrationPermissionValue ;
+
+                      rdfs:comment ""@en .
+
+
+
+<http://data.knora.org/permissions/ProjectRightsAdminPermission>
+
+                      rdf:type :ProjectAdministrationPermissionValue ;
+
+                      rdfs:comment ""@en .
+
+
+
+#
+## Project Administration Permission Properties
+#
+
+### http://www.knora.org/ontology/knora-base#hasProjectAdministrationPermission
+
+:hasProjectAdministrationPermission rdf:type owl:ObjectProperty ;
+
+                                    rdfs:comment "Base Project Administration Permission property."@en ;
+
+                                    rdfs:subPropertyOf :hasAdministrativePermission ;
+
+                                    :subjectClassConstraint :Permission ;
+
+                                    :objectClassConstraint :ProjectAdministrationPermissionValue .
 
 
 
@@ -229,48 +285,63 @@
 
 
 
-### http://www.knora.org/ontology/knora-base#hasProjectRightsAdminPermission
+#
+## Ontology Administration Permissions Value Class and Instance
+#
 
-:hasProjectRightsAdminPermission rdf:type owl:ObjectProperty ;
+###  Class
+###  http://www.knora.org/ontology/knora-base#OntologyAdministrationPermissionValue
 
-                                 rdfs:comment ""@en ;
+:OntologyAdministrationPermissionValue rdf:type owl:Class ;
 
-                                 rdfs:subPropertyOf :hasPermission ;
+                                       rdf:subClassOf :AdministrativePermissionValue ;
 
-                                 :objectDatatypeConstrained xsd:boolean .
+                                       rdfs:comment "Base Project Administration Permission Value class."@en .
+
+
+
+###  Instance
+<http://data.knora.org/permissionsProjectOntologyAdminPermission
+
+                      rdf:type OntologyAdministrationPermissionValue ;
+
+                      rdfs:comment ""@en .
 
 
 
 #
-## Ontology Administration Permissions
+## Ontology Administration Permission Properties
 #
-
-### http://www.knora.org/ontology/knora-base#hasProjectOntologyAdminPermission
-
-:hasProjectOntologyAdminPermission rdf:type owl:ObjectProperty ;
-
-                                   rdfs:comment ""@en ;
-
-                                   rdfs:subPropertyOf :hasOntologyAdministrationPermission ;
-
-                                   :objectDatatypeConstrained xsd:boolean .
-
 
 ### http://www.knora.org/ontology/knora-base#hasOntologyAdministrationPermission
 
 :hasOntologyAdministrationPermission rdf:type owl:ObjectProperty ;
 
-                                     rdfs:comment "Base Object Access Permission property."@en ;
+                                     rdfs:comment "Base Ontology Administration Permission property."@en ;
 
-                                     rdfs:subPropertyOf :hasPermission .
+                                     rdfs:subPropertyOf :hasAdministrativePermission ;
+
+                                     :subjectClassConstraint :Permission ;
+
+                                     :objectClassConstraint :OntologyAdministrationPermissionValue .
 
 
 
 #
 ##
-### Default Permissions
+### Default Object Access Permissions
 ##
 #
+
+###  http://www.knora.org/ontology/knora-base#hasDefaultObjectAccessPermission
+
+:hasDefaultObjectAccessPermission rdf:type owl:ObjectProperty ;
+
+                                  rdfs:comment "Base Default Object Access Permission property."@en ;
+
+                                  rdfs:subPropertyOf :hasPermission .
+
+
 
 ###  http://www.knora.org/ontology/knora-base#hasDefaultChangeRightsPermission
 
@@ -316,14 +387,4 @@
 
                                     :objectClassConstraint :UserGroup ;
 
-                                    rdfs:subPropertyOf :hasDefaultPermission .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasDefaultPermission
-
-:hasDefaultPermission rdf:type owl:ObjectProperty ;
-
-                      rdfs:subPropertyOf :hasPermission ;
-
-                      :objectClassConstraint :UserGroup .
+                                    rdfs:subPropertyOf :hasDefaultObjectAccessPermission .
