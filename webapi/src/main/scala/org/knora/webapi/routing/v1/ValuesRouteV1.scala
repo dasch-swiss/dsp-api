@@ -64,7 +64,7 @@ object ValuesRouteV1 extends Authenticator {
     private def makeLinkValueGetRequestMessage(userProfile: UserProfileV1, iris: Seq[IRI]): LinkValueGetRequestV1 = {
         if (iris.length != 3) throw BadRequestException("Link value request requires subject IRI, predicate IRI, and object IRI")
 
-        val Vector(subjectIriStr, predicateIriStr, objectIriStr) = iris
+        val Vector(subjectIriStr, predicateIriStr, objectIriStr) = iris.toVector
 
         val subjectIri = InputValidation.toIri(subjectIriStr, () => throw BadRequestException(s"Invalid subject IRI $subjectIriStr"))
         val predicateIri = InputValidation.toIri(predicateIriStr, () => throw BadRequestException(s"Invalid predicate IRI $predicateIriStr"))
