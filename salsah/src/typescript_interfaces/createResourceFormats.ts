@@ -108,14 +108,14 @@ export module createResourceFormats {
              * The IRI of the property type the value belongs to
              */
             property_id: {
-                string: string;
+                string: basicMessageComponents.KnoraIRI;
             }
 
             /**
              * The IRI of the person that created the value
              */
             person_id: {
-                string: string;
+                string: basicMessageComponents.KnoraIRI;
             }
 
             /**
@@ -129,14 +129,14 @@ export module createResourceFormats {
              * The IRI of the resource the value belongs to.
              */
             resource_id: {
-                string: string;
+                string: basicMessageComponents.KnoraIRI;
             }
         }
 
         /**
          * The property value's IRI
          */
-        id: string;
+        id: basicMessageComponents.KnoraIRI;
     }
 
     /**
@@ -152,7 +152,7 @@ export module createResourceFormats {
         /**
          * The IRI of the resource class the new resource belongs to.
          */
-        restype_id: string;
+        restype_id: basicMessageComponents.KnoraIRI;
 
         /**
          * A map of property types to property values to be assigned to the new resource.
@@ -169,7 +169,7 @@ export module createResourceFormats {
         /**
          * The IRI of the project the new resource belongs to.
          */
-        project_id: string;
+        project_id: basicMessageComponents.KnoraIRI;
 
         /**
          * The label describing the new resource.
@@ -193,7 +193,7 @@ export module createResourceFormats {
         /**
          * The IRI of the new resource
          */
-        res_id: string;
+        res_id: basicMessageComponents.KnoraIRI;
 
         /**
          * A map of property types to property values

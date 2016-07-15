@@ -17,13 +17,107 @@
 export module basicMessageComponents {
 
     /**
+     * Numeric code representing the result (success or failure) of an API operation.
+     *
+     * 0:   OK (Success)
+     *
+     * 1:   INVALID_REQUEST_METHOD
+     *
+     * 2:   CREDENTIALS_NOT_VALID
+     *
+     * 3:   NO_RIGHTS_FOR_OPERATION
+     *
+     * 4:   INTERNAL_SALSAH_ERROR
+     *
+     * 5:   NO_PROPERTIES
+     *
+     * 6:   NOT_IN_USERDATA
+     *
+     * 7:   RESOURCE_ID_MISSING
+     *
+     * 8:   UNKNOWN_VOCABULARY
+     *
+     * 9:   NOT_FOUND
+     *
+     * 10:  API_ENDPOINT_NOT_FOUND
+     *
+     * 11:  INVALID_REQUEST_TYPE
+     *
+     * 12:  PROPERTY_ID_MISSING
+     *
+     * 13:  NOT_YET_IMPLEMENTED
+     *
+     * 14:  COULD_NOT_OPEN_PROGRESS_FILE
+     *
+     * 15:  VALUE_ID_OR_RESTYPE_ID_MISSING
+     *
+     * 16:  HLIST_ALREADY_EXISTENT
+     *
+     * 17:  HLIST_NO_LABELS
+     *
+     * 18:  HLIST_NOT_EXISTING
+     *
+     * 19:  HLIST_NO_POSITION
+     *
+     * 20:  HLIST_INVALID_POSITION
+     *
+     * 21:  SELECTION_NO_LABELS
+     *
+     * 22:  SELECTION_ALREADY_EXISTENT
+     *
+     * 23:  SELECTION_MISSING_OR_INVALID_POSITION
+     *
+     * 24:  SELECTION_DELETE_FAILED
+     *
+     * 25:  SELECTION_NODE_ALREADY_EXISTENT
+     *
+     * 26:  GEONAMES_GEONAME_ID_EXISTING
+     *
+     * 27:  UPDATE_NOT_PERFORMED
+     *
+     * 28:  DUPLICATE_VALUE
+     *
+     * 29:  ONTOLOGY_CONSTRAINT
+     *
+     * 999: UNSPECIFIED_ERROR
+     *
+     */
+    type KnoraStatusCode = integer;
+
+    /**
+     * Numeric code representing the user's rights on a Knora resource.
+     *
+     * 0: No rights
+     *
+     * 1: Restricted View Permission
+     *
+     * 2: View Permission
+     *
+     * 6: Modify Permission
+     *
+     * 7: Delete Permission
+     *
+     * 8: Change Rights Permission
+     */
+    export type KnoraRights = integer;
+
+    /**
+     * Obsolete
+     *
+     * String representing the user's permission on a resource.
+     * 
+     * "OK": the user has sufficient permission to view the resource
+     */
+    export type KnoraAccess = string;
+
+    /**
      * Basic members of the Knora API V1 response format.
      */
     export interface basicResponse {
         /**
          * Knora status code
          */
-        status:number;
+        status:KnoraStatusCode;
 
         /**
          * The current user's data
@@ -58,7 +152,7 @@ export module basicMessageComponents {
         /**
          * The project's IRI
          */
-        id:string;
+        id:KnoraIRI;
 
         /**
          * Keywords describing the project
@@ -68,7 +162,7 @@ export module basicMessageComponents {
         /**
          * obsolete
          */
-        rights:string;
+        rights:KnoraRights;
 
         /**
          * Project's long name
@@ -185,20 +279,67 @@ export module basicMessageComponents {
         /**
          * Begin of the interval in seconds
          */
-        timeval1: number;
+        timeval1: integer;
 
         /**
          * End ofg the interval in seconds
          */
-        timeval2: number;
+        timeval2: integer;
 
     }
+
+    /**
+     * String must be a hexadecimal RGB color code, e.g. "#4169E1"
+     */
+    type color = string;
+
+    /**
+     * String must be a valid Knora IRI, e.g. "http://data.knora.org/c5058f3a".
+     */
+    export type KnoraIRI = string;
+
+    /**
+     * String must have the following format: (GREGORIAN|JULIAN):YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]
+     * E.g. an exact date like GREGORIAN:2015-12-03 or a period like GREGORIAN:2015-12-03-2015-12-04.
+     * Dates may also have month or year precision, e.g. GREGORIAN:2015-12 (the whole month of december) or GREGORIAN:2015 (the whole year 2015).
+     */
+    type dateString = string;
+
+    /**
+     * An integer number (no fractions).
+     */
+    type integer = number;
+
+    /**
+     * A floating point number (may have fractions).
+     */
+    type decimal = number;
+
+    /**
+     * A string representing a URI
+     */
+    type URI = string;
+
+    /**
+     * A string representing a geometrical figure on a surface (2D).
+     */
+    type geometry = string;
+
+    /**
+     * A Knora List Node IRI
+     */
+    export type KnoraListNodeIRI = KnoraIRI;
+
+    /**
+     * A geoname identifier
+     */
+    type geoname = string;
 
     /**
      * Describes a Knora Value.
      * Either a simple type or a complex represented by an interface.
      */
-    export type knoraValue = number|string|boolean|richtext|interval|date;
+    export type knoraValue = integer|decimal|boolean|richtext|interval|date|color|KnoraIRI|URI|geometry|geoname|KnoraListNodeIRI;
 
     export interface richtextValue {
 
@@ -215,7 +356,7 @@ export module basicMessageComponents {
         /**
          * A link to another Knora resource. Value must be a Knora IRI.
          */
-        link_value: string;
+        link_value: KnoraIRI;
 
     }
 
@@ -225,7 +366,7 @@ export module basicMessageComponents {
         /**
          * An integer value
          */
-        int_value: number;
+        int_value: integer;
 
     }
 
@@ -235,7 +376,7 @@ export module basicMessageComponents {
         /**
          * A decimal value (floating point)
          */
-        decimal_value: number;
+        decimal_value: decimal;
 
     }
 
@@ -253,27 +394,24 @@ export module basicMessageComponents {
         /**
          * A URI value
          */
-        uri_value: string;
+        uri_value: URI;
 
     }
 
     export interface dateValue {
 
         /**
-         * A date value. This must have the following format: (GREGORIAN|JULIAN):YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]
-         * E.g. an exact date like GREGORIAN:2015-12-03 or a period like GREGORIAN:2015-12-03-2015-12-04.
-         * Dates may also have month or year precision, e.g. GREGORIAN:2015-12 (the whole month of december) or GREGORIAN:2015 (the whole year 2015).
+         * A date value.
          */
-        date_value: string;
+        date_value: dateString;
     }
 
     export interface colorValue {
 
         /**
          * A color value
-         * Value must be a hexadecimal RGB color code, e.g. "#4169E1"
          */
-        color_value: string;
+        color_value: color;
     }
 
     export interface geometryValue {
@@ -281,7 +419,7 @@ export module basicMessageComponents {
         /**
          * A geometry value representing a region on a 2D surface.
          */
-        geom_value: string;
+        geom_value: geometry;
     }
 
 
@@ -290,7 +428,7 @@ export module basicMessageComponents {
         /**
          * A list node IRI
          */
-        hlist_value: string;
+        hlist_value: KnoraListNodeIRI;
 
     }
 
@@ -299,7 +437,7 @@ export module basicMessageComponents {
         /**
          * An interval value consisting of two time values
          */
-        interval_value: Array<number>;
+        interval_value: Array<integer>;
 
     }
 
@@ -309,7 +447,7 @@ export module basicMessageComponents {
         /**
          * A geoname value
          */
-        geoname_value: string;
+        geoname_value: geoname;
 
     }
 

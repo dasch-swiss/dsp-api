@@ -29,7 +29,7 @@ export module deleteResponseFormats {
         /**
          * The IRI of the value that has been marked as deleted.
          */
-        id: string;
+        id: basicMessageComponents.KnoraIRI;
 
     }
 
@@ -43,7 +43,7 @@ export module deleteResponseFormats {
         /**
          * The IRI of the resource that has been marked as deleted.
          */
-        id: string;
+        id: basicMessageComponents.KnoraIRI;
 
     }
 

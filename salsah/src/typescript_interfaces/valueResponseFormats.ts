@@ -28,12 +28,12 @@ export module valueResponseFormats {
         /**
          * The IRI of the value's type
          */
-        valuetype: string;
+        valuetype: basicMessageComponents.KnoraIRI;
 
         /**
          * The user's permissions on the value
          */
-        rights: number;
+        rights: basicMessageComponents.KnoraRights;
 
         /**
          * The value's value
@@ -50,7 +50,7 @@ export module valueResponseFormats {
         /**
          * The value's IRI
          */
-        valueObjectIri: string;
+        valueObjectIri: basicMessageComponents.KnoraIRI;
 
         /**
          * The date when the value was created
@@ -61,7 +61,7 @@ export module valueResponseFormats {
          * The value's previous version (its value IRI).
          * This member is not set for the first version of the value since it has no predecessor.
          */
-        previousValue?: string;
+        previousValue?: basicMessageComponents.KnoraIRI;
 
     }
 
@@ -87,17 +87,17 @@ export module valueResponseFormats {
         /**
          * The IRI of the source object
          */
-        subjectIri: string;
+        subjectIri: basicMessageComponents.KnoraIRI;
 
         /**
          * The IRI of the linking property type
          */
-        predicateIri: string;
+        predicateIri: basicMessageComponents.KnoraIRI;
 
         /**
          * The IRI of the target object
          */
-        objectIri:string;
+        objectIri:basicMessageComponents.KnoraIRI;
 
         /**
          * Number of instances of this link
@@ -117,12 +117,12 @@ export module valueResponseFormats {
         /**
          * The IRI of the type of the linking property
          */
-        valuetype:string;
+        valuetype:basicMessageComponents.KnoraIRI;
 
         /**
          * The user's permissions on the link
          */
-        rights:number;
+        rights:basicMessageComponents.KnoraRights;
 
         /**
          * Description of the link

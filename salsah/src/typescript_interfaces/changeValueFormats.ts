@@ -26,7 +26,7 @@ export module changeValueFormats {
         /**
          * The IRI of the project the new value belongs to.
          */
-        project_id:string;
+        project_id:basicMessageComponents.KnoraIRI;
 
         /**
          * Comment on the value to be created.
@@ -162,7 +162,7 @@ export module changeValueFormats {
         /**
          * The IRI of the new value
          */
-        id: string;
+        id: basicMessageComponents.KnoraIRI;
 
         /**
          * The value that has been added
@@ -177,7 +177,7 @@ export module changeValueFormats {
         /**
          * The user's permissions on the new value
          */
-        rights: number;
+        rights: basicMessageComponents.KnoraRights;
 
     }
 

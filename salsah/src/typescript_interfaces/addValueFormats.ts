@@ -26,17 +26,17 @@ export module addValueFormats {
         /**
          * The IRI of the project the new value belongs to.
          */
-        project_id:string;
+        project_id:basicMessageComponents.KnoraIRI;
 
         /**
          * The IRI of the property type the new value belongs to.
          */
-        prop:string;
+        prop:basicMessageComponents.KnoraIRI;
 
         /**
          * The IRI of the resource the new value is attached to.
          */
-        res_id: string;
+        res_id: basicMessageComponents.KnoraIRI;
 
         /**
          * Comment on the value to be created.
@@ -149,7 +149,7 @@ export module addValueFormats {
         /**
          * The IRI of the new value
          */
-        id: string;
+        id: basicMessageComponents.KnoraIRI;
 
         /**
          * The value that has been added
@@ -164,7 +164,7 @@ export module addValueFormats {
         /**
          * The user's permissions on the new value
          */
-        rights: number;
+        rights: basicMessageComponents.KnoraRights;
 
     }
 

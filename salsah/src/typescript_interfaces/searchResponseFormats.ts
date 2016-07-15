@@ -25,11 +25,6 @@ export module searchResponseFormats {
         iconlabel: string;
 
         /**
-         * IRI of the resource's class
-         */
-        valuetype_id: Array<string>;
-
-        /**
          * X dimension of the preview representation
          */
         preview_nx: number;
@@ -47,7 +42,7 @@ export module searchResponseFormats {
         /**
          * Iri of the retrieved resource
          */
-        obj_id: string;
+        obj_id: basicMessageComponents.KnoraIRI;
 
         /**
          * Icon representing the resource's class
@@ -62,12 +57,17 @@ export module searchResponseFormats {
         /**
          * The user's permission on the retrieved resource
          */
-        rights: number;
+        rights: basicMessageComponents.KnoraRights;
 
         /**
          * Values of the retrieved resource
          */
         value: Array<string>;
+
+        /**
+         * IRIs of the value types of the resource's values
+         */
+        valuetype_id: Array<basicMessageComponents.KnoraIRI>;
 
         /**
          * Labels of the retrieved resource's values

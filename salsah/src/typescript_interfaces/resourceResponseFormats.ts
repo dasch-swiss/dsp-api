@@ -17,7 +17,7 @@
 import {basicMessageComponents} from "./basicMessageComponents"
 
 export module resourceResponseFormats {
-    
+
     /**
      * Represents a property value (no parallel arrays)
      */
@@ -40,7 +40,7 @@ export module resourceResponseFormats {
         /**
          * IRI of the value.
          */
-        id:string;
+        id:basicMessageComponents.KnoraIRI;
 
         /**
          * Comment on the value.
@@ -75,7 +75,7 @@ export module resourceResponseFormats {
         /**
          * IRI of the value type.
          */
-        valuetype_id:string;
+        valuetype_id:basicMessageComponents.KnoraIRI;
 
         /**
          * Label of the property type
@@ -95,7 +95,7 @@ export module resourceResponseFormats {
         /**
          * IRI of the property type
          */
-        pid:string;
+        pid:basicMessageComponents.KnoraIRI;
 
         /**
          * The property's values if given.
@@ -110,7 +110,7 @@ export module resourceResponseFormats {
      */
     interface property {
         /**
-         * obsolete
+         * Obsolete
          */
         regular_property:number;
 
@@ -132,7 +132,7 @@ export module resourceResponseFormats {
         value_firstprops?:Array<string>;
 
         /**
-         * obsolote
+         * Obsolete
          */
         is_annotation:string;
 
@@ -170,17 +170,17 @@ export module resourceResponseFormats {
          * The IRIs of the value objects representing the property's values for this resource
          */
 
-        value_ids?:Array<string>;
+        value_ids?:Array<basicMessageComponents.KnoraIRI>;
 
         /**
          * The given user's permissions on the value objects.
          */
-        value_rights?:Array<number>;
+        value_rights?:Array<basicMessageComponents.KnoraRights>;
 
         /**
          * The IRI of the property type
          */
-        pid:string;
+        pid:basicMessageComponents.KnoraIRI;
 
         /**
          * The property's values
@@ -285,7 +285,7 @@ export module resourceResponseFormats {
         /**
          * The project IRI the resource belongs to
          */
-        project_id:string;
+        project_id:basicMessageComponents.KnoraIRI;
 
         /**
          * Full quality representation of the resource
@@ -295,7 +295,7 @@ export module resourceResponseFormats {
         /**
          * The Knora IRI identifying the resource's class
          */
-        restype_id:string;
+        restype_id:basicMessageComponents.KnoraIRI;
 
         /**
          * The resource's label
@@ -310,7 +310,7 @@ export module resourceResponseFormats {
         /**
          * The Knora IRI identifying the resource's class
          */
-        restype_name:string;
+        restype_name:basicMessageComponents.KnoraIRI;
     }
 
     /**
@@ -320,12 +320,12 @@ export module resourceResponseFormats {
         /**
          * IRI of the resource
          */
-        res_id:string;
+        res_id:basicMessageComponents.KnoraIRI;
 
         /**
          * IRI of the resource's class.
          */
-        restype_name:string;
+        restype_name:basicMessageComponents.KnoraIRI;
 
         /**
          * Label of the resource's class
@@ -340,7 +340,7 @@ export module resourceResponseFormats {
         /**
          * The given user's permissions on the resource
          */
-        rights:number;
+        rights:basicMessageComponents.KnoraRights;
     }
 
     /**
@@ -352,14 +352,14 @@ export module resourceResponseFormats {
          */
         ext_res_id:{
             /**
-             * The Iri of the referring resource
+             * The IRI of the referring resource
              */
-            id:string;
+            id:basicMessageComponents.KnoraIRI;
 
             /**
              * The IRI of the referring property type
              */
-            pid:string;
+            pid:basicMessageComponents.KnoraIRI;
         };
 
         /**
@@ -383,14 +383,14 @@ export module resourceResponseFormats {
         context:number;
 
         /**
-         * The Iri of the resource
+         * The IRI of the resource
          */
-        canonical_res_id:string;
+        canonical_res_id:basicMessageComponents.KnoraIRI;
 
         /**
-         * IRO of the parent resource
+         * IRI of the parent resource
          */
-        parent_res_id?:string;
+        parent_res_id?:basicMessageComponents.KnoraIRI;
 
         /**
          * Resinfo of the parent resource (if the requested resource is a dependent resource like a page that belongs to a book)
@@ -428,9 +428,9 @@ export module resourceResponseFormats {
         resclass_name?:string;
 
         /**
-         * Iris of dependent resources (e.g. pages of a book)
+         * IRIs of dependent resources (e.g. pages of a book)
          */
-        res_id?:Array<string>;
+        res_id?:Array<basicMessageComponents.KnoraIRI>;
     }
 
     /**
@@ -440,7 +440,7 @@ export module resourceResponseFormats {
         /**
          * IRI of the property type
          */
-        name:string;
+        name:basicMessageComponents.KnoraIRI;
 
         /**
          * Description of the property type
@@ -450,7 +450,7 @@ export module resourceResponseFormats {
         /**
          * IRI of the property type's value
          */
-        valuetype_id:string;
+        valuetype_id:basicMessageComponents.KnoraIRI;
 
         /**
          * Label of the property type
@@ -460,7 +460,7 @@ export module resourceResponseFormats {
         /**
          * IRI of the vocabulary the property type belongs to
          */
-        vocabulary:string;
+        vocabulary:basicMessageComponents.KnoraIRI;
 
         /**
          * GUI attributes (HTML) of the property type
@@ -475,7 +475,7 @@ export module resourceResponseFormats {
         /**
          * IRI of the property type
          */
-        id:string;
+        id:basicMessageComponents.KnoraIRI;
 
         /**
          * Name of the GUI element used for the property type
@@ -492,7 +492,7 @@ export module resourceResponseFormats {
         /**
          * IRI of the resource class
          */
-        name:string;
+        name:basicMessageComponents.KnoraIRI;
 
         /**
          * Description of the resource class
@@ -533,7 +533,7 @@ export module resourceResponseFormats {
         /**
          * IRI of the resource class
          */
-        id:string;
+        id:basicMessageComponents.KnoraIRI;
 
         /**
          * Label of the resource class
@@ -564,17 +564,17 @@ export module resourceResponseFormats {
         /**
          * The vocabulay's IRI
          */
-        uri: string;
+        uri: basicMessageComponents.KnoraIRI;
 
         /**
-         * The vocabulay's IRI
+         * The vocabulary's IRI
          */
-        id: string;
+        id: basicMessageComponents.KnoraIRI;
 
         /**
          * The project the vocabulary belongs to
          */
-        project_id:string;
+        project_id:basicMessageComponents.KnoraIRI;
 
         /**
          * The vocabulay's long name
@@ -593,7 +593,7 @@ export module resourceResponseFormats {
         /**
          * The IRI of the retrieved resource
          */
-        id: string;
+        id: basicMessageComponents.KnoraIRI;
 
         /**
          * Values representing the retrieved resource
@@ -603,7 +603,7 @@ export module resourceResponseFormats {
         /**
          * The user's permissions on the retrieved resource
          */
-        rights: number;
+        rights: basicMessageComponents.KnoraRights;
 
     }
 
@@ -694,9 +694,9 @@ export module resourceResponseFormats {
         incoming:Array<incomingItem>
 
         /**
-         * The given user's permissions on the resource
+         * The given user's permissions on the resource (obsolete)
          */
-        access:string;
+        access:basicMessageComponents.KnoraAccess;
 
     }
 
@@ -709,7 +709,7 @@ export module resourceResponseFormats {
         /**
          * The current user's permissions on the resource
          */
-        rights:number;
+        rights:basicMessageComponents.KnoraRights;
 
         /**
          * Description of the resource and its class

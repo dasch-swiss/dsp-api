@@ -36,7 +36,7 @@ export module hierarchicalListResponseFormats {
         /**
          * The IRI of the list node
          */
-        id:string;
+        id:basicMessageComponents.KnoraListNodeIRI;
 
         /**
          * The level the list node is on (first level below root node is 0)
@@ -69,7 +69,7 @@ export module hierarchicalListResponseFormats {
         /**
          * The IRI of the list node
          */
-        id:string;
+        id:basicMessageComponents.KnoraListNodeIRI;
 
 
     }
