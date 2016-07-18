@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE region SYSTEM "../XML-schemas/diplomatic.dtd">
-<region id="2" regiontype="T" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../XML-schemas/diplomatic.xsd">
+<region id="2" regiontype="T" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../XML-schemas/meditatio.xsd">
     Reperti sunt quidam novitii, qui introduxerunt hanc senten­tiam, &nempe; Author &line;
     histori&ae; singularium Angli&ae;, Scoti&ae; &pp; (quem citat Adam Weber in art. discurr. &line;
     Font. 33&ndot; expl. 6&ndot;) eandem sent. fovet Dn. D. Megerlinus, <rendition type="strike">è cu</rendition> qui eam inter &line;

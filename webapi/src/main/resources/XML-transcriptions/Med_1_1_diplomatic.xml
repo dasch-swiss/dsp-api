@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE region SYSTEM "../XML-schemas/diplomatic.dtd">
-<region id="1" regiontype="TT" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../XML-schemas/diplomatic.xsd">
+<region id="1" regiontype="TT" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../XML-schemas/meditatio.xsd">
     I. <rendition type="underline">An Terra sit figur&ae; elliptic&ae;, aut ovalis?</rendition> &line;
 </region>
