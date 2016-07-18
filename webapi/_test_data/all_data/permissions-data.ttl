@@ -1,0 +1,51 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+##########################################################
+#
+# Images Demo Project Permissions
+#
+##########################################################
+
+<http://data.knora.org/permissions/001>
+
+                      rdf:type knora-base:Permission ;
+
+                      knora-base:forProject <http://data.knora.org/projects/images> ;
+
+                      knora-base:forGroup <knora-base:ProjectMember> ;
+
+                      knora-base:forResourceClass knora-base:ResourceClassNotApplicable ;
+
+                      knora-base:forProperty knora-base:PropertyNotApplicable ;
+
+                      knora-base:hasResourceCreationPermission knora-base:ProjectResourceCreateAllPermission ;
+
+                      knora-base:hasDefaultChangeRightsPermission knora-base:Creator ;
+
+                      knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                      knora-base:hasDefaultViewPermission knora-base:KnownUser .
+
+
+
+<http://data.knora.org/permissions/002>
+
+                      rdf:type knora-base:Permission ;
+
+                      knora-base:forProject <http://data.knora.org/projects/images> ;
+
+                      knora-base:forGroup <knora-base:ProjectAdmin> ;
+
+                      knora-base:forResourceClass knora-base:ResourceClassNotApplicable ;
+
+                      knora-base:forProperty knora-base:PropertyNotApplicable ;
+
+                      knora-base:hasResourceCreationPermission knora-base:ProjectResourceCreateAllPermission ;
+
+                      knora-base:hasProjectAdministrationPermission knora-base:ProjectAllAdminPermission .
+

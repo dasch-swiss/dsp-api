@@ -71,6 +71,8 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     private def getGroupPermissionV1(forProject: IRI, forGroup: IRI, userProfileV1: UserProfileV1): Future[PermissionV1] = {
 
+
+
         Future(PermissionV1())
     }
 }

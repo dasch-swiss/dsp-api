@@ -52,7 +52,7 @@ case class GetGroupPermissionV1(projectIri: IRI, groupIri: IRI, userProfileV1: U
 case class PermissionV1(forProject: IRI = OntologyConstants.KnoraBase.ProjectNotApplicable,
                         forGroup: IRI = OntologyConstants.KnoraBase.GroupNotApplicable,
                         forResourceClass: IRI = OntologyConstants.KnoraBase.ResourceClassNotApplicable,
-                        forProperty: IRI = OntologyConstants.KnoraBase.ResourcePropertyNotApplicable,
+                        forProperty: IRI = OntologyConstants.KnoraBase.PropertyNotApplicable,
                         resourceCreationPermissionValues: Option[List[IRI]] = None,
                         resourceCreationPermissionProperties: Option[Map[IRI, List[IRI]]] = None,
                         projectAdministrationPermissionValues: Option[List[IRI]] = None,
