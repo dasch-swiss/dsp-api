@@ -63,7 +63,35 @@
 
 
 
+### http://www.knora.org/ontology/knora-base#ProjectNotApplicable
 
+:ProjectNotApplicable rdf:type :knoraProject ;
+
+                      rdfs:comment "A built-in project instance used in permission instances."@en
+
+
+
+### http://www.knora.org/ontology/knora-base#GroupNotApplicable
+
+:GroupNotApplicable rdf:type :UserGroup ;
+
+                      rdfs:comment "A built-in group instance used in permission instances."@en
+
+
+
+### http://www.knora.org/ontology/knora-base#ResourceClassNotApplicable
+
+:ResourceClassNotApplicable rdf:type owl:Class ;
+
+                      rdfs:comment "A built-in resource class used in permission instances."@en
+
+
+
+### http://www.knora.org/ontology/knora-base#ResourcePropertyNotApplicable
+
+:ResourcePropertyNotApplicable rdf:type owl:ObjectProperty ;
+
+                      rdfs:comment "A built-in resource property used in permission instances."@en
 
 
 
@@ -176,7 +204,7 @@
 
 
 ###  Instance
-<http://data.knora.org/permissions/ProjectResourceCreateAllPermission>
+<http://www.knora.org/ontology/knora-base#ProjectResourceCreateAllPermission>
 
                         rdf:type :ResourceCreationPermissionValue ;
 
@@ -231,7 +259,7 @@
 
 
 ###  Instances
-<http://data.knora.org/permissions/ProjectAllAdminPermission>
+<http://www.knora.org/ontology/knora-base#ProjectAllAdminPermission>
 
                       rdf:type :ProjectAdministrationPermissionValue ;
 
@@ -239,7 +267,7 @@
 
 
 
-<http://data.knora.org/permissions/ProjectAllGroupAdminPermission>
+<http://www.knora.org/ontology/knora-base#ProjectAllGroupAdminPermission>
 
                       rdf:type :ProjectAdministrationPermissionValue ;
 
@@ -247,7 +275,7 @@
 
 
 
-<http://data.knora.org/permissions/ProjectRightsAdminPermission>
+<http://www.knora.org/ontology/knora-base#ProjectRightsAdminPermission>
 
                       rdf:type :ProjectAdministrationPermissionValue ;
 
@@ -301,7 +329,7 @@
 
 
 ###  Instance
-<http://data.knora.org/permissionsProjectOntologyAdminPermission
+<http://www.knora.org/ontology/knora-base#ProjectOntologyAdminPermission
 
                       rdf:type OntologyAdministrationPermissionValue ;
 
