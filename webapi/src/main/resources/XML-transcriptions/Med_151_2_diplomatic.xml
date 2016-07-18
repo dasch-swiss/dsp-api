@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<region id="2" regiontype="T" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../XML-schemas/diplomatic.xsd">
-    Modus hic est: Fiat triang: æquil: <formula notation="TeX">ABD</formula>, divisâq́  diametro <formula notation="TeX">AB</formula> in tot partes æquales,<lb/>
-    quot laterum est figura inscribenda, duabusq́ earum p̃termissis <rendition type="strike">et</rendition> à <formula notation="TeX">B</formula> versùs <formula notation="TeX">A</formula>, ducat,<lb/>
-    per initium tertiæ recta <formula notation="TeX">DF</formula>, &amp; hinc recta <formula notation="TeX">FB</formula>, quam putat esse latus polygoni optati<lb/><lb/>
-    <rendition type="underline">Anal</rendition>: Sit secta diameter utcunq́ in <formula notation="TeX">E</formula>, <formula notation="TeX">e</formula> , ductæq́ <formula notation="TeX">DEF</formula>, <rendition type="above"><formula notation="TeX">FA</formula>,</rendition> &amp; <formula notation="TeX">FB</formula> &amp; demissa in diametrum per-<lb/>
-    pendicularis <formula notation="TeX">FG</formula>, fiat <formula notation="TeX">CB=a</formula>, <formula notation="TeX">CE</formula> vel <formula notation="TeX">Ce=b</formula>, <formula notation="TeX">FB=x</formula>, unde <formula notation="TeX">AF=\sqrt{\mathstrut}\,\overline{4aa-xx}</formula><lb/>
-    
-</region>
