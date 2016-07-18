@@ -128,35 +128,6 @@ object OntologyConstants {
 
         val IsDeleted = "http://www.knora.org/ontology/knora-base#isDeleted"
 
-        /* Built-In Groups */
-        val UnknownUser = "http://www.knora.org/ontology/knora-base#UnknownUser"
-        val KnownUser = "http://www.knora.org/ontology/knora-base#KnownUser"
-        val ProjectMember = "http://www.knora.org/ontology/knora-base#ProjectMember"
-        val Creator = "http://www.knora.org/ontology/knora-base#Creator"
-        val SystemAdmin = "http://www.knora.org/ontology/knora-base#SystemAdmin"
-        val ProjectAdmin = "http://www.knora/ontology/knora-base#ProjectAdmin"
-        val GroupAdmin = "http://www.knora.org/ontology/knora-base#GroupAdmin"
-
-        val HasRestrictedViewPermission = "http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission"
-        val HasViewPermission = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-        val HasModifyPermission = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-        val HasDeletePermission = "http://www.knora.org/ontology/knora-base#hasDeletePermission"
-        val HasChangeRightsPermission = "http://www.knora.org/ontology/knora-base#hasChangeRightsPermission"
-        val HasMaxPermission = HasChangeRightsPermission
-
-        val HasDefaultRestrictedViewPermission = "http://www.knora.org/ontology/knora-base#hasDefaultRestrictedViewPermission"
-        val HasDefaultViewPermission = "http://www.knora.org/ontology/knora-base#hasDefaultViewPermission"
-        val HasDefaultModifyPermission = "http://www.knora.org/ontology/knora-base#hasDefaultModifyPermission"
-        val HasDefaultDeletePermission = "http://www.knora.org/ontology/knora-base#hasDefaultDeletePermission"
-        val HasDefaultChangeRightsPermission = "http://www.knora.org/ontology/knora-base#hasDefaultChangeRightsPermission"
-
-        val defaultPermissionProperties = Set(
-            HasDefaultRestrictedViewPermission,
-            HasDefaultViewPermission,
-            HasDefaultModifyPermission,
-            HasDefaultDeletePermission,
-            HasDefaultChangeRightsPermission
-        )
 
         val StandoffHasAttribute = "http://www.knora.org/ontology/knora-base#standoffHasAttribute"
         val StandoffHasStart = "http://www.knora.org/ontology/knora-base#standoffHasStart"
@@ -203,8 +174,75 @@ object OntologyConstants {
         val BelongsToProject = KNORA_BASE_PREFIX + "belongsToProject"
         val IsActiveGroup = KNORA_BASE_PREFIX + "isActiveGroup"
 
+        /* Built-In Groups */
+        val UnknownUser = "http://www.knora.org/ontology/knora-base#UnknownUser"
+        val KnownUser = "http://www.knora.org/ontology/knora-base#KnownUser"
+        val ProjectMember = "http://www.knora.org/ontology/knora-base#ProjectMember"
+        val Creator = "http://www.knora.org/ontology/knora-base#Creator"
+        val SystemAdmin = "http://www.knora.org/ontology/knora-base#SystemAdmin"
+        val ProjectAdmin = "http://www.knora/ontology/knora-base#ProjectAdmin"
+        val GroupAdmin = "http://www.knora.org/ontology/knora-base#GroupAdmin"
+
         /* Institution */
         val Institution = KNORA_BASE_PREFIX + "Institution"
+
+
+        /* Object Access Permission Properties */
+        val HasRestrictedViewPermission = KNORA_BASE_PREFIX + "hasRestrictedViewPermission"
+        val HasViewPermission = KNORA_BASE_PREFIX + "hasViewPermission"
+        val HasModifyPermission = KNORA_BASE_PREFIX + "hasModifyPermission"
+        val HasDeletePermission = KNORA_BASE_PREFIX + "hasDeletePermission"
+        val HasChangeRightsPermission = KNORA_BASE_PREFIX + "hasChangeRightsPermission"
+        val HasMaxPermission = HasChangeRightsPermission
+
+        /* Permissions */
+        val Permission = KNORA_BASE_PREFIX + "Permission"
+        val ProjectNotApplicable = KNORA_BASE_PREFIX + "ProjectNotApplicable"
+        val GroupNotApplicable = KNORA_BASE_PREFIX + "GroupNotApplicable"
+        val ResourceClassNotApplicable = KNORA_BASE_PREFIX + "ResourceClassNotApplicable"
+        val ResourcePropertyNotApplicable = KNORA_BASE_PREFIX + "ResourcePropertyNotApplicable"
+
+        
+        /* Resource Creation Permission Properties */
+        val HasResourceCreationPermission = KNORA_BASE_PREFIX + "hasResourceCreationPermission"
+        val HasRestrictedProjectResourceCreatePermission = KNORA_BASE_PREFIX + "hasRestrictedProjectResourceCreatePermission"
+
+        /* Resource Creation Permission Value Instances */
+        val ResourceCreationPermissionValue = KNORA_BASE_PREFIX + "ProjectResourceCreateAllPermission"
+
+
+        /* Project Administration Permission Properties */
+        val HasProjectAdministrationPermission = KNORA_BASE_PREFIX + "hasProjectAdministrationPermission"
+        val HasProjectRestrictedGroupAdminPermission = KNORA_BASE_PREFIX + "hasProjectRestrictedGroupAdminPermission"
+
+        /* Project Administration Permission Value Instances */
+        val ProjectAllAdminPermission = KNORA_BASE_PREFIX + "ProjectAllAdminPermission"
+        val ProjectAllGroupAdminPermission = KNORA_BASE_PREFIX + "ProjectAllGroupAdminPermission"
+        val ProjectRightsAdminPermission = KNORA_BASE_PREFIX + "ProjectRightsAdminPermission"
+
+
+        /* Ontology Administration Permission Properties */
+        val HasOntologyAdministrationPermission = KNORA_BASE_PREFIX + "hasOntologyAdministrationPermission"
+
+        /* Ontology Administration Permission Value Instances */
+        val ProjectOntologyAdminPermission = KNORA_BASE_PREFIX + "ProjectOntologyAdminPermission"
+
+
+        /* Default Object Access Permissions */
+        val HasDefaultObjectAccessPermission = KNORA_BASE_PREFIX + "hasDefaultObjectAccessPermission"
+        val HasDefaultRestrictedViewPermission = KNORA_BASE_PREFIX + "hasDefaultRestrictedViewPermission"
+        val HasDefaultViewPermission = KNORA_BASE_PREFIX + "hasDefaultViewPermission"
+        val HasDefaultModifyPermission = KNORA_BASE_PREFIX + "hasDefaultModifyPermission"
+        val HasDefaultDeletePermission = KNORA_BASE_PREFIX + "hasDefaultDeletePermission"
+        val HasDefaultChangeRightsPermission = KNORA_BASE_PREFIX + "hasDefaultChangeRightsPermission"
+
+        val defaultPermissionProperties = Set(
+            HasDefaultRestrictedViewPermission,
+            HasDefaultViewPermission,
+            HasDefaultModifyPermission,
+            HasDefaultDeletePermission,
+            HasDefaultChangeRightsPermission
+        )
 
     }
 
