@@ -31,7 +31,9 @@
 #
 
 :systemProperty rdf:type rdf:Property .
+:knoraProject rdf:type owl:Class .
 :UserGroup rdf:type owl:Class .
+
 
 
 
@@ -47,6 +49,51 @@
                rdfs:comment "Base permission property."@en ;
                
                rdfs:subPropertyOf :systemProperty .
+
+
+
+#
+##
+### Permission Class Properties
+##
+#
+### http://www.knora.org/ontology/knora-base#forProject
+
+:forProject rdf:type rdf:Property ;
+
+            rdfs:comment "Permission property pointing to a knoraProject."@en ;
+
+            rdfs:subPropertyOf :systemProperty .
+
+
+
+### http://www.knora.org/ontology/knora-base#forGroup
+
+:forGroup rdf:type rdf:Property ;
+
+          rdfs:comment "Permission property pointing to a UserGroup."@en ;
+
+          rdfs:subPropertyOf :systemProperty .
+
+
+
+### http://www.knora.org/ontology/knora-base#forResourceClass
+
+:forResourceClass rdf:type rdf:Property ;
+
+                  rdfs:comment "Permission property pointing to a resource class."@en ;
+
+                  rdfs:subPropertyOf :systemProperty .
+
+
+
+### http://www.knora.org/ontology/knora-base#forProperty
+
+:forProperty rdf:type rdf:property ;
+
+             rdfs:comment "Permission property pointing to a resource property."@en ;
+
+             rdfs:subPropertyOf :systemProperty .
 
 
 
@@ -75,7 +122,7 @@
 
 :GroupNotApplicable rdf:type :UserGroup ;
 
-                      rdfs:comment "A built-in group instance used in permission instances."@en
+                    rdfs:comment "A built-in group instance used in permission instances."@en
 
 
 
@@ -83,15 +130,15 @@
 
 :ResourceClassNotApplicable rdf:type owl:Class ;
 
-                      rdfs:comment "A built-in resource class used in permission instances."@en
+                            rdfs:comment "A built-in resource class used in permission instances."@en
 
 
 
-### http://www.knora.org/ontology/knora-base#ResourcePropertyNotApplicable
+### http://www.knora.org/ontology/knora-base#PropertyNotApplicable
 
-:ResourcePropertyNotApplicable rdf:type owl:ObjectProperty ;
+:PropertyNotApplicable rdf:type owl:ObjectProperty ;
 
-                      rdfs:comment "A built-in resource property used in permission instances."@en
+                       rdfs:comment "A built-in resource property used in permission instances."@en
 
 
 
