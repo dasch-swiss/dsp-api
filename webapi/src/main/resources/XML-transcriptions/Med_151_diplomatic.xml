@@ -28,7 +28,7 @@
         hinc
         <formula notation="TeX">
             \begin{array}{lccc}
-            &amp; \pm \,GB  \mp \,CB &amp; -\,CE \\
+            &amp; \pm \,GB &amp; \mp \,CB &amp; -\,CE  \\
             \quad GE= &amp; \pm \,\dfrac{\mathstrut xx}{2a} &amp; \mp \,a &amp; -\,b
             \end{array}
         </formula>
@@ -37,21 +37,36 @@
 
     <region id="5" regiontype="M">
 
-        <formula notation="TeX">
+        <formula notation="TeX" repl="
+            \begin{array}{ccccccc}
+            BA &amp; . &amp; AF &amp; :: &amp; AF &amp; . &amp; AG \\
+            2a &amp; . &amp; \sqrt{4aa-xx} &amp; :: &amp; \sqrt{4aa-xx} &amp; . &amp; \dfrac{4aa-xx}{2a}
+            \end{array}
+            ">
             \begin{array}{ccccccc}
             BA &amp; . &amp; AF &amp; :: &amp; AF &amp; . &amp; AG  \\
             2a &amp; . &amp; \sqrt{\mathstrut}\,\overline{4aa-xx} &amp; :: &amp; \sqrt{\mathstrut}\,\overline{4aa-xx} &amp; . &amp; \dfrac{4aa-xx}{2a}
             \end{array}
         </formula>
 
-        <formula notation="TeX">
+        <formula notation="TeX" repl="
+            \begin{array}{cc}
+            AG \,\times\, GB &amp; \\
+            \dfrac{4aaxx-x^4}{4aa} &amp; =GF\text{q}
+            \end{array}
+            ">
             \begin{array}{cc}
             AG \,\times\, GB &amp;  \\
             \dfrac{4aaxx-x4}{4aa} &amp; =GF\text{q}
             \end{array}
         </formula>
 
-        <formula notation="TeX">
+        <formula notation="TeX" repl="
+            \begin{array}{ccccccc}
+            GE\text{q} &amp; . &amp; GF\text{q} &amp; :: &amp; CE\text{q} &amp; . &amp; CD\text{q} \quad (DB\text{q}-CB\text{q}) \\
+            \dfrac{x^4}{4aa} + aa + bb - xx \mp \dfrac{bxx}{a} \pm 2ab &amp; . &amp; \dfrac{4aaxx-x^4}{4aa} &amp; :: &amp; bb &amp; . &amp; 3aa \quad (4aa - aa)
+            \end{array}
+            ">
             \begin{array}{ccccccc}
             GE\text{q} &amp; . &amp; GF\text{q} &amp; :: &amp; CE\text{q} &amp; . &amp; CD\text{q} \quad (DB\text{q}-CB\text{q})  \\
             \dfrac{x4}{4aa} + aa + bb - xx \mp \dfrac{bxx}{a} \pm 2ab &amp; . &amp; \dfrac{4aaxx-x4}{4aa} &amp; :: &amp; bb &amp; . &amp; 3aa \quad (4aa - aa)
