@@ -99,46 +99,50 @@
 
 #
 ##
-### Permission Class
+### Permission Class and Sub-Classes
 ##
 #
 ### http://www.knora.org/ontology/knora-base#Permission
 
 :Permission rdf:type owl:Class ;
 
-            rdfs:comment "Permission class."@en.
+            rdfs:comment "Base Permission class."@en.
 
 
 
-### http://www.knora.org/ontology/knora-base#ProjectNotApplicable
+### http://www.knora.org/ontology/knora-base#AdministrativePermission
 
-:ProjectNotApplicable rdf:type :knoraProject ;
+:AdministrativePermission rdf:type owl:Class ;
 
-                      rdfs:comment "A built-in project instance used in permission instances."@en
+                          rdfs:comment "Administrative Permission class used to create instances for storing administrative permissions on groups."@en ;
 
-
-
-### http://www.knora.org/ontology/knora-base#GroupNotApplicable
-
-:GroupNotApplicable rdf:type :UserGroup ;
-
-                    rdfs:comment "A built-in group instance used in permission instances."@en
+                          rdfs:subClassOf knora-base:Permission .
 
 
 
-### http://www.knora.org/ontology/knora-base#ResourceClassNotApplicable
+### http://www.knora.org/ontology/knora-base#DefaultObjectAccessPermission
 
-:ResourceClassNotApplicable rdf:type owl:Class ;
+:DefaultObjectAccessPermission rdf:type owl:Class ;
 
-                            rdfs:comment "A built-in resource class used in permission instances."@en
+                               rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission on groups."@en ;
+
+                               rdfs:subClassOf knora-base:Permission .
 
 
 
-### http://www.knora.org/ontology/knora-base#PropertyNotApplicable
+### http://www.knora.org/ontology/knora-base#AllResourceClasses
+
+:AllResourceClasses rdf:type owl:Class ;
+
+                    rdfs:comment "A built-in resource class used in permission instances to denote that the defined default object access permission should be applied to all resource classes defined for the project."@en
+
+
+
+### http://www.knora.org/ontology/knora-base#AllProperties
 
 :PropertyNotApplicable rdf:type owl:ObjectProperty ;
 
-                       rdfs:comment "A built-in resource property used in permission instances."@en
+                       rdfs:comment "A built-in resource property used in permission instances to denote that the defined default object access permissions should be applied to all properties defined for the specified resource class."@en
 
 
 
