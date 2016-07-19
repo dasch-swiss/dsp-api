@@ -296,7 +296,7 @@ Creating a new Resource
      c1 [label="Get all Resource Creation Permissions"];
      c2 [label="Decide if user is allowed to create the resource type"];
      
-     d1 [label="Get all Default Permissions"];
+     d1 [label="Get all Default Object Access Permissions"];
      d2 [label="Get Default Permissions attached to Groups"];
      d3 [label="Get Default Permissions attached to Resources/Values"];
      d4 [label="Calculate maximum Default Permissions"];
@@ -381,16 +381,17 @@ The requirements for defining default permissions imposed by all the different u
 need to be able to define default permissions per project, per group, per resource class, per resource property, and
 all their possible combinations.
 
-For this reason, we introduce the *Permission* class, which instances will carry all the necessary information. The
-following graph, shows the structure:
+For this reason, we introduce the *knora-base:Permission* class with two sub-classes, namely
+*knora-base:AdministrativePermission* and *knora-base:DefaultObjectAccessPermission*, which instances will carry all
+the necessary information. The following graphs, show the structure.
 
-
+**Administrative Permission Structure:
 .. graphviz::
 
    digraph permissions {
      rankdir="LR"
      
-     p [label=":Permission"]
+     ap [label=":AdministrativePermission"]
      np [label=":knoraProject"]
      ug [label=":UserGroup"]
      rc1 [label="Resource Class Name"]
@@ -400,8 +401,8 @@ following graph, shows the structure:
      g1 [label="<Group IRI>"]
      g2 [label="<Group IRI>"]
      
-     p -> np [ label=":forProject" ]
-     p -> ug [ label=":forGroup" ]
+     ap -> np [ label=":forProject" ]
+     ap -> ug [ label=":forGroup" ]
      p -> rc1 [ label=":forResourceClass" ]
      p -> pr [ label=":forProperty" ]
      
@@ -447,9 +448,53 @@ and the same as RDF:
        knora-base:hasDefaultChangeRightsPermission <http://data.knora.org/groups/[UUID]> .
 
 
+.. graphviz::
+
+   digraph permissions {
+     rankdir="LR"
+     
+     ap [label=":AdministrativePermission"]
+     np [label=":knoraProject"]
+     ug [label=":UserGroup"]
+     rc1 [label="Resource Class Name"]
+     rc2 [label="Resource Class Name"]
+     pr [label="Resource Property Name"]
+     
+     g1 [label="<Group IRI>"]
+     g2 [label="<Group IRI>"]
+     
+     ap -> np [ label=":forProject" ]
+     ap -> ug [ label=":forGroup" ]
+     p -> rc1 [ label=":forResourceClass" ]
+     p -> pr [ label=":forProperty" ]
+     
+     p -> "Instances of :ResourceCreationPermissionValue" [ label=":hasResourceCreationPermission" ]
+     p -> rc2 [ label="hasRestrictedResourceCreationPermission" ]
+     
+     p -> "Instances of :ProjectAdministrationPermissionValue" [ label=":hasProjectAdministrationPermission" ]
+     p -> g1 [ label=":hasRestrictedProjectGroupAdminPermission" ]
+     
+     p -> "Instances of :OntologyAdministrationPermissionValue" [ label=":hasOntologyAdministrationPermission" ]
+     
+     p -> g2 [ label="rdf:subClassesOf :hasDefaultObjectAccessPermission"]
+   }
+
+
+Querying Permission Instances
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 The properties **forProject**, **forGroup**, **forResourceClass**, and **forProperty** form together a kind of a
 *compound key*, allowing finding existing permission instances, that address the same set of Project / Group /
 ResourceClass / Property combination, thus making it possible to extend or change the attached permissions.
+
+**Administrative Permission Instances**: For each group inside the project, there can be **zero** or **one** instances
+holding administrative permission informations. Querying is trait forward by using the *knora-base:forProject* and
+*knora-base:forGroup* properties.
+
+**Default Object Access Permission Instances**: For each group inside the project, there can be **zero** or **n**
+instances holding default object access permission informations. Querying is a bit more involved, and is done by using
+the *knora-base:forProject* and *knora-base:forGroup* properties, and additionally the *knora-base:forResourceClass*
+and *forProperty* properties.
 
 
 Permission Class and Property Hierarchy
@@ -466,6 +511,8 @@ Permission Classes and Permission Value Instances
      
      oc [label="owl:Class"]
      p [label="knora-base:Permission"]
+     ap [label="knora-base:AdministrativePermission"]
+     dp [label="knora-base:DefaultAccessObjectPermission"]
      pv [label="knora-base:AdministrativePermissionValue"]
      
      RCPv [label=":ResourceCreationPermissionValue"]
