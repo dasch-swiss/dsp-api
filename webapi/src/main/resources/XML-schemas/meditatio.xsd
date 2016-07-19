@@ -3,35 +3,9 @@
     <xs:element name="meditatio">
         <xs:complexType>
             <xs:choice maxOccurs="unbounded" minOccurs="1">
-                <xs:element name="region">
-                    <xs:complexType mixed="true">
-                        <xs:choice maxOccurs="unbounded" minOccurs="0">
-                            <xs:element name="rendition">
-                                <xs:complexType mixed="true">
-                                    <xs:choice maxOccurs="unbounded" minOccurs="0">
-                                        <xs:element name="lb"/>
-                                        <xs:element name="formula" type="formula_element"></xs:element>
-                                        <xs:element name="abbr" type="abbr_element"></xs:element>
-                                        <xs:element name="corr" type="corr_element"></xs:element>
-                                        <xs:element name="add" type="add_element"></xs:element>
-                                        <xs:element name="del" type="del_element"></xs:element>
-                                    </xs:choice>
-                                    <xs:attribute name="type" type="renditiontype_attribute" use="required"></xs:attribute>
-                                 </xs:complexType>
-                            </xs:element>
-                            <xs:element name="lb"/>
-                            <xs:element name="formula" type="formula_element"></xs:element>
-                            <xs:element name="abbr" type="abbr_element"></xs:element>
-                            <xs:element name="corr" type="corr_element"></xs:element>
-                            <xs:element name="add" type="add_element"></xs:element>
-                            <xs:element name="del" type="del_element"></xs:element>
-                        </xs:choice>
-                        <xs:attribute name="id" type="xs:anyURI" use="required"></xs:attribute>
-                        <xs:attribute name="regiontype" type="regiontype_attribute" use="required"></xs:attribute>
-                    </xs:complexType>
-                </xs:element>
+                <xs:element name="region" type="region_element"/>
             </xs:choice>
-            <xs:attribute name="id" type="xs:string" use="required"></xs:attribute>
+            <xs:attribute name="id" type="xs:string" use="required"/>
         </xs:complexType>
     </xs:element>
 
@@ -42,16 +16,16 @@
 
     -->
 
-    <!--  
+    <!--
 
-        <region id="KnoraIRI" regiontype="TT|T|M|F"> ... </region> 
-        
+        <region id="KnoraIRI" regiontype="TT|T|M|F"> ... </region>
+
         A region represents a geometrical figure on the mansucript:
-        - "id": IRI of the Knora region containing the geometrical information 
+        - "id": IRI of the Knora region containing the geometrical information
         - "regiontype": Type of the region (see "regiontype_attribute")
-    
+
     -->
-    
+
     <xs:simpleType name="regiontype_attribute">
         <xs:restriction base="xs:string">
             <xs:enumeration value="TT"/> <!-- Title Text -->
@@ -60,38 +34,66 @@
             <xs:enumeration value="F"/> <!-- Figure -->
         </xs:restriction>
     </xs:simpleType>
-    
-    
-    <!-- 
-    
+
+    <xs:complexType mixed="true" name="region_element">
+        <xs:choice maxOccurs="unbounded" minOccurs="0">
+            <xs:element name="rendition">
+                <xs:complexType mixed="true">
+                    <xs:choice maxOccurs="unbounded" minOccurs="0">
+                        <xs:element name="lb"/>
+                        <xs:element name="formula" type="formula_element"/>
+                        <xs:element name="abbr" type="abbr_element"/>
+                        <xs:element name="corr" type="corr_element"/>
+                        <xs:element name="add" type="add_element"/>
+                        <xs:element name="del" type="del_element"/>
+                    </xs:choice>
+                    <xs:attribute name="type" type="renditiontype_attribute" use="required"/>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="lb"/>
+            <xs:element name="formula" type="formula_element"/>
+            <xs:element name="abbr" type="abbr_element"/>
+            <xs:element name="corr" type="corr_element"/>
+            <xs:element name="add" type="add_element"/>
+            <xs:element name="del" type="del_element"/>
+            <xs:element name="region" type="region_element"/>
+
+        </xs:choice>
+        <xs:attribute name="id" type="xs:anyURI" use="required"/>
+        <xs:attribute name="regiontype" type="regiontype_attribute" use="required"/>
+    </xs:complexType>
+
+
+    <!--
+
         <rendition type="(\s?underline|\s?center|\s?strike|\s?above)"> ... </rendition
-    
+
         Represents layout information:
         - "underline": text underlined in manuscript
         - "center": text centered in manuscript
         - "strike": text struck through in manuscript
         - "above": text positioned above baseline in manuscript
-        
+
         A type attribute may hold several of these.
 
     -->
-    
+
     <xs:simpleType name="renditiontype_attribute">
         <xs:restriction base="xs:string">
-            <xs:pattern value="(\s?underline|\s?center|\s?strike|\s?above)+"></xs:pattern>
+            <xs:pattern value="(\s?underline|\s?center|\s?strike|\s?above)+"/>
         </xs:restriction>
     </xs:simpleType>
 
 
-    <!-- 
-    
+    <!--
+
         <formula notation="TeX">AB</formula>
-        
+
         Represents a mathematical formula:
         - "notation": indicates the format in which the fomula is written
-        
+
         At the moment, only TeX is supported. It has to be MathJax compliant which means that only the math parts of LaTeX may be used, not the text parts.
-    
+
     -->
 
     <xs:simpleType name="notation_attribute">
@@ -101,17 +103,17 @@
     </xs:simpleType>
 
     <xs:complexType name="formula_element" mixed="true">
-        <xs:attribute name="notation" type="notation_attribute" use="required"></xs:attribute>
-        <xs:attribute name="repl" type="repl_attribute" use="optional"></xs:attribute>
+        <xs:attribute name="notation" type="notation_attribute" use="required"/>
+        <xs:attribute name="repl" type="repl_attribute" use="optional"/>
     </xs:complexType>
-    
-    <!-- 
-    
+
+    <!--
+
         <abbr expan="Analysis">Anal.</abbr>
-        
+
         Expands an abbreviation:
         - "expan": expansion of the abbreviation
-    
+
     -->
 
     <xs:simpleType name="expan_attribute">
@@ -122,52 +124,52 @@
         <xs:attribute name="expan" use="required" type="expan_attribute"/>
     </xs:complexType>
 
-    
-    <!-- 
-    
+
+    <!--
+
         <corr repl="y">x</corr>
-        
+
         Represents an editorial intervention:
         - "repl": replacement for the original text
-    
+
     -->
-    
+
     <xs:simpleType name="repl_attribute">
         <xs:restriction base="xs:string"/>
     </xs:simpleType>
-    
+
     <xs:complexType name="corr_element" mixed="true">
         <xs:attribute name="expan" use="required" type="repl_attribute"/>
     </xs:complexType>
-    
-    <!-- 
-    
+
+    <!--
+
         <add>added by author</add>
-        
-        Represents text that was added to the base text by the author himself. 
-        
+
+        Represents text that was added to the base text by the author himself.
+
     -->
 
     <xs:complexType name="add_element" mixed="true">
         <xs:choice maxOccurs="unbounded" minOccurs="0">
-            <xs:element name="formula" type="formula_element"></xs:element>
-        </xs:choice>    
-    </xs:complexType>
-
-    <!-- 
-    
-        <del>deleted by author</del>
-        
-        Represents text that was deleted by the auhtor himself.
-        
-    -->
-    
-    <xs:complexType name="del_element" mixed="true">
-        <xs:choice maxOccurs="unbounded" minOccurs="0">
-            <xs:element name="formula" type="formula_element"></xs:element>
+            <xs:element name="formula" type="formula_element"/>
         </xs:choice>
     </xs:complexType>
-    
+
+    <!--
+
+        <del>deleted by author</del>
+
+        Represents text that was deleted by the auhtor himself.
+
+    -->
+
+    <xs:complexType name="del_element" mixed="true">
+        <xs:choice maxOccurs="unbounded" minOccurs="0">
+            <xs:element name="formula" type="formula_element"/>
+        </xs:choice>
+    </xs:complexType>
+
 
 
 </xs:schema>
