@@ -37,25 +37,15 @@
 
     <xs:complexType mixed="true" name="region_element">
         <xs:choice maxOccurs="unbounded" minOccurs="0">
-            <xs:element name="rendition">
-                <xs:complexType mixed="true">
-                    <xs:choice maxOccurs="unbounded" minOccurs="0">
-                        <xs:element name="lb"/>
-                        <xs:element name="formula" type="formula_element"/>
-                        <xs:element name="abbr" type="abbr_element"/>
-                        <xs:element name="corr" type="corr_element"/>
-                        <xs:element name="add" type="add_element"/>
-                        <xs:element name="del" type="del_element"/>
-                    </xs:choice>
-                    <xs:attribute name="type" type="renditiontype_attribute" use="required"/>
-                </xs:complexType>
-            </xs:element>
+            <xs:element name="rendition" type="rendition_element"/>
             <xs:element name="lb"/>
             <xs:element name="formula" type="formula_element"/>
             <xs:element name="abbr" type="abbr_element"/>
             <xs:element name="corr" type="corr_element"/>
             <xs:element name="add" type="add_element"/>
             <xs:element name="del" type="del_element"/>
+            <xs:element name="subst" type="subst_element"/>
+            <xs:element name="gap" type="gap_element"/>
             <xs:element name="region" type="region_element"/>
 
         </xs:choice>
@@ -84,6 +74,18 @@
         </xs:restriction>
     </xs:simpleType>
 
+    <xs:complexType name="rendition_element" mixed="true">
+        <xs:choice maxOccurs="unbounded" minOccurs="0">
+            <xs:element name="lb"/>
+            <xs:element name="formula" type="formula_element"/>
+            <xs:element name="abbr" type="abbr_element"/>
+            <xs:element name="corr" type="corr_element"/>
+            <xs:element name="add" type="add_element"/>
+            <xs:element name="del" type="del_element"/>
+            <xs:element name="subst" type="subst_element"/>
+        </xs:choice>
+        <xs:attribute name="type" type="renditiontype_attribute" use="required"/>
+    </xs:complexType>
 
     <!--
 
@@ -144,6 +146,24 @@
 
     <!--
 
+        <subst>
+            <del>deleted text</del>
+            <add>added text that subsitutes the deleted text</add>
+        </subst>
+
+        Represents a subsitution of text with other text in the manuscript.
+
+    -->
+
+    <xs:complexType name="subst_element">
+        <xs:sequence>
+            <xs:element name="del" type="del_element"/>
+            <xs:element name="add" type="add_element"></xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+
         <add>added by author</add>
 
         Represents text that was added to the base text by the author himself.
@@ -153,6 +173,9 @@
     <xs:complexType name="add_element" mixed="true">
         <xs:choice maxOccurs="unbounded" minOccurs="0">
             <xs:element name="formula" type="formula_element"/>
+            <xs:element name="gap" type="gap_element"/>
+            <xs:element name="del" type="del_element"/> <!-- added text could have been deleted again -->
+            <xs:element name="rendition" type="rendition_element"/> <!-- added text could have been styled partially -->
         </xs:choice>
     </xs:complexType>
 
@@ -169,6 +192,26 @@
             <xs:element name="formula" type="formula_element"/>
         </xs:choice>
     </xs:complexType>
+
+    <!--
+
+        <gap unsure="true|false">conjecture</gap>
+
+        Expands a gap in the manuscript
+        - "unsure": indicates whether the conjecture is unsure
+    -->
+
+    <xs:simpleType name="unsure_attribute">
+        <xs:restriction base="xs:boolean"/>
+    </xs:simpleType>
+
+    <xs:complexType name="gap_element" mixed="true">
+        <xs:choice maxOccurs="1" minOccurs="0">
+            <xs:element name="lb"/>
+        </xs:choice>
+        <xs:attribute name="unsure" type="unsure_attribute" default="true" use="optional"/>
+    </xs:complexType>
+
 
 
 
