@@ -24,10 +24,10 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
-import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
-import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
+import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.ResourceLocker
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
@@ -241,11 +241,12 @@ class ValuesResponderV1 extends ResponderV1 {
         def makeTaskFuture(userIri: IRI): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
             /**
               * Assists in the numbering of values to be created.
+              *
               * @param createValueV1WithComment the value to be created.
-              * @param valueIndex the index of the value in the sequence of all values to be created. This will be used
-              *                   to generate unique SPARQL variable names.
-              * @param valueHasOrder the index of the value in the sequence of values to be created for a particular property.
-              *                      This will be used to generate `knora-base:valueHasOrder`.
+              * @param valueIndex               the index of the value in the sequence of all values to be created. This will be used
+              *                                 to generate unique SPARQL variable names.
+              * @param valueHasOrder            the index of the value in the sequence of values to be created for a particular property.
+              *                                 This will be used to generate `knora-base:valueHasOrder`.
               */
             case class NumberedValueToCreate(createValueV1WithComment: CreateValueV1WithComment,
                                              valueIndex: Int,
@@ -254,10 +255,11 @@ class ValuesResponderV1 extends ResponderV1 {
             /**
               * Assists in collecting generated SPARQL as well as other information about values to be created for
               * a particular property.
-              * @param whereSparql statements to be included in the SPARQL WHERE clause.
-              * @param insertSparql statements to be included in the SPARQL INSERT clause.
+              *
+              * @param whereSparql    statements to be included in the SPARQL WHERE clause.
+              * @param insertSparql   statements to be included in the SPARQL INSERT clause.
               * @param valuesToVerify information about each value to be created.
-              * @param valueIndexes the value index of each value described by this object (so they can be sorted).
+              * @param valueIndexes   the value index of each value described by this object (so they can be sorted).
               */
             case class SparqlGenerationResultForProperty(whereSparql: Vector[String] = Vector.empty[String],
                                                          insertSparql: Vector[String] = Vector.empty[String],
@@ -942,18 +944,28 @@ class ValuesResponderV1 extends ResponderV1 {
           */
         def makeTaskFuture(userIri: IRI, findResourceWithValueResult: FindResourceWithValueResult): Future[DeleteValueResponseV1] = for {
         // Ensure that the user has permission to mark the value as deleted.
-            currentValueResponse <- getValueResponseV1(deleteValueRequest.valueIri, deleteValueRequest.userProfile)
+            maybeCurrentValueQueryResult <- findValue(deleteValueRequest.valueIri, deleteValueRequest.userProfile)
+            currentValueQueryResult = maybeCurrentValueQueryResult.getOrElse(throw NotFoundException(s"Value ${deleteValueRequest.valueIri} not found (it may have been deleted)"))
 
-            _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = Some(currentValueResponse.rights), userNeedsPermissionIri = OntologyConstants.KnoraBase.HasDeletePermission)) {
+            _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = Some(currentValueQueryResult.permissionCode), userNeedsPermissionIri = OntologyConstants.KnoraBase.HasDeletePermission)) {
                 throw ForbiddenException(s"User $userIri does not have permission to delete value ${deleteValueRequest.valueIri}")
             }
 
             // The way we delete the value depends on whether it's a link value or an ordinary value.
 
-            (sparqlUpdate, deletedValueIri) <- currentValueResponse.value match {
+            (sparqlUpdate, deletedValueIri) <- currentValueQueryResult.value match {
                 case linkValue: LinkValueV1 =>
                     // It's a LinkValue. Make a new version of it with a reference count of 0, and mark the new
                     // version as deleted.
+
+                    // Give the new version the same permissions and project as the previous version, but make the requesting user
+                    // the owner.
+                    val permissionRelevantAssertions: Seq[(IRI, IRI)] = {
+                        (OntologyConstants.KnoraBase.AttachedToUser, userIri) +:
+                            currentValueQueryResult.permissionRelevantAssertions.filterNot {
+                                case (p, o) => p == OntologyConstants.KnoraBase.AttachedToUser
+                            }
+                    }
 
                     val linkPropertyIri = knoraIriUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
 
@@ -961,7 +973,8 @@ class ValuesResponderV1 extends ResponderV1 {
                         sparqlTemplateLinkUpdate <- decrementLinkValue(
                             sourceResourceIri = findResourceWithValueResult.resourceIri,
                             linkPropertyIri = linkPropertyIri,
-                            removedTargetResourceIri = linkValue.objectIri,
+                            targetResourceIri = linkValue.objectIri,
+                            permissionRelevantAssertions = permissionRelevantAssertions,
                             userProfile = deleteValueRequest.userProfile
                         )
 
@@ -986,7 +999,8 @@ class ValuesResponderV1 extends ResponderV1 {
                                 targetResourceIri => decrementLinkValue(
                                     sourceResourceIri = findResourceWithValueResult.resourceIri,
                                     linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                                    removedTargetResourceIri = targetResourceIri,
+                                    targetResourceIri = targetResourceIri,
+                                    permissionRelevantAssertions = OntologyConstants.KnoraBase.SystemPermissionRelevantAssertions,
                                     userProfile = deleteValueRequest.userProfile
                                 )
                             }
@@ -1026,9 +1040,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 throw UpdateNotPerformedException(s"The request to mark value ${deleteValueRequest.valueIri} (or a new version of that value) as deleted did not succeed. Please report this as a possible bug.")
             }
         } yield DeleteValueResponseV1(
-                id = deletedValueIri,
-                userdata = deleteValueRequest.userProfile.userData
-            )
+            id = deletedValueIri,
+            userdata = deleteValueRequest.userProfile.userData
+        )
 
         for {
         // Don't allow anonymous users to update values.
@@ -1704,7 +1718,7 @@ class ValuesResponderV1 extends ResponderV1 {
         val newValueIri = knoraIriUtil.makeRandomValueIri(resourceIri)
 
         for {
-        // If we're creating a text value, update direct links and LinkValues for any resource references in Standoff.
+        // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- value match {
                 case textValueV1: TextValueV1 =>
                     // Make sure the text value's list of resource references is correct.
@@ -1712,15 +1726,15 @@ class ValuesResponderV1 extends ResponderV1 {
 
                     // Construct a SparqlTemplateLinkUpdate for each reference that was added.
                     val standoffLinkUpdatesForAddedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] =
-                        textValueV1.resource_reference.map {
-                            targetResourceIri => incrementLinkValue(
-                                sourceResourceIri = resourceIri,
-                                linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                                targetResourceIri = targetResourceIri,
-                                permissionRelevantAssertions = permissionRelevantAssertions, // TODO: How should we create permissions for a LinkValue for standoff links (issue 88)?
-                                userProfile = userProfile
-                            )
-                        }
+                    textValueV1.resource_reference.map {
+                        targetResourceIri => incrementLinkValue(
+                            sourceResourceIri = resourceIri,
+                            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                            targetResourceIri = targetResourceIri,
+                            permissionRelevantAssertions = OntologyConstants.KnoraBase.SystemPermissionRelevantAssertions,
+                            userProfile = userProfile
+                        )
+                    }
 
                     Future.sequence(standoffLinkUpdatesForAddedResourceRefs)
 
@@ -1782,7 +1796,8 @@ class ValuesResponderV1 extends ResponderV1 {
             sparqlTemplateLinkUpdateForCurrentLink <- decrementLinkValue(
                 sourceResourceIri = resourceIri,
                 linkPropertyIri = propertyIri,
-                removedTargetResourceIri = currentLinkValueV1.objectIri,
+                targetResourceIri = currentLinkValueV1.objectIri,
+                permissionRelevantAssertions = permissionRelevantAssertions,
                 userProfile = userProfile
             )
 
@@ -1879,28 +1894,29 @@ class ValuesResponderV1 extends ResponderV1 {
 
                     // Construct a SparqlTemplateLinkUpdate for each reference that was added.
                     val standoffLinkUpdatesForAddedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] =
-                        addedResourceRefs.toVector.map {
-                            targetResourceIri =>
-                                incrementLinkValue(
-                                    sourceResourceIri = resourceIri,
-                                    linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                                    targetResourceIri = targetResourceIri,
-                                    permissionRelevantAssertions = permissionRelevantAssertions,
-                                    userProfile = userProfile
-                                )
-                        }
+                    addedResourceRefs.toVector.map {
+                        targetResourceIri =>
+                            incrementLinkValue(
+                                sourceResourceIri = resourceIri,
+                                linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                                targetResourceIri = targetResourceIri,
+                                permissionRelevantAssertions = OntologyConstants.KnoraBase.SystemPermissionRelevantAssertions,
+                                userProfile = userProfile
+                            )
+                    }
 
                     // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
                     val standoffLinkUpdatesForRemovedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] =
-                        removedResourceRefs.toVector.map {
-                            removedTargetResource =>
-                                decrementLinkValue(
-                                    sourceResourceIri = resourceIri,
-                                    linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                                    removedTargetResourceIri = removedTargetResource,
-                                    userProfile = userProfile
-                                )
-                        }
+                    removedResourceRefs.toVector.map {
+                        removedTargetResource =>
+                            decrementLinkValue(
+                                sourceResourceIri = resourceIri,
+                                linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                                targetResourceIri = removedTargetResource,
+                                permissionRelevantAssertions = OntologyConstants.KnoraBase.SystemPermissionRelevantAssertions,
+                                userProfile = userProfile
+                            )
+                    }
 
                     Future.sequence(standoffLinkUpdatesForAddedResourceRefs ++ standoffLinkUpdatesForRemovedResourceRefs)
 
@@ -1948,13 +1964,23 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Generates a [[SparqlTemplateLinkUpdate]] object for a resource reference that has been added to a resource.
+      * Generates a [[SparqlTemplateLinkUpdate]] to tell a SPARQL update template how to create a `LinkValue` or to
+      * increment the reference count of an existing `LinkValue`. This happens in two cases:
       *
-      * @param sourceResourceIri            the resource containing the resource reference.
+      *  - When the user creates a link. In this case, neither the link nor the `LinkValue` exist yet. The
+      * [[SparqlTemplateLinkUpdate]] will specify that the link should be created, and that the `LinkValue` should be
+      * created with a reference count of 1.
+      *  - When a text value is updated so that its standoff markup refers to a resource that it did not previously
+      * refer to. Here there are two possibilities:
+      *    - If there is currently a `knora-base:hasStandoffLinkTo` link between the source and target resources, with a
+      * corresponding `LinkValue`, a new version of the `LinkValue` will be made, with an incremented reference count.
+      *    - If there that link and `LinkValue` don't yet exist, they will be created, and the `LinkValue` will be given
+      * a reference count of 1.
+      *
+      * @param sourceResourceIri            the IRI of the source resource.
       * @param linkPropertyIri              the IRI of the property that links the source resource to the target resource.
-      * @param targetResourceIri            the target resource for which a reference has been added.
-      * @param permissionRelevantAssertions the permission-relevant assertions to be used for a new `knora-base:LinkValue`
-      *                                     (as opposed to a new version of an existing `LinkValue`).
+      * @param targetResourceIri            the IRI of the target resource.
+      * @param permissionRelevantAssertions the permission-relevant assertions to be included in the `LinkValue`.
       * @param userProfile                  the profile of the user making the request.
       * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
       */
@@ -1964,6 +1990,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                    permissionRelevantAssertions: Seq[(IRI, IRI)],
                                    userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
+        // Check whether a LinkValue already exists for this link.
             maybeLinkValueQueryResult <- findLinkValueByObject(
                 subjectIri = sourceResourceIri,
                 predicateIri = linkPropertyIri,
@@ -1992,7 +2019,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         linkTargetIri = targetResourceIri,
                         currentReferenceCount = currentReferenceCount,
                         newReferenceCount = newReferenceCount,
-                        permissionRelevantAssertions = linkValueQueryResult.permissionRelevantAssertions
+                        permissionRelevantAssertions = permissionRelevantAssertions
                     )
 
                 case None =>
@@ -2015,32 +2042,52 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Generates a [[SparqlTemplateLinkUpdate]] for a resource reference that has been removed from a resource.
+      * Generates a [[SparqlTemplateLinkUpdate]] to tell a SPARQL update template how to decrement the reference count
+      * of a `LinkValue`. This happens in two cases:
       *
-      * @param sourceResourceIri        the resource containing the resource reference.
-      * @param linkPropertyIri          the IRI of the property that links the source resource to the target resource.
-      * @param removedTargetResourceIri the target resources for which a reference has been removed.
-      * @param userProfile              the profile of the user making the request.
+      *  - When the user deletes (or changes) a user-created link. In this case, the current reference count will be 1.
+      * The existing link will be removed. A new version of the `LinkValue` be made with a reference count of 0, and
+      * will be marked as deleted.
+      *  - When a resource reference is removed from standoff markup on a text value, so that the text value no longer
+      * contains any references to that target resource. In this case, a new version of the `LinkValue` will be
+      * made, with a decremented reference count. If the new reference count is 0, the link will be removed and the
+      * `LinkValue` will be marked as deleted.
+      *
+      * @param sourceResourceIri            the IRI of the source resource.
+      * @param linkPropertyIri              the IRI of the property that links the source resource to the target resource.
+      * @param targetResourceIri            the IRI of the target resource.
+      * @param permissionRelevantAssertions the permission-relevant assertions to be included in the `LinkValue`.
+      * @param userProfile                  the profile of the user making the request.
       * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
       */
-    private def decrementLinkValue(sourceResourceIri: IRI, linkPropertyIri: IRI, removedTargetResourceIri: IRI, userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
+    private def decrementLinkValue(sourceResourceIri: IRI,
+                                   linkPropertyIri: IRI,
+                                   targetResourceIri: IRI,
+                                   permissionRelevantAssertions: Seq[(IRI, IRI)],
+                                   userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
+        // Query the LinkValue to ensure that it exists and to get its contents.
             maybeLinkValueQueryResult <- findLinkValueByObject(
                 subjectIri = sourceResourceIri,
                 predicateIri = linkPropertyIri,
-                objectIri = removedTargetResourceIri,
+                objectIri = targetResourceIri,
                 userProfile = userProfile
             )
 
+            // Did we find it?
             linkUpdate = maybeLinkValueQueryResult match {
                 case Some(linkValueQueryResult) =>
-                    // There's already a LinkValue for links between these two resources. Decrement its
-                    // reference count.
+                    // Yes. Make a SparqlTemplateLinkUpdate.
+
+                    // Decrement the LinkValue's reference count.
                     val currentReferenceCount = linkValueQueryResult.value.referenceCount
                     val newReferenceCount = currentReferenceCount - 1
+
+                    // If the new reference count is 0, specify that the direct link between the source and target
+                    // resources should be removed.
                     val deleteDirectLink = linkValueQueryResult.directLinkExists && newReferenceCount == 0
 
-                    // Generate an IRI for the new LinkValue.
+                    // Generate an IRI for the new version of the LinkValue.
                     val newLinkValueIri = knoraIriUtil.makeRandomValueIri(sourceResourceIri)
 
                     SparqlTemplateLinkUpdate(
@@ -2050,15 +2097,15 @@ class ValuesResponderV1 extends ResponderV1 {
                         deleteDirectLink = deleteDirectLink,
                         linkValueExists = true,
                         newLinkValueIri = newLinkValueIri,
-                        linkTargetIri = removedTargetResourceIri,
+                        linkTargetIri = targetResourceIri,
                         currentReferenceCount = currentReferenceCount,
                         newReferenceCount = newReferenceCount,
                         permissionRelevantAssertions = linkValueQueryResult.permissionRelevantAssertions
                     )
 
                 case None =>
-                    // This shouldn't happen.
-                    throw InconsistentTriplestoreDataException(s"There should be a knora-base:LinkValue describing a direct link from resource $sourceResourceIri to resource $removedTargetResourceIri using property $linkPropertyIri, but it seems to be missing")
+                    // We didn't find the LinkValue. This shouldn't happen.
+                    throw InconsistentTriplestoreDataException(s"There should be a knora-base:LinkValue describing a direct link from resource $sourceResourceIri to resource $targetResourceIri using property $linkPropertyIri, but it seems to be missing")
             }
         } yield linkUpdate
     }

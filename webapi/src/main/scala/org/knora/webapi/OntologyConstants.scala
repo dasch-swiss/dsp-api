@@ -179,6 +179,9 @@ object OntologyConstants {
         val ProjectKeyword = KnoraAdminPrefix + "projectKeyword"
         val ProjectBasepath = KnoraAdminPrefix + "projectBasepath"
         val ProjectLogo = KnoraAdminPrefix + "projectLogo"
+
+        val SystemUser = "http://www.knora.org/ontology/knora-base#SystemUser"
+        val SystemPermissionRelevantAssertions = Seq((AttachedToUser, SystemUser))
     }
 
     object SalsahGui {

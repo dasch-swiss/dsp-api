@@ -403,8 +403,10 @@ case class DeleteValueRequestV1(valueIri: IRI,
 /**
   * Represents a response to a [[DeleteValueRequestV1]].
   *
-  * @param id       the IRI of the value that was marked as deleted. This may be the same value IRI that was given in
-  *                 the [[DeleteValueRequestV1]], or it may be the IRI of a new version of that value.
+  * @param id       the IRI of the value that was marked as deleted. If this was a `LinkValue`, a new version of it
+  *                 will have been created, and `id` will the IRI of that new version. Otherwise, `id` will be the IRI
+  *                 submitted in the [[DeleteValueRequestV1]]. For an explanation of this behaviour, see the chapter
+  *                 ''Triplestore Updates'' in the Knora API server design documentation.
   * @param userdata information about the user that made the request.
   */
 case class DeleteValueResponseV1(id: IRI,

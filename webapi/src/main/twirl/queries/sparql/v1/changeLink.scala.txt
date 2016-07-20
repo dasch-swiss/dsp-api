@@ -78,6 +78,7 @@ INSERT {
             knora-base:valueCreationDate ?currentTime ;
             knora-base:previousValue ?currentLinkValueForCurrentLink ;
             @if(linkUpdateForCurrentLink.newReferenceCount == 0) {
+                knora-base:deleteDate ?currentTime ;
                 knora-base:isDeleted true .
             } else {
                 @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.newReferenceCount must be 0 in this SPARQL template"); ()}

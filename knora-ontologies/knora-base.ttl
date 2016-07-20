@@ -2748,3 +2748,21 @@
                       owl:NamedIndividual ;
              
              <http://xmlns.com/foaf/0.1/name> "unknown user" .
+
+
+
+###  http://www.knora.org/ontology/knora-base#SystemUser
+
+:SystemUser rdf:type knora-base:User ;
+
+                     knora-base:userid "system" ;
+
+                     foaf:givenName "System" ;
+
+                     foaf:familyName "System" ;
+
+                     knora-base:password "-" ;
+
+                     knora-base:email "system@knora.org" ;
+
+                     knora-base:preferredLanguage "en" .
