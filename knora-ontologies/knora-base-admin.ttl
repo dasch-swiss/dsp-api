@@ -409,7 +409,7 @@
               rdfs:subClassOf <http://xmlns.com/foaf/0.1/Project> ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectShortname ;
-                                owl:cardinality "1"^^xsd:nonNegativeInteger
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLongname ;
@@ -425,7 +425,7 @@
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectBasepath ;
-                                owl:cardinality "1"^^xsd:nonNegativeInteger
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectKeyword ;

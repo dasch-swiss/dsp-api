@@ -116,7 +116,7 @@
 
                           rdfs:comment "Administrative Permission class used to create instances for storing administrative permissions on groups."@en ;
 
-                          rdfs:subClassOf knora-base:Permission .
+                          rdfs:subClassOf :Permission .
 
 
 
@@ -126,7 +126,23 @@
 
                                rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission on groups."@en ;
 
-                               rdfs:subClassOf knora-base:Permission .
+                               rdfs:subClassOf :Permission .
+
+
+
+### http://www.knora.org/ontology/knora-base#AllProjects
+
+:AllProjects rdf:type :knoraProject ;
+
+             rdfs:comment "A built-in project representing all projects."@en .
+
+
+
+### http://www.knora.org/ontology/knora-base#AllGroups
+
+:AllGroups rdfs:type :UserGroup ;
+
+           rdfs:comment "A built-in group representing all groups."@en .
 
 
 
@@ -134,7 +150,7 @@
 
 :AllResourceClasses rdf:type owl:Class ;
 
-                    rdfs:comment "A built-in resource class used in permission instances to denote that the defined default object access permission should be applied to all resource classes defined for the project."@en
+                    rdfs:comment "A built-in resource class used in permission instances to denote that the defined default object access permission should be applied to all resource classes defined for the project."@en .
 
 
 
@@ -142,7 +158,7 @@
 
 :PropertyNotApplicable rdf:type owl:ObjectProperty ;
 
-                       rdfs:comment "A built-in resource property used in permission instances to denote that the defined default object access permissions should be applied to all properties defined for the specified resource class."@en
+                       rdfs:comment "A built-in resource property used in permission instances to denote that the defined default object access permissions should be applied to all properties defined for the specified resource class."@en .
 
 
 
@@ -310,27 +326,28 @@
 
 
 ###  Instances
-<http://www.knora.org/ontology/knora-base#ProjectAllAdminPermission>
 
-                      rdf:type :ProjectAdministrationPermissionValue ;
+###  http://www.knora.org/ontology/knora-base#ProjectAllAdminPermission
 
-                      rdfs:comment ""@en .
+:ProjectAllAdminPermission rdf:type :ProjectAdministrationPermissionValue ;
 
-
-
-<http://www.knora.org/ontology/knora-base#ProjectAllGroupAdminPermission>
-
-                      rdf:type :ProjectAdministrationPermissionValue ;
-
-                      rdfs:comment ""@en .
+                           rdfs:comment "Gives the permission to perform all administrative tasks inside the project."@en .
 
 
 
-<http://www.knora.org/ontology/knora-base#ProjectRightsAdminPermission>
+###  http://www.knora.org/ontology/knora-base#ProjectAllGroupAdminPermission
 
-                      rdf:type :ProjectAdministrationPermissionValue ;
+:ProjectAllGroupAdminPermission rdf:type :ProjectAdministrationPermissionValue ;
 
-                      rdfs:comment ""@en .
+                                rdfs:comment "Gives the permission to perform all administrative tasks on all groups inside the project."@en .
+
+
+
+### http://www.knora.org/ontology/knora-base#ProjectRightsAdminPermission
+
+:ProjectRightsAdminPermission rdf:type :ProjectAdministrationPermissionValue ;
+
+                              rdfs:comment "Gives the permission to add/edit/change permissions on all groups inside the project."@en .
 
 
 
@@ -356,7 +373,7 @@
 
 :hasProjectRestrictedGroupAdminPermission rdf:type owl:ObjectProperty ;
 
-                                          rdfs:comment ""@en ;
+                                          rdfs:comment "Gives the permission to perform all administrative tasks on the specified groups inside the project."@en ;
 
                                           rdfs:subPropertyOf :hasPermission ;
 
@@ -380,11 +397,11 @@
 
 
 ###  Instance
-<http://www.knora.org/ontology/knora-base#ProjectOntologyAdminPermission
+###  http://www.knora.org/ontology/knora-base#ProjectOntologyAdminPermission
 
-                      rdf:type OntologyAdministrationPermissionValue ;
+:ProjectOntologyAdminPermission rdf:type :OntologyAdministrationPermissionValue ;
 
-                      rdfs:comment ""@en .
+                                rdfs:comment "Gives the permission to perform any kind of changes to project ontologies."@en .
 
 
 
@@ -467,3 +484,5 @@
                                     :objectClassConstraint :UserGroup ;
 
                                     rdfs:subPropertyOf :hasDefaultObjectAccessPermission .
+
+
