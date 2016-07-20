@@ -180,7 +180,15 @@ object OntologyConstants {
         val ProjectBasepath = KnoraAdminPrefix + "projectBasepath"
         val ProjectLogo = KnoraAdminPrefix + "projectLogo"
 
+        /**
+          * The system user is the owner of objects that are created by the system, rather than directly by the user,
+          * such as link values for standoff resource references.
+          */
         val SystemUser = "http://www.knora.org/ontology/knora-base#SystemUser"
+
+        /**
+          * When an object is created by the system user, it is given these permission-relevant assertions.
+          */
         val SystemPermissionRelevantAssertions = Seq((AttachedToUser, SystemUser))
     }
 

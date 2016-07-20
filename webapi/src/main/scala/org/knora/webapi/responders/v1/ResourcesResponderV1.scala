@@ -366,7 +366,6 @@ class ResourcesResponderV1 extends ResponderV1 {
         // Get information about the references pointing from other resources to this resource.
         val maybeIncomingRefsFuture: Future[Option[SparqlSelectResponse]] = if (getIncoming) {
             for {
-            // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
                 incomingRefsSparql <- Future(queries.sparql.v1.txt.getIncomingReferences(
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceIri
@@ -401,6 +400,9 @@ class ResourcesResponderV1 extends ResponderV1 {
             // Group incoming reference rows by the IRI of the referring resource, and construct an IncomingV1 for each one.
 
             maybeIncomingRefsResponse: Option[SparqlSelectResponse] <- maybeIncomingRefsFuture
+
+            // TODO: rewrite this so it can handle multiple links from the same source to the same target, using different link properties.
+            // For each link, check the permissions on the corresponding LinkValue returned by the query.
 
             incomingRefFutures: Seq[Future[Option[IncomingV1]]] = maybeIncomingRefsResponse match {
                 case Some(incomingRefsResponse) =>
