@@ -7,6 +7,7 @@ curl -F filedata=@../../knora-ontologies/knora-base-admin.ttl http://localhost:3
 curl -F filedata=@../../knora-ontologies/knora-dc.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/dc > /dev/null
 curl -F filedata=@../../knora-ontologies/salsah-gui.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/salsah-gui > /dev/null
 curl -F filedata=@../_test_data/all_data/admin-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/admin > /dev/null
+curl -F filedata=@../_test_data/all_data/permissions-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/permissions > /dev/null
 curl -F filedata=@../_test_data/ontologies/incunabula-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/incunabula > /dev/null
 curl -F filedata=@../_test_data/all_data/incunabula-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/incunabula > /dev/null
 curl -F filedata=@../_test_data/ontologies/images-demo-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/images > /dev/null

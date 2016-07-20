@@ -14,24 +14,20 @@
 ### Administrative Permissions on ProjectMember
 <http://data.knora.org/permissions/001>
 
-                      rdf:type knora-base:Permission ;
+                      rdf:type knora-base:AdministrativePermission ;
 
                       knora-base:forProject <http://data.knora.org/projects/images> ;
 
                       knora-base:forGroup <knora-base:ProjectMember> ;
 
-                      knora-base:forResourceClass knora-base:ResourceClassNotApplicable ;
-
-                      knora-base:forProperty knora-base:PropertyNotApplicable ;
-
                       knora-base:hasResourceCreationPermission knora-base:ProjectResourceCreateAllPermission .
 
 
 
-### Default Access Object Permissions on ProjectMember Group
+### Default Object Access Permissions on ProjectMember Group
 <http://data.knora.org/permissions/002>
 
-                      rdf:type knora-base:Permission ;
+                      rdf:type knora-base:DefaultObjectAccesssPermission ;
 
                       knora-base:forProject <http://data.knora.org/projects/images> ;
 
@@ -52,7 +48,7 @@
 ### Administrative Permissions on ProjectAdmin
 <http://data.knora.org/permissions/003>
 
-                      rdf:type knora-base:Permission ;
+                      rdf:type knora-base:AdministrativePermission ;
 
                       knora-base:forProject <http://data.knora.org/projects/images> ;
 

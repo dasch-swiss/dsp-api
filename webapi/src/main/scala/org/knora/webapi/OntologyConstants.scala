@@ -187,16 +187,17 @@ object OntologyConstants {
         val Institution = KNORA_BASE_PREFIX + "Institution"
 
         /* Permissions */
-        val Permission = KNORA_BASE_PREFIX + "Permission"
+        val AdministrativePermission = KNORA_BASE_PREFIX + "AdministrativePermission"
+        val DefaultObjectAccessPermission = KNORA_BASE_PREFIX + "DefaultObjectAccessPermission"
         val ForProject = KNORA_BASE_PREFIX + "forProject"
         val ForGroup = KNORA_BASE_PREFIX + "forGroup"
         val ForResourceClass = KNORA_BASE_PREFIX + "forResourceClass"
         val ForProperty = KNORA_BASE_PREFIX + "forProperty"
 
-        val ProjectNotApplicable = KNORA_BASE_PREFIX + "ProjectNotApplicable"
-        val GroupNotApplicable = KNORA_BASE_PREFIX + "GroupNotApplicable"
-        val ResourceClassNotApplicable = KNORA_BASE_PREFIX + "ResourceClassNotApplicable"
-        val PropertyNotApplicable = KNORA_BASE_PREFIX + "PropertyNotApplicable"
+        val AllProjects = KNORA_BASE_PREFIX + "AllProjects"
+        val AllGroups = KNORA_BASE_PREFIX + "AllGroups"
+        val AllResourceClasses = KNORA_BASE_PREFIX + "AllResourceClasses"
+        val AllProperties = KNORA_BASE_PREFIX + "AllProperties"
 
 
         /* Object Access Permission Properties */
@@ -213,7 +214,7 @@ object OntologyConstants {
         val HasRestrictedProjectResourceCreatePermission = KNORA_BASE_PREFIX + "hasRestrictedProjectResourceCreatePermission"
 
         /* Resource Creation Permission Value Instances */
-        val ResourceCreationPermissionValue = KNORA_BASE_PREFIX + "ProjectResourceCreateAllPermission"
+        val ProjectResourceCreateAllPermission = KNORA_BASE_PREFIX + "ProjectResourceCreateAllPermission"
 
 
         /* Project Administration Permission Properties */

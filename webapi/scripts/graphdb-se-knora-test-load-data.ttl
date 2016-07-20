@@ -5,6 +5,7 @@ load ../../knora-ontologies/knora-base-admin.ttl into http://www.knora.org/ontol
 load ../../knora-ontologies/knora-dc.ttl into http://www.knora.org/ontology/dc .
 load ../../knora-ontologies/salsah-gui.ttl into http://www.knora.org/ontology/salsah-gui .
 load ../_test_data/all_data/admin-data.ttl into http://www.knora.org/data/admin .
+load ../_test_data/all_data/permissions-data.ttl into http://www.knora.org/data/permissions .
 load ../_test_data/ontologies/incunabula-onto.ttl into http://www.knora.org/ontology/incunabula .
 load ../_test_data/all_data/incunabula-data.ttl into http://www.knora.org/data/incunabula .
 load ../_test_data/ontologies/images-demo-onto.ttl into http://www.knora.org/ontology/images .

@@ -22,7 +22,7 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{GetGroupPermissionV1, PermissionV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionV1, _}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.KnoraIriUtil
@@ -44,35 +44,36 @@ class PermissionsResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case GetGroupPermissionV1(projectIri, groupIri, userProfileV1) => future2Message(sender(), getGroupPermissionV1(projectIri, groupIri, userProfileV1), log)
+        case GetGroupAdministrativePermissionV1(projectIri, groupIri, userProfileV1) => future2Message(sender(), getGroupAdministrativePermissionV1(projectIri, groupIri, userProfileV1), log)
+        case GetGroupDefaultObjectAccessPermissionsV1(projectIri, groupIri, userProfileV1) => future2Message(sender(), getGroupDefaultObjectAccessPermissionsV1(projectIri, groupIri, userProfileV1), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
-    /**
-      * Gets a list of Permission object, and returns it in a [[List[PermissionV1]]].
-      *
-      * @param userIri the IRI of the user.
-      * @return a list of [[PermissionV1]] objects .
-      */
-    private def getUserPermissionsV1(userIri: IRI, clean: Boolean): Future[List[PermissionV1]] = {
-
-        val permissionList = List(PermissionV1())
-        Future(permissionList)
-    }
 
     /**
-      * Gets the [[PermissionV1]] object for a group inside a project.
+      * Gets the [[AdministrativePermissionV1]] object for a group inside a project.
       *
       * @param forProject the IRI of the project.
       * @param forGroup the IRI of the group.
       * @param userProfileV1 the [[UserProfileV1]] of the requesting user.
       *
-      * @return a single [[PermissionV1]]
+      * @return a single [[AdministrativePermissionV1]] object.
       */
-    private def getGroupPermissionV1(forProject: IRI, forGroup: IRI, userProfileV1: UserProfileV1): Future[PermissionV1] = {
+    private def getGroupAdministrativePermissionV1(forProject: IRI, forGroup: IRI, userProfileV1: UserProfileV1): Future[AdministrativePermissionV1] = {
 
+        Future(AdministrativePermissionV1())
+    }
 
+    /**
+      * Gets the [[DefaultObjectAccessPermissionV1]] objects for a group inside a project.
+      *
+      * @param forProject the IRI of the project.
+      * @param forGroup the IRI of the group.
+      * @param userProfileV1 the [[UserProfileV1]] of the requesting user.
+      * @return a list of [[DefaultObjectAccessPermissionV1]] objects.
+      */
+    private def getGroupDefaultObjectAccessPermissionsV1(forProject: IRI, forGroup: IRI, userProfileV1: UserProfileV1): Future[List[DefaultObjectAccessPermissionV1]] = {
 
-        Future(PermissionV1())
+        Future(List(DefaultObjectAccessPermissionV1()))
     }
 }
