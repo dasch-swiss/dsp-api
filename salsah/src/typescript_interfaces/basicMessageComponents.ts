@@ -231,6 +231,48 @@ export module basicMessageComponents {
     }
 
     /**
+     * Represents a range in the text.
+     */
+    interface standoffPosition {
+
+        /**
+         * Start position of the range
+         */
+        start: integer;
+
+        /**
+         * End psoition of the range
+         */
+        end: integer;
+
+        /**
+         * In case it is a hyperlink, this is the link's target
+         */
+        href?: URI;
+
+        /**
+         * In case it is an internal link, this is the referred resource's IRI
+         */
+        resid?: KnoraIRI;
+    }
+
+    /**
+     * Represents the standoff information for a text value.
+     */
+    export interface textattr {
+        /**
+         * A map of attribute names to standoff positions.
+         * For each attribute the standoff positions indicate in which ranges of the text the attribute occurs.
+         */
+        [index: string]: Array<standoffPosition>
+    }
+
+    /**
+     * String must be a stringified [[textattr]] (using `JSON.stringify()`) that can pe parsed in a [[textattr]] using `JSON.parse()`.
+     */
+    type textattrStringified = string;
+
+    /**
      * Represents a rich text value
      */
     interface richtext {
@@ -242,7 +284,7 @@ export module basicMessageComponents {
         /**
          * Markup information in standoff format
          */
-        textattr:string;
+        textattr:textattrStringified;
 
         /**
          * References to Knora resources from the text
