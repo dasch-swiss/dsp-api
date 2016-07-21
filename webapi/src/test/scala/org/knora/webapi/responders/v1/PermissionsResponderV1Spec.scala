@@ -71,7 +71,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     groupIri = OntologyConstants.KnoraBase.ProjectMember,
                     SharedTestData.rootUserProfileV1
                 )
-                expectMsg(permission001)
+                expectMsg(Some(permission001))
             }
             "return DefaultObjectAccessPermission for group " in {
                 actorUnderTest ! GetGroupDefaultObjectAccessPermissionsV1(

@@ -1,0 +1,52 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Gets the administrative permission information attached to a group, given the project and group IRI.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param projectIri the project's IRI.
+ * @param groupIri the group's IRI.
+ *@
+@(triplestore: String,
+  projectIri: IRI,
+  groupIri: IRI)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?s ?p ?o
+
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
+
+WHERE {
+    BIND(IRI("@projectIri") as ?pIri)
+    BIND(IRI("@groupIri") as ?gIri)
+
+    ?s rdf:type knora-base:AdministrativePermission .
+    ?s knora-base:forProject ?pIri .
+    ?s knora-base:forGroup ?gIri .
+    ?s ?p ?o .
+}

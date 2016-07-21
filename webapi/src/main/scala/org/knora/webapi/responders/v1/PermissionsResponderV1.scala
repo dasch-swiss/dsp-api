@@ -21,11 +21,13 @@
 package org.knora.webapi.responders.v1
 
 import akka.actor.Status
+import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionV1, _}
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.KnoraIriUtil
+import org.knora.webapi.util.{KnoraIriUtil, MessageUtil}
 
 import scala.concurrent.Future
 
@@ -59,9 +61,52 @@ class PermissionsResponderV1 extends ResponderV1 {
       *
       * @return a single [[AdministrativePermissionV1]] object.
       */
-    private def getGroupAdministrativePermissionV1(forProject: IRI, forGroup: IRI, userProfileV1: UserProfileV1): Future[AdministrativePermissionV1] = {
+    private def getGroupAdministrativePermissionV1(forProject: IRI, forGroup: IRI, userProfileV1: UserProfileV1): Future[Option[AdministrativePermissionV1]] = {
 
-        Future(AdministrativePermissionV1())
+        for {
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getGroupAdministrativePermission(
+                triplestore = settings.triplestoreType,
+                projectIri = forProject,
+                groupIri = forGroup
+            ).toString())
+            //_ = log.debug(s"getGroupAdministrativePermissionV1 - query: $sparqlQueryString")
+
+            permissionsQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            _ = log.debug(s"getGroupAdministrativePermissionV1 - result: ${MessageUtil.toSource(permissionsQueryResponse)}")
+
+            permissionsResponseRows: Seq[VariableResultsRow] = permissionsQueryResponse.results.bindings
+
+
+            _ = if (permissionsQueryResponse.results.bindings.size > 1) {
+                throw InconsistentTriplestoreDataException(s"More then one AdministrativePermission found for project: $forProject, and group: $forGroup")
+            }
+
+            /* Are there any administrative permissions attached to the group */
+            administrativePermission = if (permissionsResponseRows.nonEmpty) {
+
+                /* */
+                val administrativePermissions = permissionsResponseRows.groupBy(_.rowMap("s"))
+
+                val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionsQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
+                    case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+                }
+
+                log.debug(s"getGroupAdministrativePermissionV1 - groupedResult: ${MessageUtil.toSource(groupedPermissionsQueryResponse)}")
+
+                Some(
+                    AdministrativePermissionV1(
+                        forProject = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProject).get.head,
+                        forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).get.head,
+                        resourceCreationPermissionValues = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasResourceCreationPermission).map(_.toList),
+                        projectAdministrationPermissionValues = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasProjectAdministrationPermission).map(_.toList),
+                        ontologyAdministrationPermissionValues = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasOntologyAdministrationPermission).map(_.toList)
+                    )
+                )
+            } else {
+                None
+            }
+
+        } yield administrativePermission
     }
 
     /**

@@ -18,7 +18,7 @@
 
                       knora-base:forProject <http://data.knora.org/projects/images> ;
 
-                      knora-base:forGroup <knora-base:ProjectMember> ;
+                      knora-base:forGroup knora-base:ProjectMember ;
 
                       knora-base:hasResourceCreationPermission knora-base:ProjectResourceCreateAllPermission .
 
@@ -31,7 +31,7 @@
 
                       knora-base:forProject <http://data.knora.org/projects/images> ;
 
-                      knora-base:forGroup <knora-base:ProjectMember> ;
+                      knora-base:forGroup knora-base:ProjectMember ;
 
                       knora-base:forResourceClass knora-base:AllResourceClasses ;
 
@@ -52,7 +52,7 @@
 
                       knora-base:forProject <http://data.knora.org/projects/images> ;
 
-                      knora-base:forGroup <knora-base:ProjectAdmin> ;
+                      knora-base:forGroup knora-base:ProjectAdmin ;
 
                       knora-base:forResourceClass knora-base:ResourceClassNotApplicable ;
 
