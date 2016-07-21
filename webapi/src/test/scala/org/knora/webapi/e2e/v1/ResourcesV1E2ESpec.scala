@@ -178,7 +178,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               	"label": "A thing",
               	"project_id": "http://data.knora.org/projects/anything",
               	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test text"}}],
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":"{\"_link\":[{\"start\":0,\"end\":4,\"href\":\"http://data.knora.org/a-thing\",\"resid\":\"http://data.knora.org/a-thing\"}],\"p\":[{\"start\":0,\"end\":5}]}","resource_reference" :[],"utf8str":"Test text"}}],
                     "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
                     "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
                     "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],

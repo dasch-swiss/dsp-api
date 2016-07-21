@@ -2050,7 +2050,7 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     @throws(classOf[BadRequestException])
     private def checkTextValueResourceRefs(textValue: TextValueV1): Unit = {
-        val resourceRefsInStandoff: Set[IRI] = textValue.textattr.get(StandoffConstantsV1.LINK_ATTR) match {
+        val resourceRefsInStandoff: Set[IRI] = textValue.textattr.get(StandoffAttributeV1.link) match {
             case Some(positions) => positions.flatMap(_.resid).toSet
             case None => Set.empty[IRI]
         }

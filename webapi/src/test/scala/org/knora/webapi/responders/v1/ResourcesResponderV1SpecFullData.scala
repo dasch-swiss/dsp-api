@@ -32,7 +32,7 @@ object ResourcesResponderV1SpecFullData {
 
     val settings = Settings(system)
 
-    val emptyTextattr = Map.empty[String, Seq[StandoffPositionV1]]
+    val emptyTextattr = Map.empty[StandoffAttributeV1.Value, Seq[StandoffPositionV1]]
 
     // The expected response to a "full" resource request for a book.
     val expectedBookResourceFullResponse = ResourceFullResponseV1(
@@ -1161,13 +1161,13 @@ object ResourcesResponderV1SpecFullData {
                 values = Vector(TextValueV1(
                     resource_reference = Vector("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"),
                     textattr = Map(
-                        "p" -> Vector(StandoffPositionV1(
+                        StandoffAttributeV1.paragraph -> Vector(StandoffPositionV1(
                             href = None,
                             resid = None,
                             end = 94,
                             start = 0
                         )),
-                        "_link" -> Vector(StandoffPositionV1(
+                        StandoffAttributeV1.link -> Vector(StandoffPositionV1(
                             href = Some("http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06%2Fvalues%2F2428fc96-1383-4457-9704-077b37256103"),
                             resid = Some("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"),
                             end = 39,

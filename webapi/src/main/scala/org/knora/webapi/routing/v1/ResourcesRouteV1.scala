@@ -105,7 +105,11 @@ object ResourcesRouteV1 extends Authenticator {
                                 // create corresponding UpdateValueV1
 
                                 case CreateResourceValueV1(Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
-                                    val textattr: Map[String, Seq[StandoffPositionV1]] = InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]])
+                                    val textattr: Map[StandoffAttributeV1.Value, Seq[StandoffPositionV1]] =
+                                        InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]].map {
+                                            case (attr, standoffPos) =>
+                                                (StandoffAttributeV1.lookup(attr), standoffPos)
+                                        })
                                     val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
 
                                     CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
