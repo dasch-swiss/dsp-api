@@ -1791,16 +1791,22 @@
                      rdfs:comment "Represents a file containing audio data"@en .
 
 
+###  http://www.knora.org/ontology/knora-base#ColorBase
+
+:ColorBase rdf:type owl:Class ;
+
+           rdfs:subClassOf [ rdf:type owl:Restriction ;
+                             owl:onProperty :valueHasColor ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ] .
+
 
 ###  http://www.knora.org/ontology/knora-base#ColorValue
 
 :ColorValue rdf:type owl:Class ;
 
             rdfs:subClassOf :Value ,
-                            [ rdf:type owl:Restriction ;
-                              owl:onProperty :valueHasColor ;
-                              owl:cardinality "1"^^xsd:nonNegativeInteger
-                            ] ,
+                            :ColorBase ,
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :valueHasString ;
                               owl:cardinality "1"^^xsd:nonNegativeInteger
@@ -1842,32 +1848,38 @@
                    rdfs:comment "Represents a file containg 3D data"@en .
 
 
+###  http://www.knora.org/ontology/knora-base#DateBase
+
+:DateBase rdf:type owl:Class ;
+
+          rdfs:subClassOf [ rdf:type owl:Restriction ;
+                           owl:onProperty :valueHasCalendar ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger
+                         ] ,
+                         [ rdf:type owl:Restriction ;
+                           owl:onProperty :valueHasEndPrecision ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger
+                         ] ,
+                         [ rdf:type owl:Restriction ;
+                           owl:onProperty :valueHasEndJDC ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger
+                         ] ,
+                         [ rdf:type owl:Restriction ;
+                           owl:onProperty :valueHasStartPrecision ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger
+                         ] ,
+                         [ rdf:type owl:Restriction ;
+                           owl:onProperty :valueHasStartJDC ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger
+                         ] .
+
 
 ###  http://www.knora.org/ontology/knora-base#DateValue
 
 :DateValue rdf:type owl:Class ;
 
            rdfs:subClassOf :Value ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasCalendar ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasEndPrecision ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasEndJDC ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasStartPrecision ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasStartJDC ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
+                           :DateBase ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasString ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
@@ -1968,16 +1980,23 @@
                            ] .
 
 
+###  http://www.knora.org/ontology/knora-base#DecimalBase
+
+:DecimalBase rdf:type owl:Class ;
+
+             rdfs:subClassOf [ rdf:type owl:Restriction ;
+                               owl:onProperty :valueHasDecimal ;
+                               owl:cardinality "1"^^xsd:nonNegativeInteger
+                             ] .
+
+
 
 ###  http://www.knora.org/ontology/knora-base#DecimalValue
 
 :DecimalValue rdf:type owl:Class ;
 
             rdfs:subClassOf :Value ,
-                            [ rdf:type owl:Restriction ;
-                              owl:onProperty :valueHasDecimal ;
-                              owl:cardinality "1"^^xsd:nonNegativeInteger
-                            ] ,
+                            :DecimalBase ,
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :valueHasString ;
                               owl:cardinality "1"^^xsd:nonNegativeInteger
@@ -2051,15 +2070,23 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#IntBase
+
+:IntBase rdf:type owl:Class ;
+
+          rdfs:subClassOf [ rdf:type owl:Restriction ;
+                            owl:onProperty :valueHasInteger ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#IntValue
 
 :IntValue rdf:type owl:Class ;
 
           rdfs:subClassOf :Value ,
-                          [ rdf:type owl:Restriction ;
-                            owl:onProperty :valueHasInteger ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
-                          ] ,
+                          :IntBase,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :valueHasString ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
@@ -2067,6 +2094,14 @@
 
           rdfs:comment "Represents an integer value"@en .
 
+###  http://www.knora.org/ontology/knora-base#BooleanBase
+
+:BooleanBase rdf:type owl:Class ;
+
+             rdfs:subClassOf [ rdf:type owl:Restriction ;
+                               owl:onProperty :valueHasBoolean ;
+                               owl:cardinality "1"^^xsd:nonNegativeInteger
+                             ] .
 
 
 ###  http://www.knora.org/ontology/knora-base#BooleanValue
@@ -2074,27 +2109,42 @@
 :BooleanValue rdf:type owl:Class ;
 
           rdfs:subClassOf :Value ,
-                          [ rdf:type owl:Restriction ;
-                            owl:onProperty :valueHasBoolean ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
-                          ] ;
+                          :BooleanBase ;
 
           rdfs:comment "Represents a boolean value"@en .
 
 
+
+###  http://www.knora.org/ontology/knora-base#UriBase
+
+:UriBase rdf:type owl:Class ;
+
+         rdfs:subClassOf [ rdf:type owl:Restriction ;
+                           owl:onProperty :valueHasUri ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger
+                         ] .
 
 ###  http://www.knora.org/ontology/knora-base#UriValue
 
 :UriValue rdf:type owl:Class ;
 
           rdfs:subClassOf :Value ,
-                          [ rdf:type owl:Restriction ;
-                            owl:onProperty :valueHasUri ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
-                          ] ;
+                          :UriBase ;
 
           rdfs:comment "Represents a URI"@en .
 
+###  http://www.knora.org/ontology/knora-base#IntervalBase
+
+:IntervalBase rdf:type owl:Class ;
+
+              rdfs:subClassOf [ rdf:type owl:Restriction ;
+                                owl:onProperty :valueHasIntervalEnd ;
+                                owl:cardinality "1"^^xsd:nonNegativeInteger
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :valueHasIntervalStart ;
+                                owl:cardinality "1"^^xsd:nonNegativeInteger
+                              ] .
 
 
 ###  http://www.knora.org/ontology/knora-base#IntervalValue
@@ -2102,14 +2152,7 @@
 :IntervalValue rdf:type owl:Class ;
 
                rdfs:subClassOf :Value ,
-                               [ rdf:type owl:Restriction ;
-                                 owl:onProperty :valueHasIntervalEnd ;
-                                 owl:cardinality "1"^^xsd:nonNegativeInteger
-                               ] ,
-                               [ rdf:type owl:Restriction ;
-                                 owl:onProperty :valueHasIntervalStart ;
-                                 owl:cardinality "1"^^xsd:nonNegativeInteger
-                               ] ;
+                               :IntervalBase ;
 
                rdfs:comment "Represents a time interval, e.g. in an audio recording"@en .
 
