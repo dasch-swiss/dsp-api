@@ -21,15 +21,13 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets the administrative permission information attached to a group, given the project and group IRI.
+ * Gets the default object access permission identified by IRI.
  *
  * @param triplestore the name of the triplestore being used.
- * @param projectIri the project's IRI.
- * @param groupIri the group's IRI.
+ * @param defaultObjectAccessPermissionIri the permission's IRI.
  *@
 @(triplestore: String,
-  projectIri: IRI,
-  groupIri: IRI)
+  defaultObjectAccessPermissionIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -42,11 +40,8 @@ SELECT ?s ?p ?o
 }
 
 WHERE {
-    BIND(IRI("@projectIri") as ?pIri)
-    BIND(IRI("@groupIri") as ?gIri)
+    BIND(IRI("@defaultObjectAccessPermissionIri") as ?s)
 
-    ?s rdf:type knora-base:AdministrativePermission .
-    ?s knora-base:forProject ?pIri .
-    ?s knora-base:forGroup ?gIri .
+    ?s rdf:type knora-base:DefaultObjectAccessPermission .
     ?s ?p ?o .
 }

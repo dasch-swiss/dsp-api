@@ -23,7 +23,7 @@ package org.knora.webapi.responders.v1
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.v1.responder.permissionmessages.{GetGroupAdministrativePermissionV1, GetGroupDefaultObjectAccessPermissionsV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.{CoreSpec, LiveActorMaker, OntologyConstants, SharedTestData}
@@ -65,21 +65,27 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
     "The PermissionsResponderV1 " when {
         "queried about permissions " should {
-            "return AdministrativePermission for group " in {
-                actorUnderTest ! GetGroupAdministrativePermissionV1(
+            "return AdministrativePermission IRIs for project " in {
+                actorUnderTest ! GetProjectAdministrativePermissionsV1(
                     projectIri = IMAGES_PROJECT_IRI,
-                    groupIri = OntologyConstants.KnoraBase.ProjectMember,
                     SharedTestData.rootUserProfileV1
                 )
-                expectMsg(Some(permission001))
+                expectMsg(Some(List(permission001Iri, permission002Iri)))
             }
-            "return DefaultObjectAccessPermission for group " in {
-                actorUnderTest ! GetGroupDefaultObjectAccessPermissionsV1(
+            "return AdministrativePermission object for IRI " in {
+                actorUnderTest ! GetAdministrativePermissionV1(administrativePermissionIri = permission001Iri)
+                expectMsg(permission001)
+            }
+            "return DefaultObjectAccessPermission IRIs for project " in {
+                actorUnderTest ! GetProjectDefaultObjectAccessPermissionsV1(
                     projectIri = IMAGES_PROJECT_IRI,
-                    groupIri = OntologyConstants.KnoraBase.ProjectMember,
                     SharedTestData.rootUserProfileV1
                 )
-                expectMsg(List(permission002))
+                expectMsg(List(permission002Iri))
+            }
+            "return DefaultObjectAccessPermission for IRI " in {
+                actorUnderTest ! GetDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri = permission003Iri)
+                expectMsg(permission002)
             }
         }
     }

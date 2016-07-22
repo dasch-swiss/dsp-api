@@ -30,6 +30,7 @@ object PermissionsResponderV1SpecTestData {
 
     val IMAGES_PROJECT_IRI = "http://data.knora.org/projects/images"
 
+    val permission001Iri = "http://data.knora.org/permissions/001"
     val permission001 =
         AdministrativePermissionV1(
             forProject = IMAGES_PROJECT_IRI,
@@ -38,6 +39,7 @@ object PermissionsResponderV1SpecTestData {
 
     )
 
+    val permission002Iri = "http://data.knora.org/permissions/002"
     val permission002 =
         DefaultObjectAccessPermissionV1(
             forProject = IMAGES_PROJECT_IRI,
@@ -52,5 +54,9 @@ object PermissionsResponderV1SpecTestData {
                 )
             )
         )
+
+    val permission003Iri = "http://data.knora.org/permissions/003"
+    val permission004Iri = "http://data.knora.org/permissions/004"
+    val permission005Iri = "http://data.knora.org/permissions/005"
 
 }

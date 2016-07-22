@@ -13,10 +13,18 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
   */
 sealed trait PermissionsResponderRequestV1 extends KnoraRequestV1
 
+/**
+  * A message that requests the IRIs of all administrative permissions defined inside a project.
+  * A successful response will contain a list of IRIs.
+  *
+  * @param projectIri the project for which the administrative permissions are queried.
+  * @param userProfileV1 the user initiation the request.
+  */
+case class GetProjectAdministrativePermissionsV1(projectIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
 /**
   * A message that requests all administrative permissions attached to a group inside a project.
-  * A successful response will contain a [[AdministrativePermissionV1]] object.
+  * A successful response will contain an [[AdministrativePermissionV1]] object.
   *
   * @param projectIri the project to which the group belongs to.
   * @param groupIri the group for which we want to retrieve the permission object.
@@ -24,17 +32,30 @@ sealed trait PermissionsResponderRequestV1 extends KnoraRequestV1
   */
 case class GetGroupAdministrativePermissionV1(projectIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
+/**
+  * A message that requests an administrative permission object identified through his IRI.
+  * A successful response will contain an [[AdministrativePermissionV1]] object.
+  *
+  * @param administrativePermissionIri the iri of the administrative permission object.
+  */
+case class GetAdministrativePermissionV1(administrativePermissionIri: IRI) extends PermissionsResponderRequestV1
 
 /**
-  * A message that requests all default object access permissions attached to a group inside a project.
-  * A successful response will contain a list with [[DefaultObjectAccessPermissionV1]] object.
+  * A message that requests all IRIs of default object access permissions defined inside a project.
+  * A successful response will contain a list with IRIs of default object access permissions.
   *
-  * @param projectIri the project to which the group belongs to.
-  * @param groupIri the group for which we want to retrieve the permission object.
+  * @param projectIri the project for which the default object access permissions are queried.
   * @param userProfileV1 the user initiating this request.
   */
-case class GetGroupDefaultObjectAccessPermissionsV1(projectIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+case class GetProjectDefaultObjectAccessPermissionsV1(projectIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
+/**
+  * A message that requests a default object access permission object identified through his IRI.
+  * A successful response will contain an [[DefaultObjectAccessPermissionV1]] object.
+  *
+  * @param defaultObjectAccessPermissionIri the iri of the default object access permission object.
+  */
+case class GetDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri: IRI) extends PermissionsResponderRequestV1
 
 // Permissions UserGroups
 // Default Permissions on Resources and Values
