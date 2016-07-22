@@ -221,6 +221,16 @@ object InputValidation {
         }
     }
 
+    def getResourceIrisFromStandoffLinkTags(links: Seq[StandoffPositionV1]): Vector[IRI] = {
+        links.foldLeft(Set.empty[IRI]) {
+            // use a set to eliminate redundancy of identical Iris
+            case (acc, position) => position.resid match {
+                case Some(resid: IRI) => acc + resid
+                case None => acc
+            }
+        }.toVector
+    }
+
     /**
       * Turn a possibly empty value returned by the triplestore into a Boolean value.
       * Returns false if the value is empty or if the given String is cannot be converted to a Boolean `true`.

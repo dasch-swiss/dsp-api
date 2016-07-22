@@ -97,6 +97,15 @@ object ValuesRouteV1 extends Authenticator {
                     })
                 val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
 
+                // check if the IRIs in resourceReference correspond to the standoff link tags' IRIs
+                val resIrisfromStandoffLinkTags: Vector[IRI] = textattr.get(StandoffTagV1.link) match {
+                    case Some(links: Seq[StandoffPositionV1]) => InputValidation.getResourceIrisFromStandoffLinkTags(links)
+                    case None => Vector.empty[IRI]
+                }
+
+                // check if resources references in standoff link tags exactly correspond to those submitted in richtext.resource_reference
+                if (resourceReference.sorted != resIrisfromStandoffLinkTags.sorted) throw BadRequestException("Submitted resource references in standoff link tags and in member 'resource_reference' are inconsistent")
+
                 (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
 
             case CreateValueApiRequestV1(_, _, _, _, Some(intValue: Int), _, _, _, _, _, _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)
@@ -164,6 +173,15 @@ object ValuesRouteV1 extends Authenticator {
                             (StandoffTagV1.lookup(attr), standoffPos)
                     })
                 val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
+
+                // check if the IRIs in resourceReference correspond to the standoff link tags' IRIs
+                val resIrisfromStandoffLinkTags: Vector[IRI] = textattr.get(StandoffTagV1.link) match {
+                    case Some(links: Seq[StandoffPositionV1]) => InputValidation.getResourceIrisFromStandoffLinkTags(links)
+                    case None => Vector.empty[IRI]
+                }
+
+                // check if resources references in standoff link tags exactly correspond to those submitted in richtext.resource_reference
+                if (resourceReference.sorted != resIrisfromStandoffLinkTags.sorted) throw BadRequestException("Submitted resource references in standoff link tags and in member 'resource_reference' are inconsistent")
 
                 (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
 

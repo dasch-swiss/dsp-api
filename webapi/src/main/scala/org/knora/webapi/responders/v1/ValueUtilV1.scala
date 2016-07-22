@@ -452,13 +452,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
         // map over all _link attributes to collect IRIs that are referred to
         val resids: Seq[IRI] = groupedByAttr.get(StandoffTagV1.link) match {
-            case Some(links: Seq[StandoffPositionV1]) => links.foldLeft(Set.empty[IRI]) {
-                // use a set to eliminate redundancy of identical Iris
-                case (acc, position) => position.resid match {
-                    case Some(resid: IRI) => acc + resid
-                    case None => acc
-                }
-            }.toVector
+            case Some(links: Seq[StandoffPositionV1]) => InputValidation.getResourceIrisFromStandoffLinkTags(links)
             case None => Vector.empty[IRI]
         }
 
