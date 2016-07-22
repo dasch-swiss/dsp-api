@@ -406,7 +406,8 @@ class ValuesResponderV1 extends ResponderV1 {
                                             permissionRelevantAssertions = permissionRelevantAssertionsForProperty
                                         ).toString()
 
-                                        (whereSparql, insertSparql)
+                                        // append the SPARQL that was generated to create standoff links to the other insert statements
+                                        (whereSparql, insertSparql + standoffLinkInsertSparql)
                                 }
 
                                 // For each value of the property, accumulate the generated SPARQL and an UnverifiedValueV1
@@ -2050,7 +2051,7 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     @throws(classOf[BadRequestException])
     private def checkTextValueResourceRefs(textValue: TextValueV1): Unit = {
-        val resourceRefsInStandoff: Set[IRI] = textValue.textattr.get(StandoffAttributeV1.link) match {
+        val resourceRefsInStandoff: Set[IRI] = textValue.textattr.get(StandoffTagV1.link) match {
             case Some(positions) => positions.flatMap(_.resid).toSet
             case None => Set.empty[IRI]
         }

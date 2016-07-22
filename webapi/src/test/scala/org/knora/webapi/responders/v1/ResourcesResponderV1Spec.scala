@@ -659,11 +659,11 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val citation2 = TextValueV1(
                 utf8str = "This citation refers to another resource",
                 textattr = Map(
-                    StandoffAttributeV1.bold -> Vector(StandoffPositionV1(
+                    StandoffTagV1.bold -> Vector(StandoffPositionV1(
                         start = 5,
                         end = 13
                     )),
-                    StandoffAttributeV1.link -> Vector(StandoffPositionV1(
+                    StandoffTagV1.link -> Vector(StandoffPositionV1(
                         start = 32,
                         end = 40,
                         resid = Some("http://data.knora.org/c5058f3a")

@@ -29,7 +29,7 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.valuemessages.{CreateRichtextV1, StandoffAttributeV1, StandoffPositionV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{CreateRichtextV1, StandoffTagV1, StandoffPositionV1}
 import spray.json.JsonParser
 
 
@@ -195,9 +195,9 @@ object InputValidation {
       * @param textattr text attributes sent by the client as part of a richtext object
       * @return validated text attributes
       */
-    def validateTextattr(textattr: Map[StandoffAttributeV1.Value, Seq[StandoffPositionV1]]): Map[StandoffAttributeV1.Value, Seq[StandoffPositionV1]] = {
+    def validateTextattr(textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]]): Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = {
         textattr.map {
-            case (attr: StandoffAttributeV1.Value, positions: Seq[StandoffPositionV1]) => (attr, positions.map {
+            case (attr: StandoffTagV1.Value, positions: Seq[StandoffPositionV1]) => (attr, positions.map {
                     case (position: StandoffPositionV1) => StandoffPositionV1(start = position.start, end = position.end, href = position.href match {
                             case Some(href) => Some(InputValidation.toIri(href, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute href $href")))
                             case _ => None

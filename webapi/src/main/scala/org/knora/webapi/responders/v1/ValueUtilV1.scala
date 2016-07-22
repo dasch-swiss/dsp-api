@@ -424,10 +424,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       */
     private def makeTextValue(valueProps: ValueProps): ApiValueV1 = {
 
-        val groupedByAttr: Map[StandoffAttributeV1.Value, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(_ (OntologyConstants.KnoraBase.StandoffHasAttribute)).map {
+        val groupedByAttr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(_ (OntologyConstants.KnoraBase.StandoffHasAttribute)).map {
             case (attr: String, standoffInfos: Seq[Map[String, String]]) =>
                 // we grouped by the attribute name, return it as the key of that Map
-                (StandoffAttributeV1.lookup(attr), standoffInfos.map {
+                (StandoffTagV1.lookup(attr), standoffInfos.map {
                     // for each attribute name, we may have several positions that have to be turned into a StandoffPositionV1
 
                     case standoffInfo =>
@@ -451,7 +451,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         }
 
         // map over all _link attributes to collect IRIs that are referred to
-        val resids: Seq[IRI] = groupedByAttr.get(StandoffAttributeV1.link) match {
+        val resids: Seq[IRI] = groupedByAttr.get(StandoffTagV1.link) match {
             case Some(links: Seq[StandoffPositionV1]) => links.foldLeft(Set.empty[IRI]) {
                 // use a set to eliminate redundancy of identical Iris
                 case (acc, position) => position.resid match {

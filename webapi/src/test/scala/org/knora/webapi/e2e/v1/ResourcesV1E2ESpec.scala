@@ -20,10 +20,12 @@
 
 package org.knora.webapi.e2e.v1
 
+import java.net.URLEncoder
+
 import akka.actor.{ActorSystem, Props}
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.LiveActorMaker
+import org.knora.webapi._
 import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
@@ -32,6 +34,7 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.ResourcesRouteV1
 import org.knora.webapi.store._
+import org.knora.webapi.util.{MutableTestIri, ScalaPrettyPrinter}
 import spray.http.MediaTypes._
 import spray.http.{HttpEntity, _}
 import spray.json._
@@ -79,6 +82,25 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
+    }
+
+    private val firstThingIri = new MutableTestIri
+    private val secondThingIri = new MutableTestIri
+
+    /**
+      * Gets the field `res_id` from a JSON response.
+      *
+      * @param response the respons sent back from the API.
+      * @return the value of `res_id`.
+      */
+    private def getResIriFromJsonResponse(response: HttpResponse) = {
+
+        JsonParser(response.entity.asString).asJsObject.fields.get("res_id") match {
+            case Some(JsString(resourceId)) => resourceId
+            case None => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
+            case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but ${other}")
+        }
+
     }
 
     "The Resources Endpoint" should {
@@ -170,15 +192,26 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
         }
 
-        "create a resource of type anything:Thing" in {
+        "create a first resource of type anything:Thing" in {
+
+            val textattrStringified =
+                """
+                  {
+                      "bold": [{
+                          "start": 0,
+                          "end": 4
+                      }]
+                  }
+                """.toJson.compactPrint
+
             val params =
-            """
+            s"""
               {
               	"restype_id": "http://www.knora.org/ontology/anything#Thing",
-              	"label": "A thing",
+              	"label": "A first thing",
               	"project_id": "http://data.knora.org/projects/anything",
               	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":"{\"_link\":[{\"start\":0,\"end\":4,\"href\":\"http://data.knora.org/a-thing\",\"resid\":\"http://data.knora.org/a-thing\"}],\"p\":[{\"start\":0,\"end\":5}]}","resource_reference" :[],"utf8str":"Test text"}}],
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :[],"utf8str":"This is a test"}}],
                     "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
                     "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
                     "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
@@ -199,8 +232,109 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
+                val resId = getResIriFromJsonResponse(response)
+
+                firstThingIri.set(resId)
+
             }
         }
+
+
+        "create a second resource of type anything:Thing linking to the first thing via standoff" in {
+
+
+            val textattrStringified =
+                s"""
+                  {
+                      "_link": [{
+                          "start": 10,
+                          "end": 15,
+                          "resid": "${firstThingIri.get}",
+                          "href": "${firstThingIri.get}"
+                      }]
+                  }
+                """.toJson.compactPrint
+
+            val params =
+                s"""
+              {
+              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
+              	"label": "A second thing",
+              	"project_id": "http://data.knora.org/projects/anything",
+              	"properties": {
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["${firstThingIri.get}"],"utf8str":"This text links to a thing"}}],
+                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+              	}
+              }
+                """
+
+            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val resId = getResIriFromJsonResponse(response)
+
+                secondThingIri.set(resId)
+
+            }
+
+        }
+
+        "get the first thing resource that is referred to by the second thing resource" in {
+
+            Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // check if this resource is referred to by the second thing resource
+                val incoming = JsonParser(response.entity.asString).asJsObject.fields.get("incoming") match {
+                    case Some(incomingRefs: JsArray) => incomingRefs
+                    case None => throw InvalidApiJsonException(s"The response does not contain a field called 'incoming'")
+                    case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsObject, but ${other}")
+                }
+
+                val firstElement = incoming.elements.headOption match {
+                    case Some(incomingRef: JsObject) => incomingRef
+                    case None => throw NotFoundException("Field 'incoming' is empty, but one incoming reference is expected")
+                    case other => throw InvalidApiJsonException("First element in 'incoming' is not a JsObject")
+                }
+
+                firstElement.fields.get("ext_res_id") match {
+                    case Some(extResObj: JsObject) =>
+                        // get the Iri of the referring resource
+                        val idJsString = extResObj.fields.getOrElse("id", throw InvalidApiJsonException("No member 'id' given"))
+
+                        // get the Iri of the property pointing to this resource
+                        val propIriJsString = extResObj.fields.getOrElse("pid", throw InvalidApiJsonException("No member 'pid' given"))
+
+                        idJsString match {
+                            case JsString(id) =>
+                                assert(id == secondThingIri.get, "This resource should be referred to by the second thing resource")
+                            case other => throw InvalidApiJsonException("Id is not a JsString")
+                        }
+
+                        propIriJsString match {
+                            case JsString(pid) =>
+                                assert(pid == OntologyConstants.KnoraBase.HasStandoffLinkTo, s"This resource should be referred to by ${OntologyConstants.KnoraBase.HasStandoffLinkTo}")
+                            case other => throw InvalidApiJsonException("pid is not a JsString")
+                        }
+
+
+                    case None => throw InvalidApiJsonException("Element in 'incoming' does not have a member 'ext_res_id'")
+                    case other => throw InvalidApiJsonException("Element in 'incoming' is not a JsObject")
+                }
+
+            }
+
+        }
+
+
 
     }
 

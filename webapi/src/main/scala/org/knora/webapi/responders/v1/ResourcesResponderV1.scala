@@ -1204,6 +1204,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                 )
                 generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- (responderManager ? generateSparqlForValuesRequest).mapTo[GenerateSparqlToCreateMultipleValuesResponseV1]
 
+                //_ = println(generateSparqlForValuesResponse.insertSparql)
+
                 // Generate SPARQL for creating the resource, and include the SPARQL for creating the values.
                 createNewResourceSparql = queries.sparql.v1.txt.createNewResource(
                     triplestore = settings.triplestoreType,

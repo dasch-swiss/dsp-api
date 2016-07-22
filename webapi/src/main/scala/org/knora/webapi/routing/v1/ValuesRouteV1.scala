@@ -90,10 +90,10 @@ object ValuesRouteV1 extends Authenticator {
 
             case CreateValueApiRequestV1(_, _, _, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
                 // textattr is a string that can be parsed into Map[String, Seq[StandoffPositionV1]]
-                val textattr: Map[StandoffAttributeV1.Value, Seq[StandoffPositionV1]] =
+                val textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] =
                     InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]].map {
                         case (attr, standoffPos) =>
-                            (StandoffAttributeV1.lookup(attr), standoffPos)
+                            (StandoffTagV1.lookup(attr), standoffPos)
                     })
                 val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
 
@@ -158,10 +158,10 @@ object ValuesRouteV1 extends Authenticator {
         val (value: UpdateValueV1, commentStr: Option[String]) = apiRequest match {
             case ChangeValueApiRequestV1(_, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
                 // textattr is a string that can be parsed into Map[String, Seq[StandoffPositionV1]]
-                val textattr: Map[StandoffAttributeV1.Value, Seq[StandoffPositionV1]] =
+                val textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] =
                     InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]].map {
                         case (attr, standoffPos) =>
-                            (StandoffAttributeV1.lookup(attr), standoffPos)
+                            (StandoffTagV1.lookup(attr), standoffPos)
                     })
                 val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
 
