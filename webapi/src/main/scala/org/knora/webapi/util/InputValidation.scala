@@ -221,6 +221,12 @@ object InputValidation {
         }
     }
 
+    /**
+      * Map over all standoff link tags to collect IRIs that are referred to.
+      *
+      * @param links The list of [[StandoffPositionV1]] for [[StandoffTagV1.link]].
+      * @return a list of Iris referred to in the [[StandoffPositionV1]].
+      */
     def getResourceIrisFromStandoffLinkTags(links: Seq[StandoffPositionV1]): Vector[IRI] = {
         links.foldLeft(Set.empty[IRI]) {
             // use a set to eliminate redundancy of identical Iris
