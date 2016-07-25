@@ -451,9 +451,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         }
 
         // map over all _link attributes to collect IRIs that are referred to
-        val resids: Seq[IRI] = groupedByAttr.get(StandoffTagV1.link) match {
+        val resids: Set[IRI] = groupedByAttr.get(StandoffTagV1.link) match {
             case Some(links: Seq[StandoffPositionV1]) => InputValidation.getResourceIrisFromStandoffLinkTags(links)
-            case None => Vector.empty[IRI]
+            case None => Set.empty[IRI]
         }
 
         // If there's an empty string in the data (which does sometimes happen), the store package will remove it from

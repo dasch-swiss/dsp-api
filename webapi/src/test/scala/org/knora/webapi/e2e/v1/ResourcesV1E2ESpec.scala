@@ -29,7 +29,7 @@ import org.knora.webapi._
 import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.ResourcesRouteV1
@@ -86,6 +86,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
     private val firstThingIri = new MutableTestIri
     private val secondThingIri = new MutableTestIri
+    private val thirdThingIri = new MutableTestIri
 
     /**
       * Gets the field `res_id` from a JSON response.
@@ -545,7 +546,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               	"label": "A second thing",
               	"project_id": "http://data.knora.org/projects/anything",
               	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["http://data.knora.org/861b5644b302", "http://data.knora.org/9935159f67"],"utf8str":"This text links to a thing"}}],
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["http://data.knora.org/9935159f67", "http://data.knora.org/861b5644b302"],"utf8str":"This text links to a thing"}}],
                     "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
                     "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
                     "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
@@ -566,6 +567,191 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
         }
 
+
+        "create a third resource of type thing with two standoff links to the same resource and a standoff link to another one" in {
+
+            val textattrStringified1 =
+                """
+                  {
+                      "bold": [{
+                          "start": 0,
+                          "end": 4
+                      }],
+                      "underline": [
+                          {
+                            "start": 0,
+                            "end": 4
+                          },
+                          {
+                            "start": 5,
+                            "end": 9
+                          }
+                      ],
+                      "_link": [
+                        {
+                            "start": 10,
+                            "end": 15,
+                            "href": "http://data.knora.org/861b5644b302",
+                            "resid": "http://data.knora.org/861b5644b302"
+                        }
+                      ]
+                  }
+                """.toJson.compactPrint
+
+
+            val textattrStringified2 =
+                """
+                  {
+                      "bold": [{
+                          "start": 0,
+                          "end": 4
+                      }],
+                      "underline": [
+                          {
+                            "start": 0,
+                            "end": 4
+                          },
+                          {
+                            "start": 5,
+                            "end": 9
+                          }
+                      ],
+                      "_link": [
+                        {
+                            "start": 10,
+                            "end": 15,
+                            "href": "http://data.knora.org/861b5644b302",
+                            "resid": "http://data.knora.org/861b5644b302"
+                        },
+                        {
+                           "start": 10,
+                           "end": 15,
+                           "href": "http://data.knora.org/9935159f67",
+                           "resid": "http://data.knora.org/9935159f67"
+                        },
+                        {
+                           "start": 10,
+                           "end": 15,
+                           "href": "http://data.knora.org/9935159f67",
+                           "resid": "http://data.knora.org/9935159f67"
+                        }
+                      ]
+                  }
+                """.toJson.compactPrint
+
+
+            val params =
+                s"""
+              {
+              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
+              	"label": "A second thing",
+              	"project_id": "http://data.knora.org/projects/anything",
+              	"properties": {
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified1,"resource_reference" :["http://data.knora.org/861b5644b302"],"utf8str":"This text links to a thing"}}, {"richtext_value":{"textattr":$textattrStringified2,"resource_reference" :["http://data.knora.org/861b5644b302", "http://data.knora.org/9935159f67"],"utf8str":"This text links to a thing"}}],
+                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+              	}
+              }
+                """
+
+            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val resId = getResIriFromJsonResponse(response)
+
+                thirdThingIri.set(resId)
+
+            }
+
+        }
+
+        "check that the third thing resource has two direct standoff links" in {
+
+            val sparqlQuery =
+                s"""
+                  PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                  SELECT ?referredResourceIRI WHERE {
+                      BIND(IRI("${thirdThingIri.get}") as ?resIRI)
+
+                      ?resIRI knora-base:hasStandoffLinkTo ?referredResourceIRI .
+
+                  }
+                """
+
+            Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+
+                case response: SparqlSelectResponse =>
+
+                    val ref1: Boolean = response.results.bindings.exists {
+                        row: VariableResultsRow =>
+                            row.rowMap("referredResourceIRI") == "http://data.knora.org/861b5644b302"
+                    }
+
+                    val ref2: Boolean = response.results.bindings.exists {
+                        row: VariableResultsRow =>
+                            row.rowMap("referredResourceIRI") == "http://data.knora.org/9935159f67"
+                    }
+
+                    assert(ref1, "No direct link to 'http://data.knora.org/861b5644b302' found")
+
+                    assert(ref2, "No direct link to 'http://data.knora.org/9935159f67' found")
+
+                case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
+
+            }
+
+        }
+
+        "check that the third thing resource's standoff link reifications have the correct reference counts" in {
+
+            val sparqlQuery =
+                s"""
+                   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                   PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+                   SELECT DISTINCT ?reificationIRI ?object ?refCnt where {
+                        BIND(IRI("${thirdThingIri.get}") as ?resIRI)
+
+                        ?resIRI knora-base:hasStandoffLinkToValue ?reificationIRI .
+
+                        ?reificationIRI rdf:object ?object .
+
+                        ?reificationIRI knora-base:valueHasRefCount ?refCnt .
+
+                   }
+                    """
+
+            Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+
+                case response: SparqlSelectResponse =>
+
+                    val refCnt1: Boolean = response.results.bindings.exists {
+                        row: VariableResultsRow =>
+                            row.rowMap("object") == "http://data.knora.org/861b5644b302" &&
+                                row.rowMap("refCnt").toInt == 2
+                    }
+
+                    val refCnt2: Boolean = response.results.bindings.exists {
+                        row: VariableResultsRow =>
+                            row.rowMap("object") == "http://data.knora.org/9935159f67" &&
+                                row.rowMap("refCnt").toInt == 1
+                    }
+
+                    assert(refCnt1, "Ref count for 'http://data.knora.org/861b5644b302' should be 2")
+
+                    assert(refCnt2, "Ref count for 'http://data.knora.org/9935159f67' should be 1")
+
+                case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
+
+            }
+
+        }
 
     }
 

@@ -110,16 +110,16 @@ object ResourcesRouteV1 extends Authenticator {
                                             case (attr, standoffPos) =>
                                                 (StandoffTagV1.lookup(attr, () => throw BadRequestException(s"Standoff tag not supported: $attr")), standoffPos)
                                         })
-                                    val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference).toSet.toVector
+                                    val resourceReference: Set[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
 
                                     // check if the IRIs in resourceReference correspond to the standoff link tags' IRIs
-                                    val resIrisfromStandoffLinkTags: Vector[IRI] = textattr.get(StandoffTagV1.link) match {
+                                    val resIrisfromStandoffLinkTags: Set[IRI] = textattr.get(StandoffTagV1.link) match {
                                         case Some(links: Seq[StandoffPositionV1]) => InputValidation.getResourceIrisFromStandoffLinkTags(links)
-                                        case None => Vector.empty[IRI]
+                                        case None => Set.empty[IRI]
                                     }
 
                                     // check if resources references in standoff link tags exactly correspond to those submitted in richtext.resource_reference
-                                    if (resourceReference.sorted != resIrisfromStandoffLinkTags.sorted) throw BadRequestException("Submitted resource references in standoff link tags and in member 'resource_reference' are inconsistent")
+                                    if (resourceReference != resIrisfromStandoffLinkTags) throw BadRequestException("Submitted resource references in standoff link tags and in member 'resource_reference' are inconsistent")
 
                                     CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
 

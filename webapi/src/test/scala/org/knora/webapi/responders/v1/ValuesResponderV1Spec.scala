@@ -727,7 +727,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         resid = Some(zeitglöckleinIri)
                     ))
                 ),
-                resource_reference = Vector(zeitglöckleinIri)
+                resource_reference = Set(zeitglöckleinIri)
             )
 
             actorUnderTest ! CreateValueRequestV1(
@@ -809,7 +809,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                resource_reference = Vector(zeitglöckleinIri)
+                resource_reference = Set(zeitglöckleinIri)
             )
 
             actorUnderTest ! ChangeValueRequestV1(
@@ -880,7 +880,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         resid = Some(zeitglöckleinIri)
                     ))
                 ),
-                resource_reference = Vector(zeitglöckleinIri)
+                resource_reference = Set(zeitglöckleinIri)
             )
 
             actorUnderTest ! CreateValueRequestV1(
@@ -1082,7 +1082,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                resource_reference = Vector(zeitglöckleinIri)
+                resource_reference = Set(zeitglöckleinIri)
             )
 
             actorUnderTest ! ChangeValueRequestV1(

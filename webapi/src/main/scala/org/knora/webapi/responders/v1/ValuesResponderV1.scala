@@ -1700,7 +1700,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 permissionRelevantAssertions = permissionRelevantAssertions, // TODO: How should we create permissions for a LinkValue for standoff links (issue 88)?
                                 userProfile = userProfile
                             )
-                        }
+                        }.toVector
 
                     Future.sequence(standoffLinkUpdatesForAddedResourceRefs)
 
@@ -1852,8 +1852,8 @@ class ValuesResponderV1 extends ResponderV1 {
 
                     // Identify the resource references that have been added or removed in the new version of
                     // the value.
-                    val currentResourceRefs = currentTextValue.resource_reference.toSet
-                    val newResourceRefs = newTextValue.resource_reference.toSet
+                    val currentResourceRefs = currentTextValue.resource_reference
+                    val newResourceRefs = newTextValue.resource_reference
                     val addedResourceRefs = newResourceRefs -- currentResourceRefs
                     val removedResourceRefs = currentResourceRefs -- newResourceRefs
 
@@ -2056,7 +2056,7 @@ class ValuesResponderV1 extends ResponderV1 {
             case None => Set.empty[IRI]
         }
 
-        if (resourceRefsInStandoff != textValue.resource_reference.toSet) {
+        if (resourceRefsInStandoff != textValue.resource_reference) {
             throw BadRequestException(s"The list of resource references in this text value does not match the resource references in its Standoff markup: $textValue")
         }
     }

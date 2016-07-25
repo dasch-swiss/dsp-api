@@ -620,7 +620,7 @@ case class StandoffPositionV1(start: Int,
   */
 case class TextValueV1(utf8str: String,
                        textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = Map.empty[StandoffTagV1.Value, Seq[StandoffPositionV1]],
-                       resource_reference: Seq[IRI] = Vector.empty[IRI]) extends UpdateValueV1 with ApiValueV1 {
+                       resource_reference: Set[IRI] = Set.empty[IRI]) extends UpdateValueV1 with ApiValueV1 {
 
     import ApiValueV1JsonProtocol._
 

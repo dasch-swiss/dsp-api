@@ -235,26 +235,26 @@ object InputValidation {
       * @param resRefs resource references sent by the client as patr of a richtext object
       * @return validate resource references
       */
-    def validateResourceReference(resRefs: Seq[IRI]): Seq[IRI] = {
+    def validateResourceReference(resRefs: Seq[IRI]): Set[IRI] = {
         resRefs.map {
             case (ref: IRI) => InputValidation.toIri(ref, () => throw BadRequestException(s"Invalid Knora resource IRI $ref"))
-        }
+        }.toSet
     }
 
     /**
       * Map over all standoff link tags to collect IRIs that are referred to.
       *
       * @param links The list of [[StandoffPositionV1]] for [[StandoffTagV1.link]].
-      * @return a list of Iris referred to in the [[StandoffPositionV1]].
+      * @return a set of Iris referred to in the [[StandoffPositionV1]].
       */
-    def getResourceIrisFromStandoffLinkTags(links: Seq[StandoffPositionV1]): Vector[IRI] = {
+    def getResourceIrisFromStandoffLinkTags(links: Seq[StandoffPositionV1]): Set[IRI] = {
         links.foldLeft(Set.empty[IRI]) {
             // use a set to eliminate redundancy of identical Iris
             case (acc, position) => position.resid match {
                 case Some(resid: IRI) => acc + resid
                 case None => acc
             }
-        }.toVector
+        }
     }
 
     /**

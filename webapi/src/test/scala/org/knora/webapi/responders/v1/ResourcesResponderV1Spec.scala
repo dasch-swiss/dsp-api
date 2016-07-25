@@ -337,7 +337,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                             None,
                             "",
                             "Siehe Seite c5v",
-                            TextValueV1("Siehe Seite c5v", Map(), Vector()),
+                            TextValueV1("Siehe Seite c5v"),
                             "http://data.knora.org/021ec18f1735/values/8a96c303338201",
                             None,
                             None))),
@@ -669,7 +669,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         resid = Some("http://data.knora.org/c5058f3a")
                     ))
                 ),
-                resource_reference = Vector("http://data.knora.org/c5058f3a")
+                resource_reference = Set("http://data.knora.org/c5058f3a")
             )
             val citation3 = TextValueV1("und noch eines")
             val citation4 = TextValueV1("noch ein letztes")
