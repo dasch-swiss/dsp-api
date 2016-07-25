@@ -74,12 +74,12 @@
 
 \usepackage{hyperref}
 \usepackage[textwidth=3cm]{todonotes}
-\newcommand{\issue}[2]{\todo{\href{http://git.iml.unibas.ch/salsah-suite/knora/issues/#1}{Issue #1: #2}}}
+\newcommand{\issue}[2]{\todo{\href{https://github.com/dhlab-basel/Knora/issues/#1}{Issue #1: #2}}}
 
 \title{The Knora Base Ontology}
 \author{Lukas Rosenthaler, Benjamin Geer, Tobias Schweizer, Ivan Subotic\\Digital Humanities Lab, University of Basel}
 
-\date{11 March 2016}
+\date{25 July 2016}
 
 \begin{document}
 
@@ -213,13 +213,13 @@ In Knora, each item of data belongs to some particular project. Each project usi
 
 \begin{description}
 	\item[shortname (1)] A short name that can be used to identify the project in configuration files and the like.
-	\item[basepath (1)] The filesystem path of the directory where the project's files are stored. \issue{290}{Should this be in the triplestore?}
+	\item[basepath (1)] The filesystem path of the directory where the project's files are stored. \issue{192}{Should this be in the triplestore?}
 	\item[foaf:name (0-1)] The name of the project.
 	\item[description (0-1)] A description of the project.
 	\item[belongsTo (0-1)] The \texttt{kb:Institution} that the project belongs to.
 \end{description}
 
-Resources and values are associated with a project by means of the \texttt{kb:attached\-To\-Project} property, as described in Section~\ref{sec:data-model}. Users are associated with a project by means of the \texttt{kb:is\-In\-Project} property, as described in Section~\ref{sec:authorization}.
+Resources and values are associated with a project by means of the \texttt{kb:attached\-To\-Project} property, as described in Section~\ref{sec:data-model}. Users are associated with a project by means of the \texttt{kb:is\-In\-Project} property, as described in Section~\ref{subsec:users-and-groups}.
 
 \subsection{Resources}
 
@@ -227,11 +227,13 @@ Resources and values are associated with a project by means of the \texttt{kb:at
 
 All the content produced by a project (e.g. digitised primary source materials or research data) must be stored in objects that belong to subclasses of \texttt{kb:Resource}, so that the Knora API server can query and update that content. Each project using the Knora base ontology must define its own OWL classes, derived from \texttt{kb:Resource}, to represent the types of data it deals with.
 
-Resources have properties that point to different parts of the content they contain. For example, a resource representing a book could have a property called \texttt{hasAuthor}, pointing to the author of the book. There are two possible kinds of content in a Knora resource: Knora values (see Section~\ref{subsec:values}) or links to other resources (see Section~\ref{sec:links}). Properties that point to Knora values must be subproperties of \texttt{kb:hasValue}, and properties that point to other resources must be subproperties of \texttt{kb:hasLinkTo}. \todo{Add a list of the Knora properties that projects are, and are not, allowed to use directly, and explain why.} Each property definition must specify the types that its subjects and objects must belong to (see Section~\ref{subsec:property-restrictions} for details).
+Resources have properties that point to different parts of the content they contain. For example, a resource representing a book could have a property called \texttt{hasAuthor}, pointing to the author of the book. There are two possible kinds of content in a Knora resource: Knora values (see Section~\ref{subsec:values}) or links to other resources (see Section~\ref{sec:links}). Properties that point to Knora values must be subproperties of \texttt{kb:hasValue}, and properties that point to other resources must be subproperties of \texttt{kb:hasLinkTo}. \issue{138}{Add a list of the Knora properties that projects are, and are not, allowed to use directly, and explain why.} Each property definition must specify the types that its subjects and objects must belong to (see Section~\ref{subsec:property-restrictions} for details).
 
 Each project-specific resource class definition must use OWL cardinality restrictions to specify the properties that resources of that class can have (see Section~\ref{subsec:cardinalities} for details).
 
-Resources are not versioned; only their values are versioned (see Section~\ref{subsec:values}). A resource can be marked as deleted. It then remains in the repository, but becomes invisible to ordinary queries. It cannot be undeleted, because even though resources are not versioned, it is necessary to be able to find out when a resource was deleted. If desired, a new resource can be created by copying data from a deleted resource.
+Resources are not versioned; only their values are versioned (see Section~\ref{subsec:values}).
+
+A resource can be marked as deleted. An optional \texttt{kb:delete\-Comment} may be added to explain why the resource has been marked as deleted. Deleted resources are normally hidden. They cannot be undeleted, because even though resources are not versioned, it is necessary to be able to find out when a resource was deleted. If desired, a new resource can be created by copying data from a deleted resource.
 
 \subsubsection{Properties of Resource}
 
@@ -241,8 +243,9 @@ Resources are not versioned; only their values are versioned (see Section~\ref{s
   \item[attachedToProject (1)] The project that the resource is part of.
   \item[lastModificationDate (0-1)] A timestamp indicating when the resource (or one of its values) was last modified.
   \item[seqnum (0-1)] The sequence number of the resource, if it is part of an ordered group of resources, such as the pages in a book. 
-  \item[isDeleted (0-1)] Indicates whether the resource has been deleted.
+  \item[isDeleted (1)] Indicates whether the resource has been deleted.
   \item[deleteDate (0-1)] If the resource has been deleted, indicates when it was deleted.
+  \item[deleteComment (0-1)] If the resource has been deleted, indicates why it was deleted.
 \end{description}
 
 Resources can have properties that point to other resources; see Section~\ref{sec:links}. A resource grants permissions to groups of users; see Section~\ref{sec:authorization}.
@@ -282,7 +285,11 @@ A value is always part of one particular resource, which points to it using some
 
 Knora values are versioned. Existing values are not modified. Instead, a new version of an existing value is created. The new version is linked to the old version via the \texttt{previousValue} property.
 
-\enquote{Deleting} a value means creating a new version, marked with \texttt{kb:is\-Deleted} and pointing to the previous version. A triple then points from the containing resource to this new, deleted version of the value, which remains in the repository but is invisible to ordinary queries. To simplify the enforcement of ontology constraints, and for consistency with resource updates, no new versions of a deleted value can be made; it is not possible to undelete. Instead, if desired, a new value can be created by copying data from a deleted value.
+\enquote{Deleting} a value means marking it with \texttt{kb:is\-Deleted}. An optional \texttt{kb:delete\-Comment} may be added to explain why the value has been marked as deleted. Deleted values are normally hidden.
+
+Most types of values are marked as deleted without creating a new version of the value. However, link values must be treated as a special case. Before a \texttt{LinkValue} can be marked as deleted, its reference count must be decremented to 0. Therefore, a new version of the \texttt{LinkValue} is made, with a reference count of 0, and it is this new version that is marked as deleted.
+
+To simplify the enforcement of ontology constraints, and for consistency with resource updates, no new versions of a deleted value can be made; it is not possible to undelete. Instead, if desired, a new value can be created by copying data from a deleted value.
 
 \subsubsection{Properties of Value}
 
@@ -293,7 +300,9 @@ Knora values are versioned. Existing values are not modified. Instead, a new ver
   \item[valueHasString (1)] A human-readable string representation of the value's contents, which is available to Knora's full-text search index.
   \item[valueHasOrder (0-1)] A resource may have several properties of the same type with different values (which will be of the same class), and it may be necessary to indicate an order in which these values occur. For example, a book may have several authors which should appear in a defined order. Hence, \texttt{valueHasOrder}, when present, points to an integer literal indicating the order of a given value relative to the other values of the same property. These integers will not necessarily start at any particular number, and will not necessarily be consecutive.
   \item[previousValue (0-1)] The previous version of the value.
-  \item[isDeleted (0-1)] Indicates whether the value has been deleted.
+  \item[isDeleted (1)] Indicates whether the value has been deleted.
+  \item[deleteDate (0-1)] If the value has been deleted, indicates when it was deleted.
+  \item[deleteComment (0-1)] If the value has been deleted, indicates why it was deleted.
 \end{description}
 
 Each Knora value can grant permissions (see Section~\ref{sec:authorization}).
@@ -605,17 +614,7 @@ This would require just two standoff nodes: \texttt{(italic, start=5, end=29)} a
 
 Moreover, standoff makes it possible to mark up the same text in different, possibly incompatible ways, allowing for different interpretations without making redundant copies of the text. In the Knora base ontology, any text value can have standoff nodes.
 
-By representing standoff as RDF triples, Knora makes markup searchable across multiple text documents in a repository. For example, if a repository contains documents in which references to persons are indicated in standoff, it is straightforward to find all the documents mentioning a particular person. Knora's standoff support is intended to make it possible to convert documents with embedded, hierarchical markup, such as TEI/XML, into RDF standoff and back again, with no data loss, thus bringing the benefits of RDF to existing TEI-encoded documents (cf.~\cite[3]{Schmidt_Standoff}). While standoff nodes directly referring to positions in the text represent flat structures, the representation of XML-based markup or any hierarchical structures in standoff is enabled by introducing terminal and nonterminal nodes~\cite{PAULA, POWLA}.\issue{292}{Nonterminal nodes do not exist yet in the ontology.} Nonterminal nodes may represent hierarchical structures like lists: individual list elements refer to index positions in the text and point to a common nonterminal node representing their parent element (cf.~\cite[229]{POWLA}). A purely flat approach (terminal nodes only) would mean that relations between single standoff nodes could not be handled at all by Knora. Taking the example of a list, the following embedded markup would not be represented correctly:
-
-\begin{lstlisting}[language=HTML,caption={List in HTML},label=lst:list]
-<ol>
-	<li>first element</li>
-	<li>second element</li>
-	<li>third element</li>
-</ol>
-\end{lstlisting}
-
-Applying a purely flat approach, only the index positions of the elements would be stored, but not the information that \texttt{<ol>} actually contains all the \texttt{<li>} elements. This information would only implicitly be given because the \texttt{<ol>} spans the range of all the \texttt{<li>} elements. By representing all the \texttt{<li>} elements as terminal nodes and the \texttt{<ol>} as a nonterminal node, we are able to represent a truly hierarchical relation as standoff.\footnote{Schmidt~\cite{Schmidt_Standoff} differentiates between `standoff properties' and `standoff markup'. The first term refers to an approach where attributes may freely overlap. The latter represents structures that comply with a context-free grammar such as an XML schema or a DTD (no overlap allowed). However, we think that hierarchies are not a restriction per se because there might be structures that are in fact hierarchical and should be represented as such also in standoff.} The main benefit of using standoff nodes is that our approach may represent hierarchical relations (if the relation we want to represent is in fact a hierarchy), but does not require markup information to be hierarchical due to syntactical restrictions.\todo{How do we differentiate between truly hierarchical structures and structures that are just encoded as a hierarchy for a given XML file?} 
+By representing standoff as RDF triples, Knora makes markup searchable across multiple text documents in a repository. For example, if a repository contains documents in which references to persons are indicated in standoff, it is straightforward to find all the documents mentioning a particular person. Knora's standoff support is intended to make it possible to convert documents with embedded, hierarchical markup, such as TEI/XML, into RDF standoff and back again, with no data loss, thus bringing the benefits of RDF to existing TEI-encoded documents (cf.~\cite[3]{Schmidt_Standoff}).
 
 In the Knora base ontology, a \texttt{TextValue} can have one or more standoff nodes. Each standoff node indicates the start and end positions of a substring in the text that has a particular attribute. The OWL class \texttt{kb:Standoff}, which is the base class of all standoff node classes, has these properties:
 
@@ -681,6 +680,8 @@ data:LV1 rdf:type kb:LinkValue ;
 
 Figure~\ref{fig:standoff-link-graph} illustrates the result.
 
+Link values created automatically for resource references in standoff are automatically visible to all users, as long as they have permission to see the source and target resources. The owner of these link values is always \texttt{kb:SystemUser} (see Section \ref{subsec:users-and-groups}).
+
 \begin{figure}[h]
 \centering
 
@@ -726,6 +727,8 @@ edge [<-,cyan!60!green] node[text style,above]{valueHasRefCount} (link);
 
 \subsection{Users and Groups}
 
+\label{subsec:users-and-groups}
+
 Each Knora user is represented by an object belonging to the class \texttt{kb:User}, which is a subclass of \texttt{foaf:Person}, and has the following properties:
 
 \begin{description}
@@ -748,6 +751,8 @@ Knora's concept of access control is that an object (a resource or value) can gr
 \end{description}
 
 A project-specific ontology can define additional groups, which must belong to the OWL class \texttt{kb:UserGroup}.
+
+There is one built-in \texttt{SystemUser}, which is the owner of link values created automatically for resource references in standoff markup (see Section~\ref{subsubsec:standoff-link}).
 
 \subsection{Permissions}
 
@@ -786,7 +791,7 @@ The implementation of consistency checking is partly triplestore-dependent; Knor
 
 \label{subsec:cardinalities}
 
-As noted in Section~\ref{subsec:resources}, each subclass of \texttt{Resource} must use OWL cardinality restrictions to specify the properties it can have. More specifically, a resource is allowed to have a property that is a subproperty of \texttt{kb:hasValue} only if the resource's class has some cardinality for that property. In addition, Knora supports, and attempts to enforce, the following cardinality constraints:
+As noted in Section~\ref{subsec:resources}, each subclass of \texttt{Resource} must use OWL cardinality restrictions to specify the properties it can have. More specifically, a resource is allowed to have a property that is a subproperty of \texttt{kb:hasValue} or \texttt{kb:hasLinkTo} only if the resource's class has some cardinality for that property. In addition, Knora supports, and attempts to enforce, the following cardinality constraints:
  
 \begin{description}
 	\item[owl:cardinality 1] A resource of this class must have exactly one instance of the specified property.
