@@ -242,7 +242,6 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
         "create a second resource of type anything:Thing linking to the first thing via standoff" in {
 
-
             val textattrStringified =
                 s"""
                   {
@@ -334,6 +333,238 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
         }
 
+        "attempt to create a resource of type thing with an invalid standoff tag name" in {
+
+            // use invalid standoff tag name
+            val textattrStringified =
+                """
+                  {
+                      "old": [{
+                          "start": 0,
+                          "end": 4
+                      }]
+                  }
+                """.toJson.compactPrint
+
+            val params =
+                s"""
+              {
+              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
+              	"label": "A second thing",
+              	"project_id": "http://data.knora.org/projects/anything",
+              	"properties": {
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :[],"utf8str":"This text links to a thing"}}],
+                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+              	}
+              }
+                """
+
+            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+
+                // the route should reject the request because `old` is not a valid standoff tag name
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+            }
+
+        }
+
+        "create a resource of type thing with several standoff tags" in {
+
+            val textattrStringified =
+                """
+                  {
+                      "bold": [{
+                          "start": 0,
+                          "end": 4
+                      }],
+                      "underline": [
+                          {
+                            "start": 0,
+                            "end": 4
+                          },
+                          {
+                            "start": 5,
+                            "end": 9
+                          }
+                      ],
+                      "_link": [
+                        {
+                            "start": 10,
+                            "end": 15,
+                            "href": "http://data.knora.org/861b5644b302",
+                            "resid": "http://data.knora.org/861b5644b302"
+                        },
+                        {
+                            "start": 16,
+                            "end": 18,
+                            "href": "http://data.knora.org/9935159f67",
+                            "resid": "http://data.knora.org/9935159f67"
+                        }
+                      ]
+                  }
+                """.toJson.compactPrint
+
+            val params =
+                s"""
+              {
+              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
+              	"label": "A second thing",
+              	"project_id": "http://data.knora.org/projects/anything",
+              	"properties": {
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["http://data.knora.org/861b5644b302", "http://data.knora.org/9935159f67"],"utf8str":"This text links to a thing"}}],
+                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+              	}
+              }
+                """
+
+            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+            }
+
+        }
+
+        "create a resource of type thing with several standoff tags with a missing IRI in resource_reference" in {
+
+            val textattrStringified =
+                """
+                  {
+                      "bold": [{
+                          "start": 0,
+                          "end": 4
+                      }],
+                      "underline": [
+                          {
+                            "start": 0,
+                            "end": 4
+                          },
+                          {
+                            "start": 5,
+                            "end": 9
+                          }
+                      ],
+                      "_link": [
+                        {
+                            "start": 10,
+                            "end": 15,
+                            "href": "http://data.knora.org/861b5644b302",
+                            "resid": "http://data.knora.org/861b5644b302"
+                        },
+                        {
+                            "start": 16,
+                            "end": 18,
+                            "href": "http://data.knora.org/9935159f67",
+                            "resid": "http://data.knora.org/9935159f67"
+                        }
+                      ]
+                  }
+                """.toJson.compactPrint
+
+            // IRI http://data.knora.org/861b5644b302 is missing in resource_reference
+            val params =
+                s"""
+              {
+              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
+              	"label": "A second thing",
+              	"project_id": "http://data.knora.org/projects/anything",
+              	"properties": {
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["http://data.knora.org/9935159f67"],"utf8str":"This text links to a thing"}}],
+                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+              	}
+              }
+                """
+
+            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+
+                // the route should reject the request because an IRI is missing in resource_reference
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+            }
+
+        }
+
+        "create a resource of type thing with several standoff tags with an IRI given in resource_reference but not given in the standoff link tags" in {
+
+            // IRI http://data.knora.org/9935159f67 is missing in standoff link tag
+            val textattrStringified =
+                """
+                  {
+                      "bold": [{
+                          "start": 0,
+                          "end": 4
+                      }],
+                      "underline": [
+                          {
+                            "start": 0,
+                            "end": 4
+                          },
+                          {
+                            "start": 5,
+                            "end": 9
+                          }
+                      ],
+                      "_link": [
+                        {
+                            "start": 10,
+                            "end": 15,
+                            "href": "http://data.knora.org/861b5644b302",
+                            "resid": "http://data.knora.org/861b5644b302"
+                        },
+                        {
+                            "start": 16,
+                            "end": 18,
+                            "href": "http://data.knora.org/9935159f67"
+                        }
+                      ]
+                  }
+                """.toJson.compactPrint
+
+            val params =
+                s"""
+              {
+              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
+              	"label": "A second thing",
+              	"project_id": "http://data.knora.org/projects/anything",
+              	"properties": {
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["http://data.knora.org/861b5644b302", "http://data.knora.org/9935159f67"],"utf8str":"This text links to a thing"}}],
+                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+              	}
+              }
+                """
+
+            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+
+                // the route should reject the request because an IRI is missing in standoff link tags
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+            }
+
+        }
 
 
     }

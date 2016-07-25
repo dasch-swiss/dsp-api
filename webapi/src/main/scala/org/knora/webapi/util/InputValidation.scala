@@ -189,23 +189,43 @@ object InputValidation {
     */
 
     /**
-      * Validate textattr (member of [[CreateRichtextV1]]): convert every attribute name to a save String
-      * and process each StandoffPositionV1's arguments.
+      * Validate textattr (member of [[CreateRichtextV1]]): check for required members of _link standoff tags and
+      * and validate each StandoffPositionV1's arguments.
       *
       * @param textattr text attributes sent by the client as part of a richtext object
       * @return validated text attributes
       */
     def validateTextattr(textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]]): Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = {
         textattr.map {
-            case (attr: StandoffTagV1.Value, positions: Seq[StandoffPositionV1]) => (attr, positions.map {
-                    case (position: StandoffPositionV1) => StandoffPositionV1(start = position.start, end = position.end, href = position.href match {
-                            case Some(href) => Some(InputValidation.toIri(href, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute href $href")))
-                            case _ => None
-                        }, resid = position.resid match {
-                            case Some(resid) => Some(InputValidation.toIri(resid, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute resid $resid")))
-                            case _ => None
-                        })
-                })
+            case (tagName: StandoffTagV1.Value, positions: Seq[StandoffPositionV1]) =>
+                val standoffPositionsForTagName: Seq[StandoffPositionV1] = tagName match {
+                        // depending on whether it is a linking tag or not, process the arguments
+                    case linkingTag: StandoffTagV1.Value if linkingTag == StandoffTagV1.link =>
+                        // it is a linking tag:
+                        // "href" is required for all positions belonging to this tag, "resid" may be given in case it is an internal link to a Knora resource
+                        positions.map {
+                            position: StandoffPositionV1 => StandoffPositionV1(start = position.start, end = position.end, href = position.href match {
+                                case Some(href) => Some(InputValidation.toIri(href, () => throw BadRequestException(s"Invalid URL in attribute href: $href")))
+                                case None => throw BadRequestException(s"No href given for standoff tag of type ${StandoffTagV1.link}")
+                            }, resid = position.resid match {
+                                case Some(resid) => Some(InputValidation.toIri(resid, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute resid $resid")))
+                                case None => None
+                            })
+                        }
+                    case nonLinkingTag: StandoffTagV1.Value =>
+                        // only "start" and "end" are required, no further members allowed
+                        positions.map {
+                            position: StandoffPositionV1 => StandoffPositionV1(start = position.start, end = position.end, href = position.href match {
+                                case Some(href) => throw BadRequestException(s"href given for non linking standoff tag $nonLinkingTag")
+                                case None => None
+                            }, resid = position.resid match {
+                                case Some(resid) => throw BadRequestException(s"resid given for non linking standoff tag $nonLinkingTag")
+                                case None => None
+                            })
+                        }
+                }
+
+                (tagName, standoffPositionsForTagName)
         }
     }
 
@@ -264,7 +284,9 @@ object InputValidation {
 
         val fileName: File = File.createTempFile("tmp_", ".bin", new File(settings.tmpDataDir))
 
-        if (!fileName.canWrite) throw FileWriteException(s"File ${fileName} cannot be written.")
+        if (!fileName.canWrite) throw FileWriteException(s"File ${
+            fileName
+        } cannot be written.")
 
         // write given file to disk
         Files.write(fileName.toPath, binaryData)

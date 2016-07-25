@@ -576,12 +576,13 @@ object StandoffTagV1 extends Enumeration {
       * [[BadRequestException]].
       *
       * @param name the name of the value.
+      * @param errorFun the function to be called in case of an error.
       * @return the requested value.
       */
-    def lookup(name: String): Value = {
+    def lookup(name: String, errorFun: () => Nothing): Value = {
         valueMap.get(name) match {
             case Some(value) => value
-            case None => throw BadRequestException(s"Standoff tag not supported: $name")
+            case None => errorFun()
         }
     }
 
