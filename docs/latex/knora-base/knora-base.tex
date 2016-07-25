@@ -776,6 +776,8 @@ Each permission in the above list implies all lower-numbered permissions. A user
     \item If the result is that she would have no permissions, give her whatever permission \texttt{UnknownUser} would have.
 \end{enumerate}
 
+To view a link between resources, a user needs permission to view the source and target resources. He also needs permission to view the \texttt{LinkValue} representing the link, unless the link property is \texttt{hasStandoffLinkTo} (see \ref{subsubsec:standoff-link}).
+
 \section{Consistency Checking}
 
 Knora tries to enforce repository consistency by checking constraints that are specified in the Knora base ontology and in project-specific ontologies. Two types of constraints are enforced:
