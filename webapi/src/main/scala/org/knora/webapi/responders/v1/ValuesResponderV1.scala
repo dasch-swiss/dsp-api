@@ -407,7 +407,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                         ).toString()
 
                                         // append the SPARQL that was generated to create standoff links to the other insert statements
-                                        (whereSparql, insertSparql + standoffLinkInsertSparql)
+                                        (whereSparql, insertSparql)
                                 }
 
                                 // For each value of the property, accumulate the generated SPARQL and an UnverifiedValueV1
@@ -427,7 +427,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Sort the contents of each string by value index.
                 resultsForAllProperties: Iterable[SparqlGenerationResultForProperty] = sparqlGenerationResults.values
                 allWhereSparql: String = resultsForAllProperties.flatMap(result => result.whereSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n")
-                allInsertSparql: String = resultsForAllProperties.flatMap(result => result.insertSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n")
+                allInsertSparql: String = resultsForAllProperties.flatMap(result => result.insertSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n") + standoffLinkInsertSparql
 
                 // Collect all the UnverifiedValueV1s for each property.
                 allUnverifiedValues: Map[IRI, Seq[UnverifiedValueV1]] = sparqlGenerationResults.map {
