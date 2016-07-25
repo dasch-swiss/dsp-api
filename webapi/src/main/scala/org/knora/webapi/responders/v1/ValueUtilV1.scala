@@ -55,7 +55,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     def makeSipiImagePreviewGetUrlFromFilename(filename: String): String = {
-        s"${settings.sipiIIIFGetUrl}/${filename}/full/full/0/default.jpg"
+        s"${settings.sipiIIIFGetUrl}/$filename/full/full/0/default.jpg"
     }
 
     /**

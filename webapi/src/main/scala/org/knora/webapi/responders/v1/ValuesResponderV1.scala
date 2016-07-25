@@ -30,6 +30,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.ResourceLocker
+import org.knora.webapi.responders.v1.GroupedProps.ValueProps
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
@@ -298,7 +299,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             linkTargetIri = targetIri,
                             currentReferenceCount = 0,
                             newReferenceCount = initialReferenceCount,
-                            permissionRelevantAssertions = Vector(ownerTuple, projectTuple) // TODO: How should we create permissions for a LinkValue for standoff links? (issue 88)
+                            permissionRelevantAssertions = OntologyConstants.KnoraBase.SystemPermissionRelevantAssertions
                         )
                 }
 
@@ -1094,7 +1095,6 @@ class ValuesResponderV1 extends ResponderV1 {
         for {
         // Do a SPARQL query to get the versions of the value.
             sparqlQuery <- Future {
-                // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
                 queries.sparql.v1.txt.getVersionHistory(
                     triplestore = settings.triplestoreType,
                     resourceIri = versionHistoryRequest.resourceIri,
@@ -1122,21 +1122,35 @@ class ValuesResponderV1 extends ResponderV1 {
             // Filter out the versions that the user doesn't have permission to see.
             filteredVersionRowsVector = versionRowsVector.filter {
                 rowMap =>
+                    val valueIri = rowMap("value")
                     val valueOwner = rowMap("valueOwner")
                     val project = rowMap("project")
                     val permissionAssertions = rowMap.getOrElse("permissionAssertions", "")
 
-                    val permissionRelevantAssertions = PermissionUtilV1.parsePermissions(
+                    // Get the value's permission-relevant assertions.
+                    val valueProps: ValueProps = PermissionUtilV1.parsePermissionsAsValueProps(
                         assertionsString = permissionAssertions,
                         owner = valueOwner,
                         project = project
                     )
 
-                    val valuePermissions = PermissionUtilV1.getUserPermissionV1(
-                        subjectIri = rowMap("value"),
-                        assertions = permissionRelevantAssertions,
-                        userProfile = versionHistoryRequest.userProfile
-                    )
+                    // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
+                    val valuePermissions = if (InputValidation.optionStringToBoolean(rowMap.get("isLinkValue"))) {
+                        // It's a LinkValue.
+                        PermissionUtilV1.getUserPermissionOnLinkValueV1(
+                            linkValueIri = valueIri,
+                            predicateIri = rowMap("linkValuePredicate"),
+                            valueProps = valueProps,
+                            userProfile = versionHistoryRequest.userProfile
+                        )
+                    } else {
+                        // It's not a LinkValue.
+                        PermissionUtilV1.getUserPermissionV1WithValueProps(
+                            subjectIri = valueIri,
+                            valueProps = valueProps,
+                            userProfile = versionHistoryRequest.userProfile
+                        )
+                    }
 
                     valuePermissions.nonEmpty
             }
@@ -1262,13 +1276,7 @@ class ValuesResponderV1 extends ResponderV1 {
             ).toString())
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows: Seq[VariableResultsRow] = response.results.bindings
-
-            result = if (rows.nonEmpty) {
-                Some(sparqlQueryResults2ValueQueryResult(valueIri, rows, userProfile))
-            } else {
-                None
-            }
-        } yield result
+        } yield sparqlQueryResults2ValueQueryResult(valueIri, rows, userProfile)
     }
 
     /**
@@ -1327,6 +1335,50 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
+      * Converts SPARQL query results into a [[ValueQueryResult]].
+      *
+      * @param valueIri    the IRI of the value that was queried.
+      * @param rows        the query result rows.
+      * @param userProfile the profile of the user making the request.
+      * @return a [[ValueQueryResult]].
+      */
+    @throws(classOf[ForbiddenException])
+    private def sparqlQueryResults2ValueQueryResult(valueIri: IRI, rows: Seq[VariableResultsRow], userProfile: UserProfileV1): Option[ValueQueryResult] = {
+        if (rows.nonEmpty) {
+            // Convert the query results to a ApiValueV1.
+            val valueProps = valueUtilV1.createValueProps(valueIri, rows)
+            val value = valueUtilV1.makeValueV1(valueProps)
+
+            // Get the value's project IRI.
+            val projectIri = getValueProjectIri(valueIri, rows)
+
+            // Get the optional comment on the value.
+            val comment = getValueComment(rows)
+
+            // Get the value's permission-relevant assertions.
+            val assertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
+
+            // Get the permission code representing the user's permissions on the value.
+            val permissionCode = PermissionUtilV1.getUserPermissionV1(valueIri, assertions, userProfile).getOrElse {
+                val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                throw ForbiddenException(s"User $userIri does not have permission to see value $valueIri")
+            }
+
+            Some(
+                BasicValueQueryResult(
+                    value = value,
+                    comment = comment,
+                    projectIri = projectIri,
+                    permissionRelevantAssertions = assertions,
+                    permissionCode = permissionCode
+                )
+            )
+        } else {
+            None
+        }
+    }
+
+    /**
       * Converts SPARQL query results about a `knora-base:LinkValue` into a [[LinkValueQueryResult]].
       *
       * @param rows        SPARQL query results about a `knora-base:LinkValue`.
@@ -1336,25 +1388,49 @@ class ValuesResponderV1 extends ResponderV1 {
     private def sparqlQueryResults2LinkValueQueryResult(rows: Seq[VariableResultsRow], userProfile: UserProfileV1): Option[LinkValueQueryResult] = {
         if (rows.nonEmpty) {
             val firstRowMap = rows.head.rowMap
-            val valueIri = firstRowMap("linkValue")
+            val linkValueIri = firstRowMap("linkValue")
+
+            // Convert the query results into a LinkValueV1.
+            val valueProps = valueUtilV1.createValueProps(linkValueIri, rows)
+            val linkValueV1: LinkValueV1 = valueUtilV1.makeValueV1(valueProps) match {
+                case linkValue: LinkValueV1 => linkValue
+                case other => throw InconsistentTriplestoreDataException(s"Expected value $linkValueIri to be of type ${OntologyConstants.KnoraBase.LinkValue}, but it was read with type ${other.valueTypeIri}")
+            }
+
+            // Get the value's project IRI.
+            val projectIri = getValueProjectIri(linkValueIri, rows)
+
+            // Get the optional comment on the value.
             val comment = getValueComment(rows)
-            val projectIri = getValueProjectIri(valueIri, rows)
+
+            // Get the value's permission-relevant assertions.
+            val permissionRelevantAssertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
+
+            // Get the permission code representing the user's permissions on the value.
+            val permissionCode = PermissionUtilV1.getUserPermissionOnLinkValueV1(
+                linkValueIri = linkValueIri,
+                predicateIri = linkValueV1.predicateIri,
+                valueProps = valueProps,
+                userProfile = userProfile
+            ).getOrElse {
+                val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                throw ForbiddenException(s"User $userIri does not have permission to see value $linkValueIri")
+            }
+
             val directLinkExists = firstRowMap.get("directLinkExists").exists(_.toBoolean)
             val targetResourceClass = firstRowMap.get("targetResourceClass")
-            val valueQueryResult = sparqlQueryResults2ValueQueryResult(valueIri, rows, userProfile)
-            val linkValueQueryResult = LinkValueQueryResult(
-                value = valueQueryResult.value match {
-                    case linkValue: LinkValueV1 => linkValue
-                    case other => throw InconsistentTriplestoreDataException(s"Expected value $valueIri to be of type ${OntologyConstants.KnoraBase.LinkValue}, but it was read with type ${other.valueTypeIri}")
-                },
-                comment = comment,
-                projectIri = projectIri,
-                directLinkExists = directLinkExists,
-                targetResourceClass = targetResourceClass,
-                permissionRelevantAssertions = valueQueryResult.permissionRelevantAssertions,
-                permissionCode = valueQueryResult.permissionCode
+
+            Some(
+                LinkValueQueryResult(
+                    value = linkValueV1,
+                    comment = comment,
+                    projectIri = projectIri,
+                    directLinkExists = directLinkExists,
+                    targetResourceClass = targetResourceClass,
+                    permissionRelevantAssertions = permissionRelevantAssertions,
+                    permissionCode = permissionCode
+                )
             )
-            Some(linkValueQueryResult)
         } else {
             None
         }
@@ -1444,12 +1520,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             updateVerificationResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = updateVerificationResponse.results.bindings
-
-            result = if (rows.nonEmpty) {
-                sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, userProfile = userProfile)
-            } else {
-                throw UpdateNotPerformedException(s"The update to value $searchValueIri for property $propertyIri in resource $resourceIri was not performed. Please report this as a possible bug.")
-            }
+            result = sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, userProfile = userProfile).getOrElse(throw UpdateNotPerformedException(s"The update to value $searchValueIri for property $propertyIri in resource $resourceIri was not performed. Please report this as a possible bug."))
         } yield result
     }
 
@@ -1488,47 +1559,6 @@ class ValuesResponderV1 extends ResponderV1 {
                     throw UpdateNotPerformedException(s"The update to link value $linkValueIri with source IRI $linkSourceIri, link property $linkPropertyIri, and target $linkTargetIri was not performed. Please report this as a possible bug.")
             }
         } yield result
-    }
-
-    /**
-      * Converts SPARQL query results into a [[ApiValueV1]] plus a permission code.
-      *
-      * @param valueIri    the IRI of the value that was queried.
-      * @param rows        the query result rows.
-      * @param userProfile the profile of the user making the request.
-      * @return a tuple containing a [[ApiValueV1]], the value's permission-relevant assertions, and a Knora API v1 permission
-      *         code representing the user's permissions on the value.
-      */
-    @throws(classOf[ForbiddenException])
-    private def sparqlQueryResults2ValueQueryResult(valueIri: IRI, rows: Seq[VariableResultsRow], userProfile: UserProfileV1): ValueQueryResult = {
-        // Convert the query results to a ApiValueV1.
-        val valueProps = valueUtilV1.createValueProps(valueIri, rows)
-        val value = valueUtilV1.makeValueV1(valueProps)
-
-        // Get the value's project IRI.
-        val projectIri = getValueProjectIri(valueIri, rows)
-
-        // Get the optional comment on the value.
-        val comment = getValueComment(rows)
-
-        // Get the value's permission-relevant assertions.
-        val assertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
-
-        // Get the permission code representing the user's permissions on the value.
-        val permissionCode = PermissionUtilV1.getUserPermissionV1(valueIri, assertions, userProfile) match {
-            case Some(code) => code
-            case None =>
-                val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
-                throw ForbiddenException(s"User $userIri does not have permission to see value $valueIri")
-        }
-
-        BasicValueQueryResult(
-            value = value,
-            comment = comment,
-            projectIri = projectIri,
-            permissionRelevantAssertions = assertions,
-            permissionCode = permissionCode
-        )
     }
 
     /**

@@ -759,7 +759,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
                     ),
-                    rights = 8,
+                    rights = 2,
                     userdata = incunabulaUserData
                 )
             )
@@ -839,7 +839,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
                     ),
-                    rights = 8,
+                    rights = 2,
                     userdata = incunabulaUserData
                 )
             )
@@ -912,7 +912,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         objectIri = zeitglöckleinIri,
                         referenceCount = 2
                     ),
-                    rights = 8,
+                    rights = 2,
                     userdata = incunabulaUserData
                 )
             )
@@ -973,7 +973,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
                     ),
-                    rights = 8,
+                    rights = 2,
                     userdata = incunabulaUserData
                 )
             )
@@ -1112,7 +1112,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
                     ),
-                    rights = 8,
+                    rights = 2,
                     userdata = incunabulaUserData
                 )
             )

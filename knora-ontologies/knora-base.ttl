@@ -2753,16 +2753,16 @@
 
 ###  http://www.knora.org/ontology/knora-base#SystemUser
 
-:SystemUser rdf:type knora-base:User ;
+:SystemUser rdf:type :User ;
 
-                     knora-base:userid "system" ;
+                     :userid "system" ;
 
-                     foaf:givenName "System" ;
+                     <http://xmlns.com/foaf/0.1/givenName> "Knora" ;
 
-                     foaf:familyName "System" ;
+                     <http://xmlns.com/foaf/0.1/familyName> "System" ;
 
-                     knora-base:password "-" ;
+                     :password "-" ;
 
-                     knora-base:email "system@knora.org" ;
+                     :email "-" ;
 
-                     knora-base:preferredLanguage "en" .
+                     :preferredLanguage "en" .

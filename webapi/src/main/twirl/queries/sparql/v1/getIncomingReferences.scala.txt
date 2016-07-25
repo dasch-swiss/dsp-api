@@ -33,7 +33,7 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?referringResource ?linkingProp ?p ?o ?isLinkValue ?objPred ?objObj
+SELECT ?referringResource ?linkProp ?prop ?obj ?isLinkValue ?objPred ?objObj
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -43,29 +43,32 @@ WHERE {
 
     ?resource knora-base:isDeleted false .
 
-    ?linkingProp rdfs:subPropertyOf* knora-base:hasLinkTo .
+    ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
 
     MINUS {
-        ?linkingProp rdfs:subPropertyOf+ knora-base:isPartOf .
+        ?linkProp rdfs:subPropertyOf+ knora-base:isPartOf .
     }
 
-    ?referringResource ?linkingProp ?resource ;
+    ?referringResource ?linkProp ?resource ;
         knora-base:isDeleted false .
 
     {
-        ?referringResource ?p ?o .
+        ?referringResource ?prop ?obj .
 
         MINUS {
-            ?p rdfs:subPropertyOf+ knora-base:hasValue .
+            ?prop rdfs:subPropertyOf+ knora-base:hasValue .
         }
     }
     UNION
     {
-        ?p rdfs:subPropertyOf* knora-base:hasLinkToValue .
-        ?referringResource ?p ?o .
-        ?o rdf:object ?resource .
-        ?o knora-base:isDeleted false .
-        ?o ?objPred ?objObj .
-        BIND(true AS ?isLinkValue)
+        @* Get the LinkValue for each link from ?referringResource to ?resource, so its permissions can be checked. *@
+
+        ?prop rdfs:subPropertyOf* knora-base:hasLinkToValue .
+        ?referringResource ?prop ?obj .
+        ?obj rdf:predicate ?linkProp .
+        ?obj rdf:object ?resource .
+        ?obj knora-base:isDeleted false .
+        ?obj ?objPred ?objObj .
+        BIND(true as ?isLinkValue)
     }
 }
