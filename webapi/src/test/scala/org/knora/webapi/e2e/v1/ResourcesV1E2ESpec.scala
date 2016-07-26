@@ -43,7 +43,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
-
 /**
   * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
@@ -126,6 +125,53 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
     }
 
+    /**
+      * Creates a SPARQL query string to get the standoff links (direct links) for a given resource.
+      *
+      * @param resIri the resource whose standoff links are to be queried.
+      * @return SPARQL query string.
+      */
+    private def getDirectLinksSPARQL(resIri: IRI): String = {
+
+        s"""
+          PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          SELECT ?referredResourceIRI WHERE {
+              BIND(IRI("$resIri") as ?resIRI)
+
+              ?resIRI knora-base:hasStandoffLinkTo ?referredResourceIRI .
+
+          }
+        """
+
+    }
+
+    /**
+      * Creates a SPARQL query to get the standoff links reifications to check for the target resource and the reference count.
+      *
+      * @param resIri the resource whose standoff reifications are to be queried.
+      * @return SPARQL query string.
+      */
+    private def getRefCountsSPARQL(resIri: IRI): String = {
+
+        s"""
+           PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+           PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+           SELECT DISTINCT ?reificationIRI ?object ?refCnt where {
+                BIND(IRI("$resIri") as ?resIRI)
+
+                ?resIRI knora-base:hasStandoffLinkToValue ?reificationIRI .
+
+                ?reificationIRI rdf:object ?object .
+
+                ?reificationIRI knora-base:valueHasRefCount ?refCnt .
+
+           }
+        """
+
+    }
+
+
 
     "The Resources Endpoint" should {
         "provide a HTML representation of the resource properties " in {
@@ -193,7 +239,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
         "create a resource of type images:person" in {
 
             val params =
-            """
+                """
 
               {
               	"restype_id": "http://www.knora.org/ontology/images#person",
@@ -206,7 +252,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               }
 
 
-            """
+                """
 
             Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
 
@@ -229,7 +275,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
                 """.toJson.compactPrint
 
             val params =
-            s"""
+                s"""
               {
               	"restype_id": "http://www.knora.org/ontology/anything#Thing",
               	"label": "A first thing",
@@ -301,7 +347,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
         }
 
-        "change the created text value above for the first thing resource" in {
+        "change the created text value above for the first thing resource so it has a standoff link to incunabulaBookBiechlin" in {
 
             val textattr =
                 s"""
@@ -344,11 +390,48 @@ class ResourcesV1E2ESpec extends E2ESpec {
         }
 
 
-        /*"make sure that the first thing resource contains a direct standoff link now" in {
+        "make sure that the first thing resource contains a direct standoff link to incunabulaBookBiechlin now" in {
 
+            val sparqlQuery = getDirectLinksSPARQL(firstThingIri.get)
 
+            Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
 
-        }*/
+                case response: SparqlSelectResponse =>
+
+                    val ref: Boolean = response.results.bindings.exists {
+                        row: VariableResultsRow =>
+                            row.rowMap("referredResourceIRI") == incunabulaBookBiechlin
+                    }
+
+                    assert(ref, s"No direct link to '$incunabulaBookBiechlin' found")
+
+                case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
+
+            }
+
+        }
+
+        "check that the first thing resource's standoff link reification has the correct reference count" in {
+
+            val sparqlQuery = getRefCountsSPARQL(firstThingIri.get)
+
+            Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+
+                case response: SparqlSelectResponse =>
+
+                    val refCnt: Boolean = response.results.bindings.exists {
+                        row: VariableResultsRow =>
+                            row.rowMap("object") == incunabulaBookBiechlin &&
+                                row.rowMap("refCnt").toInt == 1
+                    }
+
+                    assert(refCnt, s"Ref count for '$incunabulaBookBiechlin' should be 1")
+
+                case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
+
+            }
+
+        }
 
         "create a second resource of type anything:Thing linking to the first thing via standoff" in {
 
@@ -447,14 +530,14 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
             // use invalid standoff tag name
             val textattrStringified =
-                """
+            """
                   {
                       "old": [{
                           "start": 0,
                           "end": 4
                       }]
                   }
-                """.toJson.compactPrint
+            """.toJson.compactPrint
 
             val params =
                 s"""
@@ -585,7 +668,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
             // IRI incunabulaBookQuadra is missing in resource_reference
             val params =
-                s"""
+            s"""
               {
               	"restype_id": "http://www.knora.org/ontology/anything#Thing",
               	"label": "A second thing",
@@ -616,7 +699,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
             // IRI http://data.knora.org/9935159f67 (incunabulaBookBiechlin) is missing in standoff link tag
             val textattrStringified =
-                s"""
+            s"""
                   {
                       "bold": [{
                           "start": 0,
@@ -782,16 +865,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
         "check that the third thing resource has two direct standoff links" in {
 
-            val sparqlQuery =
-                s"""
-                  PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                  SELECT ?referredResourceIRI WHERE {
-                      BIND(IRI("${thirdThingIri.get}") as ?resIRI)
-
-                      ?resIRI knora-base:hasStandoffLinkTo ?referredResourceIRI .
-
-                  }
-                """
+            val sparqlQuery = getDirectLinksSPARQL(thirdThingIri.get)
 
             Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
 
@@ -819,22 +893,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
         "check that the third thing resource's standoff link reifications have the correct reference counts" in {
 
-            val sparqlQuery =
-                s"""
-                   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                   PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-
-                   SELECT DISTINCT ?reificationIRI ?object ?refCnt where {
-                        BIND(IRI("${thirdThingIri.get}") as ?resIRI)
-
-                        ?resIRI knora-base:hasStandoffLinkToValue ?reificationIRI .
-
-                        ?reificationIRI rdf:object ?object .
-
-                        ?reificationIRI knora-base:valueHasRefCount ?refCnt .
-
-                   }
-                    """
+            val sparqlQuery = getRefCountsSPARQL(thirdThingIri.get)
 
             Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
 
