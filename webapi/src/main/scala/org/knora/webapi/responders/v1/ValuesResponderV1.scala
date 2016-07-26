@@ -279,15 +279,43 @@ class ValuesResponderV1 extends ResponderV1 {
                     userProfile = createMultipleValuesRequest.userProfile
                 )).mapTo[EntityInfoGetResponseV1]
 
-                // We could be creating several text values with standoff links to the same target resource. Count
-                // the number of standoff links to each target resource.
-                targetIris: Seq[(IRI, Int)] = createMultipleValuesRequest.values.values.flatten.collect {
-                    case CreateValueV1WithComment(textValueV1: TextValueV1, _) => textValueV1.resource_reference
-                }.flatten.groupBy(identity).mapValues(_.size).toSeq // http://stackoverflow.com/a/10934489
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // Generate SPARQL to create links and LinkValues for standoff resource references in text values
 
-                // Construct a SparqlTemplateLinkUpdate to create one link and one LinkValue for each resource that is
-                // the target of a standoff link.
-                standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = targetIris.map {
+                // To create LinkValues for the standoff resource references in the values to be created, we need to compute
+                // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
+                // that have standoff references to a particular target resource.
+
+                // First, make a single list of all the values to be created.
+                valuesToCreatePerProperty: Map[IRI, Seq[CreateValueV1WithComment]] = createMultipleValuesRequest.values
+                valuesToCreateForAllProperties: Iterable[Seq[CreateValueV1WithComment]] = valuesToCreatePerProperty.values
+                allValuesToCreate: Iterable[CreateValueV1WithComment] = valuesToCreateForAllProperties.flatten
+
+                // Then, get the standoff resource references from all the text values to be created.
+                // The 'collect' method builds a new list by applying a partial function to all elements of the list
+                // on which the function is defined.
+                resourceReferencesForAllTextValues: Iterable[Seq[IRI]] = allValuesToCreate.collect {
+                    case CreateValueV1WithComment(textValueV1: TextValueV1, _) => textValueV1.resource_reference
+                }
+
+                // Combine those resource references into a single list, so if there are n text values with a reference to
+                // some IRI, the list will contain that IRI n times.
+                allResourceReferences: Iterable[IRI] = resourceReferencesForAllTextValues.flatten
+
+                // Now we need to count the number of times each IRI occurs in allResourceReferences. To do this, first
+                // use groupBy(identity). The groupBy method takes a function that returns a key for each item in the
+                // collection, and makes a Map in which items with the same key are grouped together. The identity
+                // function just returns its argument. So groupBy(identity) makes a Map[IRI, Iterable[IRI]] in which each
+                // IRI points to a sequence of the same IRI repeated as many times as it occurred in allResourceReferences.
+                allResourceReferencesGrouped: Map[IRI, Iterable[IRI]] = allResourceReferences.groupBy(identity)
+
+                // Finally, replace each Iterable[IRI] with its size. That's the number of text values containing
+                // standoff references to that IRI.
+                targetIris: Map[IRI, Int] = allResourceReferencesGrouped.mapValues(_.size)
+
+                // For each target IRI, construct a SparqlTemplateLinkUpdate to create one link, as well as one LinkValue
+                // with associated count as its initial reference count.
+                standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = targetIris.toSeq.map {
                     case (targetIri, initialReferenceCount) =>
                         SparqlTemplateLinkUpdate(
                             linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -305,6 +333,9 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 // Generate INSERT clause statements based on those SparqlTemplateLinkUpdates.
                 standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(linkUpdates = standoffLinkUpdates).toString()
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // Number each value to be created, and give it a valueHasOrder
 
                 // Ungroup the values to be created so we can number them as a single sequence (to create unique SPARQL variable names for each value).
                 ungroupedValues: Seq[(IRI, CreateValueV1WithComment)] = createMultipleValuesRequest.values.toSeq.flatMap {
@@ -331,10 +362,12 @@ class ValuesResponderV1 extends ResponderV1 {
                         (propertyIri, valuesWithValueHasOrder)
                 }
 
-                // For each value to be created, generate WHERE clause statements, INSERT clause statements, and an UnverifiedValueV1 (so the successful
-                // creation of the value can be verified later).
-                sparqlGenerationResults: Map[IRI, SparqlGenerationResultForProperty] = groupedNumberedValuesWithValueHasOrder.foldLeft(Map.empty[IRI, SparqlGenerationResultForProperty]) {
-                    case (acc, (propertyIri: IRI, valuesToCreate: Seq[NumberedValueToCreate])) =>
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // Generate SPARQL for each value of each property
+
+                // Make a SparqlGenerationResultForProperty for each property.
+                sparqlGenerationResults: Map[IRI, SparqlGenerationResultForProperty] = groupedNumberedValuesWithValueHasOrder.map {
+                    case (propertyIri: IRI, valuesToCreate: Seq[NumberedValueToCreate]) =>
                         // Construct a list of permission-relevant assertions about the new values of each property,
                         // i.e. the values' owner and project plus their permissions. Use the property's default
                         // permissions to make permissions for the new values.
@@ -395,7 +428,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             propertyIri = propertyIri,
                                             newValueIri = newValueIri,
                                             valueTypeIri = updateValueV1.valueTypeIri,
-                                            linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately below.
+                                            linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                                             maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
                                         ).toString()
 
@@ -404,7 +437,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             valueIndex = valueToCreate.valueIndex,
                                             propertyIri = propertyIri,
                                             value = updateValueV1,
-                                            linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately below.
+                                            linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
                                             permissionRelevantAssertions = permissionRelevantAssertionsForProperty
                                         ).toString()
@@ -422,14 +455,14 @@ class ValuesResponderV1 extends ResponderV1 {
                                 )
                         }
 
-                        acc + (propertyIri -> sparqlGenerationResultForProperty)
+                        propertyIri -> sparqlGenerationResultForProperty
                 }
 
-                // Concatenate all the generated SPARQL into one string for the WHERE clause and one string for the INSERT clause.
-                // Sort the contents of each string by value index.
+                // Concatenate all the generated SPARQL into one string for the WHERE clause and one string for the INSERT clause, sorting
+                // the values by their indexes.
                 resultsForAllProperties: Iterable[SparqlGenerationResultForProperty] = sparqlGenerationResults.values
                 allWhereSparql: String = resultsForAllProperties.flatMap(result => result.whereSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n")
-                allInsertSparql: String = resultsForAllProperties.flatMap(result => result.insertSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n")
+                allInsertSparql: String = resultsForAllProperties.flatMap(result => result.insertSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n") + standoffLinkInsertSparql
 
                 // Collect all the UnverifiedValueV1s for each property.
                 allUnverifiedValues: Map[IRI, Seq[UnverifiedValueV1]] = sparqlGenerationResults.map {
@@ -444,10 +477,10 @@ class ValuesResponderV1 extends ResponderV1 {
         }
 
         for {
-        // Don't allow anonymous users to update values.
+        // Don't allow anonymous users to create resources.
             userIri <- createMultipleValuesRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
-                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to update values"))
+                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to create resources"))
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
@@ -1606,7 +1639,7 @@ class ValuesResponderV1 extends ResponderV1 {
             findResourceResponse <- (storeManager ? SparqlSelectRequest(findResourceSparqlQuery)).mapTo[SparqlSelectResponse]
 
             _ = if (findResourceResponse.results.bindings.isEmpty) {
-                throw new NotFoundException(s"No resource found containing value $valueIri")
+                throw NotFoundException(s"No resource found containing value $valueIri")
             }
 
             resultRowMap = findResourceResponse.getFirstRow.rowMap
