@@ -315,7 +315,7 @@ class SearchResponderV1 extends ResponderV1 {
                     // check if the valuetype of the given propertyIri conforms to the given compop
                     if (!validTypeCompopCombos(propertyObjectClassConstraint).contains(compop)) {
                         // the given combination of propertyIri valtype and compop is not allowed
-                        throw new BadRequestException(s"The combination of propertyIri and compop is invalid")
+                        throw BadRequestException(s"The combination of propertyIri and compop is invalid")
                     }
 
                     val searchParamWithoutValue = SearchCriterion(
@@ -337,7 +337,7 @@ class SearchResponderV1 extends ResponderV1 {
                                 // It is a date, parse and convert it to JD
                                 //
 
-                                val datestring = InputValidation.toDate(searchval, () => throw new BadRequestException(s"Invalid date format: $searchval"))
+                                val datestring = InputValidation.toDate(searchval, () => throw BadRequestException(s"Invalid date format: $searchval"))
 
                                 // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
                                 val parsedDate = datestring.split(InputValidation.calendar_separator)
@@ -399,22 +399,22 @@ class SearchResponderV1 extends ResponderV1 {
 
                             case OntologyConstants.KnoraBase.IntValue =>
                                 // check if string is an integer
-                                val searchString = InputValidation.toInt(searchval, () => throw new BadRequestException(s"Given searchval is not an integer: $searchval")).toString
+                                val searchString = InputValidation.toInt(searchval, () => throw BadRequestException(s"Given searchval is not an integer: $searchval")).toString
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                             case OntologyConstants.KnoraBase.DecimalValue =>
                                 // check if string is a decimal number
-                                val searchString = InputValidation.toBigDecimal(searchval, () => throw new BadRequestException(s"Given searchval is not a decimal number: $searchval")).toString
+                                val searchString = InputValidation.toBigDecimal(searchval, () => throw BadRequestException(s"Given searchval is not a decimal number: $searchval")).toString
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                             case OntologyConstants.KnoraBase.Resource =>
                                 // check if string is a valid IRI
-                                val searchString = InputValidation.toIri(searchval, () => throw new BadRequestException(s"Given searchval is not a valid IRI: $searchval"))
+                                val searchString = InputValidation.toIri(searchval, () => throw BadRequestException(s"Given searchval is not a valid IRI: $searchval"))
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                             case OntologyConstants.KnoraBase.ColorValue =>
                                 // check if string is a hexadecimal RGB-color value
-                                val searchString = InputValidation.toColor(searchval, () => throw new BadRequestException(s"Invalid color format: $searchval"))
+                                val searchString = InputValidation.toColor(searchval, () => throw BadRequestException(s"Invalid color format: $searchval"))
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                             case OntologyConstants.KnoraBase.GeomValue =>
@@ -423,10 +423,10 @@ class SearchResponderV1 extends ResponderV1 {
 
                             case OntologyConstants.KnoraBase.ListValue =>
                                 // check if string represents a node in a list
-                                val searchString = InputValidation.toIri(searchval, () => throw new BadRequestException(s"Given searchval is not a formally valid IRI $searchval"))
+                                val searchString = InputValidation.toIri(searchval, () => throw BadRequestException(s"Given searchval is not a formally valid IRI $searchval"))
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
-                            case other => throw new BadRequestException(s"The value type for the given property $prop is unknown.")
+                            case other => throw BadRequestException(s"The value type for the given property $prop is unknown.")
                         }
                     }
                 }

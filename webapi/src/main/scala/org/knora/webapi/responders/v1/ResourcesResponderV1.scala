@@ -1908,11 +1908,25 @@ class ResourcesResponderV1 extends ResponderV1 {
                             case _ => 0 // order statement is missing, set it to zero
                         }
 
+                        val apiValueV1ForLinkValue = valueUtilV1.makeValueV1(linkValueProps)
+
+                        val linkValueV1: LinkValueV1 = apiValueV1ForLinkValue match {
+                            case linkValueV1: LinkValueV1 => linkValueV1
+                            case _ => throw InconsistentTriplestoreDataException(s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1ForLinkValue.valueTypeIri}")
+                        }
+
+                        // Check the permissions on the LinkValue.
+                        val linkValuePermission = PermissionUtilV1.getUserPermissionOnLinkValueV1(
+                            linkValueIri = linkValueIri,
+                            predicateIri = linkValueV1.predicateIri,
+                            valueProps = linkValueProps,
+                            userProfile = userProfile
+                        )
+
                         // We only allow the user to see information about the link if they have at least view permission on both the link value
                         // and on the target resource.
 
                         val targetResourcePermission = PermissionUtilV1.getUserPermissionV1WithValueProps(targetResourceIri, valueProps, userProfile)
-                        val linkValuePermission = PermissionUtilV1.getUserPermissionV1WithValueProps(linkValueIri, linkValueProps, userProfile)
 
                         val linkPermission = (targetResourcePermission, linkValuePermission) match {
                             case (Some(targetResourcePermissionCode), Some(linkValuePermissionCode)) => Some(scala.math.min(targetResourcePermissionCode, linkValuePermissionCode))

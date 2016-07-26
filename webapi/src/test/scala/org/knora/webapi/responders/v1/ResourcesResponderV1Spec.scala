@@ -188,7 +188,7 @@ object ResourcesResponderV1Spec {
                             None,
                             None))))))
 
-    private val anythingIncomingLinks = Vector(IncomingV1(
+    private val hasOtherThingIncomingLink = IncomingV1(
         value = Some("A thing that only project members can see"),
         resinfo = ResourceInfoV1(
             regions = None,
@@ -205,7 +205,16 @@ object ResourcesResponderV1Spec {
             restype_label = Some("Ding"),
             restype_name = Some("http://www.knora.org/ontology/anything#Thing"),
             restype_id = "http://www.knora.org/ontology/anything#Thing",
-            permissions = Vector(("http://www.knora.org/ontology/knora-base#hasViewPermission", "http://www.knora.org/ontology/knora-base#ProjectMember")),
+            permissions = Vector(
+                Tuple2(
+                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
+                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
+                ),
+                Tuple2(
+                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
+                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
+                )
+            ),
             person_id = "http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q",
             project_id = "http://data.knora.org/projects/anything"
         ),
@@ -213,7 +222,95 @@ object ResourcesResponderV1Spec {
             pid = "http://www.knora.org/ontology/anything#hasOtherThing",
             id = "http://data.knora.org/project-thing-1"
         )
-    ))
+    )
+
+    private val hasStandoffLinkToIncomingLink = IncomingV1(
+        value = Some("A thing that only project members can see"),
+        resinfo = ResourceInfoV1(
+            regions = None,
+            firstproperty = Some("A thing that only project members can see"),
+            value_of = 0,
+            lastmod = "0000-00-00 00:00:00",
+            resclass_has_location = false,
+            resclass_name = "object",
+            locdata = None,
+            locations = None,
+            preview = None,
+            restype_iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
+            restype_description = Some("Diese Resource-Klasse beschreibt ein Ding"),
+            restype_label = Some("Ding"),
+            restype_name = Some("http://www.knora.org/ontology/anything#Thing"),
+            restype_id = "http://www.knora.org/ontology/anything#Thing",
+            permissions = Vector(
+                Tuple2(
+                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
+                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
+                ),
+                Tuple2(
+                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
+                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
+                )
+            ),
+            person_id = "http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q",
+            project_id = "http://data.knora.org/projects/anything"
+        ),
+        ext_res_id = ExternalResourceIDV1(
+            pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
+            id = "http://data.knora.org/project-thing-1"
+        )
+    )
+
+    private val hasOtherThingOutgoingLink = PropertyV1(
+        locations = Nil,
+        value_rights = Vector(Some(8)),
+        value_firstprops = Vector(Some("Another thing that only project members can see")),
+        value_iconsrcs = Vector(Some("http://localhost:3335/project-icons/anything/thing.png")),
+        value_restype = Vector(Some("Ding")),
+        comments = Vector(""),
+        value_ids = Vector("http://data.knora.org/project-thing-1/values/0"),
+        values = Vector(LinkV1(
+            valueResourceClassIcon = Some("http://localhost:3335/project-icons/anything/thing.png"),
+            valueResourceClassLabel = Some("Ding"),
+            valueResourceClass = Some("http://www.knora.org/ontology/anything#Thing"),
+            valueLabel = Some("Another thing that only project members can see"),
+            targetResourceIri = "http://data.knora.org/project-thing-2"
+        )),
+        occurrence = Some("0-n"),
+        attributes = "restypeid=http://www.knora.org/ontology/anything#Thing",
+        label = Some("Ein anderes Ding"),
+        is_annotation = "0",
+        guielement = Some("searchbox"),
+        guiorder = Some(1),
+        valuetype_id = Some("http://www.knora.org/ontology/knora-base#LinkValue"),
+        regular_property = 1,
+        pid = "http://www.knora.org/ontology/anything#hasOtherThing"
+    )
+
+    private val hasStandoffLinkToOutgoingLink = PropertyV1(
+        locations = Nil,
+        value_rights = Vector(Some(2)),
+        value_firstprops = Vector(Some("Another thing that only project members can see")),
+        value_iconsrcs = Vector(Some("http://localhost:3335/project-icons/anything/thing.png")),
+        value_restype = Vector(Some("Ding")),
+        comments = Vector(""),
+        value_ids = Vector("http://data.knora.org/project-thing-1/values/1"),
+        values = Vector(LinkV1(
+            valueResourceClassIcon = Some("http://localhost:3335/project-icons/anything/thing.png"),
+            valueResourceClassLabel = Some("Ding"),
+            valueResourceClass = Some("http://www.knora.org/ontology/anything#Thing"),
+            valueLabel = Some("Another thing that only project members can see"),
+            targetResourceIri = "http://data.knora.org/project-thing-2"
+        )),
+        occurrence = None,
+        attributes = "restypeid=http://www.knora.org/ontology/knora-base#Resource",
+        label = Some("hat Standoff Link zu"),
+        is_annotation = "0",
+        guielement = None,
+        guiorder = None,
+        valuetype_id = Some("http://www.knora.org/ontology/knora-base#LinkValue"),
+        regular_property = 1,
+        pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
+    )
 }
 
 
@@ -512,21 +609,6 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         // check that there are 7 locations
         assert(received.resource_context.resinfo.get.locations.get.length == 7)
 
-    }
-
-    private def checkForLinkToOtherThing(received: ResourceFullResponseV1): Boolean = {
-        received.props.get.properties.exists {
-            prop =>
-                prop.pid == "http://www.knora.org/ontology/anything#hasOtherThing" &&
-                    prop.value_ids == Vector("http://data.knora.org/project-thing-1/values/0") &&
-                    prop.values == Vector(LinkV1(
-                        valueResourceClassIcon = Some("http://localhost:3335/project-icons/anything/thing.png"),
-                        valueResourceClassLabel = Some("Ding"),
-                        valueResourceClass = Some("http://www.knora.org/ontology/anything#Thing"),
-                        valueLabel = Some("Another thing that only project members can see"),
-                        targetResourceIri = "http://data.knora.org/project-thing-2"
-                    ))
-        }
     }
 
     "Load test data" in {
@@ -926,41 +1008,58 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "not show a user an incoming link if they have permission to see both resources, but not the link" in {
-            // The link's owner, anythingUser1, should see the link.
+        "should show incoming standoff links if the user has view permission on both resources, but show other incoming links only if the user also has view permission on the link" in {
+            // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
 
             actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-2", userProfile = anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
-                    assert(response.incoming == anythingIncomingLinks)
+                    response.incoming.size should ===(2)
+                    response.incoming.contains(hasStandoffLinkToIncomingLink) should ===(true)
+                    response.incoming.contains(hasOtherThingIncomingLink) should ===(true)
             }
 
-            // But another user should not see the link.
+            // But another user should see only the hasStandoffLinkTo link.
 
             actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-2", userProfile = anythingUser2)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
-                    assert(response.incoming.isEmpty)
+                    response.incoming.contains(hasStandoffLinkToIncomingLink) should ===(true)
+                    response.incoming.contains(hasOtherThingIncomingLink) should ===(false)
             }
         }
 
-        "not show a user an outgoing link if they have permission to see both resources, but not the link" in {
-            // The link's owner, anythingUser1, should see the link.
+        "should show outgoing standoff links if the user has view permission on both resources, but show other incoming links only if the user also has view permission on the link" in {
+            // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
 
             actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-1", userProfile = anythingUser1)
 
             expectMsgPF(timeout) {
-                case response: ResourceFullResponseV1 => checkForLinkToOtherThing(response) should ===(true)
+                case response: ResourceFullResponseV1 =>
+                    val linkProps = response.props.get.properties.filter {
+                        prop => prop.values.nonEmpty && prop.valuetype_id.get != OntologyConstants.KnoraBase.TextValue
+                    }
+
+                    linkProps.size should ===(2)
+                    linkProps.contains(hasStandoffLinkToOutgoingLink) should ===(true)
+                    linkProps.contains(hasOtherThingOutgoingLink) should ===(true)
             }
 
-            // But another user should not see the link.
+            // But another user should see only the hasStandoffLinkTo link.
 
             actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-1", userProfile = anythingUser2)
 
             expectMsgPF(timeout) {
-                case response: ResourceFullResponseV1 => checkForLinkToOtherThing(response) should ===(false)
+                case response: ResourceFullResponseV1 =>
+                    val linkProps = response.props.get.properties.filter {
+                        prop => prop.values.nonEmpty && prop.valuetype_id.get != OntologyConstants.KnoraBase.TextValue
+                    }
+
+                    linkProps.size should ===(1)
+                    linkProps.contains(hasStandoffLinkToOutgoingLink) should ===(true)
+                    linkProps.contains(hasOtherThingOutgoingLink) should ===(false)
             }
         }
     }
