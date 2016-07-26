@@ -279,7 +279,10 @@ class ValuesResponderV1 extends ResponderV1 {
                 // We could be creating several text values with standoff links to the same target resource. Count
                 // the number of standoff links to each target resource.
                 targetIris: Seq[(IRI, Int)] = createMultipleValuesRequest.values.values.flatten.collect {
-                    case CreateValueV1WithComment(textValueV1: TextValueV1, _) => textValueV1.resource_reference
+                    case CreateValueV1WithComment(textValueV1: TextValueV1, _) =>
+                        // check that resource references are consistent in `resource_reference` and linking standoff tags
+                        checkTextValueResourceRefs(textValueV1)
+                        textValueV1.resource_reference
                 }.flatten.groupBy(identity).mapValues(_.size).toSeq // http://stackoverflow.com/a/10934489
 
                 // Construct a SparqlTemplateLinkUpdate to create one link and one LinkValue for each resource that is
