@@ -47,20 +47,18 @@ object ValuesResponderV1Spec {
     private val miscResourceIri = "http://data.knora.org/miscResource"
     private val aThingIri = "http://data.knora.org/a-thing"
 
-    private val incunabulaUserData = UserDataV1(
-        email = Some("test@test.ch"),
-        lastname = Some("Test"),
-        firstname = Some("User"),
-        username = Some("testuser"),
-        token = None,
-        user_id = Some("http://data.knora.org/users/b83acc5f05"),
-        lang = "de"
-    )
-
     private val incunabulaUser = UserProfileV1(
         projects = Vector("http://data.knora.org/projects/77275339"),
         groups = Nil,
-        userData = incunabulaUserData
+        userData = UserDataV1(
+            email = Some("test@test.ch"),
+            lastname = Some("Test"),
+            firstname = Some("User"),
+            username = Some("testuser"),
+            token = None,
+            user_id = Some("http://data.knora.org/users/b83acc5f05"),
+            lang = "de"
+        )
     )
 
     private val imagesUser = UserProfileV1(
@@ -82,7 +80,7 @@ object ValuesResponderV1Spec {
     )
 
     private val versionHistoryWithHiddenVersion = ValueVersionHistoryGetResponseV1(
-        userdata = incunabulaUserData,
+        userdata = incunabulaUser.userData,
         valueVersions = Vector(
             ValueVersionV1(
                 previousValue = None, // The user doesn't have permission to see the previous value.
@@ -325,7 +323,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         referenceCount = 1
                     ),
                     rights = 2,
-                    userdata = incunabulaUserData
+                    userdata = incunabulaUser.userData
                 )
             )
         }
@@ -762,7 +760,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         referenceCount = 1
                     ),
                     rights = 2,
-                    userdata = incunabulaUserData
+                    userdata = incunabulaUser.userData
                 )
             )
 
@@ -842,7 +840,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         referenceCount = 1
                     ),
                     rights = 2,
-                    userdata = incunabulaUserData
+                    userdata = incunabulaUser.userData
                 )
             )
 
@@ -915,7 +913,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         referenceCount = 2
                     ),
                     rights = 2,
-                    userdata = incunabulaUserData
+                    userdata = incunabulaUser.userData
                 )
             )
 
@@ -976,7 +974,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         referenceCount = 1
                     ),
                     rights = 2,
-                    userdata = incunabulaUserData
+                    userdata = incunabulaUser.userData
                 )
             )
 
@@ -1115,7 +1113,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         referenceCount = 1
                     ),
                     rights = 2,
-                    userdata = incunabulaUserData
+                    userdata = incunabulaUser.userData
                 )
             )
 

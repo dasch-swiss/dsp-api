@@ -25,10 +25,10 @@ import java.util.UUID
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
-import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
+import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
@@ -41,167 +41,37 @@ import scala.concurrent.duration._
   */
 object ResourcesResponderV1Spec {
 
-    // A test UserDataV1.
-    private val userData = UserDataV1(
-        email = Some("test@test.ch"),
-        lastname = Some("Test"),
-        firstname = Some("User"),
-        username = Some("testuser"),
-        token = None,
-        user_id = Some("http://data.knora.org/users/b83acc5f05"),
-        lang = "de"
-    )
-
-    // A test UserProfileV1.
-    private val userProfile = UserProfileV1(
+    private val incunabulaUser = UserProfileV1(
         projects = Vector("http://data.knora.org/projects/77275339"),
         groups = Nil,
-        userData = userData
-    )
-}
-
-
-/**
-  * Tests [[ResourcesResponderV1]].
-  */
-class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
-
-    // Construct the actors needed for this test.
-    private val actorUnderTest = TestActorRef[ResourcesResponderV1]
-
-    val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
-
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
-    val rdfDataObjects = List(
-        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
-        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
+        userData = UserDataV1(
+            email = Some("test@test.ch"),
+            lastname = Some("Test"),
+            firstname = Some("User"),
+            username = Some("testuser"),
+            token = None,
+            user_id = Some("http://data.knora.org/users/b83acc5f05"),
+            lang = "de"
+        )
     )
 
-    // The default timeout for receiving reply messages from actors.
-    private val timeout = 60.seconds
-
-    private val newBookResourceIri = new MutableTestIri
-    private val newPageResourceIri = new MutableTestIri
-
-    private def compareResourceFullResponses(received: ResourceFullResponseV1, expected: ResourceFullResponseV1): Unit = {
-        // println(MessageUtil.toSource(received))
-
-        assert(received.access == expected.access, "access does not match")
-        assert(received.userdata == expected.userdata, "userdata does not match")
-
-        val expectedResinfoWithSortedPermissions = expected.resinfo.get.copy(
-            permissions = expected.resinfo.get.permissions.sorted
+    private val anythingUser1 = UserProfileV1(
+        projects = Vector("http://data.knora.org/projects/anything"),
+        groups = Nil,
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q"),
+            lang = "de"
         )
+    )
 
-        val receivedResInfoWithSortedPermissions = received.resinfo.get.copy(
-            permissions = received.resinfo.get.permissions.sorted
+    private val anythingUser2 = UserProfileV1(
+        projects = Vector("http://data.knora.org/projects/anything"),
+        groups = Nil,
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ"),
+            lang = "de"
         )
-
-        assert(receivedResInfoWithSortedPermissions == expectedResinfoWithSortedPermissions , "resinfo does not match")
-        assert(received.resdata == expected.resdata, "resdata does not match")
-
-        // sort permissions in incoming resinfo
-        val expectedIncomingWithSortedPermissions = expected.incoming.map {
-            case (incomingReference: IncomingV1) => incomingReference.copy(
-                resinfo = incomingReference.resinfo.copy(
-                    permissions = incomingReference.resinfo.permissions.sorted
-                )
-            )
-        }
-
-        val receivedIncomingWithSortedPermissions = received.incoming.map {
-            case (incomingReference: IncomingV1) => incomingReference.copy(
-                resinfo = incomingReference.resinfo.copy(
-                    permissions = incomingReference.resinfo.permissions.sorted
-                )
-            )
-        }
-
-        assert(receivedIncomingWithSortedPermissions == expectedIncomingWithSortedPermissions, "incoming does not match")
-
-        val sortedReceivedProps = received.props.get.properties.sortBy(_.pid)
-        val sortedExpectedProps = expected.props.get.properties.sortBy(_.pid)
-
-        assert(sortedReceivedProps.length == sortedExpectedProps.length, s"\n********** expected these properties:\n${MessageUtil.toSource(sortedExpectedProps)}\n********** received these properties:\n${MessageUtil.toSource(sortedReceivedProps)}")
-
-        sortedExpectedProps.zip(sortedReceivedProps).foreach {
-            case (expectedProp: PropertyV1, receivedProp: PropertyV1) =>
-
-                // sort property attributes
-                val expectedPropWithSortedAttr = expectedProp.copy(
-                    attributes = expectedProp.attributes.sorted
-                )
-
-                val receivedPropWithSortedAttr = receivedProp.copy(
-                    attributes = receivedProp.attributes.sorted
-                )
-
-                assert(receivedPropWithSortedAttr == expectedPropWithSortedAttr, s"These props do not match:\n********** Expected:\n${MessageUtil.toSource(expectedProp)}\n********** Received:\n${MessageUtil.toSource(receivedProp)}")
-        }
-    }
-
-    private def compareResourceCompoundContextResponses(received: ResourceContextResponseV1, expected: ResourceContextResponseV1): Unit = {
-        val receivedContext = received.resource_context
-        val expectedContext = expected.resource_context
-
-        assert(receivedContext.firstprop == expectedContext.firstprop, "firstprop does not match")
-        assert(receivedContext.context == expectedContext.context, "context does not match")
-        assert(receivedContext.preview == expectedContext.preview, "preview does not match")
-        assert(receivedContext.locations.nonEmpty, "no locations given")
-        assert(receivedContext.locations.get.size == 402, "the length of locations did not match")
-        assert(receivedContext.locations.get.head == ResourcesResponderV1SpecContextData.expectedFirstLocationOfBookResourceContextResponse, "first location did not match")
-        assert(receivedContext.canonical_res_id == expectedContext.canonical_res_id, "canonical_res_id does not match")
-        assert(receivedContext.region == expectedContext.region, "region does not match")
-        assert(receivedContext.res_id == expectedContext.res_id, "res_id does not match")
-    }
-
-    private def compareResourcePartOfContextResponses(received: ResourceContextResponseV1, expected: ResourceContextResponseV1): Unit = {
-        val receivedContext = received.resource_context
-        val expectedContext = expected.resource_context
-
-        val expectexResinfoWithSortedPermissions = expectedContext.resinfo match {
-            case Some(resinfo: ResourceInfoV1) =>
-                Some(resinfo.copy(
-                    permissions = resinfo.permissions.sorted
-                ))
-            case None => None
-        }
-
-        val receivedResinfoWithSortedPermissions = receivedContext.resinfo match {
-            case Some(resinfo: ResourceInfoV1) =>
-                Some(resinfo.copy(
-                    permissions = resinfo.permissions.sorted
-                ))
-            case None => None
-        }
-
-        assert(receivedResinfoWithSortedPermissions == expectexResinfoWithSortedPermissions , "resinfo does not match")
-        assert(receivedContext.parent_res_id == expectedContext.parent_res_id, "parent_res_id does not match")
-        assert(receivedContext.context == expectedContext.context, "context does not match")
-        assert(receivedContext.canonical_res_id == expectedContext.canonical_res_id, "canonical_res_id does not match")
-
-        val expectexParentResinfoWithSortedPermissions = expectedContext.parent_resinfo match {
-            case Some(resinfo: ResourceInfoV1) =>
-                Some(resinfo.copy(
-                    permissions = resinfo.permissions.sorted
-                ))
-            case None => None
-        }
-
-        val receivedParentResinfoWithSortedPermissions = receivedContext.parent_resinfo match {
-            case Some(resinfo: ResourceInfoV1) =>
-                Some(resinfo.copy(
-                    permissions = resinfo.permissions.sorted
-                ))
-            case None => None
-        }
-
-        assert(receivedParentResinfoWithSortedPermissions == expectexParentResinfoWithSortedPermissions, "parent_resinfo does not match")
-    }
+    )
 
     val ReiseInsHeiligelandThreeValues = ResourceSearchResponseV1(
         resources = Vector(ResourceSearchResultRowV1(
@@ -238,89 +108,6 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             lang = "de"
         )
     )
-
-    private def compareResourceSearchResults(received: ResourceSearchResponseV1, expected: ResourceSearchResponseV1): Unit = {
-
-        assert(received.resources == expected.resources, "resources did not match")
-    }
-
-    private def checkResourceCreation(received: ResourceCreateResponseV1, expected: Map[IRI, Seq[ApiValueV1]]): Unit = {
-        // sort values by their string representation
-        val sortedValuesReceived: Map[IRI, Seq[ResourceCreateValueResponseV1]] = received.results.map {
-            case (propIri, propValues: Seq[ResourceCreateValueResponseV1]) => (propIri, propValues.sortBy {
-                case valueObject: ResourceCreateValueResponseV1 =>
-                    val stringValue = valueObject.value.textval.map {
-                        case (valType: LiteralValueType.Value, value: String) => value // get string and ignore value type
-                    }.head // each value is represented by a map consisting of only one item (e.g. string -> "book title")
-                    stringValue
-            })
-        }
-
-        // sort values by their string representation
-        val sortedValuesExpected: Map[IRI, Seq[ResourceCreateValueResponseV1]] = expected.map {
-            case (propIri, propValues) => (propIri, propValues.sortBy(_.toString))
-        }.map {
-            // turn the expected ApiValueV1s in ResourceCreateValueResponseV1 (these are returned by the actor).
-            case (propIri: IRI, propValues: Seq[ApiValueV1]) =>
-                (propIri, propValues.map {
-                    case (propValue: ApiValueV1) =>
-                        val valueResponse = CreateValueResponseV1(
-                            value = propValue,
-                            rights = 6,
-                            id = "http://www.knora.org/test/values/test",
-                            userdata = ResourcesResponderV1Spec.userProfile.userData
-                        )
-
-                        // convert CreateValueResponseV1 to a ResourceCreateValueResponseV1
-                        MessageUtil.convertCreateValueResponseV1ToResourceCreateValueResponseV1(
-                            resourceIri = "http://www.knora.org/test",
-                            ownerIri = "http://data.knora.org/users/b83acc5f05",
-                            propertyIri = propIri,
-                            valueResponse = valueResponse
-                        )
-                })
-        }
-
-        // compare expected and received values
-        sortedValuesExpected.foreach {
-            case (propIri, propValuesExpected) =>
-                (propValuesExpected, sortedValuesReceived(propIri)).zipped.foreach {
-                    case (expected: ResourceCreateValueResponseV1, received: ResourceCreateValueResponseV1) =>
-                        assert(received.value.textval == expected.value.textval, "textval did not match")
-                        assert(received.value.ival == expected.value.ival, "ival did not match")
-                        assert(received.value.dval == expected.value.dval, "dval did not match")
-                        assert(received.value.dateval1 == expected.value.dateval1, "dateval1 did not match")
-                        assert(received.value.dateval2 == expected.value.dateval2, "dateval2 did not match")
-                        assert(received.value.calendar == expected.value.calendar, "calendar did not match")
-                        assert(received.value.dateprecision1 == expected.value.dateprecision1, "dateprecision1 did not match")
-                        assert(received.value.dateprecision2 == expected.value.dateprecision2, "dateprecision2 did not match")
-                        assert(received.value.timeval1 == expected.value.timeval1, "timeval1 did not match")
-                        assert(received.value.timeval2 == expected.value.timeval2, "timeval2 did not match")
-                }
-        }
-
-    }
-
-    private def getLastModificationDate(resourceIri: IRI): Option[String] = {
-        val lastModSparqlQuery = queries.sparql.v1.txt.getLastModificationDate(
-            triplestore = settings.triplestoreType,
-            resourceIri = resourceIri
-        ).toString()
-
-        storeManager ! SparqlSelectRequest(lastModSparqlQuery)
-
-        expectMsgPF(timeout) {
-            case response: SparqlSelectResponse =>
-                val rows = response.results.bindings
-                assert(rows.size <= 1, s"Resource $resourceIri has more than one instance of knora-base:lastModificationDate")
-
-                if (rows.size == 1) {
-                    Some(rows.head.rowMap("lastModificationDate"))
-                } else {
-                    None
-                }
-        }
-    }
 
     private val propertiesGetResponseV1Region = PropertiesGetResponseV1(
         PropsGetV1(
@@ -401,12 +188,270 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                             None,
                             None))))))
 
+    private val anythingIncomingLinks = Vector(IncomingV1(
+        value = Some("A thing that only project members can see"),
+        resinfo = ResourceInfoV1(
+            regions = None,
+            firstproperty = Some("A thing that only project members can see"),
+            value_of = 0,
+            lastmod = "0000-00-00 00:00:00",
+            resclass_has_location = false,
+            resclass_name = "object",
+            locdata = None,
+            locations = None,
+            preview = None,
+            restype_iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
+            restype_description = Some("Diese Resource-Klasse beschreibt ein Ding"),
+            restype_label = Some("Ding"),
+            restype_name = Some("http://www.knora.org/ontology/anything#Thing"),
+            restype_id = "http://www.knora.org/ontology/anything#Thing",
+            permissions = Vector(("http://www.knora.org/ontology/knora-base#hasViewPermission", "http://www.knora.org/ontology/knora-base#ProjectMember")),
+            person_id = "http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q",
+            project_id = "http://data.knora.org/projects/anything"
+        ),
+        ext_res_id = ExternalResourceIDV1(
+            pid = "http://www.knora.org/ontology/anything#hasOtherThing",
+            id = "http://data.knora.org/project-thing-1"
+        )
+    ))
+}
 
-    private def comparePropertiesGetResponse(received: PropertiesGetResponseV1, expected: PropertiesGetResponseV1) = {
+
+/**
+  * Tests [[ResourcesResponderV1]].
+  */
+class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
+    import ResourcesResponderV1Spec._
+
+    // Construct the actors needed for this test.
+    private val actorUnderTest = TestActorRef[ResourcesResponderV1]
+
+    val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
+
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+
+    val rdfDataObjects = List(
+        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
+        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
+        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
+        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+    )
+
+    // The default timeout for receiving reply messages from actors.
+    private val timeout = 60.seconds
+
+    private val newBookResourceIri = new MutableTestIri
+    private val newPageResourceIri = new MutableTestIri
+
+    private def compareResourceFullResponses(received: ResourceFullResponseV1, expected: ResourceFullResponseV1): Unit = {
+        // println(MessageUtil.toSource(received))
+
+        assert(received.access == expected.access, "access does not match")
+        assert(received.userdata == expected.userdata, "userdata does not match")
+
+        val expectedResinfoWithSortedPermissions = expected.resinfo.get.copy(
+            permissions = expected.resinfo.get.permissions.sorted
+        )
+
+        val receivedResInfoWithSortedPermissions = received.resinfo.get.copy(
+            permissions = received.resinfo.get.permissions.sorted
+        )
+
+        assert(receivedResInfoWithSortedPermissions == expectedResinfoWithSortedPermissions, "resinfo does not match")
+        assert(received.resdata == expected.resdata, "resdata does not match")
+
+        // sort permissions in incoming resinfo
+        val expectedIncomingWithSortedPermissions = expected.incoming.map {
+            case (incomingReference: IncomingV1) => incomingReference.copy(
+                resinfo = incomingReference.resinfo.copy(
+                    permissions = incomingReference.resinfo.permissions.sorted
+                )
+            )
+        }
+
+        val receivedIncomingWithSortedPermissions = received.incoming.map {
+            case (incomingReference: IncomingV1) => incomingReference.copy(
+                resinfo = incomingReference.resinfo.copy(
+                    permissions = incomingReference.resinfo.permissions.sorted
+                )
+            )
+        }
+
+        assert(receivedIncomingWithSortedPermissions == expectedIncomingWithSortedPermissions, "incoming does not match")
+
+        val sortedReceivedProps = received.props.get.properties.sortBy(_.pid)
+        val sortedExpectedProps = expected.props.get.properties.sortBy(_.pid)
+
+        assert(sortedReceivedProps.length == sortedExpectedProps.length, s"\n********** expected these properties:\n${MessageUtil.toSource(sortedExpectedProps)}\n********** received these properties:\n${MessageUtil.toSource(sortedReceivedProps)}")
+
+        sortedExpectedProps.zip(sortedReceivedProps).foreach {
+            case (expectedProp: PropertyV1, receivedProp: PropertyV1) =>
+
+                // sort property attributes
+                val expectedPropWithSortedAttr = expectedProp.copy(
+                    attributes = expectedProp.attributes.sorted
+                )
+
+                val receivedPropWithSortedAttr = receivedProp.copy(
+                    attributes = receivedProp.attributes.sorted
+                )
+
+                assert(receivedPropWithSortedAttr == expectedPropWithSortedAttr, s"These props do not match:\n********** Expected:\n${MessageUtil.toSource(expectedProp)}\n********** Received:\n${MessageUtil.toSource(receivedProp)}")
+        }
+    }
+
+    private def compareResourceCompoundContextResponses(received: ResourceContextResponseV1, expected: ResourceContextResponseV1): Unit = {
+        val receivedContext = received.resource_context
+        val expectedContext = expected.resource_context
+
+        assert(receivedContext.firstprop == expectedContext.firstprop, "firstprop does not match")
+        assert(receivedContext.context == expectedContext.context, "context does not match")
+        assert(receivedContext.preview == expectedContext.preview, "preview does not match")
+        assert(receivedContext.locations.nonEmpty, "no locations given")
+        assert(receivedContext.locations.get.size == 402, "the length of locations did not match")
+        assert(receivedContext.locations.get.head == ResourcesResponderV1SpecContextData.expectedFirstLocationOfBookResourceContextResponse, "first location did not match")
+        assert(receivedContext.canonical_res_id == expectedContext.canonical_res_id, "canonical_res_id does not match")
+        assert(receivedContext.region == expectedContext.region, "region does not match")
+        assert(receivedContext.res_id == expectedContext.res_id, "res_id does not match")
+    }
+
+    private def compareResourcePartOfContextResponses(received: ResourceContextResponseV1, expected: ResourceContextResponseV1): Unit = {
+        val receivedContext = received.resource_context
+        val expectedContext = expected.resource_context
+
+        val expectexResinfoWithSortedPermissions = expectedContext.resinfo match {
+            case Some(resinfo: ResourceInfoV1) =>
+                Some(resinfo.copy(
+                    permissions = resinfo.permissions.sorted
+                ))
+            case None => None
+        }
+
+        val receivedResinfoWithSortedPermissions = receivedContext.resinfo match {
+            case Some(resinfo: ResourceInfoV1) =>
+                Some(resinfo.copy(
+                    permissions = resinfo.permissions.sorted
+                ))
+            case None => None
+        }
+
+        assert(receivedResinfoWithSortedPermissions == expectexResinfoWithSortedPermissions, "resinfo does not match")
+        assert(receivedContext.parent_res_id == expectedContext.parent_res_id, "parent_res_id does not match")
+        assert(receivedContext.context == expectedContext.context, "context does not match")
+        assert(receivedContext.canonical_res_id == expectedContext.canonical_res_id, "canonical_res_id does not match")
+
+        val expectexParentResinfoWithSortedPermissions = expectedContext.parent_resinfo match {
+            case Some(resinfo: ResourceInfoV1) =>
+                Some(resinfo.copy(
+                    permissions = resinfo.permissions.sorted
+                ))
+            case None => None
+        }
+
+        val receivedParentResinfoWithSortedPermissions = receivedContext.parent_resinfo match {
+            case Some(resinfo: ResourceInfoV1) =>
+                Some(resinfo.copy(
+                    permissions = resinfo.permissions.sorted
+                ))
+            case None => None
+        }
+
+        assert(receivedParentResinfoWithSortedPermissions == expectexParentResinfoWithSortedPermissions, "parent_resinfo does not match")
+    }
+
+
+    private def compareResourceSearchResults(received: ResourceSearchResponseV1, expected: ResourceSearchResponseV1): Unit = {
+
+        assert(received.resources == expected.resources, "resources did not match")
+    }
+
+    private def checkResourceCreation(received: ResourceCreateResponseV1, expected: Map[IRI, Seq[ApiValueV1]]): Unit = {
+        // sort values by their string representation
+        val sortedValuesReceived: Map[IRI, Seq[ResourceCreateValueResponseV1]] = received.results.map {
+            case (propIri, propValues: Seq[ResourceCreateValueResponseV1]) => (propIri, propValues.sortBy {
+                valueObject: ResourceCreateValueResponseV1 =>
+                    val stringValue = valueObject.value.textval.map {
+                        case (valType: LiteralValueType.Value, value: String) => value // get string and ignore value type
+                    }.head // each value is represented by a map consisting of only one item (e.g. string -> "book title")
+                    stringValue
+            })
+        }
+
+        // sort values by their string representation
+        val sortedValuesExpected: Map[IRI, Seq[ResourceCreateValueResponseV1]] = expected.map {
+            case (propIri, propValues) => (propIri, propValues.sortBy(_.toString))
+        }.map {
+            // turn the expected ApiValueV1s in ResourceCreateValueResponseV1 (these are returned by the actor).
+            case (propIri: IRI, propValues: Seq[ApiValueV1]) =>
+                (propIri, propValues.map {
+                    case (propValue: ApiValueV1) =>
+                        val valueResponse = CreateValueResponseV1(
+                            value = propValue,
+                            rights = 6,
+                            id = "http://www.knora.org/test/values/test",
+                            userdata = incunabulaUser.userData
+                        )
+
+                        // convert CreateValueResponseV1 to a ResourceCreateValueResponseV1
+                        MessageUtil.convertCreateValueResponseV1ToResourceCreateValueResponseV1(
+                            resourceIri = "http://www.knora.org/test",
+                            ownerIri = "http://data.knora.org/users/b83acc5f05",
+                            propertyIri = propIri,
+                            valueResponse = valueResponse
+                        )
+                })
+        }
+
+        // compare expected and received values
+        sortedValuesExpected.foreach {
+            case (propIri, propValuesExpected) =>
+                (propValuesExpected, sortedValuesReceived(propIri)).zipped.foreach {
+                    case (expected: ResourceCreateValueResponseV1, received: ResourceCreateValueResponseV1) =>
+                        assert(received.value.textval == expected.value.textval, "textval did not match")
+                        assert(received.value.ival == expected.value.ival, "ival did not match")
+                        assert(received.value.dval == expected.value.dval, "dval did not match")
+                        assert(received.value.dateval1 == expected.value.dateval1, "dateval1 did not match")
+                        assert(received.value.dateval2 == expected.value.dateval2, "dateval2 did not match")
+                        assert(received.value.calendar == expected.value.calendar, "calendar did not match")
+                        assert(received.value.dateprecision1 == expected.value.dateprecision1, "dateprecision1 did not match")
+                        assert(received.value.dateprecision2 == expected.value.dateprecision2, "dateprecision2 did not match")
+                        assert(received.value.timeval1 == expected.value.timeval1, "timeval1 did not match")
+                        assert(received.value.timeval2 == expected.value.timeval2, "timeval2 did not match")
+                }
+        }
+
+    }
+
+    private def getLastModificationDate(resourceIri: IRI): Option[String] = {
+        val lastModSparqlQuery = queries.sparql.v1.txt.getLastModificationDate(
+            triplestore = settings.triplestoreType,
+            resourceIri = resourceIri
+        ).toString()
+
+        storeManager ! SparqlSelectRequest(lastModSparqlQuery)
+
+        expectMsgPF(timeout) {
+            case response: SparqlSelectResponse =>
+                val rows = response.results.bindings
+                assert(rows.size <= 1, s"Resource $resourceIri has more than one instance of knora-base:lastModificationDate")
+
+                if (rows.size == 1) {
+                    Some(rows.head.rowMap("lastModificationDate"))
+                } else {
+                    None
+                }
+        }
+    }
+
+    private def comparePropertiesGetResponse(received: PropertiesGetResponseV1, expected: PropertiesGetResponseV1): Unit = {
 
         assert(received.properties.properties.length == expected.properties.properties.length, "The length of given properties is not correct.")
 
-        expected.properties.properties.sortBy { // sort by property Iri
+        expected.properties.properties.sortBy {
+            // sort by property Iri
             prop => prop.pid
         }.zip(received.properties.properties.sortBy {
             prop => prop.pid
@@ -431,7 +476,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
     }
 
-    private def comparePageContextRegionResponse(received: ResourceContextResponseV1) = {
+    private def comparePageContextRegionResponse(received: ResourceContextResponseV1): Unit = {
 
         assert(received.resource_context.resinfo.nonEmpty)
 
@@ -455,7 +500,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     }
 
-    private def compareNewPageContextResponse(received: ResourceContextResponseV1) = {
+    private def compareNewPageContextResponse(received: ResourceContextResponseV1): Unit = {
 
         assert(received.resource_context.resinfo.nonEmpty)
 
@@ -469,6 +514,21 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     }
 
+    private def checkForLinkToOtherThing(received: ResourceFullResponseV1): Boolean = {
+        received.props.get.properties.exists {
+            prop =>
+                prop.pid == "http://www.knora.org/ontology/anything#hasOtherThing" &&
+                    prop.value_ids == Vector("http://data.knora.org/project-thing-1/values/0") &&
+                    prop.values == Vector(LinkV1(
+                        valueResourceClassIcon = Some("http://localhost:3335/project-icons/anything/thing.png"),
+                        valueResourceClassLabel = Some("Ding"),
+                        valueResourceClass = Some("http://www.knora.org/ontology/anything#Thing"),
+                        valueLabel = Some("Another thing that only project members can see"),
+                        targetResourceIri = "http://data.knora.org/project-thing-2"
+                    ))
+        }
+    }
+
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
@@ -477,7 +537,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
     "The resources responder" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/c5058f3a", userProfile = ResourcesResponderV1Spec.userProfile)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/c5058f3a", userProfile = incunabulaUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse)
@@ -486,7 +546,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "return a full description of the first page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F8a0b1e75
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/8a0b1e75", userProfile = ResourcesResponderV1Spec.userProfile)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/8a0b1e75", userProfile = incunabulaUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse)
@@ -495,7 +555,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "return a region with a comment containing standoff information (disabled because of issue 17)" ignore {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/047db418ae06", userProfile = ResourcesResponderV1Spec.userProfile)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/047db418ae06", userProfile = incunabulaUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -506,7 +566,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "return the context (describing 402 pages) of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?reqtype=context&resinfo=true
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/c5058f3a", resinfo = true, userProfile = ResourcesResponderV1Spec.userProfile)
+            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/c5058f3a", resinfo = true, userProfile = incunabulaUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 => compareResourceCompoundContextResponses(received = response, expected = ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse)
@@ -515,7 +575,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "return the context of a page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F8a0b1e75?reqtype=context&resinfo=true
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/8a0b1e75", resinfo = true, userProfile = ResourcesResponderV1Spec.userProfile)
+            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/8a0b1e75", resinfo = true, userProfile = incunabulaUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 => compareResourcePartOfContextResponses(received = response, expected = ResourcesResponderV1SpecContextData.expectedPageResourceContextResponse)
@@ -529,7 +589,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 numberOfProps = 3,
                 limitOfResults = 11,
                 resourceTypeIri = None,
-                userProfile = ResourcesResponderV1Spec.userProfile
+                userProfile = incunabulaUser
             )
 
             expectMsgPF(timeout) {
@@ -544,7 +604,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 numberOfProps = 1,
                 limitOfResults = 11,
                 resourceTypeIri = Some("http://www.knora.org/ontology/incunabula#book"),
-                userProfile = ResourcesResponderV1Spec.userProfile
+                userProfile = incunabulaUser
             )
 
             expectMsgPF(timeout) {
@@ -564,7 +624,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 searchString = "Narrenschiff",
                 numberOfProps = 4,
                 limitOfResults = 100,
-                userProfile = ResourcesResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 resourceTypeIri = None
             )
 
@@ -581,7 +641,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 searchString = "Narrenschiff",
                 numberOfProps = 3,
                 limitOfResults = 100,
-                userProfile = ResourcesResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 resourceTypeIri = Some("http://www.knora.org/ontology/incunabula#book")
             )
 
@@ -605,7 +665,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 label = "Test-Misc",
                 projectIri = "http://data.knora.org/projects/77275339",
                 values = valuesToBeCreated,
-                userProfile = ResourcesResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -641,7 +701,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 label = "Test-Book",
                 projectIri = "http://data.knora.org/projects/77275339",
                 values = valuesToBeCreated,
-                userProfile = ResourcesResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -705,7 +765,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 label = "Test-Book",
                 projectIri = "http://data.knora.org/projects/77275339",
                 values = valuesToBeCreated,
-                userProfile = ResourcesResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -720,7 +780,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             // See if we can query the resource.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = newBookResourceIri.get, userProfile = ResourcesResponderV1Spec.userProfile)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = newBookResourceIri.get, userProfile = incunabulaUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => () // If we got a ResourceFullResponseV1, the operation succeeded.
@@ -784,9 +844,9 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     originalFilename = "test.jpg",
                     originalMimeType = "image/jpeg",
                     filename = "./test_server/images/Chlaus.jpg",
-                    userProfile = ResourcesResponderV1Spec.userProfile
+                    userProfile = incunabulaUser
                 )),
-                userProfile = ResourcesResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -804,7 +864,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val pageGetContext = ResourceContextGetRequestV1(
                 iri = resIri,
                 resinfo = true,
-                userProfile = ResourcesResponderV1Spec.userProfile
+                userProfile = incunabulaUser
             )
 
             actorUnderTest ! pageGetContext
@@ -821,16 +881,16 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val resourceDeleteRequest = ResourceDeleteRequestV1(
                 resourceIri = newPageResourceIri.get,
                 deleteComment = Some("This page was deleted as a test"),
-                userProfile = ResourcesResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
 
             actorUnderTest ! resourceDeleteRequest
 
-            expectMsg(timeout, ResourceDeleteResponseV1(id = newPageResourceIri.get, userdata = ResourcesResponderV1Spec.userProfile.userData))
+            expectMsg(timeout, ResourceDeleteResponseV1(id = newPageResourceIri.get, userdata = incunabulaUser.userData))
 
             // Check that the resource is marked as deleted.
-            actorUnderTest ! ResourceInfoGetRequestV1(iri = newPageResourceIri.get, userProfile = ResourcesResponderV1Spec.userProfile)
+            actorUnderTest ! ResourceInfoGetRequestV1(iri = newPageResourceIri.get, userProfile = incunabulaUser)
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
@@ -845,7 +905,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             val propertiesGetRequest = PropertiesGetRequestV1(
                 "http://data.knora.org/021ec18f1735",
-                ResourcesResponderV1Spec.userProfile
+                incunabulaUser
             )
 
             actorUnderTest ! propertiesGetRequest
@@ -853,19 +913,55 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case response: PropertiesGetResponseV1 => comparePropertiesGetResponse(received = response, expected = propertiesGetResponseV1Region)
             }
-
         }
 
         "get the regions of a page pointed to by regions" in {
 
-            val resourceContextPage = ResourceContextGetRequestV1(iri = "http://data.knora.org/9d626dc76c03", resinfo = true, userProfile = ResourcesResponderV1Spec.userProfile)
+            val resourceContextPage = ResourceContextGetRequestV1(iri = "http://data.knora.org/9d626dc76c03", resinfo = true, userProfile = incunabulaUser)
 
             actorUnderTest ! resourceContextPage
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 => comparePageContextRegionResponse(received = response)
             }
+        }
 
+        "not show a user an incoming link if they have permission to see both resources, but not the link" in {
+            // The link's owner, anythingUser1, should see the link.
+
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-2", userProfile = anythingUser1)
+
+            expectMsgPF(timeout) {
+                case response: ResourceFullResponseV1 =>
+                    assert(response.incoming == anythingIncomingLinks)
+            }
+
+            // But another user should not see the link.
+
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-2", userProfile = anythingUser2)
+
+            expectMsgPF(timeout) {
+                case response: ResourceFullResponseV1 =>
+                    assert(response.incoming.isEmpty)
+            }
+        }
+
+        "not show a user an outgoing link if they have permission to see both resources, but not the link" in {
+            // The link's owner, anythingUser1, should see the link.
+
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-1", userProfile = anythingUser1)
+
+            expectMsgPF(timeout) {
+                case response: ResourceFullResponseV1 => checkForLinkToOtherThing(response) should ===(true)
+            }
+
+            // But another user should not see the link.
+
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-1", userProfile = anythingUser2)
+
+            expectMsgPF(timeout) {
+                case response: ResourceFullResponseV1 => checkForLinkToOtherThing(response) should ===(false)
+            }
         }
     }
 }

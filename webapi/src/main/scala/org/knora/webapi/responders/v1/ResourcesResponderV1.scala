@@ -38,6 +38,7 @@ import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
+import scala.collection.immutable.Iterable
 import scala.concurrent.{Future, Promise}
 
 /**
@@ -431,7 +432,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                         val groupedByLinkValue: Map[String, Seq[VariableResultsRow]] = rowsWithLinkValues.groupBy(_.rowMap("obj"))
 
                                         // For each LinkValue, check whether the user has permission to see the link, and if so, make an IncomingV1.
-                                        groupedByLinkValue.flatMap {
+                                        val maybeIncomingV1s: Iterable[Option[IncomingV1]] = groupedByLinkValue.map {
                                             case (linkValueIri: IRI, linkValueRows: Seq[VariableResultsRow]) =>
                                                 // Convert the rows representing the LinkValue to a ValueProps.
                                                 val originalValueProps = valueUtilV1.createValueProps(valueIri = linkValueIri, objRows = linkValueRows)
@@ -476,11 +477,13 @@ class ResourcesResponderV1 extends ResponderV1 {
                                                         ))
 
                                                     case None =>
-                                                        // No. Make a None. (The Nones will be filtered out by groupedByLinkValue.flatMap.)
+                                                        // No. Make a None.
                                                         None
                                                 }
+                                        }
 
-                                        }.toVector
+                                        // Filter out the Nones, which represent incoming links that the user doesn't have permission to see.
+                                        maybeIncomingV1s.flatten.toVector
 
                                     case None =>
                                         // The user doesn't have permission to see the referring resource.
