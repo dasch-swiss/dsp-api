@@ -25,12 +25,13 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
+import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.util.InputValidation.RichtextComponents
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
 import spray.http.HttpEntity.NonEmpty
@@ -74,9 +75,6 @@ object ResourcesRouteV1 extends Authenticator {
         }
 
         def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiResponderConversionPathRequestV1] = None, userProfile: UserProfileV1): ResourceCreateRequestV1 = {
-            // necessary import statements to convert to [[StandoffPositionV1]]
-            import ApiValueV1JsonProtocol._
-            import spray.json.JsonParser
 
             val projectIri = InputValidation.toIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI ${apiRequest.project_id}"))
             val resourceTypeIri = InputValidation.toIri(apiRequest.restype_id, () => throw BadRequestException(s"Invalid resource IRI ${apiRequest.restype_id}"))
@@ -105,23 +103,13 @@ object ResourcesRouteV1 extends Authenticator {
                                 // create corresponding UpdateValueV1
 
                                 case CreateResourceValueV1(Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
-                                    val textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] =
-                                        InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]].map {
-                                            case (attr, standoffPos) =>
-                                                (StandoffTagV1.lookup(attr, () => throw BadRequestException(s"Standoff tag not supported: $attr")), standoffPos)
-                                        })
-                                    val resourceReference: Set[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
 
-                                    // check if the IRIs in resourceReference correspond to the standoff link tags' IRIs
-                                    val resIrisfromStandoffLinkTags: Set[IRI] = textattr.get(StandoffTagV1.link) match {
-                                        case Some(links: Seq[StandoffPositionV1]) => InputValidation.getResourceIrisFromStandoffLinkTags(links)
-                                        case None => Set.empty[IRI]
-                                    }
+                                    val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext)
 
-                                    // check if resources references in standoff link tags exactly correspond to those submitted in richtext.resource_reference
-                                    if (resourceReference != resIrisfromStandoffLinkTags) throw BadRequestException("Submitted resource references in standoff link tags and in member 'resource_reference' are inconsistent")
-
-                                    CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
+                                    CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str),
+                                        textattr = richtextComponents.textattr,
+                                        resource_reference = richtextComponents.resource_reference),
+                                        comment)
 
                                 case CreateResourceValueV1(_, Some(linkValue: IRI), _, _, _, _, _, _, _, _, _, _, comment) =>
                                     val linkVal = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Invalid Knora resource Iri $linkValue"))

@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonPro
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
-import org.knora.webapi.routing.v1.ResourcesRouteV1
+import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
 import org.knora.webapi.util.{MutableTestIri, ScalaPrettyPrinter}
 import spray.http.MediaTypes._
@@ -60,6 +60,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val resourcesPath = ResourcesRouteV1.rapierPath(system, settings, log)
+    val valuesPath = ValuesRouteV1.rapierPath(system, settings, log)
 
     implicit val timeout: Timeout = 300.seconds
 
@@ -85,13 +86,18 @@ class ResourcesV1E2ESpec extends E2ESpec {
     }
 
     private val firstThingIri = new MutableTestIri
+    private val firstTextValueIRI = new MutableTestIri
     private val secondThingIri = new MutableTestIri
     private val thirdThingIri = new MutableTestIri
 
+    val incunabulaBookBiechlin = "http://data.knora.org/9935159f67" // incunabula book with title "Eyn biechlin ..."
+    val incunabulaBookQuadra = "http://data.knora.org/861b5644b302" // incunabula book with title Quadragesimale
+
+
     /**
-      * Gets the field `res_id` from a JSON response.
+      * Gets the field `res_id` from a JSON response to resource creation.
       *
-      * @param response the respons sent back from the API.
+      * @param response the response sent back from the API.
       * @return the value of `res_id`.
       */
     private def getResIriFromJsonResponse(response: HttpResponse) = {
@@ -103,6 +109,23 @@ class ResourcesV1E2ESpec extends E2ESpec {
         }
 
     }
+
+    /**
+      * Gets the field `id` from a JSON response to value creation (new value).
+      *
+      * @param response the response sent back from the API.
+      * @return the value of `res_id`.
+      */
+    private def getNewValueIriFromJsonResponse(response: HttpResponse) = {
+
+        JsonParser(response.entity.asString).asJsObject.fields.get("id") match {
+            case Some(JsString(resourceId)) => resourceId
+            case None => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
+            case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but ${other}")
+        }
+
+    }
+
 
     "The Resources Endpoint" should {
         "provide a HTML representation of the resource properties " in {
@@ -240,6 +263,92 @@ class ResourcesV1E2ESpec extends E2ESpec {
             }
         }
 
+        "create a new text value for the first thing resource" in {
+
+            val textattr =
+                """
+                  {
+                    "bold": [{
+                        "start": 2,
+                        "end": 5
+                    }]
+                  }
+                """.toJson.compactPrint
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "res_id": "${firstThingIri.get}",
+                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "richtext_value": {
+                        "utf8str": "a new value",
+                        "textattr": ${textattr}
+                  }
+                }
+                """
+
+            Post("/v1/values", HttpEntity(`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val resId = getNewValueIriFromJsonResponse(response)
+
+                firstTextValueIRI.set(resId)
+
+
+            }
+
+        }
+
+        "change the created text value above for the first thing resource" in {
+
+            val textattr =
+                s"""
+                  {
+                    "underline": [{
+                        "start": 2,
+                        "end": 5
+                    }],
+                  "_link": [{
+                        "start": 10,
+                        "end": 15,
+                        "resid": "$incunabulaBookBiechlin",
+                        "href": "$incunabulaBookBiechlin"
+                    }]
+                  }
+                """.toJson.compactPrint
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "richtext_value": {
+                        "utf8str": "a new value",
+                        "textattr": ${textattr},
+                        "resource_reference": ["$incunabulaBookBiechlin"]
+                  }
+                }
+                """
+
+            Put("/v1/values/" + URLEncoder.encode(firstTextValueIRI.get, "UTF-8"), HttpEntity(`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val resId = getNewValueIriFromJsonResponse(response)
+
+                firstTextValueIRI.set(resId)
+
+            }
+
+        }
+
+
+        /*"make sure that the first thing resource contains a direct standoff link now" in {
+
+
+
+        }*/
 
         "create a second resource of type anything:Thing linking to the first thing via standoff" in {
 
@@ -378,7 +487,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
         "create a resource of type thing with several standoff tags" in {
 
             val textattrStringified =
-                """
+                s"""
                   {
                       "bold": [{
                           "start": 0,
@@ -398,14 +507,14 @@ class ResourcesV1E2ESpec extends E2ESpec {
                         {
                             "start": 10,
                             "end": 15,
-                            "href": "http://data.knora.org/861b5644b302",
-                            "resid": "http://data.knora.org/861b5644b302"
+                            "href": "$incunabulaBookQuadra",
+                            "resid": "$incunabulaBookQuadra"
                         },
                         {
                             "start": 16,
                             "end": 18,
-                            "href": "http://data.knora.org/9935159f67",
-                            "resid": "http://data.knora.org/9935159f67"
+                            "href": "$incunabulaBookBiechlin",
+                            "resid": "$incunabulaBookBiechlin"
                         }
                       ]
                   }
@@ -418,7 +527,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               	"label": "A second thing",
               	"project_id": "http://data.knora.org/projects/anything",
               	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["http://data.knora.org/861b5644b302", "http://data.knora.org/9935159f67"],"utf8str":"This text links to a thing"}}],
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["$incunabulaBookQuadra", "$incunabulaBookBiechlin"],"utf8str":"This text links to a thing"}}],
                     "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
                     "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
                     "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
@@ -441,7 +550,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
         "create a resource of type thing with several standoff tags with a missing IRI in resource_reference" in {
 
             val textattrStringified =
-                """
+                s"""
                   {
                       "bold": [{
                           "start": 0,
@@ -461,20 +570,20 @@ class ResourcesV1E2ESpec extends E2ESpec {
                         {
                             "start": 10,
                             "end": 15,
-                            "href": "http://data.knora.org/861b5644b302",
-                            "resid": "http://data.knora.org/861b5644b302"
+                            "href": "$incunabulaBookQuadra",
+                            "resid": "$incunabulaBookQuadra"
                         },
                         {
                             "start": 16,
                             "end": 18,
-                            "href": "http://data.knora.org/9935159f67",
-                            "resid": "http://data.knora.org/9935159f67"
+                            "href": "$incunabulaBookBiechlin",
+                            "resid": "$incunabulaBookBiechlin"
                         }
                       ]
                   }
                 """.toJson.compactPrint
 
-            // IRI http://data.knora.org/861b5644b302 is missing in resource_reference
+            // IRI incunabulaBookQuadra is missing in resource_reference
             val params =
                 s"""
               {
@@ -482,7 +591,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               	"label": "A second thing",
               	"project_id": "http://data.knora.org/projects/anything",
               	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["http://data.knora.org/9935159f67"],"utf8str":"This text links to a thing"}}],
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["$incunabulaBookBiechlin"],"utf8str":"This text links to a thing"}}],
                     "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
                     "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
                     "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
@@ -505,9 +614,9 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
         "create a resource of type thing with several standoff tags with an IRI given in resource_reference but not given in the standoff link tags" in {
 
-            // IRI http://data.knora.org/9935159f67 is missing in standoff link tag
+            // IRI http://data.knora.org/9935159f67 (incunabulaBookBiechlin) is missing in standoff link tag
             val textattrStringified =
-                """
+                s"""
                   {
                       "bold": [{
                           "start": 0,
@@ -527,13 +636,13 @@ class ResourcesV1E2ESpec extends E2ESpec {
                         {
                             "start": 10,
                             "end": 15,
-                            "href": "http://data.knora.org/861b5644b302",
-                            "resid": "http://data.knora.org/861b5644b302"
+                            "href": "$incunabulaBookQuadra",
+                            "resid": "$incunabulaBookQuadra"
                         },
                         {
                             "start": 16,
                             "end": 18,
-                            "href": "http://data.knora.org/9935159f67"
+                            "href": "$incunabulaBookBiechlin"
                         }
                       ]
                   }
@@ -546,7 +655,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               	"label": "A second thing",
               	"project_id": "http://data.knora.org/projects/anything",
               	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["http://data.knora.org/9935159f67", "http://data.knora.org/861b5644b302"],"utf8str":"This text links to a thing"}}],
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["$incunabulaBookBiechlin", "$incunabulaBookQuadra"],"utf8str":"This text links to a thing"}}],
                     "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
                     "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
                     "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
@@ -571,7 +680,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
         "create a third resource of type thing with two standoff links to the same resource and a standoff link to another one" in {
 
             val textattrStringified1 =
-                """
+                s"""
                   {
                       "bold": [{
                           "start": 0,
@@ -591,8 +700,8 @@ class ResourcesV1E2ESpec extends E2ESpec {
                         {
                             "start": 10,
                             "end": 15,
-                            "href": "http://data.knora.org/861b5644b302",
-                            "resid": "http://data.knora.org/861b5644b302"
+                            "href": "$incunabulaBookQuadra",
+                            "resid": "$incunabulaBookQuadra"
                         }
                       ]
                   }
@@ -600,7 +709,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
 
             val textattrStringified2 =
-                """
+                s"""
                   {
                       "bold": [{
                           "start": 0,
@@ -620,20 +729,20 @@ class ResourcesV1E2ESpec extends E2ESpec {
                         {
                             "start": 10,
                             "end": 15,
-                            "href": "http://data.knora.org/861b5644b302",
-                            "resid": "http://data.knora.org/861b5644b302"
+                            "href": "$incunabulaBookQuadra",
+                            "resid": "$incunabulaBookQuadra"
                         },
                         {
                            "start": 10,
                            "end": 15,
-                           "href": "http://data.knora.org/9935159f67",
-                           "resid": "http://data.knora.org/9935159f67"
+                           "href": "$incunabulaBookBiechlin",
+                           "resid": "$incunabulaBookBiechlin"
                         },
                         {
                            "start": 10,
                            "end": 15,
-                           "href": "http://data.knora.org/9935159f67",
-                           "resid": "http://data.knora.org/9935159f67"
+                           "href": "$incunabulaBookBiechlin",
+                           "resid": "$incunabulaBookBiechlin"
                         }
                       ]
                   }
@@ -647,7 +756,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               	"label": "A second thing",
               	"project_id": "http://data.knora.org/projects/anything",
               	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified1,"resource_reference" :["http://data.knora.org/861b5644b302"],"utf8str":"This text links to a thing"}}, {"richtext_value":{"textattr":$textattrStringified2,"resource_reference" :["http://data.knora.org/861b5644b302", "http://data.knora.org/9935159f67"],"utf8str":"This text links to a thing"}}],
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified1,"resource_reference" :["$incunabulaBookQuadra"],"utf8str":"This text links to a thing"}}, {"richtext_value":{"textattr":$textattrStringified2,"resource_reference" :["$incunabulaBookQuadra", "$incunabulaBookBiechlin"],"utf8str":"This text links to a thing"}}],
                     "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
                     "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
                     "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
@@ -690,17 +799,17 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
                     val ref1: Boolean = response.results.bindings.exists {
                         row: VariableResultsRow =>
-                            row.rowMap("referredResourceIRI") == "http://data.knora.org/861b5644b302"
+                            row.rowMap("referredResourceIRI") == incunabulaBookQuadra
                     }
 
                     val ref2: Boolean = response.results.bindings.exists {
                         row: VariableResultsRow =>
-                            row.rowMap("referredResourceIRI") == "http://data.knora.org/9935159f67"
+                            row.rowMap("referredResourceIRI") == incunabulaBookBiechlin
                     }
 
-                    assert(ref1, "No direct link to 'http://data.knora.org/861b5644b302' found")
+                    assert(ref1, s"No direct link to '$incunabulaBookQuadra' found")
 
-                    assert(ref2, "No direct link to 'http://data.knora.org/9935159f67' found")
+                    assert(ref2, s"No direct link to '$incunabulaBookBiechlin' found")
 
                 case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
 
@@ -733,19 +842,19 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
                     val refCnt1: Boolean = response.results.bindings.exists {
                         row: VariableResultsRow =>
-                            row.rowMap("object") == "http://data.knora.org/861b5644b302" &&
+                            row.rowMap("object") == incunabulaBookQuadra &&
                                 row.rowMap("refCnt").toInt == 2
                     }
 
                     val refCnt2: Boolean = response.results.bindings.exists {
                         row: VariableResultsRow =>
-                            row.rowMap("object") == "http://data.knora.org/9935159f67" &&
+                            row.rowMap("object") == incunabulaBookBiechlin &&
                                 row.rowMap("refCnt").toInt == 1
                     }
 
-                    assert(refCnt1, "Ref count for 'http://data.knora.org/861b5644b302' should be 2")
+                    assert(refCnt1, s"Ref count for '$incunabulaBookQuadra' should be 2")
 
-                    assert(refCnt2, "Ref count for 'http://data.knora.org/9935159f67' should be 1")
+                    assert(refCnt2, s"Ref count for '$incunabulaBookBiechlin' should be 1")
 
                 case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
 
