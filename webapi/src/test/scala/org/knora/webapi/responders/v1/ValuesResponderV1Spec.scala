@@ -25,15 +25,14 @@ import java.util.UUID
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
-import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
+import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.{DateUtilV1, MutableTestIri}
-import org.knora.webapi.util.ScalaPrettyPrinter
+import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 
@@ -103,6 +102,7 @@ object ValuesResponderV1Spec {
   * Tests [[ValuesResponderV1]].
   */
 class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
+
     import ValuesResponderV1Spec._
 
     private val actorUnderTest = TestActorRef[ValuesResponderV1]
@@ -444,7 +444,9 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            expectMsg(timeout, DeleteValueResponseV1(commentIri.get, incunabulaUserData))
+            expectMsgPF(timeout) {
+                case msg: DeleteValueResponseV1 => commentIri.set(msg.id)
+            }
 
             actorUnderTest ! ValueGetRequestV1(
                 valueIri = commentIri.get,
@@ -1381,8 +1383,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case DeleteValueResponseV1(newLinkValueIri: IRI, _) =>
-                    linkObjLinkValueIri.set(newLinkValueIri)
+                case msg: DeleteValueResponseV1 => linkObjLinkValueIri.set(msg.id)
             }
 
             val deletedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
@@ -1592,7 +1593,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newListValue: HierarchicalListValueV1, _ , _, _, _) =>
+                case CreateValueResponseV1(newListValue: HierarchicalListValueV1, _, _, _, _) =>
                     newListValue should ===(HierarchicalListValueV1(summer))
             }
 
@@ -1611,7 +1612,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newDecimalValue: DecimalValueV1, _ , _, _, _) =>
+                case CreateValueResponseV1(newDecimalValue: DecimalValueV1, _, _, _, _) =>
                     newDecimalValue should ===(decimalValue)
             }
         }
@@ -1629,7 +1630,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newIntervalValue: IntervalValueV1, _ , _, _, _) =>
+                case CreateValueResponseV1(newIntervalValue: IntervalValueV1, _, _, _, _) =>
                     newIntervalValue should ===(intervalValue)
             }
         }
@@ -1647,7 +1648,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newColorValue: ColorValueV1, _ , _, _, _) =>
+                case CreateValueResponseV1(newColorValue: ColorValueV1, _, _, _, _) =>
                     newColorValue should ===(colorValue)
             }
         }
@@ -1720,8 +1721,186 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newUriValue: UriValueV1, _ , _, _, _) =>
+                case CreateValueResponseV1(newUriValue: UriValueV1, _, _, _, _) =>
                     newUriValue should ===(uriValue)
+            }
+        }
+
+        "delete two text values containing the same standoff resource reference" in {
+            val thingWithTextValues = "http://data.knora.org/a-thing-with-text-values"
+            val firstTextValue = "http://data.knora.org/a-thing-with-text-values/values/1"
+            val secondTextValue = "http://data.knora.org/a-thing-with-text-values/values/2"
+            val lastModBeforeFirstDelete = getLastModificationDate(thingWithTextValues)
+
+            // Check that the link value has an initial reference count of 2.
+
+            actorUnderTest ! LinkValueGetRequestV1(
+                subjectIri = thingWithTextValues,
+                predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                objectIri = aThingIri,
+                userProfile = anythingUser
+            )
+
+            expectMsg(
+                timeout,
+                ValueGetResponseV1(
+                    valuetype = OntologyConstants.KnoraBase.LinkValue,
+                    value = LinkValueV1(
+                        subjectIri = thingWithTextValues,
+                        predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                        objectIri = aThingIri,
+                        referenceCount = 2
+                    ),
+                    rights = 2,
+                    userdata = anythingUser.userData
+                )
+            )
+
+            val initialLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
+                subjectIri = thingWithTextValues,
+                predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                objectIri = aThingIri
+            ).toString()
+
+            storeManager ! SparqlSelectRequest(initialLinkValueSparqlQuery)
+
+            // It should have no previousValue, and the direct link should exist.
+
+            expectMsgPF(timeout) {
+                case response: SparqlSelectResponse =>
+                    val rows = response.results.bindings
+                    rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+                    rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+            }
+
+            // Now delete the first text value.
+
+            actorUnderTest ! DeleteValueRequestV1(
+                valueIri = firstTextValue,
+                userProfile = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            val deletedFirstTextValue = expectMsgPF(timeout) {
+                case msg: DeleteValueResponseV1 => msg.id
+            }
+
+            actorUnderTest ! ValueGetRequestV1(
+                valueIri = deletedFirstTextValue,
+                userProfile = anythingUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+
+            // Check that the resource's last modification date got updated.
+            val lastModAfterFirstDelete = getLastModificationDate(thingWithTextValues)
+            lastModBeforeFirstDelete != lastModAfterFirstDelete should ===(true)
+
+            // The link value should now have a reference count of 1.
+
+            actorUnderTest ! LinkValueGetRequestV1(
+                subjectIri = thingWithTextValues,
+                predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                objectIri = aThingIri,
+                userProfile = anythingUser
+            )
+
+            expectMsg(
+                timeout,
+                ValueGetResponseV1(
+                    valuetype = OntologyConstants.KnoraBase.LinkValue,
+                    value = LinkValueV1(
+                        subjectIri = thingWithTextValues,
+                        predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                        objectIri = aThingIri,
+                        referenceCount = 1
+                    ),
+                    rights = 2,
+                    userdata = anythingUser.userData
+                )
+            )
+
+            // It should have a previousValue, and the direct link should still exist.
+
+            val decrementedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
+                subjectIri = thingWithTextValues,
+                predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                objectIri = aThingIri
+            ).toString()
+
+            storeManager ! SparqlSelectRequest(decrementedLinkValueSparqlQuery)
+
+            expectMsgPF(timeout) {
+                case response: SparqlSelectResponse =>
+                    val rows = response.results.bindings
+                    rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+                    rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+            }
+
+            // Now delete the second text value.
+
+            actorUnderTest ! DeleteValueRequestV1(
+                valueIri = secondTextValue,
+                userProfile = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            val deletedSecondTextValue = expectMsgPF(timeout) {
+                case msg: DeleteValueResponseV1 => msg.id
+            }
+
+            actorUnderTest ! ValueGetRequestV1(
+                valueIri = deletedSecondTextValue,
+                userProfile = anythingUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+
+            // Check that the resource's last modification date got updated.
+            val lastModAfterSecondDelete = getLastModificationDate(thingWithTextValues)
+            lastModBeforeFirstDelete != lastModAfterSecondDelete should ===(true)
+
+            // The new version of the LinkValue should be marked as deleted.
+
+            actorUnderTest ! LinkValueGetRequestV1(
+                subjectIri = thingWithTextValues,
+                predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                objectIri = aThingIri,
+                userProfile = anythingUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+
+            // The LinkValue should point to its previous version. There should be no direct link.
+
+            val deletedLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
+                triplestore = settings.triplestoreType,
+                subjectIri = thingWithTextValues,
+                predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                objectIri = aThingIri,
+                includeDeleted = true
+            ).toString()
+
+            storeManager ! SparqlSelectRequest(deletedLinkValueSparqlQuery)
+
+            expectMsgPF(timeout) {
+                case response: SparqlSelectResponse =>
+                    standoffLinkValueIri.unset()
+                    val rows = response.results.bindings
+                    rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(true)
+                    rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
             }
         }
     }
