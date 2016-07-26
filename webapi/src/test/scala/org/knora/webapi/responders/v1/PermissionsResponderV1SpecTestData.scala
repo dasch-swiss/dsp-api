@@ -20,8 +20,13 @@
 
 package org.knora.webapi.responders.v1
 
+import dispatch.url
 import org.knora.webapi.OntologyConstants
 import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionV1, DefaultObjectAccessPermissionV1}
+
+/* Helper case classes */
+case class ap (iri: String, p: AdministrativePermissionV1)
+case class doap (iri: String, p: DefaultObjectAccessPermissionV1)
 
 /**
   * This object holds data representations for the data in '_test_data/all_data/permissions-data.ttl'.
@@ -30,33 +35,45 @@ object PermissionsResponderV1SpecTestData {
 
     val IMAGES_PROJECT_IRI = "http://data.knora.org/projects/images"
 
-    val permission001Iri = "http://data.knora.org/permissions/001"
-    val permission001 =
-        AdministrativePermissionV1(
-            forProject = IMAGES_PROJECT_IRI,
-            forGroup = OntologyConstants.KnoraBase.ProjectMember,
-            resourceCreationPermissionValues = Some(List(OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission))
-
-    )
-
-    val permission002Iri = "http://data.knora.org/permissions/002"
-    val permission002 =
-        DefaultObjectAccessPermissionV1(
-            forProject = IMAGES_PROJECT_IRI,
-            forGroup = OntologyConstants.KnoraBase.ProjectMember,
-            forResourceClass = OntologyConstants.KnoraBase.AllResourceClasses,
-            forProperty = OntologyConstants.KnoraBase.AllProperties,
-            defaultObjectAccessPermissionProperties = Some(
-                Map(
-                    OntologyConstants.KnoraBase.HasDefaultChangeRightsPermission -> List(OntologyConstants.KnoraBase.Creator),
-                    OntologyConstants.KnoraBase.HasDefaultModifyPermission -> List(OntologyConstants.KnoraBase.ProjectMember),
-                    OntologyConstants.KnoraBase.HasDefaultViewPermission -> List(OntologyConstants.KnoraBase.KnownUser)
-                )
+    val perm001 =
+        ap(
+            iri = "http://data.knora.org/permissions/001",
+            p = AdministrativePermissionV1(
+                forProject = IMAGES_PROJECT_IRI,
+                forGroup = OntologyConstants.KnoraBase.ProjectMember,
+                resourceCreationPermissionValues = Some(List(OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission))
             )
         )
 
-    val permission003Iri = "http://data.knora.org/permissions/003"
-    val permission004Iri = "http://data.knora.org/permissions/004"
-    val permission005Iri = "http://data.knora.org/permissions/005"
+    val perm002 =
+        doap(
+            iri = "http://data.knora.org/permissions/002",
+            p = DefaultObjectAccessPermissionV1(
+                forProject = IMAGES_PROJECT_IRI,
+                forGroup = OntologyConstants.KnoraBase.ProjectMember,
+                forResourceClass = OntologyConstants.KnoraBase.AllResourceClasses,
+                forProperty = OntologyConstants.KnoraBase.AllProperties,
+                hasDefaultChangeRightsPermission = Some(List(OntologyConstants.KnoraBase.Creator)),
+                hasDefaultModifyPermission = Some(List(OntologyConstants.KnoraBase.ProjectMember)),
+                hasDefaultViewPermission = Some(List(OntologyConstants.KnoraBase.KnownUser))
+            )
+        )
+
+
+    val perm003 =
+        ap(
+            iri = "http://data.knora.org/permissions/003",
+            p = AdministrativePermissionV1()
+        )
+    val perm004 =
+        ap(
+            iri = "http://data.knora.org/permissions/004",
+            p = AdministrativePermissionV1()
+        )
+    val perm005 =
+        ap (
+            iri = "http://data.knora.org/permissions/005",
+            p = AdministrativePermissionV1()
+        )
 
 }

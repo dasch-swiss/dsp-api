@@ -94,11 +94,19 @@ case class AdministrativePermissionV1(forProject: IRI = OntologyConstants.KnoraB
   * @param forGroup
   * @param forResourceClass
   * @param forProperty
-  * @param defaultObjectAccessPermissionProperties
+  * @param hasDefaultChangeRightsPermission
+  * @param hasDefaultDeletePermission
+  * @param hasDefaultModifyPermission
+  * @param hasDefaultViewPermission
+  * @param hasDefaultRestrictedViewPermission
   */
 case class DefaultObjectAccessPermissionV1(forProject: IRI = OntologyConstants.KnoraBase.AllProjects,
                                            forGroup: IRI = OntologyConstants.KnoraBase.AllGroups,
                                            forResourceClass: IRI = OntologyConstants.KnoraBase.AllResourceClasses,
                                            forProperty: IRI = OntologyConstants.KnoraBase.AllProperties,
-                                           defaultObjectAccessPermissionProperties: Option[Map[IRI, List[IRI]]] = None
+                                           hasDefaultChangeRightsPermission: Option[List[IRI]] = None,
+                                           hasDefaultDeletePermission: Option[List[IRI]] = None,
+                                           hasDefaultModifyPermission: Option[List[IRI]] = None,
+                                           hasDefaultViewPermission: Option[List[IRI]] = None,
+                                           hasDefaultRestrictedViewPermission: Option[List[IRI]] = None
                                           )

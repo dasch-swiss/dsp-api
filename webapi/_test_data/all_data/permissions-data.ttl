@@ -27,7 +27,7 @@
 ### Default Object Access Permissions on ProjectMember Group
 <http://data.knora.org/permissions/002>
 
-                      rdf:type knora-base:DefaultObjectAccesssPermission ;
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
 
                       knora-base:forProject <http://data.knora.org/projects/images> ;
 

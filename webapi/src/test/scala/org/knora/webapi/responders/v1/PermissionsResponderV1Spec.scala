@@ -70,22 +70,22 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     projectIri = IMAGES_PROJECT_IRI,
                     SharedTestData.rootUserProfileV1
                 )
-                expectMsg(Some(List(permission001Iri, permission002Iri)))
+                expectMsg(Some(List(perm001.iri, perm003.iri)))
             }
             "return AdministrativePermission object for IRI " in {
-                actorUnderTest ! GetAdministrativePermissionV1(administrativePermissionIri = permission001Iri)
-                expectMsg(permission001)
+                actorUnderTest ! GetAdministrativePermissionV1(administrativePermissionIri = perm001.iri)
+                expectMsg(perm001.p)
             }
             "return DefaultObjectAccessPermission IRIs for project " in {
                 actorUnderTest ! GetProjectDefaultObjectAccessPermissionsV1(
                     projectIri = IMAGES_PROJECT_IRI,
                     SharedTestData.rootUserProfileV1
                 )
-                expectMsg(List(permission002Iri))
+                expectMsg(Some(List(perm002.iri)))
             }
             "return DefaultObjectAccessPermission for IRI " in {
-                actorUnderTest ! GetDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri = permission003Iri)
-                expectMsg(permission002)
+                actorUnderTest ! GetDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri = perm002.iri)
+                expectMsg(perm002.p)
             }
         }
     }

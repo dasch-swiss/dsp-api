@@ -22,14 +22,12 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
-import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionV1, _}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{KnoraIriUtil, MessageUtil}
-import shapeless.get
 
 import scala.concurrent.Future
 
@@ -55,18 +53,28 @@ class PermissionsResponderV1 extends ResponderV1 {
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
-    private def getProjectAdministrativePermissionsV1(forProject: IRI, userProfileV1: UserProfileV1): Future[List[IRI]] = {
+    private def getProjectAdministrativePermissionsV1(forProject: IRI, userProfileV1: UserProfileV1): Future[Option[List[IRI]]] = {
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectAdministrativePermissions(
                 triplestore = settings.triplestoreType,
                 projectIri = forProject
             ).toString())
-            _ = log.debug(s"getProjectAdministrativePermissionsV1 - query: $sparqlQueryString")
+            //_ = log.debug(s"getProjectAdministrativePermissionsV1 - query: $sparqlQueryString")
 
             permissionsQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            _ = log.debug(s"getProjectAdministrativePermissionsV1 - result: ${MessageUtil.toSource(permissionsQueryResponse)}")
+            //_ = log.debug(s"getProjectAdministrativePermissionsV1 - result: ${MessageUtil.toSource(permissionsQueryResponse)}")
 
-            administrativePermissionIris = List("some iri")
+            permissionsQueryResponseRows: Seq[VariableResultsRow] = permissionsQueryResponse.results.bindings
+
+            apIris: List[String] = permissionsQueryResponseRows.map(_.rowMap("s")).toList
+            //_ = log.debug(s"getProjectAdministrativePermissionsV1 - iris: $apIris")
+
+            administrativePermissionIris = if (apIris.nonEmpty) {
+                Some(apIris)
+            } else {
+                None
+            }
+
         } yield administrativePermissionIris
     }
 
@@ -84,10 +92,10 @@ class PermissionsResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 administrativePermissionIri = administrativePermissionIri
             ).toString())
-            _ = log.debug(s"getGroupAdministrativePermissionV1 - query: $sparqlQueryString")
+            //_ = log.debug(s"getAdministrativePermissionV1 - query: $sparqlQueryString")
 
             permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            _ = log.debug(s"getGroupAdministrativePermissionV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
+            //_ = log.debug(s"getAdministrativePermissionV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
             permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
@@ -95,7 +103,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
             }
 
-            _ = log.debug(s"getGroupAdministrativePermissionV1 - groupedResult: ${MessageUtil.toSource(groupedPermissionsQueryResponse)}")
+            //_ = log.debug(s"getAdministrativePermissionV1 - groupedResult: ${MessageUtil.toSource(groupedPermissionsQueryResponse)}")
 
             // TODO: Handle restricted permissions correctly (or at all)
             administrativePermission = AdministrativePermissionV1 (
@@ -119,22 +127,30 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @param userProfileV1 the [[UserProfileV1]] of the requesting user.
       * @return a list of [[DefaultObjectAccessPermissionV1]] objects.
       */
-    private def getProjectDefaultObjectAccessPermissionsV1(forProject: IRI, userProfileV1: UserProfileV1): Future[Option[List[DefaultObjectAccessPermissionV1]]] = {
+    private def getProjectDefaultObjectAccessPermissionsV1(forProject: IRI, userProfileV1: UserProfileV1): Future[Option[List[IRI]]] = {
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectDefaultObjectAccessPermissions(
                 triplestore = settings.triplestoreType,
                 projectIri = forProject
             ).toString())
-            _ = log.debug(s"getGroupAdministrativePermissionV1 - query: $sparqlQueryString")
+            //_ = log.debug(s"getProjectDefaultObjectAccessPermissionsV1 - query: $sparqlQueryString")
 
             permissionsQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            _ = log.debug(s"getGroupAdministrativePermissionV1 - result: ${MessageUtil.toSource(permissionsQueryResponse)}")
+            //_ = log.debug(s"getProjectDefaultObjectAccessPermissionsV1 - result: ${MessageUtil.toSource(permissionsQueryResponse)}")
 
+            permissionsQueryResponseRows: Seq[VariableResultsRow] = permissionsQueryResponse.results.bindings
 
-            defaultObjectAccessPermissions = Some(List( DefaultObjectAccessPermissionV1()))
+            daopIris: List[String] = permissionsQueryResponseRows.map(_.rowMap("s")).toList
+            //_ = log.debug(s"getProjectAdministrativePermissionsV1 - iris: $apIris")
 
-        } yield defaultObjectAccessPermissions
+            defaultObjectAccessPermissionIris = if (daopIris.nonEmpty) {
+                Some(daopIris)
+            } else {
+                None
+            }
+
+        } yield defaultObjectAccessPermissionIris
 
     }
 
@@ -144,13 +160,30 @@ class PermissionsResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 defaultObjectAccessPermissionIri = defaultObjectAccessPermissionIri
             ).toString())
-            _ = log.debug(s"getDefaultObjectAccessPermissionV1 - query: $sparqlQueryString")
+            //_ = log.debug(s"getDefaultObjectAccessPermissionV1 - query: $sparqlQueryString")
 
             permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            _ = log.debug(s"getDefaultObjectAccessPermissionV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
+            //_ = log.debug(s"getDefaultObjectAccessPermissionV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
+            permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
-            defaultObjectAccessPermission = DefaultObjectAccessPermissionV1()
+            groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
+                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+            }
+
+            //_ = log.debug(s"getDefaultObjectAccessPermissionV1 - groupedResult: ${MessageUtil.toSource(groupedPermissionsQueryResponse)}")
+
+            defaultObjectAccessPermission = DefaultObjectAccessPermissionV1 (
+                forProject = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProject).get.head,
+                forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).get.head,
+                forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForResourceClass).get.head,
+                forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProperty).get.head,
+                hasDefaultChangeRightsPermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasDefaultChangeRightsPermission).map(_.toList),
+                hasDefaultDeletePermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasDefaultDeletePermission).map(_.toList),
+                hasDefaultModifyPermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasDefaultModifyPermission).map(_.toList),
+                hasDefaultViewPermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasDefaultViewPermission).map(_.toList),
+                hasDefaultRestrictedViewPermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasDefaultRestrictedViewPermission).map(_.toList)
+            )
 
         } yield defaultObjectAccessPermission
     }
