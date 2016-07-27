@@ -110,11 +110,10 @@ class PermissionsResponderV1 extends ResponderV1 {
                 forProject = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProject).get.head,
                 forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).get.head,
                 resourceCreationPermissionValues = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasResourceCreationPermission).map(_.toList),
-                resourceCreationPermissionProperties = None,
+                hasRestrictedProjectResourceCreatePermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasRestrictedProjectResourceCreatePermission).map(_.toList),
                 projectAdministrationPermissionValues = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasProjectAdministrationPermission).map(_.toList),
-                projectAdministrationPermissionProperties = None,
-                ontologyAdministrationPermissionValues = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasOntologyAdministrationPermission).map(_.toList),
-                ontologyAdministrationPermissionProperties = None
+                hasRestrictedProjectGroupAdminPermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasRestrictedProjectGroupAdminPermission).map(_.toList),
+                ontologyAdministrationPermissionValues = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasOntologyAdministrationPermission).map(_.toList)
             )
 
         } yield administrativePermission

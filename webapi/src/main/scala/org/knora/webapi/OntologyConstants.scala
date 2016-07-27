@@ -219,7 +219,7 @@ object OntologyConstants {
 
         /* Project Administration Permission Properties */
         val HasProjectAdministrationPermission = KNORA_BASE_PREFIX + "hasProjectAdministrationPermission"
-        val HasProjectRestrictedGroupAdminPermission = KNORA_BASE_PREFIX + "hasProjectRestrictedGroupAdminPermission"
+        val HasRestrictedProjectGroupAdminPermission = KNORA_BASE_PREFIX + "hasRestrictedProjectGroupAdminPermission"
 
         /* Project Administration Permission Value Instances */
         val ProjectAllAdminPermission = KNORA_BASE_PREFIX + "ProjectAllAdminPermission"

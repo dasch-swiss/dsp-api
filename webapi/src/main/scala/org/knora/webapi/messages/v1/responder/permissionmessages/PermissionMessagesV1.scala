@@ -68,23 +68,21 @@ case class GetDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri: 
 /**
   * Represents 'knora-base:AdministrativePermission'
   *
-  * @param forProject
-  * @param forGroup
-  * @param resourceCreationPermissionValues
-  * @param resourceCreationPermissionProperties
-  * @param projectAdministrationPermissionValues
-  * @param projectAdministrationPermissionProperties
-  * @param ontologyAdministrationPermissionValues
-  * @param ontologyAdministrationPermissionProperties
+  * @param forProject the project this permission applies to.
+  * @param forGroup the group this permission applies to.
+  * @param resourceCreationPermissionValues a list of resource creation permission values given to members of the project/group combination.
+  * @param hasRestrictedProjectResourceCreatePermission a list of resource classes to which the members of the project/group combination is restricted to create.
+  * @param projectAdministrationPermissionValues a list of project administration permission value given to members of the project/group combination.
+  * @param hasRestrictedProjectGroupAdminPermission a list of user groups to which the members of the project/group combination is restricted to perform administrative tasks.
+  * @param ontologyAdministrationPermissionValues a list of ontology administrative permission values given to members of the project/group combination.
   */
 case class AdministrativePermissionV1(forProject: IRI = OntologyConstants.KnoraBase.AllProjects,
                                       forGroup: IRI = OntologyConstants.KnoraBase.AllGroups,
                                       resourceCreationPermissionValues: Option[List[IRI]] = None,
-                                      resourceCreationPermissionProperties: Option[Map[IRI, List[IRI]]] = None,
+                                      hasRestrictedProjectResourceCreatePermission: Option[List[IRI]] = None,
                                       projectAdministrationPermissionValues: Option[List[IRI]] = None,
-                                      projectAdministrationPermissionProperties: Option[Map[IRI, List[IRI]]] = None,
-                                      ontologyAdministrationPermissionValues: Option[List[IRI]] = None,
-                                      ontologyAdministrationPermissionProperties: Option[Map[IRI, List[IRI]]] = None
+                                      hasRestrictedProjectGroupAdminPermission: Option[List[IRI]] = None,
+                                      ontologyAdministrationPermissionValues: Option[List[IRI]] = None
                                      )
 
 /**

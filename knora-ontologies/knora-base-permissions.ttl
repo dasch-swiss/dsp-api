@@ -369,9 +369,9 @@
 
 
 
-### http://www.knora.org/ontology/knora-base#hasProjectRestrictedGroupAdminPermission
+### http://www.knora.org/ontology/knora-base#hasRestrictedProjectGroupAdminPermission
 
-:hasProjectRestrictedGroupAdminPermission rdf:type owl:ObjectProperty ;
+:hasRestrictedProjectGroupAdminPermission rdf:type owl:ObjectProperty ;
 
                                           rdfs:comment "Gives the permission to perform all administrative tasks on the specified groups inside the project."@en ;
 
