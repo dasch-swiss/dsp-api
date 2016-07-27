@@ -354,7 +354,7 @@ object PermissionUtilV1 {
       *         of tuples.
       */
     def parsePermissions(assertionsString: String, owner: IRI, project: IRI): Seq[(IRI, IRI)] = {
-        val resourcePermissions: Seq[(IRI, IRI)] = if (assertionsString.length > 0) {
+        val permissions: Seq[(IRI, IRI)] = if (assertionsString.length > 0) {
             assertionsString.split(';').map {
                 row =>
                     val pair = row.split(',')
@@ -364,8 +364,8 @@ object PermissionUtilV1 {
             Vector.empty[(IRI, IRI)]
         }
 
-        // in the resourcePermissions, the information about the user (owner) and the project are still missing
-        (OntologyConstants.KnoraBase.AttachedToProject, project) +: (OntologyConstants.KnoraBase.AttachedToUser, owner) +: resourcePermissions
+        // Add assertions about the subject's owner and project.
+        (OntologyConstants.KnoraBase.AttachedToProject, project) +: (OntologyConstants.KnoraBase.AttachedToUser, owner) +: permissions
     }
 
     /**
