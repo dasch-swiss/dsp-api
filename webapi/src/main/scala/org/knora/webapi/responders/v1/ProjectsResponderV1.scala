@@ -175,6 +175,14 @@ class ProjectsResponderV1 extends ResponderV1 {
         )
     }
 
+    private def createNewProjectV1(userProfileV1: UserProfileV1): Future[ProjectInfoResponseV1] = ???
+
+    private def updateProjectV1(userProfileV1: UserProfileV1): Future[ProjectInfoResponseV1] = ???
+
+    ////////////////////
+    // Helper Methods //
+    ////////////////////
+
     /**
       * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
       *
