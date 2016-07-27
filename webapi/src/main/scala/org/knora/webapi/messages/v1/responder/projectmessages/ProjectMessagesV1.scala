@@ -33,13 +33,14 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 /**
   * Represents an API request payload that asks the Knora API server to create a new project.
   *
-  * @param shortName          the shortname of the project to be created (unique).
-  * @param longName           the longname of the project to be created.
-  * @param basePath           the basepath of the project to be created.
-  * @param ontologyGraph      the named graph where the ontology of the created project will be stored.
-  * @param dataGraph          the named graph where the data of the created project will be stored.
-  * @param isActiveProject    the status of the project to be created.
-  * @param hasSelfJoinEnabled the status of self-join of the project to be created.
+  * @param shortName           the shortname of the project to be created (unique).
+  * @param longName            the longname of the project to be created.
+  * @param basePath            the basepath of the project to be created.
+  * @param ontologyGraph       the named graph where the ontology of the created project will be stored.
+  * @param dataGraph           the named graph where the data of the created project will be stored.
+  * @param isActiveProject     the status of the project to be created.
+  * @param permissionsTemplate the permissions template used for creating the initial permissions.
+  * @param hasSelfJoinEnabled  the status of self-join of the project to be created.
   */
 case class CreateProjectApiRequestV1(shortName: String,
                                      longName: String,
@@ -47,6 +48,7 @@ case class CreateProjectApiRequestV1(shortName: String,
                                      ontologyGraph: String,
                                      dataGraph: String,
                                      isActiveProject: String,
+                                     permissionsTemplate: PermissionsTemplate.Value,
                                      hasSelfJoinEnabled: Boolean) {
     def toJsValue = ProjectV1JsonProtocol.createProjectApiRequestV1Format.write(this)
 }
@@ -161,6 +163,27 @@ object ProjectInfoType extends Enumeration {
         valueMap.get(name) match {
             case Some(value) => value
             case None => throw InconsistentTriplestoreDataException(s"Project info type not supported: $name")
+        }
+    }
+}
+
+object PermissionsTemplate extends Enumeration {
+    val A = Value(0, "a")
+    val B = Value(1, "b")
+
+    val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+
+    /**
+      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
+      * [[InconsistentTriplestoreDataException]].
+      *
+      * @param name the name of the calue.
+      * @return the requested value.
+      */
+    def lookup(name: String): Value = {
+        valueMap.get(name) match {
+            case Some(value) => value
+            case None => throw InconsistentTriplestoreDataException(s"Initial permissions emplate not supported: $name")
         }
     }
 }

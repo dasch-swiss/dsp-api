@@ -70,7 +70,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
         expectMsg(300.seconds, ResetTriplestoreContentACK())
     }
 
-    "The ProjectsResponder " when {
+    "The ProjectsResponderV1 " when {
         /*
         "asked about a project identified by 'iri' " should {
             "return project info if the project is known " in {
@@ -94,8 +94,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             }
         }
 
-        "asked to create a new user " should {
-            "create the user and return it's profile if the supplied username is unique " in {
+        "asked to create a new project " should {
+            "create the project and return it's profile if the supplied username is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
                     NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "test", false, "en"),
                     SharedTestData.anonymousUserProfileV1,
