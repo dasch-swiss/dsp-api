@@ -192,6 +192,8 @@
 
     rdf:object <http://data.knora.org/a-thing> ;
 
+    knora-base:valueHasString """http://data.knora.org/a-thing""" ;
+
     knora-base:valueHasRefCount "2"^^xsd:integer ;
 
     knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
@@ -286,6 +288,8 @@
 
     rdf:object <http://data.knora.org/project-thing-2> ;
 
+    knora-base:valueHasString """http://data.knora.org/project-thing-2""" ;
+
     knora-base:valueHasRefCount "1"^^xsd:integer ;
 
     knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
@@ -305,6 +309,8 @@
     rdf:predicate knora-base:hasStandoffLinkTo ;
 
     rdf:object <http://data.knora.org/project-thing-2> ;
+
+    knora-base:valueHasString """http://data.knora.org/project-thing-2""" ;
 
     knora-base:valueHasRefCount "1"^^xsd:integer ;
 

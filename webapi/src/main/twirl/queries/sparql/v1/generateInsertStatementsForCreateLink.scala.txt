@@ -55,6 +55,7 @@
             rdf:subject ?resource ;
             rdf:predicate ?linkProperty@valueIndex ;
             rdf:object ?linkTarget@valueIndex ;
+            knora-base:valueHasString "@linkUpdate.linkTargetIri" ;
             knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
             @maybeComment match {
                 case Some(comment) => {

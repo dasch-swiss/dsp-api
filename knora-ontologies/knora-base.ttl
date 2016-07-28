@@ -1693,6 +1693,8 @@
 
                 rdfs:subPropertyOf :valueHas ;
 
+                rdfs:comment "A string representation of a value, required for full-text searches and search results."@en ;
+
                 :subjectClassConstraint :Value ;
 
                 :objectDatatypeConstraint xsd:string .
@@ -1810,10 +1812,6 @@
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :valueHasColor ;
                               owl:cardinality "1"^^xsd:nonNegativeInteger
-                            ] ,
-                            [ rdf:type owl:Restriction ;
-                              owl:onProperty :valueHasString ;
-                              owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ;
 
             rdfs:comment "Represents a color in HTML format, e.g. \"#33eeff\""@en .
@@ -1876,10 +1874,6 @@
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasStartJDC ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasString ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ;
 
@@ -1987,10 +1981,6 @@
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :valueHasDecimal ;
                               owl:cardinality "1"^^xsd:nonNegativeInteger
-                            ] ,
-                            [ rdf:type owl:Restriction ;
-                              owl:onProperty :valueHasString ;
-                              owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ;
 
             rdfs:comment "Represents an arbitrary-precision decimal value"@en .
@@ -2018,10 +2008,6 @@
               rdfs:subClassOf :Value ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :valueHasGeonameCode ;
-                                owl:cardinality "1"^^xsd:nonNegativeInteger
-                              ] ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :valueHasString ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] .
 
@@ -2068,10 +2054,6 @@
           rdfs:subClassOf :Value ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :valueHasInteger ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
-                          ] ,
-                          [ rdf:type owl:Restriction ;
-                            owl:onProperty :valueHasString ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ;
 
@@ -2224,10 +2206,6 @@
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasListNode ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasString ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
@@ -2537,10 +2515,6 @@
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasStandoff ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasString ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
 
@@ -2639,6 +2613,10 @@
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :previousValue ;
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :valueHasString ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger
                        ] ;
        
        rdfs:comment "The base class of classes representing Knora values"@en .

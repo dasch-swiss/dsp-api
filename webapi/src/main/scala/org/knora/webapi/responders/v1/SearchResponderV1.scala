@@ -26,7 +26,8 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1, ResourceEntityInfoV1}
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.responders.v1.GroupedProps.ValueProps
 import org.knora.webapi.twirl.SearchCriterion
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{DateUtilV1, FormatConstants}
@@ -93,6 +94,19 @@ class SearchResponderV1 extends ResponderV1 {
             SearchComparisonOperatorV1.EXISTS
         )
     )
+
+    /**
+      * Represents a matching value in a search result.
+      *
+      * @param valueTypeIri        the IRI of the value that matched.
+      * @param valueTypeLabel      the label of the value class.
+      * @param literal             the literal that matched.
+      * @param valuePermissionCode the user's permission code on the value.
+      */
+    private case class MatchingValue(valueTypeIri: IRI,
+                                     valueTypeLabel: String,
+                                     literal: String,
+                                     valuePermissionCode: Option[Int])
 
     val valueUtilV1 = new ValueUtilV1(settings)
 
@@ -432,38 +446,20 @@ class SearchResponderV1 extends ResponderV1 {
                 }
             )
 
-            // Count the number of search results.
-            countSparql = queries.sparql.v1.txt.searchExtended(
-                countResults = true,
-                searchCriteria = searchCriteria,
+            // Get the search results.
+            searchSparql = queries.sparql.v1.txt.searchExtended(
                 triplestore = settings.triplestoreType,
+                searchCriteria = searchCriteria,
                 preferredLanguage = searchGetRequest.userProfile.userData.lang,
                 fallbackLanguage = settings.fallbackLanguage,
                 projectIriOption = searchGetRequest.filterByProject,
                 restypeIriOption = searchGetRequest.filterByRestype,
-                ownerIriOption = searchGetRequest.filterByOwner,
-                offsetOption = None,
-                limitOption = None
-            ).toString()
-            countResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResponse]
-            resultCount = countResponse.results.bindings.head.rowMap("count").toInt
-            // _ = log.debug(s"Result count: $resultCount")
-
-            // Get the search results with paging.
-            pagingSparql = queries.sparql.v1.txt.searchExtended(
-                countResults = false,
-                searchCriteria = searchCriteria,
-                triplestore = settings.triplestoreType,
-                preferredLanguage = searchGetRequest.userProfile.userData.lang,
-                fallbackLanguage = settings.fallbackLanguage,
-                projectIriOption = searchGetRequest.filterByProject,
-                restypeIriOption = searchGetRequest.filterByRestype,
-                ownerIriOption = searchGetRequest.filterByOwner,
-                offsetOption = Some(searchGetRequest.startAt),
-                limitOption = Some(limit)
+                ownerIriOption = searchGetRequest.filterByOwner
             ).toString()
 
-            searchResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(pagingSparql)).mapTo[SparqlSelectResponse]
+            // _ = println(searchSparql)
+
+            searchResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
 
             // Collect all the resource class IRIs mentioned in the search results.
             resourceClassIris: Set[IRI] = searchResponse.results.bindings.map(_.rowMap("resourceClass")).toSet
@@ -477,71 +473,197 @@ class SearchResponderV1 extends ResponderV1 {
 
             entityInfoResponse <- (responderManager ? entityInfoRequest).mapTo[EntityInfoGetResponseV1]
 
+            // Collect the IRIs of resources that are the targets of matching links.
+
+            // Get the indexes of criteria that involve links.
+            indexesWithTargetResources: Seq[Int] = searchCriteria.zipWithIndex.filter {
+                case (searchCriterion, index) => searchCriterion.valueType == OntologyConstants.KnoraBase.Resource
+            }.map(_._2)
+
+            // Get the unique target resource IRIs from all the matches for those criteria.
+            targetResourceIris: Seq[IRI] = searchResponse.results.bindings.foldLeft(Set.empty[IRI]) {
+                case (acc: Set[IRI], row) =>
+                    acc ++ indexesWithTargetResources.map {
+                        index => row.rowMap(s"targetResource$index")
+                    }
+            }.toVector
+
+            // _ = println(s"targetResourceIris: $targetResourceIris")
+
+            // Get the permission-relevant assertions from those target resources.
+            targetResourceIriAuthInfoRows: Seq[VariableResultsRow] <- if (targetResourceIris.nonEmpty) {
+                for {
+                    authInfoSparql <- Future(queries.sparql.v1.txt.getAuthorisationInfoForResources(
+                        triplestore = settings.triplestoreType,
+                        resourceIris = targetResourceIris
+                    ).toString())
+
+                    // _ = println(authInfoSparql)
+
+                    authInfoResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(authInfoSparql)).mapTo[SparqlSelectResponse]
+                } yield authInfoResponse.results.bindings
+            } else {
+                Future(Vector.empty[VariableResultsRow])
+            }
+
+            // Get the user's permission on each target resource.
+            targetResourceIriAuthInfo: Map[String, Option[Int]] = targetResourceIriAuthInfoRows.groupBy(_.rowMap("resource")).map {
+                case (targetResourceIri, rows: Seq[VariableResultsRow]) =>
+                    val assertions = rows.map {
+                        row => (row.rowMap("p"), row.rowMap("o"))
+                    }
+
+                    val permissionCode = PermissionUtilV1.getUserPermissionV1(
+                        subjectIri = targetResourceIri,
+                        assertions = assertions,
+                        userProfile = searchGetRequest.userProfile
+                    )
+
+                    (targetResourceIri, permissionCode)
+            }
+
+            // Group the search results by resource IRI.
+            groupedByResourceIri: Map[IRI, Seq[VariableResultsRow]] = searchResponse.results.bindings.groupBy(_.rowMap("resource"))
+
             // Convert the query result rows into SearchResultRowV1 objects.
 
-            subjects: Seq[SearchResultRowV1] = searchResponse.results.bindings.map {
-                row =>
-                    val resourceClassIri = row.rowMap("resourceClass")
-                    val resourceEntityInfoMap = entityInfoResponse.resourceEntityInfoMap(resourceClassIri)
-                    val resourceClassLabel = resourceEntityInfoMap.getPredicateObject(OntologyConstants.Rdfs.Label)
-                    val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) // TODO: make a Sipi URL.
+            subjects: Vector[SearchResultRowV1] = groupedByResourceIri.foldLeft(Vector.empty[SearchResultRowV1]) {
+                case (subjectsAcc, (resourceIri, rows)) =>
+                    val firstRowMap = rows.head.rowMap
 
-                    val resourceIri = row.rowMap("resource")
-                    val attachedToUser = row.rowMap("attachedToUser")
-                    val attachedToProject = row.rowMap("attachedToProject")
-                    val permissionAssertions = row.rowMap("permissionAssertions")
-                    val assertions = PermissionUtilV1.parsePermissions(permissionAssertions, attachedToUser, attachedToProject)
-                    val permission = PermissionUtilV1.getUserPermissionV1(resourceIri, assertions, searchGetRequest.userProfile)
-                    val literals = searchCriteria.indices.map(paramNum => row.rowMap(s"literal$paramNum"))
-                    val valueTypeIDs = searchCriteria.map(_.valueType)
-                    val valueLabels = searchCriteria.map {
-                        param =>
-                            val propertyIri = param.propertyIri
-                            propertyInfo.propertyEntityInfoMap(propertyIri).getPredicateObject(OntologyConstants.Rdfs.Label) match {
-                                case Some(label) => label
-                                case None => throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
+                    // Does the user have permission to see the resource?
+
+                    val resourceOwner = firstRowMap("resourceOwner")
+                    val resourceProject = firstRowMap("resourceProject")
+                    val resourcePermissionsString = firstRowMap("resourcePermissions")
+                    val resourcePermissions: Seq[(IRI, IRI)] = PermissionUtilV1.parsePermissions(resourcePermissionsString, resourceOwner, resourceProject)
+                    val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(resourceIri, resourcePermissions, searchGetRequest.userProfile)
+
+                    if (resourcePermissionCode.nonEmpty) {
+                        // Yes. Get more information about the resource.
+
+                        val resourceClassIri = firstRowMap("resourceClass")
+                        val resourceEntityInfoMap = entityInfoResponse.resourceEntityInfoMap(resourceClassIri)
+                        val resourceClassLabel = resourceEntityInfoMap.getPredicateObject(OntologyConstants.Rdfs.Label)
+                        val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) // TODO: make a Sipi URL.
+
+                        // Collect the matching values in the resource.
+                        val matchingValues = rows.foldLeft(Map.empty[IRI, MatchingValue]) {
+                            case (acc, row) =>
+                                val valuesInRow: Seq[(String, MatchingValue)] = searchCriteria.zipWithIndex.map {
+                                    case (searchCriterion, index) =>
+                                        // Convert the permissions on the matching value object into a ValueProps.
+                                        val valueIri = row.rowMap(s"valueObject$index")
+                                        val literal = row.rowMap(s"literal$index")
+                                        val valuePermissionsString = row.rowMap.getOrElse(s"valuePermissions$index", "")
+                                        val valuePermissionsAsValueProps: ValueProps = PermissionUtilV1.parsePermissionsAsValueProps(
+                                            assertionsString = valuePermissionsString,
+                                            owner = row.rowMap(s"valueOwner$index"),
+                                            project = row.rowMap.getOrElse(s"valueProject$index", resourceProject) // If the value doesn't specify a project, it's implicitly in the resource's project.
+                                        )
+
+                                        // Is the matching value object a LinkValue?
+                                        val valuePermissionCode = if (searchCriterion.valueType == OntologyConstants.KnoraBase.Resource) {
+                                            // Yes. Handle it as a special case, because LinkValues for standoff links don't have permissions.
+                                            val linkValuePermissionCode = PermissionUtilV1.getUserPermissionOnLinkValueV1(
+                                                linkValueIri = valueIri,
+                                                predicateIri = searchCriterion.propertyIri,
+                                                valueProps = valuePermissionsAsValueProps,
+                                                userProfile = searchGetRequest.userProfile
+                                            )
+
+                                            // Get the permission code for the target resource.
+                                            val targetResourceIri = row.rowMap(s"targetResource$index")
+                                            val targetResourcePermissionCode = targetResourceIriAuthInfo(targetResourceIri)
+
+                                            // Only allow the user to see the match if they have view permission on both the link value and the target resource.
+                                            Seq(linkValuePermissionCode, targetResourcePermissionCode).min
+                                        } else {
+                                            // The matching object is an ordinary value, not a LinkValue.
+                                            PermissionUtilV1.getUserPermissionV1WithValueProps(
+                                                subjectIri = valueIri,
+                                                valueProps = valuePermissionsAsValueProps,
+                                                userProfile = searchGetRequest.userProfile
+                                            )
+                                        }
+
+                                        val propertyIri = searchCriterion.propertyIri
+                                        val valueTypeLabel = propertyInfo.propertyEntityInfoMap(propertyIri).getPredicateObject(OntologyConstants.Rdfs.Label) match {
+                                            case Some(label) => label
+                                            case None => throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
+                                        }
+
+                                        valueIri -> MatchingValue(
+                                            valueTypeIri = searchCriterion.valueType,
+                                            valueTypeLabel = valueTypeLabel,
+                                            literal = literal,
+                                            valuePermissionCode = valuePermissionCode
+                                        )
+                                }
+
+                                // Filter out the values that the user doesn't have permission to see.
+                                val filteredValues = valuesInRow.filter {
+                                    case (matchingValueIri, matchingValue) => matchingValue.valuePermissionCode.nonEmpty
+                                }
+
+                                acc ++ filteredValues
+                        }.toVector.sortBy(_._1).map(_._2) // Sort by value IRI so the results are consistent between requests.
+
+                        // Does the user have permission to see at least one matching value in the resource?
+                        if (matchingValues.nonEmpty) {
+                            // Yes. Make a search result for the resource.
+
+                            val resourceClassIconURL = resourceClassIcon match {
+                                case Some(resClassIcon) => Some(valueUtilV1.makeResourceClassIconURL(resourceClassIri, resClassIcon))
+                                case _ => None
                             }
+
+                            subjectsAcc :+ SearchResultRowV1(
+                                obj_id = resourceIri,
+                                preview_path = firstRowMap.get("previewPath") match {
+                                    case Some(path) => Some(valueUtilV1.makeSipiImagePreviewGetUrlFromFilename(path))
+                                    case None =>
+                                        // If there is no preview image, use the resource class icon from the ontology.
+                                        resourceClassIconURL
+                                },
+                                iconsrc = resourceClassIconURL,
+                                icontitle = resourceClassLabel,
+                                iconlabel = resourceClassLabel,
+                                valuetype_id = OntologyConstants.Rdfs.Label +: matchingValues.map(_.valueTypeIri),
+                                valuelabel = "Label" +: matchingValues.map(_.valueTypeLabel),
+                                value = firstRowMap("resourceLabel") +: matchingValues.map(_.literal),
+                                preview_nx = firstRowMap.get("previewDimX") match {
+                                    case Some(previewDimX) => previewDimX.toInt
+                                    case None => settings.defaultIconSizeDimX
+                                },
+                                preview_ny = firstRowMap.get("previewDimY") match {
+                                    case Some(previewDimY) => previewDimY.toInt
+                                    case None => settings.defaultIconSizeDimY
+                                },
+                                rights = resourcePermissionCode
+                            )
+                        } else {
+                            // The user doesn't have permission to see any of the matching values.
+                            subjectsAcc
+                        }
+                    } else {
+                        // The user doesn't have permission to see the resource.
+                        subjectsAcc
                     }
 
-                    val resourceClassIconURL = resourceClassIcon match {
-                        case Some(resClassIcon) => Some(valueUtilV1.makeResourceClassIconURL(resourceClassIri, resClassIcon))
-                        case _ => None
-                    }
-
-                    SearchResultRowV1(
-                        obj_id = resourceIri,
-                        preview_path = row.rowMap.get("previewPath") match {
-                            case Some(path) => Some(valueUtilV1.makeSipiImagePreviewGetUrlFromFilename(path))
-                            case None =>
-                                // If there is no preview image, use the resource class icon from the ontology.
-                                resourceClassIconURL
-                        },
-                        iconsrc = resourceClassIconURL,
-                        icontitle = resourceClassLabel,
-                        iconlabel = resourceClassLabel,
-                        valuetype_id = OntologyConstants.Rdfs.Label +: valueTypeIDs,
-                        valuelabel = "Label" +: valueLabels,
-                        value = row.rowMap("resourceLabel") +: literals,
-                        preview_nx = row.rowMap.get("previewDimX") match {
-                            case Some(previewDimX) => previewDimX.toInt
-                            case None => settings.defaultIconSizeDimX
-                        },
-                        preview_ny = row.rowMap.get("previewDimY") match {
-                            case Some(previewDimY) => previewDimY.toInt
-                            case None => settings.defaultIconSizeDimY
-                        },
-                        rights = permission
-                    )
-            }.filter(_.rights.nonEmpty) // only return the rows the given user has at least restricted view permissions on
+            }.sortBy(_.obj_id) // Sort the matching resources by resource IRI so paging works.
 
             (maxPreviewDimX, maxPreviewDimY) = findMaxPreviewDimensions(subjects)
 
+            // Get the requested page of results.
+            resultsPage = subjects.slice(searchGetRequest.startAt, searchGetRequest.startAt + limit)
+
             results = SearchGetResponseV1(
                 userdata = searchGetRequest.userProfile.userData,
-                subjects = subjects,
-                nhits = resultCount.toString,
+                subjects = resultsPage,
+                nhits = subjects.size.toString,
                 thumb_max = SearchPreviewDimensionsV1(maxPreviewDimX, maxPreviewDimY),
-                paging = makePaging(offset = searchGetRequest.startAt, limit = limit, resultCount = resultCount)
+                paging = makePaging(offset = searchGetRequest.startAt, limit = limit, resultCount = subjects.size)
             )
         } yield results
     }
@@ -549,8 +671,8 @@ class SearchResponderV1 extends ResponderV1 {
     /**
       * Creates a list of available search result pages.
       *
-      * @param offset the requested result offset.
-      * @param limit the maximum number of results per page.
+      * @param offset      the requested result offset.
+      * @param limit       the maximum number of results per page.
       * @param resultCount the total number of results found.
       * @return a list of [[SearchResultPage]] objects.
       */
