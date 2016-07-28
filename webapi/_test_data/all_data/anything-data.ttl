@@ -130,7 +130,7 @@
 
     knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 
-    rdfs:label "A thing"@en ;
+    rdfs:label "A thing" ;
 
     knora-base:hasViewPermission knora-base:UnknownUser ;
 
@@ -148,7 +148,7 @@
 
     knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 
-    rdfs:label "Another thing"@en ;
+    rdfs:label "Another thing" ;
 
     knora-base:hasViewPermission knora-base:UnknownUser ;
 
@@ -166,7 +166,7 @@
 
     knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 
-    rdfs:label "A thing with text values"@en ;
+    rdfs:label "A thing with text values" ;
 
     anything:hasText <http://data.knora.org/a-thing-with-text-values/values/1> ;
 
@@ -272,7 +272,7 @@
 
     knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 
-    rdfs:label "A thing that only project members can see"@en ;
+    rdfs:label "A thing that only project members can see" ;
 
     knora-base:hasViewPermission knora-base:ProjectMember ;
 
@@ -354,7 +354,7 @@
 
     knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 
-    rdfs:label "Another thing that only project members can see"@en ;
+    rdfs:label "Another thing that only project members can see" ;
 
     knora-base:hasViewPermission knora-base:ProjectMember ;
 
