@@ -28,7 +28,6 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProf
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
-import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.duration._
 
@@ -68,6 +67,69 @@ object SearchResponderV1Spec {
             lang = "de"
         )
     )
+
+    private val fulltextThingResultsForUser1 = Vector(SearchResultRowV1(
+        rights = Some(8),
+        preview_ny = 32,
+        preview_nx = 32,
+        value = Vector(
+            "Ein Ding f\u00FCr wen, der die Dinge liebe",
+            "Ich liebe die Dinge, sie sind alles f\u00FCr mich.",
+            "Na ja, die Dinge sind OK."
+        ),
+        valuelabel = Vector(
+            "Label",
+            "Text",
+            "Text"
+        ),
+        valuetype_id = Vector(
+            "http://www.w3.org/2000/01/rdf-schema#label",
+            "http://www.knora.org/ontology/knora-base#TextValue",
+            "http://www.knora.org/ontology/knora-base#TextValue"
+        ),
+        iconlabel = Some("Ding"),
+        icontitle = Some("Ding"),
+        iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        obj_id = "http://data.knora.org/a-thing-with-text-values"
+    ))
+
+    private val fulltextValueInThingResultsForUser1 = Vector(SearchResultRowV1(
+        rights = Some(8),
+        preview_ny = 32,
+        preview_nx = 32,
+        value = Vector(
+            "Ein Ding f\u00FCr wen, der die Dinge liebe",
+            "Ich liebe die Dinge, sie sind alles f\u00FCr mich."
+        ),
+        valuelabel = Vector(
+            "Label",
+            "Text"
+        ),
+        valuetype_id = Vector(
+            "http://www.w3.org/2000/01/rdf-schema#label",
+            "http://www.knora.org/ontology/knora-base#TextValue"
+        ),
+        iconlabel = Some("Ding"),
+        icontitle = Some("Ding"),
+        iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        obj_id = "http://data.knora.org/a-thing-with-text-values"
+    ))
+
+    private val fulltextThingResultsForUser2 = Vector(SearchResultRowV1(
+        rights = Some(2),
+        preview_ny = 32,
+        preview_nx = 32,
+        value = Vector("Ein Ding f\u00FCr wen, der die Dinge liebe"),
+        valuelabel = Vector("Label"),
+        valuetype_id = Vector("http://www.w3.org/2000/01/rdf-schema#label"),
+        iconlabel = Some("Ding"),
+        icontitle = Some("Ding"),
+        iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        obj_id = "http://data.knora.org/a-thing-with-text-values"
+    ))
 
     private val hasOtherThingResultsForUser1 = Vector(SearchResultRowV1(
         rights = Some(8),
@@ -145,6 +207,7 @@ object SearchResponderV1Spec {
   * Tests [[SearchResponderV1]].
   */
 class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
+
     import SearchResponderV1Spec._
 
     // Construct the actors needed for this test.
@@ -669,6 +732,118 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 case response: SearchGetResponseV1 => response.subjects.size should ===(4)
             }
 
+        }
+
+        "should filter full-text search results using permissions on resources and values" in {
+            // When the owner of the resource and its values, anythingUser1, searches for something that matches the resource's label
+            // as well as both values, the search result should include the resource and show that both values matched.
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "die Dinge",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = anythingUser1,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects should ===(fulltextThingResultsForUser1)
+            }
+
+            // Another user in the same project, anythingUser2, should get the resource as a search result, but should not see the values.
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "die Dinge",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = anythingUser2,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects should ===(fulltextThingResultsForUser2)
+            }
+
+            // User anythingUser2 should also get the resource as a search result by searching for something that matches the resource's label, but not the values.
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "für wen",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = anythingUser2,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects should ===(fulltextThingResultsForUser2)
+            }
+
+            // If user anythingUser1 searches for something that matches one of the values, but doesn't match the resource's label, the result should include the
+            // value that matched, but not the value that didn't match.
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "alles für mich",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = anythingUser1,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects should ===(fulltextValueInThingResultsForUser1)
+            }
+
+            // If user anythingUser2 searches for something that matches one of the values, but doesn't match the resource's label, no results should be returned.
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "alles für mich",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = anythingUser2,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+            }
+
+            // A user in another project shouldn't get any results for any of those queries.
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "die Dinge",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = incunabulaUser,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+            }
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "für wen",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = incunabulaUser,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+            }
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "alles für mich",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = incunabulaUser,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+            }
         }
 
         "should not show resources that the user doesn't have permission to see in an extended search" in {

@@ -25,7 +25,7 @@
 
 @**
  * Performs an extended search. The number of rows returned per matching resource is the product of the number of
- * values that each search criterion matched in that resource.
+ * values that each search criterion matched in the resource.
  *
  * @param triplestore the name of the triplestore being used.
  * @param searchCriteria a list of maps containing search criteria, each of which contains:
@@ -34,6 +34,7 @@
  * @param projectIri if filtering by project is desired, the IRI of the project to search.
  * @param restypeIri if filtering by resource type is desired, the IRI of the resource type to search for.
  * @param ownerIri if filtering by owner is desired, the IRI of the resource owner to search for.
+ * @param limit the maximum number of results to re
  *@
 @(triplestore: String,
   searchCriteria: Seq[SearchCriterion],
@@ -76,6 +77,8 @@ WHERE {
 
     @for((searchCriterion, index) <- searchCriteria.zipWithIndex) {
 
+        # Search criterion @index: operator @searchCriterion.comparisonOperator
+
         @*
 
         If this search criterion involves a property that points to a knora-base:Value, find a resource that has
@@ -86,11 +89,8 @@ WHERE {
         *@
 
         @if(searchCriterion.valueType != "http://www.knora.org/ontology/knora-base#Resource") {
-            ?resource <@{searchCriterion.propertyIri}> ?valueObject@index ;
-                knora-base:isDeleted false .
+            ?resource <@{searchCriterion.propertyIri}> ?valueObject@index .
         }
-
-        # Search criterion @index: operator @searchCriterion.comparisonOperator
 
         @*
 
@@ -167,7 +167,6 @@ WHERE {
                         ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
 
                         ?valueObject@index rdf:type knora-base:LinkValue ;
-                            knora-base:isDeleted false ;
                             rdf:subject ?resource ;
                             rdf:predicate <@searchCriterion.propertyIri> ;
                             rdf:object ?targetResource@index .
@@ -232,7 +231,6 @@ WHERE {
                         ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
 
                         ?valueObject@index rdf:type knora-base:LinkValue ;
-                            knora-base:isDeleted false ;
                             rdf:subject ?resource ;
                             rdf:predicate <@searchCriterion.propertyIri> ;
                             rdf:object <@searchCriterion.searchValue> .
@@ -509,7 +507,8 @@ WHERE {
             }
         }
 
-        ?valueObject@index knora-base:attachedToUser ?valueOwner@index .
+        ?valueObject@index knora-base:isDeleted false ;
+            knora-base:attachedToUser ?valueOwner@index .
 
         OPTIONAL {
             ?valueObject@index knora-base:attachedToProject ?valueProject@index .
@@ -600,3 +599,4 @@ GROUP BY
         ?targetResource@index
         ?literal@index
     }
+LIMIT 500

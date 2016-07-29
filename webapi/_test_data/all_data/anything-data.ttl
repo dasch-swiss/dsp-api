@@ -166,7 +166,7 @@
 
     knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 
-    rdfs:label "A thing with text values" ;
+    rdfs:label "Ein Ding für wen, der die Dinge liebe" ;
 
     anything:hasText <http://data.knora.org/a-thing-with-text-values/values/1> ;
 
@@ -176,9 +176,7 @@
 
     knora-base:hasStandoffLinkToValue <http://data.knora.org/a-thing-with-text-values/values/0> ;
 
-    knora-base:hasViewPermission knora-base:UnknownUser ;
-
-    knora-base:hasModifyPermission knora-base:ProjectMember ;
+    knora-base:hasViewPermission knora-base:ProjectMember ;
 
     knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
@@ -224,9 +222,7 @@
 
     knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 
-    knora-base:hasViewPermission knora-base:UnknownUser ;
-
-    knora-base:hasModifyPermission knora-base:ProjectMember .
+    knora-base:hasViewPermission knora-base:Owner .
 
 
 
@@ -250,9 +246,7 @@
 
     knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 
-    knora-base:hasViewPermission knora-base:UnknownUser ;
-
-    knora-base:hasModifyPermission knora-base:ProjectMember .
+    knora-base:hasViewPermission knora-base:Owner .
 
 
 
