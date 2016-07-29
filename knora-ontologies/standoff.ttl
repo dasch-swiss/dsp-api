@@ -167,9 +167,9 @@
                         rdfs:subPropertyOf :hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/knora-base#standoffHasLink
+###  http://www.knora.org/ontology/knora-base#standoffTagHasLink
 
-:standoffHasLink rdf:type owl:ObjectProperty ;
+:standoffTagHasLink rdf:type owl:ObjectProperty ;
 
                  rdfs:subPropertyOf :systemProperty ;
 
@@ -180,9 +180,9 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#standoffHasStart
+###  http://www.knora.org/ontology/knora-base#standoffTagHasStart
 
-:standoffHasStart rdf:type owl:DatatypeProperty ;
+:standoffTagHasStart rdf:type owl:DatatypeProperty ;
 
                   rdfs:subPropertyOf :systemProperty ;
 
@@ -192,9 +192,9 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#standoffHasEnd
+###  http://www.knora.org/ontology/knora-base#standoffTagHasEnd
 
-:standoffHasEnd rdf:type owl:DatatypeProperty ;
+:standoffTagHasEnd rdf:type owl:DatatypeProperty ;
 
                 rdfs:subPropertyOf :systemProperty ;
 
@@ -204,9 +204,9 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#standoffHasHref
+###  http://www.knora.org/ontology/knora-base#standoffTagHasHref
 
-:standoffHasHref rdf:type owl:DatatypeProperty ;
+:standoffTagHasHref rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf :systemProperty ;
 
@@ -215,20 +215,9 @@
                  :objectDatatypeConstraint xsd:anyURI .
 
 
-### http://www.knora.org/ontology/knora-base#standoffHasIndex
+### http://www.knora.org/ontology/knora-base#standoffTagHasIndex
 
-:standoffHasIndex rdf:type owl:DatatypeProperty ;
-
-                  rdfs:subPropertyOf :systemProperty ;
-
-                  :subjectClassConstraint :StandoffTag ;
-
-                  :objectDatatypeConstraint xsd:integer .
-
-
-### http://www.knora.org/ontology/knora-base#standoffHasParentIndex
-
-:standoffHasParentIndex rdf:type owl:DatatypeProperty ;
+:standoffTagHasIndex rdf:type owl:DatatypeProperty ;
 
                   rdfs:subPropertyOf :systemProperty ;
 
@@ -237,9 +226,20 @@
                   :objectDatatypeConstraint xsd:integer .
 
 
-### http://www.knora.org/ontology/knora-base#standoffHasUUID
+### http://www.knora.org/ontology/knora-base#standoffTagHasParentIndex
 
-:standoffHasUUID rdf:type owl:DatatypeProperty ;
+:standoffTagHasParentIndex rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :systemProperty ;
+
+                  :subjectClassConstraint :StandoffTag ;
+
+                  :objectDatatypeConstraint xsd:integer .
+
+
+### http://www.knora.org/ontology/knora-base#standoffTagHasUUID
+
+:standoffTagHasUUID rdf:type owl:DatatypeProperty ;
 
                   rdfs:subPropertyOf :systemProperty ;
 
@@ -248,9 +248,9 @@
                   :objectDatatypeConstraint xsd:anyURI .
 
 
-### http://www.knora.org/ontology/knora-base#standoffHasTagname
+### http://www.knora.org/ontology/knora-base#standoffTagHasTagname
 
-:standoffHasTagname rdf:type owl:DatatypeProperty ;
+:standoffTagHasTagname rdf:type owl:DatatypeProperty ;
 
                   rdfs:subPropertyOf :systemProperty ;
 
@@ -259,9 +259,9 @@
                   :objectDatatypeConstraint xsd:string .
 
 
-### http://www.knora.org/ontology/knora-base#standoffHasXMLNamespace
+### http://www.knora.org/ontology/knora-base#standoffTagHasXMLNamespace
 
-:standoffHasXMLNamespace rdf:type owl:DatatypeProperty ;
+:standoffTagHasXMLNamespace rdf:type owl:DatatypeProperty ;
 
                   rdfs:subPropertyOf :systemProperty ;
 
@@ -270,9 +270,9 @@
                   :objectDatatypeConstraint xsd:anyURI .
 
 
-### http://www.knora.org/ontology/knora-base#standoffHasXMLAttribute
+### http://www.knora.org/ontology/knora-base#standoffTagHasXMLAttribute
 
-:standoffHasXMLAttribute rdf:type owl:DatatypeProperty ;
+:standoffTagHasXMLAttribute rdf:type owl:DatatypeProperty ;
 
                   rdfs:subPropertyOf :systemProperty ;
 
@@ -313,35 +313,35 @@
 :StandoffTag rdf:type owl:Class ;
 
           rdfs:subClassOf [ rdf:type owl:Restriction ;
-                            owl:onProperty :standoffHasStart ;
+                            owl:onProperty :standoffTagHasStart ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :standoffHasEnd ;
+                            owl:onProperty :standoffTagHasEnd ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :standoffHasUUID ;
+                            owl:onProperty :standoffTagHasUUID ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ],
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :standoffHasIndex ;
+                            owl:onProperty :standoffTagHasIndex ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ],
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :standoffHasParentIndex ;
+                            owl:onProperty :standoffTagHasParentIndex ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ],
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :standoffHasTagname ;
+                            owl:onProperty :standoffTagHasTagname ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ],
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :standoffHasXMLNamespace ;
+                            owl:onProperty :standoffTagHasXMLNamespace ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :standoffHasXMLAttribute ;
+                            owl:onProperty :standoffTagHasXMLAttribute ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger
                           ] ;
 
@@ -353,7 +353,7 @@
 :StandoffXMLAttribute rdf:type owl:Class ;
 
            rdfs:subClassOf [ rdf:type owl:Restriction ;
-                             owl:onProperty :standoffHasXMLNamespace ;
+                             owl:onProperty :standoffTagHasXMLNamespace ;
                              owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ],
                            [ rdf:type owl:Restriction ;
@@ -365,7 +365,7 @@
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ;
 
-          rdfs:comment "Represents a attribute of a standoff tag"@en .
+          rdfs:comment "Represents an attribute of a standoff tag"@en .
 
 
 #################################################################
@@ -423,7 +423,7 @@
 
               rdfs:subClassOf :StandoffReferenceTag ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :standoffHasHref ;
+                                owl:onProperty :standoffTagHasHref ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ;
 
@@ -437,7 +437,7 @@
 
               rdfs:subClassOf :StandoffReferenceTag ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :standoffHasLink ;
+                                owl:onProperty :standoffTagHasLink ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ;
 
