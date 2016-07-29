@@ -215,6 +215,93 @@
                  :objectDatatypeConstraint xsd:anyURI .
 
 
+### http://www.knora.org/ontology/knora-base#standoffHasIndex
+
+:standoffHasIndex rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :systemProperty ;
+
+                  :subjectClassConstraint :StandoffTag ;
+
+                  :objectDatatypeConstraint xsd:integer .
+
+
+### http://www.knora.org/ontology/knora-base#standoffHasParentIndex
+
+:standoffHasParentIndex rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :systemProperty ;
+
+                  :subjectClassConstraint :StandoffTag ;
+
+                  :objectDatatypeConstraint xsd:integer .
+
+
+### http://www.knora.org/ontology/knora-base#standoffHasUUID
+
+:standoffHasUUID rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :systemProperty ;
+
+                  :subjectClassConstraint :StandoffTag ;
+
+                  :objectDatatypeConstraint xsd:anyURI .
+
+
+### http://www.knora.org/ontology/knora-base#standoffHasTagname
+
+:standoffHasTagname rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :systemProperty ;
+
+                  :subjectClassConstraint :StandoffTag ;
+
+                  :objectDatatypeConstraint xsd:string .
+
+
+### http://www.knora.org/ontology/knora-base#standoffHasXMLNamespace
+
+:standoffHasXMLNamespace rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :systemProperty ;
+
+                  :subjectClassConstraint :StandoffTag ;
+
+                  :objectDatatypeConstraint xsd:anyURI .
+
+
+### http://www.knora.org/ontology/knora-base#standoffHasXMLAttribute
+
+:standoffHasXMLAttribute rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :systemProperty ;
+
+                  :subjectClassConstraint :StandoffTag ;
+
+                  :objectDatatypeConstraint :StandoffXMLAttribute .
+
+
+### http://www.knora.org/ontology/knora-base#standoffXMLAttributeHasName
+
+:standoffXMLAttributeHasName rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :systemProperty ;
+
+                  :subjectClassConstraint :StandoffTag ;
+
+                  :objectDatatypeConstraint xsd:string .
+
+
+### http://www.knora.org/ontology/knora-base#standoffXMLAttributeHasValue
+
+:standoffXMLAttributeHasValue rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :systemProperty ;
+
+                  :subjectClassConstraint :StandoffTag ;
+
+                  :objectDatatypeConstraint xsd:string .
+
 #################################################################
 #
 # Generic Standoff Tag
@@ -232,9 +319,53 @@
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :standoffHasEnd ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :standoffHasUUID ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ],
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :standoffHasIndex ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ],
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :standoffHasParentIndex ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ],
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :standoffHasTagname ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ],
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :standoffHasXMLNamespace ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :standoffHasXMLAttribute ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
                           ] ;
 
           rdfs:comment "Represents a standoff tag in a TextValue"@en .
+
+
+### http://www.knora.org/ontology/knora-base#StandoffXMLAttribute
+
+:StandoffXMLAttribute rdf:type owl:Class ;
+
+           rdfs:subClassOf [ rdf:type owl:Restriction ;
+                             owl:onProperty :standoffHasXMLNamespace ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :standoffXMLAttributeHasName ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :standoffXMLAttributeHasValue ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ] ;
+
+          rdfs:comment "Represents a attribute of a standoff tag"@en .
 
 
 #################################################################
