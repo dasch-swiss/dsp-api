@@ -206,7 +206,7 @@ class SearchResponderV1 extends ResponderV1 {
                                     userProfile = searchGetRequest.userProfile
                                 )
 
-                                val value: Option[(String, MatchingValue)] = valuePermissionCode.map {
+                                val value: Option[(IRI, MatchingValue)] = valuePermissionCode.map {
                                     permissionCode =>
                                         val propertyIri = row.rowMap("resourceProperty")
                                         val propertyLabel = entityInfoResponse.propertyEntityInfoMap(propertyIri).getPredicateObject(OntologyConstants.Rdfs.Label) match {
@@ -498,7 +498,7 @@ class SearchResponderV1 extends ResponderV1 {
             }
 
             // Get the user's permission on each target resource.
-            targetResourceIriAuthInfo: Map[String, Option[Int]] = targetResourceIriAuthInfoRows.groupBy(_.rowMap("resource")).map {
+            targetResourceIriAuthInfo: Map[IRI, Option[Int]] = targetResourceIriAuthInfoRows.groupBy(_.rowMap("resource")).map {
                 case (targetResourceIri, rows: Seq[VariableResultsRow]) =>
                     val assertions = rows.map {
                         row => (row.rowMap("p"), row.rowMap("o"))
@@ -542,11 +542,13 @@ class SearchResponderV1 extends ResponderV1 {
                         // Collect the matching values in the resource.
                         val matchingValues = rows.foldLeft(Map.empty[IRI, MatchingValue]) {
                             case (valuesAcc, row) =>
-                                val valuesInRow: Seq[(String, MatchingValue)] = searchCriteria.zipWithIndex.map {
+                                val valuesInRow: Seq[(IRI, MatchingValue)] = searchCriteria.zipWithIndex.map {
                                     case (searchCriterion, index) =>
-                                        // Convert the permissions on the matching value object into a ValueProps.
                                         val valueIri = row.rowMap(s"valueObject$index")
                                         val literal = row.rowMap(s"literal$index")
+
+                                        // Convert the permissions on the matching value object into a ValueProps.
+
                                         val valuePermissionsString = row.rowMap.getOrElse(s"valuePermissions$index", "")
                                         val valuePermissionsAsValueProps: ValueProps = PermissionUtilV1.parsePermissionsAsValueProps(
                                             assertionsString = valuePermissionsString,
