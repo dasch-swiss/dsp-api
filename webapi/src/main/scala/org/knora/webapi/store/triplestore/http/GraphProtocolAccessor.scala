@@ -41,8 +41,9 @@ object GraphProtocolAccessor {
 
     /**
       * Use the HTTP PUT method to send the data. Put is defined as SILENT DELETE of the graph and an INSERT.
+      *
       * @param graphName the name of the graph.
-      * @param filepath a path to the file containing turtle.
+      * @param filepath  a path to the file containing turtle.
       * @return String
       */
     def put(graphName: String, filepath: String)(implicit _system: ActorSystem): String = {
@@ -51,8 +52,9 @@ object GraphProtocolAccessor {
 
     /**
       * Use the HTTP PUT method to send the data. Put is defined as SILENT DELETE of the graph and an INSERT.
+      *
       * @param graphName the name of the graph.
-      * @param filepath path to the file containing turtle.
+      * @param filepath  path to the file containing turtle.
       * @return String
       */
     def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem): String = {
@@ -61,8 +63,9 @@ object GraphProtocolAccessor {
 
     /**
       * Use the HTTP POST method to send the data. Post is defined as an INSERT.
+      *
       * @param graphName the name of the graph.
-      * @param filepath a path to the file containing turtle.
+      * @param filepath  a path to the file containing turtle.
       * @return String
       */
     def post(graphName: String, filepath: String)(implicit _system: ActorSystem): String = {

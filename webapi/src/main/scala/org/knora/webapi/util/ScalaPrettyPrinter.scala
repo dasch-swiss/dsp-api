@@ -28,6 +28,7 @@ import org.kiama.output.PrettyPrinter
 object ScalaPrettyPrinter extends PrettyPrinter {
     /**
       * Converts any Scala value into a pretty-printed string.
+      *
       * @param value the value to be converted.
       * @return a pretty-printed string.
       */

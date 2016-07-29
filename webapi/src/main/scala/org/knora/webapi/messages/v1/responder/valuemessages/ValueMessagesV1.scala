@@ -428,7 +428,7 @@ case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiResponderConvers
   * Possibly, two file values have been changed (thumb and full quality).
   *
   * @param locations the updated file value(s).
-  * @param userdata           information about the user that made the request.
+  * @param userdata  information about the user that made the request.
   */
 case class ChangeFileValueResponseV1(locations: Vector[LocationV1],
                                      userdata: UserDataV1) extends KnoraResponseV1 {
@@ -1139,7 +1139,7 @@ case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
 
 /**
   * Represents a [[http://www.geonames.org/ GeoNames]] code.
- *
+  *
   * @param geonameCode a string representing the GeoNames code.
   */
 case class GeonameValueV1(geonameCode: String) extends UpdateValueV1 with ApiValueV1 {
@@ -1305,8 +1305,8 @@ case class ValueVersionV1(valueObjectIri: IRI,
   */
 object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
     import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     /**
       * Converts between [[StandoffPositionV1]] objects and [[JsValue]] objects.

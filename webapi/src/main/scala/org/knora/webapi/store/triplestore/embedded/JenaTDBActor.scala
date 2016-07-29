@@ -21,13 +21,12 @@
 package org.knora.webapi.store.triplestore.embedded
 
 import java.io._
-import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging, Status}
 import org.apache.commons.io.FileUtils
 import org.apache.jena.graph.Node
 import org.apache.jena.query._
-import org.apache.jena.query.text.{DatasetGraphText, Entity, EntityDefinition, TextDatasetFactory, TextQueryFuncs}
+import org.apache.jena.query.text._
 import org.apache.jena.rdf.model.{Literal, ResourceFactory}
 import org.apache.jena.sparql.core.Quad
 import org.apache.jena.tdb.{TDB, TDBFactory}
@@ -131,6 +130,7 @@ class JenaTDBActor extends Actor with ActorLogging {
 
     /**
       * Submits a SPARQL query to the embedded Jena TDB store and returns the response as a [[SparqlSelectResponse]].
+      *
       * @param queryString the SPARQL request to be submitted.
       * @return [[SparqlSelectResponse]].
       */
@@ -214,6 +214,7 @@ class JenaTDBActor extends Actor with ActorLogging {
     /**
       * Submits a SPARQL update request to the embedded Jena TDB store, and returns a [[SparqlUpdateResponse]] if the
       * operation completed successfully.
+      *
       * @param updateString the SPARQL update to be submitted.
       * @return a [[SparqlUpdateResponse]].
       */
@@ -254,6 +255,7 @@ class JenaTDBActor extends Actor with ActorLogging {
 
     /**
       * Reloads the contents of the triplestore from RDF data files.
+      *
       * @param rdfDataObjects a list of [[RdfDataObject]] instances describing the files to be loaded.
       * @return an [[ResetTriplestoreContentACK]] indicating that the operation completed successfully.
       */
@@ -279,6 +281,7 @@ class JenaTDBActor extends Actor with ActorLogging {
 
     /**
       * Drops all content from the triplestore.
+      *
       * @return a [[DropAllTriplestoreContentACK]]
       */
     private def dropAllTriplestoreContent(): DropAllTriplestoreContentACK = {
@@ -319,6 +322,7 @@ class JenaTDBActor extends Actor with ActorLogging {
 
     /**
       * Inserts the data referenced in each [[RdfDataObject]]
+      *
       * @param rdfDataObjects a sequence holding [[RdfDataObject]]
       * @return a [[InsertTriplestoreContentACK]]
       */
@@ -366,6 +370,7 @@ class JenaTDBActor extends Actor with ActorLogging {
 
     /**
       * Used to manually refresh the Lucene index after changing data in the triplestore.
+      *
       * @return a [[Boolean]] denoting if the update was successful
       */
     private def updateIndex(): Boolean = {
@@ -411,6 +416,7 @@ class JenaTDBActor extends Actor with ActorLogging {
     /**
       * Creates the dataset with a Lucene index attached. The triplestore dataset is either disk-backed or in-memory,
       * depending on the settings. The Lucene index is always in-memory.
+      *
       * @return a [[Dataset]]
       */
     private def getDataset: Dataset = {

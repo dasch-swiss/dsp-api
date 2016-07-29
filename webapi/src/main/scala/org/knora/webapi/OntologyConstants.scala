@@ -216,6 +216,7 @@ object OntologyConstants {
             val resourceClass = "restypeid"
             val assignmentOperator = "="
         }
+
     }
 
     object Foaf {

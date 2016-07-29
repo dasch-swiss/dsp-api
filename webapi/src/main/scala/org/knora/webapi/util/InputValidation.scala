@@ -198,14 +198,14 @@ object InputValidation {
     def validateTextattr(textattr: Map[String, Seq[StandoffPositionV1]]): Map[String, Seq[StandoffPositionV1]] = {
         textattr.map {
             case (attr: String, positions: Seq[StandoffPositionV1]) => (InputValidation.toSparqlEncodedString(attr), positions.map {
-                    case (position: StandoffPositionV1) => StandoffPositionV1(start = position.start, end = position.end, href = position.href match {
-                            case Some(href) => Some(InputValidation.toIri(href, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute href $href")))
-                            case _ => None
-                        }, resid = position.resid match {
-                            case Some(resid) => Some(InputValidation.toIri(resid, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute resid $resid")))
-                            case _ => None
-                        })
+                case (position: StandoffPositionV1) => StandoffPositionV1(start = position.start, end = position.end, href = position.href match {
+                    case Some(href) => Some(InputValidation.toIri(href, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute href $href")))
+                    case _ => None
+                }, resid = position.resid match {
+                    case Some(resid) => Some(InputValidation.toIri(resid, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute resid $resid")))
+                    case _ => None
                 })
+            })
         }
     }
 

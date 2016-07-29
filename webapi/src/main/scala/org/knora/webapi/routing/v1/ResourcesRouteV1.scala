@@ -25,8 +25,8 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
+import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._

@@ -39,7 +39,8 @@ sealed trait GraphDataResponderRequestV1 extends KnoraRequestV1
 
 /**
   * Requests visualization graph data. A successful response will be a [[GraphDataGetResponseV1]].
-  * @param iri the IRI of the list.
+  *
+  * @param iri         the IRI of the list.
   * @param userProfile the profile of the user making the request.
   */
 case class GraphDataGetRequestV1(iri: IRI, userProfile: UserProfileV1, level: Int = 1) extends GraphDataResponderRequestV1
@@ -51,6 +52,7 @@ case class GraphDataGetRequestV1(iri: IRI, userProfile: UserProfileV1, level: In
 sealed abstract class GraphDataResponseV1 extends KnoraResponseV1 {
     /**
       * Information about the user that made the request.
+      *
       * @return a [[UserDataV1]].
       */
     def userdata: UserDataV1
@@ -58,7 +60,8 @@ sealed abstract class GraphDataResponseV1 extends KnoraResponseV1 {
 
 /**
   * Provides a graph data representation
-  * @param graph the graph representation holding a list of nodes and edges
+  *
+  * @param graph    the graph representation holding a list of nodes and edges
   * @param userdata information about the user that made the request.
   */
 case class GraphDataGetResponseV1(graph: GraphV1, userdata: UserDataV1) extends GraphDataResponseV1 {
@@ -72,7 +75,8 @@ case class GraphDataGetResponseV1(graph: GraphV1, userdata: UserDataV1) extends 
 
 /**
   * Represents a graph in Knora API v1 format.
-  * @param id the IRI that generates the graph.
+  *
+  * @param id    the IRI that generates the graph.
   * @param nodes a flat list of all the nodes in the graph
   * @param edges a flat list of all the edges in the graph
   */
@@ -80,6 +84,7 @@ case class GraphV1(id: IRI, nodes: Seq[GraphNodeV1], edges: Seq[GraphDataEdgeV1]
 
 /**
   * Represents a graph node in Knora API v1 format.
+  *
   * @param id the IRI that generates the graph.
   * @param resinfo
   * @param properties
@@ -89,9 +94,10 @@ case class GraphNodeV1(id: IRI, resinfo: Option[ResourceInfoV1], properties: Opt
 
 /**
   * Represents a graph edge
+  *
   * @param label the edge label
-  * @param from the central IRI
-  * @param to the incoming IRI
+  * @param from  the central IRI
+  * @param to    the incoming IRI
   */
 case class GraphDataEdgeV1(label: Option[String], from: IRI, to: IRI)
 
@@ -110,6 +116,7 @@ object GraphDataV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
     implicit object GraphDataV1JsonFormat extends JsonFormat[GraphV1] {
         /**
           * Recursively converts a [[GraphV1]] to a [[JsValue]].
+          *
           * @param graph a [[GraphV1]].
           * @return a [[JsValue]].
           */

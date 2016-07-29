@@ -23,9 +23,9 @@ package org.knora.webapi.messages.v1.responder.sipimessages
 import java.io.File
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.messages.v1.responder.valuemessages.FileValueV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.FileValueV1
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -232,8 +232,8 @@ sealed trait SipiResponderRequestV1 extends KnoraRequestV1
 /**
   * A Knora v1 API request message that requests information about a `FileValue`.
   *
-  * @param filename the name of the file belonging to the file value to be queried.
-  * @param userProfile  the profile of the user making the request.
+  * @param filename    the name of the file belonging to the file value to be queried.
+  * @param userProfile the profile of the user making the request.
   */
 case class SipiFileInfoGetRequestV1(filename: String, userProfile: UserProfileV1) extends SipiResponderRequestV1
 
@@ -257,6 +257,7 @@ case class SipiFileInfoGetResponseV1(permissionCode: Option[Int],
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
 object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
+
     import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat3(SipiFileInfoGetResponseV1)

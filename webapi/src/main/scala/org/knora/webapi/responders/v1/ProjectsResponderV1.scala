@@ -51,9 +51,9 @@ class ProjectsResponderV1 extends ResponderV1 {
     /**
       * Gets permissions for the current user on the given project.
       *
-      * @param projectIri the Iri of the project.
+      * @param projectIri           the Iri of the project.
       * @param propertiesForProject assertions containing permissions on the project.
-      * @param userProfile the user that is making the request.
+      * @param userProfile          the user that is making the request.
       * @return permission level of the current user on the project.
       */
     private def getUserPermissionV1ForProject(projectIri: IRI, propertiesForProject: Map[IRI, String], userProfile: UserProfileV1): Option[Int] = {
@@ -116,9 +116,9 @@ class ProjectsResponderV1 extends ResponderV1 {
       * Turns SPARQL result rows into a [[ProjectInfoV1]].
       *
       * @param projectResponse results from the SPARQL query representing information about the project.
-      * @param projectIri the Iri of the project the querid information belong to.
-      * @param requestType type request: either short or full.
-      * @param userProfile the profile of user that is making the request.
+      * @param projectIri      the Iri of the project the querid information belong to.
+      * @param requestType     type request: either short or full.
+      * @param userProfile     the profile of user that is making the request.
       * @return a [[ProjectInfoV1]] representing information about project.
       */
     private def createProjectInfoV1FromProjectResponse(projectResponse: Seq[VariableResultsRow], projectIri: IRI, requestType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): ProjectInfoV1 = {
@@ -167,7 +167,7 @@ class ProjectsResponderV1 extends ResponderV1 {
     /**
       * Gets the project with the given project Iri and returns the information as a [[ProjectInfoResponseV1]].
       *
-      * @param projectIri the Iri of the project requested.
+      * @param projectIri  the Iri of the project requested.
       * @param requestType type request: either short or full.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
@@ -194,7 +194,7 @@ class ProjectsResponderV1 extends ResponderV1 {
     /**
       * Gets the project with the given shortname and returns the information as a [[ProjectInfoResponseV1]].
       *
-      * @param shortname the shortname of the project requested.
+      * @param shortname   the shortname of the project requested.
       * @param requestType type request: either short or full.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].

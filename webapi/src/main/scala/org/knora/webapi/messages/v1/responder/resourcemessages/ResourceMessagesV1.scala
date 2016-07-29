@@ -160,10 +160,10 @@ case class ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProf
 /**
   * Requests that a resource is marked as deleted. A successful response will be a [[ResourceDeleteResponseV1]].
   *
-  * @param resourceIri the IRI of the resource to be marked as deleted.
+  * @param resourceIri   the IRI of the resource to be marked as deleted.
   * @param deleteComment an optional comment explaining why the resource is being marked as deleted.
-  * @param userProfile the profile of the user making the request.
-  * @param apiRequestID    the ID of the API request.
+  * @param userProfile   the profile of the user making the request.
+  * @param apiRequestID  the ID of the API request.
   */
 case class ResourceDeleteRequestV1(resourceIri: IRI,
                                    deleteComment: Option[String],
@@ -180,8 +180,8 @@ case class ResourceCheckClassResponseV1(isInClass: Boolean)
 /**
   * Represents a successful response to a [[ResourceDeleteRequestV1]].
   *
-  * @param id the IRI of the resource that was marked as deleted.
-  * @param userdata    information about the user that made the request.
+  * @param id       the IRI of the resource that was marked as deleted.
+  * @param userdata information about the user that made the request.
   */
 case class ResourceDeleteResponseV1(id: IRI, userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceV1JsonProtocol.resourceDeleteResponseV1Format.write(this)

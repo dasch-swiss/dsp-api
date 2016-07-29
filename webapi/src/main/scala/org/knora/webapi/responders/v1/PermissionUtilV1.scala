@@ -320,11 +320,11 @@ object PermissionUtilV1 {
       *
       * @param linkValueIri the IRI of the `LinkValue`.
       * @param predicateIri the `rdf:predicate` of the `LinkValue`.
-      * @param valueProps  a [[ValueProps]] containing the permission-relevant predicates and objects
-      *                    pertaining to the value, grouped by predicate.
-      *                    Other predicates may be included, but they will be ignored, so there is no need to filter
-      *                    them before passing them to this function.
-      * @param userProfile the profile of the user making the request.
+      * @param valueProps   a [[ValueProps]] containing the permission-relevant predicates and objects
+      *                     pertaining to the value, grouped by predicate.
+      *                     Other predicates may be included, but they will be ignored, so there is no need to filter
+      *                     them before passing them to this function.
+      * @param userProfile  the profile of the user making the request.
       * @return a code representing the user's permission level on the value.
       */
     def getUserPermissionOnLinkValueV1(linkValueIri: IRI,
