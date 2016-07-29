@@ -48,7 +48,7 @@ case class CreateProjectApiRequestV1(shortName: String,
                                      ontologyGraph: String,
                                      dataGraph: String,
                                      isActiveProject: String,
-                                     permissionsTemplate: PermissionsTemplate.Value,
+                                     permissionsTemplate: String,
                                      hasSelfJoinEnabled: Boolean) {
     def toJsValue = ProjectV1JsonProtocol.createProjectApiRequestV1Format.write(this)
 }
@@ -103,6 +103,10 @@ case class ProjectInfoByIRIGetRequest(iri: IRI, infoType: ProjectInfoType.Value,
 case class ProjectInfoByShortnameGetRequest(shortname: String, infoType: ProjectInfoType.Value, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 
+case class ProjectCreateRequestV1(userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
+
+case class ProjectUpdateRequestV1(userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
+
 // Responses
 /**
   * Represents the Knora API v1 JSON response to a request for information about all projects.
@@ -140,9 +144,11 @@ case class ProjectInfoV1(id: IRI,
                          longname: Option[String] = None,
                          description: Option[String] = None,
                          keywords: Option[String] = None,
+                         projectOntologyGraph: IRI,
+                         projectDataGraph: IRI,
                          logo: Option[String] = None,
                          basepath: Option[String] = None,
-                         isActiveProject: Option[String] = None,
+                         isActiveProject: Option[Boolean] = None,
                          hasSelfJoinEnabled: Option[Boolean] = None,
                          rights: Option[Int] = None)
 
@@ -166,6 +172,12 @@ object ProjectInfoType extends Enumeration {
         }
     }
 }
+
+
+case class NewProjectDataV1(
+                           shortname: String,
+                           longname: Option[String]
+                           )
 
 object PermissionsTemplate extends Enumeration {
     val A = Value(0, "a")
@@ -200,14 +212,14 @@ object ProjectV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
     import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 
-    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat10(ProjectInfoV1)
+    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat12(ProjectInfoV1)
     // we have to use lazyFormat here because `UserV1JsonProtocol` contains an import statement for this object.
     // this results in recursive import statements
     // rootFormat makes it return the expected type again.
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectsResponseV1)))
     implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectInfoResponseV1)))
-    implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat7(CreateProjectApiRequestV1)))
+    implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat8(CreateProjectApiRequestV1)))
     implicit val updateProjectApiRequestV1Format: RootJsonFormat[UpdateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat2(UpdateProjectApiRequestV1)))
     implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectOperationResponseV1)))
 }

@@ -26,7 +26,8 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.{IRI, NotFoundException, OntologyConstants, UnexpectedMessageException}
+import org.knora.webapi._
+import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.Future
 
@@ -77,10 +78,15 @@ class ProjectsResponderV1 extends ResponderV1 {
 
         for {
         // group project result rows by their IRI
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjects(
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
                 triplestore = settings.triplestoreType
             ).toString())
-            projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            _ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
+
+            projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            _ = log.debug(s"getProjectsResponseV1 - result: ${MessageUtil.toSource(projectsResponse)}")
+
             projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
 
             projectsWithProperties: Map[String, Map[String, String]] = projectsResponseRows.groupBy(_.rowMap("s")).map {
@@ -88,6 +94,8 @@ class ProjectsResponderV1 extends ResponderV1 {
                     case row => (row.rowMap("p"), row.rowMap("o"))
                 }.toMap)
             }
+
+            _ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: ${MessageUtil.toSource(projectsWithProperties)}")
 
             projects = projectsWithProperties.map {
                 case (projIri: String, propsMap: Map[String, String]) =>
@@ -99,9 +107,14 @@ class ProjectsResponderV1 extends ResponderV1 {
 
                     ProjectInfoV1(
                         id = projIri,
-                        shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, ""),
+                        shortname = propsMap.get(OntologyConstants.KnoraBase.ProjectShortname).get,
                         longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname),
+                        description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription),
+                        keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords),
+                        projectOntologyGraph = propsMap.get(OntologyConstants.KnoraBase.ProjectOntolgyGraph).get,
+                        projectDataGraph = propsMap.get(OntologyConstants.KnoraBase.ProjectDataGraph).get,
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo),
+                        basepath = propsMap.get(OntologyConstants.KnoraBase.ProjectBasepath),
                         rights = rightsInProject
                     )
             }.toVector
@@ -129,6 +142,10 @@ class ProjectsResponderV1 extends ResponderV1 {
                 projectIri = projectIri
             ).toString())
             projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            _ = if (projectResponse.results.bindings.isEmpty) {
+                throw NotFoundException(s"Project '$projectIri' not found")
+            }
 
             projectInfo = createProjectInfoV1FromProjectResponse(projectResponse = projectResponse.results.bindings, projectIri = projectIri, infoType = infoType, userProfile)
 
@@ -161,7 +178,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             projectIri: IRI = if (projectResponse.results.bindings.nonEmpty) {
                 projectResponse.results.bindings.head.rowMap("s")
             } else {
-                throw NotFoundException(s"For the given project shortname $shortname no information was found")
+                throw NotFoundException(s"Project '$shortname' not found")
             }
 
             projectInfo = createProjectInfoV1FromProjectResponse(projectResponse = projectResponse.results.bindings, projectIri = projectIri, infoType = infoType, userProfile)
@@ -210,21 +227,26 @@ class ProjectsResponderV1 extends ResponderV1 {
                 case ProjectInfoType.FULL =>
                     ProjectInfoV1(
                         id = projectIri,
-                        longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
                         shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, ""),
-                        logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
+                        longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
                         description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
-                        keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeyword),
+                        keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords),
+                        projectOntologyGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectOntolgyGraph).get,
+                        projectDataGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectDataGraph).get,
+                        logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
                         basepath = projectProperties.get(OntologyConstants.KnoraBase.ProjectBasepath),
+                        isActiveProject = projectProperties.get(OntologyConstants.KnoraBase.IsActiveProject).map(_.toBoolean),
+                        hasSelfJoinEnabled = projectProperties.get(OntologyConstants.KnoraBase.HasSelfJoinEnabled).map(_.toBoolean),
                         rights = rightsInProject
                     )
                 case ProjectInfoType.SHORT | _ =>
                     ProjectInfoV1(
                         id = projectIri,
-                        longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
                         shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, ""),
-                        logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
-                        rights = rightsInProject
+                        longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
+                        description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
+                        projectOntologyGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectOntolgyGraph).get,
+                        projectDataGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectDataGraph).get
                     )
             }
         } else {

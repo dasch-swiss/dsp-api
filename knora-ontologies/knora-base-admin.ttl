@@ -282,17 +282,17 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#projectKeyword
+###  http://www.knora.org/ontology/knora-base#projectKeywords
 
-:projectKeyword rdf:type owl:DatatypeProperty ;
+:projectKeywords rdf:type owl:DatatypeProperty ;
 
-                rdfs:comment "A comma-delimited list of keywords describing a project"@en ;
+                 rdfs:comment "A comma-delimited list of keywords describing a project"@en ;
 
-                rdfs:subPropertyOf :systemProperty ;
+                 rdfs:subPropertyOf :systemProperty ;
 
-                :subjectClassConstraint :knoraProject ;
+                 :subjectClassConstraint :knoraProject ;
 
-                :objectDatatypeConstraint xsd:string .
+                 :objectDatatypeConstraint xsd:string .
 
 
 
@@ -428,7 +428,7 @@
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :projectKeyword ;
+                                owl:onProperty :projectKeywords ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;

@@ -31,6 +31,7 @@ import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoByShortnameGetRequest, ProjectInfoType, ProjectsGetRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
@@ -55,8 +56,9 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
     implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    val imagesProjectIri = "http://data.knora.org/projects/images"
-    val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
+    val imagesPI = SharedTestData.testprojectProjectInfoV1
+    val incunabulaPI= SharedTestData.incunabulaProjectInfoV1
+    val testprojectPI = SharedTestData.testprojectProjectInfoV1
 
     val rootUserProfileV1 = SharedTestData.rootUserProfileV1
 
@@ -71,29 +73,34 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
     }
 
     "The ProjectsResponderV1 " when {
-        /*
+        "asked about all projects " should {
+            "return 'full' project info for every project" in {
+                actorUnderTest ! ProjectsGetRequestV1(ProjectInfoType.SHORT, Some(rootUserProfileV1))
+                expectMsg(Some(List(imagesPI, incunabulaPI, testprojectPI)))
+            }
+        }
         "asked about a project identified by 'iri' " should {
-            "return project info if the project is known " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/root", true)
-                expectMsg(rootUserProfileV1.getCleanUserProfileV1)
+            "return full project info if the project is known " in {
+                actorUnderTest ! ProjectInfoByIRIGetRequest(imagesPI.id, ProjectInfoType.FULL, Some(rootUserProfileV1))
+                expectMsg(imagesPI)
             }
             "return 'NotFoundException' when the project is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", true)
-                expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
+                actorUnderTest ! ProjectInfoByIRIGetRequest("http://data.knora.org/projects/notexisting", ProjectInfoType.FULL, Some(rootUserProfileV1))
+                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/users/notexisting' not found")))
             }
         }
         "asked about a project identified by 'shortname' " should {
-            "return group info if the group is known " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1("root", true)
-                expectMsg(rootUserProfileV1.getCleanUserProfileV1)
+            "return full project info if the project is known " in {
+                actorUnderTest ! ProjectInfoByShortnameGetRequest(incunabulaPI.shortname, ProjectInfoType.FULL, Some(rootUserProfileV1))
+                expectMsg(incunabulaPI)
             }
 
-            "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1("userwrong", true)
-                expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
+            "return 'NotFoundException' when the project is unknown " in {
+                actorUnderTest ! ProjectInfoByShortnameGetRequest("projectwrong", ProjectInfoType.FULL, Some(rootUserProfileV1))
+                expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found")))
             }
         }
-
+        /*
         "asked to create a new project " should {
             "create the project and return it's profile if the supplied username is unique " in {
                 actorUnderTest ! UserCreateRequestV1(

@@ -110,15 +110,19 @@
 
 <http://data.knora.org/projects/images> rdf:type knora-base:knoraProject ;
 
-                                        knora-base:projectBasepath "/imldata/SALSAH-TEST-01/images"^^xsd:string ;
-
                                         knora-base:projectShortname "images"^^xsd:string ;
 
                                         knora-base:projectLongname "Image Collection Demo"^^xsd:string ;
 
+                                        knora-base:projectDescription "A demo project of a collection of images"^^xsd:string ;
+
+                                        knora-base:projectKeywords "images, collection"^^xsd:string ;
+
                                         knora-base:projectOntolgyGraph "http://www.knora.org/ontology/images"^^xsd:string ;
 
                                         knora-base:projectDataGraph "http://www.knora.org/data/images"^^xsd:string ;
+
+                                        knora-base:projectBasepath "/imldata/SALSAH-TEST-01/images"^^xsd:string ;
 
                                         knora-base:isActiveProject "true"^^xsd:boolean ;
 
@@ -215,11 +219,9 @@
 
 <http://data.knora.org/projects/77275339> rdf:type knora-base:knoraProject ;
 
-                                          knora-base:projectBasepath "/imldata/SALSAH-TEST-01/Incunabula"^^xsd:string ;
+                                          knora-base:projectShortname "incunabula"^^xsd:string ;
 
                                           knora-base:projectLongname "Bilderfolgen Basler Frühdrucke"^^xsd:string ;
-
-                                          knora-base:projectShortname "incunabula"^^xsd:string ;
 
                                           knora-base:projectDescription """<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.
 </p>
@@ -233,7 +235,17 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                           knora-base:projectKeyword """Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images"""^^xsd:string ;
 
-                                          knora-base:projectLogo "incunabula_logo.png"^^xsd:string .
+                                          knora-base:projectOntologyGraph "http://www.knora.org/ontology/incunabula"^^xsd:string ;
+
+                                          knora-base:projectDataGraph "http://www.knora.org/data/incunabula"^^xsd:string ;
+
+                                          knora-base:projectLogo "incunabula_logo.png"^^xsd:string ;
+
+                                          knora-base:projectBasepath "/imldata/SALSAH-TEST-01/Incunabula"^^xsd:string ;
+
+                                          knora-base:isActiveProject "true"^^xsd:boolean ;
+
+                                          knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 ### ###########################################
@@ -288,17 +300,17 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ###################################
 <http://data.knora.org/projects/666>	  rdf:type knora-base:knoraProject ;
 
-                                          knora-base:projectBasepath "/imldata/testproject"^^xsd:string ;
+                                          knora-base:projectShortname "testproject"^^xsd:string ;
 
                                           knora-base:projectLongname "Test Project"^^xsd:string ;
 
-                                          knora-base:projectShortname "testproject"^^xsd:string ;
-
                                           knora-base:projectDescription "A test project"^^xsd:string ;
 
-                                          knora-base:projectOntolgyGraph "http://www.knora.org/ontology/testproject"^^xsd:string ;
+                                          knora-base:projectOntologyGraph "http://www.knora.org/ontology/testproject"^^xsd:string ;
 
                                           knora-base:projectDataGraph "http://www.knora.org/data/testproject"^^xsd:string ;
+
+                                          knora-base:projectBasepath "/imldata/testproject"^^xsd:string ;
 
                                           knora-base:isActiveProject "true"^^xsd:boolean ;
 

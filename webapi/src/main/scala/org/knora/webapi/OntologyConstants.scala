@@ -158,7 +158,7 @@ object OntologyConstants {
         val ProjectShortname = KNORA_BASE_PREFIX + "projectShortname"
         val ProjectLongname = KNORA_BASE_PREFIX + "projectLongname"
         val ProjectDescription = KNORA_BASE_PREFIX + "projectDescription"
-        val ProjectKeyword = KNORA_BASE_PREFIX + "projectKeyword"
+        val ProjectKeywords = KNORA_BASE_PREFIX + "projectKeywords"
         val ProjectBasepath = KNORA_BASE_PREFIX + "projectBasepath"
         val ProjectLogo = KNORA_BASE_PREFIX + "projectLogo"
         val ProjectOntolgyGraph = KNORA_BASE_PREFIX + "projectOntologyGraph"
