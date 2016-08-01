@@ -394,4 +394,14 @@ Consistency: resource_prop_cardinality_any
     i <rdf:type> r
     r <owl:onProperty> p
 
+
+// If a value has a subproperty of knora-base:valueHas, the value class must have
+// some cardinality for that property.
+Consistency: value_prop_cardinality_any
+    i <knora-base:valueHas> j
+    ------------------------------------
+    i p j
+    i <rdf:type> r
+    r <owl:onProperty> p
+
 }
