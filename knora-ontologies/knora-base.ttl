@@ -890,6 +890,8 @@
 
 :standoffHasLink rdf:type owl:ObjectProperty ;
 
+                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
                  :objectClassConstraint :Resource ;
 
                  :subjectClassConstraint :StandoffLink .
@@ -1439,7 +1441,7 @@
 
               rdfs:comment "A comment explaining why a resource or value was marked as deleted"@en ;
 
-              rdfs:subPropertyOf :systemProperty ;
+              rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
               :objectDatatypeConstraint xsd:string .
 
