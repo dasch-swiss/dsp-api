@@ -65,6 +65,8 @@ Specifically, consistency checking should prevent the following:
 - An instance of ``knora-base:Resource`` has an object property pointing to a
   ``knora-base:Value`` or to another ``Resource``, and its class has no cardinality
   for that property.
+- An instance of ``knora-base:Value`` has a subproperty of ``knora-base:valueHas``,
+  and its class has no cardinality for that property.
 
 Cardinalities in base classes are inherited by derived classes. Derived classes
 can override inherited cardinalities by making them more restrictive, i.e. by specifying
@@ -179,11 +181,10 @@ whether ``i`` is actually something that can be marked as deleted.
 However, this implementation would be much too slow. We therefore use
 two optimisations suggested by Ontotext:
 
-1. Add ``[Cut]`` to avoid running the rule twice to check the same two
-   objects, first as ``j`` and ``k``, then as ``k`` and ``j``.
-2. Add custom inference rules to make tables (i.e. named graphs) of pre-calculated
+1. Add custom inference rules to make tables (i.e. named graphs) of pre-calculated
    information about the cardinalities on properties of subjects,
    and use those tables to simplify the consistency rules.
+2. Use ``[Cut]`` to avoid generating redundant compiled rules.
 
 For example, to construct a table of subjects belonging to classes that have
 ``owl:maxCardinality 1`` on some property ``p``, we use the following custom
@@ -280,35 +281,36 @@ cardinality:
 
 ::
 
-    Consistency: cardinality_1_not_less_any_object
-        i p r [Context <onto:_cardinality_1_table>]
+Consistency: cardinality_1_not_less_any_object
+    i p r [Context <onto:_cardinality_1_table>]
+    ------------------------------------
+    i p j
+
+
+Knora allows a subproperty of ``knora-base:hasValue`` or
+``knora-base:hasLinkTo`` to be a predicate of a resource only if the resource's
+class has some cardinality for the property. For convenience,
+``knora-base:hasValue`` and ``knora-base:hasLinkTo`` are subproperties of
+``knora-base:resourceProperty``, which is used to check this constraint in the
+following rule:
+
+::
+
+    Consistency: resource_prop_cardinality_any
+        i <knora-base:resourceProperty> j
         ------------------------------------
         i p j
+        i <rdf:type> r
+        r <owl:onProperty> p
 
+If resource ``i`` has a subproperty of ``knora-base:resourceProperty``,
+and ``i`` is not a member of a subclass of an ``owl:Restriction`` ``r``
+with a cardinality on that property (or on one of its base
+properties), the rule is violated.
 
-.. Commented out because of GraphDB issue OWLIM-2937 (Consistency rules with multiple consequents do not trigger),
-   which should be fixed in GraphDB SE 7.0.2.
-
-    Knora allows a subproperty of ``knora-base:hasValue`` or
-    ``knora-base:hasLinkTo`` to be a predicate of a resource only if the resource's
-    class has some cardinality for the property. For convenience,
-    ``knora-base:hasValue`` and ``knora-base:hasLinkTo`` are subproperties of
-    ``knora-base:resourceProperty``, which is used to check this constraint in the
-    following rule:
-
-    ::
-
-        Consistency: resource_prop_cardinality_any
-            i <knora-base:resourceProperty> j
-            ------------------------------------
-            i p j
-            i <rdf:type> r
-            r <owl:onProperty> p
-
-    If resource ``i`` has a subproperty of ``knora-base:resourceProperty``,
-    and ``i`` is not a member of a subclass of an ``owl:Restriction`` ``r``
-    with a cardinality on that property (or on one of its base
-    properties), the rule is violated.
+A similar rule, ``value_prop_cardinality_any``, ensures that if a value has
+a subproperty of ``knora-base:valueHas``, the value's class has some cardinality
+for that property.
 
 
 .. _Ontotext GraphDB: https://ontotext.com/products/graphdb/
