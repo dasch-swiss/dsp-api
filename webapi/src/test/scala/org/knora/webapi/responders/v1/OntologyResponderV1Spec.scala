@@ -575,7 +575,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = None,
+                    description = Some("Represents a direct connection between two resources"),
                     label = Some("hat Standoff Link zu"),
                     name = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
                     id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
@@ -588,36 +588,17 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         )
     )
 
-    private def checkResourceTypeResponseV1(received: ResourceTypeResponseV1, expected: ResourceTypeResponseV1): Boolean = {
+    private def checkResourceTypeResponseV1(received: ResourceTypeResponseV1, expected: ResourceTypeResponseV1): Unit = {
         val sortedReceivedProperties = received.restype_info.properties.toList.sortBy(_.id)
         val sortedExpectedProperties: Seq[PropertyDefinitionV1] = expected.restype_info.properties.toList.sortBy(_.id)
 
         assert(sortedReceivedProperties.size == sortedExpectedProperties.size,
             s"\n********** received these properties:\n${MessageUtil.toSource(sortedReceivedProperties)}\n********** expected these properties:\n${MessageUtil.toSource(sortedExpectedProperties)}")
 
-
         sortedReceivedProperties.zip(sortedExpectedProperties).foreach {
             case (receivedProp: PropertyDefinitionV1, expectedProp: PropertyDefinitionV1) =>
-
-                // sort property attributes
-                val expectedPropWithSortedAttr = expectedProp.copy(
-                    attributes = expectedProp.attributes match {
-                        case Some(attr: String) => Some(attr.sorted)
-                        case None => None
-                    }
-                )
-
-                val receivedPropWithSortedAttr = receivedProp.copy(
-                    attributes = receivedProp.attributes match {
-                        case Some(attr: String) => Some(attr.sorted)
-                        case None => None
-                    }
-                )
-
-                assert(receivedPropWithSortedAttr == expectedPropWithSortedAttr, s"These props do not match:\n*** Received:\n${MessageUtil.toSource(receivedProp)}\n*** Expected:\n${MessageUtil.toSource(expectedProp)}")
+                assert(receivedProp == receivedProp, s"These props do not match:\n*** Received:\n${MessageUtil.toSource(receivedProp)}\n*** Expected:\n${MessageUtil.toSource(expectedProp)}")
         }
-
-        true
     }
 
     private val resourceTypesForNamedGraphIncunabula = ResourceTypesForNamedGraphResponseV1(
@@ -1174,7 +1155,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ResourceTypeResponseV1 if checkResourceTypeResponseV1(received = msg, expected = page) => ()
+                case msg: ResourceTypeResponseV1 => checkResourceTypeResponseV1(received = msg, expected = page)
             }
         }
 
@@ -1186,7 +1167,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ResourceTypeResponseV1 if checkResourceTypeResponseV1(received = msg, expected = book) => ()
+                case msg: ResourceTypeResponseV1 => checkResourceTypeResponseV1(received = msg, expected = book)
             }
         }
 
@@ -1198,7 +1179,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ResourceTypeResponseV1 if checkResourceTypeResponseV1(received = msg, expected = region) => ()
+                case msg: ResourceTypeResponseV1 => checkResourceTypeResponseV1(received = msg, expected = region)
             }
         }
 
@@ -1210,7 +1191,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ResourceTypeResponseV1 if checkResourceTypeResponseV1(received = msg, expected = linkObject) => ()
+                case msg: ResourceTypeResponseV1 => checkResourceTypeResponseV1(received = msg, expected = linkObject)
             }
         }
 
