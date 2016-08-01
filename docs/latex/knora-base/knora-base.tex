@@ -79,7 +79,7 @@
 \title{The Knora Base Ontology}
 \author{Lukas Rosenthaler, Benjamin Geer, Tobias Schweizer, Ivan Subotic\\Digital Humanities Lab, University of Basel}
 
-\date{25 July 2016}
+\date{1 August 2016}
 
 \begin{document}
 
@@ -213,7 +213,7 @@ In Knora, each item of data belongs to some particular project. Each project usi
 
 \begin{description}
 	\item[shortname (1)] A short name that can be used to identify the project in configuration files and the like.
-	\item[basepath (1)] The filesystem path of the directory where the project's files are stored. \issue{192}{Should this be in the triplestore?}
+	\item[basepath (1)] The filesystem path of the directory where the project's files are stored.
 	\item[foaf:name (0-1)] The name of the project.
 	\item[description (0-1)] A description of the project.
 	\item[belongsTo (0-1)] The \texttt{kb:Institution} that the project belongs to.
@@ -345,12 +345,20 @@ Represents an arbitrary-precision decimal number. Property:
 	\item[valueHasDecimal (1)] An \texttt{xsd:decimal}.
 \end{description}
 
-\subsubsection{TimeValue}
+\subsubsection{UriValue}
 
-Represents a precise point on a timeline, e.g. relative to the beginning of an audio or video file. Property:
+Represents a non-Knora URI. Property:
 
 \begin{description}
-	\item[valueHasTime (1)]	An \texttt{xsd:decimal} representing a number of seconds from the beginning of the timeline.
+	\item[valueHasUri (1)] An \texttt{xsd:anyURI}.
+\end{description}
+
+\subsubsection{BooleanValue}
+
+Represents a boolean value. Property:
+
+\begin{description}
+	\item[valueHasBoolean (1)] An \texttt{xsd:boolean}.
 \end{description}
 
 \subsubsection{GeomValue}
@@ -793,7 +801,9 @@ The implementation of consistency checking is partly triplestore-dependent; Knor
 
 \label{subsec:cardinalities}
 
-As noted in Section~\ref{subsec:resources}, each subclass of \texttt{Resource} must use OWL cardinality restrictions to specify the properties it can have. More specifically, a resource is allowed to have a property that is a subproperty of \texttt{kb:hasValue} or \texttt{kb:hasLinkTo} only if the resource's class has some cardinality for that property. In addition, Knora supports, and attempts to enforce, the following cardinality constraints:
+As noted in Section~\ref{subsec:resources}, each subclass of \texttt{Resource} must use OWL cardinality restrictions to specify the properties it can have. More specifically, a resource is allowed to have a property that is a subproperty of \texttt{kb:hasValue} or \texttt{kb:hasLinkTo} only if the resource's class has some cardinality for that property. Similarly, a value is allowed to have a subproperty of \texttt{kb:valueHas} only if the value's class has some cardinality for that property.
+
+Knora supports, and attempts to enforce, the following cardinality constraints:
  
 \begin{description}
 	\item[owl:cardinality 1] A resource of this class must have exactly one instance of the specified property.
