@@ -969,9 +969,7 @@
 
             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-            rdfs:comment "Indicates when a resource was deleted"@en ;
-
-            :subjectClassConstraint :Resource ;
+            rdfs:comment "Indicates when a resource or value was deleted"@en ;
 
             :objectDatatypeConstraint xsd:dateTimeStamp .
 
@@ -1435,6 +1433,18 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#deleteComment
+
+:deleteComment rdf:type owl:DatatypeProperty ;
+
+              rdfs:comment "A comment explaining why a resource or value was marked as deleted"@en ;
+
+              rdfs:subPropertyOf :systemProperty ;
+
+              :objectDatatypeConstraint xsd:string .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#valueCreationDate
 
 :valueCreationDate rdf:type owl:DatatypeProperty ;
@@ -1680,6 +1690,8 @@
 
                 rdfs:subPropertyOf :valueHas ;
 
+                rdfs:comment "A string representation of a value, required for full-text searches and search results."@en ;
+
                 :subjectClassConstraint :Value ;
 
                 :objectDatatypeConstraint xsd:string .
@@ -1797,10 +1809,6 @@
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :valueHasColor ;
                               owl:cardinality "1"^^xsd:nonNegativeInteger
-                            ] ,
-                            [ rdf:type owl:Restriction ;
-                              owl:onProperty :valueHasString ;
-                              owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ;
 
             rdfs:comment "Represents a color in HTML format, e.g. \"#33eeff\""@en .
@@ -1863,10 +1871,6 @@
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasStartJDC ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasString ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ;
 
@@ -1974,10 +1978,6 @@
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :valueHasDecimal ;
                               owl:cardinality "1"^^xsd:nonNegativeInteger
-                            ] ,
-                            [ rdf:type owl:Restriction ;
-                              owl:onProperty :valueHasString ;
-                              owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ;
 
             rdfs:comment "Represents an arbitrary-precision decimal value"@en .
@@ -2005,10 +2005,6 @@
               rdfs:subClassOf :Value ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :valueHasGeonameCode ;
-                                owl:cardinality "1"^^xsd:nonNegativeInteger
-                              ] ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :valueHasString ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] .
 
@@ -2055,10 +2051,6 @@
           rdfs:subClassOf :Value ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :valueHasInteger ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
-                          ] ,
-                          [ rdf:type owl:Restriction ;
-                            owl:onProperty :valueHasString ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ;
 
@@ -2211,10 +2203,6 @@
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasListNode ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasString ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
@@ -2382,6 +2370,10 @@
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :deleteDate ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :deleteComment ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
 
           rdfs:label "Ressource"@de ,
@@ -2528,10 +2520,6 @@
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasStandoff ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasString ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
 
@@ -2612,12 +2600,28 @@
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
+                         owl:onProperty :valueHasComment ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
                          owl:onProperty :isDeleted ;
                          owl:cardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
+                         owl:onProperty :deleteDate ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :deleteComment ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
                          owl:onProperty :previousValue ;
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :valueHasString ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger
                        ] ;
        
        rdfs:comment "The base class of classes representing Knora values"@en .
@@ -2727,3 +2731,21 @@
                       owl:NamedIndividual ;
              
              <http://xmlns.com/foaf/0.1/name> "unknown user" .
+
+
+
+###  http://www.knora.org/ontology/knora-base#SystemUser
+
+:SystemUser rdf:type :User ;
+
+                     :userid "system" ;
+
+                     <http://xmlns.com/foaf/0.1/givenName> "Knora" ;
+
+                     <http://xmlns.com/foaf/0.1/familyName> "System" ;
+
+                     :password "-" ;
+
+                     :email "-" ;
+
+                     :preferredLanguage "en" .

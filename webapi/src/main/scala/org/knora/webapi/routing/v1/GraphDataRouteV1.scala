@@ -38,9 +38,9 @@ object GraphDataRouteV1 extends Authenticator {
 
     /**
       *
-      * @param _system: The actor system to be used
+      * @param _system : The actor system to be used
       */
-    def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout

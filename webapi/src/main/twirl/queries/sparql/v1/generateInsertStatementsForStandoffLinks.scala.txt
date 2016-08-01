@@ -46,6 +46,7 @@
                 rdf:subject ?resource ;
                 rdf:predicate <@linkUpdate.linkPropertyIri> ;
                 rdf:object <@linkUpdate.linkTargetIri> ;
+                knora-base:valueHasString "@linkUpdate.linkTargetIri" ;
                 knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
                 knora-base:isDeleted false ;
                 knora-base:valueCreationDate ?currentTime .

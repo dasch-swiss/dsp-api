@@ -26,8 +26,7 @@ import akka.pattern._
 import akka.routing.FromConfig
 import akka.util.Timeout
 import org.knora.webapi.SettingsConstants._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.messages.v1.store.triplestoremessages.{CheckConnection, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{CheckConnection, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK, _}
 import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.embedded.JenaTDBActor
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreActor

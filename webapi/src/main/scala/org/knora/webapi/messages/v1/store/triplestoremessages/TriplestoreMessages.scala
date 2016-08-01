@@ -23,6 +23,7 @@ case object CheckConnection extends TriplestoreRequest
 
 /**
   * Represents a SPARQL SELECT query to be sent to the triplestore.
+  *
   * @param sparql the SPARQL string.
   */
 case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
@@ -30,13 +31,15 @@ case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
 /**
   * Represents a response to a SPARQL SELECT query, containing a parsed representation of the response (JSON, etc.)
   * returned by the triplestore
-  * @param head the header of the response, containing the variable names.
+  *
+  * @param head    the header of the response, containing the variable names.
   * @param results the body of the response, containing rows of query results.
   */
 case class SparqlSelectResponse(head: SparqlSelectResponseHeader, results: SparqlSelectResponseBody) {
 
     /**
       * Returns the contents of the first row of results.
+      *
       * @return a [[Map]] representing the contents of the first row of results.
       */
     @throws[InconsistentTriplestoreDataException]("if the query returned no results.")
@@ -51,12 +54,14 @@ case class SparqlSelectResponse(head: SparqlSelectResponseHeader, results: Sparq
 
 /**
   * Represents the header of a JSON response to a SPARQL SELECT query.
+  *
   * @param vars the names of the variables that were used in the SPARQL SELECT statement.
   */
 case class SparqlSelectResponseHeader(vars: Seq[String])
 
 /**
   * Represents the body of a JSON response to a SPARQL SELECT query.
+  *
   * @param bindings the bindings of values to the variables used in the SPARQL SELECT statement.
   *                 Empty rows are not allowed.
   */
@@ -67,6 +72,7 @@ case class SparqlSelectResponseBody(bindings: Seq[VariableResultsRow]) {
 
 /**
   * Represents a row of results in a JSON response to a SPARQL SELECT query.
+  *
   * @param rowMap a map of variable names to values in the row. An empty string is not allowed as a variable
   *               name or value.
   */
@@ -135,6 +141,7 @@ case class SparqlUpdateResponse(transactionID: UUID)
 
 /**
   * Represents a SPARQL Update operation to be performed.
+  *
   * @param sparql the SPARQL string.
   */
 case class SparqlUpdateRequest(sparql: String) extends TriplestoreRequest
@@ -147,6 +154,7 @@ case class SparqlUpdateResponse()
 /**
   * Message for resetting the contents of the triplestore and loading a fresh set of data. The data needs to be
   * stored in an accessible path and supplied via the [[RdfDataObject]].
+  *
   * @param rdfDataObjects contains a list of [[RdfDataObject]].
   */
 case class ResetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]) extends TriplestoreRequest
@@ -168,6 +176,7 @@ case class DropAllTriplestoreContentACK()
 
 /**
   * Inserts data into the triplestore.
+  *
   * @param rdfDataObjects contains a list of [[RdfDataObject]].
   */
 case class InsertTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]) extends TriplestoreRequest
@@ -179,6 +188,7 @@ case class InsertTriplestoreContentACK()
 
 /**
   * Initialize the triplestore. This will initiate the (re)creation of the repository and adding data to it.
+  *
   * @param rdfDataObject contains a list of [[RdfDataObject]].
   */
 case class InitTriplestore(rdfDataObject: RdfDataObject) extends TriplestoreRequest
@@ -195,6 +205,7 @@ case class Initialized() extends TriplestoreRequest
 
 /**
   * Response indicating whether the triplestore has finished initialization and is ready for processing messages
+  *
   * @param initFinished indicates if actor initialization has finished
   */
 case class InitializedResponse(initFinished: Boolean)
@@ -211,18 +222,21 @@ sealed trait TriplestoreAdminRequest extends AdminRequest
 
 /**
   * TODO: document this.
+  *
   * @param userProfile
   */
 case class FakeTriplestorePrepare(userProfile: UserProfileV1) extends TriplestoreAdminRequest
 
 /**
   * TODO: document this.
+  *
   * @param userProfileV1
   */
 case class FakeTriplestoreUse(userProfileV1: UserProfileV1) extends TriplestoreAdminRequest
 
 /**
   * TODO: document this.
+  *
   * @param message
   */
 case class TriplestoreAdminResponse(message: String) extends KnoraResponseV1 {
@@ -235,6 +249,7 @@ case class TriplestoreAdminResponse(message: String) extends KnoraResponseV1 {
 
 /**
   * Contains the path to the 'ttl' file and the name of the named graph it should be loaded in.
+  *
   * @param path to the 'ttl' file
   * @param name of the named graph the data will be load into.
   */

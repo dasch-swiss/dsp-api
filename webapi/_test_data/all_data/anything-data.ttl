@@ -89,7 +89,7 @@
 
 <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> rdf:type knora-base:User ;
 
-                                         knora-base:userid "root" ;
+                                         knora-base:userid "anything-user" ;
 
                                          foaf:givenName "Anything" ;
 
@@ -104,6 +104,24 @@
                                          knora-base:isInProject <http://data.knora.org/projects/anything> .
 
 
+<http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ> rdf:type knora-base:User ;
+
+                                         knora-base:userid "anything-user-2" ;
+
+                                         foaf:givenName "Anything" ;
+
+                                         foaf:familyName "User02" ;
+
+                                         knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+
+                                         knora-base:email "anything.user02@example.org" ;
+
+                                         knora-base:preferredLanguage "de" ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/anything> .
+
+
+
 <http://data.knora.org/a-thing> rdf:type anything:Thing ;
 
     knora-base:isDeleted false ;
@@ -112,10 +130,228 @@
 
     knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 
-    rdfs:label "A thing"@en ;
+    rdfs:label "A thing" ;
 
     knora-base:hasViewPermission knora-base:UnknownUser ;
 
     knora-base:hasModifyPermission knora-base:ProjectMember ;
 
     knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
+
+
+
+<http://data.knora.org/another-thing> rdf:type anything:Thing ;
+
+    knora-base:isDeleted false ;
+
+    knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+
+    knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
+
+    rdfs:label "Another thing" ;
+
+    knora-base:hasViewPermission knora-base:UnknownUser ;
+
+    knora-base:hasModifyPermission knora-base:ProjectMember ;
+
+    knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
+
+
+
+<http://data.knora.org/a-thing-with-text-values> rdf:type anything:Thing ;
+
+    knora-base:isDeleted false ;
+
+    knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+
+    knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
+
+    rdfs:label "Ein Ding für wen, der die Dinge liebe" ;
+
+    anything:hasText <http://data.knora.org/a-thing-with-text-values/values/1> ;
+
+    anything:hasText <http://data.knora.org/a-thing-with-text-values/values/2> ;
+
+    knora-base:hasStandoffLinkTo <http://data.knora.org/a-thing> ;
+
+    knora-base:hasStandoffLinkToValue <http://data.knora.org/a-thing-with-text-values/values/0> ;
+
+    knora-base:hasViewPermission knora-base:ProjectMember ;
+
+    knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
+
+
+
+<http://data.knora.org/a-thing-with-text-values/values/0> rdf:type knora-base:LinkValue ;
+
+    rdf:subject <http://data.knora.org/a-thing-with-text-values> ;
+
+    rdf:predicate knora-base:hasStandoffLinkTo ;
+
+    rdf:object <http://data.knora.org/a-thing> ;
+
+    knora-base:valueHasString """http://data.knora.org/a-thing""" ;
+
+    knora-base:valueHasRefCount "2"^^xsd:integer ;
+
+    knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
+
+    knora-base:isDeleted "false"^^xsd:boolean ;
+
+    knora-base:attachedToUser <http://www.knora.org/ontology/knora-base#SystemUser> .
+
+
+
+<http://data.knora.org/a-thing-with-text-values/values/1> rdf:type knora-base:TextValue ;
+
+    knora-base:isDeleted "false"^^xsd:boolean ;
+
+    knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+
+    knora-base:valueHasString """Ich liebe die Dinge, sie sind alles für mich.""" ;
+
+    knora-base:valueHasOrder "0"^^xsd:integer ;
+
+    knora-base:valueHasStandoff [
+                                  knora-base:standoffHasAttribute "_link" ;
+                                  knora-base:standoffHasStart "14"^^xsd:integer ;
+                                  knora-base:standoffHasEnd "19"^^xsd:integer ;
+                                  rdf:type knora-base:StandoffLink ;
+                                  knora-base:standoffHasLink <http://data.knora.org/a-thing>
+                                ] ;
+
+    knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
+
+    knora-base:hasViewPermission knora-base:Owner .
+
+
+
+<http://data.knora.org/a-thing-with-text-values/values/2> rdf:type knora-base:TextValue ;
+
+    knora-base:isDeleted "false"^^xsd:boolean ;
+
+    knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+
+    knora-base:valueHasString """Na ja, die Dinge sind OK.""" ;
+
+    knora-base:valueHasOrder "0"^^xsd:integer ;
+
+    knora-base:valueHasStandoff [
+                                  knora-base:standoffHasAttribute "_link" ;
+                                  knora-base:standoffHasStart "11"^^xsd:integer ;
+                                  knora-base:standoffHasEnd "16"^^xsd:integer ;
+                                  rdf:type knora-base:StandoffLink ;
+                                  knora-base:standoffHasLink <http://data.knora.org/a-thing>
+                                ] ;
+
+    knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
+
+    knora-base:hasViewPermission knora-base:Owner .
+
+
+
+<http://data.knora.org/project-thing-1> rdf:type anything:Thing ;
+
+    knora-base:isDeleted false ;
+
+    anything:hasOtherThing <http://data.knora.org/project-thing-2> ;
+
+    anything:hasOtherThingValue <http://data.knora.org/project-thing-1/values/0> ;
+
+    knora-base:hasStandoffLinkTo <http://data.knora.org/project-thing-2> ;
+
+    knora-base:hasStandoffLinkToValue <http://data.knora.org/project-thing-1/values/1> ;
+
+    knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+
+    knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
+
+    rdfs:label "A thing that only project members can see" ;
+
+    knora-base:hasViewPermission knora-base:ProjectMember ;
+
+    knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
+
+
+
+<http://data.knora.org/project-thing-1/values/0> rdf:type knora-base:LinkValue ;
+
+    rdf:subject <http://data.knora.org/project-thing-1> ;
+
+    rdf:predicate anything:hasOtherThing ;
+
+    rdf:object <http://data.knora.org/project-thing-2> ;
+
+    knora-base:valueHasString """http://data.knora.org/project-thing-2""" ;
+
+    knora-base:valueHasRefCount "1"^^xsd:integer ;
+
+    knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
+
+    knora-base:isDeleted "false"^^xsd:boolean ;
+
+    knora-base:hasViewPermission knora-base:Owner ;
+
+    knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> .
+
+
+
+<http://data.knora.org/project-thing-1/values/1> rdf:type knora-base:LinkValue ;
+
+    rdf:subject <http://data.knora.org/project-thing-1> ;
+
+    rdf:predicate knora-base:hasStandoffLinkTo ;
+
+    rdf:object <http://data.knora.org/project-thing-2> ;
+
+    knora-base:valueHasString """http://data.knora.org/project-thing-2""" ;
+
+    knora-base:valueHasRefCount "1"^^xsd:integer ;
+
+    knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
+
+    knora-base:isDeleted "false"^^xsd:boolean ;
+
+    knora-base:attachedToUser <http://www.knora.org/ontology/knora-base#SystemUser> .
+
+
+
+<http://data.knora.org/project-thing-1/values/2> rdf:type knora-base:TextValue ;
+
+    knora-base:isDeleted "false"^^xsd:boolean ;
+
+    knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+
+    knora-base:valueHasString """This is a standoff link.""" ;
+
+    knora-base:valueHasOrder "0"^^xsd:integer ;
+
+    knora-base:valueHasStandoff [
+                                  knora-base:standoffHasAttribute "_link" ;
+                                  knora-base:standoffHasStart "10"^^xsd:integer ;
+                                  knora-base:standoffHasEnd "23"^^xsd:integer ;
+                                  rdf:type knora-base:StandoffLink ;
+                                  knora-base:standoffHasLink <http://data.knora.org/project-thing-2>
+                                ] ;
+
+    knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
+
+    knora-base:hasViewPermission knora-base:Owner .
+
+
+
+<http://data.knora.org/project-thing-2> rdf:type anything:Thing ;
+
+    knora-base:isDeleted false ;
+
+    knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+
+    knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
+
+    rdfs:label "Another thing that only project members can see" ;
+
+    knora-base:hasViewPermission knora-base:ProjectMember ;
+
+    knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
+
+

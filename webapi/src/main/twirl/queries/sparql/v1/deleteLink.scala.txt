@@ -72,8 +72,10 @@ INSERT {
             rdf:subject ?linkSource ;
             rdf:predicate ?linkProperty ;
             rdf:object ?linkTarget ;
+            knora-base:valueHasString "@linkUpdate.linkTargetIri" ;
             knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
             knora-base:valueCreationDate ?currentTime ;
+            knora-base:deleteDate ?currentTime ;
             knora-base:previousValue ?currentLinkValue ;
             @maybeComment match {
                 case Some(comment) => {

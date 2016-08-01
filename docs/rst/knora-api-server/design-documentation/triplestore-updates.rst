@@ -35,9 +35,9 @@ The supported update operations are:
 
 - Change a value.
 
-- Delete a value.
+- Delete a value (i.e. mark it as deleted).
 
-- Delete a resource.
+- Delete a resource (i.e. mark it as deleted).
 
 Users must be able to edit the same data concurrently.
 
@@ -115,27 +115,45 @@ trivial, is allowed.
 Versioning
 ^^^^^^^^^^
 
-Each Knora value (i.e. something belonging to an OWL class derived from ``knora-base:Value``) is versioned.
-This means that once created, a value is never modified. Instead, 'changing' a value means creating a new
-version of the value --- actually a new value --- that points to the previous version using
-``knora-base:previousValue``. The versions of a value are a singly-linked list, pointing backwards into the
-past. When a new version of a value is made, the triple that points from the resource to the old version
-(using a subproperty of ``knora-base:hasValue``) is deleted, and a triple is added to point from the resource
-to the new version. Thus the resource always points only to the current version of the value, and the older
-versions are available only via the current version's ``knora-base:previousValue`` predicate.
+Each Knora value (i.e. something belonging to an OWL class derived from
+``knora-base:Value``) is versioned. This means that once created, a value is
+never modified. Instead, 'changing' a value means creating a new version of
+the value --- actually a new value --- that points to the previous version
+using ``knora-base:previousValue``. The versions of a value are a singly-
+linked list, pointing backwards into the past. When a new version of a value
+is made, the triple that points from the resource to the old version (using a
+subproperty of ``knora-base:hasValue``) is removed, and a triple is added to
+point from the resource to the new version. Thus the resource always points
+only to the current version of the value, and the older versions are available
+only via the current version's ``knora-base:previousValue`` predicate.
 
-'Deleting' a value means creating a new version, marked with ``knora-base:isDeleted`` and pointing
-to the previous version. A triple then points from the resource to this new, deleted version of the value.
-To simplify the enforcement of ontology constraints, and for consistency with resource updates, no
-new versions of a deleted value can be made; it is not possible to undelete. Instead, if desired, a
-new value can be created by copying data from a deleted value.
+Unlike values, resources (members of OWL classes derived from
+``knora-base:Resource``) are not versioned. The data that is attached to a
+resource, other than its values, can be modified.
 
-Unlike values, resources (which belong to OWL classes derived from ``knora-base:Resource``) are not
-versioned. The data that is attached to a resource, other than its values, can be modified. A resource
-can be deleted by marking it with ``knora-base:isDeleted`` and a timestamp. Once this is done, the resource
-cannot be undeleted, because even though resources are not versioned, it is necessary to be able to find out
-when a resource was deleted. If desired, a new resource can be created by copying data from a deleted
-resource.
+Deleting
+~~~~~~~~
+
+Knora does not actually delete resources or values; it only marks them as
+deleted. Deleted data is normally hidden. All resources and values must have
+the predicate ``knora- base:isDeleted``, whose object is a boolean. If a
+resource or value has been marked as deleted, it has
+``knora-base:isDeleted true`` and has a ``knora-base:deleteDate``. An
+optional ``knora-base:deleteComment`` may be added to explain why the
+resource or value has been marked as deleted.
+
+Normally, a value is marked as deleted without creating a new version of it.
+However, link values must be treated as a special case. Before a ``LinkValue`` can be
+marked as deleted, its reference count must be decremented to 0. Therefore, a
+new version of the ``LinkValue`` is made, with a reference count of 0, and it
+is this new version that is marked as deleted.
+
+Since it is necessary to be able to find out when a resource was deleted, it
+is not possible to undelete a resource. Moreover, to simplify the checking
+of cardinality constraints, and for consistency with resources, it is not possible
+to undelete a value, and no new versions of a deleted value can be made.
+Instead, if desired, a new resource or value can be created by copying data from a
+deleted resource or value.
 
 .. _triplestore-linking-reqs:
 

@@ -74,10 +74,12 @@ INSERT {
             rdf:subject ?linkSource ;
             rdf:predicate ?linkProperty ;
             rdf:object ?linkTargetForCurrentLink ;
+            knora-base:valueHasString "@linkUpdateForCurrentLink.linkTargetIri" ;
             knora-base:valueHasRefCount @linkUpdateForCurrentLink.newReferenceCount ;
             knora-base:valueCreationDate ?currentTime ;
             knora-base:previousValue ?currentLinkValueForCurrentLink ;
             @if(linkUpdateForCurrentLink.newReferenceCount == 0) {
+                knora-base:deleteDate ?currentTime ;
                 knora-base:isDeleted true .
             } else {
                 @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.newReferenceCount must be 0 in this SPARQL template"); ()}
@@ -98,6 +100,8 @@ INSERT {
             rdf:subject ?linkSource ;
             rdf:predicate ?linkProperty ;
             rdf:object ?linkTargetForNewLink ;
+            knora-base:valueHasString "@linkUpdateForNewLink.linkTargetIri" ;
+
             @maybeComment match {
                 case Some(comment) => {
                     knora-base:valueHasComment """@comment""" ;
