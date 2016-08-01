@@ -60,18 +60,16 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
     // HTTP paths for SPARQL queries.
     private val queryRequestPath = settings.triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE => triplestore / "graphdb-server" / "repositories" / settings.triplestoreDatabaseName
-        case HTTP_GRAPH_DB_FREE_TS_TYPE => triplestore / "repositories" / settings.triplestoreDatabaseName
-        case HTTP_SESAME_TS_TYPE => triplestore / "graphdb-server" / "repositories" / settings.triplestoreDatabaseName
+        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => triplestore / "repositories" / settings.triplestoreDatabaseName
+        case HTTP_SESAME_TS_TYPE => triplestore / "openrdf-sesame" / "repositories" / settings.triplestoreDatabaseName
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => triplestore / settings.triplestoreDatabaseName / "query"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => triplestore / settings.fusekiTomcatContext / settings.triplestoreDatabaseName / "query"
     }
 
     // HTTP paths for SPARQL Update operations.
     private val updateRequestPath = settings.triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE => triplestore / "graphdb-server" / "repositories" / settings.triplestoreDatabaseName / "statements"
-        case HTTP_GRAPH_DB_FREE_TS_TYPE => triplestore / "repositories" / settings.triplestoreDatabaseName / "statements"
-        case HTTP_SESAME_TS_TYPE => triplestore / "graphdb-server" / "repositories" / settings.triplestoreDatabaseName / "statements"
+        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => triplestore / "repositories" / settings.triplestoreDatabaseName / "statements"
+        case HTTP_SESAME_TS_TYPE => triplestore / "openrdf-sesame" / "repositories" / settings.triplestoreDatabaseName / "statements"
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => triplestore / settings.triplestoreDatabaseName / "update"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => triplestore / settings.fusekiTomcatContext / settings.triplestoreDatabaseName / "update"
     }

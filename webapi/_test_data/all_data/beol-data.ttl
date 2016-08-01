@@ -3,7 +3,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix foaf: <http://xmln.com/foaf/0.1/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix dc: <http://www.knora.org/ontology/dc#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
@@ -37,9 +37,9 @@
 
                                          knora-base:userid "beol" ;
 
-                                         foaf:lastName "BEOL" ;
+                                         foaf:familyName "BEOL" ;
 
-                                         foaf:firstName "BEOL" ;
+                                         foaf:givenName "BEOL" ;
 
                                          knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 
