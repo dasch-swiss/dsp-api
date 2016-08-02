@@ -99,11 +99,13 @@ class SearchResponderV1 extends ResponderV1 {
       * Represents a matching value in a search result.
       *
       * @param valueTypeIri        the type of the value that matched.
+      * @param propertyIri         the IRI of the property that points to the value.
       * @param propertyLabel       the label of the property that points to the value.
       * @param literal             the literal that matched.
       * @param valuePermissionCode the user's permission code on the value.
       */
     private case class MatchingValue(valueTypeIri: IRI,
+                                     propertyIri: IRI,
                                      propertyLabel: String,
                                      literal: String,
                                      valuePermissionCode: Option[Int])
@@ -216,6 +218,7 @@ class SearchResponderV1 extends ResponderV1 {
 
                                         valueIri -> MatchingValue(
                                             valueTypeIri = row.rowMap("valueObjectType"),
+                                            propertyIri = propertyIri,
                                             propertyLabel = propertyLabel,
                                             literal = literal,
                                             valuePermissionCode = valuePermissionCode
@@ -223,7 +226,7 @@ class SearchResponderV1 extends ResponderV1 {
                                 }
 
                                 valuesAcc ++ value
-                        }.toVector.sortBy(_._1).map(_._2) // Sort by value IRI so the results are consistent between requests.
+                        }.toVector.sortBy(_._1).map(_._2).sortBy(_.propertyIri) // Sort by value IRI, then by property IRI, so the results are consistent between requests.
 
                         // Does the user have permission to see at least one matching value in the resource, or did the resource's label match?
                         if (matchingValues.nonEmpty || rows.exists(_.rowMap.get("valueObject").isEmpty)) {
@@ -589,6 +592,7 @@ class SearchResponderV1 extends ResponderV1 {
 
                                         valueIri -> MatchingValue(
                                             valueTypeIri = searchCriterion.valueType,
+                                            propertyIri = propertyIri,
                                             propertyLabel = propertyLabel,
                                             literal = literal,
                                             valuePermissionCode = valuePermissionCode
@@ -601,7 +605,7 @@ class SearchResponderV1 extends ResponderV1 {
                                 }
 
                                 valuesAcc ++ filteredValues
-                        }.toVector.sortBy(_._1).map(_._2) // Sort by value IRI so the results are consistent between requests.
+                        }.toVector.sortBy(_._1).map(_._2).sortBy(_.propertyIri) // Sort by value IRI, then by property IRI, so the results are consistent between requests.
 
                         // Does the user have permission to see at least one matching value in the resource?
                         if (matchingValues.nonEmpty) {
