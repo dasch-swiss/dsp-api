@@ -118,7 +118,7 @@
 
                                         knora-base:projectKeywords "images, collection"^^xsd:string ;
 
-                                        knora-base:projectOntolgyGraph "http://www.knora.org/ontology/images"^^xsd:string ;
+                                        knora-base:projectOntologyGraph "http://www.knora.org/ontology/images"^^xsd:string ;
 
                                         knora-base:projectDataGraph "http://www.knora.org/data/images"^^xsd:string ;
 

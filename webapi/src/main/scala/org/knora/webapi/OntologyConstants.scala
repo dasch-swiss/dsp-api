@@ -161,7 +161,7 @@ object OntologyConstants {
         val ProjectKeywords = KNORA_BASE_PREFIX + "projectKeywords"
         val ProjectBasepath = KNORA_BASE_PREFIX + "projectBasepath"
         val ProjectLogo = KNORA_BASE_PREFIX + "projectLogo"
-        val ProjectOntolgyGraph = KNORA_BASE_PREFIX + "projectOntologyGraph"
+        val ProjectOntologyGraph = KNORA_BASE_PREFIX + "projectOntologyGraph"
         val ProjectDataGraph = KNORA_BASE_PREFIX + "projectDataGraph"
         val IsActiveProject = KNORA_BASE_PREFIX + "isActiveProject"
         val HasSelfJoinEnabled = KNORA_BASE_PREFIX + "hasSelfJoinEnabled"

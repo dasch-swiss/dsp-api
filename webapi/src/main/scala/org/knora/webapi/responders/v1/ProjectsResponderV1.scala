@@ -111,11 +111,13 @@ class ProjectsResponderV1 extends ResponderV1 {
                         longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname),
                         description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription),
                         keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords),
-                        projectOntologyGraph = propsMap.get(OntologyConstants.KnoraBase.ProjectOntolgyGraph).get,
+                        projectOntologyGraph = propsMap.get(OntologyConstants.KnoraBase.ProjectOntologyGraph).get,
                         projectDataGraph = propsMap.get(OntologyConstants.KnoraBase.ProjectDataGraph).get,
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo),
                         basepath = propsMap.get(OntologyConstants.KnoraBase.ProjectBasepath),
-                        rights = rightsInProject
+                        isActiveProject = propsMap.get(OntologyConstants.KnoraBase.IsActiveProject).map(_.toBoolean),
+                        hasSelfJoinEnabled = propsMap.get(OntologyConstants.KnoraBase.HasSelfJoinEnabled).map(_.toBoolean),
+                        rights = None
                     )
             }.toVector
         } yield ProjectsResponseV1(
@@ -231,7 +233,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                         longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
                         description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
                         keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords),
-                        projectOntologyGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectOntolgyGraph).get,
+                        projectOntologyGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectOntologyGraph).get,
                         projectDataGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectDataGraph).get,
                         logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
                         basepath = projectProperties.get(OntologyConstants.KnoraBase.ProjectBasepath),
@@ -245,7 +247,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                         shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, ""),
                         longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
                         description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
-                        projectOntologyGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectOntolgyGraph).get,
+                        projectOntologyGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectOntologyGraph).get,
                         projectDataGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectDataGraph).get
                     )
             }

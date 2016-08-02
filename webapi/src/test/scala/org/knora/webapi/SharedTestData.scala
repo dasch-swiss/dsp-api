@@ -204,6 +204,7 @@ object SharedTestData {
         keywords = None,
         projectOntologyGraph = "http://www.knora.org/ontology/testproject",
         projectDataGraph = "http://www.knora.org/data/testproject",
+        logo = None,
         basepath = Some("/imldata/testproject"),
         isActiveProject = Some(true),
         hasSelfJoinEnabled = Some(false),
