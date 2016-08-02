@@ -2815,7 +2815,6 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            BIND(0 AS ?nextOrder6)
-
           |}
         """.stripMargin
 
