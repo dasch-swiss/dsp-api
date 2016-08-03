@@ -27,7 +27,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi._
-import org.knora.webapi.util.MessageUtil
+import org.knora.webapi.util.{MessageUtil, SparqlUtil}
 
 import scala.concurrent.Future
 
@@ -77,15 +77,13 @@ class ProjectsResponderV1 extends ResponderV1 {
     private def getProjectsResponseV1(infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): Future[ProjectsResponseV1] = {
 
         for {
-        // group project result rows by their IRI
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
                 triplestore = settings.triplestoreType
             ).toString())
-
-            _ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
+            //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
 
             projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            _ = log.debug(s"getProjectsResponseV1 - result: ${MessageUtil.toSource(projectsResponse)}")
+            //_ = log.debug(s"getProjectsResponseV1 - result: ${MessageUtil.toSource(projectsResponse)}")
 
             projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
 
@@ -94,8 +92,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                     case row => (row.rowMap("p"), row.rowMap("o"))
                 }.toMap)
             }
-
-            _ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: ${MessageUtil.toSource(projectsWithProperties)}")
+            //_ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: ${MessageUtil.toSource(projectsWithProperties)}")
 
             projects = projectsWithProperties.map {
                 case (projIri: String, propsMap: Map[String, String]) =>
@@ -141,7 +138,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(
                 triplestore = settings.triplestoreType,
-                projectIri = projectIri
+                projectIRI = projectIri
             ).toString())
             projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
@@ -163,24 +160,28 @@ class ProjectsResponderV1 extends ResponderV1 {
     /**
       * Gets the project with the given shortname and returns the information as a [[ProjectInfoResponseV1]].
       *
-      * @param shortname the shortname of the project requested.
+      * @param shortName the shortname of the project requested.
       * @param infoType type request: either short or full.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */
-    private def getProjectInfoByShortnameGetRequest(shortname: String, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
+    private def getProjectInfoByShortnameGetRequest(shortName: String, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByShortname(
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectByShortname(
                 triplestore = settings.triplestoreType,
-                shortname = shortname
+                shortname = SparqlUtil.any2SparqlLiteral(shortName)
             ).toString())
-            projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            //_ = log.debug(s"getProjectInfoByShortnameGetRequest - query: $sparqlQueryString")
+
+            projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            //_ = log.debug(s"getProjectInfoByShortnameGetRequest - result: ${MessageUtil.toSource(projectResponse)}")
+
 
             // get project Iri from results rows
             projectIri: IRI = if (projectResponse.results.bindings.nonEmpty) {
                 projectResponse.results.bindings.head.rowMap("s")
             } else {
-                throw NotFoundException(s"Project '$shortname' not found")
+                throw NotFoundException(s"Project '$shortName' not found")
             }
 
             projectInfo = createProjectInfoV1FromProjectResponse(projectResponse = projectResponse.results.bindings, projectIri = projectIri, infoType = infoType, userProfile)
@@ -229,7 +230,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                 case ProjectInfoType.FULL =>
                     ProjectInfoV1(
                         id = projectIri,
-                        shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, ""),
+                        shortname = projectProperties.get(OntologyConstants.KnoraBase.ProjectShortname).get,
                         longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
                         description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
                         keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords),

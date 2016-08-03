@@ -75,7 +75,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 actorUnderTest ! ProjectsGetRequestV1(ProjectInfoType.FULL, Some(rootUserProfileV1))
                 expectMsgPF(timeout) {
                     case ProjectsResponseV1(projects, userdata) => {
-                        println(projects)
+                        //println(projects)
                         assert(projects.contains(imagesPI))
                         //Todo: make it work with icunabula
                         //assert(projects.contains(incunabulaPI))
@@ -91,13 +91,13 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             }
             "return 'NotFoundException' when the project is unknown " in {
                 actorUnderTest ! ProjectInfoByIRIGetRequest("http://data.knora.org/projects/notexisting", ProjectInfoType.FULL, Some(rootUserProfileV1))
-                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/users/notexisting' not found")))
+                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found")))
             }
         }
         "asked about a project identified by 'shortname' " should {
-            "return full project info if the project is known " in {
+            "return 'full' project info if the project is known " in {
                 actorUnderTest ! ProjectInfoByShortnameGetRequest(incunabulaPI.shortname, ProjectInfoType.FULL, Some(rootUserProfileV1))
-                expectMsg(incunabulaPI)
+                expectMsg(ProjectInfoResponseV1(incunabulaPI, Some(rootUserProfileV1.userData)))
             }
 
             "return 'NotFoundException' when the project is unknown " in {
