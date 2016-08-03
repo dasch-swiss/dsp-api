@@ -79,7 +79,7 @@
 \title{The Knora Base Ontology}
 \author{Lukas Rosenthaler, Benjamin Geer, Tobias Schweizer, Ivan Subotic\\Digital Humanities Lab, University of Basel}
 
-\date{25 July 2016}
+\date{3 August 2016}
 
 \begin{document}
 
@@ -756,14 +756,15 @@ There is one built-in \texttt{SystemUser}, which is the owner of link values cre
 
 \subsection{Permissions}
 
-The owner of an object is always allowed to perform any operation on it. An object can grant the following permissions:
+The owner of an object is always allowed to perform any operation on it. An object can grant the following permissions, which are stored in a compact format in a single string, which is the object of the predicate 
+\texttt{kb:hasPermissions}:
 
 \begin{enumerate}
-	\item \texttt{hasRestrictedViewPermission}: Allows a restricted view of the object, e.g.\ a view of an image with a watermark.
-	\item \texttt{hasViewPermission}: Allows an unrestricted view of the object. Having view permission on a resource only affects the user's ability to view information about the resource other than its values. To view a value, she must have view permission on the value itself.
-	\item \texttt{hasModifyPermission}: For values, this permission allows a new version of a value to be created. For resources, this allows the user to create a new value (as opposed to a new version of an existing value), or to change information about the resource other than its values. When he wants to make a new version of a value, his permissions on the containing resource are not relevant. However, when he wants to change the target of a link, the old link must be deleted and a new one created, so he needs modify permission on the resource.
-	\item \texttt{hasDeletePermission}: Allows the item to be marked as deleted.
-	\item \texttt{hasChangeRightsPermission}: Allows the permissions granted by the object to be changed.
+	\item \textbf{Restricted view permission (\texttt{RV})} Allows a restricted view of the object, e.g.\ a view of an image with a watermark.
+	\item \textbf{View permission (\texttt{V})} Allows an unrestricted view of the object. Having view permission on a resource only affects the user's ability to view information about the resource other than its values. To view a value, she must have view permission on the value itself.
+	\item \textbf{Modify permission (\texttt{M})} For values, this permission allows a new version of a value to be created. For resources, this allows the user to create a new value (as opposed to a new version of an existing value), or to change information about the resource other than its values. When he wants to make a new version of a value, his permissions on the containing resource are not relevant. However, when he wants to change the target of a link, the old link must be deleted and a new one created, so he needs modify permission on the resource.
+	\item \textbf{Delete permission (\texttt{D})} Allows the item to be marked as deleted.
+	\item \textbf{Change rights permission (\texttt{CR})} Allows the permissions granted by the object to be changed.
 \end{enumerate}
 
 Each permission in the above list implies all lower-numbered permissions. A user's permission level on a particular object is calculated in the following way:
@@ -777,6 +778,21 @@ Each permission in the above list implies all lower-numbered permissions. A user
 \end{enumerate}
 
 To view a link between resources, a user needs permission to view the source and target resources. He also needs permission to view the \texttt{LinkValue} representing the link, unless the link property is \texttt{hasStandoffLinkTo} (see \ref{subsubsec:standoff-link}).
+
+The format of the object of \texttt{kb:hasPermissions} is as follows:
+
+\begin{itemize}
+	\item Each permission is represented by the one-letter or two-letter abbreviation given above.
+	\item Each permission abbreviation is followed by a space, then a comma-separated list of groups that the permission is granted to.
+	\item The IRIs of built-in groups are shortened using the \texttt{knora-base} prefix.
+	\item Multiple permissions are separated by a vertical bar (\texttt{|}).
+\end{itemize}
+
+For example, if an object grants view permission to unknown and known users, and modify permission to project members, the resulting permission literal would be:
+
+\begin{verbatim}
+V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember
+\end{verbatim}
 
 \section{Consistency Checking}
 

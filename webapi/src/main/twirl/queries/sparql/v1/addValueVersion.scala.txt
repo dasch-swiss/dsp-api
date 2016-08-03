@@ -50,8 +50,10 @@
   currentValueIri: IRI,
   newValueIri: IRI,
   valueTypeIri: IRI,
-  permissionRelevantAssertions: Seq[(IRI, IRI)],
   value: UpdateValueV1,
+  valueOwner: IRI,
+  valueProject: IRI,
+  maybeValuePermissions: Option[String],
   maybeComment: Option[String],
   linkUpdates: Seq[SparqlTemplateLinkUpdate])
 
@@ -225,8 +227,18 @@ DELETE {
         }
 
         @* Insert the value's permission-relevant assertions (its owner, project, and permissions). *@
-        @for(assertion <- permissionRelevantAssertions) {
-            ?newValue <@assertion._1> <@assertion._2> .
+        ?newValue knora-base:attachedToUser <@valueOwner> ;
+            knora-base:attachedToProject <@valueProject> .
+
+        @maybeValuePermissions match {
+
+            case Some(valuePermissions) => {
+
+                ?newValue knora-base:hasPermissions "@valuePermissions" .
+
+            }
+
+            case None => {}
         }
 
         @* TODO: in case of a file value, order is not given *@
@@ -257,8 +269,28 @@ DELETE {
                 }
                 knora-base:valueCreationDate ?currentTime .
 
-            @for(assertion <- linkUpdate.permissionRelevantAssertions) {
-                <@linkUpdate.newLinkValueIri> <@assertion._1> <@assertion._2> .
+            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueOwner> .
+
+            @linkUpdate.newLinkValueProject match {
+
+                case Some(linkValueProject) => {
+
+                    <@linkUpdate.newLinkValueIri> knora-base:attachedToProject <@linkValueProject> .
+
+                }
+
+                case None => {}
+            }
+
+            @linkUpdate.newLinkValuePermissions match {
+
+                case Some(linkValuePermissions) => {
+
+                    <@linkUpdate.newLinkValueIri> knora-base:hasPermissions "@linkValuePermissions" .
+
+                }
+
+                case None => {}
             }
 
             @* If we're inserting a new version of an existing LinkValue, attach it to the previous version. *@

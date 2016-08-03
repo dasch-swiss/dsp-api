@@ -205,16 +205,6 @@ object ResourcesResponderV1Spec {
             restype_label = Some("Ding"),
             restype_name = Some("http://www.knora.org/ontology/anything#Thing"),
             restype_id = "http://www.knora.org/ontology/anything#Thing",
-            permissions = Vector(
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                )
-            ),
             person_id = "http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q",
             project_id = "http://data.knora.org/projects/anything"
         ),
@@ -241,16 +231,6 @@ object ResourcesResponderV1Spec {
             restype_label = Some("Ding"),
             restype_name = Some("http://www.knora.org/ontology/anything#Thing"),
             restype_id = "http://www.knora.org/ontology/anything#Thing",
-            permissions = Vector(
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                )
-            ),
             person_id = "http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q",
             project_id = "http://data.knora.org/projects/anything"
         ),
@@ -348,36 +328,9 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         assert(received.access == expected.access, "access does not match")
         assert(received.userdata == expected.userdata, "userdata does not match")
-
-        val expectedResinfoWithSortedPermissions = expected.resinfo.get.copy(
-            permissions = expected.resinfo.get.permissions.sorted
-        )
-
-        val receivedResInfoWithSortedPermissions = received.resinfo.get.copy(
-            permissions = received.resinfo.get.permissions.sorted
-        )
-
-        assert(receivedResInfoWithSortedPermissions == expectedResinfoWithSortedPermissions, "resinfo does not match")
+        assert(received.resinfo == expected.resinfo, "resinfo does not match")
         assert(received.resdata == expected.resdata, "resdata does not match")
-
-        // sort permissions in incoming resinfo
-        val expectedIncomingWithSortedPermissions = expected.incoming.map {
-            case (incomingReference: IncomingV1) => incomingReference.copy(
-                resinfo = incomingReference.resinfo.copy(
-                    permissions = incomingReference.resinfo.permissions.sorted
-                )
-            )
-        }
-
-        val receivedIncomingWithSortedPermissions = received.incoming.map {
-            case (incomingReference: IncomingV1) => incomingReference.copy(
-                resinfo = incomingReference.resinfo.copy(
-                    permissions = incomingReference.resinfo.permissions.sorted
-                )
-            )
-        }
-
-        assert(receivedIncomingWithSortedPermissions == expectedIncomingWithSortedPermissions, "incoming does not match")
+        assert(received.incoming == expected.incoming, "incoming does not match")
 
         val sortedReceivedProps = received.props.get.properties.sortBy(_.pid)
         val sortedExpectedProps = expected.props.get.properties.sortBy(_.pid)
@@ -419,44 +372,11 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         val receivedContext = received.resource_context
         val expectedContext = expected.resource_context
 
-        val expectexResinfoWithSortedPermissions = expectedContext.resinfo match {
-            case Some(resinfo: ResourceInfoV1) =>
-                Some(resinfo.copy(
-                    permissions = resinfo.permissions.sorted
-                ))
-            case None => None
-        }
-
-        val receivedResinfoWithSortedPermissions = receivedContext.resinfo match {
-            case Some(resinfo: ResourceInfoV1) =>
-                Some(resinfo.copy(
-                    permissions = resinfo.permissions.sorted
-                ))
-            case None => None
-        }
-
-        assert(receivedResinfoWithSortedPermissions == expectexResinfoWithSortedPermissions, "resinfo does not match")
+        assert(receivedContext.resinfo == expectedContext.resinfo, "resinfo does not match")
         assert(receivedContext.parent_res_id == expectedContext.parent_res_id, "parent_res_id does not match")
         assert(receivedContext.context == expectedContext.context, "context does not match")
         assert(receivedContext.canonical_res_id == expectedContext.canonical_res_id, "canonical_res_id does not match")
-
-        val expectexParentResinfoWithSortedPermissions = expectedContext.parent_resinfo match {
-            case Some(resinfo: ResourceInfoV1) =>
-                Some(resinfo.copy(
-                    permissions = resinfo.permissions.sorted
-                ))
-            case None => None
-        }
-
-        val receivedParentResinfoWithSortedPermissions = receivedContext.parent_resinfo match {
-            case Some(resinfo: ResourceInfoV1) =>
-                Some(resinfo.copy(
-                    permissions = resinfo.permissions.sorted
-                ))
-            case None => None
-        }
-
-        assert(receivedParentResinfoWithSortedPermissions == expectexParentResinfoWithSortedPermissions, "parent_resinfo does not match")
+        assert(receivedContext.parent_resinfo == expectedContext.parent_resinfo, "parent_resinfo does not match")
     }
 
 

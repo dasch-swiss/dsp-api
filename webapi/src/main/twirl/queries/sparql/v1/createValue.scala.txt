@@ -50,7 +50,9 @@
   value: UpdateValueV1,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   maybeComment: Option[String],
-  permissionRelevantAssertions: Seq[(IRI, IRI)])
+  valueOwner: IRI,
+  valueProject: IRI,
+  maybeValuePermissions: Option[String])
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -90,7 +92,9 @@ DELETE {
                                                                          value = value,
                                                                          linkUpdates = linkUpdates,
                                                                          maybeComment = maybeComment,
-                                                                         permissionRelevantAssertions = permissionRelevantAssertions)
+                                                                         valueOwner = valueOwner,
+                                                                         valueProject = valueProject,
+                                                                         maybeValuePermissions = maybeValuePermissions)
         }
     }
 }

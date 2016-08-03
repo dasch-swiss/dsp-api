@@ -456,7 +456,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                                 }
 
                                                 // Check the permissions on the LinkValue.
-                                                val linkValuePermission = PermissionUtilV1.getUserPermissionOnLinkValueV1(
+                                                val linkValuePermission = PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
                                                     linkValueIri = linkValueIri,
                                                     predicateIri = linkValueV1.predicateIri,
                                                     valueProps = valuePropsWithProject,
@@ -667,27 +667,27 @@ class ResourcesResponderV1 extends ResponderV1 {
         /**
           * Represents a source object (e.g. a page of a book).
           *
-          * @param id          IRI of the source Object.
-          * @param firstprop   first property of the source object.
-          * @param seqnum      sequence number of the source object.
-          * @param permissions the current user's permissions on the source object.
-          * @param fileValues  the file values belonging to the source object.
+          * @param id             IRI of the source Object.
+          * @param firstprop      first property of the source object.
+          * @param seqnum         sequence number of the source object.
+          * @param permissionCode the current user's permissions on the source object.
+          * @param fileValues     the file values belonging to the source object.
           */
         case class SourceObject(id: IRI,
                                 firstprop: Option[String],
                                 seqnum: Int,
-                                permissions: Option[Int],
+                                permissionCode: Option[Int],
                                 fileValues: Vector[StillImageFileValue] = Vector.empty[StillImageFileValue])
 
         /**
           * Represents a still image file value belonging to a source object (e.g., an image representation of a page).
           *
-          * @param id          the file value IRI
-          * @param permissions the current user's permissions on the file value.
-          * @param image       a [[StillImageFileValueV1]]
+          * @param id            the file value IRI
+          * @param permissioCode the current user's permission code on the file value.
+          * @param image         a [[StillImageFileValueV1]]
           */
         case class StillImageFileValue(id: IRI,
-                                       permissions: Option[Int],
+                                       permissioCode: Option[Int],
                                        image: StillImageFileValueV1)
 
 
@@ -708,12 +708,17 @@ class ResourcesResponderV1 extends ResponderV1 {
             // The row may or may not contain a file value IRI.
             row.rowMap.get("fileValue") match {
                 case Some(fileValueIri) =>
-                    val authorizationAssertionsForFileValue = PermissionUtilV1.parsePermissions(row.rowMap("fileValuePermissionAssertions"), row.rowMap("fileValueAttachedToUser"), fileValueProject)
-                    val fileValuePermissions = PermissionUtilV1.getUserPermissionV1(fileValueIri, authorizationAssertionsForFileValue, userProfile)
+                    val fileValuePermission = PermissionUtilV1.getUserPermissionV1(
+                        subjectIri = fileValueIri,
+                        subjectOwner = row.rowMap("fileValueAttachedToUser"),
+                        subjectProject = fileValueProject,
+                        subjectPermissionLiteral = row.rowMap.get("fileValuePermissions"),
+                        userProfile = userProfile
+                    )
 
                     Some(StillImageFileValue(
                         id = fileValueIri,
-                        permissions = fileValuePermissions,
+                        permissioCode = fileValuePermission,
                         image = StillImageFileValueV1(
                             internalMimeType = row.rowMap("internalMimeType"),
                             internalFilename = row.rowMap("internalFilename"),
@@ -737,13 +742,19 @@ class ResourcesResponderV1 extends ResponderV1 {
           */
         def createSourceObjectFromResultRow(row: VariableResultsRow): SourceObject = {
             val sourceObjectIri = row.rowMap("sourceObject")
-            val authorizationAssertionsForsourceObject = PermissionUtilV1.parsePermissions(row.rowMap("sourceObjectPermissionAssertions"), row.rowMap("sourceObjectAttachedToUser"), row.rowMap("sourceObjectAttachedToProject"))
-            val sourceObjectPermissions = PermissionUtilV1.getUserPermissionV1(sourceObjectIri, authorizationAssertionsForsourceObject, userProfile)
+
+            val sourceObjectPermissionCode = PermissionUtilV1.getUserPermissionV1(
+                subjectIri = sourceObjectIri,
+                subjectOwner = row.rowMap("sourceObjectAttachedToUser"),
+                subjectProject = row.rowMap("sourceObjectAttachedToProject"),
+                subjectPermissionLiteral = row.rowMap.get("sourceObjectPermissions"),
+                userProfile = userProfile
+            )
 
             SourceObject(id = row.rowMap("sourceObject"),
                 firstprop = row.rowMap.get("firstprop"),
                 seqnum = row.rowMap("seqnum").toInt,
-                permissions = sourceObjectPermissions,
+                permissionCode = sourceObjectPermissionCode,
                 fileValues = createStillImageFileValueFromResultRow(row).toVector
             )
         }
@@ -824,20 +835,20 @@ class ResourcesResponderV1 extends ResponderV1 {
                     }
 
                     // Filter the source objects by eliminating the ones that the user doesn't have permission to see.
-                    sourceObjectsWithPermissions = sourceObjects.filter(sourceObj => sourceObj.permissions.nonEmpty)
+                    sourceObjectsWithPermissions = sourceObjects.filter(sourceObj => sourceObj.permissionCode.nonEmpty)
 
                     //_ = println(ScalaPrettyPrinter.prettyPrint(sourceObjectsWithPermissions))
 
                     contextItems = sourceObjectsWithPermissions.map {
                         (sourceObj: SourceObject) =>
 
-                            val preview: Option[LocationV1] = sourceObj.fileValues.find(fileVal => fileVal.permissions.nonEmpty && fileVal.image.isPreview) match {
+                            val preview: Option[LocationV1] = sourceObj.fileValues.find(fileVal => fileVal.permissioCode.nonEmpty && fileVal.image.isPreview) match {
                                 case Some(preview: StillImageFileValue) =>
                                     Some(valueUtilV1.fileValueV12LocationV1(preview.image))
                                 case None => None
                             }
 
-                            val locations: Option[Seq[LocationV1]] = sourceObj.fileValues.find(fileVal => fileVal.permissions.nonEmpty && !fileVal.image.isPreview) match {
+                            val locations: Option[Seq[LocationV1]] = sourceObj.fileValues.find(fileVal => fileVal.permissioCode.nonEmpty && !fileVal.image.isPreview) match {
                                 case Some(full: StillImageFileValue) =>
                                     val fileVals = createMultipleImageResolutions(full.image)
                                     Some(preview.toVector ++ fileVals.map(valueUtilV1.fileValueV12LocationV1))
@@ -878,11 +889,16 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                     regionPropertiesSequencedFutures: Seq[Future[PropsGetForRegionV1]] = regionRows.filter {
                         regionRow =>
-                            val permissionsForRegion = PermissionUtilV1.parsePermissions(regionRow.rowMap("regionObjectPermissionAssertions"), regionRow.rowMap("owner"), regionRow.rowMap("project"))
-                            val sourceObjectPermissions = PermissionUtilV1.getUserPermissionV1(resourceIri, permissionsForRegion, userProfile)
+                            val permissionCodeForRegion = PermissionUtilV1.getUserPermissionV1(
+                                subjectIri = regionRow.rowMap("region"),
+                                subjectOwner = regionRow.rowMap("owner"),
+                                subjectProject = regionRow.rowMap("project"),
+                                subjectPermissionLiteral = regionRow.rowMap.get("regionObjectPermissions"),
+                                userProfile = userProfile
+                            )
 
                             // ignore regions the user has no permissions on
-                            sourceObjectPermissions.nonEmpty
+                            permissionCodeForRegion.nonEmpty
                     }.map {
                         regionRow =>
 
@@ -1043,14 +1059,19 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             resources: Seq[ResourceSearchResultRowV1] = searchResponse.results.bindings.map {
                 case (row: VariableResultsRow) =>
-
+                    val resourceIri = row.rowMap("resourceIri")
                     val firstProp = row.rowMap("firstProp")
-
                     val attachedToUser = row.rowMap("attachedToUser")
                     val attachedToProject = row.rowMap("attachedToProject")
-                    val permissionAssertions = row.rowMap("permissionAssertions")
-                    val assertions = PermissionUtilV1.parsePermissions(permissionAssertions, attachedToUser, attachedToProject)
-                    val permission = PermissionUtilV1.getUserPermissionV1(row.rowMap("resourceIri"), assertions, userProfile)
+                    val resourcePermissions = row.rowMap.get("resourcePermissions")
+
+                    val permissionCode = PermissionUtilV1.getUserPermissionV1(
+                        subjectIri = resourceIri,
+                        subjectOwner = attachedToUser,
+                        subjectProject = attachedToProject,
+                        subjectPermissionLiteral = resourcePermissions,
+                        userProfile = userProfile
+                    )
 
                     if (numberOfProps > 1) {
                         // The client requested more than one property per resource that was found.
@@ -1076,7 +1097,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         ResourceSearchResultRowV1(
                             id = row.rowMap("resourceIri"),
                             value = propValues.slice(0, numberOfProps), // take only as many elements as were requested by the client.
-                            rights = permission
+                            rights = permissionCode
 
                         )
                     } else {
@@ -1084,7 +1105,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         ResourceSearchResultRowV1(
                             id = row.rowMap("resourceIri"),
                             value = Vector(firstProp),
-                            rights = permission
+                            rights = permissionCode
                         )
                     }
             }.filter(_.rights.nonEmpty) // user must have permissions to see resource (must not be None)
@@ -1160,7 +1181,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         def createResourceAndCheck(resourceIri: IRI,
                                    values: Map[IRI, Seq[CreateValueV1WithComment]],
                                    sipiConversionRequest: Option[SipiResponderConversionRequestV1],
-                                   permissions: Seq[(IRI, IRI)],
+                                   permissions: Option[String],
                                    ownerIri: IRI,
                                    namedGraph: IRI,
                                    apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
@@ -1273,7 +1294,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     resourceClassIri = resourceClassIri,
                     ownerIri = ownerIri,
                     projectIri = projectIri,
-                    permissions = permissions,
+                    maybePermissions = permissions,
                     whereStatementsForValues = generateSparqlForValuesResponse.whereSparql,
                     insertStatementsForValues = generateSparqlForValuesResponse.insertSparql
                 ).toString()
@@ -1360,7 +1381,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             // represents the permissions as a List of 2-tuples:
             // e.g. (http://www.knora.org/ontology/knora-base#hasViewPermission,http://www.knora.org/ontology/knora-base#KnownUser)
-            permissions: Seq[(IRI, IRI)] = PermissionUtilV1.makePermissionsFromEntityDefaults(entityInfoResponse.resourceEntityInfoMap(resourceClassIri))
+            permissions: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(entityInfoResponse.resourceEntityInfoMap(resourceClassIri))
 
             result: ResourceCreateResponseV1 <- ResourceLocker.runWithResourceLock(
                 apiRequestID,
@@ -1406,7 +1427,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // Check that the user has permission to delete the resource.
                 (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceDeleteRequest.resourceIri, userProfile = resourceDeleteRequest.userProfile, queryOntology = false)
 
-                _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermissionIri = OntologyConstants.KnoraBase.HasDeletePermission)) {
+                _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission)) {
                     throw ForbiddenException(s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted")
                 }
 
@@ -1466,7 +1487,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         // Check that the user has permission to view the resource.
             (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceIri, userProfile = userProfile, queryOntology = false)
 
-            _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermissionIri = OntologyConstants.KnoraBase.HasRestrictedViewPermission)) {
+            _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)) {
                 val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
                 throw ForbiddenException(s"User $userIri does not have permission to view resource $resourceIri")
             }
@@ -1612,7 +1633,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             }.filter {
                 case (fileValueIri, fileValueProps) =>
                     val permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(fileValueIri, fileValueProps, userProfile)
-                    PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermissionIri = OntologyConstants.KnoraBase.HasRestrictedViewPermission)
+                    PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)
             }
 
             // Convert the ValueProps objects into FileValueV1 objects
@@ -1641,7 +1662,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             val permissionRelevantAssertions = PermissionUtilV1.filterPermissionRelevantAssertions(resInfoResponseRows.map(row => (row.rowMap("prop"), row.rowMap("obj"))))
 
             // Get the user's permission on the resource.
-            val userPermission = PermissionUtilV1.getUserPermissionV1(
+            val userPermission = PermissionUtilV1.getUserPermissionV1FromAssertions(
                 subjectIri = resourceIri,
                 assertions = permissionRelevantAssertions,
                 userProfile = userProfile
@@ -1680,7 +1701,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                     locdata = locations.lastOption,
                     person_id = groupedByPredicate(OntologyConstants.KnoraBase.AttachedToUser).head("obj"),
                     project_id = groupedByPredicate(OntologyConstants.KnoraBase.AttachedToProject).head("obj"),
-                    permissions = PermissionUtilV1.filterPermissions(permissionRelevantAssertions),
                     restype_label = restype_label,
                     restype_name = Some(groupedByPredicate(OntologyConstants.Rdf.Type).head("obj")),
                     restype_description = restype_description,
@@ -1916,7 +1936,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         }
 
                         // Check the permissions on the LinkValue.
-                        val linkValuePermission = PermissionUtilV1.getUserPermissionOnLinkValueV1(
+                        val linkValuePermission = PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
                             linkValueIri = linkValueIri,
                             predicateIri = linkValueV1.predicateIri,
                             valueProps = linkValueProps,

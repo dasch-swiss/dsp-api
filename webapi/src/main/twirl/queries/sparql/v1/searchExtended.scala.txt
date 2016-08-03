@@ -58,15 +58,18 @@ SELECT DISTINCT
     ?previewDimY
     ?resourceOwner
     ?resourceProject
+    ?resourcePermissions
     @for((searchCriterion, index) <- searchCriteria.zipWithIndex) {
         ?valueObject@index
         ?valueOwner@index
         ?valueProject@index
+        ?valuePermissions@index
         ?targetResource@index
+        ?targetResourceOwner@index
+        ?targetResourceProject@index
+        ?targetResourcePermissions@index
         ?literal@index
-        (GROUP_CONCAT(DISTINCT(?valuePermission@index); separator=";") AS ?valuePermissions@index)
     }
-    (GROUP_CONCAT(DISTINCT(?resourcePermission); separator=";") AS ?resourcePermissions)
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -162,7 +165,13 @@ WHERE {
                         ?resource <@searchCriterion.propertyIri> ?targetResource@index .
 
                         ?targetResource@index rdfs:label ?literal@index ;
-                            knora-base:isDeleted false .
+                            knora-base:isDeleted false ;
+                            knora-base:attachedToUser ?targetResourceOwner@index ;
+                            knora-base:attachedToProject ?targetResourceProject@index .
+
+                        OPTIONAL {
+                            ?targetResource@index knora-base:hasPermissions ?targetResourcePermissions@index .
+                        }
 
                         ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
 
@@ -226,7 +235,13 @@ WHERE {
                         ?resource <@searchCriterion.propertyIri> <@searchCriterion.searchValue> .
 
                         <@searchCriterion.searchValue> rdfs:label ?literal@index ;
-                            knora-base:isDeleted false .
+                            knora-base:isDeleted false ;
+                            knora-base:attachedToUser ?targetResourceOwner@index ;
+                            knora-base:attachedToProject ?targetResourceProject@index .
+
+                        OPTIONAL {
+                            <@searchCriterion.searchValue> knora-base:hasPermissions ?targetResourcePermissions@index .
+                        }
 
                         ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
 
@@ -515,9 +530,7 @@ WHERE {
         }
 
         OPTIONAL {
-            ?valuePermissionProp@index rdfs:subPropertyOf+ knora-base:hasPermission .
-            ?valueObject@index ?valuePermissionProp@index ?valuePermissionGroup@index .
-            BIND(CONCAT(STR(?valuePermissionProp@index), ",", STR(?valuePermissionGroup@index)) as ?valuePermission@index)
+            ?valueObject@index knora-base:hasPermissions ?valuePermissions@index .
         }
     }
 
@@ -570,9 +583,7 @@ WHERE {
     }
 
     OPTIONAL {
-        ?resourcePermissionProp rdfs:subPropertyOf+ knora-base:hasPermission .
-        ?resource ?resourcePermissionProp ?resourcePermissionGroup .
-        BIND(CONCAT(STR(?resourcePermissionProp), ",", STR(?resourcePermissionGroup)) as ?resourcePermission)
+        ?resource knora-base:hasPermissions ?resourcePermissions .
     }
 
     OPTIONAL {
@@ -583,20 +594,4 @@ WHERE {
         ?resource knora-base:attachedToProject ?resourceProject .
     }
 }
-GROUP BY
-    ?resource
-    ?resourceLabel
-    ?resourceClass
-    ?previewPath
-    ?previewDimX
-    ?previewDimY
-    ?resourceOwner
-    ?resourceProject
-    @for((searchCriterion, index) <- searchCriteria.zipWithIndex) {
-        ?valueObject@index
-        ?valueOwner@index
-        ?valueProject@index
-        ?targetResource@index
-        ?literal@index
-    }
 LIMIT 500

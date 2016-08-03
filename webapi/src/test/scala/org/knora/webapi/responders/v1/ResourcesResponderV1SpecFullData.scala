@@ -64,20 +64,6 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Verkn\u00FCpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
-                    permissions = Vector(
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#KnownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#UnknownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        )
-                    ),
                     person_id = "http://data.knora.org/users/91e19f1e01",
                     project_id = "http://data.knora.org/projects/77275339"
                 ),
@@ -102,20 +88,6 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Verkn\u00FCpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
-                    permissions = Vector(
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#KnownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#UnknownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        )
-                    ),
                     person_id = "http://data.knora.org/users/b83acc5f05",
                     project_id = "http://data.knora.org/projects/77275339"
                 ),
@@ -487,24 +459,6 @@ object ResourcesResponderV1SpecFullData {
             restype_label = Some("Buch"),
             restype_name = Some("http://www.knora.org/ontology/incunabula#book"),
             restype_id = "http://www.knora.org/ontology/incunabula#book",
-            permissions = Vector(
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#Owner",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#KnownUser",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#UnknownUser",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission"
-                )
-            ),
             person_id = "http://data.knora.org/users/91e19f1e01",
             project_id = "http://data.knora.org/projects/77275339"
         ))
@@ -960,24 +914,6 @@ object ResourcesResponderV1SpecFullData {
             restype_label = Some("Seite"),
             restype_name = Some("http://www.knora.org/ontology/incunabula#page"),
             restype_id = "http://www.knora.org/ontology/incunabula#page",
-            permissions = Vector(
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#KnownUser",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#UnknownUser",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#Owner",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                )
-            ),
             person_id = "http://data.knora.org/users/91e19f1e01",
             project_id = "http://data.knora.org/projects/77275339"
         ))

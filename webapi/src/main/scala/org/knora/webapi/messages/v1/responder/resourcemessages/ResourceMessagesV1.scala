@@ -369,7 +369,6 @@ case class ResourceContextItemV1(res_id: IRI,
   *
   * @param project_id            the IRI of the project that the resource is associated with.
   * @param person_id             the IRI of the resource's owner.
-  * @param permissions           the permissions defined on the resource.
   * @param restype_id            the IRI of the resource's OWL class.
   * @param restype_name          same as `restype_id`.
   * @param restype_label         the label of the resource class.
@@ -387,7 +386,6 @@ case class ResourceContextItemV1(res_id: IRI,
   */
 case class ResourceInfoV1(project_id: IRI,
                           person_id: IRI,
-                          permissions: Seq[(IRI, IRI)],
                           restype_id: IRI,
                           restype_name: Option[IRI] = None,
                           restype_label: Option[String] = None,
@@ -939,9 +937,6 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
             val fields = Map(
                 "project_id" -> resInfoV1.project_id.toJson,
                 "person_id" -> resInfoV1.person_id.toJson,
-                "permissions" -> JsArray(resInfoV1.permissions.map {
-                    case (p, o) => JsObject(Map("permission" -> JsString(p), "granted_to" -> JsString(o)))
-                }.toVector),
                 "restype_id" -> resInfoV1.restype_id.toJson,
                 "restype_name" -> resInfoV1.restype_name.toJson,
                 "restype_label" -> resInfoV1.restype_label.toJson,

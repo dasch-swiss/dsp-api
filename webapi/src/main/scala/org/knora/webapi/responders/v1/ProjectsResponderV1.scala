@@ -62,7 +62,11 @@ class ProjectsResponderV1 extends ResponderV1 {
         propertiesForProject.get(OntologyConstants.KnoraBase.AttachedToUser) match {
             case Some(user) => // add statement that `PermissionUtil.getUserPermissionV1` requires but is not present in the data for projects.
                 val assertionsForProject: Seq[(IRI, IRI)] = (OntologyConstants.KnoraBase.AttachedToProject, projectIri) +: propertiesForProject.toVector
-                PermissionUtilV1.getUserPermissionV1(projectIri, assertionsForProject, userProfile)
+                PermissionUtilV1.getUserPermissionV1FromAssertions(
+                    subjectIri = projectIri,
+                    assertions = assertionsForProject,
+                    userProfile = userProfile
+                )
             case None => None // TODO: this is temporary to prevent PermissionUtil.getUserPermissionV1 from failing because owner id is missing in the data for project. See issue 1.
         }
     }
@@ -82,9 +86,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
 
             projectsWithProperties: Map[String, Map[String, String]] = projectsResponseRows.groupBy(_.rowMap("s")).map {
-                case (projIri: String, rows: Seq[VariableResultsRow]) => (projIri, rows.map {
-                    case row => (row.rowMap("p"), row.rowMap("o"))
-                }.toMap)
+                case (projIri: String, rows: Seq[VariableResultsRow]) => (projIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
             }
 
             projects = projectsWithProperties.map {

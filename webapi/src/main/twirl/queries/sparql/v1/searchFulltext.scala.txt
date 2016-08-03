@@ -52,14 +52,14 @@ SELECT DISTINCT
     ?previewDimY
     ?resourceOwner
     ?resourceProject
+    ?resourcePermissions
     ?resourceProperty
     ?valueObject
     ?valueObjectType
     ?valueOwner
     ?valueProject
+    ?valuePermissions
     ?literal
-    (GROUP_CONCAT(DISTINCT(?valuePermission); separator=";") AS ?valuePermissions)
-    (GROUP_CONCAT(DISTINCT(?resourcePermission); separator=";") AS ?resourcePermissions)
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -121,9 +121,7 @@ WHERE {
         }
 
         OPTIONAL {
-            ?valuePermissionProp rdfs:subPropertyOf+ knora-base:hasPermission .
-            ?valueObject ?valuePermissionProp ?valuePermissionGroup .
-            BIND(CONCAT(STR(?valuePermissionProp), ",", STR(?valuePermissionGroup)) as ?valuePermission)
+            ?valueObject knora-base:hasPermissions ?valuePermissions .
         }
 
 
@@ -174,33 +172,11 @@ WHERE {
         }
     }
 
-    OPTIONAL {
-        ?resourcePermissionProp rdfs:subPropertyOf+ knora-base:hasPermission .
-        ?resource ?resourcePermissionProp ?resourcePermissionGroup .
-        BIND(CONCAT(STR(?resourcePermissionProp), ",", STR(?resourcePermissionGroup)) as ?resourcePermission)
-    }
+    ?resource knora-base:attachedToUser ?resourceOwner .
+    ?resource knora-base:attachedToProject ?resourceProject .
 
     OPTIONAL {
-        ?resource knora-base:attachedToUser ?resourceOwner .
-    }
-
-    OPTIONAL {
-        ?resource knora-base:attachedToProject ?resourceProject .
+        ?resource knora-base:hasPermissions ?resourcePermissions .
     }
 }
-GROUP BY
-    ?resource
-    ?resourceLabel
-    ?resourceClass
-    ?previewPath
-    ?previewDimX
-    ?previewDimY
-    ?resourceOwner
-    ?resourceProject
-    ?resourceProperty
-    ?valueObject
-    ?valueObjectType
-    ?valueOwner
-    ?valueProject
-    ?literal
 LIMIT 500
