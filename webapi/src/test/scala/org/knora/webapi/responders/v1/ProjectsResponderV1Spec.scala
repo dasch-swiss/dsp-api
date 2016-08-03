@@ -30,6 +30,7 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.projectmessages._
+import org.knora.webapi.messages.v1.responder.usermessages.{NewUserDataV1, UserCreateRequestV1, UserOperationResponseV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 
@@ -105,51 +106,114 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found")))
             }
         }
-        /*
         "asked to create a new project " should {
-            "create the project and return it's profile if the supplied username is unique " in {
-                actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "test", false, "en"),
-                    SharedTestData.anonymousUserProfileV1,
-                    UUID.randomUUID
+            "create the project with using a permissions template, and return the 'full' project info if the supplied shortname is unique " in {
+                actorUnderTest ! ProjectCreateRequestV1(
+                    NewProjectDataV1(
+                        shortname = "newproject",
+                        longname = "project longname",
+                        description = "project description",
+                        keywords = "keywords",
+                        projectOntologyGraph = "http://www.knora.org/ontology/newproject",
+                        projectDataGraph = "http://www.knora.org/data/newproject",
+                        logo = "",
+                        basepath = "",
+                        isActiveProject = true,
+                        hasSelfJoinEnabled = false,
+                        permissionsTemplate = PermissionsTemplate.A
+                    ),
+                    SharedTestData.rootUserProfileV1
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(newUserProfile, requestingUserData) => {
-                        assert(newUserProfile.userData.username.get.equals("dduck"))
-                        assert(newUserProfile.userData.firstname.get.equals("Donald"))
-                        assert(newUserProfile.userData.lastname.get.equals("Duck"))
-                        assert(newUserProfile.userData.email.get.equals("donald.duck@example.com"))
-                        assert(newUserProfile.userData.lang.equals("en"))
+                    case ProjectOperationResponseV1(newProjectInfo, requestingUserData) => {
+                        assert(newProjectInfo.shortname.equals("newproject"))
+                        assert(newProjectInfo.longname.get.equals("project longname"))
+                        assert(newProjectInfo.projectOntologyGraph.equals("http://www.knora.org/ontology/newproject"))
+                        assert(newProjectInfo.projectDataGraph.equals("http://www.knora.org/data/newproject"))
                     }
                 }
             }
-            "return a 'DuplicateValueException' if the supplied username is not unique " in {
-                actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("root", "", "", "", "test", false, ""),
-                    SharedTestData.anonymousUserProfileV1,
-                    UUID.randomUUID
+            "return a 'DuplicateValueException' if the supplied project shortname is not unique " in {
+                actorUnderTest ! ProjectCreateRequestV1(
+                    NewProjectDataV1(
+                        shortname = "newproject",
+                        longname = "project longname",
+                        description = "project description",
+                        keywords = "keywords",
+                        projectOntologyGraph = "http://www.knora.org/ontology/newproject",
+                        projectDataGraph = "http://www.knora.org/data/newproject",
+                        logo = "",
+                        basepath = "",
+                        isActiveProject = true,
+                        hasSelfJoinEnabled = false,
+                        permissionsTemplate = PermissionsTemplate.A
+                    ),
+                    SharedTestData.rootUserProfileV1
                 )
-                expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
+                expectMsg(Failure(DuplicateValueException(s"Project with the shortname: 'incunabula' already exists")))
             }
-            "return 'BadRequestException' if username or password are missing" in {
+            "return 'BadRequestException' if shortname, projectOntologyGraph, or projectDataGraph are missing" in {
 
-                /* missing username */
-                actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("", "", "", "", "test", false, ""),
-                    SharedTestData.anonymousUserProfileV1,
-                    UUID.randomUUID
+                /* missing shortname */
+                actorUnderTest ! ProjectCreateRequestV1(
+                    NewProjectDataV1(
+                        shortname = "newproject",
+                        longname = "project longname",
+                        description = "project description",
+                        keywords = "keywords",
+                        projectOntologyGraph = "http://www.knora.org/ontology/newproject",
+                        projectDataGraph = "http://www.knora.org/data/newproject",
+                        logo = "",
+                        basepath = "",
+                        isActiveProject = true,
+                        hasSelfJoinEnabled = false,
+                        permissionsTemplate = PermissionsTemplate.A
+                    ),
+                    SharedTestData.rootUserProfileV1
                 )
-                expectMsg(Failure(BadRequestException("Username cannot be empty")))
+                expectMsg(Failure(BadRequestException("'Shortname' cannot be empty")))
 
-                /* missing password */
-                actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("dduck", "", "", "", "", false, ""),
-                    SharedTestData.anonymousUserProfileV1,
-                    UUID.randomUUID
+                /* missing projectOntologyGraph */
+                actorUnderTest ! ProjectCreateRequestV1(
+                    NewProjectDataV1(
+                        shortname = "newproject",
+                        longname = "project longname",
+                        description = "project description",
+                        keywords = "keywords",
+                        projectOntologyGraph = "http://www.knora.org/ontology/newproject",
+                        projectDataGraph = "http://www.knora.org/data/newproject",
+                        logo = "",
+                        basepath = "",
+                        isActiveProject = true,
+                        hasSelfJoinEnabled = false,
+                        permissionsTemplate = PermissionsTemplate.A
+                    ),
+                    SharedTestData.rootUserProfileV1
                 )
-                expectMsg(Failure(BadRequestException("Password cannot be empty")))
+                expectMsg(Failure(BadRequestException("'projectOntologyGraph' cannot be empty")))
+
+                /* missing projectDataGraph */
+                actorUnderTest ! ProjectCreateRequestV1(
+                    NewProjectDataV1(
+                        shortname = "newproject",
+                        longname = "project longname",
+                        description = "project description",
+                        keywords = "keywords",
+                        projectOntologyGraph = "http://www.knora.org/ontology/newproject",
+                        projectDataGraph = "http://www.knora.org/data/newproject",
+                        logo = "",
+                        basepath = "",
+                        isActiveProject = true,
+                        hasSelfJoinEnabled = false,
+                        permissionsTemplate = PermissionsTemplate.A
+                    ),
+                    SharedTestData.rootUserProfileV1
+                )
+                expectMsg(Failure(BadRequestException("'projectDataGraph' cannot be empty")))
+
             }
         }
+        /*
         "asked to update a user " should {
             "update the user " in {
 

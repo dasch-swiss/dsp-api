@@ -298,25 +298,6 @@ case class NewUserDataV1(username: String,
                          password: String,
                          lang: String)
 
-/**
-  * Represents information about the user that need to be updated.
-  *
-  * @param username the new username of the user to be updated.
-  * @param givenName the new given name of the user to be updated.
-  * @param familyName the new family name of the user to be updated.
-  * @param email the new email address of the user to be updated.
-  * @param password the new password of the user to be updated.
-  * @param isActiveUser the new status of the user to be updated.
-  * @param lang the new default language of the user to be updated.
-  */
-case class UpdatedUserDataV1(username: Option[String] = None,
-                             givenName: Option[String] = None,
-                             familyName: Option[String] = None,
-                             email: Option[String] = None,
-                             password: Option[String] = None,
-                             isActiveUser: Option[Boolean] = None,
-                             lang: Option[String] = None)
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 

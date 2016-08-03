@@ -20,6 +20,7 @@
 
 package org.knora.webapi.messages.v1.responder.projectmessages
 
+import org.knora.webapi
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
@@ -39,17 +40,18 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
   * @param ontologyGraph       the named graph where the ontology of the created project will be stored.
   * @param dataGraph           the named graph where the data of the created project will be stored.
   * @param isActiveProject     the status of the project to be created.
-  * @param permissionsTemplate the permissions template used for creating the initial permissions.
   * @param hasSelfJoinEnabled  the status of self-join of the project to be created.
+  * @param permissionsTemplate the permissions template used for creating the initial permissions.
   */
 case class CreateProjectApiRequestV1(shortName: String,
                                      longName: String,
                                      basePath: String,
                                      ontologyGraph: String,
                                      dataGraph: String,
-                                     isActiveProject: String,
-                                     permissionsTemplate: String,
-                                     hasSelfJoinEnabled: Boolean) {
+                                     isActiveProject: Boolean,
+                                     hasSelfJoinEnabled: Boolean,
+                                     permissionsTemplate: String
+                                    ) {
     def toJsValue = ProjectV1JsonProtocol.createProjectApiRequestV1Format.write(this)
 }
 
@@ -102,10 +104,27 @@ case class ProjectInfoByIRIGetRequest(iri: IRI, infoType: ProjectInfoType.Value,
   */
 case class ProjectInfoByShortnameGetRequest(shortname: String, infoType: ProjectInfoType.Value, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
+/**
+  * Requests the cration of a new project.
+  *
+  * @param newProjectDataV1 the [[NewProjectDataV1]] information for creation a new project.
+  * @param userProfileV1 the user profile of the user creating the new project.
+  */
+case class ProjectCreateRequestV1(newProjectDataV1: NewProjectDataV1,
+                                  userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
 
-case class ProjectCreateRequestV1(userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
-
-case class ProjectUpdateRequestV1(userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
+/**
+  * Requests updating an existing project
+  *
+  * @param projectIri the IRI of the project to be updated.
+  * @param propertyIri the IRI of the property to be updated.
+  * @param newValue the new value for the property.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  */
+case class ProjectUpdateRequestV1(projectIri: webapi.IRI,
+                                  propertyIri: webapi.IRI,
+                                  newValue: Any,
+                                  userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
 
 // Responses
 /**
@@ -174,9 +193,17 @@ object ProjectInfoType extends Enumeration {
 }
 
 
-case class NewProjectDataV1(
-                           shortname: String,
-                           longname: Option[String]
+case class NewProjectDataV1(shortname: String,
+                            longname: String,
+                            description: String,
+                            keywords: String,
+                            projectOntologyGraph: IRI,
+                            projectDataGraph: IRI,
+                            logo: String,
+                            basepath: String,
+                            isActiveProject: Boolean,
+                            hasSelfJoinEnabled: Boolean,
+                            permissionsTemplate: PermissionsTemplate.Value
                            )
 
 object PermissionsTemplate extends Enumeration {
