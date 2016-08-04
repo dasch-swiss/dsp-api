@@ -27,7 +27,7 @@
  * @param projectIri the project's IRI.
  *@
 @(triplestore: String,
-  projectIRI: IRI)
+  projectIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -38,7 +38,7 @@ SELECT ?s ?p ?o
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND(IRI("@projectIRI") as ?s)
+    BIND(IRI("@projectIri") as ?s)
 
     ?s rdf:type knora-base:knoraProject .
     ?s ?p ?o .

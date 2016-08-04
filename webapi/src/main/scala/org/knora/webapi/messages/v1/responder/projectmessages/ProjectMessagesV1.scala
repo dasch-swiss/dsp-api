@@ -37,8 +37,6 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
   * @param shortName           the shortname of the project to be created (unique).
   * @param longName            the longname of the project to be created.
   * @param basePath            the basepath of the project to be created.
-  * @param ontologyGraph       the named graph where the ontology of the created project will be stored.
-  * @param dataGraph           the named graph where the data of the created project will be stored.
   * @param isActiveProject     the status of the project to be created.
   * @param hasSelfJoinEnabled  the status of self-join of the project to be created.
   * @param permissionsTemplate the permissions template used for creating the initial permissions.
@@ -46,8 +44,6 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 case class CreateProjectApiRequestV1(shortName: String,
                                      longName: String,
                                      basePath: String,
-                                     ontologyGraph: String,
-                                     dataGraph: String,
                                      isActiveProject: Boolean,
                                      hasSelfJoinEnabled: Boolean,
                                      permissionsTemplate: String
@@ -163,12 +159,12 @@ case class ProjectInfoV1(id: IRI,
                          longname: Option[String] = None,
                          description: Option[String] = None,
                          keywords: Option[String] = None,
-                         projectOntologyGraph: IRI,
-                         projectDataGraph: IRI,
                          logo: Option[String] = None,
                          basepath: Option[String] = None,
                          isActiveProject: Option[Boolean] = None,
                          hasSelfJoinEnabled: Option[Boolean] = None,
+                         projectOntologyGraph: IRI,
+                         projectDataGraph: IRI,
                          rights: Option[Int] = None)
 
 object ProjectInfoType extends Enumeration {
@@ -197,8 +193,6 @@ case class NewProjectDataV1(shortname: String,
                             longname: String,
                             description: String,
                             keywords: String,
-                            projectOntologyGraph: IRI,
-                            projectDataGraph: IRI,
                             logo: String,
                             basepath: String,
                             isActiveProject: Boolean,
@@ -246,7 +240,7 @@ object ProjectV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectsResponseV1)))
     implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectInfoResponseV1)))
-    implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat8(CreateProjectApiRequestV1)))
+    implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat6(CreateProjectApiRequestV1)))
     implicit val updateProjectApiRequestV1Format: RootJsonFormat[UpdateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat2(UpdateProjectApiRequestV1)))
     implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectOperationResponseV1)))
 }

@@ -154,7 +154,7 @@ object OntologyConstants {
         val IsInGroup = KNORA_BASE_PREFIX + "isInGroup"
 
         /* Project */
-        val Project = KNORA_BASE_PREFIX + "Project"
+        val KnoraProject = KNORA_BASE_PREFIX + "knoraProject"
         val ProjectShortname = KNORA_BASE_PREFIX + "projectShortname"
         val ProjectLongname = KNORA_BASE_PREFIX + "projectLongname"
         val ProjectDescription = KNORA_BASE_PREFIX + "projectDescription"

@@ -136,6 +136,7 @@ object SparqlUtil {
                 "\"false\"^^xsd:boolean"
             }
             case value: String if value.nonEmpty => "\"" + value.asInstanceOf[String] + "\"^^xsd:string"
+            case value: String if value.isEmpty => ""
         }
     }
 }

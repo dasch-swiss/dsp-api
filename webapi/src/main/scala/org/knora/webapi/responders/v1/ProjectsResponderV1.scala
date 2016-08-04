@@ -23,11 +23,11 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserOperationResponseV1, UserProfileV1}
+import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi._
-import org.knora.webapi.util.{MessageUtil, SparqlUtil}
+import org.knora.webapi.util.{KnoraIriUtil, MessageUtil, SparqlUtil}
 
 import scala.concurrent.Future
 
@@ -36,6 +36,9 @@ import scala.concurrent.Future
   * Returns information about Knora projects.
   */
 class ProjectsResponderV1 extends ResponderV1 {
+
+    // Creates IRIs for new Knora user objects.
+    val knoraIriUtil = new KnoraIriUtil
 
     /**
       * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message, or
@@ -46,6 +49,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         case ProjectsGetRequestV1(infoType, userProfile) => future2Message(sender(), getProjectsResponseV1(infoType, userProfile), log)
         case ProjectInfoByIRIGetRequest(iri, infoType, userProfile) => future2Message(sender(), getProjectInfoByIRIGetRequest(iri, infoType, userProfile), log)
         case ProjectInfoByShortnameGetRequest(shortname, infoType, userProfile) => future2Message(sender(), getProjectInfoByShortnameGetRequest(shortname, infoType, userProfile), log)
+        case ProjectCreateRequestV1(newProjectDataV1: NewProjectDataV1, userProfileV1) => future2Message(sender(), createNewProjectV1(newProjectDataV1, userProfileV1), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -129,24 +133,24 @@ class ProjectsResponderV1 extends ResponderV1 {
     /**
       * Gets the project with the given project Iri and returns the information as a [[ProjectInfoResponseV1]].
       *
-      * @param projectIri the Iri of the project requested.
+      * @param projectIRI the Iri of the project requested.
       * @param infoType type request: either short or full.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */
-    private def getProjectInfoByIRIGetRequest(projectIri: IRI, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
+    private def getProjectInfoByIRIGetRequest(projectIRI: IRI, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(
                 triplestore = settings.triplestoreType,
-                projectIRI = projectIri
+                projectIri = projectIRI
             ).toString())
             projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             _ = if (projectResponse.results.bindings.isEmpty) {
-                throw NotFoundException(s"Project '$projectIri' not found")
+                throw NotFoundException(s"Project '$projectIRI' not found")
             }
 
-            projectInfo = createProjectInfoV1FromProjectResponse(projectResponse = projectResponse.results.bindings, projectIri = projectIri, infoType = infoType, userProfile)
+            projectInfo = createProjectInfoV1FromProjectResponse(projectResponse = projectResponse.results.bindings, projectIri = projectIRI, infoType = infoType, userProfile)
 
         } yield ProjectInfoResponseV1(
             project_info = projectInfo,
@@ -195,7 +199,75 @@ class ProjectsResponderV1 extends ResponderV1 {
         )
     }
 
-    private def createNewProjectV1(userProfileV1: UserProfileV1): Future[ProjectInfoResponseV1] = ???
+    private def createNewProjectV1(newProjectDataV1: NewProjectDataV1, userProfileV1: UserProfileV1): Future[ProjectOperationResponseV1] = {
+
+        for {
+            a <- Future("")
+
+            // check if required properties are not empty
+            _ = if (newProjectDataV1.shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty")
+
+            // check if the supplied 'shortname' for the new project is unique, i.e. not already registered
+            sparqlQueryString = queries.sparql.v1.txt.getProjectByShortname(
+                triplestore = settings.triplestoreType,
+                shortname = SparqlUtil.any2SparqlLiteral(newProjectDataV1.shortname)
+            ).toString()
+            //_ = log.debug(s"createNewProjectV1 - check duplicate shortname query: $sparqlQueryString")
+
+            projectInfoQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            projectResponse = projectInfoQueryResponse.results.bindings
+            //_ = log.debug(s"createNewProjectV1 - check duplicate shortname response:  ${MessageUtil.toSource(projectInfoQueryResponse)}")
+
+            _ = if (projectResponse.nonEmpty) {
+                throw DuplicateValueException(s"Project with the shortname: '${newProjectDataV1.shortname}' already exists")
+            }
+
+            projectIRI = knoraIriUtil.makeRandomProjectIri
+            projectOntologyGraphString = "http://www.knora.org/ontology/" + newProjectDataV1.shortname
+            projectDataGraphString = "http://www.knora.org/data/" + newProjectDataV1.shortname
+
+            // Create the new project.
+            createNewProjectSparqlString = queries.sparql.v1.txt.createNewProject(
+                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                triplestore = settings.triplestoreType,
+                projectIri = projectIRI,
+                projectClassIri = OntologyConstants.KnoraBase.KnoraProject,
+                shortname = SparqlUtil.any2SparqlLiteral(newProjectDataV1.shortname),
+                longname = SparqlUtil.any2SparqlLiteral(newProjectDataV1.longname),
+                keywords = SparqlUtil.any2SparqlLiteral(newProjectDataV1.keywords),
+                logo = SparqlUtil.any2SparqlLiteral(newProjectDataV1.logo),
+                basepath = SparqlUtil.any2SparqlLiteral(newProjectDataV1.basepath),
+                isActiveProject = SparqlUtil.any2SparqlLiteral(newProjectDataV1.isActiveProject),
+                hasSelfJoinEnabled = SparqlUtil.any2SparqlLiteral(newProjectDataV1.hasSelfJoinEnabled),
+                projectOntologyGraph = SparqlUtil.any2SparqlLiteral(projectOntologyGraphString),
+                projectDataGraph = SparqlUtil.any2SparqlLiteral(projectDataGraphString)
+            ).toString
+            //_ = log.debug(s"createNewProjectV1 - update query: $createNewProjectSparqlString")
+
+            createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewProjectSparqlString)).mapTo[SparqlUpdateResponse]
+
+
+            // Verify that the project was created.
+            sparqlQuery = queries.sparql.v1.txt.getProjectByIri(
+                triplestore = settings.triplestoreType,
+                projectIri = projectIRI
+            ).toString
+            projectInfoQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            projectResponse = projectInfoQueryResponse.results.bindings
+            //_ = log.debug(s"createNewProjectV1 - verify query response: ${MessageUtil.toSource(projectResponse)}")
+
+            _ = if (projectResponse.isEmpty) {
+                throw UpdateNotPerformedException(s"Project $projectIRI was not created. Please report this as a possible bug.")
+            }
+
+            // create the project info
+            newProjectInfo = createProjectInfoV1FromProjectResponse(projectResponse, projectIRI, ProjectInfoType.FULL, Some(userProfileV1))
+
+            // create the project operation response
+            projectOperationResponseV1 = ProjectOperationResponseV1(newProjectInfo, userProfileV1.userData)
+
+        } yield projectOperationResponseV1
+    }
 
     private def updateProjectV1(userProfileV1: UserProfileV1): Future[ProjectInfoResponseV1] = ???
 

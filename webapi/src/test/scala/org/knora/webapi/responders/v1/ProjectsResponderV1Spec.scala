@@ -114,8 +114,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         longname = "project longname",
                         description = "project description",
                         keywords = "keywords",
-                        projectOntologyGraph = "http://www.knora.org/ontology/newproject",
-                        projectDataGraph = "http://www.knora.org/data/newproject",
                         logo = "",
                         basepath = "",
                         isActiveProject = true,
@@ -126,6 +124,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 )
                 expectMsgPF(timeout) {
                     case ProjectOperationResponseV1(newProjectInfo, requestingUserData) => {
+                        //println(newProjectInfo)
                         assert(newProjectInfo.shortname.equals("newproject"))
                         assert(newProjectInfo.longname.get.equals("project longname"))
                         assert(newProjectInfo.projectOntologyGraph.equals("http://www.knora.org/ontology/newproject"))
@@ -140,8 +139,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         longname = "project longname",
                         description = "project description",
                         keywords = "keywords",
-                        projectOntologyGraph = "http://www.knora.org/ontology/newproject",
-                        projectDataGraph = "http://www.knora.org/data/newproject",
                         logo = "",
                         basepath = "",
                         isActiveProject = true,
@@ -150,19 +147,16 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                     ),
                     SharedTestData.rootUserProfileV1
                 )
-                expectMsg(Failure(DuplicateValueException(s"Project with the shortname: 'incunabula' already exists")))
+                expectMsg(Failure(DuplicateValueException(s"Project with the shortname: 'newproject' already exists")))
             }
-            "return 'BadRequestException' if shortname, projectOntologyGraph, or projectDataGraph are missing" in {
+            "return 'BadRequestException' if 'shortname' is missing" in {
 
-                /* missing shortname */
                 actorUnderTest ! ProjectCreateRequestV1(
                     NewProjectDataV1(
-                        shortname = "newproject",
+                        shortname = "",
                         longname = "project longname",
                         description = "project description",
                         keywords = "keywords",
-                        projectOntologyGraph = "http://www.knora.org/ontology/newproject",
-                        projectDataGraph = "http://www.knora.org/data/newproject",
                         logo = "",
                         basepath = "",
                         isActiveProject = true,
@@ -172,45 +166,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                     SharedTestData.rootUserProfileV1
                 )
                 expectMsg(Failure(BadRequestException("'Shortname' cannot be empty")))
-
-                /* missing projectOntologyGraph */
-                actorUnderTest ! ProjectCreateRequestV1(
-                    NewProjectDataV1(
-                        shortname = "newproject",
-                        longname = "project longname",
-                        description = "project description",
-                        keywords = "keywords",
-                        projectOntologyGraph = "http://www.knora.org/ontology/newproject",
-                        projectDataGraph = "http://www.knora.org/data/newproject",
-                        logo = "",
-                        basepath = "",
-                        isActiveProject = true,
-                        hasSelfJoinEnabled = false,
-                        permissionsTemplate = PermissionsTemplate.A
-                    ),
-                    SharedTestData.rootUserProfileV1
-                )
-                expectMsg(Failure(BadRequestException("'projectOntologyGraph' cannot be empty")))
-
-                /* missing projectDataGraph */
-                actorUnderTest ! ProjectCreateRequestV1(
-                    NewProjectDataV1(
-                        shortname = "newproject",
-                        longname = "project longname",
-                        description = "project description",
-                        keywords = "keywords",
-                        projectOntologyGraph = "http://www.knora.org/ontology/newproject",
-                        projectDataGraph = "http://www.knora.org/data/newproject",
-                        logo = "",
-                        basepath = "",
-                        isActiveProject = true,
-                        hasSelfJoinEnabled = false,
-                        permissionsTemplate = PermissionsTemplate.A
-                    ),
-                    SharedTestData.rootUserProfileV1
-                )
-                expectMsg(Failure(BadRequestException("'projectDataGraph' cannot be empty")))
-
             }
         }
         /*
