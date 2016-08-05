@@ -66,26 +66,64 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
     "The PermissionsResponderV1 " when {
         "queried about permissions " should {
             "return AdministrativePermission IRIs for project " in {
-                actorUnderTest ! GetProjectAdministrativePermissionsV1(
+                actorUnderTest ! AdministrativePermissionsForProjectGetRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
                     SharedTestData.rootUserProfileV1
                 )
                 expectMsg(Some(List(perm001.iri, perm003.iri)))
             }
             "return AdministrativePermission object for IRI " in {
-                actorUnderTest ! GetAdministrativePermissionV1(administrativePermissionIri = perm001.iri)
+                actorUnderTest ! AdministrativePermissionGetRequestV1(administrativePermissionIri = perm001.iri)
                 expectMsg(perm001.p)
             }
             "return DefaultObjectAccessPermission IRIs for project " in {
-                actorUnderTest ! GetProjectDefaultObjectAccessPermissionsV1(
+                actorUnderTest ! DefaultObjectAccessPermissionsForProjectGetRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
                     SharedTestData.rootUserProfileV1
                 )
                 expectMsg(Some(List(perm002.iri)))
             }
             "return DefaultObjectAccessPermission for IRI " in {
-                actorUnderTest ! GetDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri = perm002.iri)
+                actorUnderTest ! DefaultObjectAccessPermissionGetRequestV1(defaultObjectAccessPermissionIri = perm002.iri)
                 expectMsg(perm002.p)
+            }
+        }
+        "asked to create a permission object " should {
+            "create and return an administrative permission " ignore {
+                actorUnderTest ! AdministrativePermissionCreateRequestV1(
+                    newAdministrativePermissionV1 = NewAdministrativePermissionV1(
+                        iri = "http://data.knora.org/permissions/998",
+                        forProject = IMAGES_PROJECT_IRI,
+                        forGroup = OntologyConstants.KnoraBase.ProjectMember
+                    ),
+                    userProfileV1 = rootUserProfileV1
+                )
+            }
+            "create and return a default object access permission " ignore {
+
+            }
+        }
+        "asked to delete a permission object " should {
+            "delete an administrative permission " ignore {
+
+            }
+            "delete a default object access permission " ignore {
+
+            }
+        }
+        "asked to create permissions from a template " should {
+            "create and return all permissions defined inside the template " in {
+                /* the default behaviour is to delete all permissions inside a project prior to applying a template */
+                actorUnderTest ! TemplatePermissionsCreateRequest(
+                    projectIri = IMAGES_PROJECT_IRI,
+                    permissionsTemplate = PermissionsTemplate.OPEN
+                )
+                expectMsg(TemplatePermissionsCreateResponse(
+                    success = true,
+                    msg = "ok",
+                    administrativePermissions = List(perm001.p, perm003.p),
+                    defaultObjectAccessPermissions = List(perm002.p)
+                ))
             }
         }
     }

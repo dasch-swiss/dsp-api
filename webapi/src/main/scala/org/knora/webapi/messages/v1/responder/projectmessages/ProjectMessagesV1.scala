@@ -21,6 +21,7 @@
 package org.knora.webapi.messages.v1.responder.projectmessages
 
 import org.knora.webapi
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsTemplate
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
@@ -199,27 +200,6 @@ case class NewProjectDataV1(shortname: String,
                             hasSelfJoinEnabled: Boolean,
                             permissionsTemplate: PermissionsTemplate.Value
                            )
-
-object PermissionsTemplate extends Enumeration {
-    val A = Value(0, "a")
-    val B = Value(1, "b")
-
-    val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
-
-    /**
-      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-      * [[InconsistentTriplestoreDataException]].
-      *
-      * @param name the name of the calue.
-      * @return the requested value.
-      */
-    def lookup(name: String): Value = {
-        valueMap.get(name) match {
-            case Some(value) => value
-            case None => throw InconsistentTriplestoreDataException(s"Initial permissions emplate not supported: $name")
-        }
-    }
-}
 
 
 

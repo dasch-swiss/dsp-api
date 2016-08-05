@@ -46,13 +46,26 @@ class PermissionsResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case GetProjectAdministrativePermissionsV1(projectIri, userProfileV1) => future2Message(sender(), getProjectAdministrativePermissionsV1(projectIri, userProfileV1), log)
-        case GetAdministrativePermissionV1(administrativePermissionIri) => future2Message(sender(), getAdministrativePermissionV1(administrativePermissionIri), log)
-        case GetProjectDefaultObjectAccessPermissionsV1(projectIri, userProfileV1) => future2Message(sender(), getProjectDefaultObjectAccessPermissionsV1(projectIri, userProfileV1), log)
-        case GetDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri) => future2Message(sender(), getDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri), log)
+        case AdministrativePermissionsForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), getProjectAdministrativePermissionsV1(projectIri, userProfileV1), log)
+        case AdministrativePermissionGetRequestV1(administrativePermissionIri) => future2Message(sender(), getAdministrativePermissionV1(administrativePermissionIri), log)
+        case AdministrativePermissionCreateRequestV1(newAdministrativePermissionV1, userProfileV1) => future2Message(sender(), createAdministrativePermissionV1(), log)
+        case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, userProfileV1) => future2Message(sender(), deleteAdministrativePermissionV1(), log)
+        case DefaultObjectAccessPermissionsForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), getProjectDefaultObjectAccessPermissionsV1(projectIri, userProfileV1), log)
+        case DefaultObjectAccessPermissionGetRequestV1(defaultObjectAccessPermissionIri) => future2Message(sender(), getDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri), log)
+        case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(), log)
+        case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
+
+
+    /**
+      * Gets all IRI's of all administrative permissions defined inside a project.
+      *
+      * @param forProject the IRI of the project.
+      * @param userProfileV1 the [[UserProfileV1]] of the requesting user.
+      * @return a list of IRIs of [[AdministrativePermissionV1]] objects.
+      */
     private def getProjectAdministrativePermissionsV1(forProject: IRI, userProfileV1: UserProfileV1): Future[Option[List[IRI]]] = {
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectAdministrativePermissions(
@@ -79,7 +92,7 @@ class PermissionsResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Gets the [[AdministrativePermissionV1]] object for a group inside a project.
+      * Gets a single administrative permission identified by it's IRI.
       *
       * @param administrativePermissionIri the IRI of the administrative permission.
       *
@@ -119,12 +132,16 @@ class PermissionsResponderV1 extends ResponderV1 {
         } yield administrativePermission
     }
 
+    private def createAdministrativePermissionV1() = ???
+
+    private def deleteAdministrativePermissionV1() = ???
+
     /**
       * Gets all IRI's of all default object access permissions defined inside a project.
       *
       * @param forProject the IRI of the project.
       * @param userProfileV1 the [[UserProfileV1]] of the requesting user.
-      * @return a list of [[DefaultObjectAccessPermissionV1]] objects.
+      * @return a list of IRIs of [[DefaultObjectAccessPermissionV1]] objects.
       */
     private def getProjectDefaultObjectAccessPermissionsV1(forProject: IRI, userProfileV1: UserProfileV1): Future[Option[List[IRI]]] = {
 
@@ -153,6 +170,12 @@ class PermissionsResponderV1 extends ResponderV1 {
 
     }
 
+    /**
+      * Gets a single default object access permission identified by it's IRI.
+      *
+      * @param defaultObjectAccessPermissionIri the IRI of the default object access permission.
+      * @return a single [[DefaultObjectAccessPermissionV1]] object.
+      */
     private def getDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri: IRI): Future[DefaultObjectAccessPermissionV1] = {
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getDefaultObjectAccessPermission(
@@ -186,4 +209,8 @@ class PermissionsResponderV1 extends ResponderV1 {
 
         } yield defaultObjectAccessPermission
     }
+
+    private def createDefaultObjectAccessPermissionV1() = ???
+
+    private def deleteDefaultObjectAccessPermissionV1() = ???
 }

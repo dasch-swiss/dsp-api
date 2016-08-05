@@ -27,6 +27,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserOperationRespons
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.permissionmessages.{TemplatePermissionsCreateRequest, TemplatePermissionsCreateResponse}
 import org.knora.webapi.util.{KnoraIriUtil, MessageUtil, SparqlUtil}
 
 import scala.concurrent.Future
@@ -258,6 +259,14 @@ class ProjectsResponderV1 extends ResponderV1 {
 
             _ = if (projectResponse.isEmpty) {
                 throw UpdateNotPerformedException(s"Project $projectIRI was not created. Please report this as a possible bug.")
+            }
+
+            // create template permissions
+            templatePermissionsCreateResponse <- (responderManager ? TemplatePermissionsCreateRequest(projectIRI, newProjectDataV1.permissionsTemplate)).mapTo[TemplatePermissionsCreateResponse]
+
+            _ = if (!templatePermissionsCreateResponse.success) {
+                //Todo: Handle permission creation problem
+                log.error(templatePermissionsCreateResponse.msg)
             }
 
             // create the project info

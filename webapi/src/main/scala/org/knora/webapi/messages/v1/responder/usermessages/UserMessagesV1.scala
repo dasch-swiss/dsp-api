@@ -129,7 +129,7 @@ case class UserUpdateRequestV1(userIri: webapi.IRI,
   * @param userData    information about the user that made the request.
   */
 case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDataV1) extends KnoraResponseV1 {
-    def toJsValue = UserV1JsonProtocol.userCreateResponseV1Format.write(this)
+    def toJsValue = UserV1JsonProtocol.userOperationResponseV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -311,5 +311,5 @@ object UserV1JsonProtocol extends DefaultJsonProtocol with NullOptions with Spra
     implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat6(NewUserDataV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
     implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat2(UpdateUserApiRequestV1)
-    implicit val userCreateResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat2(UserOperationResponseV1)
+    implicit val userOperationResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat2(UserOperationResponseV1)
 }
