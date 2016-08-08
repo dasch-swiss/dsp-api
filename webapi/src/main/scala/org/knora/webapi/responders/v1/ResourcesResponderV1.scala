@@ -842,6 +842,9 @@ class ResourcesResponderV1 extends ResponderV1 {
                         triplestore = settings.triplestoreType,
                         resourceIri = resourceIri
                     ).toString())
+
+                    // _ = println(contextSparqlQuery)
+
                     contextQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(contextSparqlQuery)).mapTo[SparqlSelectResponse]
                     rows = contextQueryResponse.results.bindings
 
