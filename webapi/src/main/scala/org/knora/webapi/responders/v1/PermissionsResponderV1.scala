@@ -23,6 +23,7 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsTemplate.PermissionsTemplate
 import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionV1, _}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
@@ -48,16 +49,15 @@ class PermissionsResponderV1 extends ResponderV1 {
     def receive = {
         case AdministrativePermissionsForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), getProjectAdministrativePermissionsV1(projectIri, userProfileV1), log)
         case AdministrativePermissionGetRequestV1(administrativePermissionIri) => future2Message(sender(), getAdministrativePermissionV1(administrativePermissionIri), log)
-        case AdministrativePermissionCreateRequestV1(newAdministrativePermissionV1, userProfileV1) => future2Message(sender(), createAdministrativePermissionV1(), log)
-        case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, userProfileV1) => future2Message(sender(), deleteAdministrativePermissionV1(), log)
+        case AdministrativePermissionCreateRequestV1(newAdministrativePermissionV1, userProfileV1) => future2Message(sender(), createAdministrativePermissionV1(newAdministrativePermissionV1, userProfileV1), log)
+        case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, userProfileV1) => future2Message(sender(), deleteAdministrativePermissionV1(administrativePermissionIri, userProfileV1), log)
         case DefaultObjectAccessPermissionsForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), getProjectDefaultObjectAccessPermissionsV1(projectIri, userProfileV1), log)
         case DefaultObjectAccessPermissionGetRequestV1(defaultObjectAccessPermissionIri) => future2Message(sender(), getDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri), log)
-        case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(), log)
-        case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(), log)
+        case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, userProfileV1), log)
+        case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, userProfileV1), log)
+        case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1) => future2Message(sender(), templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
-
-
 
     /**
       * Gets all IRI's of all administrative permissions defined inside a project.
@@ -66,7 +66,7 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @param userProfileV1 the [[UserProfileV1]] of the requesting user.
       * @return a list of IRIs of [[AdministrativePermissionV1]] objects.
       */
-    private def getProjectAdministrativePermissionsV1(forProject: IRI, userProfileV1: UserProfileV1): Future[Option[List[IRI]]] = {
+    private def getProjectAdministrativePermissionsV1(forProject: IRI, userProfileV1: UserProfileV1): Future[Seq[IRI]] = {
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectAdministrativePermissions(
                 triplestore = settings.triplestoreType,
@@ -83,9 +83,9 @@ class PermissionsResponderV1 extends ResponderV1 {
             //_ = log.debug(s"getProjectAdministrativePermissionsV1 - iris: $apIris")
 
             administrativePermissionIris = if (apIris.nonEmpty) {
-                Some(apIris)
+                apIris
             } else {
-                None
+                Vector.empty[IRI]
             }
 
         } yield administrativePermissionIris
@@ -122,19 +122,19 @@ class PermissionsResponderV1 extends ResponderV1 {
             administrativePermission = AdministrativePermissionV1 (
                 forProject = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProject).get.head,
                 forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).get.head,
-                resourceCreationPermissionValues = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasResourceCreationPermission).map(_.toList),
-                hasRestrictedProjectResourceCreatePermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasRestrictedProjectResourceCreatePermission).map(_.toList),
-                projectAdministrationPermissionValues = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasProjectAdministrationPermission).map(_.toList),
-                hasRestrictedProjectGroupAdminPermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasRestrictedProjectGroupAdminPermission).map(_.toList),
-                ontologyAdministrationPermissionValues = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasOntologyAdministrationPermission).map(_.toList)
+                resourceCreationPermissionValues = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasResourceCreationPermission, Vector.empty[IRI]),
+                hasRestrictedProjectResourceCreatePermission = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasRestrictedProjectResourceCreatePermission, Vector.empty[IRI]),
+                projectAdministrationPermissionValues = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasProjectAdministrationPermission, Vector.empty[IRI]),
+                hasRestrictedProjectGroupAdminPermission = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasRestrictedProjectGroupAdminPermission, Vector.empty[IRI]),
+                ontologyAdministrationPermissionValues = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasOntologyAdministrationPermission, Vector.empty[IRI])
             )
 
         } yield administrativePermission
     }
 
-    private def createAdministrativePermissionV1() = ???
+    private def createAdministrativePermissionV1(newAdministrativePermissionV1: NewAdministrativePermissionV1, userProfileV1: UserProfileV1): Future[AdministrativePermissionOperationResponseV1] = ???
 
-    private def deleteAdministrativePermissionV1() = ???
+    private def deleteAdministrativePermissionV1(administrativePermissionIri: IRI, userProfileV1: UserProfileV1): Future[AdministrativePermissionOperationResponseV1] = ???
 
     /**
       * Gets all IRI's of all default object access permissions defined inside a project.
@@ -143,7 +143,7 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @param userProfileV1 the [[UserProfileV1]] of the requesting user.
       * @return a list of IRIs of [[DefaultObjectAccessPermissionV1]] objects.
       */
-    private def getProjectDefaultObjectAccessPermissionsV1(forProject: IRI, userProfileV1: UserProfileV1): Future[Option[List[IRI]]] = {
+    private def getProjectDefaultObjectAccessPermissionsV1(forProject: IRI, userProfileV1: UserProfileV1): Future[Seq[IRI]] = {
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectDefaultObjectAccessPermissions(
@@ -161,9 +161,9 @@ class PermissionsResponderV1 extends ResponderV1 {
             //_ = log.debug(s"getProjectAdministrativePermissionsV1 - iris: $apIris")
 
             defaultObjectAccessPermissionIris = if (daopIris.nonEmpty) {
-                Some(daopIris)
+                daopIris
             } else {
-                None
+                Vector.empty[IRI]
             }
 
         } yield defaultObjectAccessPermissionIris
@@ -200,17 +200,46 @@ class PermissionsResponderV1 extends ResponderV1 {
                 forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).get.head,
                 forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForResourceClass).get.head,
                 forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProperty).get.head,
-                hasDefaultChangeRightsPermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasDefaultChangeRightsPermission).map(_.toList),
-                hasDefaultDeletePermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasDefaultDeletePermission).map(_.toList),
-                hasDefaultModifyPermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasDefaultModifyPermission).map(_.toList),
-                hasDefaultViewPermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasDefaultViewPermission).map(_.toList),
-                hasDefaultRestrictedViewPermission = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasDefaultRestrictedViewPermission).map(_.toList)
+                hasDefaultChangeRightsPermission = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasDefaultChangeRightsPermission, Vector.empty[IRI]),
+                hasDefaultDeletePermission = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasDefaultDeletePermission, Vector.empty[IRI]),
+                hasDefaultModifyPermission = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasDefaultModifyPermission, Vector.empty[IRI]),
+                hasDefaultViewPermission = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasDefaultViewPermission, Vector.empty[IRI]),
+                hasDefaultRestrictedViewPermission = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasDefaultRestrictedViewPermission, Vector.empty[IRI])
             )
 
         } yield defaultObjectAccessPermission
     }
 
-    private def createDefaultObjectAccessPermissionV1() = ???
+    private def createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1: NewDefaultObjectAccessPermissionV1, userProfileV1: UserProfileV1): Future[DefaultObjectAccessPermissionOperationResponseV1] = ???
 
-    private def deleteDefaultObjectAccessPermissionV1() = ???
+    private def deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri: IRI, userProfileV1: UserProfileV1): Future[DefaultObjectAccessPermissionOperationResponseV1] = ???
+
+    private def templatePermissionsCreateRequestV1(projectIri: IRI, permissionsTemplate: PermissionsTemplate, userProfileV1: UserProfileV1): Future[TemplatePermissionsCreateResponseV1] = {
+        for {
+            /* find and delete all administrative permissions */
+            administrativePermissionsIris <- getProjectAdministrativePermissionsV1(projectIri, userProfileV1)
+            _ = administrativePermissionsIris.foreach { iri =>
+                deleteAdministrativePermissionV1(iri, userProfileV1)
+            }
+
+            /* find and delete all default object access permissions */
+            defaultObjectAccessPermissionIris <- getProjectDefaultObjectAccessPermissionsV1(projectIri, userProfileV1)
+            _ = defaultObjectAccessPermissionIris.foreach { iri =>
+                deleteDefaultObjectAccessPermissionV1(iri, userProfileV1)
+            }
+
+            _ = if (permissionsTemplate == PermissionsTemplate.OPEN) {
+                /* create administrative permissions */
+            }
+
+            templatePermissionsCreateResponse = TemplatePermissionsCreateResponseV1(
+                success = true,
+                administrativePermissions = Vector.empty[AdministrativePermissionV1],
+                defaultObjectAccessPermissions = Vector.empty[DefaultObjectAccessPermissionV1],
+                msg = "OK"
+            )
+
+        } yield templatePermissionsCreateResponse
+
+    }
 }

@@ -41,7 +41,7 @@ object PermissionsResponderV1SpecTestData {
             p = AdministrativePermissionV1(
                 forProject = IMAGES_PROJECT_IRI,
                 forGroup = OntologyConstants.KnoraBase.ProjectMember,
-                resourceCreationPermissionValues = Some(List(OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission))
+                resourceCreationPermissionValues = List(OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission)
             )
         )
 
@@ -53,9 +53,9 @@ object PermissionsResponderV1SpecTestData {
                 forGroup = OntologyConstants.KnoraBase.ProjectMember,
                 forResourceClass = OntologyConstants.KnoraBase.AllResourceClasses,
                 forProperty = OntologyConstants.KnoraBase.AllProperties,
-                hasDefaultChangeRightsPermission = Some(List(OntologyConstants.KnoraBase.Creator)),
-                hasDefaultModifyPermission = Some(List(OntologyConstants.KnoraBase.ProjectMember)),
-                hasDefaultViewPermission = Some(List(OntologyConstants.KnoraBase.KnownUser))
+                hasDefaultChangeRightsPermission = List(OntologyConstants.KnoraBase.Creator),
+                hasDefaultModifyPermission = List(OntologyConstants.KnoraBase.ProjectMember),
+                hasDefaultViewPermission = List(OntologyConstants.KnoraBase.KnownUser)
             )
         )
 

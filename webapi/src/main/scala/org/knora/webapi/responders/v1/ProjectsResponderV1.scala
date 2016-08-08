@@ -22,13 +22,13 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
+import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.permissionmessages.{TemplatePermissionsCreateRequestV1, TemplatePermissionsCreateResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserOperationResponseV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{TemplatePermissionsCreateRequest, TemplatePermissionsCreateResponse}
-import org.knora.webapi.util.{KnoraIriUtil, MessageUtil, SparqlUtil}
+import org.knora.webapi.util.{KnoraIriUtil, SparqlUtil}
 
 import scala.concurrent.Future
 
@@ -262,7 +262,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             }
 
             // create template permissions
-            templatePermissionsCreateResponse <- (responderManager ? TemplatePermissionsCreateRequest(projectIRI, newProjectDataV1.permissionsTemplate)).mapTo[TemplatePermissionsCreateResponse]
+            templatePermissionsCreateResponse <- (responderManager ? TemplatePermissionsCreateRequestV1(projectIRI, newProjectDataV1.permissionsTemplate, userProfileV1)).mapTo[TemplatePermissionsCreateResponseV1]
 
             _ = if (!templatePermissionsCreateResponse.success) {
                 //Todo: Handle permission creation problem

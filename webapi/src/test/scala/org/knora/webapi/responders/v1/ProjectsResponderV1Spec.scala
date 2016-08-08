@@ -29,6 +29,7 @@ import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsTemplate
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{NewUserDataV1, UserCreateRequestV1, UserOperationResponseV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages._
@@ -118,7 +119,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         basepath = "",
                         isActiveProject = true,
                         hasSelfJoinEnabled = false,
-                        permissionsTemplate = PermissionsTemplate.A
+                        permissionsTemplate = PermissionsTemplate.OPEN
                     ),
                     SharedTestData.rootUserProfileV1
                 )
@@ -143,7 +144,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         basepath = "",
                         isActiveProject = true,
                         hasSelfJoinEnabled = false,
-                        permissionsTemplate = PermissionsTemplate.A
+                        permissionsTemplate = PermissionsTemplate.OPEN
                     ),
                     SharedTestData.rootUserProfileV1
                 )
@@ -161,7 +162,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         basepath = "",
                         isActiveProject = true,
                         hasSelfJoinEnabled = false,
-                        permissionsTemplate = PermissionsTemplate.A
+                        permissionsTemplate = PermissionsTemplate.OPEN
                     ),
                     SharedTestData.rootUserProfileV1
                 )

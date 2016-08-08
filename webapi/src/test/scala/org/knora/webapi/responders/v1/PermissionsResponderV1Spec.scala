@@ -114,11 +114,12 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
         "asked to create permissions from a template " should {
             "create and return all permissions defined inside the template " in {
                 /* the default behaviour is to delete all permissions inside a project prior to applying a template */
-                actorUnderTest ! TemplatePermissionsCreateRequest(
+                actorUnderTest ! TemplatePermissionsCreateRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
-                    permissionsTemplate = PermissionsTemplate.OPEN
+                    permissionsTemplate = PermissionsTemplate.OPEN,
+                    rootUserProfileV1
                 )
-                expectMsg(TemplatePermissionsCreateResponse(
+                expectMsg(TemplatePermissionsCreateResponseV1(
                     success = true,
                     msg = "ok",
                     administrativePermissions = List(perm001.p, perm003.p),

@@ -1,10 +1,12 @@
 package org.knora.webapi.messages.v1.responder.permissionmessages
 
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionOperation.PermissionOperation
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsTemplate.PermissionsTemplate
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import spray.httpx.SprayJsonSupport
-import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
+import spray.json._
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,12 +26,8 @@ sealed trait PermissionsResponderRequestV1 extends KnoraRequestV1
   * @param projectIri the IRI of the project.
   * @param permissionsTemplate the permissions template.
   */
-case class TemplatePermissionsCreateRequest(projectIri: IRI, permissionsTemplate: PermissionsTemplate.Value) extends PermissionsResponderRequestV1
-case class TemplatePermissionsCreateResponse(success: Boolean,
-                                             msg: String,
-                                             administrativePermissions: Seq[AdministrativePermissionV1],
-                                             defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionV1]
-                                            )
+case class TemplatePermissionsCreateRequestV1(projectIri: IRI, permissionsTemplate: PermissionsTemplate, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+
 
 /**
   * A message that requests the IRIs of all administrative permissions defined inside a project.
@@ -61,13 +59,6 @@ case class AdministrativePermissionCreateRequestV1(newAdministrativePermissionV1
   * @param administrativePermissionIri
   */
 case class AdministrativePermissionDeleteRequestV1(administrativePermissionIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
-
-/**
-  * Response to the delete request
-  * @param success
-  * @param msg
-  */
-case class AdministrativePermissionDeleteResponseV1(success: Boolean, msg: String)
 
 /**
   * Update a single [[AdministrativePermissionV1]]
@@ -109,14 +100,6 @@ case class DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPe
 case class DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
 /**
-  * Response to the delete request.
-  *
-  * @param success
-  * @param msg
-  */
-case class DefaultObjectAccessPermissionDeleteResponseV1(success: Boolean, msg: String)
-
-/**
   * Update a single [[DefaultObjectAccessPermissionV1]].
   *
   * @param userProfileV1
@@ -126,18 +109,39 @@ case class DefaultObjectAccessPermissionUpdateRequestV1(userProfileV1: UserProfi
 // Responses
 
 /**
-  * Represents an answer to an administrative permission creating/modifying operation.
-  * @param administrativePermissionV1
+  * Represents an answer to a [[TemplatePermissionsCreateRequestV1]].
+  * @param success
+  * @param msg
+  * @param administrativePermissions
+  * @param defaultObjectAccessPermissions
   */
-case class AdministrativePermissionOperationResponseV1(administrativePermissionV1: AdministrativePermissionV1) extends KnoraResponseV1 {
+case class TemplatePermissionsCreateResponseV1(success: Boolean,
+                                             msg: String,
+                                             administrativePermissions: Seq[AdministrativePermissionV1],
+                                             defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionV1]
+                                            ) extends KnoraResponseV1 {
+    def toJsValue = PermissionV1JsonProtocol.templatePermissionsCreateResponseV1Format.write(this)
+}
+
+/**
+  * Represents an answer to an administrative permission creating/modifying/deletion operation.
+  * @param success
+  * @param operationType
+  * @param administrativePermissionV1
+  * @param msg
+  */
+case class AdministrativePermissionOperationResponseV1(success: Boolean, operationType: PermissionOperation, administrativePermissionV1: Option[AdministrativePermissionV1], msg: String) extends KnoraResponseV1 {
     def toJsValue = PermissionV1JsonProtocol.administrativePermissionOperationResponseV1Format.write(this)
 }
 
 /**
-  * Represents an answer to a default object access permission creating/modifying operation.
+  * Represents an answer to a default object access permission creating/modifying/deletion operation.
+  * @param success
+  * @param operationType
   * @param defaultObjectAccessPermissionV1
+  * @param msg
   */
-case class DefaultObjectAccessPermissionOperationResponseV1(defaultObjectAccessPermissionV1: DefaultObjectAccessPermissionV1) extends KnoraResponseV1 {
+case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean, operationType: PermissionOperation, defaultObjectAccessPermissionV1: Option[DefaultObjectAccessPermissionV1], msg: String) extends KnoraResponseV1 {
     def toJsValue = PermissionV1JsonProtocol.defaultObjectAccessPermissionOperationResponseV1Format.write(this)
 }
 
@@ -242,6 +246,9 @@ case class NewDefaultObjectAccessPermissionV1(iri: IRI,
   * Permissions template values
   */
 object PermissionsTemplate extends Enumeration {
+
+    type PermissionsTemplate = Value
+
     val NONE = Value(0, "none")
     val OPEN = Value(1, "open")
     val CLOSED = Value(2, "closed")
@@ -263,6 +270,14 @@ object PermissionsTemplate extends Enumeration {
     }
 }
 
+object PermissionOperation extends Enumeration {
+
+    type PermissionOperation = Value
+
+    val CREATE = Value("create")
+    val UPDATE = Value("update")
+    val DELETE = Value("delete")
+}
 
 
 
@@ -272,6 +287,25 @@ object PermissionsTemplate extends Enumeration {
 
 object PermissionV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
-    implicit val administrativePermissionOperationResponseV1Format: RootJsonFormat[AdministrativePermissionOperationResponseV1] = jsonFormat1(AdministrativePermissionOperationResponseV1)
-    implicit val defaultObjectAccessPermissionOperationResponseV1Format: RootJsonFormat[DefaultObjectAccessPermissionOperationResponseV1] = jsonFormat1(DefaultObjectAccessPermissionOperationResponseV1)
+    implicit object PermissionOperation extends JsonFormat[PermissionOperation] {
+        /**
+          * Not implemented.
+          */
+        def read(jsonVal: JsValue) = ???
+
+        /**
+          * Converts a [[PermissionOperation]] into [[JsValue]] for formatting as JSON.
+          *
+          * @param permissionOperation the [[PermissionOperation]] to be converted.
+          * @return a [[JsValue]].
+          */
+        def write(permissionOperation: PermissionOperation): JsValue = {
+            JsObject(Map("permission_operation" -> permissionOperation.toString.toJson))
+        }
+    }
+    implicit val administrativePermissionV1Format: JsonFormat[AdministrativePermissionV1] = jsonFormat7(AdministrativePermissionV1)
+    implicit val defaultObjectAccessPermissionV1Format: JsonFormat[DefaultObjectAccessPermissionV1] = jsonFormat9(DefaultObjectAccessPermissionV1)
+    implicit val templatePermissionsCreateResponseV1Format: RootJsonFormat[TemplatePermissionsCreateResponseV1] = jsonFormat4(TemplatePermissionsCreateResponseV1)
+    implicit val administrativePermissionOperationResponseV1Format: RootJsonFormat[AdministrativePermissionOperationResponseV1] = jsonFormat4(AdministrativePermissionOperationResponseV1)
+    implicit val defaultObjectAccessPermissionOperationResponseV1Format: RootJsonFormat[DefaultObjectAccessPermissionOperationResponseV1] = jsonFormat4(DefaultObjectAccessPermissionOperationResponseV1)
 }
