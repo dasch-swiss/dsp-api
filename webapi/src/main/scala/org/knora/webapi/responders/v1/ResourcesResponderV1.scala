@@ -742,66 +742,100 @@ class ResourcesResponderV1 extends ResponderV1 {
           */
         def createSourceObjectFromResultRow(row: VariableResultsRow): SourceObject = {
             val sourceObjectIri = row.rowMap("sourceObject")
+            val sourceObjectOwner = row.rowMap("sourceObjectAttachedToUser")
+            val sourceObjectProject = row.rowMap("sourceObjectAttachedToProject")
+            val sourceObjectLiteral = row.rowMap.get("sourceObjectPermissions")
 
             val sourceObjectPermissionCode = PermissionUtilV1.getUserPermissionV1(
                 subjectIri = sourceObjectIri,
-                subjectOwner = row.rowMap("sourceObjectAttachedToUser"),
-                subjectProject = row.rowMap("sourceObjectAttachedToProject"),
-                subjectPermissionLiteral = row.rowMap.get("sourceObjectPermissions"),
+                subjectOwner = sourceObjectOwner,
+                subjectProject = sourceObjectProject,
+                subjectPermissionLiteral = sourceObjectLiteral,
                 userProfile = userProfile
             )
+
+            val linkValueIri = row.rowMap("linkValue")
+            val linkValueOwner = row.rowMap("linkValueOwner")
+            val linkValueProject = row.rowMap.getOrElse("linkValueProject", sourceObjectProject)
+            val linkValuePermissions = row.rowMap.get("linkValuePermissions")
+
+            val linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(
+                subjectIri = linkValueIri,
+                subjectOwner = linkValueOwner,
+                subjectProject = linkValueProject,
+                subjectPermissionLiteral = linkValuePermissions,
+                userProfile = userProfile
+            )
+
+            // Allow the user to see the link only if they have permission to see both the source object and the link value.
+            val permissionCode = Seq(sourceObjectPermissionCode, linkValuePermissionCode).min
 
             SourceObject(id = row.rowMap("sourceObject"),
                 firstprop = row.rowMap.get("firstprop"),
                 seqnum = row.rowMap("seqnum").toInt,
-                permissionCode = sourceObjectPermissionCode,
+                permissionCode = permissionCode,
                 fileValues = createStillImageFileValueFromResultRow(row).toVector
             )
         }
 
-        // If the API request asked for a ResourceInfoV1, query for that.
-        val resInfoV1Future = if (resinfo) {
-            for {
-                (userPermission, resInfoV1) <- getResourceInfoV1(
-                    resourceIri = resourceIri,
-                    userProfile = userProfile,
-                    queryOntology = true
-                )
-            } yield userPermission match {
-                case Some(permission) => Some(resInfoV1)
-                case None => None
-            }
-        } else {
-            Future(None)
-        }
+        val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
 
         for {
-        // If this resource is part of another resource, get its parent resource.
-            isPartOfSparqlQuery <- Future(queries.sparql.v1.txt.isPartOf(
+            // Get the resource info even if the user didn't ask for it, so we can check its permissions.
+            (userPermission, resInfoV1) <- getResourceInfoV1(
+                resourceIri = resourceIri,
+                userProfile = userProfile,
+                queryOntology = true
+            )
+
+            _ = if (userPermission.isEmpty) {
+                throw ForbiddenException(s"User $userIri does not have permission to query the context of resource $resourceIri")
+            }
+
+            // If this resource is part of another resource, get its parent resource.
+            isPartOfSparqlQuery = queries.sparql.v1.txt.isPartOf(
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri
-            ).toString())
+            ).toString()
             isPartOfResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isPartOfSparqlQuery)).mapTo[SparqlSelectResponse]
 
-            (parentResourceIriOption, parentResInfoV1Option) <- isPartOfResponse.results.bindings match {
+            (containingResourceIriOption: Option[IRI], containingResInfoV1Option: Option[ResourceInfoV1]) <- isPartOfResponse.results.bindings match {
                 case rows if rows.nonEmpty =>
-                    val parentResourceIri = rows.head.rowMap("containingResource")
+                    val rowMap = rows.head.rowMap
+                    val containingResourceIri = rowMap("containingResource")
+                    val containingResourceProject = rowMap("containingResourceProject")
 
                     for {
-                        (userPermission, resInfoV1) <- getResourceInfoV1(
-                            resourceIri = rows.head.rowMap("containingResource"),
+                        (containingResourcePermissionCode, resInfoV1) <- getResourceInfoV1(
+                            resourceIri = containingResourceIri,
                             userProfile = userProfile,
                             queryOntology = true
                         )
-                    } yield userPermission match {
-                        case Some(permission) => (Some(parentResourceIri), Some(resInfoV1))
+
+                        linkValueIri = rowMap("linkValue")
+                        linkValueOwner = rowMap("linkValueOwner")
+                        linkValueProject = rowMap.getOrElse("linkValueProject", containingResourceProject)
+                        linkValuePermissions = rowMap.get("linkValuePermissions")
+
+                        linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(
+                            subjectIri = linkValueIri,
+                            subjectOwner = linkValueOwner,
+                            subjectProject = linkValueProject,
+                            subjectPermissionLiteral = linkValuePermissions,
+                            userProfile = userProfile
+                        )
+
+                        // Allow the user to see the link only if they have permission to see both the containing resource and the link value.
+                        permissionCode = Seq(containingResourcePermissionCode, linkValuePermissionCode).min
+
+                    } yield permissionCode match {
+                        case Some(permission) => (Some(containingResourceIri), Some(resInfoV1))
                         case None => (None, None)
                     }
-
                 case _ => Future((None, None))
             }
 
-            resourceContexts: Seq[ResourceContextItemV1] <- if (parentResInfoV1Option.isEmpty) {
+            resourceContexts: Seq[ResourceContextItemV1] <- if (containingResInfoV1Option.isEmpty) {
                 for {
                 // Otherwise, do a SPARQL query that returns resources that are part of this resource (as indicated by knora-base:isPartOf).
                     contextSparqlQuery <- Future(queries.sparql.v1.txt.getContext(
@@ -872,9 +906,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 Future(Nil)
             }
 
-            resinfoV1Option: Option[ResourceInfoV1] <- resInfoV1Future
-
-            resinfoV1WithRegionsOption: Option[ResourceInfoV1] <- if (resinfoV1Option.nonEmpty) {
+            resinfoV1WithRegionsOption: Option[ResourceInfoV1] <- if (resinfo) {
 
                 for {
                 //
@@ -941,25 +973,24 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                     resinfoWithRegions: Option[ResourceInfoV1] = if (regionProperties.nonEmpty) {
                         // regions are given, append them to resinfo
-                        Some(resinfoV1Option.get.copy(
-                            regions = Some(regionProperties)))
+                        Some(resInfoV1.copy(regions = Some(regionProperties)))
                     } else {
                         // no regions given, just return resinfo
-                        resinfoV1Option
+                        Some(resInfoV1)
                     }
                 } yield resinfoWithRegions
             } else {
                 // resinfo is not requested
-                Future(resinfoV1Option)
+                Future(None)
             }
 
-            resourceContextV1 = parentResourceIriOption match {
+            resourceContextV1 = containingResourceIriOption match {
                 case Some(_) =>
                     // This resource is part of another resource, so return the resource info of the parent.
                     ResourceContextV1(
                         resinfo = resinfoV1WithRegionsOption,
-                        parent_res_id = parentResourceIriOption,
-                        parent_resinfo = parentResInfoV1Option,
+                        parent_res_id = containingResourceIriOption,
+                        parent_resinfo = containingResInfoV1Option,
                         context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_PARTOF,
                         canonical_res_id = resourceIri
                     )

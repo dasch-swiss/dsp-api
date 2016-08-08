@@ -34,7 +34,7 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 
-SELECT ?seqnum ?sourceObject ?sourceObjectAttachedToUser ?sourceObjectAttachedToProject ?sourceObjectPermissions ?firstprop ?fileValue ?isPreview ?internalFilename ?internalMimeType ?originalFilename ?dimX ?dimY ?qualityLevel ?fileValuePermissions ?fileValueAttachedToUser ?fileValueAttachedToProject
+SELECT ?seqnum ?sourceObject ?sourceObjectAttachedToUser ?sourceObjectAttachedToProject ?sourceObjectPermissions ?linkValue ?linkValueOwner ?linkValueProject ?linkValuePermissions ?firstprop ?fileValue ?isPreview ?internalFilename ?internalMimeType ?originalFilename ?dimX ?dimY ?qualityLevel ?fileValuePermissions ?fileValueAttachedToUser ?fileValueAttachedToProject
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -64,6 +64,25 @@ WHERE {
 
     OPTIONAL {
         ?sourceObject knora-base:hasPermissions ?sourceObjectPermissions .
+    }
+
+    BIND(IRI(CONCAT(STR(?linkingProp), "Value")) AS ?linkValueProp)
+
+    ?sourceObject ?linkValueProp ?linkValue .
+
+    ?linkValue rdf:type knora-base:LinkValue ;
+        rdf:subject ?sourceObject ;
+        rdf:predicate ?linkingProp ;
+        rdf:object ?resource ;
+        knora-base:isDeleted false ;
+        knora-base:attachedToUser ?linkValueOwner .
+
+    OPTIONAL {
+        ?linkValue knora-base:attachedToProject ?linkValueProject .
+    }
+
+    OPTIONAL {
+        ?linkValue knora-base:hasPermissions ?linkValuePermissions .
     }
 
     OPTIONAL {
