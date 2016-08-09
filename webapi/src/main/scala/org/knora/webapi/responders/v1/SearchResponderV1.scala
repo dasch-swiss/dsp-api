@@ -27,7 +27,6 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetReq
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
-import org.knora.webapi.responders.v1.GroupedProps.ValueProps
 import org.knora.webapi.twirl.SearchCriterion
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.DateUtilV1
@@ -99,11 +98,13 @@ class SearchResponderV1 extends ResponderV1 {
       * Represents a matching value in a search result.
       *
       * @param valueTypeIri        the type of the value that matched.
+      * @param propertyIri         the IRI of the property that points to the value.
       * @param propertyLabel       the label of the property that points to the value.
       * @param literal             the literal that matched.
       * @param valuePermissionCode the user's permission code on the value.
       */
     private case class MatchingValue(valueTypeIri: IRI,
+                                     propertyIri: IRI,
                                      propertyLabel: String,
                                      literal: String,
                                      valuePermissionCode: Option[Int])
@@ -174,9 +175,15 @@ class SearchResponderV1 extends ResponderV1 {
 
                     val resourceOwner = firstRowMap("resourceOwner")
                     val resourceProject = firstRowMap("resourceProject")
-                    val resourcePermissionsString = firstRowMap("resourcePermissions")
-                    val resourcePermissions: Seq[(IRI, IRI)] = PermissionUtilV1.parsePermissions(resourcePermissionsString, resourceOwner, resourceProject)
-                    val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(resourceIri, resourcePermissions, searchGetRequest.userProfile)
+                    val resourcePermissions = firstRowMap.get("resourcePermissions")
+
+                    val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(
+                        subjectIri = resourceIri,
+                        subjectOwner = resourceOwner,
+                        subjectProject = resourceProject,
+                        subjectPermissionLiteral = resourcePermissions,
+                        userProfile = searchGetRequest.userProfile
+                    )
 
                     if (resourcePermissionCode.nonEmpty) {
                         // Yes. Get more information about the resource.
@@ -193,16 +200,14 @@ class SearchResponderV1 extends ResponderV1 {
                                 // Convert the permissions on the matching value object into a ValueProps.
                                 val valueIri = row.rowMap(s"valueObject")
                                 val literal = row.rowMap(s"literal")
-                                val valuePermissionsString = row.rowMap.getOrElse(s"valuePermissions", "")
-                                val valuePermissionsAsValueProps: ValueProps = PermissionUtilV1.parsePermissionsAsValueProps(
-                                    assertionsString = valuePermissionsString,
-                                    owner = row.rowMap(s"valueOwner"),
-                                    project = row.rowMap.getOrElse(s"valueProject", resourceProject) // If the value doesn't specify a project, it's implicitly in the resource's project.
-                                )
-
-                                val valuePermissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                                val valueOwner = row.rowMap(s"valueOwner")
+                                val valueProject = row.rowMap.getOrElse(s"valueProject", resourceProject) // If the value doesn't specify a project, it's implicitly in the resource's project.
+                            val valuePermissionsLiteral = row.rowMap.get(s"valuePermissions")
+                                val valuePermissionCode = PermissionUtilV1.getUserPermissionV1(
                                     subjectIri = valueIri,
-                                    valueProps = valuePermissionsAsValueProps,
+                                    subjectOwner = valueOwner,
+                                    subjectProject = valueProject,
+                                    subjectPermissionLiteral = valuePermissionsLiteral,
                                     userProfile = searchGetRequest.userProfile
                                 )
 
@@ -216,6 +221,7 @@ class SearchResponderV1 extends ResponderV1 {
 
                                         valueIri -> MatchingValue(
                                             valueTypeIri = row.rowMap("valueObjectType"),
+                                            propertyIri = propertyIri,
                                             propertyLabel = propertyLabel,
                                             literal = literal,
                                             valuePermissionCode = valuePermissionCode
@@ -223,7 +229,7 @@ class SearchResponderV1 extends ResponderV1 {
                                 }
 
                                 valuesAcc ++ value
-                        }.toVector.sortBy(_._1).map(_._2) // Sort by value IRI so the results are consistent between requests.
+                        }.toVector.sortBy(_._1).map(_._2).sortBy(_.propertyIri) // Sort by value IRI, then by property IRI, so the results are consistent between requests.
 
                         // Does the user have permission to see at least one matching value in the resource, or did the resource's label match?
                         if (matchingValues.nonEmpty || rows.exists(_.rowMap.get("valueObject").isEmpty)) {
@@ -464,55 +470,6 @@ class SearchResponderV1 extends ResponderV1 {
 
             entityInfoResponse <- (responderManager ? entityInfoRequest).mapTo[EntityInfoGetResponseV1]
 
-            // Collect the IRIs of resources that are the targets of matching links.
-
-            // Get the indexes of criteria that involve links.
-            indexesWithTargetResources: Seq[Int] = searchCriteria.zipWithIndex.filter {
-                case (searchCriterion, index) => searchCriterion.valueType == OntologyConstants.KnoraBase.Resource
-            }.map(_._2)
-
-            // Get the unique target resource IRIs from all the matches for those criteria.
-            targetResourceIris: Seq[IRI] = searchResponse.results.bindings.foldLeft(Set.empty[IRI]) {
-                case (acc: Set[IRI], row) =>
-                    acc ++ indexesWithTargetResources.map {
-                        index => row.rowMap(s"targetResource$index")
-                    }
-            }.toVector
-
-            // _ = println(s"targetResourceIris: $targetResourceIris")
-
-            // Get the permission-relevant assertions from those target resources.
-            targetResourceIriAuthInfoRows: Seq[VariableResultsRow] <- if (targetResourceIris.nonEmpty) {
-                for {
-                    authInfoSparql <- Future(queries.sparql.v1.txt.getAuthorisationInfoForResources(
-                        triplestore = settings.triplestoreType,
-                        resourceIris = targetResourceIris
-                    ).toString())
-
-                    // _ = println(authInfoSparql)
-
-                    authInfoResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(authInfoSparql)).mapTo[SparqlSelectResponse]
-                } yield authInfoResponse.results.bindings
-            } else {
-                Future(Vector.empty[VariableResultsRow])
-            }
-
-            // Get the user's permission on each target resource.
-            targetResourceIriAuthInfo: Map[IRI, Option[Int]] = targetResourceIriAuthInfoRows.groupBy(_.rowMap("resource")).map {
-                case (targetResourceIri, rows: Seq[VariableResultsRow]) =>
-                    val assertions = rows.map {
-                        row => (row.rowMap("p"), row.rowMap("o"))
-                    }
-
-                    val permissionCode = PermissionUtilV1.getUserPermissionV1(
-                        subjectIri = targetResourceIri,
-                        assertions = assertions,
-                        userProfile = searchGetRequest.userProfile
-                    )
-
-                    (targetResourceIri, permissionCode)
-            }
-
             // Group the search results by resource IRI.
             groupedByResourceIri: Map[IRI, Seq[VariableResultsRow]] = searchResponse.results.bindings.groupBy(_.rowMap("resource"))
 
@@ -527,8 +484,15 @@ class SearchResponderV1 extends ResponderV1 {
                     val resourceOwner = firstRowMap("resourceOwner")
                     val resourceProject = firstRowMap("resourceProject")
                     val resourcePermissionsString = firstRowMap("resourcePermissions")
-                    val resourcePermissions: Seq[(IRI, IRI)] = PermissionUtilV1.parsePermissions(resourcePermissionsString, resourceOwner, resourceProject)
-                    val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(resourceIri, resourcePermissions, searchGetRequest.userProfile)
+                    val resourcePermissions = firstRowMap.get("resourcePermissions")
+
+                    val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(
+                        subjectIri = resourceIri,
+                        subjectOwner = resourceOwner,
+                        subjectProject = resourceProject,
+                        subjectPermissionLiteral = resourcePermissions,
+                        userProfile = searchGetRequest.userProfile
+                    )
 
                     if (resourcePermissionCode.nonEmpty) {
                         // Yes. Get more information about the resource.
@@ -549,12 +513,9 @@ class SearchResponderV1 extends ResponderV1 {
 
                                         // Convert the permissions on the matching value object into a ValueProps.
 
-                                        val valuePermissionsString = row.rowMap.getOrElse(s"valuePermissions$index", "")
-                                        val valuePermissionsAsValueProps: ValueProps = PermissionUtilV1.parsePermissionsAsValueProps(
-                                            assertionsString = valuePermissionsString,
-                                            owner = row.rowMap(s"valueOwner$index"),
-                                            project = row.rowMap.getOrElse(s"valueProject$index", resourceProject) // If the value doesn't specify a project, it's implicitly in the resource's project.
-                                        )
+                                        val valueOwner = row.rowMap(s"valueOwner$index")
+                                        val valueProject = row.rowMap.getOrElse(s"valueProject$index", resourceProject) // If the value doesn't specify a project, it's implicitly in the resource's project.
+                                    val valuePermissionLiteral = row.rowMap.get(s"valuePermissions$index")
 
                                         // Is the matching value object a LinkValue?
                                         val valuePermissionCode = if (searchCriterion.valueType == OntologyConstants.KnoraBase.Resource) {
@@ -562,21 +523,35 @@ class SearchResponderV1 extends ResponderV1 {
                                             val linkValuePermissionCode = PermissionUtilV1.getUserPermissionOnLinkValueV1(
                                                 linkValueIri = valueIri,
                                                 predicateIri = searchCriterion.propertyIri,
-                                                valueProps = valuePermissionsAsValueProps,
+                                                linkValueOwner = valueOwner,
+                                                linkValueProject = valueProject,
+                                                linkValuePermissionLiteral = valuePermissionLiteral,
                                                 userProfile = searchGetRequest.userProfile
                                             )
 
                                             // Get the permission code for the target resource.
                                             val targetResourceIri = row.rowMap(s"targetResource$index")
-                                            val targetResourcePermissionCode = targetResourceIriAuthInfo(targetResourceIri)
+                                            val targetResourceOwner = row.rowMap(s"targetResourceOwner$index")
+                                            val targetResourceProject = row.rowMap(s"targetResourceProject$index")
+                                            val targetResourcePermissionLiteral = row.rowMap.get(s"targetResourcePermissions$index")
+
+                                            val targetResourcePermissionCode = PermissionUtilV1.getUserPermissionV1(
+                                                subjectIri = targetResourceIri,
+                                                subjectOwner = targetResourceOwner,
+                                                subjectProject = targetResourceProject,
+                                                subjectPermissionLiteral = targetResourcePermissionLiteral,
+                                                userProfile = searchGetRequest.userProfile
+                                            )
 
                                             // Only allow the user to see the match if they have view permission on both the link value and the target resource.
                                             Seq(linkValuePermissionCode, targetResourcePermissionCode).min
                                         } else {
                                             // The matching object is an ordinary value, not a LinkValue.
-                                            PermissionUtilV1.getUserPermissionV1WithValueProps(
+                                            PermissionUtilV1.getUserPermissionV1(
                                                 subjectIri = valueIri,
-                                                valueProps = valuePermissionsAsValueProps,
+                                                subjectOwner = valueOwner,
+                                                subjectProject = valueProject,
+                                                subjectPermissionLiteral = valuePermissionLiteral,
                                                 userProfile = searchGetRequest.userProfile
                                             )
                                         }
@@ -589,6 +564,7 @@ class SearchResponderV1 extends ResponderV1 {
 
                                         valueIri -> MatchingValue(
                                             valueTypeIri = searchCriterion.valueType,
+                                            propertyIri = propertyIri,
                                             propertyLabel = propertyLabel,
                                             literal = literal,
                                             valuePermissionCode = valuePermissionCode
@@ -601,7 +577,7 @@ class SearchResponderV1 extends ResponderV1 {
                                 }
 
                                 valuesAcc ++ filteredValues
-                        }.toVector.sortBy(_._1).map(_._2) // Sort by value IRI so the results are consistent between requests.
+                        }.toVector.sortBy(_._1).map(_._2).sortBy(_.propertyIri) // Sort by value IRI, then by property IRI, so the results are consistent between requests.
 
                         // Does the user have permission to see at least one matching value in the resource?
                         if (matchingValues.nonEmpty) {

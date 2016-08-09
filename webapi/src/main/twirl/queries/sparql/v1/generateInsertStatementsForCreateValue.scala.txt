@@ -46,7 +46,9 @@
   value: UpdateValueV1,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   maybeComment: Option[String],
-  permissionRelevantAssertions: Seq[(IRI, IRI)])
+  valueOwner: IRI,
+  valueProject: IRI,
+  maybeValuePermissions: Option[String])
 
         # Value @valueIndex
         # Property: @propertyIri
@@ -192,9 +194,18 @@
             case None => {}
         }
 
-        @* Insert the value's permission-relevant assertions (its owner, project, and permissions). *@
-        @for(assertion <- permissionRelevantAssertions) {
-            ?newValue@valueIndex <@assertion._1> <@assertion._2> .
+        ?newValue@valueIndex knora-base:attachedToUser <@valueOwner> ;
+            knora-base:attachedToProject <@valueProject> .
+
+        @maybeValuePermissions match {
+
+            case Some(valuePermissions) => {
+
+                ?newValue@valueIndex knora-base:hasPermissions "@valuePermissions" .
+
+            }
+
+            case None => {}
         }
 
         ?newValue@valueIndex knora-base:valueHasOrder ?nextOrder@valueIndex ;

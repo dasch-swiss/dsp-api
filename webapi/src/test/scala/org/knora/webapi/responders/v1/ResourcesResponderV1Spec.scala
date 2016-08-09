@@ -205,16 +205,6 @@ object ResourcesResponderV1Spec {
             restype_label = Some("Ding"),
             restype_name = Some("http://www.knora.org/ontology/anything#Thing"),
             restype_id = "http://www.knora.org/ontology/anything#Thing",
-            permissions = Vector(
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                )
-            ),
             person_id = "http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q",
             project_id = "http://data.knora.org/projects/anything"
         ),
@@ -241,16 +231,6 @@ object ResourcesResponderV1Spec {
             restype_label = Some("Ding"),
             restype_name = Some("http://www.knora.org/ontology/anything#Thing"),
             restype_id = "http://www.knora.org/ontology/anything#Thing",
-            permissions = Vector(
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                )
-            ),
             person_id = "http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q",
             project_id = "http://data.knora.org/projects/anything"
         ),
@@ -311,6 +291,7 @@ object ResourcesResponderV1Spec {
         regular_property = 1,
         pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
     )
+
 }
 
 
@@ -348,36 +329,9 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         assert(received.access == expected.access, "access does not match")
         assert(received.userdata == expected.userdata, "userdata does not match")
-
-        val expectedResinfoWithSortedPermissions = expected.resinfo.get.copy(
-            permissions = expected.resinfo.get.permissions.sorted
-        )
-
-        val receivedResInfoWithSortedPermissions = received.resinfo.get.copy(
-            permissions = received.resinfo.get.permissions.sorted
-        )
-
-        assert(receivedResInfoWithSortedPermissions == expectedResinfoWithSortedPermissions, "resinfo does not match")
+        assert(received.resinfo == expected.resinfo, "resinfo does not match")
         assert(received.resdata == expected.resdata, "resdata does not match")
-
-        // sort permissions in incoming resinfo
-        val expectedIncomingWithSortedPermissions = expected.incoming.map {
-            case (incomingReference: IncomingV1) => incomingReference.copy(
-                resinfo = incomingReference.resinfo.copy(
-                    permissions = incomingReference.resinfo.permissions.sorted
-                )
-            )
-        }
-
-        val receivedIncomingWithSortedPermissions = received.incoming.map {
-            case (incomingReference: IncomingV1) => incomingReference.copy(
-                resinfo = incomingReference.resinfo.copy(
-                    permissions = incomingReference.resinfo.permissions.sorted
-                )
-            )
-        }
-
-        assert(receivedIncomingWithSortedPermissions == expectedIncomingWithSortedPermissions, "incoming does not match")
+        assert(received.incoming == expected.incoming, "incoming does not match")
 
         val sortedReceivedProps = received.props.get.properties.sortBy(_.pid)
         val sortedExpectedProps = expected.props.get.properties.sortBy(_.pid)
@@ -419,44 +373,11 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         val receivedContext = received.resource_context
         val expectedContext = expected.resource_context
 
-        val expectexResinfoWithSortedPermissions = expectedContext.resinfo match {
-            case Some(resinfo: ResourceInfoV1) =>
-                Some(resinfo.copy(
-                    permissions = resinfo.permissions.sorted
-                ))
-            case None => None
-        }
-
-        val receivedResinfoWithSortedPermissions = receivedContext.resinfo match {
-            case Some(resinfo: ResourceInfoV1) =>
-                Some(resinfo.copy(
-                    permissions = resinfo.permissions.sorted
-                ))
-            case None => None
-        }
-
-        assert(receivedResinfoWithSortedPermissions == expectexResinfoWithSortedPermissions, "resinfo does not match")
+        assert(receivedContext.resinfo == expectedContext.resinfo, "resinfo does not match")
         assert(receivedContext.parent_res_id == expectedContext.parent_res_id, "parent_res_id does not match")
         assert(receivedContext.context == expectedContext.context, "context does not match")
         assert(receivedContext.canonical_res_id == expectedContext.canonical_res_id, "canonical_res_id does not match")
-
-        val expectexParentResinfoWithSortedPermissions = expectedContext.parent_resinfo match {
-            case Some(resinfo: ResourceInfoV1) =>
-                Some(resinfo.copy(
-                    permissions = resinfo.permissions.sorted
-                ))
-            case None => None
-        }
-
-        val receivedParentResinfoWithSortedPermissions = receivedContext.parent_resinfo match {
-            case Some(resinfo: ResourceInfoV1) =>
-                Some(resinfo.copy(
-                    permissions = resinfo.permissions.sorted
-                ))
-            case None => None
-        }
-
-        assert(receivedParentResinfoWithSortedPermissions == expectexParentResinfoWithSortedPermissions, "parent_resinfo does not match")
+        assert(receivedContext.parent_resinfo == expectedContext.parent_resinfo, "parent_resinfo does not match")
     }
 
 
@@ -1007,7 +928,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "should show incoming standoff links if the user has view permission on both resources, but show other incoming links only if the user also has view permission on the link" in {
+        "show incoming standoff links if the user has view permission on both resources, but show other incoming links only if the user also has view permission on the link" in {
             // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
 
             actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-2", userProfile = anythingUser1)
@@ -1030,7 +951,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "should show outgoing standoff links if the user has view permission on both resources, but show other outgoing links only if the user also has view permission on the link" in {
+        "show outgoing standoff links if the user has view permission on both resources, but show other outgoing links only if the user also has view permission on the link" in {
             // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
 
             actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-1", userProfile = anythingUser1)
@@ -1059,6 +980,38 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     linkProps.size should ===(1)
                     linkProps.contains(hasStandoffLinkToOutgoingLink) should ===(true)
                     linkProps.contains(hasOtherThingOutgoingLink) should ===(false)
+            }
+        }
+
+        "show a contained resource in a context request only if the user has permission to see the containing resource, the contained resource, and the link value" in {
+            // The owner of the resources and the link should see two contained resources.
+
+            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/containing-thing", resinfo = true, userProfile = anythingUser1)
+
+            expectMsgPF(timeout) {
+                case response: ResourceContextResponseV1 =>
+                    response.resource_context.res_id should ===(Some(Vector(
+                        "http://data.knora.org/contained-thing-1",
+                        "http://data.knora.org/contained-thing-2"
+                    )))
+            }
+
+            // Another user in the project, who doesn't have permission to see the second link, should see only one contained resource.
+
+            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/containing-thing", resinfo = true, userProfile = anythingUser2)
+
+            expectMsgPF(timeout) {
+                case response: ResourceContextResponseV1 =>
+                    response.resource_context.res_id should ===(Some(Vector("http://data.knora.org/contained-thing-1")))
+            }
+
+            // A user who's not in the project shouldn't see any contained resources.
+
+            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/containing-thing", resinfo = true, userProfile = incunabulaUser)
+
+            expectMsgPF(timeout) {
+                case response: ResourceContextResponseV1 =>
+                    response.resource_context.res_id should ===(None)
             }
         }
     }

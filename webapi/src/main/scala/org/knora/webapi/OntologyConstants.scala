@@ -60,6 +60,9 @@ object OntologyConstants {
     }
 
     object KnoraBase {
+        val KnoraBasePrefix = "knora-base:"
+        val KnoraBasePrefixExpansion = "http://www.knora.org/ontology/knora-base#"
+
         val Resource = "http://www.knora.org/ontology/knora-base#Resource"
 
         val ObjectClassConstraint = "http://www.knora.org/ontology/knora-base#objectClassConstraint"
@@ -129,7 +132,6 @@ object OntologyConstants {
         val LinkValue = "http://www.knora.org/ontology/knora-base#LinkValue"
         val GeonameValue = "http://www.knora.org/ontology/knora-base#GeonameValue"
 
-        val KnoraAdminPrefix = "http://www.knora.org/ontology/knora-base#"
         val IsInGroup = "http://www.knora.org/ontology/knora-base#isInGroup"
         val IsInProject = "http://www.knora.org/ontology/knora-base#isInProject"
         val IsDeleted = "http://www.knora.org/ontology/knora-base#isDeleted"
@@ -139,12 +141,25 @@ object OntologyConstants {
         val ProjectMember = "http://www.knora.org/ontology/knora-base#ProjectMember"
         val Owner = "http://www.knora.org/ontology/knora-base#Owner"
 
-        val HasRestrictedViewPermission = "http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission"
-        val HasViewPermission = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-        val HasModifyPermission = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-        val HasDeletePermission = "http://www.knora.org/ontology/knora-base#hasDeletePermission"
-        val HasChangeRightsPermission = "http://www.knora.org/ontology/knora-base#hasChangeRightsPermission"
-        val HasMaxPermission = HasChangeRightsPermission
+        val HasPermissions = "http://www.knora.org/ontology/knora-base#hasPermissions"
+
+        val RestrictedViewPermission = "RV"
+        val ViewPermission = "V"
+        val ModifyPermission = "M"
+        val DeletePermission = "D"
+        val ChangeRightsPermission = "CR"
+        val MaxPermission = ChangeRightsPermission
+
+        val PermissionAbbreviations = Seq(
+            RestrictedViewPermission,
+            ViewPermission,
+            ModifyPermission,
+            DeletePermission,
+            ChangeRightsPermission
+        )
+
+        val PermissionListDelimiter = '|'
+        val GroupListDelimiter = ','
 
         val HasDefaultRestrictedViewPermission = "http://www.knora.org/ontology/knora-base#hasDefaultRestrictedViewPermission"
         val HasDefaultViewPermission = "http://www.knora.org/ontology/knora-base#hasDefaultViewPermission"
@@ -152,7 +167,7 @@ object OntologyConstants {
         val HasDefaultDeletePermission = "http://www.knora.org/ontology/knora-base#hasDefaultDeletePermission"
         val HasDefaultChangeRightsPermission = "http://www.knora.org/ontology/knora-base#hasDefaultChangeRightsPermission"
 
-        val defaultPermissionProperties = Set(
+        val DefaultPermissionProperties = Set(
             HasDefaultRestrictedViewPermission,
             HasDefaultViewPermission,
             HasDefaultModifyPermission,
@@ -171,14 +186,14 @@ object OntologyConstants {
         val AttachedToUser = "http://www.knora.org/ontology/knora-base#attachedToUser"
         val AttachedToProject = "http://www.knora.org/ontology/knora-base#attachedToProject"
 
-        val UsersActiveProject = KnoraAdminPrefix + "currentproject"
+        val UsersActiveProject = KnoraBasePrefixExpansion + "currentproject"
 
-        val ProjectShortname = KnoraAdminPrefix + "projectShortname"
-        val ProjectLongname = KnoraAdminPrefix + "projectLongname"
-        val ProjectDescription = KnoraAdminPrefix + "projectDescription"
-        val ProjectKeyword = KnoraAdminPrefix + "projectKeyword"
-        val ProjectBasepath = KnoraAdminPrefix + "projectBasepath"
-        val ProjectLogo = KnoraAdminPrefix + "projectLogo"
+        val ProjectShortname = KnoraBasePrefixExpansion + "projectShortname"
+        val ProjectLongname = KnoraBasePrefixExpansion + "projectLongname"
+        val ProjectDescription = KnoraBasePrefixExpansion + "projectDescription"
+        val ProjectKeyword = KnoraBasePrefixExpansion + "projectKeyword"
+        val ProjectBasepath = KnoraBasePrefixExpansion + "projectBasepath"
+        val ProjectLogo = KnoraBasePrefixExpansion + "projectLogo"
 
         /**
           * The system user is the owner of objects that are created by the system, rather than directly by the user,
@@ -186,10 +201,6 @@ object OntologyConstants {
           */
         val SystemUser = "http://www.knora.org/ontology/knora-base#SystemUser"
 
-        /**
-          * When an object is created by the system user, it is given these permission-relevant assertions.
-          */
-        val SystemPermissionRelevantAssertions = Seq((AttachedToUser, SystemUser))
     }
 
     object SalsahGui {

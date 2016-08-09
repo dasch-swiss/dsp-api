@@ -85,8 +85,28 @@ INSERT {
                 @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.newReferenceCount must be 0 in this SPARQL template"); ()}
             }
 
-        @for(assertion <- linkUpdateForNewLink.permissionRelevantAssertions) {
-           ?newLinkValueForCurrentLink <@assertion._1> <@assertion._2> .
+        ?newLinkValueForCurrentLink knora-base:attachedToUser <@linkUpdateForCurrentLink.newLinkValueOwner> .
+
+        @linkUpdateForCurrentLink.newLinkValueProject match {
+
+            case Some(linkValueProject) => {
+
+                ?newLinkValueForCurrentLink knora-base:attachedToProject <@linkValueProject> .
+
+            }
+
+            case None => {}
+        }
+
+        @linkUpdateForCurrentLink.newLinkValuePermissions match {
+
+            case Some(linkValuePermissions) => {
+
+                ?newLinkValueForCurrentLink knora-base:hasPermissions "@linkValuePermissions" .
+
+            }
+
+            case None => {}
         }
 
         @* Attach the new LinkValue to its containing resource. *@
@@ -114,8 +134,28 @@ INSERT {
             knora-base:isDeleted false ;
             knora-base:valueCreationDate ?currentTime .
 
-        @for(assertion <- linkUpdateForNewLink.permissionRelevantAssertions) {
-           ?newLinkValueForNewLink <@assertion._1> <@assertion._2> .
+        ?newLinkValueForNewLink knora-base:attachedToUser <@linkUpdateForNewLink.newLinkValueOwner> .
+
+        @linkUpdateForNewLink.newLinkValueProject match {
+
+            case Some(linkValueProject) => {
+
+                ?newLinkValueForNewLink knora-base:attachedToProject <@linkValueProject> .
+
+            }
+
+            case None => {}
+        }
+
+        @linkUpdateForNewLink.newLinkValuePermissions match {
+
+            case Some(linkValuePermissions) => {
+
+                ?newLinkValueForNewLink knora-base:hasPermissions "@linkValuePermissions" .
+
+            }
+
+            case None => {}
         }
 
         @* Attach the new LinkValue to its containing resource. *@

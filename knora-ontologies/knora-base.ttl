@@ -228,16 +228,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#hasChangeRightsPermission
-
-:hasChangeRightsPermission rdf:type owl:ObjectProperty ;
-
-                           :objectClassConstraint :UserGroup ;
-
-                           rdfs:subPropertyOf :hasDeletePermission .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#hasColor
 
 :hasColor rdf:type owl:ObjectProperty ;
@@ -277,16 +267,6 @@
 			<http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Richtext> ;
 
             rdfs:subPropertyOf :hasValue .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasDeletePermission
-
-:hasDeletePermission rdf:type owl:ObjectProperty ;
-
-                     :objectClassConstraint :UserGroup ;
-
-                     rdfs:subPropertyOf :hasModifyPermission .
 
 
 
@@ -504,82 +484,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#hasModifyPermission
-
-:hasModifyPermission rdf:type owl:ObjectProperty ;
-
-                     :objectClassConstraint :UserGroup ;
-
-                     rdfs:subPropertyOf :hasViewPermission .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasParentListNode
-
-:hasParentListNode rdf:type owl:ObjectProperty ;
-
-                   :subjectClassConstraint :ListNode ;
-
-                   :objectClassConstraint :ListNode ;
-
-                   owl:inverseOf :hasSubListNode .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasPart
-
-:hasPart rdf:type owl:ObjectProperty ;
-
-         rdfs:label "hat Teil"@de ,
-                       "has Part"@en ,
-                       "a Part"@fr ,
-                       "ha Parte"@it ;
-         
-         rdfs:comment "Indicates that another resource is part of this resource"@en ;
-
-         :subjectClassConstraint :Resource ;
-
-         :objectClassConstraint :Resource ;
-
-         rdfs:subPropertyOf :hasLinkTo ;
-
-         owl:inverseOf :isPartOf .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasPartValue
-
-:hasPartValue rdf:type owl:ObjectProperty ;
-
-              :objectClassConstraint :LinkValue ;
-
-              :subjectClassConstraint :Resource ;
-
-              rdfs:subPropertyOf :hasLinkToValue .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasPermission
-
-:hasPermission rdf:type owl:ObjectProperty ;
-
-               :objectClassConstraint :UserGroup .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasProject
-
-:hasProject rdf:type owl:ObjectProperty ;
-
-            rdfs:comment "The given Institution is responsible for the given knoraProject"@en ;
-
-            :subjectClassConstraint :Institution ;
-
-            owl:inverseOf :belongsTo ;
-
-            :objectClassConstraint :knoraProject .
-
-
 
 ###  http://www.knora.org/ontology/knora-base#hasProvider
 
@@ -596,26 +500,6 @@
 
              rdfs:subPropertyOf :hasValue .
 
-
-
-###  http://www.knora.org/ontology/knora-base#hasRegion
-
-:hasRegion rdf:type owl:ObjectProperty ;
-
-           rdfs:comment "Points to a region of the resource"@en ;
-
-           rdfs:label "hat Region"@de ,
-                      "has Region"@en ,
-                      "a Région"@fr ,
-                      "ha Regione"@it ;
-           
-           :objectClassConstraint :Region ;
-
-           :subjectClassConstraint :Representation ;
-
-           rdfs:subPropertyOf :hasLinkTo ;
-
-           owl:inverseOf :isRegionOf .
 
 
 
@@ -660,15 +544,6 @@
 
                         rdfs:subPropertyOf :hasLinkToValue .
 
-
-
-###  http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission
-
-:hasRestrictedViewPermission rdf:type owl:ObjectProperty ;
-
-                             :objectClassConstraint :UserGroup ;
-
-                             rdfs:subPropertyOf :hasPermission .
 
 
 
@@ -725,15 +600,6 @@
 
           :objectClassConstraint :Value .
 
-
-
-###  http://www.knora.org/ontology/knora-base#hasViewPermission
-
-:hasViewPermission rdf:type owl:ObjectProperty ;
-
-                   :objectClassConstraint :UserGroup ;
-
-                   rdfs:subPropertyOf :hasRestrictedViewPermission .
 
 
 
@@ -923,6 +789,18 @@
 #    Datatype properties
 #
 #################################################################
+
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasPermissions
+
+:hasPermissions rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                :objectDatatypeConstraint xsd:string .
+
 
 
 ###  http://www.knora.org/ontology/knora-base#address
@@ -2131,11 +2009,7 @@
 
          :resourceIcon "link.gif"^^xsd:string ;
 
-		 :hasDefaultViewPermission :KnownUser ;
-
-      	 :hasDefaultModifyPermission :ProjectMember ;
-
-      	 :hasDefaultDeletePermission :Owner ;
+         :hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember" ;
 
          rdfs:comment "Verknüpfung mehrerer Resourcen"@de ,
                       "Represents a generic link object"@en .
@@ -2296,11 +2170,7 @@
 
         :resourceIcon "region.gif"^^xsd:string ;
 
-		:hasDefaultViewPermission :KnownUser ;
-
-      	:hasDefaultModifyPermission :ProjectMember ;
-
-      	:hasDefaultDeletePermission :Owner ;
+        :hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember" ;
 
         rdfs:comment "Represents a geometric region of a resource. The geometry is represented currently as JSON string."@en .
 
@@ -2356,6 +2226,10 @@
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :attachedToProject ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :hasPermissions ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :creationDate ;
@@ -2595,6 +2469,10 @@
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :attachedToProject ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :hasPermissions ;
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;

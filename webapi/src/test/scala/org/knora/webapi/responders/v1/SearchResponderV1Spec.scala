@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProf
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
+import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.duration._
 
@@ -680,6 +681,23 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         }
 
+        "return all the pages that are part of Zeitglöcklein des Lebens, have a seqnum less than or equal to 200, and have a page number that is not 'a1r, Titelblatt'" in {
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = incunabulaUser,
+                searchValue = Vector("http://data.knora.org/c5058f3a", "200", "a1r, Titelblatt"),
+                compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.LT_EQ, SearchComparisonOperatorV1.NOT_EQ),
+                propertyIri = Vector("http://www.knora.org/ontology/incunabula#partOf", "http://www.knora.org/ontology/incunabula#seqnum", "http://www.knora.org/ontology/incunabula#pagenum"),
+                filterByRestype = Some("http://www.knora.org/ontology/incunabula#page"),
+                startAt = 0,
+                showNRows = 300
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(199)
+            }
+
+        }
+
         "return all the images from the images-demo project whose title belong to the category 'Sport'" in {
             // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F71a1543cce&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
             actorUnderTest ! ExtendedSearchGetRequestV1(
@@ -936,7 +954,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case response: SearchGetResponseV1 => response.subjects should ===(hasStandoffLinkToResultsForUser2)
             }
-
         }
+
     }
 }

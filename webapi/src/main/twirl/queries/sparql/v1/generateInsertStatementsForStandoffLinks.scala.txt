@@ -51,8 +51,28 @@
                 knora-base:isDeleted false ;
                 knora-base:valueCreationDate ?currentTime .
 
-            @for(assertion <- linkUpdate.permissionRelevantAssertions) {
-                <@linkUpdate.newLinkValueIri> <@assertion._1> <@assertion._2> .
+            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueOwner> .
+
+            @linkUpdate.newLinkValueProject match {
+
+                case Some(linkValueProject) => {
+
+                    <@linkUpdate.newLinkValueIri> knora-base:attachedToProject <@linkValueProject> .
+
+                }
+
+                case None => {}
+            }
+
+            @linkUpdate.newLinkValuePermissions match {
+
+                case Some(linkValuePermissions) => {
+
+                    <@linkUpdate.newLinkValueIri> knora-base:hasPermissions "@linkValuePermissions" .
+
+                }
+
+                case None => {}
             }
 
             @*
