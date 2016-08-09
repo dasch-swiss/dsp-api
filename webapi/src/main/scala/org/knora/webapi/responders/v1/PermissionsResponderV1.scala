@@ -230,6 +230,12 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             _ = if (permissionsTemplate == PermissionsTemplate.OPEN) {
                 /* create administrative permissions */
+                /* is the user a SystemAdmin then skip adding project admin permissions*/
+                if (!userProfileV1.isSystemAdmin) {
+
+                }
+
+                /* create default object access permissions */
             }
 
             templatePermissionsCreateResponse = TemplatePermissionsCreateResponseV1(

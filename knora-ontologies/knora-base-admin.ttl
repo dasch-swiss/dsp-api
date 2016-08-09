@@ -124,6 +124,20 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#isActiveUser
+
+:isInSystemAdminGroup rdf:type owl:DatatypeProperty ;
+
+                      rdfs:comment "Exists and is true if the user is a member of the SystemAdmin group."@en ;
+
+                      rdfs:subPropertyOf :systemProperty ;
+
+                      :subjectDatatypeConstraint :User ;
+
+                      :objectDatatypeConstraint xsd:boolean .
+
+
+
 #
 ##
 ###  User Object Properties
@@ -162,16 +176,16 @@
 
 ###  http://www.knora.org/ontology/knora-base#isAdminForProject
 
-:isAdminForProject rdf:type owl:ObjectProperty ;
+:isInProjectAdminGroup rdf:type owl:ObjectProperty ;
 
-                   rdfs:comment "The given User is part of the given Project's ProjectAdmin group"@en ;
+                       rdfs:comment "The given User is part of the given Project's ProjectAdmin group"@en ;
 
-                   rdfs:subPropertyOf :systemProperty ;
-                   rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> ;
+                       rdfs:subPropertyOf :systemProperty ;
+                       rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> ;
 
-                   :subjectClassConstraint :User ;
+                       :subjectClassConstraint :User ;
 
-                   :objectClassConstraint :knoraProject .
+                       :objectClassConstraint :knoraProject .
 
 
 

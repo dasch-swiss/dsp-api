@@ -141,15 +141,15 @@ case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDat
   * @param userData basic information about the user.
   * @param groups   the groups that the user belongs to.
   * @param projects the projects that the user belongs to.
-  * @param isGroupAdminFor the groups for which the user has administrative privileges.
-  * @param isProjectAdminFor the projects for which the user has administrative privileges.
+  * @param isInSystemAdminGroup the user's knora-base:SystemAdmin group membership status.
+  * @param isInProjectAdminGroup shows for which projects the user is member in the knora-base:ProjectAdmin group.
   * @param sessionId the sessionId,.
   */
 case class UserProfileV1(userData: UserDataV1,
-                         groups: Seq[IRI] = Nil,
-                         projects: Seq[IRI] = Nil,
-                         isGroupAdminFor: Seq[IRI] = Nil,
-                         isProjectAdminFor: Seq[IRI] = Nil,
+                         groups: Seq[IRI] = Vector.empty[IRI],
+                         projects: Seq[IRI] = Vector.empty[IRI],
+                         isInSystemAdminGroup: Boolean = false,
+                         isInProjectAdminGroup: Seq[IRI] = Vector.empty[IRI],
                          sessionId: Option[String] = None) {
 
     /**
@@ -224,8 +224,8 @@ case class UserProfileV1(userData: UserDataV1,
             userData = newuserdata,
             groups = groups,
             projects = projects,
-            isGroupAdminFor = isGroupAdminFor,
-            isProjectAdminFor = isProjectAdminFor,
+            isInSystemAdminGroup = false, // remove system admin status
+            isInProjectAdminGroup = Vector.empty[IRI], // remove privileged group membership
             sessionId = None // remove session id
         )
     }
@@ -242,14 +242,14 @@ case class UserProfileV1(userData: UserDataV1,
             userData = userData,
             groups = groups,
             projects = projects,
-            isGroupAdminFor = isGroupAdminFor,
-            isProjectAdminFor = isProjectAdminFor,
+            isInSystemAdminGroup = isInSystemAdminGroup,
+            isInProjectAdminGroup = isInProjectAdminGroup,
             sessionId = Some(sessionId)
         )
     }
 
     def isSystemAdmin: Boolean = {
-        groups.contains(OntologyConstants.KnoraBase.SystemAdmin)
+        isInSystemAdminGroup
     }
 }
 

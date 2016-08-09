@@ -64,11 +64,11 @@ A user becomes implicitly a member of such a group by satisfying certain conditi
 
 **knora-base:ProjectAdmin**:
   When checking a user's permission, the user is automatically assigned to this group through the
-  ```knora-base:isAdminForProject``` property, which points to the project in question.
+  ```knora-base:isInProjectAdminGroup``` property, which points to the project in question.
 
 **knora-base:SystemAdmin**:
   The ``root`` user is by default member of this group. Membership is received by setting the property
-  ``knora-base:isInGroup`` to ``knora-base:SystemAdmin`` on a ``knora-base:User``.
+  ``knora-base:isInSystemAdminGroup`` to ``true`` on a ``knora-base:User``.
 
 To use these build-in groups as values for properties (Object Access and Default Permissions), the IRI is constructed by
 appending the name of the built-in group to ``knora-base``, e.g., ``knora-base:KnownUser`` where ``knora-base``
@@ -809,8 +809,8 @@ Example User Information stored in admin graph:
        knora-base:preferredLanguage "de" ;
        knora-base:isActiveUser "true"^^xsd:boolean ;
        knora-base:isInProject <http://data.knora.org/projects/[UUID]> ;
-       knora-base:isInGroup <http://www.knora.org/ontology/knora-base#SystemAdmin> ,
-                            <http://data.knora.org/projects/[UUID]> .
+       knora-base:isInSystemAdminGroup "true"^^xsd:boolean ;
+       knora-base:isInProjectAdminGroup <http://data.knora.org/projects/[UUID]> .
 
 
 Projects Endpoint

@@ -375,8 +375,8 @@ class UsersResponderV1 extends ResponderV1 {
             userData = userDataV1,
             groups = groupIris,
             projects = projectIris,
-            isGroupAdminFor = Vector.empty[IRI],
-            isProjectAdminFor = Vector.empty[IRI]
+            isInSystemAdminGroup = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInSystemAdminGroup, false).map(_.head.toBoolean),,
+            isProjectAdminFor = groupedUserData.get()
         )
         log.debug(s"Retrieved UserProfileV1: ${up.toString}")
 
