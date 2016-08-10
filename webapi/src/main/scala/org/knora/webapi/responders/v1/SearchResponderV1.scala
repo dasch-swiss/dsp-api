@@ -483,7 +483,6 @@ class SearchResponderV1 extends ResponderV1 {
 
                     val resourceOwner = firstRowMap("resourceOwner")
                     val resourceProject = firstRowMap("resourceProject")
-                    val resourcePermissionsString = firstRowMap("resourcePermissions")
                     val resourcePermissions = firstRowMap.get("resourcePermissions")
 
                     val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(
@@ -515,7 +514,7 @@ class SearchResponderV1 extends ResponderV1 {
 
                                         val valueOwner = row.rowMap(s"valueOwner$index")
                                         val valueProject = row.rowMap.getOrElse(s"valueProject$index", resourceProject) // If the value doesn't specify a project, it's implicitly in the resource's project.
-                                    val valuePermissionLiteral = row.rowMap.get(s"valuePermissions$index")
+                                        val valuePermissionLiteral = row.rowMap.get(s"valuePermissions$index")
 
                                         // Is the matching value object a LinkValue?
                                         val valuePermissionCode = if (searchCriterion.valueType == OntologyConstants.KnoraBase.Resource) {

@@ -759,6 +759,9 @@ class ResourcesResponderV1 extends ResponderV1 {
             val linkValueProject = row.rowMap.getOrElse("linkValueProject", sourceObjectProject)
             val linkValuePermissions = row.rowMap.get("linkValuePermissions")
 
+            // The link can't be a standoff link, because we know the link property is a subproperty of knora-base:isPartOf,
+            // so we don't have to treat it as a special case here.
+
             val linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(
                 subjectIri = linkValueIri,
                 subjectOwner = linkValueOwner,
@@ -816,6 +819,9 @@ class ResourcesResponderV1 extends ResponderV1 {
                         linkValueOwner = rowMap("linkValueOwner")
                         linkValueProject = rowMap.getOrElse("linkValueProject", containingResourceProject)
                         linkValuePermissions = rowMap.get("linkValuePermissions")
+
+                        // The link can't be a standoff link, because we know the link property is a subproperty of knora-base:isPartOf,
+                        // so we don't have to treat it as a special case here.
 
                         linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(
                             subjectIri = linkValueIri,
