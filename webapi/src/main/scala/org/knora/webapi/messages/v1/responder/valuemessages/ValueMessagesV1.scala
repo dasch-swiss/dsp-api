@@ -588,27 +588,28 @@ object StandoffTagV1 extends Enumeration {
     }
 
     /**
-      * Maps the values belonging to this enumeration to the corresponding standoff tags.
+      * Maps standoff tag IRIs to this enumeration's values.
       */
-    private val mapToIri: Map[StandoffTagV1.Value, IRI] = Map(
-        paragraph -> OntologyConstants.KnoraBase.StandoffParagraphTag,
-        italic -> OntologyConstants.KnoraBase.StandoffItalicTag,
-        bold -> OntologyConstants.KnoraBase.StandoffBoldTag,
-        underline -> OntologyConstants.KnoraBase.StandoffUnderlineTag,
-        strikethrough -> OntologyConstants.KnoraBase.StandoffStrikethroughTag,
-        link -> OntologyConstants.KnoraBase.StandoffLinkTag,
-        header1 -> OntologyConstants.KnoraBase.StandoffHeader1Tag,
-        header2 -> OntologyConstants.KnoraBase.StandoffHeader2Tag,
-        header3 -> OntologyConstants.KnoraBase.StandoffHeader3Tag,
-        header4 -> OntologyConstants.KnoraBase.StandoffHeader4Tag,
-        header5 -> OntologyConstants.KnoraBase.StandoffHeader5Tag,
-        header6 -> OntologyConstants.KnoraBase.StandoffHeader6Tag,
-        superscript -> OntologyConstants.KnoraBase.StandoffSuperscriptTag,
-        subscript -> OntologyConstants.KnoraBase.StandoffSubscriptTag,
-        orderedList -> OntologyConstants.KnoraBase.StandoffOrderedListTag,
-        unorderedList -> OntologyConstants.KnoraBase.StandoffUnorderedListTag,
-        listElement -> OntologyConstants.KnoraBase.StandoffListElementTag,
-        styleElement -> OntologyConstants.KnoraBase.StandoffStyleElementTag
+    val IRItoEnumValue: Map[IRI, StandoffTagV1.Value] = Map(
+        OntologyConstants.KnoraBase.StandoffParagraphTag -> paragraph,
+        OntologyConstants.KnoraBase.StandoffItalicTag -> italic,
+        OntologyConstants.KnoraBase.StandoffBoldTag -> bold,
+        OntologyConstants.KnoraBase.StandoffUnderlineTag -> underline,
+        OntologyConstants.KnoraBase.StandoffStrikethroughTag -> strikethrough,
+        OntologyConstants.KnoraBase.StandoffLinkTag -> link,
+        OntologyConstants.KnoraBase.StandoffHrefTag -> link,
+        OntologyConstants.KnoraBase.StandoffHeader1Tag -> header1,
+        OntologyConstants.KnoraBase.StandoffHeader2Tag -> header2,
+        OntologyConstants.KnoraBase.StandoffHeader3Tag -> header3,
+        OntologyConstants.KnoraBase.StandoffHeader4Tag -> header4,
+        OntologyConstants.KnoraBase.StandoffHeader5Tag -> header5,
+        OntologyConstants.KnoraBase.StandoffHeader6Tag -> header6,
+        OntologyConstants.KnoraBase.StandoffSuperscriptTag -> superscript,
+        OntologyConstants.KnoraBase.StandoffSubscriptTag -> subscript,
+        OntologyConstants.KnoraBase.StandoffOrderedListTag -> orderedList,
+        OntologyConstants.KnoraBase.StandoffUnorderedListTag -> unorderedList,
+        OntologyConstants.KnoraBase.StandoffListElementTag -> listElement,
+        OntologyConstants.KnoraBase.StandoffStyleElementTag -> styleElement
     )
 
 }
@@ -672,9 +673,18 @@ case class TextValueV1(utf8str: String,
       *
       * @return a list of tuples containing a standoff attribute name and a [[StandoffPositionV1]] object.
       */
-    def flattenStandoff: Seq[(StandoffTagV1.Value, StandoffPositionV1)] = {
+    def flattenStandoff: Seq[(IRI, StandoffPositionV1)] = {
         textattr.toSeq.flatMap {
-            case (attribute, positions) => positions.map(position => (attribute, position))
+            case (attribute: StandoffTagV1.Value, positions) =>
+
+                // attribute is an enumeration value
+                // get the IRI of the standoff tag
+                val standoffTagIRI: IRI = StandoffTagV1.IRItoEnumValue.find {
+                    case (standoffTagIRI: IRI, enumValue: StandoffTagV1.Value) =>
+                        enumValue == attribute
+                }.getOrElse(throw InconsistentTriplestoreDataException(s"Standoff Tag IRI $attribute is invalid"))._1 // get the first member of the tuple (the IRI)
+
+                positions.map(position => (standoffTagIRI, position))
         }
     }
 

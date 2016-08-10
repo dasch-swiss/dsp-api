@@ -424,10 +424,11 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       */
     private def makeTextValue(valueProps: ValueProps): ApiValueV1 = {
 
-        val groupedByAttr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(_ (OntologyConstants.KnoraBase.StandoffHasAttribute)).map {
-            case (attr: String, standoffInfos: Seq[Map[String, String]]) =>
+        val groupedByAttr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(_ (OntologyConstants.Rdf.Type)).map {
+            case (attr: IRI, standoffInfos: Seq[Map[String, String]]) =>
+
                 // we grouped by the attribute name, return it as the key of that Map
-                (StandoffTagV1.lookup(attr, () => throw InconsistentTriplestoreDataException(s"Got $attr from triplestore, but this is not a valid standoff tag")), standoffInfos.map {
+                (StandoffTagV1.IRItoEnumValue(attr), standoffInfos.map {
                     // for each attribute name, we may have several positions that have to be turned into a StandoffPositionV1
 
                     case standoffInfo =>

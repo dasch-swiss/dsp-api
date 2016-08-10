@@ -160,11 +160,10 @@ object OntologyConstants {
             HasDefaultChangeRightsPermission
         )
 
-        val StandoffHasAttribute = "http://www.knora.org/ontology/knora-base#standoffHasAttribute"
-        val StandoffHasStart = "http://www.knora.org/ontology/knora-base#standoffHasStart"
-        val StandoffHasEnd = "http://www.knora.org/ontology/knora-base#standoffHasEnd"
-        val StandoffHasHref = "http://www.knora.org/ontology/knora-base#standoffHasHref"
-        val StandoffHasLink = "http://www.knora.org/ontology/knora-base#standoffHasLink"
+        val StandoffHasStart = "http://www.knora.org/ontology/knora-base#standoffTagHasStart"
+        val StandoffHasEnd = "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"
+        val StandoffHasHref = "http://www.knora.org/ontology/knora-base#standoffTagHasHref"
+        val StandoffHasLink = "http://www.knora.org/ontology/knora-base#standoffTagHasLink"
         val HasStandoffLinkTo = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
         val HasStandoffLinkToValue = "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue"
 

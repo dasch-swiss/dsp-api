@@ -73,25 +73,22 @@
                             *@
                             @(position.resid, position.href) match {
                                 case (Some(resid), _) => {
-                                    rdf:type knora-base:StandoffLink ;
-                                    knora-base:standoffHasAttribute "@attribute" ;
-                                    knora-base:standoffHasLink <@resid> ;
+                                    rdf:type knora-base:StandoffLinkTag ;
+                                    knora-base:standoffTagHasLink <@resid> ;
                                 }
 
                                 case (None, Some(href)) => {
-                                    rdf:type knora-base:StandoffHref ;
-                                    knora-base:standoffHasAttribute "@attribute" ;
-                                    knora-base:standoffHasHref <@href> ;
+                                    rdf:type knora-base:StandoffHrefTag ;
+                                    knora-base:standoffTagHasHref <@href> ;
                                 }
 
                                 case (None, None) => {
-                                    rdf:type knora-base:StandoffVisualAttribute ;
-                                    knora-base:standoffHasAttribute "@attribute" ;
+                                    rdf:type <@attribute> ;
                                 }
                             }
 
-                            knora-base:standoffHasStart @position.start ;
-                            knora-base:standoffHasEnd @position.end
+                            knora-base:standoffTagHasStart @position.start ;
+                            knora-base:standoffTagHasEnd @position.end
                         ] .
                 }
             }
