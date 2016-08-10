@@ -20,8 +20,8 @@
 
 package org.knora.webapi.messages.v1.responder.ckanmessages
 
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,6 +34,7 @@ sealed trait CkanResponderRequestV1 extends KnoraRequestV1
 
 /**
   * Represents an API request payload that asks the Knora API server to return Ckan data
+  *
   * @param projects
   * @param limit
   * @param info
@@ -46,6 +47,7 @@ case class CkanRequestV1(projects: Option[Seq[String]], limit: Option[Int], info
 
 /**
   * Represents an API response with the Ckan data
+  *
   * @param projects
   */
 case class CkanResponseV1(projects: Seq[CkanProjectV1],

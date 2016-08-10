@@ -28,6 +28,7 @@ import spray.json.JsValue
 trait Jsonable {
     /**
       * Converts this [[Jsonable]] into a [[JsValue]].
+      *
       * @return a [[JsValue]].
       */
     def toJsValue: JsValue

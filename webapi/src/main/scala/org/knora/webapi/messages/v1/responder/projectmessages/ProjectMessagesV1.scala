@@ -20,8 +20,8 @@
 
 package org.knora.webapi.messages.v1.responder.projectmessages
 
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
@@ -36,6 +36,7 @@ sealed trait ProjectsResponderRequestV1 extends KnoraRequestV1
 // Requests
 /**
   * Get all information about all projects.
+  *
   * @param userProfile the profile of the user making the request.
   */
 case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
@@ -43,8 +44,9 @@ case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1]) extends Proj
 
 /**
   * Get everything about a single project identified through it's IRI.
-  * @param iri Iri of the project.
-  * @param requestType is the type of the project information: full or short.
+  *
+  * @param iri           Iri of the project.
+  * @param requestType   is the type of the project information: full or short.
   * @param userProfileV1 the profile of the user making the request.
   */
 case class ProjectInfoByIRIGetRequest(iri: IRI, requestType: ProjectInfoType.Value, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
@@ -52,8 +54,9 @@ case class ProjectInfoByIRIGetRequest(iri: IRI, requestType: ProjectInfoType.Val
 
 /**
   * Find everything about a single project identified through it's shortname.
-  * @param shortname of the project.
-  * @param requestType is the type of the project information.
+  *
+  * @param shortname     of the project.
+  * @param requestType   is the type of the project information.
   * @param userProfileV1 the profile of the user making the request.
   */
 case class ProjectInfoByShortnameGetRequest(shortname: String, requestType: ProjectInfoType.Value, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
@@ -62,6 +65,7 @@ case class ProjectInfoByShortnameGetRequest(shortname: String, requestType: Proj
 // Responses
 /**
   * Represents the Knora API v1 JSON response to a request for information about all projects.
+  *
   * @param projects information about all existing projects.
   * @param userdata information about the user that made the request.
   */
@@ -71,8 +75,9 @@ case class ProjectsResponseV1(projects: Seq[ProjectInfoV1], userdata: Option[Use
 
 /**
   * Represents the Knora API v1 JSON response to a request for information about a single project.
+  *
   * @param project_info all information about the project.
-  * @param userdata information about the user that made the request.
+  * @param userdata     information about the user that made the request.
   */
 case class ProjectInfoResponseV1(project_info: ProjectInfoV1, userdata: Option[UserDataV1]) extends KnoraResponseV1 {
     def toJsValue = ProjectV1JsonProtocol.projectInfoResponseV1Format.write(this)
@@ -99,6 +104,7 @@ object ProjectInfoType extends Enumeration {
     /**
       * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
       * [[InconsistentTriplestoreDataException]].
+      *
       * @param name the name of the value.
       * @return the requested value.
       */

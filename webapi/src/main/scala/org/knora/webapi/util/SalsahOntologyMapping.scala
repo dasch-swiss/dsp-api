@@ -176,17 +176,19 @@ class SalsahOntologyMappingReader {
 /**
   * Represents a JSON configuration file for exporting a vocabulary from SALSAH. Each file maps a SALSAH vocabulary onto a Knora
   * ontology.
-  * @param salsahName the name of the SALSAH vocabulary.
-  * @param knoraName the name of the corresponding Knora ontology.
+  *
+  * @param salsahName    the name of the SALSAH vocabulary.
+  * @param knoraName     the name of the corresponding Knora ontology.
   * @param resourceTypes a map of SALSAH resource type names to [[SalsahResourceType]] objects.
   */
 case class SalsahOntologyMapping(salsahName: String, knoraName: String, resourceTypes: Map[String, SalsahResourceType])
 
 /**
   * Represents a mapping between a SALSAH resource type and the corresponding Knora resource class.
-  * @param knoraIri the IRI of the Knora resource class.
-  * @param properties a map of SALSAH property names to the corresponding Knora property IRIs, representing the properties
-  *                   that the resource class can have.
+  *
+  * @param knoraIri       the IRI of the Knora resource class.
+  * @param properties     a map of SALSAH property names to the corresponding Knora property IRIs, representing the properties
+  *                       that the resource class can have.
   * @param fileValueTypes a map of SALSAH file value type names to the corresponding Knora file value type IRIs, representing
   *                       the file value types that the resource class can have.
   */

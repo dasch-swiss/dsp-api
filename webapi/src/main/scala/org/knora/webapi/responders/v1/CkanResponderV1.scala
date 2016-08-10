@@ -30,9 +30,9 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ckanmessages._
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
-import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 
@@ -91,6 +91,7 @@ class CkanResponderV1 extends ResponderV1 {
 
     /**
       * Dokubib specific Ckan export stuff
+      *
       * @param pinfo
       * @param limit
       * @param userProfileV1
@@ -150,6 +151,7 @@ class CkanResponderV1 extends ResponderV1 {
 
     /**
       * Get all Bilder IRIs for Dokubib
+      *
       * @param projectIri
       * @param limit
       * @return
@@ -180,6 +182,7 @@ class CkanResponderV1 extends ResponderV1 {
 
     /**
       * Incunabula specific Ckan stuff
+      *
       * @param pinfo
       * @param limit
       * @param userProfileV1
@@ -257,6 +260,7 @@ class CkanResponderV1 extends ResponderV1 {
 
     /**
       * Get all book IRIs for Incunabula
+      *
       * @param projectIri
       * @param limit
       * @return
@@ -288,6 +292,7 @@ class CkanResponderV1 extends ResponderV1 {
 
     /**
       * Get detailed information about the projects
+      *
       * @param projectNames
       * @param userProfile
       * @return
@@ -306,6 +311,7 @@ class CkanResponderV1 extends ResponderV1 {
 
     /**
       * Get IRIs of a certain type inside a certain project
+      *
       * @param projectIri
       * @param resType
       * @param limit
@@ -332,6 +338,7 @@ class CkanResponderV1 extends ResponderV1 {
 
     /**
       * Get all information there is about these resources
+      *
       * @param iris
       * @param userProfileV1
       * @return
@@ -348,6 +355,7 @@ class CkanResponderV1 extends ResponderV1 {
 
     /**
       * Get all information there is about this one resource
+      *
       * @param iri
       * @param userProfileV1
       * @return

@@ -24,54 +24,31 @@
 @import org.knora.webapi.SparqlGenerationException
 
 @**
- * Performs an extended search.
+ * Performs an extended search. The number of rows returned per matching resource is the product of the number of
+ * values that each search criterion matched in the resource.
  *
  * @param triplestore the name of the triplestore being used.
- * @param countResults if true, just returns a count of the number of results.
  * @param searchCriteria a list of maps containing search criteria, each of which contains:
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
  * @param projectIri if filtering by project is desired, the IRI of the project to search.
  * @param restypeIri if filtering by resource type is desired, the IRI of the resource type to search for.
  * @param ownerIri if filtering by owner is desired, the IRI of the resource owner to search for.
- * @param offset the offset at which to start returning search results.
- * @param limit the maximum number of search results to return.
+ * @param limit the maximum number of results to re
  *@
 @(triplestore: String,
-  countResults: Boolean,
   searchCriteria: Seq[SearchCriterion],
   preferredLanguage: String,
   fallbackLanguage: String,
   projectIriOption: Option[IRI],
   restypeIriOption: Option[IRI],
-  ownerIriOption: Option[IRI],
-  offsetOption: Option[Int],
-  limitOption: Option[Int])
-
-@*
-
-For each search result, we must return the literal that matched (?literal0, ?literal1, etc.).
-
-In order for OFFSET and LIMIT to work, search queries must return only one row per matching resource. Therefore:
-
-1. If a single resource could match multiple times (e.g. because it is a book with two titles that both
-   match the search criteria), we have to collapse it to a single row. Since the v1 API can only return one
-   literal value per matching property anyway, we do this by selecting one arbitrarily, using the SAMPLE
-   function.
-
-2. To get the permissions declared on each matching resource (so we can decide whether the user is authorised to
-   see it in the search results), we use the GROUP_CONCAT function.
-
-*@
+  ownerIriOption: Option[IRI])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 
-@if(countResults) {
-SELECT (COUNT(DISTINCT ?resource) as ?count)
-} else {
 SELECT DISTINCT
     ?resource
     ?resourceLabel @* The label of a matching resource. This is called "firstprop" in the v1 API. *@
@@ -79,13 +56,20 @@ SELECT DISTINCT
     ?previewPath
     ?previewDimX
     ?previewDimY
-    ?attachedToUser
-    ?attachedToProject
+    ?resourceOwner
+    ?resourceProject
+    ?resourcePermissions
     @for((searchCriterion, index) <- searchCriteria.zipWithIndex) {
-        (SAMPLE(?anyLiteral@index) AS ?literal@index)
+        ?valueObject@index
+        ?valueOwner@index
+        ?valueProject@index
+        ?valuePermissions@index
+        ?targetResource@index
+        ?targetResourceOwner@index
+        ?targetResourceProject@index
+        ?targetResourcePermissions@index
+        ?literal@index
     }
-    (GROUP_CONCAT(DISTINCT(?permissionAssertion); separator=";") AS ?permissionAssertions)
-}
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -95,6 +79,8 @@ WHERE {
     BIND(STR("@fallbackLanguage") AS ?fallbackLanguage)
 
     @for((searchCriterion, index) <- searchCriteria.zipWithIndex) {
+
+        # Search criterion @index: operator @searchCriterion.comparisonOperator
 
         @*
 
@@ -106,12 +92,8 @@ WHERE {
         *@
 
         @if(searchCriterion.valueType != "http://www.knora.org/ontology/knora-base#Resource") {
-            ?resource <@{searchCriterion.propertyIri}> ?valueObjectIri@index ;
-                knora-base:isDeleted false .
-            ?valueObjectIri@index knora-base:isDeleted false .
+            ?resource <@{searchCriterion.propertyIri}> ?valueObject@index .
         }
-
-        # Search criterion @index: operator @searchCriterion.comparisonOperator
 
         @*
 
@@ -133,15 +115,15 @@ WHERE {
 
                     case "graphdb" | "graphdb-free" => {
 
-                        ?valueObjectIri@index knora-base:valueHasString ?anyLiteral@index .
-                        ?anyLiteral@index <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchCriterion.searchValue' .
+                        ?valueObject@index knora-base:valueHasString ?literal@index .
+                        ?literal@index <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchCriterion.searchValue' .
 
                     }
 
                     case "embedded-jena-tdb" | "fuseki" => {
 
-                        ?valueObjectIri@index <http://jena.apache.org/text#query> ( '@searchCriterion.searchValue' ) .
-                        ?valueObjectIri@index knora-base:valueHasString ?anyLiteral@index .
+                        ?valueObject@index <http://jena.apache.org/text#query> ( '@searchCriterion.searchValue' ) .
+                        ?valueObject@index knora-base:valueHasString ?literal@index .
 
                     }
 
@@ -154,25 +136,25 @@ WHERE {
             case SearchComparisonOperatorV1.LIKE => {
 
                 @* TODO: escape regex metachars *@
-                ?valueObjectIri@index knora-base:valueHasString ?anyLiteral@index .
+                ?valueObject@index knora-base:valueHasString ?literal@index .
 
-                FILTER regex(?anyLiteral@index, '@searchCriterion.searchValue', "i")
+                FILTER regex(?literal@index, '@searchCriterion.searchValue', "i")
             }
 
             case SearchComparisonOperatorV1.NOT_LIKE => {
 
                 @*
 
-                Previously we used FILTER NOT EXISTS here, but then we couldn't get the value of ?anyLiteral
+                Previously we used FILTER NOT EXISTS here, but then we couldn't get the value of ?literal
                 (the literal that doesn't match the regex). So now we use just a negated regex. However, if a
                 resource has two instances of the same property and one of them matches and the other doesn't,
                 it will be returned in the search results.
 
                 *@
 
-                ?valueObjectIri@index knora-base:valueHasString ?anyLiteral@index .
+                ?valueObject@index knora-base:valueHasString ?literal@index .
 
-                FILTER (!regex(?anyLiteral@index, '@searchCriterion.searchValue', "i"))
+                FILTER (!regex(?literal@index, '@searchCriterion.searchValue', "i"))
             }
 
             case SearchComparisonOperatorV1.EXISTS => {
@@ -180,15 +162,28 @@ WHERE {
                 @searchCriterion.valueType match {
                     case "http://www.knora.org/ontology/knora-base#Resource" => {
 
-                        ?resource <@{searchCriterion.propertyIri}> ?targetResource@index .
+                        ?resource <@searchCriterion.propertyIri> ?targetResource@index .
 
-                        ?targetResource@index rdfs:label ?anyLiteral@index ;
-                            knora-base:isDeleted false .
+                        ?targetResource@index rdfs:label ?literal@index ;
+                            knora-base:isDeleted false ;
+                            knora-base:attachedToUser ?targetResourceOwner@index ;
+                            knora-base:attachedToProject ?targetResourceProject@index .
+
+                        OPTIONAL {
+                            ?targetResource@index knora-base:hasPermissions ?targetResourcePermissions@index .
+                        }
+
+                        ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
+
+                        ?valueObject@index rdf:type knora-base:LinkValue ;
+                            rdf:subject ?resource ;
+                            rdf:predicate <@searchCriterion.propertyIri> ;
+                            rdf:object ?targetResource@index .
                     }
 
                     case other => {
 
-                        ?valueObjectIri@index knora-base:valueHasString ?anyLiteral@index .
+                        ?valueObject@index knora-base:valueHasString ?literal@index .
 
                     }
                 }
@@ -200,45 +195,60 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#TextValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasString '@searchCriterion.searchValue' .
+                        ?valueObject@index knora-base:valueHasString '@searchCriterion.searchValue' .
 
-                        BIND('@searchCriterion.searchValue' AS ?anyLiteral@index)
+                        BIND('@searchCriterion.searchValue' AS ?literal@index)
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#IntValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasInteger @searchCriterion.searchValue .
+                        ?valueObject@index knora-base:valueHasInteger @searchCriterion.searchValue .
 
-                        BIND('@searchCriterion.searchValue' AS ?anyLiteral@index)
+                        BIND('@searchCriterion.searchValue' AS ?literal@index)
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasDecimal @searchCriterion.searchValue .
+                        ?valueObject@index knora-base:valueHasDecimal @searchCriterion.searchValue .
 
-                        BIND('@searchCriterion.searchValue' AS ?anyLiteral@index)
+                        BIND('@searchCriterion.searchValue' AS ?literal@index)
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasStartJDC ?dateStart@index .
-                        ?valueObjectIri@index knora-base:valueHasEndJDC ?dateEnd@index .
-                        ?valueObjectIri@index knora-base:valueHasString ?dateString@index .
+                        ?valueObject@index knora-base:valueHasStartJDC ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasEndJDC ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (@searchCriterion.dateStart <= ?dateEnd@index && @searchCriterion.dateEnd >= ?dateStart@index)
-                        BIND(?dateString@index as ?anyLiteral@index)
+                        BIND(?dateString@index as ?literal@index)
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#Resource" => {
 
+                        BIND(IRI("@searchCriterion.searchValue") AS ?targetResource@index)
+                        
                         ?resource <@searchCriterion.propertyIri> <@searchCriterion.searchValue> .
 
-                        <@searchCriterion.searchValue> rdfs:label ?anyLiteral@index ;
-                            knora-base:isDeleted false .
+                        <@searchCriterion.searchValue> rdfs:label ?literal@index ;
+                            knora-base:isDeleted false ;
+                            knora-base:attachedToUser ?targetResourceOwner@index ;
+                            knora-base:attachedToProject ?targetResourceProject@index .
+
+                        OPTIONAL {
+                            <@searchCriterion.searchValue> knora-base:hasPermissions ?targetResourcePermissions@index .
+                        }
+
+                        ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
+
+                        ?valueObject@index rdf:type knora-base:LinkValue ;
+                            rdf:subject ?resource ;
+                            rdf:predicate <@searchCriterion.propertyIri> ;
+                            rdf:object <@searchCriterion.searchValue> .
                     }
 
                     case "http://www.knora.org/ontology/knora-base#ListValue" => {
@@ -249,11 +259,11 @@ WHERE {
 
                         *@
 
-                        ?valueObjectIri@index knora-base:valueHasListNode ?listNode .
+                        ?valueObject@index knora-base:valueHasListNode ?listNode .
                         <@searchCriterion.searchValue> knora-base:hasSubListNode* ?listNode .
 
                         ?listNode rdfs:label ?listNodeLabel .
-                        BIND(?listNodeLabel AS ?anyLiteral@index)
+                        BIND(?listNodeLabel AS ?literal@index)
 
                     }
 
@@ -269,36 +279,36 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#TextValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasString ?anyLiteral@index .
+                        ?valueObject@index knora-base:valueHasString ?literal@index .
 
-                        FILTER (?anyLiteral@index != '@searchCriterion.searchValue')
+                        FILTER (?literal@index != '@searchCriterion.searchValue')
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#IntValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
 
-                        FILTER (?anyLiteral@index != @searchCriterion.searchValue)
+                        FILTER (?literal@index != @searchCriterion.searchValue)
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasDecimal ?anyLiteral@index .
+                        ?valueObject@index knora-base:valueHasDecimal ?literal@index .
 
-                        FILTER (?anyLiteral@index != @searchCriterion.searchValue)
+                        FILTER (?literal@index != @searchCriterion.searchValue)
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasStartJDC ?dateStart@index .
-                        ?valueObjectIri@index knora-base:valueHasEndJDC ?dateEnd@index .
-                        ?valueObjectIri@index knora-base:valueHasString ?dateString@index .
+                        ?valueObject@index knora-base:valueHasStartJDC ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasEndJDC ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (@searchCriterion.dateEnd < ?dateStart@index || @searchCriterion.dateStart > ?dateEnd@index )
-                        BIND(?dateString@index as ?anyLiteral@index)
+                        BIND(?dateString@index as ?literal@index)
 
                     }
 
@@ -314,27 +324,27 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#IntValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
 
-                        FILTER (?anyLiteral@index > @searchCriterion.searchValue)
+                        FILTER (?literal@index > @searchCriterion.searchValue)
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasDecimal ?anyLiteral@index .
+                        ?valueObject@index knora-base:valueHasDecimal ?literal@index .
 
-                        FILTER (?anyLiteral@index > searchCriterion.searchValue )
+                        FILTER (?literal@index > searchCriterion.searchValue )
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasStartJDC ?dateStart@index .
-                        ?valueObjectIri@index knora-base:valueHasString ?dateString@index .
+                        ?valueObject@index knora-base:valueHasStartJDC ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (?dateStart@index > @searchCriterion.dateEnd)
-                        BIND(?dateString@index as ?anyLiteral@index)
+                        BIND(?dateString@index as ?literal@index)
 
                     }
 
@@ -350,27 +360,27 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#IntValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
 
-                        FILTER (?anyLiteral@index >= @searchCriterion.searchValue)
+                        FILTER (?literal@index >= @searchCriterion.searchValue)
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasDecimal ?anyLiteral@index .
+                        ?valueObject@index knora-base:valueHasDecimal ?literal@index .
 
-                        FILTER (?anyLiteral@index >= @searchCriterion.searchValue)
+                        FILTER (?literal@index >= @searchCriterion.searchValue)
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasStartJDC ?dateStart@index .
-                        ?valueObjectIri@index knora-base:valueHasString ?dateString@index .
+                        ?valueObject@index knora-base:valueHasStartJDC ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (?dateStart@index >= @searchCriterion.dateEnd)
-                        BIND(?dateString@index as ?anyLiteral@index)
+                        BIND(?dateString@index as ?literal@index)
 
                     }
 
@@ -386,27 +396,27 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#IntValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
 
-                        FILTER (?anyLiteral@index < @searchCriterion.searchValue)
+                        FILTER (?literal@index < @searchCriterion.searchValue)
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
 
-                        FILTER (?anyLiteral@index < @searchCriterion.searchValue)
+                        FILTER (?literal@index < @searchCriterion.searchValue)
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasEndJDC ?dateEnd@index .
-                        ?valueObjectIri@index knora-base:valueHasString ?dateString@index .
+                        ?valueObject@index knora-base:valueHasEndJDC ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (?dateEnd@index < @searchCriterion.dateStart)
-                        BIND(?dateString@index as ?anyLiteral@index)
+                        BIND(?dateString@index as ?literal@index)
 
                     }
 
@@ -422,27 +432,27 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#IntValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
 
-                        FILTER (?anyLiteral@index <= @searchCriterion.searchValue)
+                        FILTER (?literal@index <= @searchCriterion.searchValue)
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasInteger ?anyLiteral@index .
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
 
-                        FILTER (?anyLiteral@index <= @searchCriterion.searchValue)
+                        FILTER (?literal@index <= @searchCriterion.searchValue)
 
                     }
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObjectIri@index knora-base:valueHasEndJDC ?dateEnd@index .
-                        ?valueObjectIri@index knora-base:valueHasString ?dateString@index .
+                        ?valueObject@index knora-base:valueHasEndJDC ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (?dateEnd@index <= @searchCriterion.dateStart)
-                        BIND(?dateString@index as ?anyLiteral@index)
+                        BIND(?dateString@index as ?literal@index)
 
                     }
 
@@ -456,7 +466,7 @@ WHERE {
 
                 @* see https://dev.mysql.com/doc/refman/5.5/en/fulltext-boolean.html *@
 
-                ?valueObjectIri@index knora-base:valueHasString ?anyLiteral@index .
+                ?valueObject@index knora-base:valueHasString ?literal@index .
 
                 @for(positiveTerm <- searchCriterion.matchBooleanPositiveTerms) {
 
@@ -464,13 +474,13 @@ WHERE {
 
                         case "graphdb" | "graphdb-free" => {
 
-                            ?anyLiteral@index <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@positiveTerm' .
+                            ?literal@index <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@positiveTerm' .
 
                         }
 
                         case "embedded-jena-tdb" | "fuseki" => {
 
-                            ?valueObjectIri@index <http://jena.apache.org/text#query> ( '@positiveTerm' ) .
+                            ?valueObject@index <http://jena.apache.org/text#query> ( '@positiveTerm' ) .
 
                         }
 
@@ -488,13 +498,13 @@ WHERE {
 
                                 case "graphdb" | "graphdb-free" => {
 
-                                    ?anyLiteral@index <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@negativeTerm' .
+                                    ?literal@index <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@negativeTerm' .
 
                                 }
 
                                 case "embedded-jena-tdb" | "fuseki" => {
 
-                                    ?valueObjectIri@index <http://jena.apache.org/text#query> ( '@negativeTerm' ) .
+                                    ?valueObject@index <http://jena.apache.org/text#query> ( '@negativeTerm' ) .
 
                                 }
 
@@ -511,8 +521,20 @@ WHERE {
                 @{throw SparqlGenerationException(s"Comparison operator $other is not supported in this SPARQL template"); ()}
             }
         }
+
+        ?valueObject@index knora-base:isDeleted false ;
+            knora-base:attachedToUser ?valueOwner@index .
+
+        OPTIONAL {
+            ?valueObject@index knora-base:attachedToProject ?valueProject@index .
+        }
+
+        OPTIONAL {
+            ?valueObject@index knora-base:hasPermissions ?valuePermissions@index .
+        }
     }
 
+    ?resource knora-base:isDeleted false .
     ?resource rdfs:label ?resourceLabel .
     ?resource a ?resourceClass .
 
@@ -561,45 +583,15 @@ WHERE {
     }
 
     OPTIONAL {
-        ?permission rdfs:subPropertyOf+ knora-base:hasPermission .
-        ?resource ?permission ?group .
-        BIND(CONCAT(STR(?permission), ",", STR(?group)) as ?permissionAssertion)
+        ?resource knora-base:hasPermissions ?resourcePermissions .
     }
 
     OPTIONAL {
-        ?resource knora-base:attachedToUser ?attachedToUser .
+        ?resource knora-base:attachedToUser ?resourceOwner .
     }
 
     OPTIONAL {
-        ?resource knora-base:attachedToProject ?attachedToProject .
+        ?resource knora-base:attachedToProject ?resourceProject .
     }
 }
-@if(!countResults) {
-GROUP BY
-    ?resource
-    ?resourceLabel
-    ?resourceClass
-    ?previewPath
-    ?previewDimX
-    ?previewDimY
-    ?attachedToUser
-    ?attachedToProject
-
-ORDER BY ?resource
-}
-
-@offsetOption match {
-    case Some(offset) => {
-        OFFSET @offset
-    }
-
-    case None => {}
-}
-
-@limitOption match {
-    case Some(limit) => {
-        LIMIT @limit
-    }
-
-    case None => {}
-}
+LIMIT 500

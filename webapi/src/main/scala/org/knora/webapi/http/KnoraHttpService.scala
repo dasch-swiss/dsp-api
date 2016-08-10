@@ -34,18 +34,18 @@ class KnoraHttpService extends Actor with ActorLogging with HttpService with COR
     private val settings = Settings(system)
 
     private val apiRoutes: Route =
-        ResourcesRouteV1.rapierPath(system, settings, log) ~
-            ValuesRouteV1.rapierPath(system, settings, log) ~
-            SipiRouteV1.rapierPath(system, settings, log) ~
-            ListsRouteV1.rapierPath(system, settings, log) ~
-            SearchRouteV1.rapierPath(system, settings, log) ~
-            ResourceTypesRouteV1.rapierPath(system, settings, log) ~
-            AuthenticateRouteV1.rapierPath(system, settings, log) ~
-            AssetsRouteV1.rapierPath(system, settings, log) ~
-            GraphDataRouteV1.rapierPath(system, settings, log) ~
-            ProjectsRouteV1.rapierPath(system, settings, log) ~
-            CkanRouteV1.rapierPath(system, settings, log) ~
-            StoreRouteV1.rapierPath(system, settings, log)
+        ResourcesRouteV1.knoraApiPath(system, settings, log) ~
+            ValuesRouteV1.knoraApiPath(system, settings, log) ~
+            SipiRouteV1.knoraApiPath(system, settings, log) ~
+            ListsRouteV1.knoraApiPath(system, settings, log) ~
+            SearchRouteV1.knoraApiPath(system, settings, log) ~
+            ResourceTypesRouteV1.knoraApiPath(system, settings, log) ~
+            AuthenticateRouteV1.knoraApiPath(system, settings, log) ~
+            AssetsRouteV1.knoraApiPath(system, settings, log) ~
+            GraphDataRouteV1.knoraApiPath(system, settings, log) ~
+            ProjectsRouteV1.knoraApiPath(system, settings, log) ~
+            CkanRouteV1.knoraApiPath(system, settings, log) ~
+            StoreRouteV1.knoraApiPath(system, settings, log)
 
     def actorRefFactory = context
 
