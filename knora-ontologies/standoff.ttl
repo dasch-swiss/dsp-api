@@ -281,13 +281,24 @@
                   :objectDatatypeConstraint :StandoffXMLAttribute .
 
 
+### http://www.knora.org/ontology/knora-base#standoffXMLAttributeHasXMLNamespace
+
+:standoffTagHasXMLNamespace rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :systemProperty ;
+
+                  :subjectClassConstraint :StandoffXMLAttribute ;
+
+                  :objectDatatypeConstraint xsd:anyURI .
+
+
 ### http://www.knora.org/ontology/knora-base#standoffXMLAttributeHasName
 
 :standoffXMLAttributeHasName rdf:type owl:DatatypeProperty ;
 
                   rdfs:subPropertyOf :systemProperty ;
 
-                  :subjectClassConstraint :StandoffTag ;
+                  :subjectClassConstraint :StandoffXMLAttribute ;
 
                   :objectDatatypeConstraint xsd:string .
 
@@ -298,7 +309,7 @@
 
                   rdfs:subPropertyOf :systemProperty ;
 
-                  :subjectClassConstraint :StandoffTag ;
+                  :subjectClassConstraint :StandoffXMLAttribute ;
 
                   :objectDatatypeConstraint xsd:string .
 
@@ -353,7 +364,7 @@
 :StandoffXMLAttribute rdf:type owl:Class ;
 
            rdfs:subClassOf [ rdf:type owl:Restriction ;
-                             owl:onProperty :standoffTagHasXMLNamespace ;
+                             owl:onProperty :standoffXMLAttributeHasXMLNamespace ;
                              owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ],
                            [ rdf:type owl:Restriction ;
