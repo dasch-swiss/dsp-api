@@ -283,7 +283,7 @@
 
 ### http://www.knora.org/ontology/knora-base#standoffXMLAttributeHasXMLNamespace
 
-:standoffTagHasXMLNamespace rdf:type owl:DatatypeProperty ;
+:standoffXMLAttributeHasXMLNamespace rdf:type owl:DatatypeProperty ;
 
                   rdfs:subPropertyOf :systemProperty ;
 

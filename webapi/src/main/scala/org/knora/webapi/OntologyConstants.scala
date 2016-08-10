@@ -168,6 +168,29 @@ object OntologyConstants {
         val HasStandoffLinkTo = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
         val HasStandoffLinkToValue = "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue"
 
+        val StandoffParagraphTag = "http://www.knora.org/ontology/knora-base#StandoffParagraphTag"
+        val StandoffItalicTag = "http://www.knora.org/ontology/knora-base#StandoffItalicTag"
+        val StandoffBoldTag = "http://www.knora.org/ontology/knora-base#StandoffBoldTag"
+        val StandoffUnderlineTag = "http://www.knora.org/ontology/knora-base#StandoffUnderlineTag"
+        val StandoffStrikethroughTag = "http://www.knora.org/ontology/knora-base#StandoffStrikethroughTag"
+
+        val StandoffLinkTag = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
+        val StandoffHrefTag = "http://www.knora.org/ontology/knora-base#StandoffHrefTag"
+
+        val StandoffHeader1Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader1Tag"
+        val StandoffHeader2Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader2Tag"
+        val StandoffHeader3Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader3Tag"
+        val StandoffHeader4Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader4Tag"
+        val StandoffHeader5Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader5Tag"
+        val StandoffHeader6Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader6Tag"
+
+        val StandoffSuperscriptTag = "http://www.knora.org/ontology/knora-base#StandoffSuperscriptTag"
+        val StandoffSubscriptTag = "http://www.knora.org/ontology/knora-base#StandoffSubscriptTag"
+        val StandoffOrderedListTag = "http://www.knora.org/ontology/knora-base#StandoffOrderedListTag"
+        val StandoffUnorderedListTag = "http://www.knora.org/ontology/knora-base#StandoffUnorderedListTag"
+        val StandoffListElementTag = "http://www.knora.org/ontology/knora-base#StandoffListElementTag"
+        val StandoffStyleElementTag = "http://www.knora.org/ontology/knora-base#StandoffStyleTag"
+
         val AttachedToUser = "http://www.knora.org/ontology/knora-base#attachedToUser"
         val AttachedToProject = "http://www.knora.org/ontology/knora-base#attachedToProject"
 

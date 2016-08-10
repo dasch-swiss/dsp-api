@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v1.responder.valuemessages
 
 import java.util.UUID
 
+import org.knora.webapi
 import org.knora.webapi.{BadRequestException, _}
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
@@ -585,6 +586,30 @@ object StandoffTagV1 extends Enumeration {
             case None => errorFun()
         }
     }
+
+    /**
+      * Maps the values belonging to this enumeration to the corresponding standoff tags.
+      */
+    private val mapToIri: Map[StandoffTagV1.Value, IRI] = Map(
+        paragraph -> OntologyConstants.KnoraBase.StandoffParagraphTag,
+        italic -> OntologyConstants.KnoraBase.StandoffItalicTag,
+        bold -> OntologyConstants.KnoraBase.StandoffBoldTag,
+        underline -> OntologyConstants.KnoraBase.StandoffUnderlineTag,
+        strikethrough -> OntologyConstants.KnoraBase.StandoffStrikethroughTag,
+        link -> OntologyConstants.KnoraBase.StandoffLinkTag,
+        header1 -> OntologyConstants.KnoraBase.StandoffHeader1Tag,
+        header2 -> OntologyConstants.KnoraBase.StandoffHeader2Tag,
+        header3 -> OntologyConstants.KnoraBase.StandoffHeader3Tag,
+        header4 -> OntologyConstants.KnoraBase.StandoffHeader4Tag,
+        header5 -> OntologyConstants.KnoraBase.StandoffHeader5Tag,
+        header6 -> OntologyConstants.KnoraBase.StandoffHeader6Tag,
+        superscript -> OntologyConstants.KnoraBase.StandoffSuperscriptTag,
+        subscript -> OntologyConstants.KnoraBase.StandoffSubscriptTag,
+        orderedList -> OntologyConstants.KnoraBase.StandoffOrderedListTag,
+        unorderedList -> OntologyConstants.KnoraBase.StandoffUnorderedListTag,
+        listElement -> OntologyConstants.KnoraBase.StandoffListElementTag,
+        styleElement -> OntologyConstants.KnoraBase.StandoffStyleElementTag
+    )
 
 }
 
