@@ -39,8 +39,8 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
     val hashedpassword = SharedTestData.rootUserProfileV1.userData.hashedpassword
     val groups = SharedTestData.rootUserProfileV1.groups
     val projects = SharedTestData.rootUserProfileV1.projects
-    val isGroupAdminFor = SharedTestData.rootUserProfileV1.isGroupAdminFor
-    val isProjectAdminFor = SharedTestData.rootUserProfileV1.isProjectAdminFor
+    val isInSystemAdminGroup = SharedTestData.rootUserProfileV1.isInSystemAdminGroup
+    val isInProjectAdminGroup = SharedTestData.rootUserProfileV1.isInProjectAdminGroup
     val sessionId = SharedTestData.rootUserProfileV1.sessionId
 
 
@@ -59,8 +59,8 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                 ),
                 groups = groups,
                 projects = projects,
-                isGroupAdminFor = isGroupAdminFor,
-                isProjectAdminFor = isProjectAdminFor,
+                isInSystemAdminGroup = isInSystemAdminGroup,
+                isInProjectAdminGroup = isInProjectAdminGroup,
                 sessionId = sessionId
             )
             val rootUserProfileV1Clean = UserProfileV1(
@@ -76,8 +76,8 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                     ),
                 groups = groups,
                 projects = projects,
-                isGroupAdminFor = isGroupAdminFor,
-                isProjectAdminFor = isProjectAdminFor,
+                isInSystemAdminGroup = false,
+                isInProjectAdminGroup = Vector.empty[IRI],
                 sessionId = sessionId
             )
 

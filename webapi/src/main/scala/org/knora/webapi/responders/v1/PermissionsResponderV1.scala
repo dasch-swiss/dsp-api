@@ -56,6 +56,7 @@ class PermissionsResponderV1 extends ResponderV1 {
         case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, userProfileV1), log)
         case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1) => future2Message(sender(), templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1), log)
+        case GetUserPermissionsRequestV1(userProfileV1) => future2Message(sender(), getUserPermissionsRequestV1(userProfileV1), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -247,5 +248,11 @@ class PermissionsResponderV1 extends ResponderV1 {
 
         } yield templatePermissionsCreateResponse
 
+    }
+
+    private def getUserPermissionsRequestV1(userProfileV1: UserProfileV1): Future[UserProfileV1] = {
+
+        //ToDo: loop through each project the user is part of and retrieve the permissions attached to each group he is in, calculate max permissions, package everything in a neat little object, attach it to the user profile, and return it back
+        Future(userProfileV1)
     }
 }

@@ -80,7 +80,7 @@ class UsersResponderV1 extends ResponderV1 {
                 throw NotFoundException(s"User '$userIri' not found")
             }
 
-            userProfileV1 = userDataQueryResponse2UserProfile(userDataQueryResponse, clean)
+            userProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, clean)
 
         } yield userProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
     }
@@ -107,7 +107,7 @@ class UsersResponderV1 extends ResponderV1 {
                 throw NotFoundException(s"User '$username' not found")
             }
 
-            userProfileV1 = userDataQueryResponse2UserProfile(userDataQueryResponse, clean)
+            userProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, clean)
 
         } yield userProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
     }
@@ -137,7 +137,7 @@ class UsersResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 username = SparqlUtil.any2SparqlLiteral(newUserData.username)
             ).toString()
-            _ = log.debug(s"createNewUser - check duplicate name: $sparqlQueryString")
+            //_ = log.debug(s"createNewUser - check duplicate name: $sparqlQueryString")
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
@@ -163,7 +163,7 @@ class UsersResponderV1 extends ResponderV1 {
                 email = SparqlUtil.any2SparqlLiteral(newUserData.email),
                 preferredLanguage = SparqlUtil.any2SparqlLiteral(newUserData.lang)
             ).toString
-            _ = log.debug(s"createNewUser: $createNewUserSparqlString")
+            //_ = log.debug(s"createNewUser: $createNewUserSparqlString")
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString)).mapTo[SparqlUpdateResponse]
 
 
@@ -179,7 +179,7 @@ class UsersResponderV1 extends ResponderV1 {
             }
 
             // create the user profile
-            newUserProfile = userDataQueryResponse2UserProfile(userDataQueryResponse, true)
+            newUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, true)
 
             // create the user operation response
             userOperationResponseV1 = UserOperationResponseV1(newUserProfile, userProfile.userData)
@@ -217,7 +217,7 @@ class UsersResponderV1 extends ResponderV1 {
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
             // create the user profile including sensitive information
-            currentUserProfile = userDataQueryResponse2UserProfile(userDataQueryResponse, false)
+            currentUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, false)
 
             // get the current value
             currentValue = propertyIri match {
@@ -253,7 +253,7 @@ class UsersResponderV1 extends ResponderV1 {
                 currentValue = currentValueLiteral,
                 newValue = newValueLiteral
             ).toString
-            _ = println(updateUserSparqlString)
+            //_ = log.debug(s"updateUserV1 - query: $updateUserSparqlString")
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
             // Verify that the user was updated.
@@ -265,10 +265,10 @@ class UsersResponderV1 extends ResponderV1 {
 
 
             // create the user profile including sensitive information
-            updatedUserProfile = userDataQueryResponse2UserProfile(userDataQueryResponse, false)
+            updatedUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, false)
 
             // check if what we wanted to update actually got updated
-            _ = log.debug(s"currentValue: ${currentValue.toString}, newValue: ${newValue.toString}")
+            //_ = log.debug(s"currentValue: ${currentValue.toString}, newValue: ${newValue.toString}")
             _ = propertyIri match {
                 case OntologyConstants.KnoraBase.Username => {
                     if (!updatedUserProfile.userData.username.contains(newValue.asInstanceOf[String])) {
@@ -335,56 +335,77 @@ class UsersResponderV1 extends ResponderV1 {
       * @param clean a flag denoting if sensitive information should be stripped from the returned [[UserProfileV1]]
       * @return a [[UserProfileV1]] containing the user's data.
       */
-    private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, clean: Boolean): UserProfileV1 = {
+    private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, clean: Boolean): Future[UserProfileV1] = {
         //log.debug(MessageUtil.toSource(userDataQueryResponse))
+        for {
+            a <- Future("")
 
-        val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
+            returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
 
-        val groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-            case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-        }
-
-        //log.debug(s"RAW: ${groupedUserData.toString}")
-
-        val userDataV1 = UserDataV1(
-            user_id = Some(returnedUserIri),
-            username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
-            firstname = groupedUserData.get(OntologyConstants.Foaf.GivenName).map(_.head),
-            lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
-            email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
-            hashedpassword = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-            isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.IsActiveUser).map(_.head.toBoolean),
-            lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
-                case Some(langList) => langList.head
-                case None => settings.fallbackLanguage
+            groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
+                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
             }
-        )
 
-        val groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
-            case Some(groups) => groups
-            case None => Vector.empty[IRI]
-        }
+            //log.debug(s"RAW: ${groupedUserData.toString}")
 
-        val projectIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
-            case Some(projects) => projects
-            case None => Vector.empty[IRI]
-        }
+            userDataV1 = UserDataV1(
+                user_id = Some(returnedUserIri),
+                username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
+                firstname = groupedUserData.get(OntologyConstants.Foaf.GivenName).map(_.head),
+                lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
+                email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
+                hashedpassword = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
+                isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.IsActiveUser).map(_.head.toBoolean),
+                lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
+                    case Some(langList) => langList.head
+                    case None => settings.fallbackLanguage
+                }
+            )
 
+            groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
+                case Some(groups) => groups
+                case None => Vector.empty[IRI]
+            }
 
-        val up = UserProfileV1(
-            userData = userDataV1,
-            groups = groupIris,
-            projects = projectIris,
-            isInSystemAdminGroup = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInSystemAdminGroup, false).map(_.head.toBoolean),,
-            isProjectAdminFor = groupedUserData.get()
-        )
-        log.debug(s"Retrieved UserProfileV1: ${up.toString}")
+            projectIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
+                case Some(projects) => projects
+                case None => Vector.empty[IRI]
+            }
 
-        if (clean) {
-            up.getCleanUserProfileV1
-        } else {
-            up
-        }
+            // find out to which project each group belongs to
+            projectGroups = Map("p1" -> List("g1", "g1"))
+
+            // add the project member and project admin groups to projects where needed
+
+            isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).map(_.head.toBoolean).getOrElse(false)
+            isInProjectAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInProjectAdminGroup).getOrElse(Vector.empty[IRI])
+
+            // retrieve the projectAdministrative permissions
+            projectAdministrativePermissions = Map.empty[IRI, Seq[String]]
+
+            // retrieve the default obejct access permissions
+            projectDefaultObjectAccessPermissions = Map.empty[IRI, Seq[String]]
+
+            up = UserProfileV1(
+                userData = userDataV1,
+                groups = groupIris,
+                projects = projectIris,
+                projectGroups = projectGroups,
+                isInSystemAdminGroup = isInSystemAdminGroup,
+                isInProjectAdminGroup = isInProjectAdminGroup,
+                projectAdministrativePermissions = projectAdministrativePermissions,
+                projectDefaultObjectAccessPermissions = projectDefaultObjectAccessPermissions,
+                sessionId = None
+            )
+            _ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
+
+            result = if (clean) {
+                up.getCleanUserProfileV1
+            } else {
+                up
+            }
+        } yield result
+
     }
 
 }

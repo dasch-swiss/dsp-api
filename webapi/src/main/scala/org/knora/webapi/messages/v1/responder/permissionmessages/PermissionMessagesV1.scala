@@ -18,6 +18,13 @@ import spray.json._
 sealed trait PermissionsResponderRequestV1 extends KnoraRequestV1
 
 /**
+  * A message that requests the permissions for the supplied user. The permissions are returned by adding them to
+  * the received user profile.
+  * @param userProfileV1 the user profile for which the permissions should be retrieved.
+  */
+case class GetUserPermissionsRequestV1(userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+
+/**
   * A message that requests the creation of permissions (administrative and default) for a certain project
   * based on a predefined template. These permissions can be applied to a newly created or an exesting project.
   * In the case of an existing project, this operation behaves destructive, in the sense that all existing permissions

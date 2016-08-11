@@ -141,15 +141,21 @@ case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDat
   * @param userData basic information about the user.
   * @param groups   the groups that the user belongs to.
   * @param projects the projects that the user belongs to.
+  * @param projectGroups the projects and all groups inside a project the user belongs to.
   * @param isInSystemAdminGroup the user's knora-base:SystemAdmin group membership status.
   * @param isInProjectAdminGroup shows for which projects the user is member in the knora-base:ProjectAdmin group.
+  * @param projectAdministrativePermissions the user's administrative permissions for each project.
+  * @param projectDefaultObjectAccessPermissions the user's default object access permissions for each project.
   * @param sessionId the sessionId,.
   */
 case class UserProfileV1(userData: UserDataV1,
                          groups: Seq[IRI] = Vector.empty[IRI],
                          projects: Seq[IRI] = Vector.empty[IRI],
+                         projectGroups: Map[IRI, Seq[IRI]] = Map.empty[IRI, Seq[IRI]],
                          isInSystemAdminGroup: Boolean = false,
                          isInProjectAdminGroup: Seq[IRI] = Vector.empty[IRI],
+                         projectAdministrativePermissions: Map[IRI, Seq[String]] = Map.empty[IRI, Seq[String]],
+                         projectDefaultObjectAccessPermissions: Map[IRI, Seq[String]] = Map.empty[IRI, Seq[String]],
                          sessionId: Option[String] = None) {
 
     /**
@@ -224,8 +230,11 @@ case class UserProfileV1(userData: UserDataV1,
             userData = newuserdata,
             groups = groups,
             projects = projects,
+            projectGroups = projectGroups,
             isInSystemAdminGroup = false, // remove system admin status
             isInProjectAdminGroup = Vector.empty[IRI], // remove privileged group membership
+            projectAdministrativePermissions = Map.empty[IRI, Seq[String]], // remove administrative permission information
+            projectDefaultObjectAccessPermissions = Map.empty[IRI, Seq[String]], // remove default object access permission information
             sessionId = None // remove session id
         )
     }
@@ -307,7 +316,7 @@ case class NewUserDataV1(username: String,
 object UserV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
     implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat9(UserDataV1)
-    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
+    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat9(UserProfileV1)
     implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat6(NewUserDataV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
     implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat2(UpdateUserApiRequestV1)

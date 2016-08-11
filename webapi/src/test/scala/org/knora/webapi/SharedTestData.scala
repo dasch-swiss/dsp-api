@@ -43,10 +43,10 @@ object SharedTestData {
             isActiveUser = Some(true),
             lang = "de"
         ),
-        groups = List("http://www.knora.org/ontology/knora-base#SystemAdmin"),
+        groups = Vector.empty[IRI],
         projects = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images"),
-        isGroupAdminFor = Vector.empty[IRI],
-        isProjectAdminFor = Vector.empty[IRI],
+        isInSystemAdminGroup = true,
+        isInProjectAdminGroup = Vector.empty[IRI],
         sessionId = None
     )
 
@@ -63,10 +63,10 @@ object SharedTestData {
             isActiveUser = Some(true),
             lang = "de"
         ),
-        groups = List("http://www.knora.org/ontology/knora-base#SystemAdmin"),
+        groups = Vector.empty[IRI],
         projects = Vector.empty[IRI],
-        isGroupAdminFor = Vector.empty[IRI],
-        isProjectAdminFor = Vector.empty[IRI],
+        isInSystemAdminGroup = true,
+        isInProjectAdminGroup = Vector.empty[IRI],
         sessionId = None
     )
 
@@ -85,8 +85,8 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = Vector.empty[IRI],
-        isGroupAdminFor = Vector.empty[IRI],
-        isProjectAdminFor = Vector.empty[IRI],
+        isInSystemAdminGroup = false,
+        isInProjectAdminGroup = Vector.empty[IRI],
         sessionId = None
     )
 
@@ -97,8 +97,8 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = Vector.empty[IRI],
-        isGroupAdminFor = Vector.empty[IRI],
-        isProjectAdminFor = Vector.empty[IRI],
+        isInSystemAdminGroup = false,
+        isInProjectAdminGroup = Vector.empty[IRI],
         sessionId = None
     )
 
@@ -117,8 +117,8 @@ object SharedTestData {
         ),
         groups = List("http://data.knora.org/groups/imgcontri"),
         projects = List("http://data.knora.org/projects/images"),
-        isGroupAdminFor = List("http://data.knora.org/groups/imgcontri"),
-        isProjectAdminFor = List("http://data.knora.org/projects/images"),
+        isInSystemAdminGroup = false,
+        isInProjectAdminGroup = List("http://data.knora.org/projects/images"),
         sessionId = None
     )
 
@@ -137,8 +137,8 @@ object SharedTestData {
         ),
         groups = List("http://data.knora.org/groups/imgcontri"),
         projects = List("http://data.knora.org/projects/images"),
-        isGroupAdminFor = Vector.empty[IRI],
-        isProjectAdminFor = Vector.empty[IRI],
+        isInSystemAdminGroup = false,
+        isInProjectAdminGroup = Vector.empty[IRI],
         sessionId = None
     )
 
@@ -157,8 +157,8 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = List("http://data.knora.org/projects/77275339"),
-        isGroupAdminFor = Vector.empty[IRI],
-        isProjectAdminFor = Vector.empty[IRI],
+        isInSystemAdminGroup = false,
+        isInProjectAdminGroup = Vector.empty[IRI],
         sessionId = None
 
     )
