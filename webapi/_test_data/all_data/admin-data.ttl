@@ -28,14 +28,14 @@
 
                                    knora-base:phone "123456"^^xsd:string ;
 
+                                   knora-base:preferredLanguage "de"^^xsd:string ;
+
                                    knora-base:isActiveUser "true"^^xsd:boolean ;
 
                                    knora-base:isInProject <http://data.knora.org/projects/77275339> ,
                                                           <http://data.knora.org/projects/images> ;
 
-                                   knora-base:isInSystemAdminGroup "true"^^xsd:boolean ;
-
-                                   knora-base:preferredLanguage "de"^^xsd:string .
+                                   knora-base:isInSystemAdminGroup "true"^^xsd:boolean .
 
 
 <http://data.knora.org/users/superuser> rdf:type knora-base:User ;
@@ -52,11 +52,11 @@
 
                                         knora-base:phone "123456"^^xsd:string ;
 
+                                        knora-base:preferredLanguage "de"^^xsd:string ;
+
                                         knora-base:isActiveUser "true"^^xsd:boolean ;
 
-                                        knora-base:isInSystemAdminGroup "true"^^xsd:boolean ; ;
-
-                                        knora-base:preferredLanguage "de"^^xsd:string .
+                                        knora-base:isInSystemAdminGroup "true"^^xsd:boolean .
 
 
 <http://data.knora.org/users/normaluser> rdf:type knora-base:User ;
@@ -73,11 +73,11 @@
 
                                          knora-base:phone "123456"^^xsd:string ;
 
+                                         knora-base:preferredLanguage "de"^^xsd:string ;
+
                                          knora-base:isActiveUser "true"^^xsd:boolean ;
 
-                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
-
-                                         knora-base:preferredLanguage "de"^^xsd:string .
+                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 <http://data.knora.org/users/inactiveuser> rdf:type knora-base:User ;
@@ -94,11 +94,11 @@
 
                                            knora-base:phone "123456"^^xsd:string ;
 
+                                           knora-base:preferredLanguage "de"^^xsd:string ;
+
                                            knora-base:isActiveUser "false"^^xsd:boolean ;
 
-                                           knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
-
-                                           knora-base:preferredLanguage "de"^^xsd:string .
+                                           knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 ##########################################################
@@ -174,6 +174,16 @@
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
+
+<http://data.knora.org/groups/images-reviewer> rdf:type knora-base:UserGroup ;
+
+                                               knora-base:groupName "Image reviewer" ;
+
+                                               knora-base:groupDescription "A group for image reviewers." ;
+
+                                               knora-base:belongsToProject <http://data.knora.org/projects/images> ;
+
+                                               knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 ##########################################################
@@ -261,6 +271,8 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 
+                                         knora-base:isActiveUser "true"^^xsd:boolean ;
+
                                          knora-base:isInProject <http://data.knora.org/projects/77275339> ;
 
                                          knora-base:isInSystemAdminGroup "true"^^xsd:boolean .
@@ -272,20 +284,53 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ###################################
 <http://data.knora.org/projects/666>	  rdf:type knora-base:knoraProject ;
 
-                                          knora-base:projectShortname "testproject"^^xsd:string ;
+                                        knora-base:projectShortname "testproject"^^xsd:string ;
 
-                                          knora-base:projectLongname "Test Project"^^xsd:string ;
+                                        knora-base:projectLongname "Test Project"^^xsd:string ;
 
-                                          knora-base:projectDescription "A test project"^^xsd:string ;
+                                        knora-base:projectDescription "A test project"^^xsd:string ;
 
-                                          knora-base:projectOntologyGraph "http://www.knora.org/ontology/testproject"^^xsd:string ;
+                                        knora-base:projectOntologyGraph "http://www.knora.org/ontology/testproject"^^xsd:string ;
 
-                                          knora-base:projectDataGraph "http://www.knora.org/data/testproject"^^xsd:string ;
+                                        knora-base:projectDataGraph "http://www.knora.org/data/testproject"^^xsd:string ;
 
-                                          knora-base:projectBasepath "/imldata/testproject"^^xsd:string ;
+                                        knora-base:projectBasepath "/imldata/testproject"^^xsd:string ;
 
-                                          knora-base:isActiveProject "true"^^xsd:boolean ;
+                                        knora-base:isActiveProject "true"^^xsd:boolean ;
 
-                                          knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+                                        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
+###################################
+# MULTI-PROJECT / GROUPS USER     #
+###################################
+
+<http://data.knora.org/users/multiuser> rdf:type knora-base:User ;
+
+                                        knora-base:userid "multiuser"^^xsd:string ;
+
+                                        foaf:givenName "Multi"^^xsd:string ;
+
+                                        foaf:familyName "User"^^xsd:string ;
+
+                                        knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
+
+                                        knora-base:email "multi.user@example.com"^^xsd:string ;
+
+                                        knora-base:phone "123456"^^xsd:string ;
+
+                                        knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                        knora-base:isActiveUser "true"^^xsd:boolean ;
+
+                                        knora-base:isInProject <http://data.knora.org/projects/77275339> ,
+                                                               <http://data.knora.org/projects/images>,
+                                                               <http://data.knora.org/projects/666>
+
+                                        knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
+
+                                        knora-base:isInProjectAdminGroup <http://data.knora.org/projects/77275339> ,
+                                                                         <http://data.knora.org/projects/images>,
+                                                                         <http://data.knora.org/projects/666> ;
+
+                                        knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> .

@@ -24,6 +24,7 @@ import java.util.UUID
 
 import org.knora.webapi
 import org.knora.webapi.messages.v1.responder._
+import org.knora.webapi.messages.v1.responder.groupmessages.GroupInfoType.GroupInfoType
 import org.knora.webapi.messages.v1.responder.usermessages.{NewUserDataV1, UserDataV1, UserProfileV1}
 import org.knora.webapi.responders.v1.GroupsResponderV1
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException}
@@ -75,7 +76,7 @@ sealed trait GroupsResponderRequestV1 extends KnoraRequestV1
   * @param infoType is the type of the group information: full or short.
   * @param userProfile the profile of the user making the request.
   */
-case class GroupsGetRequestV1(infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1]) extends GroupsResponderRequestV1
+case class GroupsGetRequestV1(infoType: GroupInfoType, userProfile: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 
 /**
@@ -184,7 +185,7 @@ case class GroupOperationResponseV1(group_info: GroupInfoV1, userdata: UserDataV
 case class GroupInfoV1(id: IRI,
                        name: String,
                        description: Option[String] = None,
-                       belongsToProject: Option[IRI] = None,
+                       belongsToProject: IRI,
                        isActiveGroup: Option[Boolean] = None,
                        hasSelfJoinEnabled: Option[Boolean] = None,
                        hasPermissions: Seq[GroupPermissionV1] = Nil)
@@ -213,6 +214,7 @@ case class NewGroupInfoV1(name: String,
 case class GroupPermissionV1(name: IRI, value: Either[Boolean, List[IRI]])
 
 object GroupInfoType extends Enumeration {
+    type GroupInfoType = Value
     val SHORT = Value(0, "short")
     val FULL = Value(1, "full")
 

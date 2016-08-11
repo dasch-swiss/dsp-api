@@ -24,8 +24,10 @@ import java.util.UUID
 
 import akka.actor.Status
 import akka.pattern._
+import com.ontotext.trree.x
 import org.knora.webapi
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1, GroupInfoType}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
@@ -34,8 +36,8 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{CacheUtil, KnoraIriUtil, SparqlUtil}
 import org.mindrot.jbcrypt.BCrypt
 
-import scala.concurrent.Future
-
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 /**
   * Provides information about Knora users to other responders.
@@ -372,13 +374,46 @@ class UsersResponderV1 extends ResponderV1 {
                 case None => Vector.empty[IRI]
             }
 
-            // find out to which project each group belongs to
-            projectGroups = Map("p1" -> List("g1", "g1"))
-
-            // add the project member and project admin groups to projects where needed
-
             isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).map(_.head.toBoolean).getOrElse(false)
             isInProjectAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInProjectAdminGroup).getOrElse(Vector.empty[IRI])
+
+            // find out to which project each group belongs to
+            groups: List[(IRI, IRI)] = if (groupIris.nonEmpty) {
+                groupIris.map {
+                    groupIri => {
+                        val resFuture = for {
+                            groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, GroupInfoType.SHORT, None)).mapTo[GroupInfoResponseV1]
+                            res = (groupInfo.group_info.belongsToProject, groupIri)
+                        } yield res
+                        Await.result(resFuture, 1.seconds)
+                    }
+                }.toList
+            } else {
+                List.empty[(IRI, IRI)]
+            }
+
+            // project member 'groups'
+            projectMembers: List[(IRI, IRI)] = if (projectIris.nonEmpty) {
+                for {
+                    projectIri <- projectIris.toList
+                    res = (projectIri, OntologyConstants.KnoraBase.ProjectMember)
+                } yield res
+            } else {
+                List.empty[(IRI, IRI)]
+            }
+
+            // project admin 'groups'
+            projectAdmins: List[(IRI, IRI)] = if (projectIris.nonEmpty) {
+                for {
+                    pAdmin <- isInProjectAdminGroup.toList
+                    res = (pAdmin, OntologyConstants.KnoraBase.ProjectAdmin)
+                } yield res
+            } else {
+                List.empty[(IRI, IRI)]
+            }
+
+            allGroups = groups ::: projectMembers ::: projectAdmins
+            projectGroups = allGroups.groupBy(_._1).map { case (k,v) => (k,v.map(_._2))}
 
             // retrieve the projectAdministrative permissions
             projectAdministrativePermissions = Map.empty[IRI, Seq[String]]

@@ -810,7 +810,8 @@ Example User Information stored in admin graph:
        knora-base:isActiveUser "true"^^xsd:boolean ;
        knora-base:isInProject <http://data.knora.org/projects/[UUID]> ;
        knora-base:isInSystemAdminGroup "true"^^xsd:boolean ;
-       knora-base:isInProjectAdminGroup <http://data.knora.org/projects/[UUID]> .
+       knora-base:isInProjectAdminGroup <http://data.knora.org/projects/[UUID]> ;
+       knora-base:isInGroup <http://data.knora.org/groups/[UUID]> .
 
 
 Projects Endpoint
@@ -945,18 +946,7 @@ Example Group Information stored in admin named graph:
         knora-base:groupName "Name of the group" ;
         knora-base:groupDescription "A description of the group" ;
         knora-base:belongsToProject <http://data.knora.org/projects/[UUID]> ;
-        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean ;
-        knora-base:hasProjectResourceCreateAllPermission "true"^^xsd:boolean ;
-        knora-base:hasProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/knora-base#Resource>
-        knora-base:hasProjectAllAdminPermission "true"^^xsd:boolean ;
-        knora-base:hasProjectRestrictedGroupAdminPermission <http://data.knora.org/groups/[UUID]> ;
-        knora-base:hasProjectRightsAdminPermission "true"^^xsd:boolean ;
-        knora-base:hasProjectOntologyAdminPermission "true"^^xsd:boolean ;
-        knora-base:hasDefaultRestrictedViewPermission <http://data.knora.org/groups/[UUID]> ;
-        knora-base:hasDefaultViewPermission <http://data.knora.org/groups/[UUID]> ;
-        knora-base:hasDefaultModifyPermission <http://data.knora.org/groups/[UUID]> ;
-        knora-base:hasDefaultDeletePermission <http://data.knora.org/groups/[UUID]> ;
-        knora-base:hasDefaultChangeRightsPermission <http://data.knora.org/groups/[UUID]> .
+        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 Redesign / Questions June 2016

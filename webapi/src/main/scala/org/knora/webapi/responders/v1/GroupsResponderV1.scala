@@ -84,7 +84,8 @@ class GroupsResponderV1 extends ResponderV1 {
                     GroupInfoV1(
                         id = projIri,
                         name = propsMap.getOrElse(OntologyConstants.Foaf.Name, ""),
-                        description = propsMap.get(OntologyConstants.KnoraBase.Description)
+                        description = propsMap.get(OntologyConstants.KnoraBase.Description),
+                        belongsToProject = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject).get
                     )
             }.toVector
         } yield GroupsResponseV1(
@@ -271,7 +272,7 @@ class GroupsResponderV1 extends ResponderV1 {
                     id = groupIri,
                     name = groupProperties.get(OntologyConstants.KnoraBase.GroupName).get,
                     description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription),
-                    belongsToProject = groupProperties.get(OntologyConstants.KnoraBase.BelongsToProject),
+                    belongsToProject = groupProperties.get(OntologyConstants.KnoraBase.BelongsToProject).get,
                     isActiveGroup = groupProperties.get(OntologyConstants.KnoraBase.IsActiveGroup).map(_.toBoolean),
                     hasSelfJoinEnabled = groupProperties.get(OntologyConstants.KnoraBase.HasSelfJoinEnabled).map(_.toBoolean),
                     hasPermissions = Vector.empty[GroupPermissionV1]
@@ -281,7 +282,8 @@ class GroupsResponderV1 extends ResponderV1 {
                 GroupInfoV1(
                     id = groupIri,
                     name = groupProperties.get(OntologyConstants.KnoraBase.GroupName).get,
-                    description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription)
+                    description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription),
+                    belongsToProject = groupProperties.get(OntologyConstants.KnoraBase.BelongsToProject).get
                 )
         }
     }
