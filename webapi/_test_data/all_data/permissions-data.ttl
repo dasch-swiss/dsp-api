@@ -20,7 +20,7 @@
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
-                      knora-base:hasResourceCreationPermission knora-base:ProjectResourceCreateAllPermission .
+                      knora-base:hasPermission "ProjectResourceCreateAllPermission"^^xsd:string .
 
 
 
@@ -37,11 +37,7 @@
 
                       knora-base:forProperty knora-base:AllProperties ;
 
-                      knora-base:hasDefaultChangeRightsPermission knora-base:Creator ;
-
-                      knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-                      knora-base:hasDefaultViewPermission knora-base:KnownUser .
+                      knora-base:hasPermission "CR kb:Creator|M kb:ProjectMember|V kb:KnownUser"^^xsd:string .
 
 
 
@@ -58,7 +54,5 @@
 
                       knora-base:forProperty knora-base:PropertyNotApplicable ;
 
-                      knora-base:hasResourceCreationPermission knora-base:ProjectResourceCreateAllPermission ;
-
-                      knora-base:hasProjectAdministrationPermission knora-base:ProjectAllAdminPermission .
+                      knora-base:hasPermission "ProjectResourceCreateAllPermission|ProjectAllAdminPermission"^^xsd:string .
 
