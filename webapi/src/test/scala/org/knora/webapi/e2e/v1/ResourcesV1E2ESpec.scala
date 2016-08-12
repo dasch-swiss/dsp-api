@@ -126,6 +126,19 @@ class ResourcesV1E2ESpec extends E2ESpec {
     }
 
     /**
+      * Gets the given property's values from a reource full response.
+      *
+      * @param response the response to a resource full request.
+      * @param prop the given property IRI.
+      * @return the property0s values.
+      */
+    private def getValuesForProp(response: HttpResponse, prop: IRI): JsValue = {
+
+        JsonParser(response.entity.asString).asJsObject.fields("props").asJsObject.fields(prop).asJsObject.fields("values")
+
+    }
+
+    /**
       * Creates a SPARQL query string to get the standoff links (direct links) for a given resource.
       *
       * @param resIri the resource whose standoff links are to be queried.
@@ -307,6 +320,30 @@ class ResourcesV1E2ESpec extends E2ESpec {
                 firstThingIri.set(resId)
 
             }
+        }
+
+        "get the created resource and check its standoff in the response" in {
+
+            Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val standoff: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
+
+                val textattr: JsValue = standoff match {
+                    case vals: JsArray =>
+                        vals.elements.head.asJsObject.fields("textattr")
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
+
+                val expectedTextattr: JsValue = "{\"bold\":[{\"start\":0,\"end\":4}]}".toJson
+
+                assert(textattr == expectedTextattr)
+
+
+            }
+
         }
 
         "create a new text value for the first thing resource" in {
