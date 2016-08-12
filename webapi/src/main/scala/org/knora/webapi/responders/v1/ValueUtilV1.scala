@@ -424,11 +424,15 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       */
     private def makeTextValue(valueProps: ValueProps): ApiValueV1 = {
 
-        val groupedByAttr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(_ (OntologyConstants.Rdf.Type)).map {
-            case (attr: IRI, standoffInfos: Seq[Map[String, String]]) =>
+        val groupedByAttr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(row =>
+            // group by the enumeration name of the standoff tag IRI by converting the standoff tag IRI
+            // standoff lik and href tags have the same enumeration name, so the groupBy has to combine their standoff positions
+            StandoffTagV1.IRItoEnumValue(row(OntologyConstants.Rdf.Type))
+        ).map {
+            case (tagName: StandoffTagV1.Value, standoffInfos: Seq[Map[String, String]]) =>
 
                 // we grouped by the attribute name, return it as the key of that Map
-                (StandoffTagV1.IRItoEnumValue(attr), standoffInfos.map {
+                (tagName, standoffInfos.map {
                     // for each attribute name, we may have several positions that have to be turned into a StandoffPositionV1
 
                     case standoffInfo =>
