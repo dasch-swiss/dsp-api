@@ -45,6 +45,10 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images"),
+        projectGroups = Map(
+            "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}"),
+            "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+        ),
         isInSystemAdminGroup = true,
         isInProjectAdminGroup = Vector.empty[IRI],
         sessionId = None
@@ -65,6 +69,7 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = Vector.empty[IRI],
+        projectGroups = Map.empty[IRI, List[IRI]],
         isInSystemAdminGroup = true,
         isInProjectAdminGroup = Vector.empty[IRI],
         sessionId = None
@@ -85,6 +90,7 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = Vector.empty[IRI],
+        projectGroups = Map.empty[IRI, List[IRI]],
         isInSystemAdminGroup = false,
         isInProjectAdminGroup = Vector.empty[IRI],
         sessionId = None
@@ -97,6 +103,7 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = Vector.empty[IRI],
+        projectGroups = Map.empty[IRI, List[IRI]],
         isInSystemAdminGroup = false,
         isInProjectAdminGroup = Vector.empty[IRI],
         sessionId = None
@@ -115,8 +122,11 @@ object SharedTestData {
             isActiveUser = Some(true),
             lang = "de"
         ),
-        groups = List("http://data.knora.org/groups/imgcontri"),
+        groups = List("http://data.knora.org/groups/images-reviewer"),
         projects = List("http://data.knora.org/projects/images"),
+        projectGroups = Map(
+            "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer")
+        ),
         isInSystemAdminGroup = false,
         isInProjectAdminGroup = List("http://data.knora.org/projects/images"),
         sessionId = None
@@ -135,8 +145,11 @@ object SharedTestData {
             isActiveUser = Some(true),
             lang = "de"
         ),
-        groups = List("http://data.knora.org/groups/imgcontri"),
+        groups = List("http://data.knora.org/groups/images-reviewer"),
         projects = List("http://data.knora.org/projects/images"),
+        projectGroups = Map(
+            "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer")
+        ),
         isInSystemAdminGroup = false,
         isInProjectAdminGroup = Vector.empty[IRI],
         sessionId = None
@@ -157,10 +170,37 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = List("http://data.knora.org/projects/77275339"),
+        projectGroups = Map(
+            "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+        ),
         isInSystemAdminGroup = false,
         isInProjectAdminGroup = Vector.empty[IRI],
         sessionId = None
 
+    )
+
+    /* represents the 'multiuser' as found in admin-data.ttl */
+    val multiuserUserProfileV1 = UserProfileV1(
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/multiuser"),
+            username = Some("multiuser"),
+            firstname = Some("Multi"),
+            lastname = Some("User"),
+            email = Some("multi.user@example.com"),
+            hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            token = None,
+            isActiveUser = Some(true),
+            lang = "de"
+        ),
+        groups = List("http://data.knora.org/groups/images-reviewer"),
+        projects = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
+        projectGroups = Map(
+            "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}"),
+            "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer"),
+            "http://data.knora.org/projects/666" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}")
+        ),
+        isInSystemAdminGroup = false,
+        isInProjectAdminGroup = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666")
     )
 
     /* represents the full project info of the images project */
@@ -179,7 +219,7 @@ object SharedTestData {
         rights = None
     )
 
-    /* represents the project info of the incunabula project */
+    /* represents the ProjectInfoV1 of the incunabula project */
     val incunabulaProjectInfoV1 = ProjectInfoV1(
         id = "http://data.knora.org/projects/77275339",
         shortname = "incunabula",
@@ -195,7 +235,7 @@ object SharedTestData {
         rights = None
     )
 
-    /* represents the project info of the testproject */
+    /* represents the ProjectInfoV1of the testproject */
     val testprojectProjectInfoV1 = ProjectInfoV1(
         id = "http://data.knora.org/projects/666",
         shortname = "testproject",
@@ -211,43 +251,37 @@ object SharedTestData {
         rights = None
     )
 
-    val imagesProjectAdminFullGroupInfoV1 = GroupInfoV1(
+    /* represents the full GroupInfoV1 of the images ProjectAdmin group */
+    val imagesProjectAdminGroupInfoV1 = GroupInfoV1(
         id = "http://data.knora.org/groups/images/ProjectAdmin",
         name = "ProjectAdmin",
         description = Some("Default Project Admin Group"),
-        belongsToProject = Some("http://data.knora.org/projects/images"),
+        belongsToProject = "http://data.knora.org/projects/images",
         isActiveGroup = Some(true),
         hasSelfJoinEnabled = Some(false),
         hasPermissions = Vector.empty[GroupPermissionV1]
     )
 
-    val imagesProjectAdminShortGroupInfoV1 = GroupInfoV1(
-        id = "http://data.knora.org/groups/images/ProjectAdmin",
-        name = "ProjectAdmin",
-        description = Some("Default Project Admin Group"),
-        belongsToProject = None,
-        isActiveGroup = None,
-        hasSelfJoinEnabled = None,
-        hasPermissions = Vector.empty[GroupPermissionV1]
-    )
-
-    val imagesProjectMemberFullGroupInfoV1 = GroupInfoV1(
+    /* represents the full GroupInfoV1 of the images ProjectMember group */
+    val imagesProjectMemberGroupInfoV1 = GroupInfoV1(
         id = "http://data.knora.org/groups/images/ProjectMember",
         name = "ProjectMember",
         description = Some("Default Project Member Group"),
-        belongsToProject = Some("http://data.knora.org/projects/images"),
+        belongsToProject = "http://data.knora.org/projects/images",
         isActiveGroup = Some(true),
         hasSelfJoinEnabled = Some(false),
         hasPermissions = Vector.empty[GroupPermissionV1]
     )
 
-    val imagesProjectMemberShortGroupInfoV1 = GroupInfoV1(
-        id = "http://data.knora.org/groups/images/ProjectMember",
-        name = "ProjectMember",
-        description = Some("Default Project Member Group"),
-        belongsToProject = None,
-        isActiveGroup = None,
-        hasSelfJoinEnabled = None,
+    /* represents the full GroupInfoV1 of the images project reviewer group */
+    val imageReviewerGroupInfoV1 = GroupInfoV1(
+        id = "http://data.knora.org/groups/images-reviewer",
+        name = "Image reviewer",
+        description = Some("A group for image reviewers."),
+        belongsToProject = "http://data.knora.org/projects/images",
+        isActiveGroup = Some(true),
+        hasSelfJoinEnabled = Some(false),
         hasPermissions = Vector.empty[GroupPermissionV1]
     )
+
 }

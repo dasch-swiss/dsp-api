@@ -188,7 +188,20 @@ case class GroupInfoV1(id: IRI,
                        belongsToProject: IRI,
                        isActiveGroup: Option[Boolean] = None,
                        hasSelfJoinEnabled: Option[Boolean] = None,
-                       hasPermissions: Seq[GroupPermissionV1] = Nil)
+                       hasPermissions: Seq[GroupPermissionV1] = Nil) {
+
+    def convertToShortGroupInfoV1: GroupInfoV1 = {
+        GroupInfoV1(
+            id = id,
+            name = name,
+            description = description,
+            belongsToProject = belongsToProject,
+            isActiveGroup = None, // removed
+            hasSelfJoinEnabled = None, // removed
+            hasPermissions = Nil // removed
+        )
+    }
+}
 
 
 /**

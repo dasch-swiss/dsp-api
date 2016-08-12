@@ -183,6 +183,8 @@
 
                                                knora-base:belongsToProject <http://data.knora.org/projects/images> ;
 
+                                               knora-base:isActiveGroup "true"^^xsd:boolean ;
+
                                                knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
@@ -325,7 +327,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                         knora-base:isInProject <http://data.knora.org/projects/77275339> ,
                                                                <http://data.knora.org/projects/images>,
-                                                               <http://data.knora.org/projects/666>
+                                                               <http://data.knora.org/projects/666> ;
 
                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
 

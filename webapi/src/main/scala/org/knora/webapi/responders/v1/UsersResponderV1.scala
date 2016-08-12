@@ -418,6 +418,8 @@ class UsersResponderV1 extends ResponderV1 {
             // retrieve the projectAdministrative permissions
             projectAdministrativePermissions = Map.empty[IRI, Seq[String]]
 
+
+
             // retrieve the default obejct access permissions
             projectDefaultObjectAccessPermissions = Map.empty[IRI, Seq[String]]
 

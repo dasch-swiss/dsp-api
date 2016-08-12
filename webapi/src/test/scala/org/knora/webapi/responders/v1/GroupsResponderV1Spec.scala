@@ -56,11 +56,11 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    val imagesProjectAdminFullGroupInfo = SharedTestData.imagesProjectAdminFullGroupInfoV1
-    val imagesProjectAdminShortGroupInfo = SharedTestData.imagesProjectAdminShortGroupInfoV1
+    val imagesProjectAdminFullGroupInfo = SharedTestData.imagesProjectAdminGroupInfoV1
+    val imagesProjectAdminShortGroupInfo = SharedTestData.imagesProjectAdminGroupInfoV1.convertToShortGroupInfoV1
 
-    val imagesProjectMemberFullGroupInfo = SharedTestData.imagesProjectMemberFullGroupInfoV1
-    val imagesProjectMemberShortGroupInfo = SharedTestData.imagesProjectMemberShortGroupInfoV1
+    val imagesProjectMemberFullGroupInfo = SharedTestData.imagesProjectMemberGroupInfoV1
+    val imagesProjectMemberShortGroupInfo = SharedTestData.imagesProjectMemberGroupInfoV1.convertToShortGroupInfoV1
 
     val rootUserProfileV1 = SharedTestData.rootUserProfileV1
 
@@ -91,15 +91,15 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
         }
         "asked about a group identified by 'name' " should {
             "return full group info if the group is known " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectAdminFullGroupInfo.belongsToProject.get, imagesProjectAdminFullGroupInfo.name, GroupInfoType.FULL, Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectAdminFullGroupInfo.belongsToProject, imagesProjectAdminFullGroupInfo.name, GroupInfoType.FULL, Some(rootUserProfileV1))
                 expectMsg(GroupInfoResponseV1(imagesProjectAdminFullGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return short group info if the group is known " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberFullGroupInfo.belongsToProject.get, imagesProjectMemberShortGroupInfo.name, GroupInfoType.SHORT, Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberFullGroupInfo.belongsToProject, imagesProjectMemberShortGroupInfo.name, GroupInfoType.SHORT, Some(rootUserProfileV1))
                 expectMsg(GroupInfoResponseV1(imagesProjectMemberShortGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberFullGroupInfo.belongsToProject.get,"groupwrong", GroupInfoType.FULL, Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberFullGroupInfo.belongsToProject,"groupwrong", GroupInfoType.FULL, Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"For the given group name 'groupwrong' no information was found")))
             }
         }
