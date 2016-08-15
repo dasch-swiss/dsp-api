@@ -1250,10 +1250,9 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
                                                          knora-base:valueHasString """Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach\n""" ;
 
                                                          knora-base:valueHasStandoff [
-                                                                                        rdf:type knora-base:Standoff ;
-                                                                                        knora-base:standoffHasAttribute "bold" ;
-                                                                                        knora-base:standoffHasStart "21"^^xsd:integer ;
-                                                                                        knora-base:standoffHasEnd "25"^^xsd:integer
+                                                                                        rdf:type knora-base:StandoffBoldTag ;
+                                                                                        knora-base:standoffTagHasStart "21"^^xsd:integer ;
+                                                                                        knora-base:standoffTagHasEnd "25"^^xsd:integer
                                                                                       ] ;
 
                                                          knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;

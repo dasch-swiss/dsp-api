@@ -405,12 +405,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                                            rdf:type knora-base:TextValue ;
 
-                                                           knora-base:valueHasStandoff [
-                                                                                          knora-base:standoffHasAttribute "linebreak" ;
-                                                                                          knora-base:standoffHasStart "64"^^xsd:integer ;
-                                                                                          knora-base:standoffHasEnd "64"^^xsd:integer ;
-                                                                                          rdf:type knora-base:StandoffVisualAttribute                                                                                       ] ;
-
                                                            knora-base:valueCreationDate "2016-03-02T15:05:55Z"^^xsd:dateTimeStamp ;
 
                                                            knora-base:hasViewPermission knora-base:KnownUser ;
