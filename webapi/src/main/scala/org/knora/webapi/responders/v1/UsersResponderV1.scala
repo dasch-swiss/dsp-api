@@ -28,6 +28,7 @@ import com.ontotext.trree.x
 import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1, GroupInfoType}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionV1, DefaultObjectAccessPermissionsForProjectsGetRequestV1, GetUserAdministrativePermissionsRequestV1, GetUserDefaultObjectAccessPermissionsRequestV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
@@ -415,13 +416,25 @@ class UsersResponderV1 extends ResponderV1 {
             allGroups = groups ::: projectMembers ::: projectAdmins
             projectGroups = allGroups.groupBy(_._1).map { case (k,v) => (k,v.map(_._2))}
 
-            // retrieve the projectAdministrative permissions
-            projectAdministrativePermissions = Map.empty[IRI, Seq[String]]
+            // retrieve the projects administrative permissions
+            projectAdministrativePermissions: Map[IRI, List[String]] = if (projectIris.nonEmpty) {
+                val resFuture = for {
+                    administrativePermissions <- (responderManager ? GetUserAdministrativePermissionsRequestV1(projectGroups)).mapTo[Map[IRI, List[String]]]
+                } yield administrativePermissions
+                Await.result(resFuture, 1.seconds)
+            } else {
+                Map.empty[IRI, List[String]]
+            }
 
-
-
-            // retrieve the default obejct access permissions
-            projectDefaultObjectAccessPermissions = Map.empty[IRI, Seq[String]]
+            // retrieve the projects default object access permissions
+            projectDefaultObjectAccessPermissions:Map[IRI, List[String]] = if (projectIris.nonEmpty) {
+                val resFuture = for {
+                    defaultObjectAccessPermissions <- (responderManager ? GetUserDefaultObjectAccessPermissionsRequestV1(projectGroups)).mapTo[Map[IRI, List[String]]]
+                } yield defaultObjectAccessPermissions
+                Await.result(resFuture, 1.seconds)
+            } else {
+                Map.empty[IRI, List[String]]
+            }
 
             up = UserProfileV1(
                 userData = userDataV1,

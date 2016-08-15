@@ -47,16 +47,17 @@ class PermissionsResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case AdministrativePermissionsForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), getProjectAdministrativePermissionsV1(projectIri, userProfileV1), log)
+        case AdministrativePermissionIrisForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), getProjectAdministrativePermissionsV1(projectIri, userProfileV1), log)
         case AdministrativePermissionGetRequestV1(administrativePermissionIri) => future2Message(sender(), getAdministrativePermissionV1(administrativePermissionIri), log)
         case AdministrativePermissionCreateRequestV1(newAdministrativePermissionV1, userProfileV1) => future2Message(sender(), createAdministrativePermissionV1(newAdministrativePermissionV1, userProfileV1), log)
         case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, userProfileV1) => future2Message(sender(), deleteAdministrativePermissionV1(administrativePermissionIri, userProfileV1), log)
-        case DefaultObjectAccessPermissionsForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), getProjectDefaultObjectAccessPermissionsV1(projectIri, userProfileV1), log)
+        case DefaultObjectAccessPermissionIrisForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), getProjectDefaultObjectAccessPermissionsV1(projectIri, userProfileV1), log)
         case DefaultObjectAccessPermissionGetRequestV1(defaultObjectAccessPermissionIri) => future2Message(sender(), getDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri), log)
         case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, userProfileV1), log)
         case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1) => future2Message(sender(), templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1), log)
-        case GetUserPermissionsRequestV1(userProfileV1) => future2Message(sender(), getUserPermissionsRequestV1(userProfileV1), log)
+        case GetUserAdministrativePermissionsRequestV1(projectGroups) => future2Message(sender(), getUserPermissionsRequestV1(userProfileV1), log)
+        case GetUserDefaultObjectAccessPermissionsRequestV1(projectGroups)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -250,9 +251,15 @@ class PermissionsResponderV1 extends ResponderV1 {
 
     }
 
-    private def getUserPermissionsRequestV1(userProfileV1: UserProfileV1): Future[UserProfileV1] = {
+    private def getUserAdministrativePermissionsRequestV1(projectGroups: Map[IRI, List[IRI]]): Future[Map[IRI, List[String]]] = {
 
-        //ToDo: loop through each project the user is part of and retrieve the permissions attached to each group he is in, calculate max permissions, package everything in a neat little object, attach it to the user profile, and return it back
-        Future(userProfileV1)
+        //ToDo: loop through each project the user is part of and retrieve the administrative permissions attached to each group he is in, calculate max permissions, package everything in a neat little object, and return it back
+        Future(Map("IRI" -> List("ProjectResourceCreateAllPermission")))
+    }
+
+    private def getUserDefaultObjectAccessPermissionsRequestV1(projectGroups: Map[IRI, List[IRI]]): Future[Map[IRI, List[String]]] = {
+
+        //ToDo: loop through each project the user is part of and retrieve the default object access permissions attached to each group he is in, calculate max permissions, package everything in a neat little object, and return it back
+        Future(Map("IRI" -> List("ProjectResourceCreateAllPermission")))
     }
 }

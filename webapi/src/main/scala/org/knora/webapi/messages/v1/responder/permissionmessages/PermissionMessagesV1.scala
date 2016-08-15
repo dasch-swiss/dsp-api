@@ -18,11 +18,19 @@ import spray.json._
 sealed trait PermissionsResponderRequestV1 extends KnoraRequestV1
 
 /**
-  * A message that requests the permissions for the supplied user. The permissions are returned by adding them to
-  * the received user profile.
-  * @param userProfileV1 the user profile for which the permissions should be retrieved.
+  * A message that requests the permissions for the supplied user.
+  *
+  * @param projectGroups a map of projects pointing to a list of groups the user is a member of.
   */
-case class GetUserPermissionsRequestV1(userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+case class GetUserAdministrativePermissionsRequestV1(projectGroups: Map[IRI, List[IRI]]) extends PermissionsResponderRequestV1
+
+/**
+  * A message that requests the permissions for the supplied user.
+  *
+  * @param projectGroups a map of projects pointing to a list of groups the user is a member of.
+  */
+case class GetUserDefaultObjectAccessPermissionsRequestV1(projectGroups: Map[IRI, List[IRI]]) extends PermissionsResponderRequestV1
+
 
 /**
   * A message that requests the creation of permissions (administrative and default) for a certain project
@@ -43,7 +51,16 @@ case class TemplatePermissionsCreateRequestV1(projectIri: IRI, permissionsTempla
   * @param projectIri the project for which the administrative permissions are queried.
   * @param userProfileV1 the user initiation the request.
   */
-case class AdministrativePermissionsForProjectGetRequestV1(projectIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+case class AdministrativePermissionIrisForProjectGetRequestV1(projectIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+
+/**
+  * A message that requests the administrative permissions defined inside projects.
+  * A successful response will contain map of project IRIs pointing to a list of [[AdministrativePermissionV1]].
+  *
+  * @param projectIris the projects for which the administrative permissions are queried.
+  * @param userProfileV1 the user initiation the request.
+  */
+case class AdministrativePermissionsForProjectsGetRequestV1(projectIris: List[IRI], userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
 /**
   * A message that requests an administrative permission object identified through his IRI.
@@ -81,7 +98,16 @@ case class AdministrativePermissionUpdateRequestV1(userProfileV1: UserProfileV1)
   * @param projectIri the project for which the default object access permissions are queried.
   * @param userProfileV1 the user initiating this request.
   */
-case class DefaultObjectAccessPermissionsForProjectGetRequestV1(projectIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+case class DefaultObjectAccessPermissionIrisForProjectGetRequestV1(projectIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+
+/**
+  * A message that requests all default object access permissions defined inside the projects.
+  * A successful response will contain a map of project IRIs pointing to a list of [[DefaultObjectAccessPermissionV1]].
+  *
+  * @param projectIris the project for which the default object access permissions are queried.
+  * @param userProfileV1 the user initiating this request.
+  */
+case class DefaultObjectAccessPermissionsForProjectsGetRequestV1(projectIris: List[IRI], userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
 /**
   * A message that requests a default object access permission object identified through his IRI.
