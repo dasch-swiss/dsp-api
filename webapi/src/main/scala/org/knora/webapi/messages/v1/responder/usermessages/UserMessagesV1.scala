@@ -24,6 +24,7 @@ import java.util.UUID
 
 import org.knora.webapi
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.permissionmessages.KnoraPermissions.Permission
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.httpx.SprayJsonSupport
 import spray.json._
@@ -151,11 +152,11 @@ case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDat
 case class UserProfileV1(userData: UserDataV1,
                          groups: Seq[IRI] = Vector.empty[IRI],
                          projects: Seq[IRI] = Vector.empty[IRI],
-                         projectGroups: Map[IRI, Seq[IRI]] = Map.empty[IRI, Seq[IRI]],
+                         projectGroups: Map[IRI, List[IRI]] = Map.empty[IRI, List[IRI]],
                          isInSystemAdminGroup: Boolean = false,
                          isInProjectAdminGroup: Seq[IRI] = Vector.empty[IRI],
-                         projectAdministrativePermissions: Map[IRI, Seq[String]] = Map.empty[IRI, Seq[String]],
-                         projectDefaultObjectAccessPermissions: Map[IRI, Seq[String]] = Map.empty[IRI, Seq[String]],
+                         projectAdministrativePermissions: Map[IRI, List[String]] = Map.empty[IRI, List[String]],
+                         projectDefaultObjectAccessPermissions: Map[IRI, List[String]] = Map.empty[IRI, List[String]],
                          sessionId: Option[String] = None) {
 
     /**
@@ -233,8 +234,8 @@ case class UserProfileV1(userData: UserDataV1,
             projectGroups = projectGroups,
             isInSystemAdminGroup = false, // remove system admin status
             isInProjectAdminGroup = Vector.empty[IRI], // remove privileged group membership
-            projectAdministrativePermissions = Map.empty[IRI, Seq[String]], // remove administrative permission information
-            projectDefaultObjectAccessPermissions = Map.empty[IRI, Seq[String]], // remove default object access permission information
+            projectAdministrativePermissions = Map.empty[IRI, List[String]], // remove administrative permission information
+            projectDefaultObjectAccessPermissions = Map.empty[IRI, List[String]], // remove default object access permission information
             sessionId = None // remove session id
         )
     }

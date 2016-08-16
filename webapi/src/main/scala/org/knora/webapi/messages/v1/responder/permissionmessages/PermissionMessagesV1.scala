@@ -1,5 +1,6 @@
 package org.knora.webapi.messages.v1.responder.permissionmessages
 
+import org.knora.webapi
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionOperation.PermissionOperation
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsTemplate.PermissionsTemplate
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -195,11 +196,7 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean, op
   */
 case class AdministrativePermissionV1(forProject: IRI = OntologyConstants.KnoraBase.AllProjects,
                                       forGroup: IRI = OntologyConstants.KnoraBase.AllGroups,
-                                      resourceCreationPermissionValues: Seq[IRI] = Vector.empty[IRI],
-                                      hasRestrictedProjectResourceCreatePermission: Seq[IRI] = Vector.empty[IRI],
-                                      projectAdministrationPermissionValues: Seq[IRI] = Vector.empty[IRI],
-                                      hasRestrictedProjectGroupAdminPermission: Seq[IRI] = Vector.empty[IRI],
-                                      ontologyAdministrationPermissionValues: Seq[IRI] = Vector.empty[IRI]
+                                      hasPermissions: Array[String] = Array.empty[String]
                                      )
 
 /**
@@ -312,6 +309,79 @@ object PermissionOperation extends Enumeration {
     val DELETE = Value("delete")
 }
 
+object Permissions {
+
+    object Creation {
+        val All = "ProjectResourceCreateAllPermission"
+        val Restricted = "ProjectResourceCreateRestrictedPermission"
+    }
+
+    object ProjectAdmin {
+        val All = "ProjectAdminAllPermission"
+        val GroupAll = "ProjectAdminGroupAllPermission"
+        val GroupRestricted = "ProjectAdminGroupRestrictedPermission"
+        val RightsAll = "ProjectAdminRightsAllPermission"
+        val OntologyAll = "ProjectAdminOntologyAllPermission"
+    }
+
+    object Default {
+        val RestrictedView = "RV"
+        val View = "V"
+        val Modify = "M"
+        val Delete = "D"
+        val ChangeRights = "CR"
+    }
+
+}
+
+
+object KnoraPermissions {
+
+    sealed abstract class Permission(val order: Int,
+                                     val name: String,
+                                     val category: String) extends Ordered[Permission] {
+
+        def compare(that: Permission) = this.order - that.order
+
+        override def toString = name
+    }
+
+    case object SA                      extends Permission(99, "SystemAdminPermission",                     "SYS")
+    case object RES_CREATE_ALL          extends Permission(10, "ProjectResourceCreateAllPermission",        "RES_CREATE")
+    case object RES_CREATE_RESTRICTED   extends Permission( 9, "ProjectResourceCreateRestrictedPermission", "RES_CREATE")
+    case object PROJ_ADM_ALL            extends Permission(10, "ProjectAdminAllPermission",                 "PROJ_ADM")
+    case object PROJ_ADM_GRP_ALL        extends Permission( 9, "ProjectAdminGroupAllPermission",            "PROJ_ADM")
+    case object PROJ_ADM_GRP_RESTRICTED extends Permission( 8, "ProjectAdminGroupRestrictedPermission",     "PROJ_ADM")
+    case object PROJ_ADM_RIGHTS_ALL     extends Permission( 9, "ProjectAdminRightsAllPermission",           "PROJ_ADM")
+    case object PROJ_ADM_ONTO_ALL       extends Permission( 9, "ProjectAdminOntologyAllPermission",         "PROJ_ADM")
+
+    case object RESTRICTED_VIEW extends Permission(0, "RV", "DOAP")
+    case object VIEW            extends Permission(1, "V",  "DOAP")
+    case object MODIFY          extends Permission(2, "M",  "DOAP")
+    case object DELETE          extends Permission(3, "D",  "DOAP")
+    case object CHANGE_RIGHTS   extends Permission(4, "CR", "DOAP")
+
+    val administrativePermissions: Set[Permission] = Set(
+        SA,
+        RES_CREATE_ALL,
+        RES_CREATE_RESTRICTED,
+        PROJ_ADM_ALL,
+        PROJ_ADM_GRP_ALL,
+        PROJ_ADM_GRP_RESTRICTED,
+        PROJ_ADM_RIGHTS_ALL,
+        PROJ_ADM_ONTO_ALL
+    )
+
+    val defaultObjectAccessPermissions: Set[Permission] = Set(
+        RESTRICTED_VIEW,
+        VIEW,
+        MODIFY,
+        DELETE,
+        CHANGE_RIGHTS
+    )
+
+}
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -336,7 +406,7 @@ object PermissionV1JsonProtocol extends DefaultJsonProtocol with NullOptions wit
             JsObject(Map("permission_operation" -> permissionOperation.toString.toJson))
         }
     }
-    implicit val administrativePermissionV1Format: JsonFormat[AdministrativePermissionV1] = jsonFormat7(AdministrativePermissionV1)
+    implicit val administrativePermissionV1Format: JsonFormat[AdministrativePermissionV1] = jsonFormat3(AdministrativePermissionV1)
     implicit val defaultObjectAccessPermissionV1Format: JsonFormat[DefaultObjectAccessPermissionV1] = jsonFormat9(DefaultObjectAccessPermissionV1)
     implicit val templatePermissionsCreateResponseV1Format: RootJsonFormat[TemplatePermissionsCreateResponseV1] = jsonFormat4(TemplatePermissionsCreateResponseV1)
     implicit val administrativePermissionOperationResponseV1Format: RootJsonFormat[AdministrativePermissionOperationResponseV1] = jsonFormat4(AdministrativePermissionOperationResponseV1)

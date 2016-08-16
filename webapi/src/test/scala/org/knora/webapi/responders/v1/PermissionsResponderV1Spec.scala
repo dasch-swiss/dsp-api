@@ -51,6 +51,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
     private val timeout = 5.seconds
 
     val rootUserProfileV1 = SharedTestData.rootUserProfileV1
+    val multiuserUserProfileV1 = SharedTestData.multiuserUserProfileV1
 
     val actorUnderTest = TestActorRef[PermissionsResponderV1]
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
@@ -66,26 +67,33 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
     "The PermissionsResponderV1 " when {
         "queried about permissions " should {
             "return AdministrativePermission IRIs for project " in {
-                actorUnderTest ! AdministrativePermissionsForProjectGetRequestV1(
+                actorUnderTest ! AdministrativePermissionIrisForProjectGetRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
                     SharedTestData.rootUserProfileV1
                 )
-                expectMsg(Some(List(perm001.iri, perm003.iri)))
+                expectMsg(List(perm001.iri, perm003.iri))
             }
             "return AdministrativePermission object for IRI " in {
                 actorUnderTest ! AdministrativePermissionGetRequestV1(administrativePermissionIri = perm001.iri)
-                expectMsg(perm001.p)
+                expectMsg(Some(perm001.p))
             }
             "return DefaultObjectAccessPermission IRIs for project " in {
-                actorUnderTest ! DefaultObjectAccessPermissionsForProjectGetRequestV1(
+                actorUnderTest ! DefaultObjectAccessPermissionIrisForProjectGetRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
                     SharedTestData.rootUserProfileV1
                 )
-                expectMsg(Some(List(perm002.iri)))
+                expectMsg(List(perm002.iri))
             }
             "return DefaultObjectAccessPermission for IRI " in {
                 actorUnderTest ! DefaultObjectAccessPermissionGetRequestV1(defaultObjectAccessPermissionIri = perm002.iri)
                 expectMsg(perm002.p)
+            }
+            "return user's administrative permissions " in {
+                actorUnderTest ! GetUserAdministrativePermissionsRequestV1(multiuserUserProfileV1.projectGroups)
+                expectMsg(multiuserUserProfileV1.projectAdministrativePermissions)
+            }
+            "return user's default object access permissions " in {
+                actorUnderTest ! GetUserDefaultObjectAccessPermissionsRequestV1(multiuserUserProfileV1.projectGroups)
             }
         }
         "asked to create a permission object " should {

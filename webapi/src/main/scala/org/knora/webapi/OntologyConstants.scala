@@ -195,12 +195,12 @@ object OntologyConstants {
         val ForGroup = KNORA_BASE_PREFIX + "forGroup"
         val ForResourceClass = KNORA_BASE_PREFIX + "forResourceClass"
         val ForProperty = KNORA_BASE_PREFIX + "forProperty"
+        val HasPermissions = KNORA_BASE_PREFIX + "hasPermissions"
 
         val AllProjects = KNORA_BASE_PREFIX + "AllProjects"
         val AllGroups = KNORA_BASE_PREFIX + "AllGroups"
         val AllResourceClasses = KNORA_BASE_PREFIX + "AllResourceClasses"
         val AllProperties = KNORA_BASE_PREFIX + "AllProperties"
-
 
         /* Object Access Permission Properties */
         val HasRestrictedViewPermission = KNORA_BASE_PREFIX + "hasRestrictedViewPermission"
@@ -209,32 +209,6 @@ object OntologyConstants {
         val HasDeletePermission = KNORA_BASE_PREFIX + "hasDeletePermission"
         val HasChangeRightsPermission = KNORA_BASE_PREFIX + "hasChangeRightsPermission"
         val HasMaxPermission = HasChangeRightsPermission
-
-
-        /* Resource Creation Permission Properties */
-        val HasResourceCreationPermission = KNORA_BASE_PREFIX + "hasResourceCreationPermission"
-        val HasRestrictedProjectResourceCreatePermission = KNORA_BASE_PREFIX + "hasRestrictedProjectResourceCreatePermission"
-
-        /* Resource Creation Permission Value Instances */
-        val ProjectResourceCreateAllPermission = KNORA_BASE_PREFIX + "ProjectResourceCreateAllPermission"
-
-
-        /* Project Administration Permission Properties */
-        val HasProjectAdministrationPermission = KNORA_BASE_PREFIX + "hasProjectAdministrationPermission"
-        val HasRestrictedProjectGroupAdminPermission = KNORA_BASE_PREFIX + "hasRestrictedProjectGroupAdminPermission"
-
-        /* Project Administration Permission Value Instances */
-        val ProjectAllAdminPermission = KNORA_BASE_PREFIX + "ProjectAllAdminPermission"
-        val ProjectAllGroupAdminPermission = KNORA_BASE_PREFIX + "ProjectAllGroupAdminPermission"
-        val ProjectRightsAdminPermission = KNORA_BASE_PREFIX + "ProjectRightsAdminPermission"
-
-
-        /* Ontology Administration Permission Properties */
-        val HasOntologyAdministrationPermission = KNORA_BASE_PREFIX + "hasOntologyAdministrationPermission"
-
-        /* Ontology Administration Permission Value Instances */
-        val ProjectOntologyAdminPermission = KNORA_BASE_PREFIX + "ProjectOntologyAdminPermission"
-
 
         /* Default Object Access Permissions */
         val HasDefaultObjectAccessPermission = KNORA_BASE_PREFIX + "hasDefaultObjectAccessPermission"

@@ -413,6 +413,7 @@ class UsersResponderV1 extends ResponderV1 {
                 List.empty[(IRI, IRI)]
             }
 
+            //ToDo: Maybe we need to add KnownUser group for all other projects
             allGroups = groups ::: projectMembers ::: projectAdmins
             projectGroups = allGroups.groupBy(_._1).map { case (k,v) => (k,v.map(_._2))}
 
