@@ -26,3 +26,4 @@ target/
 *.tdo
 *.toc
 .sbtrc
+docs/_format_docu/*
