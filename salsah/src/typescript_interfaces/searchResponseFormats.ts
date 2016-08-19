@@ -16,6 +16,9 @@
 
 import { basicMessageComponents } from "./basicMessageComponents"
 
+/**
+ * This module contains interfaces that represent the response to a search request (fulltext or extended search).
+ */
 export module searchResponseFormats {
 
     interface subjectItem {
@@ -101,10 +104,10 @@ export module searchResponseFormats {
     /**
      * Represents the response to a fulltext or an extended search
      *
-     * http://www.knora.org/v1/search/searchTerm?searchtype=fulltext[&filter_by_restype=resourceClassIRI][&filter_by_project=projectIRI][&show_nrows=Integer]{[&start_at=Integer]
+     * HTTP GET to http://host/v1/search/searchTerm?searchtype=fulltext[&filter_by_restype=resourceClassIRI][&filter_by_project=projectIRI][&show_nrows=Integer]{[&start_at=Integer]
      *
-     * http://www.knora.org/v1/search/?searchtype=extended[&filter_by_restype=resourceClassIRI][&filter_by_project=projectIRI][&filter_by_owner=userIRI](&property_id=propertyTypeIRI&compop=comparisonOperator&searchval=searchValue)+[&show_nrows=Integer]{[&start_at=Integer]
-      */
+     * HTTP GET to http://host/v1/search/?searchtype=extended[&filter_by_restype=resourceClassIRI][&filter_by_project=projectIRI][&filter_by_owner=userIRI](&property_id=propertyTypeIRI&compop=comparisonOperator&searchval=searchValue)+[&show_nrows=Integer]{[&start_at=Integer]
+     */
     export interface searchResponse extends basicMessageComponents.basicResponse {
 
         /**

@@ -16,6 +16,9 @@
 
 import {basicMessageComponents} from "./basicMessageComponents"
 
+/**
+ * This module contains interfaces that represent responses to a resource GET request.
+ */
 export module resourceResponseFormats {
 
     /**
@@ -199,7 +202,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents a permission assertion for the current user
+     * Represents a permission assertion for the current user.
      */
     interface permissionItem {
         /**
@@ -214,7 +217,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the regions attached to a resource
+     * Represents the regions attached to a resource.
      */
     interface region {
         /**
@@ -224,7 +227,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents information about a resource and its class
+     * Represents information about a resource and its class.
      */
     interface resinfo {
         /**
@@ -314,7 +317,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents information about a resource
+     * Represents information about a resource.
      */
     interface resdata {
         /**
@@ -374,7 +377,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the context of a resource
+     * Represents the context of a resource.
      */
     interface context {
         /**
@@ -434,7 +437,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents information about a property type
+     * Represents information about a property type.
      */
     interface propertyDefinition {
         /**
@@ -485,7 +488,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents information about the requested resource class
+     * Represents information about the requested resource class.
      */
     interface restype {
 
@@ -527,7 +530,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents a resource class
+     * Represents a resource class.
      */
     interface resTypeItem {
         /**
@@ -548,7 +551,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents a vocabulary
+     * Represents a vocabulary.
      */
     interface vocabularyItem {
         /**
@@ -588,6 +591,9 @@ export module resourceResponseFormats {
 
     }
 
+    /**
+     * Represents a retrieved resource when doing a label search.
+     */
     interface resourceLabelSearchItem {
 
         /**
@@ -610,9 +616,8 @@ export module resourceResponseFormats {
     /**
      * Represents a list of property types for the requested resource class or vocabulary.
      *
-     * http://www.knora.org/v1/propertylists?restype=resourceClassIRI
+     * HTTP GET to http://host/v1/propertylists?restype=resourceClassIRI
      *
-     * http://www.knora.org/v1/propertylists?vocabulary=vocabularyIRI
      */
     export interface propertyTypesInResourceClassResponse extends basicMessageComponents.basicResponse {
         /**
@@ -625,7 +630,7 @@ export module resourceResponseFormats {
     /**
      * Represents the Knora API V1 response to a resource type request for a vocabulary.
      *
-     * http://www.knora.org/v1/resourcetypes?vocabulary=vocabularyIRI
+     * HTTP GET to http://host/v1/resourcetypes?vocabulary=vocabularyIRI
      */
     export interface resourceTypesInVocabularyResponse extends basicMessageComponents.basicResponse {
         /**
@@ -638,7 +643,7 @@ export module resourceResponseFormats {
     /**
      * Represents the Knora API V1 response to a resource type request.
      *
-     * http://www.knora.org/v1/resourcetypes/resourceClassIRI
+     * HTTP GET to http://host/v1/resourcetypes/resourceClassIRI
      */
     export interface resourceTypeResponse extends basicMessageComponents.basicResponse {
         /**
@@ -652,7 +657,7 @@ export module resourceResponseFormats {
      * Represents the Knora API V1 response to a properties request for a resource.
      * This response just returns a resource's properties.
      *
-     * http://www.knora.org/v1/properties/resourceIRI
+     * HTTP GET to http://host/v1/properties/resourceIRI
      */
     export interface resourcePropertiesResponse extends basicMessageComponents.basicResponse {
 
@@ -668,7 +673,7 @@ export module resourceResponseFormats {
     /**
      * Represents the Knora API V1 response to a full resource request.
      *
-     * http://www.knora.org/v1/resources/resourceIRI
+     * HTTP GET to http://host/v1/resources/resourceIRI
      */
     export interface resourceFullResponse extends basicMessageComponents.basicResponse {
         /**
@@ -703,7 +708,7 @@ export module resourceResponseFormats {
     /**
      * Represents the Knora API V1 response to a resource info request (reqtype=info).
      *
-     * http://www.knora.org/v1/resources/resourceIRI?reqtype=info
+     * HTTP GET to http://host/v1/resources/resourceIRI?reqtype=info
      */
     export interface resourceInfoResponse extends basicMessageComponents.basicResponse {
         /**
@@ -721,7 +726,7 @@ export module resourceResponseFormats {
     /**
      * Represents the Knora API V1 response to a resource rights request (reqtype=rights).
      *
-     * http://www.knora.org/v1/resources/resourceIRI?reqtype=rights
+     * HTTP GET to http://host/v1/resources/resourceIRI?reqtype=rights
      */
     export interface resourceRightsResponse extends basicMessageComponents.basicResponse {
         /**
@@ -734,7 +739,7 @@ export module resourceResponseFormats {
     /**
      * Represents the Knora API V1 response to a context request (reqtype=context) with or without resinfo (resinfo=true).
      *
-     * http://www.knora.org/v1/resources/resourceIRI?reqtype=context[&resinfo=true]
+     * HTTP GET to http://host/v1/resources/resourceIRI?reqtype=context[&resinfo=true]
      */
     export interface resourceContextResponse extends basicMessageComponents.basicResponse {
         /**
@@ -747,7 +752,7 @@ export module resourceResponseFormats {
     /**
      * Represents the available vocabularies
      *
-     * http://www.knora.org/v1/vocabularies
+     * HTTP GET to http://host/v1/vocabularies
      */
     export interface vocabularyResponse extends basicMessageComponents.basicResponse {
 
@@ -760,7 +765,7 @@ export module resourceResponseFormats {
      * The search can be restricted to resource classes and a limit can be defined for the results to be returned.
      * The amount of values values to be returned for each retrieved resource can also be defined.
      *
-     * http://www.knora.org/v1/resources?searchstr=searchValue[&restype_id=resourceClassIRI][&numprops=Integer][&limit=Integer]
+     * HTTP GET to http://host/v1/resources?searchstr=searchValue[&restype_id=resourceClassIRI][&numprops=Integer][&limit=Integer]
      */
     export interface resourceLabelSearchResponse extends basicMessageComponents.basicResponse {
 

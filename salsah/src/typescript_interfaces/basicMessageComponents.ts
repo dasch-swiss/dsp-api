@@ -14,6 +14,10 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * This module contains interfaces that are used by other modules (message components).
+ * It does not represent a particular API V1 request or response format.
+ */
 export module basicMessageComponents {
 
     /**
@@ -342,7 +346,7 @@ export module basicMessageComponents {
 
     /**
      * String must have the following format: (GREGORIAN|JULIAN):YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]
-     * E.g. an exact date like GREGORIAN:2015-12-03 or a period like GREGORIAN:2015-12-03-2015-12-04.
+     * E.g. an exact date like GREGORIAN:2015-12-03 or a period like GREGORIAN:2015-12-03:2015-12-04.
      * Dates may also have month or year precision, e.g. GREGORIAN:2015-12 (the whole month of december) or GREGORIAN:2015 (the whole year 2015).
      */
     type dateString = string;

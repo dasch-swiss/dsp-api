@@ -16,6 +16,9 @@
 
 import {basicMessageComponents} from "./basicMessageComponents"
 
+/**
+ * This module contains interfaces that represent represent the response to a GET request of a hierarchical list.
+ */
 export module hierarchicalListResponseFormats {
 
     /**
@@ -74,9 +77,10 @@ export module hierarchicalListResponseFormats {
 
     }
 
-    /** Represents the response to a node path request.
+    /**
+     * Represents the response to a node path request.
      *
-     * http://www.knora.org/v1/hlists/nodeIRI?reqtype=node
+     * HTTP GET to http://host/v1/hlists/nodeIRI?reqtype=node
      *
      */
     export interface nodePathResponse extends basicMessageComponents.basicResponse {
@@ -92,8 +96,7 @@ export module hierarchicalListResponseFormats {
     /**
      * Represents a hierarchical list. Selections are also represented as hierarchical lists.
      *
-     * http://www.knora.org/v1/hlists/listIRI
-
+     * HTTP GET to http://host/v1/hlists/listIRI
      */
     export interface hierarchicalListResponse extends basicMessageComponents.basicResponse {
 

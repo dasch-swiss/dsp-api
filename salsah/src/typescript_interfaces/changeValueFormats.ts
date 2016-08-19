@@ -16,6 +16,10 @@
 
 import {basicMessageComponents} from "./basicMessageComponents"
 
+/**
+ * This module contains interfaces that represent requests to change a value (add a new version to a value)
+ * and the response to such a request.
+ */
 export module changeValueFormats {
 
     /**
@@ -37,7 +41,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change a value of type richtext.
      *
-     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     * HTTP PUT to http://host/v1/values/valueIRI
      *
      */
     export interface changeRichtextValueRequest extends changeValueRequestBase, basicMessageComponents.richtextValue {}
@@ -45,7 +49,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change a value of type link.
      *
-     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     * HTTP PUT to http://host/v1/values/valueIRI
      *
      */
     export interface changeLinkValueRequest extends changeValueRequestBase, basicMessageComponents.linkValue {}
@@ -53,7 +57,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change a value of type integer.
      *
-     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     * HTTP PUT to http://host/v1/values/valueIRI
      *
      */
     export interface changeIntegerValueRequest extends changeValueRequestBase, basicMessageComponents.integerValue {}
@@ -61,7 +65,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change a value of type decimal.
      *
-     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     * HTTP PUT to http://host/v1/values/valueIRI
      *
      */
     export interface changeDecimalValueRequest extends changeValueRequestBase, basicMessageComponents.decimalValue {}
@@ -69,7 +73,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change a value of type boolean.
      *
-     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     * HTTP PUT to http://host/v1/values/valueIRI
      *
      */
     export interface changeBooleanValueRequest extends changeValueRequestBase, basicMessageComponents.booleanValue {}
@@ -77,7 +81,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change a value of type URI.
      *
-     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     * HTTP PUT to http://host/v1/values/valueIRI
      *
      */
     export interface changeUriValueRequest extends changeValueRequestBase, basicMessageComponents.uriValue {}
@@ -85,7 +89,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change a value of type date.
      *
-     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     * HTTP PUT to http://host/v1/values/valueIRI
      *
      */
     export interface changeDateValueRequest extends changeValueRequestBase, basicMessageComponents.dateValue {}
@@ -93,7 +97,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change a value of type color.
      *
-     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     * HTTP PUT to http://host/v1/values/valueIRI
      *
      */
     export interface changeColorValueRequest extends changeValueRequestBase, basicMessageComponents.colorValue {}
@@ -101,7 +105,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change a value of type gepometry.
      *
-     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     * HTTP PUT to http://host/v1/values/valueIRI
      *
      */
     export interface changeGeometryValueRequest extends changeValueRequestBase, basicMessageComponents.geometryValue {}
@@ -109,7 +113,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change a value of type hierarchical list.
      *
-     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     * HTTP PUT to http://host/v1/values/valueIRI
      *
      */
     export interface changeHierarchicalListValueRequest extends changeValueRequestBase, basicMessageComponents.hierarchicalListValue {}
@@ -117,7 +121,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change a value of type interval.
      *
-     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     * HTTP PUT to http://host/v1/values/valueIRI
      *
      */
     export interface changeIntervalValueRequest extends changeValueRequestBase, basicMessageComponents.intervalValue {}
@@ -126,7 +130,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change a value of type geoname.
      *
-     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     * HTTP PUT to http://host/v1/values/valueIRI
      *
      */
     export interface changeGeonameValueRequest extends changeValueRequestBase, basicMessageComponents.geonameValue {}
@@ -134,7 +138,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change a value's comment without changing the value itself.
      *
-     * HTTP PUT to http://www.knora.org/v1/values/valueIRI
+     * HTTP PUT to http://host/v1/values/valueIRI
      *
      */
     export interface changeValueCommentRequest extends changeValueRequestBase {
@@ -149,7 +153,7 @@ export module changeValueFormats {
     /**
      * Represents a request to change the file value (digital representation) of a resource (GUI-case).
      *
-     * HTTP PUT to http://www.knora.org/v1/fielvalue/resourceIRI
+     * HTTP PUT to http://host/v1/filevalue/resourceIRI
      *
      */
     export interface changeFileValueRequest extends basicMessageComponents.createOrChangeFileValueRequest {}

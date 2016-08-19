@@ -16,12 +16,15 @@
 
 import { basicMessageComponents } from "./basicMessageComponents"
 
+/**
+ * This module contains interfaces that represent the answers to a DELETE request of a value or a resource.
+ */
 export module deleteResponseFormats {
 
     /**
      * Represents the answer to a value delete request.
      *
-     * HTTP DELETE to http://www.knora.org/v1/values/valueIRI
+     * HTTP DELETE to http://host/v1/values/valueIRI
      *
      */
     export interface deleteValueResponse extends basicMessageComponents.basicResponse {
@@ -36,7 +39,7 @@ export module deleteResponseFormats {
     /**
      * Represents the answer to a resource delete request.
      *
-     * HTTP DELETE to http://www.knora.org/v1/resources/valueIRI
+     * HTTP DELETE to http://host/v1/resources/valueIRI
      */
     export interface deleteResourceResponse extends basicMessageComponents.basicResponse {
 

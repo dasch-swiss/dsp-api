@@ -16,6 +16,10 @@
 
 import {basicMessageComponents} from "./basicMessageComponents"
 
+/**
+ * This module contains interfaces that represent requests to create a new resource
+ * and the response to such a request.
+ */
 export module createResourceFormats {
 
     /**
@@ -142,7 +146,7 @@ export module createResourceFormats {
     /**
      * Represents a resource creation request without providing information about a digital representation.
      *
-     * This definition describes the JSON to be sent as the HTTP body in a POST request to http://www.knora.org/v1/resources
+     * This definition describes the JSON to be sent as the HTTP body in a POST request to http://host/v1/resources
      *
      * However, this format may part of a HTTP Multipart request (in that case, do not set the content type to "application/json").
      *
@@ -181,7 +185,7 @@ export module createResourceFormats {
     /**
      * Represents a resource creation request providing a digital representation (GUI-case).
      *
-     * This definition describes the JSON to be sent as the HTTP body in a POST request to http://www.knora.org/v1/resources
+     * This definition describes the JSON to be sent as the HTTP body in a POST request to http://host/v1/resources
      */
     export interface createResourceWithRepresentationRequest extends createResourceWithoutRepresentationRequest, basicMessageComponents.createOrChangeFileValueRequest {}
 

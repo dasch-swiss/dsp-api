@@ -62,8 +62,8 @@ html:
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 jsonformat:
-	$(TYPEDOC) --out $(FORMATDOCDIR) --module commonjs $(FORMATSRCDIR)
-	@echo "Format Docs Build finished. The HTML pages are in $(FORMATDOC)/html."
+	$(TYPEDOC) --out $(FORMATDOCDIR) --exclude **/sampleRequests/* --readme none --name "Knora API V1 Format Documentation" --module commonjs $(FORMATSRCDIR)
+	@echo "Format Docs Build finished. The index page is $(FORMATDOCDIR)/index.html."
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml

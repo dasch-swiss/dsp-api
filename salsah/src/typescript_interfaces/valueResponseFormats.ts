@@ -16,6 +16,9 @@
 
 import { basicMessageComponents } from "./basicMessageComponents"
 
+/**
+ * This module contains interfaces that represent responses to a GET value request.
+ */
 export module valueResponseFormats {
 
     /**
@@ -68,7 +71,7 @@ export module valueResponseFormats {
     /**
      * Represents the answer to a value version request.
      *
-     * HTTP GET to http://www.knora.org/v1/values/history/resourceIRI/propertyTypeIRI/valueIRI
+     * HTTP GET to http://host/v1/values/history/resourceIRI/propertyTypeIRI/valueIRI
      */
     export interface valueVersionsResponse extends basicMessageComponents.basicResponse {
 
@@ -109,7 +112,7 @@ export module valueResponseFormats {
     /**
      * Represents the answer to a link request.
      *
-     * HTTP GET to http://www.knora.org/links/sourceObjectIRI/linkingPropertyIRI/targetObjectIRI
+     * HTTP GET to http://host/links/sourceObjectIRI/linkingPropertyIRI/targetObjectIRI
      *
      */
     export interface linkResponse extends basicMessageComponents.basicResponse {
