@@ -32,7 +32,7 @@ The delete request has to be sent to the Knora server using the ``resources`` pa
 
 ::
 
-    curl -X DELETE http://www.knora.org/resources/resourceIRI
+    HTTP DELETE to http://host/resources/resourceIRI
 
 
 
@@ -46,7 +46,7 @@ The delete request has to be sent to the Knora server using the ``values`` path 
 
 ::
 
-    curl -X DELETE http://www.knora.org/values/valueIRI
+    HTTP DELETE to http://host/values/valueIRI
 
 
 Please note that the value IRI has to be URL encoded.

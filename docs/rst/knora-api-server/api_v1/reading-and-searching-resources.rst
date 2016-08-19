@@ -39,13 +39,13 @@ In order to get the resource with the IRI ``http://data.knora.org/c5058f3a`` (an
 
 ::
 
-    curl http://www.knora.org/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
+    HTTP GET to http://host/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
 
 More formalized, the URL looks like this:
 
 ::
 
-    curl http://www.knora.org/v1/resources/resourceIRI
+    HTTP GET to http://host/v1/resources/resourceIRI
 
 
 As an answer, the client receives a JSON that represents the requested resource. It has the following members:
@@ -78,7 +78,7 @@ In order to get an HTML representation of a resource (not a JSON), the path segm
 
 ::
 
-    curl http://www.knora.org/v1/resources.html/resourceIRI?reqtype=properties
+    HTTP GET to http://host/v1/resources.html/resourceIRI?reqtype=properties
 
 The request returns the properties of the requested resource as an HTML document.
 
@@ -90,7 +90,7 @@ In order to get only the properties of a resource without any other information,
 
 ::
 
-    curl http://www.knora.org/v1/properties/resourceIRI
+    HTTP GET to http://host/v1/properties/resourceIRI
 
 The JSON contains just the member ``properties`` representing the requested resource's properties (see TypeScript interface ``resourcePropertiesResponse`` in module ``resourceResponseFormats``).
 
@@ -106,7 +106,7 @@ In order to get information about a resource class, the path segment ``resourcet
 
 ::
 
-    curl http://www.knora.org/v1/resourcetypes/resourceClassIRI
+    HTTP GET to http://host/v1/resourcetypes/resourceClassIRI
 
 In the JSON, the information about the resource class and all the property types that it may have are returned.
 Please note that none of these are actual instances of a property, but only only types (see TypeScript interface ``resourceTypeResponse`` in module ``resourceResponseFormats``).
@@ -121,10 +121,10 @@ or to a certain resource class using the parameter ``restype``.
 ::
 
     # returns all the property types for incunabula:page
-    curl http://www.knora.org/v1/propertylists?restype=resourceClassIRI
+    HTTP GET to http://host/v1/propertylists?restype=resourceClassIRI
 
     # returns all the property types for the incunabula vocabulary
-    curl http://www.knora.org/v1/propertylists?vocabulary=vocabularyIRI
+    HTTP GET to http://host/v1/propertylists?vocabulary=vocabularyIRI
 
 Both of these queries return a list of property types. The default value for the parameter ``vocabulary`` is ``0``
 and means that the resource classes from all the available vocabularies are returned. See TypeScript interface ``propertyTypesInResourceClassResponse`` in module ``resourceResponseFormats``.
@@ -139,7 +139,7 @@ In order to get all the resource classes defined for a specific vocabulary (e.g.
 
 ::
 
-    curl http://www.knora.org/v1/resourcetypes?vocabulary=vocabularyIRI
+    HTTP GET to http://host/v1/resourcetypes?vocabulary=vocabularyIRI
 
 This returns all the resource classes defined for the specified vocabulary and their property types. The default value for the parameter ``vocabulary`` is ``0``
 and means that the resource classes from all the available vocabularies are returned. See TypeScript interface ``resourceTypesInVocabularyResponse`` in module ``resourceResponseFormats``.
@@ -152,7 +152,7 @@ To get a list of all available vocabularies, the path segment ``vocabularies`` c
 
 ::
 
-    curl http://www.knora.org/v1/vocabularies
+    HTTP GET to http://host/v1/vocabularies
 
 The response will list all the available vocabularies. See TypeScript interface ``vocabularyResponse`` in module ``resourceResponseFormats``.
 
@@ -168,7 +168,7 @@ This is a simplified way for searching for resources just by their label. It is 
 
 ::
 
-    curl http://www.knora.org/v1/resources?searchstr=searchValue
+    HTTP GET to http://host/v1/resources?searchstr=searchValue
 
 Additionally, the following parameters can be appended to the URL (search value is ``Zeitglöcklein``):
  - ``restype_id=resourceClassIRI``: This restricts the search to resources of the specified class. ``-1`` is the default value and means no restriction to a specific class. If a resource class IRI is specified, it has to be URL encoded (e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitgl%C3%B6cklein&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book``).
@@ -187,7 +187,7 @@ Please note that the search terms have to be URL encoded.
 
 ::
 
-    curl http://localhost:3333/v1/search/searchValue?searchtype=fulltext[&filter_by_restype=resourceClassIRI]
+    HTTP GET to http://host/v1/search/searchValue?searchtype=fulltext[&filter_by_restype=resourceClassIRI]
     [&filter_by_project=projectIRI][&show_nrows=Integer]{[&start_at=Integer]
 
 The parameter ``searchtype`` is required and has to be set to ``fulltext``. Additionally, these parameters can be set:
@@ -207,7 +207,7 @@ Extended Search for Resources
 
 ::
 
-    curl http://www.knora.org/v1/search/?searchtype=extended
+    HTTP GET to http://host/v1/search/?searchtype=extended
     [&filter_by_restype=resourceClassIRI][&filter_by_project=projectIRI][&filter_by_owner=userIRI]
     (&property_id=propertyTypeIRI&compop=comparisonOperator&searchval=searchValue)+
     [&show_nrows=Integer][&start_at=Integer]
@@ -281,7 +281,7 @@ You can get a hierarchical by using the path segment ``hlists`` and appending th
 
 ::
 
-    curl http://www.knora.org/v1/hlists/rootNodeIRI
+    HTTP GET to http://host/v1/hlists/rootNodeIRI
 
 The response shows all of the list nodes that are element of the requested hierarchical list as a tree structure. See TypeScript interface ``hierarchicalListResponse`` in module ``hierarchicalListResponseFormats``.
 
@@ -289,7 +289,7 @@ For each node, the full path leading to it from the top level can be requested b
 
 ::
 
-    curl http://www.knora.org/v1/hlists/nodeIri?reqtype=node
+    HTTP GET to http://host/v1/hlists/nodeIri?reqtype=node
 
 
 The response presents the full path to the current node. See TypeScript interface ``nodePathResponse`` in module ``hierarchicalListResponseFormats``.

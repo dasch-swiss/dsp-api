@@ -50,7 +50,7 @@ In the following sections, the diverse API operations are described including th
 V1 Path Segment
 ---------------
 
-Every request to API V1 includes ``v1`` as a path segment, e.g. ``http://www.knora.org/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a``.
+Every request to API V1 includes ``v1`` as a path segment, e.g. ``http://host/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a``.
 Accordingly, requests to another version of the API will require another path segment.
 
 Knora API Response Format
@@ -60,6 +60,10 @@ is sent in the HTTP body, encoded as JSON (using UTF-8). In this JSON, an API sp
 
 The JSON formats are formally defined as TypeScript interfaces  (located in ``salsah/src/typescript_interfaces``). Build the HTML documentation of these interfaces by executing ``make jsonformat`` (see ``docs/Readme.md`` for further instructions).
 
+Placeholder ``host`` in sample URLs
+-----------------------------------
+Please note that all the sample URLs used in this documentation contain ``host`` as a placeholder. The placeholder ``host`` has to be
+replaced by the actual hostname (and port) of the server the Knora instance is running on.
 
 Authentication
 --------------

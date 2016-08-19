@@ -33,7 +33,7 @@ The representation of a value can be obtained by making a GET request providing 
 
 ::
 
-    curl http://www.knora.org/v1/values/valueIRI
+    HTTP GET to http://host/v1/values/valueIRI
 
 
 In the response, the value's type and value are returned (see TypeScript interface ``valueResponse`` in module ``valueResponseFormats``).
@@ -50,7 +50,7 @@ Additionally to ``values``, the path segment ``history`` has to be used:
 
 ::
 
-    curl http://www.knora.org/v1/values/history/resourceIRI/propertyTypeIRI/valueIRI
+    HTTP GET to http://host/v1/values/history/resourceIRI/propertyTypeIRI/valueIRI
 
 
 In the response, the value's versions returned (see TypeScript interface ``valueVersionsResponse`` in module ``valueResponseFormats``).
@@ -66,7 +66,7 @@ Each of these has to be URL encoded.
 
 ::
 
-    curl http://www.knora.org/links/sourceObjectIRI/linkingPropertyIRI/targetObjectIRI
+    HTTP GET to http://host/links/sourceObjectIRI/linkingPropertyIRI/targetObjectIRI
 
 
 In the response, information about the link is returned such as a reference count indicating how many links of the specified direction

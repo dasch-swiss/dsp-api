@@ -34,7 +34,7 @@ Also the IRI of the resource the new value belongs has to be provided in the JSO
 
 ::
 
-    curl -X POST ... http://www.knora.org/v1/values
+    HTTP POST to http://host/v1/values
 
 Depending on the type of the new value, one of the following formats (all TypeScript interfaces defined in module ``addValueFormats``) has to be used in order to create a new value:
   - ``addRichtextValueRequest``

@@ -22,7 +22,11 @@ Adding Resources
 ================
 
 In order to create a resource, the HTTP method ``POST`` has to be used.
-The request has to be sent to the Knora server using the ``resources`` path segment.
+The request has to be sent to the Knora server using the ``resources`` path segment:
+
+::
+
+     HTTP POST to http://host/v1/resources
 
 Unlike in the case of GET requests, the request body consists of JSON describing the resource to be created.
 
@@ -85,7 +89,7 @@ The other part contains the file's name, its binaries, and its mime type and has
     file = {'file': (filename, open(filename, 'rb'), "image/jpeg")} # use name "file"
 
     # do a POST request providing both the JSON and the binaries
-    r = requests.post("http://www.knora.org/v1/resources",
+    r = requests.post("http://host/v1/resources",
                       data={'json': json.dumps(resourceParams)}, # use name "json"
                       files=file,
                       auth=('user', 'password'))

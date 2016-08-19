@@ -32,7 +32,7 @@ The request has to be sent to the Knora server using the ``values`` path segment
 
 ::
 
-     curl -X PUT ... http://www.knora.org/values/valueIRI
+     HTTP PUT to http://host/values/valueIRI
 
 Please note that the value IRI has to be URL encoded.
 
@@ -62,7 +62,7 @@ The IRI of the resource whose file value is to be exchanged has to be appended:
 
 ::
 
-     curl -X PUT ... http://www.knora.org/filevalue/resourceIRI
+     HTTP PUT to http://host/filevalue/resourceIRI
 
 Please note that the resource IRI has to be URL encoded.
 
@@ -90,7 +90,7 @@ Here, a HTTP MULTIPART request has to be made simply providing the binaries (wit
 
     resIri = urllib.parse.quote_plus('http://data.knora.org/xy')
 
-    r = requests.put("http://www.knora.org/filevalue/" + resIri,
+    r = requests.put("http://host/filevalue/" + resIri,
                      files=files)
 
 
