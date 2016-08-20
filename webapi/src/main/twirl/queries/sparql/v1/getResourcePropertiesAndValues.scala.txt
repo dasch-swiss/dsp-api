@@ -78,7 +78,7 @@ WHERE {
         }
         UNION
         {
-            @* Get the value's Standoff markup nodes if it has any. *@
+            @* Get the value's standoff markup nodes if it has any. *@
 
             ?resource ?prop ?obj .
             ?obj knora-base:isDeleted false .

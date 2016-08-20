@@ -30,7 +30,7 @@
  * @param resourceClassIri the IRI of the OWL class that the new resource should belong to.
  * @param projectIri the project the new resource should belong to.
  * @param ownerIri the owner of the new resource.
- * @param permissions the permissions (tuples containing permission predicate and group) that the new resource should grant.
+ * @param maybePermissions the literal that should be used as the value of the resource's `knora-base:hasPermissions` predicate.
  * @param whereStatementsForValues statements to be included in the WHERE clause for creating the resource's initial values.
  * @param insertStatementsForValues statements to be included in the INSERT clause for creating the resource's initial values.
  *@
@@ -41,7 +41,7 @@
   label: String,
   projectIri: IRI,
   ownerIri: IRI,
-  permissions: Seq[(IRI, IRI)],
+  maybePermissions: Option[String],
   whereStatementsForValues: String,
   insertStatementsForValues: String)
 
@@ -60,8 +60,14 @@ INSERT {
             rdfs:label ?label ;
 
             @* Insert permissions. *@
-            @for(permission <- permissions) {
-                <@permission._1> <@permission._2> ;
+            @maybePermissions match {
+                case Some(permissions) => {
+
+                    knora-base:hasPermissions "@permissions" ;
+
+                }
+
+                case None => {}
             }
 
             knora-base:creationDate ?currentTime .

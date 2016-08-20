@@ -46,7 +46,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT DISTINCT ?resourceIri ?firstProp ?attachedToUser ?attachedToProject (GROUP_CONCAT(DISTINCT(?permissionAssertion); separator=";") AS ?permissionAssertions)
+SELECT DISTINCT ?resourceIri ?firstProp ?attachedToUser ?attachedToProject ?resourcePermissions
 @if(numberOfProps > 1) {
     (GROUP_CONCAT(?valueString; separator="@separator") AS ?values) (GROUP_CONCAT(?guiOrder; separator=";") AS ?guiOrders) (GROUP_CONCAT(?valueOrder; separator=";") AS ?valueOrders)
 }
@@ -102,12 +102,6 @@ WHERE {
         FILTER(?resourceClass = <@resourceTypeIri>)
     }
 
-    OPTIONAL {
-        ?permission rdfs:subPropertyOf+ knora-base:hasPermission .
-        ?resourceIri ?permission ?group .
-        BIND(CONCAT(STR(?permission), ",", STR(?group)) as ?permissionAssertion)
-    }
-
     @if(numberOfProps > 1) {
         ?resourceIri ?property ?valueObjectIri .
         ?property knora-base:objectClassConstraint knora-base:TextValue .
@@ -131,17 +125,15 @@ WHERE {
 
     }
 
-    OPTIONAL {
-        ?resourceIri knora-base:attachedToUser ?attachedToUser .
-    }
+    ?resourceIri knora-base:attachedToUser ?attachedToUser .
+    ?resourceIri knora-base:attachedToProject ?attachedToProject .
 
     OPTIONAL {
-        ?resourceIri knora-base:attachedToProject ?attachedToProject .
+        ?resourceIri knora-base:hasPermissions ?resourcePermissions
     }
-
 }
 
-GROUP BY ?resourceIri ?firstProp ?attachedToUser ?attachedToProject
+GROUP BY ?resourceIri ?firstProp ?attachedToUser ?attachedToProject ?resourcePermissions
 
 
 LIMIT @limitOfResults

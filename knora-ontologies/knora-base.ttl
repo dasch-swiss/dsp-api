@@ -227,16 +227,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#hasChangeRightsPermission
-
-:hasChangeRightsPermission rdf:type owl:ObjectProperty ;
-
-                           :objectClassConstraint :UserGroup ;
-
-                           rdfs:subPropertyOf :hasDeletePermission .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#hasColor
 
 :hasColor rdf:type owl:ObjectProperty ;
@@ -276,16 +266,6 @@
 			<http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Richtext> ;
 
             rdfs:subPropertyOf :hasValue .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasDeletePermission
-
-:hasDeletePermission rdf:type owl:ObjectProperty ;
-
-                     :objectClassConstraint :UserGroup ;
-
-                     rdfs:subPropertyOf :hasModifyPermission .
 
 
 
@@ -503,82 +483,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#hasModifyPermission
-
-:hasModifyPermission rdf:type owl:ObjectProperty ;
-
-                     :objectClassConstraint :UserGroup ;
-
-                     rdfs:subPropertyOf :hasViewPermission .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasParentListNode
-
-:hasParentListNode rdf:type owl:ObjectProperty ;
-
-                   :subjectClassConstraint :ListNode ;
-
-                   :objectClassConstraint :ListNode ;
-
-                   owl:inverseOf :hasSubListNode .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasPart
-
-:hasPart rdf:type owl:ObjectProperty ;
-
-         rdfs:label "hat Teil"@de ,
-                       "has Part"@en ,
-                       "a Part"@fr ,
-                       "ha Parte"@it ;
-         
-         rdfs:comment "Indicates that another resource is part of this resource"@en ;
-
-         :subjectClassConstraint :Resource ;
-
-         :objectClassConstraint :Resource ;
-
-         rdfs:subPropertyOf :hasLinkTo ;
-
-         owl:inverseOf :isPartOf .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasPartValue
-
-:hasPartValue rdf:type owl:ObjectProperty ;
-
-              :objectClassConstraint :LinkValue ;
-
-              :subjectClassConstraint :Resource ;
-
-              rdfs:subPropertyOf :hasLinkToValue .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasPermission
-
-:hasPermission rdf:type owl:ObjectProperty ;
-
-               :objectClassConstraint :UserGroup .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasProject
-
-:hasProject rdf:type owl:ObjectProperty ;
-
-            rdfs:comment "The given Institution is responsible for the given knoraProject"@en ;
-
-            :subjectClassConstraint :Institution ;
-
-            owl:inverseOf :belongsTo ;
-
-            :objectClassConstraint :knoraProject .
-
-
 
 ###  http://www.knora.org/ontology/knora-base#hasProvider
 
@@ -595,26 +499,6 @@
 
              rdfs:subPropertyOf :hasValue .
 
-
-
-###  http://www.knora.org/ontology/knora-base#hasRegion
-
-:hasRegion rdf:type owl:ObjectProperty ;
-
-           rdfs:comment "Points to a region of the resource"@en ;
-
-           rdfs:label "hat Region"@de ,
-                      "has Region"@en ,
-                      "a Région"@fr ,
-                      "ha Regione"@it ;
-           
-           :objectClassConstraint :Region ;
-
-           :subjectClassConstraint :Representation ;
-
-           rdfs:subPropertyOf :hasLinkTo ;
-
-           owl:inverseOf :isRegionOf .
 
 
 
@@ -659,15 +543,6 @@
 
                         rdfs:subPropertyOf :hasLinkToValue .
 
-
-
-###  http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission
-
-:hasRestrictedViewPermission rdf:type owl:ObjectProperty ;
-
-                             :objectClassConstraint :UserGroup ;
-
-                             rdfs:subPropertyOf :hasPermission .
 
 
 
@@ -724,15 +599,6 @@
 
           :objectClassConstraint :Value .
 
-
-
-###  http://www.knora.org/ontology/knora-base#hasViewPermission
-
-:hasViewPermission rdf:type owl:ObjectProperty ;
-
-                   :objectClassConstraint :UserGroup ;
-
-                   rdfs:subPropertyOf :hasRestrictedViewPermission .
 
 
 
@@ -926,6 +792,18 @@
 #################################################################
 
 
+
+
+###  http://www.knora.org/ontology/knora-base#hasPermissions
+
+:hasPermissions rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf :systemProperty ;
+
+                :objectDatatypeConstraint xsd:string .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#address
 
 :address rdf:type owl:DatatypeProperty ;
@@ -972,9 +850,7 @@
 
             rdfs:subPropertyOf :systemProperty ;
 
-            rdfs:comment "Indicates when a resource was deleted"@en ;
-
-            :subjectClassConstraint :Resource ;
+            rdfs:comment "Indicates when a resource or value was deleted"@en ;
 
             :objectDatatypeConstraint xsd:dateTimeStamp .
 
@@ -1438,6 +1314,18 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#deleteComment
+
+:deleteComment rdf:type owl:DatatypeProperty ;
+
+              rdfs:comment "A comment explaining why a resource or value was marked as deleted"@en ;
+
+              rdfs:subPropertyOf :systemProperty ;
+
+              :objectDatatypeConstraint xsd:string .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#valueCreationDate
 
 :valueCreationDate rdf:type owl:DatatypeProperty ;
@@ -1683,6 +1571,8 @@
 
                 rdfs:subPropertyOf :valueHas ;
 
+                rdfs:comment "A string representation of a value, required for full-text searches and search results."@en ;
+
                 :subjectClassConstraint :Value ;
 
                 :objectDatatypeConstraint xsd:string .
@@ -1800,10 +1690,6 @@
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :valueHasColor ;
                               owl:cardinality "1"^^xsd:nonNegativeInteger
-                            ] ,
-                            [ rdf:type owl:Restriction ;
-                              owl:onProperty :valueHasString ;
-                              owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ;
 
             rdfs:comment "Represents a color in HTML format, e.g. \"#33eeff\""@en .
@@ -1866,10 +1752,6 @@
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasStartJDC ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasString ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ;
 
@@ -1977,10 +1859,6 @@
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :valueHasDecimal ;
                               owl:cardinality "1"^^xsd:nonNegativeInteger
-                            ] ,
-                            [ rdf:type owl:Restriction ;
-                              owl:onProperty :valueHasString ;
-                              owl:cardinality "1"^^xsd:nonNegativeInteger
                             ] ;
 
             rdfs:comment "Represents an arbitrary-precision decimal value"@en .
@@ -2008,10 +1886,6 @@
               rdfs:subClassOf :Value ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :valueHasGeonameCode ;
-                                owl:cardinality "1"^^xsd:nonNegativeInteger
-                              ] ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :valueHasString ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] .
 
@@ -2058,10 +1932,6 @@
           rdfs:subClassOf :Value ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :valueHasInteger ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
-                          ] ,
-                          [ rdf:type owl:Restriction ;
-                            owl:onProperty :valueHasString ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ;
 
@@ -2140,11 +2010,7 @@
 
          :resourceIcon "link.gif"^^xsd:string ;
 
-		 :hasDefaultViewPermission :KnownUser ;
-
-      	 :hasDefaultModifyPermission :ProjectMember ;
-
-      	 :hasDefaultDeletePermission :Owner ;
+         :hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember" ;
 
          rdfs:comment "Verknüpfung mehrerer Resourcen"@de ,
                       "Represents a generic link object"@en .
@@ -2214,10 +2080,6 @@
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasListNode ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasString ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
@@ -2309,11 +2171,7 @@
 
         :resourceIcon "region.gif"^^xsd:string ;
 
-		:hasDefaultViewPermission :KnownUser ;
-
-      	:hasDefaultModifyPermission :ProjectMember ;
-
-      	:hasDefaultDeletePermission :Owner ;
+        :hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember" ;
 
         rdfs:comment "Represents a geometric region of a resource. The geometry is represented currently as JSON string."@en .
 
@@ -2363,6 +2221,10 @@
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
+                            owl:onProperty :hasPermissions ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
                             owl:onProperty :creationDate ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
@@ -2376,6 +2238,10 @@
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :deleteDate ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :deleteComment ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
 
@@ -2523,10 +2389,6 @@
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasStandoff ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :valueHasString ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
 
@@ -2603,7 +2465,15 @@
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
+                         owl:onProperty :hasPermissions ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
                          owl:onProperty :valueHasOrder ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :valueHasComment ;
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
@@ -2611,8 +2481,20 @@
                          owl:cardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
+                         owl:onProperty :deleteDate ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :deleteComment ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
                          owl:onProperty :previousValue ;
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :valueHasString ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger
                        ] ;
        
        rdfs:comment "The base class of classes representing Knora values"@en .
@@ -2722,3 +2604,21 @@
                       owl:NamedIndividual ;
              
              <http://xmlns.com/foaf/0.1/name> "unknown user" .
+
+
+
+###  http://www.knora.org/ontology/knora-base#SystemUser
+
+:SystemUser rdf:type :User ;
+
+                     :userid "system" ;
+
+                     <http://xmlns.com/foaf/0.1/givenName> "Knora" ;
+
+                     <http://xmlns.com/foaf/0.1/familyName> "System" ;
+
+                     :password "-" ;
+
+                     :email "-" ;
+
+                     :preferredLanguage "en" .

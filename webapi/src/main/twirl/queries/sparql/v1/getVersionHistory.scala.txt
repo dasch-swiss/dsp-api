@@ -39,7 +39,7 @@ prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?value ?valueCreationDate ?previousValue ?valueOwner ?project (GROUP_CONCAT(?permissionAssertion; separator=";") AS ?permissionAssertions)
+SELECT ?value ?valueCreationDate ?previousValue ?isLinkValue ?linkValuePredicate ?valueOwner ?project ?valuePermissions
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -67,6 +67,12 @@ WHERE {
     }
 
     OPTIONAL {
+        ?value rdf:type knora-base:LinkValue .
+        ?value rdf:predicate ?linkValuePredicate .
+        BIND(true as ?isLinkValue)
+    }
+
+    OPTIONAL {
         ?value knora-base:attachedToUser ?valueOwner .
     }
 
@@ -77,9 +83,6 @@ WHERE {
     BIND(COALESCE(?valueProject, ?resourceProject) AS ?project)
 
     OPTIONAL {
-        ?permission rdfs:subPropertyOf+ knora-base:hasPermission .
-        ?value ?permission ?group .
-        BIND(CONCAT(STR(?permission), ",", STR(?group)) as ?permissionAssertion)
+        ?value knora-base:hasPermissions ?valuePermissions .
     }
 }
-GROUP BY ?value ?valueCreationDate ?previousValue ?valueOwner ?project

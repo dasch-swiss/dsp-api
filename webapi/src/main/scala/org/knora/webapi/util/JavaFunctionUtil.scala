@@ -34,7 +34,7 @@ object JavaFunctionUtil {
       * @return a [[BiFunction]] that calls the Scala function.
       */
     def biFunction[A, B, C](f: (A, B) => C): BiFunction[A, B, C] =
-        new BiFunction[A, B, C] {
-            override def apply(a: A, b: B) = f(a, b)
-        }
+    new BiFunction[A, B, C] {
+        override def apply(a: A, b: B) = f(a, b)
+    }
 }

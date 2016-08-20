@@ -2,8 +2,8 @@ package org.knora.webapi.util
 
 import org.apache.commons.lang3.StringEscapeUtils
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LiteralValueType, ResourceCreateValueObjectResponseV1, ResourceCreateValueResponseV1}
+import org.knora.webapi.messages.v1.responder.valuemessages._
 
 import scala.reflect.runtime.{universe => ru}
 
@@ -16,6 +16,7 @@ object MessageUtil {
       * for writing tests containing hard-coded Akka messages. It works with case classes, collections ([[Seq]], [[Set]],
       * and [[Map]]), [[Option]], enumerations (as long as the enumeration value's `toString` representation is the same
       * as its identifier), and primitive types. It doesn't work with classes defined inside methods.
+      *
       * @param obj the object to convert.
       * @return a string that can be pasted into Scala source code to construct the object.
       */
@@ -88,9 +89,10 @@ object MessageUtil {
       * Converts a [[CreateValueResponseV1]] returned by the values responder on value creation
       * to the expected format for the resources responder [[ResourceCreateValueResponseV1]], which describes a value
       * added to a new resource.
-      * @param resourceIri the Iri of the created resource.
-      * @param ownerIri the owner of the resource.
-      * @param propertyIri the property the valueResponse belongs to.
+      *
+      * @param resourceIri   the Iri of the created resource.
+      * @param ownerIri      the owner of the resource.
+      * @param propertyIri   the property the valueResponse belongs to.
       * @param valueResponse the value that has been attached to the resource.
       * @return a [[ResourceCreateValueResponseV1]] representing the created value.
       */
