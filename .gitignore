@@ -27,3 +27,4 @@ target/
 *.tdo
 *.toc
 .sbtrc
+webapi/_fuseki/run
