@@ -97,16 +97,16 @@ class PermissionsResponderV1 extends ResponderV1 {
     /**
       * Gets a single administrative permission identified by it's IRI.
       *
-      * @param administrativePermissionIri the IRI of the administrative permission.
+      * @param administrativePermissionIRI the IRI of the administrative permission.
       *
       * @return a single [[AdministrativePermissionV1]] object.
       */
-    private def getAdministrativePermissionV1(administrativePermissionIri: IRI): Future[Option[AdministrativePermissionV1]] = {
+    private def getAdministrativePermissionV1(administrativePermissionIRI: IRI): Future[Option[AdministrativePermissionV1]] = {
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getAdministrativePermission(
                 triplestore = settings.triplestoreType,
-                administrativePermissionIri = administrativePermissionIri
+                administrativePermissionIri = administrativePermissionIRI
             ).toString())
             //_ = log.debug(s"getAdministrativePermissionV1 - query: $sparqlQueryString")
 
@@ -121,8 +121,8 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             _ = log.debug(s"getAdministrativePermissionV1 - groupedResult: ${MessageUtil.toSource(groupedPermissionsQueryResponse)}")
 
-            hasPermissions = if (groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).get.head.nonEmpty) {
-                val str = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).get.head
+            hasPermissions = if (groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasPermissions, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIRI has no permissions attached")).head.nonEmpty) {
+                val str = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasPermissions, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIRI has no permissions attached")).head
                 val res = str.split("|")
                 println(res.toList)
                 res
@@ -132,8 +132,8 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             administrativePermission = if (groupedPermissionsQueryResponse.nonEmpty) {
                 Some(AdministrativePermissionV1 (
-                    forProject = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProject).get.head,
-                    forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).get.head,
+                    forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIRI has no project attached")).head,
+                    forGroup = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForGroup, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIRI has no group attached")).head,
                     hasPermissions = hasPermissions
                 ))
             } else {
@@ -209,10 +209,10 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             // TODO: Handle IRI not found, i.e. should return Option
             defaultObjectAccessPermission = DefaultObjectAccessPermissionV1 (
-                forProject = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProject).get.head,
-                forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).get.head,
-                forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForResourceClass).get.head,
-                forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProperty).get.head,
+                forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission $defaultObjectAccessPermissionIri has no project")).head,
+                forGroup = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForGroup, throw InconsistentTriplestoreDataException(s"Permission $defaultObjectAccessPermissionIri has no group")).head,
+                forResourceClass = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForResourceClass, throw InconsistentTriplestoreDataException(s"Permission $defaultObjectAccessPermissionIri has no resource class")).head,
+                forProperty = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProperty, throw InconsistentTriplestoreDataException(s"Permission $defaultObjectAccessPermissionIri has no property")).head,
                 hasDefaultChangeRightsPermission = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasDefaultChangeRightsPermission, Vector.empty[IRI]),
                 hasDefaultDeletePermission = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasDefaultDeletePermission, Vector.empty[IRI]),
                 hasDefaultModifyPermission = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasDefaultModifyPermission, Vector.empty[IRI]),

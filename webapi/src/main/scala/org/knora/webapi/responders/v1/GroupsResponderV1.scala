@@ -79,13 +79,13 @@ class GroupsResponderV1 extends ResponderV1 {
             }
 
             groups = groupsWithProperties.map {
-                case (projIri: String, propsMap: Map[String, String]) =>
+                case (groupIri: IRI, propsMap: Map[String, String]) =>
 
                     GroupInfoV1(
-                        id = projIri,
-                        name = propsMap.getOrElse(OntologyConstants.Foaf.Name, ""),
+                        id = groupIri,
+                        name = propsMap.getOrElse(OntologyConstants.Foaf.Name, throw InconsistentTriplestoreDataException(s"Group $groupIri has no name attached")),
                         description = propsMap.get(OntologyConstants.KnoraBase.Description),
-                        belongsToProject = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject).get
+                        belongsToProject = propsMap.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached"))
                     )
             }.toVector
         } yield GroupsResponseV1(
@@ -100,26 +100,26 @@ class GroupsResponderV1 extends ResponderV1 {
     /**
       * Gets the group with the given group Iri and returns the information as a [[GroupInfoResponseV1]].
       *
-      * @param groupIri the Iri of the group requested.
+      * @param groupIRI the Iri of the group requested.
       * @param infoType type request: either short or full.
       * @param userProfile the profile of user that is making the request.
       * @return information about the group as a [[GroupInfoResponseV1]].
       */
-    private def getGroupInfoByIRIGetRequest(groupIri: IRI, infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[GroupInfoResponseV1] = {
+    private def getGroupInfoByIRIGetRequest(groupIRI: IRI, infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[GroupInfoResponseV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByIri(
                 triplestore = settings.triplestoreType,
-                groupIri = groupIri
+                groupIri = groupIRI
             ).toString())
             groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             // check group response
             _ = if (groupResponse.results.bindings.isEmpty) {
-                throw NotFoundException(s"For the given group iri '$groupIri' no information was found")
+                throw NotFoundException(s"For the given group iri '$groupIRI' no information was found")
             }
 
             // get group info
-            groupInfo = createGroupInfoV1FromGroupResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIri, infoType = infoType, userProfile)
+            groupInfo = createGroupInfoV1FromGroupResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIRI, infoType = infoType, userProfile)
 
         } yield GroupInfoResponseV1(
             group_info = groupInfo,
@@ -133,17 +133,18 @@ class GroupsResponderV1 extends ResponderV1 {
     /**
       * Gets the group with the given name and returns the information as a [[GroupInfoResponseV1]].
       *
-      * @param name the name of the project requested.
+      * @param projectIRI the IRI of the project, the group is part of.
+      * @param groupName the name of the group requested.
       * @param infoType type request: either short or full.
       * @param userProfile the profile of user that is making the request.
-      * @return information about the project as a [[GroupInfoResponseV1]].
+      * @return information about the group as a [[GroupInfoResponseV1]].
       */
-    private def getGroupInfoByNameGetRequest(projectIri: IRI, name: String, infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
+    private def getGroupInfoByNameGetRequest(projectIRI: IRI, groupName: String, infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByName(
                 triplestore = settings.triplestoreType,
-                name = SparqlUtil.any2SparqlLiteral(name),
-                projectIri = projectIri
+                name = SparqlUtil.any2SparqlLiteral(groupName),
+                projectIri = projectIRI
             ).toString())
             _ = log.debug(s"getGroupInfoByNameGetRequest - getGroupByName: $sparqlQuery")
             groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
@@ -154,11 +155,16 @@ class GroupsResponderV1 extends ResponderV1 {
             groupIri: IRI = if (groupResponse.results.bindings.nonEmpty) {
                 groupResponse.results.bindings.head.rowMap("s")
             } else {
-                throw NotFoundException(s"For the given group name '$name' no information was found")
+                throw NotFoundException(s"For the given group name '$groupName' no information was found")
             }
 
             // get group info
-            groupInfo = createGroupInfoV1FromGroupResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIri, infoType = infoType, userProfile)
+            groupInfo = createGroupInfoV1FromGroupResponse(
+                groupResponse = groupResponse.results.bindings,
+                groupIri = groupIri,
+                infoType = infoType,
+                userProfile
+            )
 
         } yield GroupInfoResponseV1(
             group_info = groupInfo,
@@ -195,13 +201,13 @@ class GroupsResponderV1 extends ResponderV1 {
             }
 
             /* generate a new random group IRI */
-            groupIri = knoraIriUtil.makeRandomGroupIri
+            groupIRI = knoraIriUtil.makeRandomGroupIri
 
             /* create the group */
             createNewGroupSparqlString = queries.sparql.v1.txt.createNewGroup(
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
-                groupIri = groupIri,
+                groupIri = groupIRI,
                 groupClassIri = OntologyConstants.KnoraBase.Group,
                 name = SparqlUtil.any2SparqlLiteral(newGroupInfo.name),
                 description = SparqlUtil.any2SparqlLiteral(newGroupInfo.description.getOrElse("")),
@@ -215,17 +221,22 @@ class GroupsResponderV1 extends ResponderV1 {
             /* Verify that the group was created */
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByIri(
                 triplestore = settings.triplestoreType,
-                groupIri = groupIri
+                groupIri = groupIRI
             ).toString())
             groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             // check group response
             _ = if (groupResponse.results.bindings.isEmpty) {
-                throw NotFoundException(s"User $groupIri was not created. Please report this as a possible bug.")
+                throw NotFoundException(s"User $groupIRI was not created. Please report this as a possible bug.")
             }
 
             // create group info from group response
-            groupInfo = createGroupInfoV1FromGroupResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIri, infoType = GroupInfoType.FULL, Some(userProfile))
+            groupInfo = createGroupInfoV1FromGroupResponse(
+                groupResponse = groupResponse.results.bindings,
+                groupIri = groupIRI,
+                infoType = GroupInfoType.FULL,
+                Some(userProfile)
+            )
 
             /* create the group operation response */
             groupOperationResponseV1 = GroupOperationResponseV1(groupInfo, userProfile.userData)
@@ -270,9 +281,9 @@ class GroupsResponderV1 extends ResponderV1 {
             case GroupInfoType.FULL =>
                 GroupInfoV1(
                     id = groupIri,
-                    name = groupProperties.get(OntologyConstants.KnoraBase.GroupName).get,
+                    name = groupProperties.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no groupName attached")),
                     description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription),
-                    belongsToProject = groupProperties.get(OntologyConstants.KnoraBase.BelongsToProject).get,
+                    belongsToProject = groupProperties.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")),
                     isActiveGroup = groupProperties.get(OntologyConstants.KnoraBase.IsActiveGroup).map(_.toBoolean),
                     hasSelfJoinEnabled = groupProperties.get(OntologyConstants.KnoraBase.HasSelfJoinEnabled).map(_.toBoolean),
                     hasPermissions = Vector.empty[GroupPermissionV1]
@@ -281,9 +292,9 @@ class GroupsResponderV1 extends ResponderV1 {
             case GroupInfoType.SHORT | _ =>
                 GroupInfoV1(
                     id = groupIri,
-                    name = groupProperties.get(OntologyConstants.KnoraBase.GroupName).get,
+                    name = groupProperties.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no group attached")),
                     description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription),
-                    belongsToProject = groupProperties.get(OntologyConstants.KnoraBase.BelongsToProject).get
+                    belongsToProject = groupProperties.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached"))
                 )
         }
     }
