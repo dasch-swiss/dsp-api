@@ -46,19 +46,20 @@
   value: UpdateValueV1,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   maybeComment: Option[String],
-  permissionRelevantAssertions: Seq[(IRI, IRI)])
+  valueOwner: IRI,
+  valueProject: IRI,
+  maybeValuePermissions: Option[String])
 
         # Value @valueIndex
         # Property: @propertyIri
 
         @* Construct the value. *@
         ?newValue@valueIndex rdf:type ?valueType@valueIndex ;
-            knora-base:isDeleted false .
+            knora-base:isDeleted false  ;
+            knora-base:valueHasString """@value.toString""" .
 
         @value match {
             case textValue: TextValueV1 => {
-
-                ?newValue@valueIndex knora-base:valueHasString """@textValue.utf8str""" .
 
                 @* Create a Standoff node for each StandoffPositionV1. *@
 
@@ -98,15 +99,25 @@
 
             case intValue: IntegerValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasInteger @intValue.ival ;
-                                     knora-base:valueHasString """@intValue.ival.toString""" .
+                ?newValue@valueIndex knora-base:valueHasInteger @intValue.ival .
 
             }
 
-            case floatValue: FloatValueV1 => {
+            case decimalValue: DecimalValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasFloat @floatValue.fval ;
-                                     knora-base:valueHasString """@floatValue.fval.toString""" .
+                ?newValue@valueIndex knora-base:valueHasDecimal "@decimalValue.dval"^^xsd:decimal .
+
+            }
+
+            case booleanValue: BooleanValueV1 => {
+
+                ?newValue@valueIndex knora-base:valueHasBoolean @booleanValue.bval .
+
+            }
+
+            case uriValue: UriValueV1 => {
+
+                ?newValue@valueIndex knora-base:valueHasUri """@uriValue.uri""" .
 
             }
 
@@ -116,22 +127,19 @@
                                      knora-base:valueHasEndJDC @jdcValue.dateval2 ;
                                      knora-base:valueHasStartPrecision "@jdcValue.dateprecision1" ;
                                      knora-base:valueHasEndPrecision "@jdcValue.dateprecision2" ;
-                                     knora-base:valueHasCalendar "@jdcValue.calendar" ;
-                                     knora-base:valueHasString """@jdcValue.toString""" .
+                                     knora-base:valueHasCalendar "@jdcValue.calendar" .
 
             }
 
             case colorValue: ColorValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasColor """@colorValue.color""" ;
-                                     knora-base:valueHasString """@colorValue.toString""" .
+                ?newValue@valueIndex knora-base:valueHasColor """@colorValue.color""" .
 
             }
 
             case geometryValue: GeomValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasGeometry """@geometryValue.geom""" ;
-                                     knora-base:valueHasString """@geometryValue.toString""" .
+                ?newValue@valueIndex knora-base:valueHasGeometry """@geometryValue.geom""" .
 
             }
 
@@ -146,16 +154,27 @@
                                      knora-base:valueHasQname """@stillImageFileValue.qualityName""" .
 
                 @if(stillImageFileValue.isPreview) {
-                    ?newValue@valueIndex knora-base:valueIsPreview true .
+                    ?newValue@valueIndex knora-base:isPreview true .
                 }
 
-                ?newValue@valueIndex knora-base:valueHasString """@stillImageFileValue.toString""" .
             }
 
             case listValue: HierarchicalListValueV1 => {
 
-                ?newValue knora-base:valueHasListNode <@listValue.hierarchicalListIri> .
-                ?newValue knora-base:valueHasString """@listValue.toString""" .
+                ?newValue@valueIndex knora-base:valueHasListNode <@listValue.hierarchicalListIri> .
+
+            }
+
+            case intervalValue: IntervalValueV1 => {
+
+                ?newValue@valueIndex knora-base:valueHasIntervalStart @intervalValue.timeval1 ;
+                                     knora-base:valueHasIntervalEnd @intervalValue.timeval2 .
+
+            }
+
+            case geonameValue: GeonameValueV1 => {
+
+                ?newValue@valueIndex knora-base:valueHasGeonameCode """@geonameValue.geonameCode""" .
 
             }
 
@@ -175,9 +194,18 @@
             case None => {}
         }
 
-        @* Insert the value's permission-relevant assertions (its owner, project, and permissions). *@
-        @for(assertion <- permissionRelevantAssertions) {
-            ?newValue@valueIndex <@assertion._1> <@assertion._2> .
+        ?newValue@valueIndex knora-base:attachedToUser <@valueOwner> ;
+            knora-base:attachedToProject <@valueProject> .
+
+        @maybeValuePermissions match {
+
+            case Some(valuePermissions) => {
+
+                ?newValue@valueIndex knora-base:hasPermissions "@valuePermissions" .
+
+            }
+
+            case None => {}
         }
 
         ?newValue@valueIndex knora-base:valueHasOrder ?nextOrder@valueIndex ;

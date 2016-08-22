@@ -51,6 +51,7 @@ import java.util.Base64
 trait Authenticator {
 
     /* Import companion object */
+
     import Authenticator._
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,13 +63,17 @@ trait Authenticator {
       * with the generated session id for the client to save.
       *
       * @param requestContext a [[RequestContext]] containing the http request
-      * @param system the current [[ActorSystem]]
+      * @param system         the current [[ActorSystem]]
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
       *         the generated session id.
       */
     def doLogin(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
+
         extractCredentialsAndAuthenticate(requestContext, true) match {
             case Success(sId) =>
+
+                val userProfile = getUserProfileV1(requestContext)
+
                 HttpResponse(
                     headers = List(HttpHeaders.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sId))),
                     status = StatusCodes.OK,
@@ -77,7 +82,8 @@ trait Authenticator {
                         JsObject(
                             "status" -> JsNumber(0),
                             "message" -> JsString("credentials are OK"),
-                            "sid" -> JsString(sId)
+                            "sid" -> JsString(sId),
+                            "userdata" -> userProfile.userData.toJsValue
                         ).compactPrint
                     )
                 )
@@ -115,7 +121,8 @@ trait Authenticator {
                         ContentTypes.`application/json`,
                         JsObject(
                             "status" -> JsNumber(0),
-                            "message" -> JsString("session credentials are OK")
+                            "message" -> JsString("session credentials are OK"),
+                            "userdata" -> userProfile.userData.toJsValue
                         ).compactPrint
                     )
                 )
@@ -142,21 +149,24 @@ trait Authenticator {
       * generated.
       *
       * @param requestContext a [[RequestContext]] containing the http request
-      * @param system the current [[ActorSystem]]
+      * @param system         the current [[ActorSystem]]
       * @return a [[RequestContext]]
       */
     def doAuthenticate(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
 
         extractCredentialsAndAuthenticate(requestContext, false) match {
             case Success(_) => {
-                log.debug(s"extractCredentialsAndAuthenticate returned Success")
+
+                val userProfile = getUserProfileV1(requestContext)
+
                 HttpResponse(
                     status = StatusCodes.OK,
                     entity = HttpEntity(
                         ContentTypes.`application/json`,
                         JsObject(
                             "status" -> JsNumber(0),
-                            "message" -> JsString("credentials are OK")
+                            "message" -> JsString("credentials are OK"),
+                            "userdata" -> userProfile.userData.toJsValue
                         ).compactPrint
                     )
                 )
@@ -178,7 +188,6 @@ trait Authenticator {
     }
 
 
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // LOGOUT ENTRY POINT
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,7 +197,7 @@ trait Authenticator {
       * cache.
       *
       * @param requestContext a [[RequestContext]] containing the http request
-      * @param system the current [[ActorSystem]]
+      * @param system         the current [[ActorSystem]]
       * @return a [[HttpResponse]]
       */
     def doLogout(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
@@ -224,7 +233,7 @@ trait Authenticator {
       * not correct, then the corresponding error is returned.
       *
       * @param requestContext a [[RequestContext]] containing the http request
-      * @param system the current [[ActorSystem]]
+      * @param system         the current [[ActorSystem]]
       * @return a [[UserProfileV1]]
       */
     def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem): UserProfileV1 = {
@@ -278,7 +287,7 @@ trait Authenticator {
   *
   * [1] https://groups.google.com/forum/#!topic/scalatest-users/FeaO__f1dN4
   * [2] http://doc.scalatest.org/2.2.6/index.html#org.scalatest.PrivateMethodTester
-  */
+  **/
 object Authenticator {
 
     val INVALID_CREDENTIALS_USERNAME_OR_PASSWORD = "Invalid username or password"
@@ -297,8 +306,8 @@ object Authenticator {
       * Tries to extract and then authenticate the credentials.
       *
       * @param requestContext a [[RequestContext]] containing the http request
-      * @param session a flag if set true then the creation of the session id and caching of the user profile will be skipped
-      * @param system the current [[ActorSystem]]
+      * @param session        a flag if set true then the creation of the session id and caching of the user profile will be skipped
+      * @param system         the current [[ActorSystem]]
       * @return [[ Try[String] ]] containing the session id if successful, which means that the credentials could be
       *         extracted and authenticated. In the case where the credentials could not be extracted or could be
       *         extracted but not authenticated, a corresponding exception is thrown.
@@ -328,8 +337,8 @@ object Authenticator {
       *
       * @param username the username of the user
       * @param password the password of th user
-      * @param session a [[Boolean]] if set true then a session id will be created and the user profile cached
-      * @param system the current [[ActorSystem]]
+      * @param session  a [[Boolean]] if set true then a session id will be created and the user profile cached
+      * @param system   the current [[ActorSystem]]
       * @return a [[Try[String]] which is the session id under which the profile is stored if authentication was successful.
       */
     private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem): Try[String] = {
@@ -466,9 +475,9 @@ object Authenticator {
     /**
       * Get a user profile with the specific IRI from the triple store
       *
-      * @param iri the IRI of the user to be queried
-      * @param system the current akka actor system
-      * @param timeout the timeout of the query
+      * @param iri              the IRI of the user to be queried
+      * @param system           the current akka actor system
+      * @param timeout          the timeout of the query
       * @param executionContext the current execution context
       * @return a [[Option(UserProfileV1)]]
       */
@@ -498,9 +507,9 @@ object Authenticator {
     /**
       * Tries to get a [[UserProfileV1]] from the triple store matching the username.
       *
-      * @param username the username of the user to be queried
-      * @param system the current akka actor system
-      * @param timeout the timeout of the query
+      * @param username         the username of the user to be queried
+      * @param system           the current akka actor system
+      * @param timeout          the timeout of the query
       * @param executionContext the current execution context
       * @return a [[Success(UserProfileV1)]]
       */

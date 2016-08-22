@@ -27,13 +27,13 @@
 <http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology .
 
 #
-## "Forward imports as knora-base.ttl is loaded after this file"
+## "Forward imports" as 'knora-base.ttl' and 'knora-base-admin.ttl' are loaded after this file.
 #
 
 :systemProperty rdf:type rdf:Property .
 :knoraProject rdf:type owl:Class .
 :UserGroup rdf:type owl:Class .
-
+:projectBasepath rdf:type owl:DatatypeProperty .
 
 
 
@@ -134,7 +134,10 @@
 
 :AllProjects rdf:type :knoraProject ;
 
-             rdfs:comment "A built-in project representing all projects."@en .
+             rdfs:comment "A built-in project representing all projects."@en ;
+
+             :projectBasepath "-"^^xsd:string .
+
 
 
 

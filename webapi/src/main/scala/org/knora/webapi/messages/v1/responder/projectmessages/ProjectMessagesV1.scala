@@ -138,7 +138,7 @@ case class ProjectsResponseV1(projects: Seq[ProjectInfoV1], userdata: Option[Use
   * Represents the Knora API v1 JSON response to a request for information about a single project.
   *
   * @param project_info all information about the project.
-  * @param userdata information about the user that made the request.
+  * @param userdata     information about the user that made the request.
   */
 case class ProjectInfoResponseV1(project_info: ProjectInfoV1, userdata: Option[UserDataV1]) extends KnoraResponseV1 {
     def toJsValue = ProjectV1JsonProtocol.projectInfoResponseV1Format.write(this)

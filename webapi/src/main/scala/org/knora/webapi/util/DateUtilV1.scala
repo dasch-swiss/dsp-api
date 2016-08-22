@@ -33,14 +33,16 @@ object DateUtilV1 {
 
     /**
       * Represents a date with a specified precision as a range of possible dates.
-      * @param start the earliest possible value for the date.
-      * @param end the latest possible value for the date.
+      *
+      * @param start     the earliest possible value for the date.
+      * @param end       the latest possible value for the date.
       * @param precision the precision that was used to calculate the date range.
       */
     case class DateRange(start: GregorianCalendar, end: GregorianCalendar, precision: KnoraPrecisionV1.Value)
 
     /**
       * Converts a [[DateValueV1]] to a [[JulianDayCountValueV1]].
+      *
       * @param dateValueV1 the [[DateValueV1]] to be converted.
       * @return a [[JulianDayCountValueV1]].
       */
@@ -60,6 +62,7 @@ object DateUtilV1 {
 
     /**
       * Converts a [[JulianDayCountValueV1]] to a [[DateValueV1]].
+      *
       * @param julianDayCountValueV1 the [[JulianDayCountValueV1]] to be converted.
       * @return a [[DateValueV1]].
       */
@@ -83,7 +86,7 @@ object DateUtilV1 {
       * YYYY-MM:     (YYYY-MM-01, YYYY-MM-LAST-DAY-OF-MONTH) month precision
       * YYYY-MM-DD:  (YYYY-MM-DD, YYYY-MM-DD) day precision
       *
-      * @param dateString A string representation of the given date conforming to the expected format.
+      * @param dateString   A string representation of the given date conforming to the expected format.
       * @param calendarType a [[KnoraCalendarV1.Value]] specifying the calendar.
       * @return A tuple containing two calendar dates (interval) and a precision.
       */
@@ -132,9 +135,10 @@ object DateUtilV1 {
 
     /**
       * Converts a Julian Day Count to a string in `YYYY[-MM[-DD] ]` format.
-      * @param julianDay a Julian Day Count.
+      *
+      * @param julianDay    a Julian Day Count.
       * @param calendarType the type of calendar to be used.
-      * @param precision the desired precision of the resulting string.
+      * @param precision    the desired precision of the resulting string.
       * @return a string in `YYYY[-MM[-DD] ]` format.
       */
     def julianDay2DateString(julianDay: Int, calendarType: KnoraCalendarV1.Value, precision: KnoraPrecisionV1.Value): String = {
@@ -172,7 +176,8 @@ object DateUtilV1 {
 
     /**
       * Converts a Julian Day Count to a [[GregorianCalendar]].
-      * @param julianDay a Julian Day Count.
+      *
+      * @param julianDay    a Julian Day Count.
       * @param calendarType the type of calendar to be used to configure the [[GregorianCalendar]].
       * @return a [[GregorianCalendar]].
       */

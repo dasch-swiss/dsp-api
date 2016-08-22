@@ -20,15 +20,13 @@
 
 package org.knora.webapi.responders.v1
 
-import java.net.URLEncoder
-
 import akka.actor.ActorSelection
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{CheckSubClassRequestV1, CheckSubClassResponseV1}
-import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
@@ -55,7 +53,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     def makeSipiImagePreviewGetUrlFromFilename(filename: String): String = {
-        s"${settings.sipiIIIFGetUrl}/${filename}/full/full/0/default.jpg"
+        s"${settings.sipiIIIFGetUrl}/$filename/full/full/0/default.jpg"
     }
 
     /**
@@ -128,7 +126,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * This method requires the Iri segment before the last slash to be a unique identifier for all the ontologies used with Knora..
       *
       * @param resourceClassIri the Iri of the resource class in question.
-      * @param iconsSrc the name of the icon file.
+      * @param iconsSrc         the name of the icon file.
       */
     def makeResourceClassIconURL(resourceClassIri: IRI, iconsSrc: String): IRI = {
         // get ontology name, e.g. "knora-base" from "http://www.knora.org/ontology/knora-base#Region"
@@ -195,10 +193,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     /**
       * Checks that a value type is valid for the `knora-base:objectClassConstraint` of a property.
       *
-      * @param propertyIri the IRI of the property.
-      * @param valueType the IRI of the value type.
+      * @param propertyIri                   the IRI of the property.
+      * @param valueType                     the IRI of the value type.
       * @param propertyObjectClassConstraint the IRI of the property's `knora-base:objectClassConstraint`.
-      * @param responderManager a reference to the Knora API Server responder manager.
+      * @param responderManager              a reference to the Knora API Server responder manager.
       * @return A future containing Unit on success, or a failed future if the value type is not valid for the property's range.
       */
     def checkValueTypeForPropertyObjectClassConstraint(propertyIri: IRI,
@@ -320,13 +318,15 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     private val valueFunctions: Map[IRI, (ValueProps) => ApiValueV1] = new ErrorHandlingMap(Map(
         OntologyConstants.KnoraBase.TextValue -> makeTextValue,
         OntologyConstants.KnoraBase.IntValue -> makeIntValue,
-        OntologyConstants.KnoraBase.FloatValue -> makeFloatValue,
+        OntologyConstants.KnoraBase.DecimalValue -> makeDecimalValue,
+        OntologyConstants.KnoraBase.BooleanValue -> makeBooleanValue,
+        OntologyConstants.KnoraBase.UriValue -> makeUriValue,
         OntologyConstants.KnoraBase.DateValue -> makeDateValue,
         OntologyConstants.KnoraBase.ColorValue -> makeColorValue,
         OntologyConstants.KnoraBase.GeomValue -> makeGeomValue,
+        OntologyConstants.KnoraBase.GeonameValue -> makeGeonameValue,
         OntologyConstants.KnoraBase.ListValue -> makeListValue,
         OntologyConstants.KnoraBase.IntervalValue -> makeIntervalValue,
-        OntologyConstants.KnoraBase.TimeValue -> makeTimeValue,
         OntologyConstants.KnoraBase.StillImageFileValue -> makeStillImageValue,
         OntologyConstants.KnoraBase.LinkValue -> makeLinkValue
     ), { key: IRI => s"Unknown value type: $key" })
@@ -344,15 +344,39 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     /**
-      * Converts a [[ValueProps]] into a [[FloatValueV1]].
+      * Converts a [[ValueProps]] into a [[DecimalValueV1]].
       *
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[FloatValueV1]].
+      * @return a [[DecimalValueV1]].
       */
-    private def makeFloatValue(valueProps: ValueProps): ApiValueV1 = {
+    private def makeDecimalValue(valueProps: ValueProps): ApiValueV1 = {
         val predicates = valueProps.literalData
 
-        FloatValueV1(predicates(OntologyConstants.KnoraBase.ValueHasFloat).literals.head.toFloat)
+        DecimalValueV1(BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasDecimal).literals.head))
+    }
+
+    /**
+      * Converts a [[ValueProps]] into a [[BooleanValueV1]].
+      *
+      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+      * @return a [[BooleanValueV1]].
+      */
+    private def makeBooleanValue(valueProps: ValueProps): ApiValueV1 = {
+        val predicates = valueProps.literalData
+
+        BooleanValueV1(predicates(OntologyConstants.KnoraBase.ValueHasBoolean).literals.head.toBoolean)
+    }
+
+    /**
+      * Converts a [[ValueProps]] into a [[UriValueV1]].
+      *
+      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+      * @return a [[UriValueV1]].
+      */
+    private def makeUriValue(valueProps: ValueProps): ApiValueV1 = {
+        val predicates = valueProps.literalData
+
+        UriValueV1(predicates(OntologyConstants.KnoraBase.ValueHasUri).literals.head)
     }
 
     /**
@@ -385,21 +409,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val predicates = valueProps.literalData
 
         IntervalValueV1(
-            timeval1 = predicates(OntologyConstants.KnoraBase.ValueHasIntervalStart).literals.head,
-            timeval2 = predicates(OntologyConstants.KnoraBase.ValueHasIntervalEnd).literals.head
+            timeval1 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalStart).literals.head),
+            timeval2 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalEnd).literals.head)
         )
-    }
-
-    /**
-      * Converts a [[ValueProps]] into a [[TimeValueV1]].
-      *
-      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[TimeValueV1]].
-      */
-    private def makeTimeValue(valueProps: ValueProps): ApiValueV1 = {
-        val predicates = valueProps.literalData
-
-        TimeValueV1(predicates(OntologyConstants.KnoraBase.ValueHasTime).literals.head)
     }
 
     /**
@@ -530,6 +542,18 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             objectIri = predicates(OntologyConstants.Rdf.Object).literals.head,
             referenceCount = predicates(OntologyConstants.KnoraBase.ValueHasRefCount).literals.head.toInt
         )
+    }
+
+    /**
+      * Converts a [[ValueProps]] into a [[GeonameValueV1]].
+      *
+      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+      * @return a [[GeonameValueV1]].
+      */
+    private def makeGeonameValue(valueProps: ValueProps): ApiValueV1 = {
+        val predicates = valueProps.literalData
+
+        GeonameValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeonameCode).literals.head)
     }
 
     /** Creates an attribute segment for the Salsah GUI from the given resource class.

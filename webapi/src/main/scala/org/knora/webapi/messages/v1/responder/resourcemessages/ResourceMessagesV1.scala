@@ -23,15 +23,14 @@ package org.knora.webapi.messages.v1.responder.resourcemessages
 import java.util.UUID
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.httpx.SprayJsonSupport
 import spray.json._
 
 import scala.collection.breakOut
-import scala.collection.immutable.Iterable
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -65,11 +64,15 @@ case class CreateResourceApiRequestV1(restype_id: IRI,
 case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None,
                                  link_value: Option[IRI] = None,
                                  int_value: Option[Int] = None,
-                                 float_value: Option[Float] = None,
+                                 decimal_value: Option[BigDecimal] = None,
+                                 boolean_value: Option[Boolean] = None,
+                                 uri_value: Option[String] = None,
                                  date_value: Option[String] = None,
                                  color_value: Option[String] = None,
                                  geom_value: Option[String] = None,
                                  hlist_value: Option[IRI] = None,
+                                 interval_value: Option[Seq[BigDecimal]] = None,
+                                 geoname_value: Option[String] = None,
                                  comment: Option[String] = None)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -136,7 +139,13 @@ case class ResourceSearchGetRequestV1(searchString: String, resourceTypeIri: Opt
   * @param userProfile     the profile of the user making the request.
   * @param apiRequestID    the ID of the API request.
   */
-case class ResourceCreateRequestV1(resourceTypeIri: IRI, label: String, values: Map[IRI, Seq[CreateValueV1WithComment]], file: Option[SipiResponderConversionRequestV1] = None, projectIri: IRI, userProfile: UserProfileV1, apiRequestID: UUID) extends ResourcesResponderRequestV1
+case class ResourceCreateRequestV1(resourceTypeIri: IRI,
+                                   label: String,
+                                   values: Map[IRI, Seq[CreateValueV1WithComment]],
+                                   file: Option[SipiResponderConversionRequestV1] = None,
+                                   projectIri: IRI,
+                                   userProfile: UserProfileV1,
+                                   apiRequestID: UUID) extends ResourcesResponderRequestV1
 
 /**
   * Checks whether a resource belongs to a certain OWL class or to a subclass of that class. This message is used
@@ -149,11 +158,34 @@ case class ResourceCreateRequestV1(resourceTypeIri: IRI, label: String, values: 
 case class ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1) extends ResourcesResponderRequestV1
 
 /**
+  * Requests that a resource is marked as deleted. A successful response will be a [[ResourceDeleteResponseV1]].
+  *
+  * @param resourceIri   the IRI of the resource to be marked as deleted.
+  * @param deleteComment an optional comment explaining why the resource is being marked as deleted.
+  * @param userProfile   the profile of the user making the request.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class ResourceDeleteRequestV1(resourceIri: IRI,
+                                   deleteComment: Option[String],
+                                   userProfile: UserProfileV1,
+                                   apiRequestID: UUID) extends ResourcesResponderRequestV1
+
+/**
   * Represents a response to a [[ResourceCheckClassRequestV1]].
   *
   * @param isInClass `true` if the resource is in the specified OWL class or a subclass of that class.
   */
 case class ResourceCheckClassResponseV1(isInClass: Boolean)
+
+/**
+  * Represents a successful response to a [[ResourceDeleteRequestV1]].
+  *
+  * @param id       the IRI of the resource that was marked as deleted.
+  * @param userdata information about the user that made the request.
+  */
+case class ResourceDeleteResponseV1(id: IRI, userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = ResourceV1JsonProtocol.resourceDeleteResponseV1Format.write(this)
+}
 
 /**
   * Represents the Knora API v1 JSON response to a request for information about a resource.
@@ -337,7 +369,6 @@ case class ResourceContextItemV1(res_id: IRI,
   *
   * @param project_id            the IRI of the project that the resource is associated with.
   * @param person_id             the IRI of the resource's owner.
-  * @param permissions           the permissions defined on the resource.
   * @param restype_id            the IRI of the resource's OWL class.
   * @param restype_name          same as `restype_id`.
   * @param restype_label         the label of the resource class.
@@ -355,7 +386,6 @@ case class ResourceContextItemV1(res_id: IRI,
   */
 case class ResourceInfoV1(project_id: IRI,
                           person_id: IRI,
-                          permissions: Seq[(IRI, IRI)],
                           restype_id: IRI,
                           restype_name: Option[IRI] = None,
                           restype_label: Option[String] = None,
@@ -571,10 +601,9 @@ object SalsahGuiConversions {
         OntologyConstants.SalsahGui.List -> "hlist",
         OntologyConstants.SalsahGui.Radio -> "radio",
         OntologyConstants.SalsahGui.Richtext -> "richtext",
-        OntologyConstants.SalsahGui.Time -> "time",
         OntologyConstants.SalsahGui.Interval -> "interval",
         OntologyConstants.SalsahGui.Geonames -> "geoname",
-        "fileupload" -> "fileupload" // this is hardcoded
+        OntologyConstants.SalsahGui.Fileupload -> "fileupload"
     )
 
     /**
@@ -620,13 +649,14 @@ case class ResourceCreateValueResponseV1(value: ResourceCreateValueObjectRespons
 }
 
 /**
-  * Represents the possible value types to be returned to the client.
+  * Represents the possible value types to be returned to the client after creating a new resource with values.
+  * This isn't used anywhere else in the API, and we're not even sure the SALSAH GUI needs it.
   */
 object LiteralValueType extends Enumeration {
     type ValueType = Value
     val StringValue = Value(0, "string")
     val IntegerValue = Value(1, "integer")
-    val FloatValue = Value(2, "float")
+    val DecimalValue = Value(2, "decimal")
 
     object LiteralValueTypeV1Protocol extends DefaultJsonProtocol {
 
@@ -645,14 +675,14 @@ object LiteralValueType extends Enumeration {
   *
   * @param textval        textual representation of the value.
   * @param ival           integer value if it is an [[IntegerValueV1]].
-  * @param fval           float value if it is a [[FloatValueV1]].
+  * @param dval           decimal value if it is a [[DecimalValueV1]].
   * @param dateval1       start date if it is a [[DateValueV1]].
   * @param dateval2       end date if it is a [[DateValueV1]].
   * @param dateprecision1 the start date's precision if it is a [[DateValueV1]].
   * @param dateprecision2 the end date's precision if it is a [[DateValueV1]].
   * @param calendar       the date's calendar if it is a [[DateValueV1]].
-  * @param timeval1
-  * @param timeval2
+  * @param timeval1       start time value if it is an [[IntervalValueV1]].
+  * @param timeval2       end time value if it is an [[IntervalValueV1]].
   * @param resource_id    the Iri of the new resource.
   * @param property_id    the Iri of the property the value belongs to.
   * @param person_id      the person that created the value.
@@ -660,14 +690,14 @@ object LiteralValueType extends Enumeration {
   */
 case class ResourceCreateValueObjectResponseV1(textval: Map[LiteralValueType.Value, String],
                                                ival: Option[Map[LiteralValueType.Value, Int]] = None,
-                                               fval: Option[Map[LiteralValueType.Value, Float]] = None,
+                                               dval: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
                                                dateval1: Option[Map[LiteralValueType.Value, String]] = None,
                                                dateval2: Option[Map[LiteralValueType.Value, String]] = None,
                                                dateprecision1: Option[Map[LiteralValueType.Value, KnoraPrecisionV1.Value]] = None,
                                                dateprecision2: Option[Map[LiteralValueType.Value, KnoraPrecisionV1.Value]] = None,
                                                calendar: Option[Map[LiteralValueType.Value, KnoraCalendarV1.Value]] = None,
-                                               timeval1: Option[Map[LiteralValueType.Value, Int]] = None,
-                                               timeval2: Option[Map[LiteralValueType.Value, Int]] = None,
+                                               timeval1: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
+                                               timeval2: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
                                                resource_id: Map[LiteralValueType.Value, IRI],
                                                property_id: Map[LiteralValueType.Value, IRI],
                                                person_id: Map[LiteralValueType.Value, IRI],
@@ -907,9 +937,6 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
             val fields = Map(
                 "project_id" -> resInfoV1.project_id.toJson,
                 "person_id" -> resInfoV1.person_id.toJson,
-                "permissions" -> JsArray(resInfoV1.permissions.map {
-                    case (p, o) => JsObject(Map("permission" -> JsString(p), "granted_to" -> JsString(o)))
-                }.toVector),
                 "restype_id" -> resInfoV1.restype_id.toJson,
                 "restype_name" -> resInfoV1.restype_name.toJson,
                 "restype_label" -> resInfoV1.restype_label.toJson,
@@ -929,7 +956,7 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
         }
     }
 
-    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat9(CreateResourceValueV1)
+    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat13(CreateResourceValueV1)
     implicit val createResourceApiRequestV1Format: RootJsonFormat[CreateResourceApiRequestV1] = jsonFormat5(CreateResourceApiRequestV1)
     implicit val resourceInfoResponseV1Format: RootJsonFormat[ResourceInfoResponseV1] = jsonFormat3(ResourceInfoResponseV1)
     implicit val resourceDataV1Format: JsonFormat[ResourceDataV1] = jsonFormat5(ResourceDataV1)
@@ -944,6 +971,7 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val resourceCreateValueObjectResponseV1Format: RootJsonFormat[ResourceCreateValueObjectResponseV1] = jsonFormat14(ResourceCreateValueObjectResponseV1)
     implicit val resourceCreateValueResponseV1Format: RootJsonFormat[ResourceCreateValueResponseV1] = jsonFormat2(ResourceCreateValueResponseV1)
     implicit val resourceCreateResponseV1Format: RootJsonFormat[ResourceCreateResponseV1] = jsonFormat3(ResourceCreateResponseV1)
+    implicit val resourceDeleteResponseV1Format: RootJsonFormat[ResourceDeleteResponseV1] = jsonFormat2(ResourceDeleteResponseV1)
 }
 
 /**

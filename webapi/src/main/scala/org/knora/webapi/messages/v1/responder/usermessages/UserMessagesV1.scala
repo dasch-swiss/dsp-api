@@ -25,6 +25,7 @@ import java.util.UUID
 import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages.KnoraPermissions.Permission
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.httpx.SprayJsonSupport
 import spray.json._
@@ -166,7 +167,7 @@ case class UserProfileV1(userData: UserDataV1,
       * @return true if password matches and false if password doesn't match.
       */
     def passwordMatch(password: String): Boolean = {
-        userData.hashedpassword.exists {
+        userData.password.exists {
             hashedpassword => hashedpassword match {
                 case hp if hp.startsWith("$2a$") => {
                     //println(s"password: $password, hashedpassword: $hashedpassword")
@@ -189,7 +190,7 @@ case class UserProfileV1(userData: UserDataV1,
       */
     private def passwordMatchSha1(password: String): Boolean = {
         val md = java.security.MessageDigest.getInstance("SHA-1")
-        userData.hashedpassword.exists { hashedPassword =>
+        userData.password.exists { hashedPassword =>
             md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hashedPassword)
         }
     }
@@ -202,7 +203,7 @@ case class UserProfileV1(userData: UserDataV1,
       */
     private def passwordMatchBCrypt(password: String): Boolean = {
         import org.mindrot.jbcrypt.BCrypt
-        userData.hashedpassword.exists {
+        userData.password.exists {
             hashedPassword => BCrypt.checkpw(password, hashedPassword)
         }
     }
@@ -216,15 +217,18 @@ case class UserProfileV1(userData: UserDataV1,
 
         val olduserdata = userData
         val newuserdata = UserDataV1(
+            lang = olduserdata.lang,
             user_id = olduserdata.user_id,
+            token = None, // remove token
             username = olduserdata.username,
             firstname = olduserdata.firstname,
             lastname = olduserdata.lastname,
             email = olduserdata.email,
-            hashedpassword = None, // remove hashed password
-            token = None, // remove token
+            password = None, // remove password
             isActiveUser = olduserdata.isActiveUser,
-            lang = olduserdata.lang
+            active_project = olduserdata.active_project,
+            projects = olduserdata.projects,
+            projects_info = olduserdata.projects_info
         )
 
         UserProfileV1(
@@ -270,25 +274,35 @@ case class UserProfileV1(userData: UserDataV1,
 /**
   * Represents basic information about a user.
   *
-  * @param user_id        the user's IRI.
-  * @param username       the user's username.
-  * @param firstname      the user's given name.
-  * @param lastname       the user's surname.
-  * @param email          the user's email address.
-  * @param hashedpassword the user's hashed password.
-  * @param token          the user's API token used as credentials.
-  * @param isActiveUser   the user's status.
-  * @param lang           the ISO 639-1 code of the user's preferred language.
+  * @param lang         The ISO 639-1 code of the user's preferred language.
+  * @param user_id      The user's IRI.
+  * @param token        TODO: document this
+  * @param username     The user's username.
+  * @param firstname    The user's given name.
+  * @param lastname     The user's surname.
+  * @param email        The user's email address.
+  * @param password     The user's hashed password.
+  * @param isActiveUser The user's status.
+  * @param active_project
+  * @param projects
+  * @param projects_info
   */
-case class UserDataV1(user_id: Option[IRI] = None,
+case class UserDataV1(lang: String,
+                      user_id: Option[IRI] = None,
+                      token: Option[String] = None,
                       username: Option[String] = None,
                       firstname: Option[String] = None,
                       lastname: Option[String] = None,
                       email: Option[String] = None,
-                      hashedpassword: Option[String] = None,
-                      token: Option[String] = None,
+                      password: Option[String] = None,
                       isActiveUser: Option[Boolean] = None,
-                      lang: String)
+                      active_project: Option[IRI] = None,
+                      projects: Option[Seq[IRI]] = None, // TODO: we do not need an option here as the list could simply be empty.
+                      projects_info: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1]) {
+
+    def toJsValue = UserV1JsonProtocol.userDataV1Format.write(this)
+
+}
 
 
 /**
@@ -316,7 +330,9 @@ case class NewUserDataV1(username: String,
   */
 object UserV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
-    implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat9(UserDataV1)
+    import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol._
+
+    implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat12(UserDataV1)
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat9(UserProfileV1)
     implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat6(NewUserDataV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)

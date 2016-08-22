@@ -191,20 +191,13 @@ class OntologyResponderV1 extends ResponderV1 {
             val resourceClassIris = resourceIris.map(_.resourceClassIri).toVector
 
             for {
-            // get information about resource entities
+            // Get information about resource classes.
                 sparqlQueryStringForResourceClasses <- Future(queries.sparql.v1.txt.getResourceClassInfo(
                     triplestore = settings.triplestoreType,
                     entityIris = resourceClassIris
                 ).toString())
                 // _ = println(sparqlQueryStringForResourceClasses)
                 resourceClassesResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryStringForResourceClasses)).mapTo[SparqlSelectResponse]
-
-                sparqlQueryStringForCardinalities = queries.sparql.v1.txt.getResourceClassCardinalities(
-                    triplestore = settings.triplestoreType,
-                    entityIris = resourceClassIris
-                ).toString()
-                // _ = println(sparqlQueryStringForCardinalities)
-                cardinalitiesResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryStringForCardinalities)).mapTo[SparqlSelectResponse]
 
                 // Filter the query results to get text in the user's preferred language (or the application's default language),
                 // if possible.
@@ -214,8 +207,25 @@ class OntologyResponderV1 extends ResponderV1 {
                     settings = settings
                 )
 
-                // Group the resource query results by subject (resource type).
+                // Group the resource query results by subject (resource class IRI).
                 resourceClassesGroupedBySubject: Map[IRI, Seq[VariableResultsRow]] = resourceClassesFilteredByLanguage.groupBy(_.rowMap("s"))
+
+                // Ensure that all the queried IRIs actually refer to resource classes.
+                incorrectIris = resourceClassIris.toSet -- resourceClassesGroupedBySubject.keySet
+                _ = if (incorrectIris.nonEmpty) {
+                    val incorrectIrisStr = incorrectIris.mkString(", ")
+                    throw BadRequestException(s"One or more requested IRIs do not refer to subclasses of knora-base:Resource: $incorrectIrisStr")
+                }
+
+                // Get information about resource class cardinalities.
+                sparqlQueryStringForCardinalities = queries.sparql.v1.txt.getResourceClassCardinalities(
+                    triplestore = settings.triplestoreType,
+                    entityIris = resourceClassIris
+                ).toString()
+                // _ = println(sparqlQueryStringForCardinalities)
+                cardinalitiesResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryStringForCardinalities)).mapTo[SparqlSelectResponse]
+
+                // Group the resource query results by subject (resource class IRI).
                 cardinalitiesGroupedBySubject: Map[IRI, Seq[VariableResultsRow]] = cardinalitiesResponse.results.bindings.groupBy(_.rowMap("s"))
 
                 // Convert the results for each subject into an ResourceEntityInfoV1.

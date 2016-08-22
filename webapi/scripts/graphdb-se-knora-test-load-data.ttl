@@ -10,5 +10,9 @@ load ../_test_data/ontologies/incunabula-onto.ttl into http://www.knora.org/onto
 load ../_test_data/all_data/incunabula-data.ttl into http://www.knora.org/data/incunabula .
 load ../_test_data/ontologies/images-demo-onto.ttl into http://www.knora.org/ontology/images .
 load ../_test_data/demo_data/images-demo-data.ttl into http://www.knora.org/data/images .
+load ../_test_data/ontologies/anything-onto.ttl into http://www.knora.org/ontology/anything .
+load ../_test_data/all_data/anything-data.ttl into http://www.knora.org/data/anything .
+load ../_test_data/ontologies/beol-onto.ttl into http://www.knora.org/ontology/beol .
+load ../_test_data/all_data/beol-data.ttl into http://www.knora.org/data/beol .
 close .
 exit .

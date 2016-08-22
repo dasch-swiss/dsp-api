@@ -37,11 +37,170 @@ import scala.concurrent.duration._
   */
 object SearchResponderV1Spec {
 
-    // A test UserDataV1.
-    private val userData = SharedTestData.testuserUserProfileV1.userData
+    private val incunabulaUser = UserProfileV1(
+        projects = Vector("http://data.knora.org/projects/77275339"),
+        groups = Nil,
+        userData = UserDataV1(
+            email = Some("test@test.ch"),
+            lastname = Some("Test"),
+            firstname = Some("User"),
+            username = Some("testuser"),
+            token = None,
+            user_id = Some("http://data.knora.org/users/b83acc5f05"),
+            lang = "de"
+        )
+    )
 
-    // A test UserProfileV1.
-    private val userProfile = SharedTestData.testuserUserProfileV1
+    private val anythingUser1 = UserProfileV1(
+        projects = Vector("http://data.knora.org/projects/anything"),
+        groups = Nil,
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q"),
+            lang = "de"
+        )
+    )
+
+    private val anythingUser2 = UserProfileV1(
+        projects = Vector("http://data.knora.org/projects/anything"),
+        groups = Nil,
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ"),
+            lang = "de"
+        )
+    )
+
+    private val fulltextThingResultsForUser1 = Vector(SearchResultRowV1(
+        rights = Some(8),
+        preview_ny = 32,
+        preview_nx = 32,
+        value = Vector(
+            "Ein Ding f\u00FCr wen, der die Dinge liebe",
+            "Ich liebe die Dinge, sie sind alles f\u00FCr mich.",
+            "Na ja, die Dinge sind OK."
+        ),
+        valuelabel = Vector(
+            "Label",
+            "Text",
+            "Text"
+        ),
+        valuetype_id = Vector(
+            "http://www.w3.org/2000/01/rdf-schema#label",
+            "http://www.knora.org/ontology/knora-base#TextValue",
+            "http://www.knora.org/ontology/knora-base#TextValue"
+        ),
+        iconlabel = Some("Ding"),
+        icontitle = Some("Ding"),
+        iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        obj_id = "http://data.knora.org/a-thing-with-text-values"
+    ))
+
+    private val fulltextValueInThingResultsForUser1 = Vector(SearchResultRowV1(
+        rights = Some(8),
+        preview_ny = 32,
+        preview_nx = 32,
+        value = Vector(
+            "Ein Ding f\u00FCr wen, der die Dinge liebe",
+            "Ich liebe die Dinge, sie sind alles f\u00FCr mich."
+        ),
+        valuelabel = Vector(
+            "Label",
+            "Text"
+        ),
+        valuetype_id = Vector(
+            "http://www.w3.org/2000/01/rdf-schema#label",
+            "http://www.knora.org/ontology/knora-base#TextValue"
+        ),
+        iconlabel = Some("Ding"),
+        icontitle = Some("Ding"),
+        iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        obj_id = "http://data.knora.org/a-thing-with-text-values"
+    ))
+
+    private val fulltextThingResultsForUser2 = Vector(SearchResultRowV1(
+        rights = Some(2),
+        preview_ny = 32,
+        preview_nx = 32,
+        value = Vector("Ein Ding f\u00FCr wen, der die Dinge liebe"),
+        valuelabel = Vector("Label"),
+        valuetype_id = Vector("http://www.w3.org/2000/01/rdf-schema#label"),
+        iconlabel = Some("Ding"),
+        icontitle = Some("Ding"),
+        iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        obj_id = "http://data.knora.org/a-thing-with-text-values"
+    ))
+
+    private val hasOtherThingResultsForUser1 = Vector(SearchResultRowV1(
+        rights = Some(8),
+        preview_ny = 32,
+        preview_nx = 32,
+        value = Vector(
+            "A thing that only project members can see",
+            "Another thing that only project members can see"
+        ),
+        valuelabel = Vector(
+            "Label",
+            "Ein anderes Ding"
+        ),
+        valuetype_id = Vector(
+            "http://www.w3.org/2000/01/rdf-schema#label",
+            "http://www.knora.org/ontology/knora-base#Resource"
+        ),
+        iconlabel = Some("Ding"),
+        icontitle = Some("Ding"),
+        iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        obj_id = "http://data.knora.org/project-thing-1"
+    ))
+
+    private val hasStandoffLinkToResultsForUser1 = Vector(SearchResultRowV1(
+        rights = Some(8),
+        preview_ny = 32,
+        preview_nx = 32,
+        value = Vector(
+            "A thing that only project members can see",
+            "Another thing that only project members can see"
+        ),
+        valuelabel = Vector(
+            "Label",
+            "hat Standoff Link zu"
+        ),
+        valuetype_id = Vector(
+            "http://www.w3.org/2000/01/rdf-schema#label",
+            "http://www.knora.org/ontology/knora-base#Resource"
+        ),
+        iconlabel = Some("Ding"),
+        icontitle = Some("Ding"),
+        iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        obj_id = "http://data.knora.org/project-thing-1"
+    ))
+
+    private val hasStandoffLinkToResultsForUser2 = Vector(SearchResultRowV1(
+        rights = Some(2),
+        preview_ny = 32,
+        preview_nx = 32,
+        value = Vector(
+            "A thing that only project members can see",
+            "Another thing that only project members can see"
+        ),
+        valuelabel = Vector(
+            "Label",
+            "hat Standoff Link zu"
+        ),
+        valuetype_id = Vector(
+            "http://www.w3.org/2000/01/rdf-schema#label",
+            "http://www.knora.org/ontology/knora-base#Resource"
+        ),
+        iconlabel = Some("Ding"),
+        icontitle = Some("Ding"),
+        iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
+        obj_id = "http://data.knora.org/project-thing-1"
+    ))
+
 }
 
 
@@ -49,6 +208,8 @@ object SearchResponderV1Spec {
   * Tests [[SearchResponderV1]].
   */
 class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
+
+    import SearchResponderV1Spec._
 
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[SearchResponderV1]
@@ -59,7 +220,9 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
     // The default timeout for receiving reply messages from actors.
@@ -123,11 +286,11 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 obj_id = "http://data.knora.org/ff17e5ef9601"
             )
         ),
-        userdata = SearchResponderV1Spec.userData
+        userdata = incunabulaUser.userData
     )
 
     val bertholdResponse = SearchGetResponseV1(
-        userdata = SearchResponderV1Spec.userData,
+        userdata = incunabulaUser.userData,
         subjects = Vector(
             SearchResultRowV1(
                 obj_id = "http://data.knora.org/c5058f3a",
@@ -171,7 +334,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://localhost:3333/v1/search/Zeitglöcklein?searchtype=fulltext
             actorUnderTest ! FulltextSearchGetRequestV1(
                 searchValue = "Zeitglöcklein",
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 startAt = 0,
                 showNRows = 25
             )
@@ -185,7 +348,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://localhost:3333/v1/search/Zeitglöcklein%20Lebens?searchtype=fulltext
             actorUnderTest ! FulltextSearchGetRequestV1(
                 searchValue = "Zeitglöcklein Lebens",
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 startAt = 0,
                 showNRows = 25
             )
@@ -199,7 +362,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://localhost:3333/v1/search/Zeitglöcklein%20Lebens?searchtype=fulltext&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page
             actorUnderTest ! FulltextSearchGetRequestV1(
                 searchValue = "Zeitglöcklein Lebens",
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 startAt = 0,
                 showNRows = 25,
                 filterByRestype = Some("http://www.knora.org/ontology/incunabula#page")
@@ -218,7 +381,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // selecting a random one). Instead of getting labels from the search query, the search responder can ask the ontology responder for them.
             actorUnderTest ! FulltextSearchGetRequestV1(
                 searchValue = "Orationes",
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 startAt = 0,
                 showNRows = 25
             )
@@ -232,7 +395,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://localhost:3333/v1/search/Berthold%20Bruder?searchtype=fulltext
             actorUnderTest ! FulltextSearchGetRequestV1(
                 searchValue = "Berthold Bruder",
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 startAt = 0,
                 showNRows = 25
             )
@@ -243,7 +406,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 2 books with the title 'Zeitglöcklein des Lebens und Leidens Christi' when we search for book titles containing the string 'Zeitglöcklein' (using a regular expression) in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=LIKE&searchval=Zeitglöcklein
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("Zeitglöcklein"),
                 compareProps = Vector(SearchComparisonOperatorV1.LIKE),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
@@ -259,7 +422,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 2 books with the title 'Zeitglöcklein des Lebens und Leidens Christi' when we search for book titles containing the word 'Zeitglöcklein' (using the full-text search index) in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=MATCH&searchval=Zeitglöcklein
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("Zeitglöcklein"),
                 compareProps = Vector(SearchComparisonOperatorV1.MATCH),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
@@ -274,7 +437,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 1 book with the title 'Zeitglöcklein des Lebens und Leidens Christi' that was published in 1490 (Julian Calendar) when we search for book titles containing the word 'Zeitglöcklein' (using the full-text search index) in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=MATCH&searchval=Zeitglöcklein&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23pubdate&compop=EQ&searchval=
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("Zeitglöcklein", "JULIAN:1490"),
                 compareProps = Vector(SearchComparisonOperatorV1.MATCH, SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#title", "http://www.knora.org/ontology/incunabula#pubdate"),
@@ -291,7 +454,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 2 books with the title 'Zeitglöcklein des Lebens und Leidens Christi' when we search for book titles containing the word 'Lebens' but not containing the word 'walfart' (using MATCH BOOLEAN) in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=MATCH_BOOLEAN&searchval=%2BLebens+-walfart&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("+Lebens -walfart"),
                 compareProps = Vector(SearchComparisonOperatorV1.MATCH_BOOLEAN),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
@@ -315,7 +478,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 18 books when we search for book titles that do not include the string 'Zeitglöcklein' (using a regular expression) in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=!LIKE&searchval=Zeitgl%C3%B6cklein
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("Zeitglöcklein"),
                 compareProps = Vector(SearchComparisonOperatorV1.NOT_LIKE),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
@@ -332,7 +495,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 2 books with the title 'Zeitglöcklein des Lebens und Leidens Christi' when we search for exactly that book title in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=EQ&searchval=Zeitgl%C3%B6cklein%20des%20Lebens%20und%20Leidens%20Christi
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("Zeitglöcklein des Lebens und Leidens Christi"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
@@ -347,7 +510,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 18 books when we search for all books that have a title that is not exactly 'Zeitglöcklein des Lebens und Leidens Christi' (although they may have another title that is) in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=!EQ&searchval=Zeitgl%C3%B6cklein%20des%20Lebens%20und%20Leidens%20Christi
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("Zeitglöcklein des Lebens und Leidens Christi"),
                 compareProps = Vector(SearchComparisonOperatorV1.NOT_EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
@@ -364,7 +527,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 19 books when we search for all books that have a title in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=EXISTS&searchval
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector(""),
                 compareProps = Vector(SearchComparisonOperatorV1.EXISTS),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
@@ -381,7 +544,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 19 pages when we search for all pages that have a sequence number of 1 in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=EQ&searchval=1
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("1"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#seqnum"),
@@ -398,7 +561,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 79 pages when we search for all pages that have a sequence number greater than 450 in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=GT&searchval=450
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("450"),
                 compareProps = Vector(SearchComparisonOperatorV1.GT),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#seqnum"),
@@ -415,7 +578,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 2 books when we search for all books that were published in January 1495 (Julian date) in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=EQ&searchval=1
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("JULIAN:1495-01"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#pubdate"),
@@ -432,7 +595,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 5 books when we search for all books whose publication date is greater than or equal to January 1495 (Julian date) in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23pubdate&compop=GT_EQ&searchval=JULIAN:1495-01
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("JULIAN:1495-01"),
                 compareProps = Vector(SearchComparisonOperatorV1.GT_EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#pubdate"),
@@ -449,7 +612,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 13 books when we search for all books whose publication date is less than or equal to December 1495 (Julian date) in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23pubdate&compop=LT_EQ&searchval=JULIAN:1495-12
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("JULIAN:1495-12"),
                 compareProps = Vector(SearchComparisonOperatorV1.LT_EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#pubdate"),
@@ -466,7 +629,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return all the pages that are part of Zeitglöcklein des Lebens" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Fdata.knora.org%2Fc5058f3a
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("http://data.knora.org/c5058f3a"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#partOf"),
@@ -483,7 +646,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return all the pages that have a sequence number of 1 and are part of some book" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=EQ&searchval=1&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EXISTS&searchval=
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("1", ""),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#seqnum", "http://www.knora.org/ontology/incunabula#partOf"),
@@ -500,10 +663,10 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return all the pages that are part of Zeitglöcklein des Lebens and have a seqnum" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Fdata.knora.org%2Fc5058f3a&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=EXISTS&searchval=
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("http://data.knora.org/c5058f3a", ""),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#partOf", "http://www.knora.org/ontology/incunabula#partOf"),
+                propertyIri = Vector("http://www.knora.org/ontology/incunabula#partOf", "http://www.knora.org/ontology/incunabula#seqnum"),
                 filterByRestype = Some("http://www.knora.org/ontology/incunabula#page"),
                 startAt = 0,
                 showNRows = 500
@@ -515,10 +678,27 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         }
 
+        "return all the pages that are part of Zeitglöcklein des Lebens, have a seqnum less than or equal to 200, and have a page number that is not 'a1r, Titelblatt'" in {
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = incunabulaUser,
+                searchValue = Vector("http://data.knora.org/c5058f3a", "200", "a1r, Titelblatt"),
+                compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.LT_EQ, SearchComparisonOperatorV1.NOT_EQ),
+                propertyIri = Vector("http://www.knora.org/ontology/incunabula#partOf", "http://www.knora.org/ontology/incunabula#seqnum", "http://www.knora.org/ontology/incunabula#pagenum"),
+                filterByRestype = Some("http://www.knora.org/ontology/incunabula#page"),
+                startAt = 0,
+                showNRows = 300
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(199)
+            }
+
+        }
+
         "return all the images from the images-demo project whose title belong to the category 'Sport'" in {
             // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F71a1543cce&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("http://data.knora.org/lists/71a1543cce"), // list node SPORT
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/images#titel"),
@@ -536,7 +716,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return all the images from the images-demo project whose title belong to the category 'Spazieren'" in {
             // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F38c73482e3&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("http://data.knora.org/lists/38c73482e3"), // list node SPAZIEREN
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/images#titel"),
@@ -554,7 +734,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return all the images from the images-demo project whose title belong to the category 'Alpinismus'" in {
             // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F3bc59463e2&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
             actorUnderTest ! ExtendedSearchGetRequestV1(
-                userProfile = SearchResponderV1Spec.userProfile,
+                userProfile = incunabulaUser,
                 searchValue = Vector("http://data.knora.org/lists/3bc59463e2"), // list node ALPINISMUS
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/images#titel"),
@@ -569,6 +749,209 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         }
 
+        "should filter full-text search results using permissions on resources and values" in {
+            // When the owner of the resource and its values, anythingUser1, searches for something that matches the resource's label
+            // as well as both values, the search result should include the resource and show that both values matched.
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "die Dinge",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = anythingUser1,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects should ===(fulltextThingResultsForUser1)
+            }
+
+            // Another user in the same project, anythingUser2, should get the resource as a search result, but should not see the values.
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "die Dinge",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = anythingUser2,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects should ===(fulltextThingResultsForUser2)
+            }
+
+            // User anythingUser2 should also get the resource as a search result by searching for something that matches the resource's label, but not the values.
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "für wen",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = anythingUser2,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects should ===(fulltextThingResultsForUser2)
+            }
+
+            // If user anythingUser1 searches for something that matches one of the values, but doesn't match the resource's label, the result should include the
+            // value that matched, but not the value that didn't match.
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "alles für mich",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = anythingUser1,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects should ===(fulltextValueInThingResultsForUser1)
+            }
+
+            // If user anythingUser2 searches for something that matches one of the values, but doesn't match the resource's label, no results should be returned.
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "alles für mich",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = anythingUser2,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+            }
+
+            // A user in another project shouldn't get any results for any of those queries.
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "die Dinge",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = incunabulaUser,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+            }
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "für wen",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = incunabulaUser,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+            }
+
+            actorUnderTest ! FulltextSearchGetRequestV1(
+                searchValue = "alles für mich",
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                userProfile = incunabulaUser,
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+            }
+        }
+
+        "should not show resources that the user doesn't have permission to see in an extended search" in {
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = incunabulaUser,
+                searchValue = Vector("http://data.knora.org/project-thing-2"),
+                compareProps = Vector(SearchComparisonOperatorV1.EQ),
+                propertyIri = Vector("http://www.knora.org/ontology/anything#hasOtherThing"),
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                startAt = 0,
+                showNRows = 10
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+            }
+
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = incunabulaUser,
+                searchValue = Vector("http://data.knora.org/project-thing-2"),
+                compareProps = Vector(SearchComparisonOperatorV1.EQ),
+                propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                startAt = 0,
+                showNRows = 10
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+            }
+        }
+
+        "should show standoff links if the user has view permission on both resources, but show other links only if the user also has view permission on the link" in {
+            // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
+
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = anythingUser1,
+                searchValue = Vector("http://data.knora.org/project-thing-2"),
+                compareProps = Vector(SearchComparisonOperatorV1.EQ),
+                propertyIri = Vector("http://www.knora.org/ontology/anything#hasOtherThing"),
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                startAt = 0,
+                showNRows = 10
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects should ===(hasOtherThingResultsForUser1)
+            }
+
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = anythingUser1,
+                searchValue = Vector("http://data.knora.org/project-thing-2"),
+                compareProps = Vector(SearchComparisonOperatorV1.EQ),
+                propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                startAt = 0,
+                showNRows = 10
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects should ===(hasStandoffLinkToResultsForUser1)
+            }
+
+            // But another user in the Anything project should see only the hasStandoffLinkTo link.
+
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = anythingUser2,
+                searchValue = Vector("http://data.knora.org/project-thing-2"),
+                compareProps = Vector(SearchComparisonOperatorV1.EQ),
+                propertyIri = Vector("http://www.knora.org/ontology/anything#hasOtherThing"),
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                startAt = 0,
+                showNRows = 10
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+            }
+
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = anythingUser2,
+                searchValue = Vector("http://data.knora.org/project-thing-2"),
+                compareProps = Vector(SearchComparisonOperatorV1.EQ),
+                propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
+                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                startAt = 0,
+                showNRows = 10
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects should ===(hasStandoffLinkToResultsForUser2)
+            }
+        }
 
     }
 }

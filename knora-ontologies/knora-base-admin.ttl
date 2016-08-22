@@ -423,7 +423,7 @@
               rdfs:subClassOf <http://xmlns.com/foaf/0.1/Project> ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectShortname ;
-                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLongname ;
@@ -439,7 +439,7 @@
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectBasepath ;
-                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectKeywords ;
@@ -699,6 +699,23 @@
 
              <http://xmlns.com/foaf/0.1/name> "system admin" .
 
+
+
+###  http://www.knora.org/ontology/knora-base#SystemUser
+
+:SystemUser rdf:type :User ;
+
+                     :userid "system" ;
+
+                     <http://xmlns.com/foaf/0.1/givenName> "Knora" ;
+
+                     <http://xmlns.com/foaf/0.1/familyName> "System" ;
+
+                     :password "-" ;
+
+                     :email "-" ;
+
+                     :preferredLanguage "en" .
 
 
 

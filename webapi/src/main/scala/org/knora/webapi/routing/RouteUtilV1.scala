@@ -44,15 +44,16 @@ object RouteUtilV1 {
 
     /**
       * Runs an API routing function.
+      *
       * @param requestMessageTry a [[Try]] which, if successful, contains a [[KnoraRequestV1]] that should be
       *                          sent to the responder manager, and if not successful, contains an error that will be
       *                          reported to the client.
-      * @param requestContext the spray [[RequestContext]].
-      * @param settings the application's settings.
-      * @param responderManager a reference to the responder manager.
-      * @param log a logging adapter.
-      * @param timeout a timeout for `ask` messages.
-      * @param executionContext an execution context for futures.
+      * @param requestContext    the spray [[RequestContext]].
+      * @param settings          the application's settings.
+      * @param responderManager  a reference to the responder manager.
+      * @param log               a logging adapter.
+      * @param timeout           a timeout for `ask` messages.
+      * @param executionContext  an execution context for futures.
       */
     def runJsonRoute[RequestMessageT <: KnoraRequestV1](requestMessageTry: Try[RequestMessageT],
                                                         requestContext: RequestContext,
@@ -111,17 +112,18 @@ object RouteUtilV1 {
 
     /**
       * Runs an API routing function that returns HTML.
+      *
       * @tparam RequestMessageT the type of request message to be sent to the responder.
-      * @tparam ReplyMessageT the type of reply message expected from the responder.
+      * @tparam ReplyMessageT   the type of reply message expected from the responder.
       * @param requestMessageTry a [[Try]] containing, if successful, the message that should be sent to the responder manager.
       *                          Any exceptions thrown will be reported to the client.
-      * @param viewHandler a function that can generate HTML from the responder's reply message.
-      * @param requestContext the spray [[RequestContext]].
-      * @param settings the application's settings.
-      * @param responderManager a reference to the responder manager.
-      * @param log a logging adapter.
-      * @param timeout a timeout for `ask` messages.
-      * @param executionContext an execution context for futures.
+      * @param viewHandler       a function that can generate HTML from the responder's reply message.
+      * @param requestContext    the spray [[RequestContext]].
+      * @param settings          the application's settings.
+      * @param responderManager  a reference to the responder manager.
+      * @param log               a logging adapter.
+      * @param timeout           a timeout for `ask` messages.
+      * @param executionContext  an execution context for futures.
       */
     def runHtmlRoute[RequestMessageT <: KnoraRequestV1, ReplyMessageT <: KnoraResponseV1 : ClassTag](requestMessageTry: Try[RequestMessageT],
                                                                                                      viewHandler: (ReplyMessageT, ActorSelection) => String,
@@ -183,6 +185,7 @@ object RouteUtilV1 {
       * a [[KnoraResponseV1]]. If so, returns an [[HttpResponse]] containing the JSON representation of the result of
       * the operation. If the operation was unsuccessful, returns an [[HttpResponse]] containing the error message from
       * the [[Try]]. The HTTP responses returned by this method contain appropriate HTTP status codes.
+      *
       * @param resultTry a [[Try]] containing the result of an operation performed by an Actor.
       * @return an [[HttpResponse]] containing a JSON representation of the result.
       */
@@ -222,8 +225,9 @@ object RouteUtilV1 {
       * a [[KnoraResponseV1]]. If so, returns an [[HttpResponse]] containing an HTML representation of the result of
       * the operation. If the operation was unsuccessful, returns an [[HttpResponse]] containing the error message from
       * the [[Try]]. The HTTP responses returned by this method contain appropriate HTTP status codes.
+      *
       * @tparam ReplyMessageT the type of reply message expected.
-      * @param resultTry a [[Try]] containing the result of an operation performed by an Actor.
+      * @param resultTry   a [[Try]] containing the result of an operation performed by an Actor.
       * @param viewHandler a function that can generate HTML from the responder's reply message.
       * @return an [[HttpResponse]] containing a JSON representation of the result.
       */
@@ -261,6 +265,7 @@ object RouteUtilV1 {
 
     /**
       * Converts an exception to an HTTP response in JSON format.
+      *
       * @param ex the exception to be converted.
       * @return an [[HttpResponse]] in JSON format.
       */
@@ -292,6 +297,7 @@ object RouteUtilV1 {
 
     /**
       * Converts an exception to an HTTP response in HTML format.
+      *
       * @param ex the exception to be converted.
       * @return an [[HttpResponse]] in HTML format.
       */
@@ -332,7 +338,8 @@ object RouteUtilV1 {
 
     /**
       * Given an exception, returns an error message suitable for clients.
-      * @param ex the exception.
+      *
+      * @param ex       the exception.
       * @param settings the application settings.
       * @return an error message suitable for clients.
       */

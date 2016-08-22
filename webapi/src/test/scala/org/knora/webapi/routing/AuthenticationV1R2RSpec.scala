@@ -70,8 +70,8 @@ class AuthenticationV1R2RSpec extends R2RSpec with RequestBuilding {
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val authenticatePath = AuthenticateRouteV1.rapierPath(system, settings, log)
-    val resourcesPath = ResourcesRouteV1.rapierPath(system, settings, log)
+    val authenticatePath = AuthenticateRouteV1.knoraApiPath(system, settings, log)
+    val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
 
     implicit val timeout: Timeout = 300.seconds
 

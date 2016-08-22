@@ -37,7 +37,7 @@ object ProjectsRouteV1 extends Authenticator {
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
 
-    def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher

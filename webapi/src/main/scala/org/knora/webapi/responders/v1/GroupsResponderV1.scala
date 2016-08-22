@@ -83,8 +83,8 @@ class GroupsResponderV1 extends ResponderV1 {
 
                     GroupInfoV1(
                         id = groupIri,
-                        name = propsMap.getOrElse(OntologyConstants.Foaf.Name, throw InconsistentTriplestoreDataException(s"Group $groupIri has no name attached")),
-                        description = propsMap.get(OntologyConstants.KnoraBase.Description),
+                        name = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no name attached")),
+                        description = propsMap.get(OntologyConstants.KnoraBase.GroupDescription),
                         belongsToProject = propsMap.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached"))
                     )
             }.toVector

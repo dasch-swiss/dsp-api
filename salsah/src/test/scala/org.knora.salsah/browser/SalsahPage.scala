@@ -25,10 +25,11 @@ import java.io.File
 import scala.collection.JavaConversions._
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.interactions.Actions
-import org.openqa.selenium.support.ui.{ExpectedConditions, Select}
+import org.openqa.selenium.support.ui.Select
 import org.openqa.selenium.{By, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
 import java.io.FileNotFoundException
+import java.util
 
 import scala.concurrent.duration._
 
@@ -141,9 +142,9 @@ class SalsahPage {
     }
 
     /**
-      * Returns the SALSAH extended search button.
+      * Clicks the SALSAH extended search button.
       */
-    def clickExtendedSearchButton = {
+    def clickExtendedSearchButton() = {
         driver.findElement(By.xpath("//div[@id='searchctrl']/img[2][@class='link']")).click()
     }
 
@@ -152,7 +153,7 @@ class SalsahPage {
       *
       * @param restype the restype to be selected.
       */
-    def selectExtendedSearchRestype(restype: String) = {
+    def selectRestype(restype: String) = {
         eventually {
             val restypeSelect = driver.findElement(By.name("selrestype"))
             new Select(restypeSelect).selectByValue(restype)
@@ -187,12 +188,12 @@ class SalsahPage {
     }
 
     /**
-      * Get the selects representing a hierarchical list.
+      * Get the selects representing a hierarchical list in extended search form.
       *
       * @param propIndex indicate which (first, second, third etc. ) property field set to use: the user may perform a search involving several properties.
       * @return a list of [[Select]]
       */
-    def getHierarchicalListSelections(propIndex: Int): List[Select] = {
+    def getHierarchicalListSelectionsInExtendedSearch(propIndex: Int): List[Select] = {
         eventually {
 
             val selections = driver.findElement(By.xpath(s"//div[$propIndex][contains(@class, 'selprop')]")).findElement(By.name("valfield")).findElements(By.xpath("span[@class='propval']//select"))
@@ -356,17 +357,6 @@ class SalsahPage {
 
     */
 
-    /**
-      * Ensures the minimum overall amount of windows and returns a list of them.
-      *
-      * @param minSize the minimum amount of windows.
-      * @return a list of [[WebElement]].
-      */
-    private def getWindows(minSize: Int): Seq[WebElement] = {
-
-        val windows = driver.findElements(By.className("win"))
-        if (windows.size < minSize) throw new Exception() else windows
-    }
 
     /**
       * Get the window with the given id.
@@ -375,10 +365,10 @@ class SalsahPage {
       * @return a [[WebElement]] representing the window.
       */
     def getWindow(winId: Int): WebElement = {
-        // make sure that the specified window is ready in the DOM
-        val windows = getWindows(winId + 1)
 
-        driver.findElement(By.id(winId.toString))
+        eventually {
+            driver.findElement(By.id(winId.toString))
+        }
     }
 
     /**
@@ -559,4 +549,79 @@ class SalsahPage {
 
         }
     }
+
+    /**
+      * Get the selects representing a hierarchical list.
+      *
+      * @param selField selection property field.
+      * @return a list of [[Select]]
+      */
+    def getHierarchicalListSelections(selField: WebElement): List[Select] = {
+        eventually {
+
+            val selections = selField.findElements(By.xpath("div//select"))
+            // make sure to find any selection (async)
+            if (selections.length < 1) throw new Exception
+
+            selections.map(new Select(_)).toList
+
+        }
+    }
+
+    /**
+      * Returns the radio buttons.
+      *
+      * @param radioField radio property field.
+      * @return a list of `input` representing the options.
+      */
+    def getRadioButtons(radioField: WebElement) = {
+        eventually {
+            val radios = radioField.findElements(By.xpath("div//input[@type='radio']"))
+
+            if (radios.length < 1) throw new Exception
+
+            radios
+
+        }
+
+    }
+
+
+    /*
+
+    Create Resource
+
+     */
+
+
+    def clickAddResourceButton() = {
+        driver.findElement(By.xpath("//div[@id='addresctrl']/img")).click()
+    }
+
+    def getInputRowsForResourceCreationForm(): List[WebElement] = {
+        eventually {
+            val rows = driver.findElement(By.xpath("//table[@class='propedit']")).findElements(By.xpath("tbody/tr[@class='propedit']")).toList
+
+            if (rows.length < 1) throw new Exception
+
+            rows
+        }
+
+    }
+
+    def getInputForResourceCreationForm(row: WebElement): WebElement = {
+
+        eventually {
+            row.findElement(By.xpath("td/input[@class='propedit']"))
+        }
+    }
+
+    def clickSaveButtonForResourceCreationForm() = {
+
+        eventually {
+            driver.findElement(By.xpath("//form[@class='propedit']//input[@value='Save']")).click()
+        }
+
+    }
+
 }

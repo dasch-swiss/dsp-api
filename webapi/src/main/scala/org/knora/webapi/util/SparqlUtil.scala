@@ -43,7 +43,8 @@ object SparqlUtil {
 
     /**
       * Parses a response from the triplestore and converts it to a [[SparqlSelectResponse]].
-      * @param sparql the SPARQL query that was submitted.
+      *
+      * @param sparql    the SPARQL query that was submitted.
       * @param resultStr the triplestore's response.
       * @return a [[SparqlSelectResponse]].
       */
@@ -70,10 +71,10 @@ object SparqlUtil {
       * the group, only one row in the group is returned: the row containing the user's preferred language if available,
       * otherwise the row containing the application's default language if available, otherwise the first row in the group.
       *
-      * @param response the SPARQL query result to filter.
+      * @param response               the SPARQL query result to filter.
       * @param langSpecificColumnName the name of the column that may contain language-specific data.
-      * @param preferredLanguage the user's preferred language.
-      * @param settings the application's configuration settings.
+      * @param preferredLanguage      the user's preferred language.
+      * @param settings               the application's configuration settings.
       * @return a filtered list of result rows.
       */
     def filterByLanguage(response: SparqlSelectResponse, langSpecificColumnName: String, preferredLanguage: String, settings: SettingsImpl): Seq[VariableResultsRow] = {

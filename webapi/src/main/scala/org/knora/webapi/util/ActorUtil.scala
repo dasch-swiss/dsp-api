@@ -36,7 +36,8 @@ object ActorUtil {
       * Sends a list of messages in parallel to an actor, and returns a [[Future]] containing a list
       * of the results. If any of the requests fails, the [[Future]] will contain an exception representing
       * the first failure.
-      * @param addressee the actor to send the messages to.
+      *
+      * @param addressee   the actor to send the messages to.
       * @param reqMessages the messages to send.
       * @tparam ReplyT the type of value expected as a result. This type must be specified explicitly by the caller, because the
       *                Scala compiler can't infer it.
@@ -71,7 +72,7 @@ object ActorUtil {
       *
       * @param sender the actor that made the request in the `ask` pattern.
       * @param tryObj either a [[Success]] containing a response message, or a [[scala.util.Failure]] containing an exception.
-      * @param log a [[LoggingAdapter]] for logging non-serializable exceptions.
+      * @param log    a [[LoggingAdapter]] for logging non-serializable exceptions.
       */
     def try2Message[ReplyT](sender: ActorRef, tryObj: Try[ReplyT], log: LoggingAdapter): Unit = {
         tryObj match {
@@ -91,9 +92,10 @@ object ActorUtil {
     /**
       * A wrapper around `try2Message` that takes a [[Future]] instead of a [[Try]], and calls `try2Message` when the future
       * completes.
+      *
       * @param sender the actor that made the request in the `ask` pattern.
       * @param future a [[Future]] that will provide the result of the sender's request.
-      * @param log a [[LoggingAdapter]] for logging non-serializable exceptions.
+      * @param log    a [[LoggingAdapter]] for logging non-serializable exceptions.
       */
     def future2Message[ReplyT](sender: ActorRef, future: Future[ReplyT], log: LoggingAdapter)(implicit executionContext: ExecutionContext): Unit = {
         future.onComplete {
@@ -105,7 +107,7 @@ object ActorUtil {
       * Converts `None` values into `Failure`s, and facilitates using the `Try` monad to check
       * for `None`.
       *
-      * @param optionTry A `Try` containing an `Option`.
+      * @param optionTry         A `Try` containing an `Option`.
       * @param notFoundException An exception that should be returned in a `Failure` if the `Option` is a `None`.
       * @tparam T the type contained in the `Option` if it is a `Some`.
       * @return a `Try` containing either a `Success` (if the option contained a `Some`) or a `Failure` (if the option contained a `None`).
@@ -120,6 +122,7 @@ object ActorUtil {
 
     /**
       * Convert a [[Map]] containing futures of sequences into a future containing a [[Map]] containing sequences.
+      *
       * @param mapToSequence the [[Map]] to be converted.
       * @return a future that will provide the results of the futures that were in the [[Map]].
       */

@@ -48,6 +48,7 @@ class KnoraIriUtil {
       * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
       * Base64 encoder from [[java.util.Base64]], without padding. This results in a 22-character string that
       * can be used as a unique identifier in IRIs.
+      *
       * @return a random, Base64-encoded UUID.
       */
     private def makeRandomBase64EncodedUuid: String = {
@@ -61,6 +62,7 @@ class KnoraIriUtil {
 
     /**
       * Converts a SALSAH resource ID into a Knora resource IRI.
+      *
       * @param salsahResourceID the SALSAH resource ID.
       * @return a resource IRI.
       */
@@ -71,6 +73,7 @@ class KnoraIriUtil {
 
     /**
       * Creates a new resource IRI based on a UUID.
+      *
       * @return a new resource IRI.
       */
     def makeRandomResourceIri: String = {
@@ -80,8 +83,9 @@ class KnoraIriUtil {
 
     /**
       * Converts a SALSAH value ID into a Knora value IRI.
+      *
       * @param salsahResourceID the SALSAH ID of the resource that the value belongs to.
-      * @param salsahValueID the SALSAH value ID.
+      * @param salsahValueID    the SALSAH value ID.
       * @return a value IRI.
       */
     def salsahValueId2Iri(salsahResourceID: String, salsahValueID: String): String = {
@@ -92,6 +96,7 @@ class KnoraIriUtil {
 
     /**
       * Creates a new value IRI based on a UUID.
+      *
       * @param resourceIri the IRI of the resource that will contain the value.
       * @return a new value IRI.
       */
@@ -102,7 +107,8 @@ class KnoraIriUtil {
 
     /**
       * Converts a SALSAH file value ID into a Knora file value IRI.
-      * @param salsahResourceID the SALSAH ID of the Representation resource that the file value belongs to.
+      *
+      * @param salsahResourceID  the SALSAH ID of the Representation resource that the file value belongs to.
       * @param salsahFileValueID the SALSAH file value ID.
       * @return a file value IRI.
       */
@@ -114,6 +120,7 @@ class KnoraIriUtil {
 
     /**
       * Creates a new representation IRI based on a UUID.
+      *
       * @param resourceIri the IRI of the resource that will have the representation.
       * @return a new representation IRI.
       */
@@ -124,6 +131,7 @@ class KnoraIriUtil {
 
     /**
       * Converts a SALSAH institution ID into a Knora institution IRI.
+      *
       * @param salsahInstitutionID the SALSAH institution ID.
       * @return an institution IRI.
       */
@@ -134,6 +142,7 @@ class KnoraIriUtil {
 
     /**
       * Creates a new institution IRI based on a UUID.
+      *
       * @return a new institution IRI.
       */
     def makeRandomInstitutionIri: String = {
@@ -143,6 +152,7 @@ class KnoraIriUtil {
 
     /**
       * Converts a SALSAH project ID into a Knora project IRI.
+      *
       * @param salsahProjectID the SALSAH project ID.
       * @return a project IRI.
       */
@@ -153,6 +163,7 @@ class KnoraIriUtil {
 
     /**
       * Creates a new project IRI based on a UUID.
+      *
       * @return a new project IRI.
       */
     def makeRandomProjectIri: String = {
@@ -162,6 +173,7 @@ class KnoraIriUtil {
 
     /**
       * Converts a SALSAH person ID into a Knora person IRI.
+      *
       * @param salsahPersonID the SALSAH person ID.
       * @return a person IRI.
       */
@@ -172,6 +184,7 @@ class KnoraIriUtil {
 
     /**
       * Creates a new person IRI based on a UUID.
+      *
       * @return a new person IRI.
       */
     def makeRandomPersonIri: String = {
@@ -181,6 +194,7 @@ class KnoraIriUtil {
 
     /**
       * Converts a SALSAH hlist ID into a Knora hierarchical list IRI.
+      *
       * @param salsahHListID the SALSAH hlist ID.
       * @return a hierarchical list IRI.
       */
@@ -191,6 +205,7 @@ class KnoraIriUtil {
 
     /**
       * Creates a new hierarchical list IRI based on a UUID.
+      *
       * @return a new hierarchical list IRI.
       */
     def makeRandomHListIri: String = {
@@ -200,6 +215,7 @@ class KnoraIriUtil {
 
     /**
       * Converts a SALSAH selection ID into a Knora selection IRI.
+      *
       * @param salsahSelectionID the SALSAH selection ID.
       * @return a selection IRI.
       */
@@ -210,6 +226,7 @@ class KnoraIriUtil {
 
     /**
       * Converts the IRI of a property that points to a resource into the IRI of the corresponding link value property.
+      *
       * @param linkPropertyIri the IRI of the property that points to a resource.
       * @return the IRI of the corresponding link value property.
       */
@@ -217,6 +234,7 @@ class KnoraIriUtil {
 
     /**
       * Converts the IRI of a property that points to a `knora-base:LinkValue` into the IRI of the corresponding link property.
+      *
       * @param linkValuePropertyIri the IRI of the property that points to the `LinkValue`.
       * @return the IRI of the corresponding link property.
       */
@@ -231,7 +249,8 @@ class KnoraIriUtil {
     /**
       * Implements an algorithm for generating Knora IDs from SALSAH IDs. Based on the PHP implementation in SALSAH, in
       * `scripts/RDF-Export/rdf-uuid-from.php`.
-      * @param id the SALSAH ID
+      *
+      * @param id     the SALSAH ID
       * @param factor the factor to multiply the ID by.
       * @return the resulting Knora ID.
       */

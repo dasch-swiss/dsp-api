@@ -160,12 +160,11 @@ class SalsahOntologyMappingReader {
     val valueTypeNumericIDs = Map(
         "1" -> OntologyConstants.KnoraBase.TextValue,
         "2" -> OntologyConstants.KnoraBase.IntValue,
-        "3" -> OntologyConstants.KnoraBase.FloatValue,
+        "3" -> OntologyConstants.KnoraBase.DecimalValue,
         "4" -> OntologyConstants.KnoraBase.DateValue,
         "5" -> OntologyConstants.KnoraBase.DateValue,
         "6" -> OntologyConstants.KnoraBase.LinkValue, // for a link to a resource
         "7" -> OntologyConstants.KnoraBase.ListValue, // TODO: is this correct?
-        "8" -> OntologyConstants.KnoraBase.TimeValue,
         "9" -> OntologyConstants.KnoraBase.IntervalValue,
         "10" -> OntologyConstants.KnoraBase.GeomValue,
         "11" -> OntologyConstants.KnoraBase.ColorValue,
@@ -177,17 +176,19 @@ class SalsahOntologyMappingReader {
 /**
   * Represents a JSON configuration file for exporting a vocabulary from SALSAH. Each file maps a SALSAH vocabulary onto a Knora
   * ontology.
-  * @param salsahName the name of the SALSAH vocabulary.
-  * @param knoraName the name of the corresponding Knora ontology.
+  *
+  * @param salsahName    the name of the SALSAH vocabulary.
+  * @param knoraName     the name of the corresponding Knora ontology.
   * @param resourceTypes a map of SALSAH resource type names to [[SalsahResourceType]] objects.
   */
 case class SalsahOntologyMapping(salsahName: String, knoraName: String, resourceTypes: Map[String, SalsahResourceType])
 
 /**
   * Represents a mapping between a SALSAH resource type and the corresponding Knora resource class.
-  * @param knoraIri the IRI of the Knora resource class.
-  * @param properties a map of SALSAH property names to the corresponding Knora property IRIs, representing the properties
-  *                   that the resource class can have.
+  *
+  * @param knoraIri       the IRI of the Knora resource class.
+  * @param properties     a map of SALSAH property names to the corresponding Knora property IRIs, representing the properties
+  *                       that the resource class can have.
   * @param fileValueTypes a map of SALSAH file value type names to the corresponding Knora file value type IRIs, representing
   *                       the file value types that the resource class can have.
   */

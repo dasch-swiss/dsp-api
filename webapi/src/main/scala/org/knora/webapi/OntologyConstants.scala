@@ -59,10 +59,9 @@ object OntologyConstants {
         )
     }
 
-
     object KnoraBase {
-
-        val KNORA_BASE_PREFIX = "http://www.knora.org/ontology/knora-base#"
+        val KnoraBasePrefix = "knora-base:"
+        val KnoraBasePrefixExpansion = "http://www.knora.org/ontology/knora-base#"
 
         val Resource = "http://www.knora.org/ontology/knora-base#Resource"
 
@@ -73,7 +72,7 @@ object OntologyConstants {
 
         val ValueHasString = "http://www.knora.org/ontology/knora-base#valueHasString"
         val ValueHasInteger = "http://www.knora.org/ontology/knora-base#valueHasInteger"
-        val ValueHasFloat = "http://www.knora.org/ontology/knora-base#valueHasFloat"
+        val ValueHasDecimal = "http://www.knora.org/ontology/knora-base#valueHasDecimal"
         val ValueHasStandoff = "http://www.knora.org/ontology/knora-base#valueHasStandoff"
         val ValueHasResPtr = "http://www.knora.org/ontology/knora-base#valueHasResPtr"
         val ValueHasStartJDC = "http://www.knora.org/ontology/knora-base#valueHasStartJDC"
@@ -81,15 +80,17 @@ object OntologyConstants {
         val ValueHasCalendar = "http://www.knora.org/ontology/knora-base#valueHasCalendar"
         val ValueHasStartPrecision = "http://www.knora.org/ontology/knora-base#valueHasStartPrecision"
         val ValueHasEndPrecision = "http://www.knora.org/ontology/knora-base#valueHasEndPrecision"
+        val ValueHasBoolean = "http://www.knora.org/ontology/knora-base#valueHasBoolean"
+        val ValueHasUri = "http://www.knora.org/ontology/knora-base#valueHasUri"
         val ValueHasColor = "http://www.knora.org/ontology/knora-base#valueHasColor"
         val ValueHasGeometry = "http://www.knora.org/ontology/knora-base#valueHasGeometry"
         val ValueHasListNode = "http://www.knora.org/ontology/knora-base#valueHasListNode"
         val ValueHasIntervalStart = "http://www.knora.org/ontology/knora-base#valueHasIntervalStart"
         val ValueHasIntervalEnd = "http://www.knora.org/ontology/knora-base#valueHasIntervalEnd"
-        val ValueHasTime = "http://www.knora.org/ontology/knora-base#valueHasTime"
         val ValueHasOrder = "http://www.knora.org/ontology/knora-base#valueHasOrder"
         val ValueHasRefCount = "http://www.knora.org/ontology/knora-base#valueHasRefCount"
         val ValueHasComment = "http://www.knora.org/ontology/knora-base#valueHasComment"
+        val ValueHasGeonameCode = "http://www.knora.org/ontology/knora-base#valueHasGeonameCode"
 
         val PreviousValue = "http://www.knora.org/ontology/knora-base#previousValue"
 
@@ -103,7 +104,6 @@ object OntologyConstants {
 
         val IsPreview = "http://www.knora.org/ontology/knora-base#isPreview"
         val ResourceIcon = "http://www.knora.org/ontology/knora-base#resourceIcon"
-        val PreferredLanguage = "http://www.knora.org/ontology/knora-base#preferredLanguage"
 
         val InternalMimeType = "http://www.knora.org/ontology/knora-base#internalMimeType"
         val InternalFilename = "http://www.knora.org/ontology/knora-base#internalFilename"
@@ -114,21 +114,24 @@ object OntologyConstants {
 
         val TextValue = "http://www.knora.org/ontology/knora-base#TextValue"
         val IntValue = "http://www.knora.org/ontology/knora-base#IntValue"
-        val FloatValue = "http://www.knora.org/ontology/knora-base#FloatValue"
+        val BooleanValue = "http://www.knora.org/ontology/knora-base#BooleanValue"
+        val UriValue = "http://www.knora.org/ontology/knora-base#UriValue"
+        val DecimalValue = "http://www.knora.org/ontology/knora-base#DecimalValue"
         val DateValue = "http://www.knora.org/ontology/knora-base#DateValue"
         val ColorValue = "http://www.knora.org/ontology/knora-base#ColorValue"
         val GeomValue = "http://www.knora.org/ontology/knora-base#GeomValue"
         val ListValue = "http://www.knora.org/ontology/knora-base#ListValue"
         val IntervalValue = "http://www.knora.org/ontology/knora-base#IntervalValue"
-        val TimeValue = "http://www.knora.org/ontology/knora-base#TimeValue"
         val StillImageFileValue = "http://www.knora.org/ontology/knora-base#StillImageFileValue"
         val MovingImageFileValue = "http://www.knora.org/ontology/knora-base#MovingImageFileValue"
         val FileValue = "http://www.knora.org/ontology/knora-base#FileValue"
         val LinkValue = "http://www.knora.org/ontology/knora-base#LinkValue"
+        val GeonameValue = "http://www.knora.org/ontology/knora-base#GeonameValue"
 
         val IsDeleted = "http://www.knora.org/ontology/knora-base#isDeleted"
 
-
+        
+        /* Standoff */
         val StandoffHasAttribute = "http://www.knora.org/ontology/knora-base#standoffHasAttribute"
         val StandoffHasStart = "http://www.knora.org/ontology/knora-base#standoffHasStart"
         val StandoffHasEnd = "http://www.knora.org/ontology/knora-base#standoffHasEnd"
@@ -137,94 +140,110 @@ object OntologyConstants {
         val HasStandoffLinkTo = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
         val HasStandoffLinkToValue = "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue"
 
+        /* Resource creator */
         val AttachedToUser = "http://www.knora.org/ontology/knora-base#attachedToUser"
+        
+        /* Resource's project */
         val AttachedToProject = "http://www.knora.org/ontology/knora-base#attachedToProject"
 
-        val Description = "http://www.knora.org/ontology/knora-base#description"
-
-
         /* User */
-        val User = KNORA_BASE_PREFIX + "User"
-        val Username = KNORA_BASE_PREFIX + "userid"
-        val Email = KNORA_BASE_PREFIX + "email"
-        val Password = KNORA_BASE_PREFIX + "password"
-        val UsersActiveProject = KNORA_BASE_PREFIX + "currentproject"
-        val IsActiveUser = KNORA_BASE_PREFIX + "isActiveUser"
-        val IsInProject = KNORA_BASE_PREFIX + "isInProject"
-        val IsInGroup = KNORA_BASE_PREFIX + "isInGroup"
-        val IsInSystemAdminGroup = KNORA_BASE_PREFIX + "isInSystemAdminGroup"
-        val IsInProjectAdminGroup = KNORA_BASE_PREFIX + "isInProjectAdminGroup"
+        val User = KnoraBasePrefixExpansion                   + "User"
+        val Username = KnoraBasePrefixExpansion               + "userid"
+        val Email = KnoraBasePrefixExpansion                  + "email"
+        val Password = KnoraBasePrefixExpansion               + "password"
+        val UsersActiveProject = KnoraBasePrefixExpansion     + "currentproject"
+        val IsActiveUser = KnoraBasePrefixExpansion           + "isActiveUser"
+        val PreferredLanguage = KnoraBasePrefixExpansion      + "preferredLanguage"
+        val IsInProject = KnoraBasePrefixExpansion            + "isInProject"
+        val IsInGroup = KnoraBasePrefixExpansion              + "isInGroup"
+        val IsInSystemAdminGroup = KnoraBasePrefixExpansion   + "isInSystemAdminGroup"
+        val IsInProjectAdminGroup = KnoraBasePrefixExpansion  + "isInProjectAdminGroup"
 
         /* Project */
-        val KnoraProject = KNORA_BASE_PREFIX + "knoraProject"
-        val ProjectShortname = KNORA_BASE_PREFIX + "projectShortname"
-        val ProjectLongname = KNORA_BASE_PREFIX + "projectLongname"
-        val ProjectDescription = KNORA_BASE_PREFIX + "projectDescription"
-        val ProjectKeywords = KNORA_BASE_PREFIX + "projectKeywords"
-        val ProjectBasepath = KNORA_BASE_PREFIX + "projectBasepath"
-        val ProjectLogo = KNORA_BASE_PREFIX + "projectLogo"
-        val ProjectOntologyGraph = KNORA_BASE_PREFIX + "projectOntologyGraph"
-        val ProjectDataGraph = KNORA_BASE_PREFIX + "projectDataGraph"
-        val IsActiveProject = KNORA_BASE_PREFIX + "isActiveProject"
-        val HasSelfJoinEnabled = KNORA_BASE_PREFIX + "hasSelfJoinEnabled"
-        val HasProjectAdmin = KNORA_BASE_PREFIX + "hasProjectAdmin"
+        val KnoraProject = KnoraBasePrefixExpansion           + "knoraProject"
+        val ProjectShortname = KnoraBasePrefixExpansion       + "projectShortname"
+        val ProjectLongname = KnoraBasePrefixExpansion        + "projectLongname"
+        val ProjectDescription = KnoraBasePrefixExpansion     + "projectDescription"
+        val ProjectKeywords = KnoraBasePrefixExpansion        + "projectKeywords"
+        val ProjectBasepath = KnoraBasePrefixExpansion        + "projectBasepath"
+        val ProjectLogo = KnoraBasePrefixExpansion            + "projectLogo"
+        val ProjectOntologyGraph = KnoraBasePrefixExpansion   + "projectOntologyGraph"
+        val ProjectDataGraph = KnoraBasePrefixExpansion       + "projectDataGraph"
+        val IsActiveProject = KnoraBasePrefixExpansion        + "isActiveProject"
+        val HasSelfJoinEnabled = KnoraBasePrefixExpansion     + "hasSelfJoinEnabled"
+        val HasProjectAdmin = KnoraBasePrefixExpansion        + "hasProjectAdmin"
 
         /* Group */
-        val Group = KNORA_BASE_PREFIX + "UserGroup"
-        val GroupName = KNORA_BASE_PREFIX + "groupName"
-        val GroupDescription = KNORA_BASE_PREFIX + "groupDescription"
-        val BelongsToProject = KNORA_BASE_PREFIX + "belongsToProject"
-        val IsActiveGroup = KNORA_BASE_PREFIX + "isActiveGroup"
+        val Group = KnoraBasePrefixExpansion                  + "UserGroup"
+        val GroupName = KnoraBasePrefixExpansion              + "groupName"
+        val GroupDescription = KnoraBasePrefixExpansion       + "groupDescription"
+        val BelongsToProject = KnoraBasePrefixExpansion       + "belongsToProject"
+        val IsActiveGroup = KnoraBasePrefixExpansion          + "isActiveGroup"
 
         /* Built-In Groups */
-        val UnknownUser = "http://www.knora.org/ontology/knora-base#UnknownUser"
-        val KnownUser = "http://www.knora.org/ontology/knora-base#KnownUser"
-        val ProjectMember = "http://www.knora.org/ontology/knora-base#ProjectMember"
-        val Creator = "http://www.knora.org/ontology/knora-base#Creator"
-        val SystemAdmin = "http://www.knora.org/ontology/knora-base#SystemAdmin"
-        val ProjectAdmin = "http://www.knora/ontology/knora-base#ProjectAdmin"
-        val GroupAdmin = "http://www.knora.org/ontology/knora-base#GroupAdmin"
+        val UnknownUser = KnoraBasePrefixExpansion            + "UnknownUser"
+        val KnownUser = KnoraBasePrefixExpansion              + "KnownUser"
+        val ProjectMember = KnoraBasePrefixExpansion          + "ProjectMember"
+        val Owner = "http://www.knora.org/ontology/knora-base#Owner" // ToDo: remove as it is now called creator
+        val Creator = KnoraBasePrefixExpansion                + "Creator"
+        val SystemAdmin = KnoraBasePrefixExpansion            + "SystemAdmin"
+        val ProjectAdmin = KnoraBasePrefixExpansion           + "ProjectAdmin"
 
         /* Institution */
-        val Institution = KNORA_BASE_PREFIX + "Institution"
+        val Institution = KnoraBasePrefixExpansion + "Institution"
 
         /* Permissions */
-        val AdministrativePermission = KNORA_BASE_PREFIX + "AdministrativePermission"
-        val DefaultObjectAccessPermission = KNORA_BASE_PREFIX + "DefaultObjectAccessPermission"
-        val ForProject = KNORA_BASE_PREFIX + "forProject"
-        val ForGroup = KNORA_BASE_PREFIX + "forGroup"
-        val ForResourceClass = KNORA_BASE_PREFIX + "forResourceClass"
-        val ForProperty = KNORA_BASE_PREFIX + "forProperty"
-        val HasPermissions = KNORA_BASE_PREFIX + "hasPermissions"
+        val HasPermissions = "http://www.knora.org/ontology/knora-base#hasPermissions"
 
-        val AllProjects = KNORA_BASE_PREFIX + "AllProjects"
-        val AllGroups = KNORA_BASE_PREFIX + "AllGroups"
-        val AllResourceClasses = KNORA_BASE_PREFIX + "AllResourceClasses"
-        val AllProperties = KNORA_BASE_PREFIX + "AllProperties"
+        val RestrictedViewPermission = "RV"
+        val ViewPermission = "V"
+        val ModifyPermission = "M"
+        val DeletePermission = "D"
+        val ChangeRightsPermission = "CR"
+        val MaxPermission = ChangeRightsPermission
 
-        /* Object Access Permission Properties */
-        val HasRestrictedViewPermission = KNORA_BASE_PREFIX + "hasRestrictedViewPermission"
-        val HasViewPermission = KNORA_BASE_PREFIX + "hasViewPermission"
-        val HasModifyPermission = KNORA_BASE_PREFIX + "hasModifyPermission"
-        val HasDeletePermission = KNORA_BASE_PREFIX + "hasDeletePermission"
-        val HasChangeRightsPermission = KNORA_BASE_PREFIX + "hasChangeRightsPermission"
-        val HasMaxPermission = HasChangeRightsPermission
+        val PermissionAbbreviations = Seq(
+            RestrictedViewPermission,
+            ViewPermission,
+            ModifyPermission,
+            DeletePermission,
+            ChangeRightsPermission
+        )
 
-        /* Default Object Access Permissions */
-        val HasDefaultObjectAccessPermission = KNORA_BASE_PREFIX + "hasDefaultObjectAccessPermission"
-        val HasDefaultRestrictedViewPermission = KNORA_BASE_PREFIX + "hasDefaultRestrictedViewPermission"
-        val HasDefaultViewPermission = KNORA_BASE_PREFIX + "hasDefaultViewPermission"
-        val HasDefaultModifyPermission = KNORA_BASE_PREFIX + "hasDefaultModifyPermission"
-        val HasDefaultDeletePermission = KNORA_BASE_PREFIX + "hasDefaultDeletePermission"
-        val HasDefaultChangeRightsPermission = KNORA_BASE_PREFIX + "hasDefaultChangeRightsPermission"
+        val PermissionListDelimiter = '|'
+        val GroupListDelimiter = ','
 
-        val defaultPermissionProperties = Set(
+        val HasDefaultRestrictedViewPermission = "http://www.knora.org/ontology/knora-base#hasDefaultRestrictedViewPermission"
+        val HasDefaultViewPermission = "http://www.knora.org/ontology/knora-base#hasDefaultViewPermission"
+        val HasDefaultModifyPermission = "http://www.knora.org/ontology/knora-base#hasDefaultModifyPermission"
+        val HasDefaultDeletePermission = "http://www.knora.org/ontology/knora-base#hasDefaultDeletePermission"
+        val HasDefaultChangeRightsPermission = "http://www.knora.org/ontology/knora-base#hasDefaultChangeRightsPermission"
+
+        val DefaultPermissionProperties = Set(
             HasDefaultRestrictedViewPermission,
             HasDefaultViewPermission,
             HasDefaultModifyPermission,
             HasDefaultDeletePermission,
             HasDefaultChangeRightsPermission
         )
+
+        val AdministrativePermission = KnoraBasePrefixExpansion       + "AdministrativePermission"
+        val DefaultObjectAccessPermission = KnoraBasePrefixExpansion  + "DefaultObjectAccessPermission"
+        val ForProject = KnoraBasePrefixExpansion                     + "forProject"
+        val ForGroup = KnoraBasePrefixExpansion                       + "forGroup"
+        val ForResourceClass = KnoraBasePrefixExpansion               + "forResourceClass"
+        val ForProperty = KnoraBasePrefixExpansion                    + "forProperty"
+
+        val AllProjects = KnoraBasePrefixExpansion                    + "AllProjects"
+        val AllGroups = KnoraBasePrefixExpansion                      + "AllGroups"
+        val AllResourceClasses = KnoraBasePrefixExpansion             + "AllResourceClasses"
+        val AllProperties = KnoraBasePrefixExpansion                  + "AllProperties"
+
+        /**
+          * The system user is the owner of objects that are created by the system, rather than directly by the user,
+          * such as link values for standoff resource references.
+          */
+        val SystemUser = "http://www.knora.org/ontology/knora-base#SystemUser"
 
     }
 
@@ -244,13 +263,15 @@ object OntologyConstants {
         val List = "http://www.knora.org/ontology/salsah-gui#List"
         val Radio = "http://www.knora.org/ontology/salsah-gui#Radio"
         val Richtext = "http://www.knora.org/ontology/salsah-gui#Richtext"
-        val Time = "http://www.knora.org/ontology/salsah-gui#Time"
         val Interval = "http://www.knora.org/ontology/salsah-gui#Interval"
         val Geonames = "http://www.knora.org/ontology/salsah-gui#Geonames"
+        val Fileupload = "http://www.knora.org/ontology/salsah-gui#Fileupload"
+
         object attributeNames {
             val resourceClass = "restypeid"
             val assignmentOperator = "="
         }
+
     }
 
     object Foaf {

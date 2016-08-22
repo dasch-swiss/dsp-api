@@ -59,7 +59,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     val usernameEmpty = ""
 
     val passwordCorrect = "test"
-    val passwordCorrectHashed = SharedTestData.rootUserProfileV1.userData.hashedpassword.get
+    val passwordCorrectHashed = SharedTestData.rootUserProfileV1.userData.password.get
     val passwordWrong = "wrong"
     val passwordEmpty = ""
 

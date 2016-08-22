@@ -30,6 +30,7 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.valuemessages.{CreateRichtextV1, StandoffPositionV1}
+import spray.json.JsonParser
 
 
 /**
@@ -53,9 +54,9 @@ object InputValidation {
         }
     }
 
-    def toDouble(s: String, errorFun: () => Nothing): Double = {
+    def toBigDecimal(s: String, errorFun: () => Nothing): BigDecimal = {
         try {
-            s.toDouble
+            BigDecimal(s)
         } catch {
             case e: Exception => errorFun() // value could not be converted to an Float
         }
@@ -105,14 +106,18 @@ object InputValidation {
         )
     }
 
-    def toGeometryString(s: String, errorFun: () => Nothing) = {
-        // TODO: here, we expect a serialized JSON object
+    def toGeometryString(s: String, errorFun: () => Nothing): String = {
+        // TODO: For now, we just make sure that the string is valid JSON. We should stop JSON in the triplestore, and represent geometry in RDF instead (issue 169).
 
-        s
-
+        try {
+            JsonParser(s)
+            s
+        } catch {
+            case e: Exception => errorFun()
+        }
     }
 
-    def toColor(s: String, errorFun: () => Nothing) = {
+    def toColor(s: String, errorFun: () => Nothing): String = {
 
         val pattern = "^#(?:[0-9a-fA-F]{3}){1,2}$".r // http://stackoverflow.com/questions/1636350/how-to-identify-a-given-string-is-hex-color-format
 
@@ -193,14 +198,14 @@ object InputValidation {
     def validateTextattr(textattr: Map[String, Seq[StandoffPositionV1]]): Map[String, Seq[StandoffPositionV1]] = {
         textattr.map {
             case (attr: String, positions: Seq[StandoffPositionV1]) => (InputValidation.toSparqlEncodedString(attr), positions.map {
-                    case (position: StandoffPositionV1) => StandoffPositionV1(start = position.start, end = position.end, href = position.href match {
-                            case Some(href) => Some(InputValidation.toIri(href, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute href $href")))
-                            case _ => None
-                        }, resid = position.resid match {
-                            case Some(resid) => Some(InputValidation.toIri(resid, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute resid $resid")))
-                            case _ => None
-                        })
+                case (position: StandoffPositionV1) => StandoffPositionV1(start = position.start, end = position.end, href = position.href match {
+                    case Some(href) => Some(InputValidation.toIri(href, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute href $href")))
+                    case _ => None
+                }, resid = position.resid match {
+                    case Some(resid) => Some(InputValidation.toIri(resid, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute resid $resid")))
+                    case _ => None
                 })
+            })
         }
     }
 

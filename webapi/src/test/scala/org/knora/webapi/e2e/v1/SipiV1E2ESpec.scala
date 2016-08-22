@@ -58,8 +58,8 @@ class SipiV1E2ESpec extends R2RSpec {
 
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val resourcesPath = ResourcesRouteV1.rapierPath(system, settings, log)
-    val valuesPath = ValuesRouteV1.rapierPath(system, settings, log)
+    val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
+    val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
     implicit val timeout: Timeout = 300.seconds
 

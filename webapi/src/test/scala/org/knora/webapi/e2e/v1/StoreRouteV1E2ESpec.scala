@@ -44,7 +44,7 @@ class StoreRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) {
     import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
 
     /**
-      * The marshaling to Json is done automatically by spray, hence the import ot the 'TriplestoreJsonProtocol'.
+      * The marshaling to Json is done automatically by spray, hence the import of the 'TriplestoreJsonProtocol'.
       * The Json which spray generates looks like this:
       *
       *  [

@@ -406,13 +406,13 @@ SALSAH.searchlist = function(ele, pele, data, params, searchtype) {
 				} // foreach
 				if (RESVIEW.winclass == '.workwin_content') {
 					tr.on('click', function(event) {
-                        console.log("calling SALSAH.show_detail")
+                        //console.log("calling SALSAH.show_detail")
 						SALSAH.show_detail(arrele.obj_id, {searchtype: searchtype, params: params});
 					});
 				}
 				else {
 					tr.on('click', function(event) {
-                        console.log("1. calling RESVIEW.new_resource_editor")
+                        //console.log("1. calling RESVIEW.new_resource_editor")
 						RESVIEW.new_resource_editor(arrele.obj_id, '');
 					});
 				}

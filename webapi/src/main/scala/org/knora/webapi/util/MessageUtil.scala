@@ -2,8 +2,8 @@ package org.knora.webapi.util
 
 import org.apache.commons.lang3.StringEscapeUtils
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LiteralValueType, ResourceCreateValueObjectResponseV1, ResourceCreateValueResponseV1}
+import org.knora.webapi.messages.v1.responder.valuemessages._
 
 import scala.reflect.runtime.{universe => ru}
 
@@ -13,9 +13,10 @@ import scala.reflect.runtime.{universe => ru}
 object MessageUtil {
     /**
       * Recursively converts a Scala object to Scala source code for constructing the object (with named parameters). This is useful
-      * for writing tests containing hard-coded Akka messages. It works with case classes, collections ([[List]], [[Set]],
+      * for writing tests containing hard-coded Akka messages. It works with case classes, collections ([[Seq]], [[Set]],
       * and [[Map]]), [[Option]], enumerations (as long as the enumeration value's `toString` representation is the same
       * as its identifier), and primitive types. It doesn't work with classes defined inside methods.
+      *
       * @param obj the object to convert.
       * @return a string that can be pasted into Scala source code to construct the object.
       */
@@ -30,6 +31,7 @@ object MessageUtil {
             case long: Long => long.toString
             case float: Float => float.toString
             case double: Double => double.toString
+            case bigDecimal: BigDecimal => bigDecimal.toString
             case boolean: Boolean => boolean.toString
             case char: Char => char.toString
             case byte: Byte => byte.toString
@@ -84,11 +86,13 @@ object MessageUtil {
     }
 
     /**
-      * Converts a [[CreateValueResponseV1]] returned by the values responder on resource creation
-      * to the expected format for the resources responder [[ResourceCreateValueResponseV1]]
-      * @param resourceIri the Iri of the created resource.
-      * @param ownerIri the owner of the resource.
-      * @param propertyIri the property the valueResponse belongs to.
+      * Converts a [[CreateValueResponseV1]] returned by the values responder on value creation
+      * to the expected format for the resources responder [[ResourceCreateValueResponseV1]], which describes a value
+      * added to a new resource.
+      *
+      * @param resourceIri   the Iri of the created resource.
+      * @param ownerIri      the owner of the resource.
+      * @param propertyIri   the property the valueResponse belongs to.
       * @param valueResponse the value that has been attached to the resource.
       * @return a [[ResourceCreateValueResponseV1]] representing the created value.
       */
@@ -113,9 +117,9 @@ object MessageUtil {
                     ival = Some(Map(LiteralValueType.IntegerValue -> integerValue.ival))
                 )
 
-            case floatValue: FloatValueV1 =>
+            case decimalValue: DecimalValueV1 =>
                 basicObjectResponse.copy(
-                    fval = Some(Map(LiteralValueType.FloatValue -> floatValue.fval))
+                    dval = Some(Map(LiteralValueType.DecimalValue -> decimalValue.dval))
                 )
 
             case dateValue: DateValueV1 =>
@@ -133,6 +137,20 @@ object MessageUtil {
             case linkValue: LinkV1 => basicObjectResponse
 
             case stillImageFileValue: StillImageFileValueV1 => basicObjectResponse // TODO: implement this.
+
+            case hlistValue: HierarchicalListValueV1 => basicObjectResponse
+
+            case colorValue: ColorValueV1 => basicObjectResponse
+
+            case geomValue: GeomValueV1 => basicObjectResponse
+
+            case intervalValue: IntervalValueV1 => basicObjectResponse
+
+            case geonameValue: GeonameValueV1 => basicObjectResponse
+
+            case booleanValue: BooleanValueV1 => basicObjectResponse
+
+            case uriValue: UriValueV1 => basicObjectResponse
 
             case other => throw new Exception(s"Resource creation response format not implemented for value type ${other.valueTypeIri}") // TODO: implement remaining types.
         }

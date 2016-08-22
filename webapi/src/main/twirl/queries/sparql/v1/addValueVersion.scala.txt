@@ -36,8 +36,8 @@
  *        the form of a list of tuples (predicate, object).
  * @param value the value to insert.
  * @param an optional comment on the new value.
- * @param linkUpdates a list of [[linkUpdate]] objects describing links and LinkValues that need to be
- *        updated for resource references.
+ * @param linkUpdates a list of [[SparqlTemplateLinkUpdate]] objects describing links and LinkValues that need to be
+ *        updated for resource references in standoff markup.
  *
  * This operation will do nothing if `currentValueIri` is not in fact the most recent version, if `valueTypeIri` is
  * the wrong type for the property, or if the resource or the current value are nonexistent or marked as deleted. To
@@ -50,8 +50,10 @@
   currentValueIri: IRI,
   newValueIri: IRI,
   valueTypeIri: IRI,
-  permissionRelevantAssertions: Seq[(IRI, IRI)],
   value: UpdateValueV1,
+  valueOwner: IRI,
+  valueProject: IRI,
+  maybeValuePermissions: Option[String],
   maybeComment: Option[String],
   linkUpdates: Seq[SparqlTemplateLinkUpdate])
 
@@ -85,12 +87,11 @@ DELETE {
     GRAPH ?dataNamedGraph {
         @* Construct the new value version. *@
         ?newValue rdf:type ?valueType ;
-            knora-base:isDeleted "false"^^xsd:boolean .
+            knora-base:isDeleted "false"^^xsd:boolean ;
+            knora-base:valueHasString """@value.toString""" .
 
         @value match {
             case textValue: TextValueV1 => {
-
-                ?newValue knora-base:valueHasString """@textValue.utf8str""" .
 
                 @* Create a Standoff node for each StandoffPositionV1. *@
 
@@ -131,14 +132,24 @@ DELETE {
             case intValue: IntegerValueV1 => {
 
                 ?newValue knora-base:valueHasInteger @intValue.ival .
-                ?newValue knora-base:valueHasString """@intValue.ival.toString""" .
 
             }
 
-            case floatValue: FloatValueV1 => {
+            case decimalValue: DecimalValueV1 => {
 
-                ?newValue knora-base:valueHasFloat @floatValue.fval .
-                ?newValue knora-base:valueHasString """@floatValue.fval.toString""" .
+                ?newValue knora-base:valueHasDecimal "@decimalValue.dval"^^xsd:decimal .
+
+            }
+
+            case booleanValue: BooleanValueV1 => {
+
+                ?newValue knora-base:valueHasBoolean @booleanValue.bval .
+
+            }
+
+            case uriValue: UriValueV1 => {
+
+                ?newValue knora-base:valueHasUri """@uriValue.uri""" .
 
             }
 
@@ -149,21 +160,18 @@ DELETE {
                 ?newValue knora-base:valueHasStartPrecision "@jdcValue.dateprecision1" .
                 ?newValue knora-base:valueHasEndPrecision "@jdcValue.dateprecision2" .
                 ?newValue knora-base:valueHasCalendar "@jdcValue.calendar" .
-                ?newValue knora-base:valueHasString """@jdcValue.toString""" .
 
             }
 
             case colorValue: ColorValueV1 => {
 
                 ?newValue knora-base:valueHasColor """@colorValue.color""" .
-                ?newValue knora-base:valueHasString """@colorValue.toString""" .
 
             }
 
             case geometryValue: GeomValueV1 => {
 
                 ?newValue knora-base:valueHasGeometry """@geometryValue.geom""" .
-                ?newValue knora-base:valueHasString """@geometryValue.toString""" .
 
             }
 
@@ -178,16 +186,27 @@ DELETE {
                 ?newValue knora-base:valueHasQname """@stillImageFileValue.qualityName""" .
 
                 @if(stillImageFileValue.isPreview) {
-                    ?newValue knora-base:valueIsPreview true .
+                    ?newValue knora-base:isPreview true .
                 }
 
-                ?newValue knora-base:valueHasString """@stillImageFileValue.toString""" .
             }
 
             case listValue: HierarchicalListValueV1 => {
 
                 ?newValue knora-base:valueHasListNode <@listValue.hierarchicalListIri> .
-                ?newValue knora-base:valueHasString """@listValue.toString""" .
+
+            }
+
+            case intervalValue: IntervalValueV1 => {
+
+                ?newValue knora-base:valueHasIntervalStart @intervalValue.timeval1 ;
+                          knora-base:valueHasIntervalEnd @intervalValue.timeval2 .
+
+            }
+
+            case geonameValue: GeonameValueV1 => {
+
+                ?newValue knora-base:valueHasGeonameCode """@geonameValue.geonameCode""" .
 
             }
 
@@ -208,8 +227,18 @@ DELETE {
         }
 
         @* Insert the value's permission-relevant assertions (its owner, project, and permissions). *@
-        @for(assertion <- permissionRelevantAssertions) {
-            ?newValue <@assertion._1> <@assertion._2> .
+        ?newValue knora-base:attachedToUser <@valueOwner> ;
+            knora-base:attachedToProject <@valueProject> .
+
+        @maybeValuePermissions match {
+
+            case Some(valuePermissions) => {
+
+                ?newValue knora-base:hasPermissions "@valuePermissions" .
+
+            }
+
+            case None => {}
         }
 
         @* TODO: in case of a file value, order is not given *@
@@ -230,16 +259,38 @@ DELETE {
                 rdf:subject ?resource ;
                 rdf:predicate <@linkUpdate.linkPropertyIri> ;
                 rdf:object <@linkUpdate.linkTargetIri> ;
+                knora-base:valueHasString "@linkUpdate.linkTargetIri" ;
                 knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
                 @if(linkUpdate.newReferenceCount == 0) {
                     knora-base:isDeleted true ;
+                    knora-base:deleteDate ?currentTime ;
                 } else {
                     knora-base:isDeleted false ;
                 }
                 knora-base:valueCreationDate ?currentTime .
 
-            @for(assertion <- linkUpdate.permissionRelevantAssertions) {
-                <@linkUpdate.newLinkValueIri> <@assertion._1> <@assertion._2> .
+            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueOwner> .
+
+            @linkUpdate.newLinkValueProject match {
+
+                case Some(linkValueProject) => {
+
+                    <@linkUpdate.newLinkValueIri> knora-base:attachedToProject <@linkValueProject> .
+
+                }
+
+                case None => {}
+            }
+
+            @linkUpdate.newLinkValuePermissions match {
+
+                case Some(linkValuePermissions) => {
+
+                    <@linkUpdate.newLinkValueIri> knora-base:hasPermissions "@linkValuePermissions" .
+
+                }
+
+                case None => {}
             }
 
             @* If we're inserting a new version of an existing LinkValue, attach it to the previous version. *@
@@ -272,6 +323,7 @@ WHERE {
     BIND(NOW() AS ?currentTime)
 
     ?resource ?property ?currentValue .
+    ?currentValue rdf:type ?valueType .
     ?property knora-base:objectClassConstraint ?valueType .
 
     @*

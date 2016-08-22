@@ -83,6 +83,7 @@ object ApiStatusCodesV1 extends Enumeration {
 
     /**
       * Converts an HTTP status code to a similar API status code.
+      *
       * @param httpStatus an HTTP status code.
       * @return an API status code.
       */
@@ -102,6 +103,7 @@ object ApiStatusCodesV1 extends Enumeration {
 
     /**
       * Converts an exception to a similar API status code.
+      *
       * @param ex an exception.
       * @return an API status code.
       */
@@ -124,6 +126,7 @@ object ApiStatusCodesV1 extends Enumeration {
 
     /**
       * Converts an API status code to a similar HTTP status code.
+      *
       * @param apiStatus an API status code.
       * @return an HTTP status code.
       */

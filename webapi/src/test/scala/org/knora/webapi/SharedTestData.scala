@@ -39,7 +39,7 @@ object SharedTestData {
             firstname = Some("System"),
             lastname = Some("Administrator"),
             email = Some("root@example.com"),
-            hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
             lang = "de"
@@ -63,7 +63,7 @@ object SharedTestData {
             firstname = Some("Super"),
             lastname = Some("User"),
             email = Some("super.user@example.com"),
-            hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
             lang = "de"
@@ -84,7 +84,7 @@ object SharedTestData {
             firstname = Some("Normal"),
             lastname = Some("User"),
             email = Some("normal.user@example.com"),
-            hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
             lang = "de"
@@ -118,7 +118,7 @@ object SharedTestData {
             firstname = Some("User01"),
             lastname = Some("User"),
             email = Some("user01.user1@example.com"),
-            hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
             lang = "de"
@@ -141,7 +141,7 @@ object SharedTestData {
             firstname = Some("User02"),
             lastname = Some("User"),
             email = Some("user02.user@example.com"),
-            hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
             lang = "de"
@@ -164,7 +164,7 @@ object SharedTestData {
             firstname = Some("User"),
             lastname = Some("Test"),
             email = Some("user.test@example.com"),
-            hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
             lang = "de"
@@ -188,7 +188,7 @@ object SharedTestData {
             firstname = Some("Multi"),
             lastname = Some("User"),
             email = Some("multi.user@example.com"),
-            hashedpassword = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
             lang = "de"

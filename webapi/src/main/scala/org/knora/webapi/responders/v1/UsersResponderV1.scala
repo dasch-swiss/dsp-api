@@ -24,11 +24,10 @@ import java.util.UUID
 
 import akka.actor.Status
 import akka.pattern._
-import com.ontotext.trree.x
 import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1, GroupInfoType}
-import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionV1, DefaultObjectAccessPermissionsForProjectsGetRequestV1, GetUserAdministrativePermissionsRequestV1, GetUserDefaultObjectAccessPermissionsRequestV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{GetUserAdministrativePermissionsRequestV1, GetUserDefaultObjectAccessPermissionsRequestV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
@@ -228,7 +227,7 @@ class UsersResponderV1 extends ResponderV1 {
                 case OntologyConstants.Foaf.GivenName => currentUserProfile.userData.firstname.getOrElse("")
                 case OntologyConstants.Foaf.FamilyName => currentUserProfile.userData.lastname.getOrElse("")
                 case OntologyConstants.KnoraBase.Email => currentUserProfile.userData.email.getOrElse("")
-                case OntologyConstants.KnoraBase.Password => currentUserProfile.userData.hashedpassword.getOrElse("")
+                case OntologyConstants.KnoraBase.Password => currentUserProfile.userData.password.getOrElse("")
                 case OntologyConstants.KnoraBase.IsActiveUser => currentUserProfile.userData.isActiveUser.getOrElse(false)
                 case OntologyConstants.KnoraBase.PreferredLanguage => currentUserProfile.userData.lang
                 case x => throw BadRequestException(s"The property $propertyIri is not allowed")
@@ -294,7 +293,7 @@ class UsersResponderV1 extends ResponderV1 {
                     }
                 }
                 case OntologyConstants.KnoraBase.Password => {
-                    if (!updatedUserProfile.userData.hashedpassword.contains(newValue.asInstanceOf[String])) {
+                    if (!updatedUserProfile.userData.password.contains(newValue.asInstanceOf[String])) {
                         throw UpdateNotPerformedException("User's 'password' was not updated. Please report this as a possible bug.")
                     }
                 }
@@ -351,20 +350,6 @@ class UsersResponderV1 extends ResponderV1 {
 
             //log.debug(s"RAW: ${groupedUserData.toString}")
 
-            userDataV1 = UserDataV1(
-                user_id = Some(returnedUserIri),
-                username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
-                firstname = groupedUserData.get(OntologyConstants.Foaf.GivenName).map(_.head),
-                lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
-                email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
-                hashedpassword = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-                isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.IsActiveUser).map(_.head.toBoolean),
-                lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
-                    case Some(langList) => langList.head
-                    case None => settings.fallbackLanguage
-                }
-            )
-
             groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
                 case Some(groups) => groups
                 case None => Vector.empty[IRI]
@@ -374,6 +359,29 @@ class UsersResponderV1 extends ResponderV1 {
                 case Some(projects) => projects
                 case None => Vector.empty[IRI]
             }
+
+            projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
+                projectIri => (responderManager ? ProjectInfoByIRIGetRequest(projectIri, ProjectInfoType.SHORT, None)).mapTo[ProjectInfoResponseV1] map (_.project_info)
+            }
+
+            projectInfos <- Future.sequence(projectInfoFutures)
+
+            userDataV1 = UserDataV1(
+                lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
+                    case Some(langList) => langList.head
+                    case None => settings.fallbackLanguage
+                },
+                user_id = Some(returnedUserIri),
+                username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
+                firstname = groupedUserData.get(OntologyConstants.Foaf.GivenName).map(_.head),
+                lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
+                email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
+                password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
+				isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.IsActiveUser).map(_.head.toBoolean),
+                active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head),
+                projects = if (projectIris.nonEmpty) Some(projectIris) else None,
+                projects_info = projectInfos
+            )
 
             isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).map(_.head.toBoolean).getOrElse(false)
             isInProjectAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInProjectAdminGroup).getOrElse(Vector.empty[IRI])

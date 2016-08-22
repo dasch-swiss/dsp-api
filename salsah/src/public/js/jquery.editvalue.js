@@ -318,7 +318,7 @@
 										action: 'delete',
 										value_id: value_id
 									};
-									SALSAH.ApiDelete('values/' + value_id, function (data) {
+									SALSAH.ApiDelete('values/' + encodeURIComponent(value_id), function (data) {
 										if (data.status == ApiErrors.OK) {
 											settings.property.values.splice(value_index, 1);
 											settings.property.value_ids.splice(value_index, 1);

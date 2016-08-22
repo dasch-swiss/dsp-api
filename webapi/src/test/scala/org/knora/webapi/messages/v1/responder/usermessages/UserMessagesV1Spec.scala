@@ -36,7 +36,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
     val firstname = SharedTestData.rootUserProfileV1.userData.firstname
     val lastname = SharedTestData.rootUserProfileV1.userData.lastname
     val email = SharedTestData.rootUserProfileV1.userData.email
-    val hashedpassword = SharedTestData.rootUserProfileV1.userData.hashedpassword
+    val password = SharedTestData.rootUserProfileV1.userData.password
     val groups = SharedTestData.rootUserProfileV1.groups
     val projects = SharedTestData.rootUserProfileV1.projects
     val isInSystemAdminGroup = SharedTestData.rootUserProfileV1.isInSystemAdminGroup
@@ -53,7 +53,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                     firstname = firstname,
                     lastname = lastname,
                     email = email,
-                    hashedpassword = hashedpassword,
+                    password = password,
                     token = token,
                     lang = lang
                 ),
@@ -70,7 +70,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                     firstname = firstname,
                     lastname = lastname,
                     email = email,
-                    hashedpassword = None,
+                    password = None,
                     token = None,
                     lang = lang
                     ),
@@ -87,7 +87,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
             val hp = BCrypt.hashpw("123456", BCrypt.gensalt())
             val up = UserProfileV1(
                 UserDataV1(
-                    hashedpassword = Some(hp),
+                    password = Some(hp),
                     lang = lang
                 ))
 

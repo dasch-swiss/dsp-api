@@ -78,10 +78,10 @@ case class ExtendedSearchGetRequestV1(filterByRestype: Option[IRI] = None,
 /**
   * Represents a response to a user search query (both fulltext and extended search)
   *
-  * @param userdata information about the user that made the request.
-  * @param subjects list of [[SearchResultRowV1]] each representing on resource.
-  * @param nhits total number of hits.
-  * @param paging information for paging.
+  * @param userdata  information about the user that made the request.
+  * @param subjects  list of [[SearchResultRowV1]] each representing on resource.
+  * @param nhits     total number of hits.
+  * @param paging    information for paging.
   * @param thumb_max maximal dimensions of preview representations.
   */
 case class SearchGetResponseV1(userdata: UserDataV1,
@@ -132,14 +132,14 @@ case class SearchPreviewDimensionsV1(nx: Int, ny: Int)
 /**
   * Represents one row (resource) in [[SearchGetResponseV1]]
   *
-  * @param obj_id Iri of the retrieved resource.
+  * @param obj_id       Iri of the retrieved resource.
   * @param preview_path path to a preview representation.
-  * @param iconsrc icon representing the resource type.
-  * @param icontitle description of the resource type.
-  * @param iconlabel description of the resource type.
+  * @param iconsrc      icon representing the resource type.
+  * @param icontitle    description of the resource type.
+  * @param iconlabel    description of the resource type.
   * @param valuetype_id value type of the first property.
-  * @param valuelabel label of the first property.
-  * @param value (text) value of the first property.
+  * @param valuelabel   label of the first property.
+  * @param value        (text) value of the first property.
   */
 case class SearchResultRowV1(obj_id: IRI,
                              preview_path: Option[String],
@@ -156,8 +156,8 @@ case class SearchResultRowV1(obj_id: IRI,
 /**
   * An element in a list of search result pages.
   *
-  * @param current true if this element represents the current page.
-  * @param start_at the index of the first search result on the page.
+  * @param current    true if this element represents the current page.
+  * @param start_at   the index of the first search result on the page.
   * @param show_nrows the number of results on the page.
   */
 case class SearchResultPage(current: Boolean, start_at: Int, show_nrows: Int)

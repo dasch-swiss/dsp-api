@@ -55,6 +55,7 @@
             rdf:subject ?resource ;
             rdf:predicate ?linkProperty@valueIndex ;
             rdf:object ?linkTarget@valueIndex ;
+            knora-base:valueHasString "@linkUpdate.linkTargetIri" ;
             knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
             @maybeComment match {
                 case Some(comment) => {
@@ -67,8 +68,28 @@
             knora-base:isDeleted false ;
             knora-base:valueCreationDate ?currentTime .
 
-        @for(assertion <- linkUpdate.permissionRelevantAssertions) {
-            ?newLinkValue@valueIndex <@assertion._1> <@assertion._2> .
+        ?newLinkValue@valueIndex knora-base:attachedToUser <@linkUpdate.newLinkValueOwner> .
+
+        @linkUpdate.newLinkValueProject match {
+
+            case Some(linkValueProject) => {
+
+                ?newLinkValue@valueIndex knora-base:attachedToProject <@linkValueProject> .
+
+            }
+
+            case None => {}
+        }
+
+        @linkUpdate.newLinkValuePermissions match {
+
+            case Some(linkValuePermissions) => {
+
+                ?newLinkValue@valueIndex knora-base:hasPermissions "@linkValuePermissions" .
+
+            }
+
+            case None => {}
         }
 
         @* Attach the new LinkValue to its containing resource. *@
