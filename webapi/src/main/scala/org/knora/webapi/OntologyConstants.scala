@@ -195,6 +195,9 @@ object OntologyConstants {
         /* Permissions */
         val HasPermissions = "http://www.knora.org/ontology/knora-base#hasPermissions"
 
+        val PermissionListDelimiter = '|'
+        val GroupListDelimiter = ','
+
         val RestrictedViewPermission = "RV"
         val ViewPermission = "V"
         val ModifyPermission = "M"
@@ -202,7 +205,8 @@ object OntologyConstants {
         val ChangeRightsPermission = "CR"
         val MaxPermission = ChangeRightsPermission
 
-        val PermissionAbbreviations = Seq(
+
+        val ObjectAccessPermissionAbbreviations = Seq(
             RestrictedViewPermission,
             ViewPermission,
             ModifyPermission,
@@ -210,8 +214,37 @@ object OntologyConstants {
             ChangeRightsPermission
         )
 
-        val PermissionListDelimiter = '|'
-        val GroupListDelimiter = ','
+        val ProjectResourceCreateAllPermission = "ProjectResourceCreateAllPermission"
+        val ProjectResourceCreateRestrictedPermission = "ProjectResourceCreateRestrictedPermission"
+        val ProjectAdminAllPermission = "ProjectAdminAllPermission"
+        val ProjectAdminGroupAllPermission = "ProjectAdminGroupAllPermission"
+        val ProjectAdminGroupRestrictedPermission = "ProjectAdminGroupRestrictedPermission"
+        val ProjectAdminRightsAllPermission = "ProjectAdminRightsAllPermission"
+        val ProjectAdminOntologyAllPermission = "ProjectAdminOntologyAllPermission"
+
+        val AdministrativePermissionAbbreviations = Seq(
+            ProjectResourceCreateAllPermission,
+            ProjectResourceCreateRestrictedPermission,
+            ProjectAdminAllPermission,
+            ProjectAdminGroupAllPermission,
+            ProjectAdminGroupRestrictedPermission,
+            ProjectAdminRightsAllPermission,
+            ProjectAdminOntologyAllPermission
+        )
+
+        val DefaultRestrictedViewPermission = "DRV"
+        val DefaultViewPermission = "DV"
+        val DefaultModifyPermission = "DM"
+        val DefaultDeletePermission = "DD"
+        val DefaultChangeRightsPermission = "DCR"
+
+        val DefaultObjectAccessPermissionAbbreviations = Seq(
+            DefaultRestrictedViewPermission,
+            DefaultViewPermission,
+            DefaultModifyPermission,
+            DefaultDeletePermission,
+            DefaultChangeRightsPermission
+        )
 
         val HasDefaultRestrictedViewPermission = "http://www.knora.org/ontology/knora-base#hasDefaultRestrictedViewPermission"
         val HasDefaultViewPermission = "http://www.knora.org/ontology/knora-base#hasDefaultViewPermission"

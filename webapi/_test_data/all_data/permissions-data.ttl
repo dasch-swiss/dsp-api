@@ -37,7 +37,7 @@
 
                       knora-base:forProperty knora-base:AllProperties ;
 
-                      knora-base:hasPermissions "CR kb:Creator|M kb:ProjectMember|V kb:KnownUser"^^xsd:string .
+                      knora-base:hasPermissions "DCR kb:Creator|DM kb:ProjectMember|DV kb:KnownUser"^^xsd:string .
 
 
 
@@ -85,7 +85,7 @@
 
                       knora-base:forProperty knora-base:AllProperties ;
 
-                      knora-base:hasPermissions "CR kb:Creator|M kb:ProjectMember|V kb:KnownUser"^^xsd:string .
+                      knora-base:hasPermissions "DCR kb:Creator|DM kb:ProjectMember|DV kb:KnownUser"^^xsd:string .
 
 
 
@@ -134,7 +134,7 @@
 
                       knora-base:forProperty knora-base:AllProperties ;
 
-                      knora-base:hasPermissions "CR kb:Creator|M kb:ProjectMember|V kb:KnownUser"^^xsd:string .
+                      knora-base:hasPermissions "DCR kb:Creator|DM kb:ProjectMember|DV kb:KnownUser"^^xsd:string .
 
 
 

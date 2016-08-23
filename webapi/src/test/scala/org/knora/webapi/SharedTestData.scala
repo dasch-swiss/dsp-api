@@ -21,7 +21,6 @@
 package org.knora.webapi
 
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1, GroupPermissionV1}
-import org.knora.webapi.messages.v1.responder.permissionmessages.Permissions
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 
@@ -203,9 +202,18 @@ object SharedTestData {
         isInSystemAdminGroup = false,
         isInProjectAdminGroup = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
         projectAdministrativePermissions = Map(
-            "http://data.knora.org/projects/77275339" -> List(Permissions.Creation.All,Permissions.ProjectAdmin.All),
-            "http://data.knora.org/projects/images" -> List(Permissions.Creation.All, Permissions.ProjectAdmin.All),
-            "http://data.knora.org/projects/666" -> List(Permissions.Creation.All, Permissions.ProjectAdmin.All)
+            "http://data.knora.org/projects/77275339" -> List(
+                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
+                OntologyConstants.KnoraBase.ProjectAdminAllPermission
+            ),
+            "http://data.knora.org/projects/images" -> List(
+                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
+                OntologyConstants.KnoraBase.ProjectAdminAllPermission
+            ),
+            "http://data.knora.org/projects/666" -> List(
+                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
+                OntologyConstants.KnoraBase.ProjectAdminAllPermission
+            )
         ),
         projectDefaultObjectAccessPermissions = Map.empty[IRI, List[IRI]]
 

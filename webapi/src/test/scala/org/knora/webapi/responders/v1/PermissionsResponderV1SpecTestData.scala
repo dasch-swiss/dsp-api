@@ -20,9 +20,8 @@
 
 package org.knora.webapi.responders.v1
 
-import dispatch.url
-import org.knora.webapi.OntologyConstants
-import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionV1, DefaultObjectAccessPermissionV1, Permissions}
+import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionV1, DefaultObjectAccessPermissionV1}
 
 /* Helper case classes */
 case class ap (iri: String, p: AdministrativePermissionV1)
@@ -41,9 +40,10 @@ object PermissionsResponderV1SpecTestData {
             p = AdministrativePermissionV1(
                 forProject = IMAGES_PROJECT_IRI,
                 forGroup = OntologyConstants.KnoraBase.ProjectMember,
-                hasPermissions = Array(Permissions.Creation.All)
+                hasPermissions = Map.empty[String, Set[IRI]]
             )
         )
+
 
     val perm002 =
         doap(

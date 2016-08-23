@@ -23,8 +23,9 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType.PermissionType
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsTemplate.PermissionsTemplate
-import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionV1, _}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionV1, PermissionType, _}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
@@ -121,14 +122,9 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             _ = log.debug(s"getAdministrativePermissionV1 - groupedResult: ${MessageUtil.toSource(groupedPermissionsQueryResponse)}")
 
-            hasPermissions = if (groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasPermissions, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIRI has no permissions attached")).head.nonEmpty) {
-                val str = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.HasPermissions, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIRI has no permissions attached")).head
-                val res = str.split("|")
-                println(res.toList)
-                res
-            } else {
-                Array.empty[String]
-            }
+            hasPermissions = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.AP)
+
+            _ = log.debug(s"getAdministrativePermissionV1 - hasPermissions: ${MessageUtil.toSource(hasPermissions)}")
 
             administrativePermission = if (groupedPermissionsQueryResponse.nonEmpty) {
                 Some(AdministrativePermissionV1 (
@@ -266,9 +262,18 @@ class PermissionsResponderV1 extends ResponderV1 {
 
         //ToDo: loop through each project the user is part of and retrieve the administrative permissions attached to each group he is in, calculate max permissions, package everything in a neat little object, and return it back
         Future(Map(
-            "http://data.knora.org/projects/77275339" -> List(Permissions.Creation.All,Permissions.ProjectAdmin.All),
-            "http://data.knora.org/projects/images" -> List(Permissions.Creation.All, Permissions.ProjectAdmin.All),
-            "http://data.knora.org/projects/666" -> List(Permissions.Creation.All, Permissions.ProjectAdmin.All)
+            "http://data.knora.org/projects/77275339" -> List(
+                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
+                OntologyConstants.KnoraBase.ProjectAdminAllPermission
+            ),
+            "http://data.knora.org/projects/images" -> List(
+                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
+                OntologyConstants.KnoraBase.ProjectAdminAllPermission
+            ),
+            "http://data.knora.org/projects/666" -> List(
+                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
+                OntologyConstants.KnoraBase.ProjectAdminAllPermission
+            )
         ))
     }
 
@@ -276,5 +281,61 @@ class PermissionsResponderV1 extends ResponderV1 {
 
         //ToDo: loop through each project the user is part of and retrieve the default object access permissions attached to each group he is in, calculate max permissions, package everything in a neat little object, and return it back
         Future(Map("IRI" -> List("ProjectResourceCreateAllPermission")))
+    }
+
+    /**
+      * -> Need this for reading permission literals.
+      *
+      * Parses the literal object of the predicate `knora-base:hasPermissions`.
+      *
+      * @param maybePermissionListStr the literal to parse.
+      * @return a [[Map]] in which the keys are permission abbreviations in
+      *         [[OntologyConstants.KnoraBase.ObjectAccessPermissionAbbreviations]], and the values are sets of
+      *         user group IRIs.
+      */
+    private def parsePermissions(maybePermissionListStr: Option[String], permissionType: PermissionType): Map[String, Set[IRI]] = {
+        maybePermissionListStr match {
+            case Some(permissionListStr) =>
+                val permissions: Seq[String] = permissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
+
+                permissions.map {
+                    permission =>
+                        val splitPermission = permission.split(' ')
+                        val abbreviation = splitPermission(0)
+
+                        permissionType match {
+                            case PermissionType.AP => {
+                                if (!OntologyConstants.KnoraBase.AdministrativePermissionAbbreviations.contains(abbreviation)) {
+                                    throw InconsistentTriplestoreDataException(s"Unrecognized permission abbreviation '$abbreviation'")
+                                }
+                                val shortGroups = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter).toSet
+                                val groups = shortGroups.map(_.replace(OntologyConstants.KnoraBase.KnoraBasePrefix, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion))
+
+                                (abbreviation, groups)
+                            }
+                            case PermissionType.DOAP => {
+                                if (!OntologyConstants.KnoraBase.AdministrativePermissionAbbreviations.contains(abbreviation)) {
+                                    throw InconsistentTriplestoreDataException(s"Unrecognized permission abbreviation '$abbreviation'")
+                                }
+                                val shortGroups = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter).toSet
+                                val groups = shortGroups.map(_.replace(OntologyConstants.KnoraBase.KnoraBasePrefix, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion))
+
+                                (abbreviation, groups)
+                        }
+
+                        if (permissionType == PermissionType.AP) {
+
+                        } else if (permissionType == PermissionType.DOAP)
+                                if (!OntologyConstants.KnoraBase.DefaultObjectAccessPermissionAbbreviations.contains(abbreviation))
+                                    throw InconsistentTriplestoreDataException(s"Unrecognized permission abbreviation '$abbreviation'")
+                        }
+
+
+
+
+                }.toMap
+
+            case None => Map.empty[String, Set[IRI]]
+        }
     }
 }
