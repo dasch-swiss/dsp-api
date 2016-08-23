@@ -37,7 +37,7 @@ case class Test(path: String, name: String)
   */
 object StoreRouteV1 extends Authenticator {
 
-    def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
         import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
         import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
@@ -50,31 +50,32 @@ object StoreRouteV1 extends Authenticator {
         path("v1" / "store") {
             get {
                 requestContext =>
+
                 /** Maybe return some statistics about the store, e.g., what triplestore, number of triples in
                   * each named graph and in total, etc.
                   */
                 // TODO: Implement some simple return
             }
         } ~
-        path("v1" / "store" / "ResetTriplestoreContent") {
-            post {
-                /* ResetTriplestoreContent */
-                entity(as[Seq[RdfDataObject]]) { apiRequest => requestContext =>
+            path("v1" / "store" / "ResetTriplestoreContent") {
+                post {
+                    /* ResetTriplestoreContent */
+                    entity(as[Seq[RdfDataObject]]) { apiRequest => requestContext =>
 
-                    val requestMessageTry = Try {
-                        // create the message
-                        ResetTriplestoreContentRequestV1(apiRequest)
+                        val requestMessageTry = Try {
+                            // create the message
+                            ResetTriplestoreContentRequestV1(apiRequest)
+                        }
+
+                        RouteUtilV1.runJsonRoute(
+                            requestMessageTry,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
                     }
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
                 }
             }
-        }
     }
 }

@@ -389,23 +389,25 @@ case class ChangeValueResponseV1(value: ApiValueV1,
 }
 
 /**
-  * Represents a request to mark a value as deleted. This will create a new version of the value, consisting of a
-  * copy of the current version plus the `knora-base:isDeleted` flag.
+  * Represents a request to mark a value as deleted.
   *
-  * @param valueIri     the IRI of the value to be marked as deleted.
-  * @param comment      an optional comment explaining why the value is being deleted.
-  * @param userProfile  the profile of the user making the request.
-  * @param apiRequestID the ID of this API request.
+  * @param valueIri      the IRI of the value to be marked as deleted.
+  * @param deleteComment an optional comment explaining why the value is being deleted.
+  * @param userProfile   the profile of the user making the request.
+  * @param apiRequestID  the ID of this API request.
   */
 case class DeleteValueRequestV1(valueIri: IRI,
-                                comment: Option[String] = None,
+                                deleteComment: Option[String] = None,
                                 userProfile: UserProfileV1,
                                 apiRequestID: UUID) extends ValuesResponderRequestV1
 
 /**
   * Represents a response to a [[DeleteValueRequestV1]].
   *
-  * @param id       the IRI of the value version that was added.
+  * @param id       the IRI of the value that was marked as deleted. If this was a `LinkValue`, a new version of it
+  *                 will have been created, and `id` will the IRI of that new version. Otherwise, `id` will be the IRI
+  *                 submitted in the [[DeleteValueRequestV1]]. For an explanation of this behaviour, see the chapter
+  *                 ''Triplestore Updates'' in the Knora API server design documentation.
   * @param userdata information about the user that made the request.
   */
 case class DeleteValueResponseV1(id: IRI,
@@ -427,7 +429,7 @@ case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiResponderConvers
   * Possibly, two file values have been changed (thumb and full quality).
   *
   * @param locations the updated file value(s).
-  * @param userdata           information about the user that made the request.
+  * @param userdata  information about the user that made the request.
   */
 case class ChangeFileValueResponseV1(locations: Vector[LocationV1],
                                      userdata: UserDataV1) extends KnoraResponseV1 {
@@ -1207,7 +1209,7 @@ case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
 
 /**
   * Represents a [[http://www.geonames.org/ GeoNames]] code.
- *
+  *
   * @param geonameCode a string representing the GeoNames code.
   */
 case class GeonameValueV1(geonameCode: String) extends UpdateValueV1 with ApiValueV1 {
@@ -1373,8 +1375,8 @@ case class ValueVersionV1(valueObjectIri: IRI,
   */
 object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
     import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     /**
       * Converts between [[StandoffPositionV1]] objects and [[JsValue]] objects.

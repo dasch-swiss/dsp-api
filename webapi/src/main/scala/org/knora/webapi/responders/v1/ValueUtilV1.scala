@@ -20,15 +20,13 @@
 
 package org.knora.webapi.responders.v1
 
-import java.net.URLEncoder
-
 import akka.actor.ActorSelection
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{CheckSubClassRequestV1, CheckSubClassResponseV1}
-import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
@@ -55,7 +53,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     def makeSipiImagePreviewGetUrlFromFilename(filename: String): String = {
-        s"${settings.sipiIIIFGetUrl}/${filename}/full/full/0/default.jpg"
+        s"${settings.sipiIIIFGetUrl}/$filename/full/full/0/default.jpg"
     }
 
     /**
@@ -128,7 +126,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * This method requires the Iri segment before the last slash to be a unique identifier for all the ontologies used with Knora..
       *
       * @param resourceClassIri the Iri of the resource class in question.
-      * @param iconsSrc the name of the icon file.
+      * @param iconsSrc         the name of the icon file.
       */
     def makeResourceClassIconURL(resourceClassIri: IRI, iconsSrc: String): IRI = {
         // get ontology name, e.g. "knora-base" from "http://www.knora.org/ontology/knora-base#Region"
@@ -195,10 +193,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     /**
       * Checks that a value type is valid for the `knora-base:objectClassConstraint` of a property.
       *
-      * @param propertyIri the IRI of the property.
-      * @param valueType the IRI of the value type.
+      * @param propertyIri                   the IRI of the property.
+      * @param valueType                     the IRI of the value type.
       * @param propertyObjectClassConstraint the IRI of the property's `knora-base:objectClassConstraint`.
-      * @param responderManager a reference to the Knora API Server responder manager.
+      * @param responderManager              a reference to the Knora API Server responder manager.
       * @return A future containing Unit on success, or a failed future if the value type is not valid for the property's range.
       */
     def checkValueTypeForPropertyObjectClassConstraint(propertyIri: IRI,

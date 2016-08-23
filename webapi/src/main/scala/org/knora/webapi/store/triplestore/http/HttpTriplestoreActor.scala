@@ -22,7 +22,6 @@ package org.knora.webapi.store.triplestore.http
 
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
-import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging, Status}
 import dispatch._
@@ -140,6 +139,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
     /**
       * Given the SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResponse]].
+      *
       * @param sparql the SPARQL SELECT query string
       * @return a [[SparqlSelectResponse]].
       */
@@ -170,6 +170,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
     /**
       * Performs a SPARQL update operation.
+      *
       * @param sparqlUpdate the SPARQL update.
       * @return a [[SparqlUpdateResponse]].
       */
@@ -177,7 +178,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
         // println(logDelimiter + sparqlUpdate)
 
         for {
-            // Send the request to the triplestore.
+        // Send the request to the triplestore.
             _ <- getTriplestoreHttpResponse(sparqlUpdate, update = true)
 
             // If we're using GraphDB, update the full-text search index.
@@ -194,6 +195,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
     /**
       * Submits a SPARQL request to the triplestore and returns the response as a string.
+      *
       * @param sparql the SPARQL request to be submitted.
       * @param update `true` if this is an update request.
       * @return the triplestore's response.
@@ -281,10 +283,10 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
                 if (tsType == HTTP_GRAPH_DB_TS_TYPE || tsType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
                     /* need to update the lucene index */
                     val indexUpdateSparqlString =
-                        """
+                    """
                             PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
                             INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
-                        """
+                    """
                     Await.result(getTriplestoreHttpResponse(indexUpdateSparqlString, update = true), 5.seconds)
                 }
 

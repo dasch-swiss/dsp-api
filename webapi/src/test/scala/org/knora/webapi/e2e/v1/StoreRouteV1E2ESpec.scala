@@ -66,7 +66,7 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
     })
 
     /* get the path of the route we want to test */
-    val storePath = StoreRouteV1.rapierPath(system, settings, log)
+    val storePath = StoreRouteV1.knoraApiPath(system, settings, log)
 
     /* set the timeout for the route test */
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(60).second)

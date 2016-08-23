@@ -22,11 +22,10 @@ package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiFileInfoGetRequestV1
 import org.knora.webapi.routing.{Authenticator, Proxy, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
-import org.knora.webapi.{BadRequestException, SettingsImpl}
-import spray.http.Uri
 import spray.routing.Directives._
 import spray.routing._
 
@@ -40,7 +39,7 @@ object SipiRouteV1 extends Authenticator with Proxy {
     /**
       * A spray-routing function for the API routes that Sipi connects to.
       */
-    def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout

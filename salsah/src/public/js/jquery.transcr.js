@@ -113,7 +113,7 @@
 		}
 	
 		// delete transcription area in db
-		SALSAH.ApiDelete('resources/' + del.data('values').res_id, {}, function(data) {
+		SALSAH.ApiDelete('resources/' + encodeURIComponent(del.data('values').res_id), {}, function(data) {
 			if (data.status == ApiErrors.OK) {
 				del.remove();
 			}

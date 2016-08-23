@@ -59,6 +59,7 @@ class HierarchicalListsResponderV1 extends ResponderV1 {
       * Retrieves a list from the triplestore and returns it as a [[ListsGetResponseV1]].
       * Due to compatibility with the old, crappy SALSAH-API, "hlists" and "selection" have to be differentiated in the response
       * [[ListsGetResponseV1]] is the abstract super class of [[HListGetResponseV1]] and [[SelectionGetResponseV1]]
+      *
       * @param rootNodeIri the Iri if the root node of the list to be queried.
       * @return a [[ListsGetResponseV1]].
       */
@@ -66,6 +67,7 @@ class HierarchicalListsResponderV1 extends ResponderV1 {
 
         /**
           * Compares the `position`-values of two nodes
+          *
           * @param list1 node in a list
           * @param list2 node in the same list
           * @return true if the `position` of list1 is lower than the one of list2
@@ -76,7 +78,8 @@ class HierarchicalListsResponderV1 extends ResponderV1 {
 
         /**
           * This function recursively transforms SPARQL query results representing a hierarchical list into a [[HierarchicalListV1]].
-          * @param nodeIri the IRI of the node to be created.
+          *
+          * @param nodeIri          the IRI of the node to be created.
           * @param groupedByNodeIri a [[Map]] in which each key is the IRI of a node in the hierarchical list, and each value is a [[Seq]]
           *                         of SPARQL query results representing that node's children.
           * @return a [[HierarchicalListV1]].
@@ -172,16 +175,18 @@ class HierarchicalListsResponderV1 extends ResponderV1 {
 
     /**
       * Provides the path to a particular hierarchical list node.
+      *
       * @param queryNodeIri the IRI of the node whose path is to be queried.
-      * @param userProfile the profile of the user making the request.
+      * @param userProfile  the profile of the user making the request.
       */
     private def getNodePathResponseV1(queryNodeIri: IRI, userProfile: UserProfileV1): Future[NodePathGetResponseV1] = {
         /**
           * Recursively constructs the path to a node.
-          * @param node the IRI of the node whose path is to be constructed.
-          * @param nodeMap a [[Map]] of node IRIs to query result row data, in the format described below.
+          *
+          * @param node      the IRI of the node whose path is to be constructed.
+          * @param nodeMap   a [[Map]] of node IRIs to query result row data, in the format described below.
           * @param parentMap a [[Map]] of child node IRIs to parent node IRIs.
-          * @param path the path constructed so far.
+          * @param path      the path constructed so far.
           * @return the complete path to `node`.
           */
         @tailrec

@@ -41,7 +41,7 @@ object ResourceLocker {
       * Represents an update lock on a resource.
       *
       * @param apiRequestID the ID of the API request that has locked the resource.
-      * @param entryCount the number of times the API request has acquired the lock without releasing it.
+      * @param entryCount   the number of times the API request has acquired the lock without releasing it.
       */
     private case class ResourceLock(apiRequestID: UUID, entryCount: Int)
 
@@ -78,9 +78,9 @@ object ResourceLocker {
       * [[ApplicationLockException]].
       *
       * @param apiRequestID the ID of the API request that needs the lock.
-      * @param resourceIri the IRI of the resource to be updated.
-      * @param task a function returning a [[Future]] that updates the resource. This function will be called only after
-      *             the lock has been acquired.
+      * @param resourceIri  the IRI of the resource to be updated.
+      * @param task         a function returning a [[Future]] that updates the resource. This function will be called only after
+      *                     the lock has been acquired.
       * @return the result of the task.
       */
     def runWithResourceLock[T](apiRequestID: UUID, resourceIri: IRI, task: () => Future[T])(implicit executionContext: ExecutionContext): Future[T] = {
@@ -97,9 +97,9 @@ object ResourceLocker {
       * waits and retries. If the lock is still unavailable after the maximum number of retries,
       * throws [[ApplicationLockException]].
       *
-      * @param resourceIri the IRI of the resource to be locked.
+      * @param resourceIri  the IRI of the resource to be locked.
       * @param apiRequestID the ID of the API request that needs the lock.
-      * @param tries the number of times to try to acquire the lock.
+      * @param tries        the number of times to try to acquire the lock.
       */
     @tailrec
     private def acquireOrIncrementLock(resourceIri: IRI, apiRequestID: UUID, tries: Int): Unit = {
@@ -139,7 +139,7 @@ object ResourceLocker {
       * Checks that the specified API request has a lock on the specified resource, then either decrements
       * the lock's entry count or releases the lock.
       *
-      * @param resourceIri the IRI of the resource that is locked.
+      * @param resourceIri  the IRI of the resource that is locked.
       * @param apiRequestID the ID of the API request that has the lock.
       */
     private def decrementOrReleaseLock(resourceIri: IRI, apiRequestID: UUID): Unit = {
