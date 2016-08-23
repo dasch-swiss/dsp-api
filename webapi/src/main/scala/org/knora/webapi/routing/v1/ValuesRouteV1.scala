@@ -47,7 +47,7 @@ object ValuesRouteV1 extends Authenticator {
     private def makeVersionHistoryRequestMessage(iris: Seq[IRI], userProfile: UserProfileV1): ValueVersionHistoryGetRequestV1 = {
         if (iris.length != 3) throw BadRequestException("Version history request requires resource IRI, property IRI, and current value IRI")
 
-        val Vector(resourceIriStr, propertyIriStr, currentValueIriStr) = iris.toVector
+        val Seq(resourceIriStr, propertyIriStr, currentValueIriStr) = iris
 
         val resourceIri = InputValidation.toIri(resourceIriStr, () => throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
         val propertyIri = InputValidation.toIri(propertyIriStr, () => throw BadRequestException(s"Invalid property IRI: $propertyIriStr"))
@@ -64,7 +64,7 @@ object ValuesRouteV1 extends Authenticator {
     private def makeLinkValueGetRequestMessage(iris: Seq[IRI], userProfile: UserProfileV1): LinkValueGetRequestV1 = {
         if (iris.length != 3) throw BadRequestException("Link value request requires subject IRI, predicate IRI, and object IRI")
 
-        val Vector(subjectIriStr, predicateIriStr, objectIriStr) = iris.toVector
+        val Seq(subjectIriStr, predicateIriStr, objectIriStr) = iris
 
         val subjectIri = InputValidation.toIri(subjectIriStr, () => throw BadRequestException(s"Invalid subject IRI: $subjectIriStr"))
         val predicateIri = InputValidation.toIri(predicateIriStr, () => throw BadRequestException(s"Invalid predicate IRI: $predicateIriStr"))

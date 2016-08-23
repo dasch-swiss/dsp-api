@@ -93,7 +93,7 @@ export module valueResponseFormats {
         subjectIri: basicMessageComponents.KnoraIRI;
 
         /**
-         * The IRI of the linking property type
+         * The IRI of the link property
          */
         predicateIri: basicMessageComponents.KnoraIRI;
 
@@ -103,7 +103,9 @@ export module valueResponseFormats {
         objectIri:basicMessageComponents.KnoraIRI;
 
         /**
-         * Number of instances of this link
+         * The reference count of the link. If the link property is knora-base:hasStandoffLinkTo, this is the number of text values in the containing resource
+         * containing at least one standoff link to the target object. Otherwise, the reference count will always be 1 (if the link exists) or 0 (if it has been deleted).
+         * See the section entitled LinkValue in The Knora Base Ontology.
          */
         referenceCount: number;
 
