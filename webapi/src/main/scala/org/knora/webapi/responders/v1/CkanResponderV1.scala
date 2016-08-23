@@ -268,7 +268,10 @@ class CkanResponderV1 extends ResponderV1 {
     private def getIncunabulaBooksWithPagesIRIs(projectIri: webapi.IRI, limit: Option[Int]): Future[Map[webapi.IRI, Seq[webapi.IRI]]] = {
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.ckanIncunabula(settings.triplestoreType, projectIri, limit).toString())
+            sparqlQuery <- Future(queries.sparql.v1.txt.ckanIncunabula(
+                settings.triplestoreType,
+                projectIri, limit
+            ).toString())
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             responseRows: Seq[VariableResultsRow] = response.results.bindings
 
@@ -457,7 +460,7 @@ class CkanResponderV1 extends ResponderV1 {
     private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorSelection): String = {
 
 
-        val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, UserProfileV1(UserDataV1("en")))
+        val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, UserProfileV1(UserDataV1(lang = "en")))
         val nodePath = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
 
         val labels = nodePath.nodelist map {

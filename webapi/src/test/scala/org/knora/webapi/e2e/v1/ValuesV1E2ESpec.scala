@@ -5,9 +5,7 @@ import java.net.URLEncoder
 import akka.actor.{ActorSystem, Props}
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.IRI
-import org.knora.webapi.LiveActorMaker
-import org.knora.webapi.e2e.E2ESpec
+import org.knora.webapi.{IRI, LiveActorMaker, R2RSpec}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
@@ -24,7 +22,7 @@ import scala.concurrent.duration._
 /**
   * Created by benjamingeer on 12/07/16.
   */
-class ValuesV1E2ESpec extends E2ESpec {
+class ValuesV1E2ESpec extends R2RSpec {
 
     override def testConfigSource =
         """

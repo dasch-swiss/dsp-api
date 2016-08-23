@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{FakeTriplestore, SparqlUtil}
 
@@ -36,6 +37,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.io.Source
 import scala.util.{Failure, Success}
+import scala.collection.JavaConversions._
 
 /**
   * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
@@ -241,7 +243,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
         log.debug("should not see this")
         val resetTriplestoreResult = for {
 
-        // drop old content
+            // drop old content
             dropResult <- dropAllTriplestoreContent()
 
             // insert new content
@@ -276,9 +278,16 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
         try {
             log.debug("==>> Loading Data Start")
 
-            for (elem <- rdfDataObjects) {
+            val defaultRdfDataList = settings.tripleStoreConfig.getConfigList("default-rdf-data")
+            val defaultRdfDataObjectList = defaultRdfDataList.map {
+                config => RdfDataObjectFactory(config)
+            }
 
-                GraphProtocolAccessor.put(elem.name, elem.path)
+            val completeRdfDataObjectList = defaultRdfDataObjectList ++ rdfDataObjects
+
+            for (elem <- completeRdfDataObjectList) {
+
+                GraphProtocolAccessor.post(elem.name, elem.path)
 
                 if (tsType == HTTP_GRAPH_DB_TS_TYPE || tsType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
                     /* need to update the lucene index */

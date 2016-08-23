@@ -1399,7 +1399,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // get project info that includes the permissions the current user has on the project
             projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequest(
                 iri = projectIri,
-                requestType = ProjectInfoType.SHORT,
+                infoType = ProjectInfoType.SHORT,
                 Some(userProfile)
             )).mapTo[ProjectInfoResponseV1]
 

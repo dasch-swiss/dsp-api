@@ -32,4 +32,5 @@ Knora API Server Design Documentation
    how-to-add-a-route
    triplestore-updates
    authentication
+   administration
    plans-for-api-v2

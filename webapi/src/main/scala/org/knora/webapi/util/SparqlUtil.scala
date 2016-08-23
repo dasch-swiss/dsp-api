@@ -33,7 +33,8 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 /**
-  * Utility functions for parsing responses from triplestores and for filtering results by language.
+  * Utility functions for parsing responses from triplestores and for filtering results by language and converting to
+  * SPARQL literal strings.
   */
 object SparqlUtil {
     private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
@@ -120,6 +121,23 @@ object SparqlUtil {
                             }
                     }
                 }
+        }
+    }
+
+    /**
+      * Converts any given value of any type to a SPARQL literal string.
+      * @param value the value to be converted.
+      * @return a string containing the SPARQL literal.
+      */
+    def any2SparqlLiteral(value: Any): String = {
+        value match {
+            case value: Boolean => if (value.asInstanceOf[Boolean]) {
+                "\"true\"^^xsd:boolean"
+            } else {
+                "\"false\"^^xsd:boolean"
+            }
+            case value: String if value.nonEmpty => "\"" + value.asInstanceOf[String] + "\"^^xsd:string"
+            case value: String if value.isEmpty => ""
         }
     }
 }

@@ -136,7 +136,7 @@ case class NodePathElementV1(id: IRI, name: Option[String], label: Option[String
   */
 object HierarchicalListV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 
     implicit object HierarchicalListV1JsonFormat extends JsonFormat[HierarchicalListV1] {
         /**

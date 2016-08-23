@@ -29,13 +29,12 @@
 @(triplestore: String,
   userIri: IRI)
 
-SELECT ?p ?o
+SELECT ?s ?p ?o
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND(IRI("@userIri") as ?user)
-
-    ?user ?p ?o .
+    BIND(IRI("@userIri") as ?s)
+    ?s ?p ?o .
 }

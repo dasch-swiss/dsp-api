@@ -260,7 +260,7 @@ case class ResourceSearchResponseV1(resources: Seq[ResourceSearchResultRowV1] = 
 /**
   * Describes the answer to a newly created resource [[ResourceCreateRequestV1]].
   *
-  * @param res_id   the IRI ow the new resource.
+  * @param res_id   the IRI of the new resource.
   * @param results  the values that have been attached to the resource. The key in the Map refers
   *                 to the property Iri and the Seq contains all instances of values of this type.
   * @param userdata information about the user that made the request.
@@ -716,8 +716,8 @@ case class ResourceCreateValueObjectResponseV1(textval: Map[LiteralValueType.Val
 object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
     import LiteralValueType.LiteralValueTypeV1Protocol._
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
     import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 
     implicit val locationFormat: JsonFormat[LocationV1] = jsonFormat8(LocationV1)
 
@@ -979,9 +979,9 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
   */
 object ResourceContextV1JsonProtocol extends DefaultJsonProtocol {
 
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
     import ResourceContextCodeV1.ResourceContextCodeV1Protocol._
     import ResourceV1JsonProtocol._
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val resourceContextV1Format: JsonFormat[ResourceContextV1] = jsonFormat11(ResourceContextV1)
     implicit val resourceContextResponseV1Format: RootJsonFormat[ResourceContextResponseV1] = jsonFormat2(ResourceContextResponseV1)

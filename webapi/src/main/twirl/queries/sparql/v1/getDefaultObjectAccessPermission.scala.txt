@@ -1,4 +1,4 @@
-/*
+@*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
  * Tobias Schweizer, André Kilchenmann, and André Fatton.
  *
@@ -16,33 +16,32 @@
  *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
- */
+ *@
 
-package org.knora.webapi.e2e
+@import org.knora.webapi.IRI
 
-import org.knora.webapi.Settings
-import org.knora.webapi.util.CacheUtil
-import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
-import spray.routing.HttpService
-import spray.testkit.ScalatestRouteTest
+@**
+ * Gets the default object access permission identified by IRI.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param defaultObjectAccessPermissionIri the permission's IRI.
+ *@
+@(triplestore: String,
+  defaultObjectAccessPermissionIri: IRI)
 
-/**
-  * Created by subotic on 08.12.15.
-  */
-class E2ESpec extends Suite with ScalatestRouteTest with WordSpecLike with Matchers with BeforeAndAfterAll with HttpService {
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-    def actorRefFactory = system
+SELECT ?s ?p ?o
 
-    val settings = Settings(system)
-    val logger = akka.event.Logging(system, this.getClass())
-    val log = logger
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 
-    override def beforeAll {
-        CacheUtil.createCaches(settings.caches)
-    }
+WHERE {
+    BIND(IRI("@defaultObjectAccessPermissionIri") as ?s)
 
-    override def afterAll {
-        CacheUtil.removeAllCaches()
-    }
-
+    ?s rdf:type knora-base:DefaultObjectAccessPermission .
+    ?s ?p ?o .
 }

@@ -103,7 +103,7 @@ case class BadRequestException(message: String) extends RequestRejectedException
   *
   * @param message a description of the error.
   */
-case class BadCredentialsException(message: String) extends RequestRejectedException(message)
+case class InvalidCredentialsException(message: String) extends RequestRejectedException(message)
 
 /**
   * An exception indicating that a user has made a request for which the user lacks the necessary permission.

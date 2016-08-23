@@ -267,4 +267,9 @@ class KnoraIriUtil {
 
         reduceProduct(id * factor, Vector.empty[String]).mkString
     }
+
+    def makeRandomGroupIri: String = {
+        val knoraGroupID = makeRandomBase64EncodedUuid
+        s"http:://data.knora.org/projects/$knoraGroupID"
+    }
 }

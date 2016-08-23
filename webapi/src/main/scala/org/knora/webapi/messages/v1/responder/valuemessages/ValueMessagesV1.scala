@@ -1306,7 +1306,7 @@ case class ValueVersionV1(valueObjectIri: IRI,
 object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
     import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 
     /**
       * Converts between [[StandoffPositionV1]] objects and [[JsValue]] objects.

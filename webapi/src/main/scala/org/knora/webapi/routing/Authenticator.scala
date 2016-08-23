@@ -24,10 +24,10 @@ import akka.actor.ActorSystem
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByIRIGetRequestV1, UserProfileByUsernameGetRequestV1, UserProfileV1}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
-import org.knora.webapi.{BadCredentialsException, IRI, Settings}
+import org.knora.webapi.{IRI, InvalidCredentialsException, NotFoundException, Settings}
 import org.slf4j.LoggerFactory
 import spray.http._
 import spray.json.{JsNumber, JsObject, JsString}
@@ -172,6 +172,7 @@ trait Authenticator {
                 )
             }
             case Failure(ex) => {
+                log.debug(s"extractCredentialsAndAuthenticate returned Failure: ${ex.toString}")
                 HttpResponse(
                     status = StatusCodes.Unauthorized,
                     entity = HttpEntity(
@@ -240,7 +241,7 @@ trait Authenticator {
         val hardCodedUser: IRI = "http://data.knora.org/users/b83acc5f05" // testuser
         if (settings.skipAuthentication) {
             // skip authentication and return hardCodedUser
-            getUserProfileByIri(hardCodedUser).getOrElse(UserProfileV1(UserDataV1(settings.fallbackLanguage))).getCleanUserProfileV1
+            getUserProfileByIri(hardCodedUser).getOrElse(UserProfileV1(UserDataV1(lang = settings.fallbackLanguage))).getCleanUserProfileV1
         }
         else {
             // let us first try to get the user profile through the session id from the cookie
@@ -272,7 +273,7 @@ trait Authenticator {
                             }
                         case None =>
                             log.debug("No credentials found, returning default UserProfileV1!")
-                            UserProfileV1(UserDataV1(settings.fallbackLanguage))
+                            UserProfileV1(UserDataV1(lang = settings.fallbackLanguage))
                     }
                 }
             }
@@ -289,10 +290,9 @@ trait Authenticator {
   **/
 object Authenticator {
 
-    val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
-    val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
-    val BAD_CRED_USERNAME_NOT_SUPPLIED = "bad credentials: no username supplied"
-    val BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE = "bad credentials: none found"
+    val INVALID_CREDENTIALS_USERNAME_OR_PASSWORD = "Invalid username or password"
+    val INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED = "No username supplied"
+    val INVALID_CREDENTIALS_NON_FOUND = "No credentials could be found"
 
     val KNORA_AUTHENTICATION_COOKIE_NAME = "KnoraAuthentication"
 
@@ -300,7 +300,7 @@ object Authenticator {
     implicit val timeout: Timeout = Duration(5, SECONDS)
     val log = Logger(LoggerFactory.getLogger("org.knora.webapi.util.authentication"))
 
-    private val cacheName = "authenticationCache"
+    val cacheName = "authenticationCache"
 
     /**
       * Tries to extract and then authenticate the credentials.
@@ -315,11 +315,17 @@ object Authenticator {
     private def extractCredentialsAndAuthenticate(requestContext: RequestContext, session: Boolean)(implicit system: ActorSystem): Try[String] = {
         Try {
             extractCredentials(requestContext) match {
-                case Some((u, p)) => authenticateCredentials(u, p, session) match {
-                    case Success(sId) => sId
-                    case Failure(ex) => throw ex
+                case Some((u, p)) => {
+                    log.debug(s"extractCredentials returned 'user: $u', and 'password: $p' ")
+                    authenticateCredentials(u, p, session) match {
+                        case Success(sId) => sId
+                        case Failure(ex) => throw ex
+                    }
                 }
-                case None => throw BadCredentialsException(BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE)
+                case None => {
+                    log.debug(s"extractCredentials returned 'None'")
+                    throw InvalidCredentialsException(INVALID_CREDENTIALS_NON_FOUND)
+                }
             }
         }
     }
@@ -338,23 +344,29 @@ object Authenticator {
     private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem): Try[String] = {
         Try {
             getUserProfileByUsername(username) match {
-                case Success(userProfileV1: UserProfileV1) => {
-                    if (userProfileV1.passwordMatch(password)) {
+                case Success(userProfile: UserProfileV1) => {
+                    // password needs to match AND user needs to be active
+                    log.debug(s"Successfully got UserProfileV1: ${userProfile.toString}")
+                    log.debug(s"Username: $username, password: $password")
+                    log.debug(s"Check password match: ${userProfile.passwordMatch(password)}")
+                    log.debug(s"Check user active: ${userProfile.userData.isActiveUser.getOrElse(false)}")
+                    if (userProfile.passwordMatch(password) && userProfile.userData.isActiveUser.getOrElse(false)) {
                         // create session id and cache user profile under this id
                         log.debug("password matched")
                         if (session) {
-                            val sId = System.currentTimeMillis().toString
-                            CacheUtil.put(cacheName, sId, userProfileV1)
+                            val sId = userProfile.getDigest
+                            CacheUtil.put[UserProfileV1](cacheName, sId, userProfile)
                             sId
                         } else {
                             "0"
                         }
                     } else {
                         log.debug("password did not match")
-                        throw BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)
+                        throw InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD)
                     }
                 }
                 case Failure(ex) => {
+                    //log.debug(s"Unsuccessful: ${ex.toString}" )
                     throw ex
                 }
             }
@@ -469,23 +481,31 @@ object Authenticator {
       * @param executionContext the current execution context
       * @return a [[Option(UserProfileV1)]]
       */
-    private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Option[UserProfileV1] = {
-        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-
-        val userProfileV1Future = responderManager ? UserProfileGetRequestV1(iri)
-        Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
-            case Some(userProfileV1) => {
+    private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Try[UserProfileV1] = {
+        try {
+            val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+            log.debug(s"username: $iri")
+            if (iri.nonEmpty) {
+                val userProfileV1Future = responderManager ? UserProfileByIRIGetRequestV1(iri)
+                val userProfileV1 = Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[UserProfileV1]
                 log.debug("This user was found: " + userProfileV1.toString)
-                Some(userProfileV1)
+                Success(userProfileV1)
+            } else {
+                log.debug("No user IRI supplied")
+                Failure(InvalidCredentialsException(INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED))
             }
-            case None => log.debug("No user found by this IRI"); None
-
-
+        } catch {
+            case nfe: NotFoundException =>  {
+                log.debug("No user found by this IRI inside the triplestore")
+                Failure(InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD))
+            }
         }
+
+
     }
 
     /**
-      * Tries to get a [[UserProfileV1]] from the cache or from the triple store matching the username.
+      * Tries to get a [[UserProfileV1]] from the triple store matching the username.
       *
       * @param username         the username of the user to be queried
       * @param system           the current akka actor system
@@ -494,33 +514,22 @@ object Authenticator {
       * @return a [[Success(UserProfileV1)]]
       */
     private def getUserProfileByUsername(username: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Try[UserProfileV1] = {
-        Try {
+        try {
             val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-
+            log.debug(s"username: $username")
             if (username.nonEmpty) {
-                // try to get it from the cache
-                CacheUtil.get[UserProfileV1](cacheName, username) match {
-                    case Some(userProfileV1) =>
-                        // found a user profile in the cache
-                        userProfileV1
-                    case None =>
-                        // didn't found one, so I will try to get it from the triple store
-                        val userProfileV1Future = responderManager ? UserProfileByUsernameGetRequestV1(username)
-                        Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
-                            case Some(userProfileV1) => {
-                                log.debug("This user was found: " + userProfileV1.toString)
-                                // before I return the found user profile, let's put it into the cache
-                                CacheUtil.put(cacheName, username, userProfileV1)
-                                userProfileV1
-                            }
-                            case None => {
-                                log.debug("No user found by this username")
-                                throw BadCredentialsException(BAD_CRED_USER_NOT_FOUND)
-                            }
-                        }
-                }
+                val userProfileV1Future = responderManager ? UserProfileByUsernameGetRequestV1(username, false)
+                val userProfileV1: UserProfileV1 = Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[UserProfileV1]
+                log.debug("Found this user in the triplestore: " + userProfileV1.toString)
+                Success(userProfileV1)
             } else {
-                throw BadCredentialsException(BAD_CRED_USERNAME_NOT_SUPPLIED)
+                log.debug("No username supplied")
+                Failure(InvalidCredentialsException(INVALID_CREDENTIALS_NO_USERNAME_SUPPLIED))
+            }
+        } catch {
+            case nfe: NotFoundException =>  {
+                log.debug("No user found by this username inside the triplestore")
+                Failure(InvalidCredentialsException(INVALID_CREDENTIALS_USERNAME_OR_PASSWORD))
             }
         }
     }

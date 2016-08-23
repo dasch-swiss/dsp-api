@@ -110,8 +110,8 @@ case class GraphDataEdgeV1(label: Option[String], from: IRI, to: IRI)
 
 object GraphDataV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
     import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit object GraphDataV1JsonFormat extends JsonFormat[GraphV1] {
         /**
