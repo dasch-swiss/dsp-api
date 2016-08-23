@@ -21,8 +21,7 @@ import java.net.URLEncoder
 import akka.actor.{ActorSystem, Props}
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.IRI
-import org.knora.webapi.LiveActorMaker
+import org.knora.webapi.{IRI, LiveActorMaker}
 import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
@@ -118,6 +117,22 @@ class ValuesV1E2ESpec extends E2ESpec {
             }
         }
 
+
+        "get a link value" in {
+            Get(s"/v1/links/${URLEncoder.encode("http://data.knora.org/contained-thing-1", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#isPartOfOtherThing", "UTF-8")}/${URLEncoder.encode("http://data.knora.org/containing-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val linkValue = JsonParser(response.entity.asString).asJsObject.fields("value").asJsObject.fields
+
+                assert(
+                    linkValue("subjectIri").asInstanceOf[JsString].value == "http://data.knora.org/contained-thing-1" &&
+                        linkValue("predicateIri").asInstanceOf[JsString].value == "http://www.knora.org/ontology/anything#isPartOfOtherThing" &&
+                        linkValue("objectIri").asInstanceOf[JsString].value == "http://data.knora.org/containing-thing" &&
+                        linkValue("referenceCount").asInstanceOf[JsNumber].value.toInt == 1
+                )
+            }
+        }
+
         "add a text value containing a standoff reference to another resource" in {
             val params =
                 """
@@ -156,6 +171,21 @@ class ValuesV1E2ESpec extends E2ESpec {
             }
         }
 
+        "get the version history of a value" in {
+            Get(s"/v1/values/history/${URLEncoder.encode("http://data.knora.org/a-thing", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#hasText", "UTF-8")}/${URLEncoder.encode(textValueIri.get, "UTF-8")}") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val versionHistory: JsValue = JsonParser(response.entity.asString).asJsObject.fields("valueVersions")
+
+                val (mostRecentVersion, originalVersion) = versionHistory match {
+                    case JsArray(Vector(mostRecent, original)) => (mostRecent.asJsObject.fields, original.asJsObject.fields)
+                }
+
+                assert(mostRecentVersion("previousValue").asInstanceOf[JsString].value == originalVersion("valueObjectIri").asInstanceOf[JsString].value)
+                assert(originalVersion("previousValue") == JsNull)
+            }
+        }
+
         "mark as deleted a text value containing a standoff reference to another resource" in {
             Delete(s"/v1/values/${URLEncoder.encode(textValueIri.get, "UTF-8")}?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
@@ -186,5 +216,6 @@ class ValuesV1E2ESpec extends E2ESpec {
                 assert(status == StatusCodes.OK, response.toString)
             }
         }
+
     }
 }

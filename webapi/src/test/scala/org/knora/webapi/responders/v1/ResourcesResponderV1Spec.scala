@@ -186,7 +186,7 @@ object ResourcesResponderV1Spec {
                                 None),
                             "http://data.knora.org/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
                             None,
-                            None))))))
+                            None))))), userdata = incunabulaUser.userData)
 
     private val hasOtherThingIncomingLink = IncomingV1(
         value = Some("A thing that only project members can see"),

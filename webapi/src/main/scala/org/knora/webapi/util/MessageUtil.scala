@@ -144,7 +144,11 @@ object MessageUtil {
 
             case geomValue: GeomValueV1 => basicObjectResponse
 
-            case intervalValue: IntervalValueV1 => basicObjectResponse
+            case intervalValue: IntervalValueV1 =>
+                basicObjectResponse.copy(
+                    timeval1 = Some(Map(LiteralValueType.DecimalValue -> intervalValue.timeval1)),
+                    timeval2 = Some(Map(LiteralValueType.DecimalValue -> intervalValue.timeval2))
+                )
 
             case geonameValue: GeonameValueV1 => basicObjectResponse
 

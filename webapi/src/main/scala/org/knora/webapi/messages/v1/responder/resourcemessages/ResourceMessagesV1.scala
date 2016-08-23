@@ -286,7 +286,7 @@ case class PropertiesGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends 
   *
   * @param properties the properties of the specified resource.
   */
-case class PropertiesGetResponseV1(properties: PropsGetV1) extends KnoraResponseV1 {
+case class PropertiesGetResponseV1(properties: PropsGetV1, userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceV1JsonProtocol.propertiesGetResponseV1Format.write(this)
 }
 
@@ -408,7 +408,7 @@ case class ResourceInfoV1(project_id: IRI,
   * @param restype_name  the IRI of the resource's OWL class.
   * @param restype_label the `rdfs:label` of the resource's OWL class.
   * @param iconsrc       the icon of the resource's OWL class.
-  * @param rights        a numeric code represting the permissions that the requesting user has on the resource.
+  * @param rights        a numeric code representing the permissions that the requesting user has on the resource.
   */
 case class ResourceDataV1(res_id: IRI,
                           restype_name: IRI,
@@ -964,7 +964,7 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val incomingV1Format: JsonFormat[IncomingV1] = jsonFormat3(IncomingV1)
     implicit val resourceFullResponseV1Format: RootJsonFormat[ResourceFullResponseV1] = jsonFormat6(ResourceFullResponseV1)
     implicit val propertiesGetValueV1Format: JsonFormat[PropertyGetValueV1] = jsonFormat7(PropertyGetValueV1)
-    implicit val propertiesGetResponseV1Format: RootJsonFormat[PropertiesGetResponseV1] = jsonFormat1(PropertiesGetResponseV1)
+    implicit val propertiesGetResponseV1Format: RootJsonFormat[PropertiesGetResponseV1] = jsonFormat2(PropertiesGetResponseV1)
     implicit val resourceRightsResponseV1Format: RootJsonFormat[ResourceRightsResponseV1] = jsonFormat2(ResourceRightsResponseV1)
     implicit val resourceSearchResultV1Format: RootJsonFormat[ResourceSearchResultRowV1] = jsonFormat3(ResourceSearchResultRowV1)
     implicit val resourceSearchResponseV1Format: RootJsonFormat[ResourceSearchResponseV1] = jsonFormat2(ResourceSearchResponseV1)

@@ -54,6 +54,7 @@ class SearchResponderV1 extends ResponderV1 {
         ),
         OntologyConstants.KnoraBase.IntValue -> Set(
             SearchComparisonOperatorV1.EQ,
+            SearchComparisonOperatorV1.NOT_EQ,
             SearchComparisonOperatorV1.GT,
             SearchComparisonOperatorV1.GT_EQ,
             SearchComparisonOperatorV1.LT,
@@ -62,6 +63,7 @@ class SearchResponderV1 extends ResponderV1 {
         ),
         OntologyConstants.KnoraBase.DecimalValue -> Set(
             SearchComparisonOperatorV1.EQ,
+            SearchComparisonOperatorV1.NOT_EQ,
             SearchComparisonOperatorV1.GT,
             SearchComparisonOperatorV1.GT_EQ,
             SearchComparisonOperatorV1.LT,

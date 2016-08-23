@@ -16,16 +16,37 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-.. _salsah:
+.. _delete-resources-and-values:
 
-####################
-SALSAH
-####################
+Deleting Resources and Values
+=============================
 
-SALSAH - System for Annotation and Linkage of Sources in Arts and Humanities
+In order to delete a resource or a value, the HTTP method ``DELETE`` has to be used.
+Deleting resources or values requires authentication.
 
-.. toctree::
-   :maxdepth: 2
+*****************
+Delete a Resource
+*****************
 
-   development/index
-   design-documentation/index
+The delete request has to be sent to the Knora server using the ``resources`` path segment.
+
+::
+
+    HTTP DELETE to http://host/resources/resourceIRI
+
+
+
+Please note that the resource IRI has to be URL encoded.
+
+**************
+Delete a Value
+**************
+
+The delete request has to be sent to the Knora server using the ``values`` path segment, providing the valueIRI:
+
+::
+
+    HTTP DELETE to http://host/values/valueIRI
+
+
+Please note that the value IRI has to be URL encoded.
