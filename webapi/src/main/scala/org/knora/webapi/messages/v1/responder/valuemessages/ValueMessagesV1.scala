@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.util.DateUtilV1
+import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap}
 import spray.httpx.SprayJsonSupport
 import spray.json._
 
@@ -592,7 +592,7 @@ object StandoffTagV1 extends Enumeration {
     /**
       * Maps standoff tag IRIs to this enumeration's values.
       */
-    val IRItoEnumValue: Map[IRI, StandoffTagV1.Value] = Map(
+    val IriToEnumValue: Map[IRI, StandoffTagV1.Value] = new ErrorHandlingMap(Map(
         OntologyConstants.KnoraBase.StandoffParagraphTag -> paragraph,
         OntologyConstants.KnoraBase.StandoffItalicTag -> italic,
         OntologyConstants.KnoraBase.StandoffBoldTag -> bold,
@@ -612,8 +612,12 @@ object StandoffTagV1 extends Enumeration {
         OntologyConstants.KnoraBase.StandoffUnorderedListTag -> unorderedList,
         OntologyConstants.KnoraBase.StandoffListElementTag -> listElement,
         OntologyConstants.KnoraBase.StandoffStyleElementTag -> styleElement
-    )
+    ), { key => throw InconsistentTriplestoreDataException(s"Invalid standoff tag IRI: $key")})
 
+    /**
+      * Maps this enumeration's values to standoff tag IRIs.
+      */
+    val EnumValueToIri: Map[StandoffTagV1.Value, IRI] = new ErrorHandlingMap(IriToEnumValue.map(_.swap), { key => throw InconsistentTriplestoreDataException(s"Invalid standoff tag name: $key")})
 }
 
 /**
@@ -678,15 +682,9 @@ case class TextValueV1(utf8str: String,
     def flattenStandoff: Seq[(IRI, StandoffPositionV1)] = {
         textattr.toSeq.flatMap {
             case (attribute: StandoffTagV1.Value, positions) =>
-
                 // attribute is an enumeration value
                 // get the IRI of the standoff tag
-                val standoffTagIRI: IRI = StandoffTagV1.IRItoEnumValue.find {
-                    case (standoffTagIRI: IRI, enumValue: StandoffTagV1.Value) =>
-                        enumValue == attribute
-                }.getOrElse(throw InconsistentTriplestoreDataException(s"Standoff Tag IRI $attribute is invalid"))._1 // get the first member of the tuple (the IRI)
-
-                positions.map(position => (standoffTagIRI, position))
+                positions.map(position => (StandoffTagV1.EnumValueToIri(attribute), position))
         }
     }
 

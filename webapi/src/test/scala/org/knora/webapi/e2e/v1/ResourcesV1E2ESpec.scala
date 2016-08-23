@@ -359,7 +359,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
                   "prop": "http://www.knora.org/ontology/anything#hasText",
                   "richtext_value": {
                         "utf8str": "a new value",
-                        "textattr": ${textattr}
+                        "textattr": $textattr
                   }
                 }
                 """
@@ -506,6 +506,25 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
             }
 
+        }
+
+        "get the second resource of type anything:Thing, containing the correct standoff link" in {
+            Get("/v1/resources/" + URLEncoder.encode(secondThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUser, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val textValues = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText").asInstanceOf[JsArray].elements
+                val firstTextValue = textValues.head.asJsObject.fields
+                val textattr = JsonParser(firstTextValue("textattr").asInstanceOf[JsString].value).asJsObject.fields
+                val links = textattr("_link").asInstanceOf[JsArray].elements
+                val link = links.head.asJsObject.fields
+
+                assert(
+                    link("start").asInstanceOf[JsNumber].value.toInt == 10 &&
+                        link("end").asInstanceOf[JsNumber].value.toInt == 15 &&
+                        link("resid").asInstanceOf[JsString].value == firstThingIri.get &&
+                        link("href").asInstanceOf[JsString].value == firstThingIri.get
+                )
+            }
         }
 
         "get the first thing resource that is referred to by the second thing resource" in {

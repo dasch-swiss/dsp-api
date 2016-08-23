@@ -425,7 +425,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val groupedByAttr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(row =>
             // group by the enumeration name of the standoff tag IRI by converting the standoff tag IRI
             // standoff lik and href tags have the same enumeration name, so the groupBy has to combine their standoff positions
-            StandoffTagV1.IRItoEnumValue(row(OntologyConstants.Rdf.Type))
+            StandoffTagV1.IriToEnumValue(row(OntologyConstants.Rdf.Type))
         ).map {
             case (tagName: StandoffTagV1.Value, standoffInfos: Seq[Map[String, String]]) =>
 
