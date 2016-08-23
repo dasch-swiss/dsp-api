@@ -13,6 +13,7 @@ native
 **/.DS_Store
 docs/env
 docs/_build
+docs/_format_docu
 project/
 target/
 *.aux
@@ -26,3 +27,4 @@ target/
 *.tdo
 *.toc
 .sbtrc
+webapi/_fuseki/run

@@ -1595,7 +1595,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             }
 
-        } yield PropertiesGetResponseV1(PropsGetV1(propertiesGetV1))
+        } yield PropertiesGetResponseV1(PropsGetV1(propertiesGetV1), userdata = userProfile.userData)
 
     }
 

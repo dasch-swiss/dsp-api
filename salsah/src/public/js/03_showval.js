@@ -152,7 +152,7 @@ SALSAH.showval = function(value_container, prop, value_index, options)
 		}
 		case VALTYPE_INTERVAL: {
 			//value_container.append(prop.values[value_index]);
-			value_container.append('VALTYPE_INTERVAL: NOT YET IMPLEMENTED!');
+			value_container.timeobj('init', prop.values[value_index]);
 			break;
 		}
 		case VALTYPE_GEOMETRY: {
