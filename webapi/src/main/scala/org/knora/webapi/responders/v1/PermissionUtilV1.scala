@@ -31,7 +31,7 @@ import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyCons
   */
 object PermissionUtilV1 {
 
-    // Todo: Add an explain method.
+    // Todo: Add an explain method for debugging purposes, e.g., explain why a user has the calculated permissions he has.
 
     /**
       * A [[Map]] of Knora permission abbreviations to their API v1 codes.
@@ -55,6 +55,10 @@ object PermissionUtilV1 {
     private val v1PermissionCodesToPermissions = permissionsToV1PermissionCodes.map(_.swap)
 
     /**
+      * -> This will be reduced to only [[OntologyConstants.KnoraBase.HasPermissions]] as the permissions for
+      * Creator (was owner) and ProjectMember, are all found inside 'HasPermissions'. Also, the group membership for
+      * ProjectMember is now explicitly stated in the [[UserProfileV1]].
+      *
       * A set of assertions that are relevant for calculating permissions.
       */
     private val permissionRelevantAssertions = Set(
@@ -75,6 +79,8 @@ object PermissionUtilV1 {
     )
 
     /**
+      * -> Compares the permission code values. Explain a bit better.
+      *
       * Checks whether a Knora API v1 integer permission code implies a particular permission property.
       *
       * @param userHasPermissionCode the Knora API v1 integer permission code that the user has, or [[None]] if the user has no permissions
@@ -156,6 +162,9 @@ object PermissionUtilV1 {
     }
 
     /**
+      * -> The default permissions (default object access permissions) are a mixture of default permissions defined
+      * on the entity AND on groups.
+      *
       * Given an [[EntityInfoV1]], gets the entity's default permissions and converts them to permissions that
       * can be assigned to an instance of the entity. An [[EntityInfoV1]] is either a [[ResourceEntityInfoV1]] or a [[PropertyEntityInfoV1]].
       *
@@ -191,6 +200,8 @@ object PermissionUtilV1 {
                             subjectPermissionLiteral: Option[String],
                             userProfile: UserProfileV1): Option[Int] = {
         /**
+          * -> Need to ...
+          *
           * Calculates the highest permission a user can be granted on a subject.
           *
           * @param subjectPermissions tuples of permissions on a subject and the groups they are granted to.
@@ -373,6 +384,8 @@ object PermissionUtilV1 {
     }
 
     /**
+      * -> Need this for reading permission literals.
+      *
       * Parses the literal object of the predicate `knora-base:hasPermissions`.
       *
       * @param maybePermissionListStr the literal to parse.
@@ -405,6 +418,8 @@ object PermissionUtilV1 {
     }
 
     /**
+      * -> Need this for writing permission literals.
+      *
       * Formats the literal object of the predicate `knora-base:hasPermissions`.
       *
       * @param permissions a [[Map]] in which the keys are permission abbreviations in
