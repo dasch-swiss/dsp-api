@@ -1014,6 +1014,8 @@ case class IntervalValueV1(timeval1: BigDecimal, timeval2: BigDecimal) extends U
         "timeval2" -> JsNumber(timeval2)
     )
 
+    override def toString = s"$timeval1 - $timeval2"
+
     /**
       * Checks if a new interval value would duplicate an existing interval value.
       *

@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.twirl.SearchCriterion
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.DateUtilV1
+import org.knora.webapi.util.{DateUtilV1, PermissionUtilV1}
 
 import scala.concurrent.Future
 
