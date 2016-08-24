@@ -442,7 +442,6 @@ class ValuesResponderV1 extends ResponderV1 {
                                             maybeValuePermissions = permissionsFromDefaults
                                         ).toString()
 
-                                        // append the SPARQL that was generated to create standoff links to the other insert statements
                                         (whereSparql, insertSparql)
                                 }
 
@@ -461,8 +460,11 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 // Concatenate all the generated SPARQL into one string for the WHERE clause and one string for the INSERT clause, sorting
                 // the values by their indexes.
+
                 resultsForAllProperties: Iterable[SparqlGenerationResultForProperty] = sparqlGenerationResults.values
                 allWhereSparql: String = resultsForAllProperties.flatMap(result => result.whereSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n")
+
+                // The SPARQL for the INSERT clause also contains the SPARQL that was generated to insert standoff links.
                 allInsertSparql: String = resultsForAllProperties.flatMap(result => result.insertSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n") + standoffLinkInsertSparql
 
                 // Collect all the UnverifiedValueV1s for each property.

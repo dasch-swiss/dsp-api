@@ -291,7 +291,6 @@ object ResourcesResponderV1Spec {
         regular_property = 1,
         pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
     )
-
 }
 
 
@@ -463,86 +462,6 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 }
         }
     }
-
-    private val propertiesGetResponseV1Region = PropertiesGetResponseV1(
-        PropsGetV1(
-            Vector(
-                PropertyGetV1(
-                    "http://www.knora.org/ontology/knora-base#hasComment",
-                    Some("Kommentar"),
-                    Some("http://www.knora.org/ontology/knora-base#TextValue"),
-                    Some("textval"),
-                    Some("richtext"),
-                    "",
-                    "0",
-                    Vector(
-                        PropertyGetValueV1(
-                            None,
-                            "",
-                            "Siehe Seite c5v",
-                            TextValueV1("Siehe Seite c5v"),
-                            "http://data.knora.org/021ec18f1735/values/8a96c303338201",
-                            None,
-                            None))),
-                PropertyGetV1(
-                    "http://www.knora.org/ontology/knora-base#hasColor",
-                    Some("Farbe"),
-                    Some(
-                        "http://www.knora.org/ontology/knora-base#ColorValue"),
-                    Some("textval"),
-                    Some("colorpicker"),
-                    "ncolors=8",
-                    "0",
-                    Vector(
-                        PropertyGetValueV1(
-                            None,
-                            "",
-                            "#ff3333",
-                            ColorValueV1("#ff3333"),
-                            "http://data.knora.org/021ec18f1735/values/10ea6976338201",
-                            None,
-                            None))),
-                PropertyGetV1(
-                    "http://www.knora.org/ontology/knora-base#hasGeometry",
-                    Some("Geometrie"),
-                    Some("http://www.knora.org/ontology/knora-base#GeomValue"),
-                    Some("textval"),
-                    Some("geometry"),
-                    "width=95%;rows=4;wrap=soft",
-                    "0",
-                    Vector(
-                        PropertyGetValueV1(
-                            None,
-                            "",
-                            "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}",
-                            GeomValueV1("{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}"),
-                            "http://data.knora.org/021ec18f1735/values/4dc0163d338201",
-                            None,
-                            None))),
-                PropertyGetV1(
-                    "http://www.knora.org/ontology/knora-base#isRegionOf",
-                    Some("is Region von"),
-                    Some("http://www.knora.org/ontology/knora-base#LinkValue"),
-                    Some("textval"),
-                    None,
-                    "restypeid=http://www.knora.org/ontology/knora-base#Representation",
-                    "0",
-                    Vector(
-                        PropertyGetValueV1(
-                            None,
-                            "",
-                            "http://data.knora.org/9d626dc76c03",
-                            LinkV1(
-                                "http://data.knora.org/9d626dc76c03",
-                                Some("u1r"),
-                                Some(
-                                    "http://www.knora.org/ontology/incunabula#page"),
-                                None,
-                                None),
-                            "http://data.knora.org/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
-                            None,
-                            None))))))
-
 
     private def comparePropertiesGetResponse(received: PropertiesGetResponseV1, expected: PropertiesGetResponseV1): Unit = {
 
