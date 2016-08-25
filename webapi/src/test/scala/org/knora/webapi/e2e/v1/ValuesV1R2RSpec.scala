@@ -21,8 +21,6 @@ import java.net.URLEncoder
 import akka.actor.{ActorSystem, Props}
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.{IRI, LiveActorMaker}
-import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
@@ -31,6 +29,7 @@ import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.store._
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.{IRI, LiveActorMaker, R2RSpec}
 import spray.http.MediaTypes._
 import spray.http._
 import spray.json._
@@ -41,7 +40,7 @@ import scala.concurrent.duration._
 /**
   * Tests the values route.
   */
-class ValuesV1E2ESpec extends E2ESpec {
+class ValuesV1R2RSpec extends R2RSpec {
 
     override def testConfigSource =
         """
@@ -249,6 +248,5 @@ class ValuesV1E2ESpec extends E2ESpec {
                 assert(status == StatusCodes.OK, response.toString)
             }
         }
-
     }
 }

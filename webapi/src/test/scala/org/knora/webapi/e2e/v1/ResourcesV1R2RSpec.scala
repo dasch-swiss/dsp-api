@@ -25,9 +25,7 @@ import java.net.URLEncoder
 import akka.actor.{ActorSystem, Props}
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi._
-import org.knora.webapi.e2e.E2ESpec
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -36,7 +34,8 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.util.{MutableTestIri, ScalaPrettyPrinter}
+import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.{LiveActorMaker, R2RSpec, _}
 import spray.http.MediaTypes._
 import spray.http.{HttpEntity, _}
 import spray.json._
@@ -49,7 +48,7 @@ import scala.concurrent.duration._
   * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-class ResourcesV1E2ESpec extends E2ESpec {
+class ResourcesV1R2RSpec extends R2RSpec {
 
     override def testConfigSource =
         """
@@ -85,10 +84,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
 
-    private val rdfDataObjects = List(
-        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
-        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
+    val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
