@@ -54,7 +54,7 @@ In that case something went wrong when dropping and recreating the repository. P
 
 
 Creating a Test Installation
------------------------------
+----------------------------
 
 TODO: write subsections like this:
 
@@ -62,7 +62,51 @@ TODO: write subsections like this:
 * Configure
 * Run
 
+Transforming Data When Ontologies Change
+----------------------------------------
+
+When there is a change in Knora's ontologies or in a project-specific ontology, it may be necessary to update existing
+data to conform to the new ontology. This can be done directly in SPARQL, but for simple transformations, Knora
+includes a command-line program that works on RDF data files in Turtle_ format. You can run it from SBT:
+
+::
+
+  > run-main org.knora.webapi.util.TransformData --help
+  [info] Running org.knora.webapi.util.TransformData --help
+  [info] 
+  [info] Updates the structure of Knora repository data to accommodate changes in Knora.
+  [info] 
+  [info] Usage: org.knora.webapi.util.TransformData -t [permissions|strings] input output
+  [info]             
+  [info]   -t, --transform  <arg>   Selects a transformation. Available transformations:
+  [info]                            'permissions' (combines old-style multiple permission
+  [info]                            statements into single permission statements),
+  [info]                            'strings' (adds missing valueHasString)
+  [info]       --help               Show help message
+  [info] 
+  [info]  trailing arguments:
+  [info]   input (required)    Input Turtle file
+  [info]   output (required)   Output Turtle file
+
+The currently available transformations are:
+
+permissions
+  Combines old-style permission statements (``hasViewPermission``, ``hasModifyPermission``, etc.) into
+  one `hasPermissions` statement per resource or value, as described in the section **Permissions** in
+  :ref:`knora-ontologies`.
+
+strings
+  Adds missing ``valueHasString`` statements to Knora value objects.
+
+``TransformData`` runs only one transformation at a time, so if you need to run multiple transformations,
+you must run it once per transformation, taking the output of each run as the input for the next run.
+
+The program uses the Turtle parsing and formatting library from RDF4J_. Additional transformations can
+be implemented as subclasses of ``org.eclipse.rdf4j.rio.RDFHandler``.
+
 .. _RDF: https://www.w3.org/TR/rdf11-primer/
 .. _free software: http://www.gnu.org/philosophy/free-sw.en.html
 .. _Ontotext GraphDB: http://ontotext.com/products/graphdb/
 .. _Apache Jena: https://jena.apache.org/
+.. _Turtle: https://www.w3.org/TR/turtle/
+.. _RDF4J: http://rdf4j.org/
