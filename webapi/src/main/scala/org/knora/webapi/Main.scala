@@ -21,17 +21,23 @@
 package org.knora.webapi
 
 /**
-  * Starts [[KnoraService]].
+  * Starts Knora by bringing everything into scope by using the cake pattern. The [[LiveCore]] trait provides
+  * an actor system, which is used by methods defined in the [[KnoraService]] trait, which itself provides
+  * three methods: ''checkActorSystem'', ''startService'', and ''stopService''.
   */
-object Main extends App {
+object Main extends App with LiveCore with KnoraService  {
     //Kamon.start()
+
+    /* Check and wait until all actors are running */
+    checkActorSystem
 
     val arglist = args.toList
 
     if (arglist.contains("loadDemoData")) StartupFlags.loadDemoData send true
     if (arglist.contains("allowResetTriplestoreContentOperationOverHTTP")) StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
 
-    KnoraService.start
+    /* Start the HTTP layer, allowing access */
+    startService
 
-    sys.addShutdownHook(KnoraService.stop())
+    sys.addShutdownHook(stopService)
 }
