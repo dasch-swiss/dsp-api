@@ -141,7 +141,7 @@ class KnoraIdUtil {
       * @param salsahResourceID the SALSAH resource ID.
       * @return a resource IRI.
       */
-    def salsahResourceId2Iri(salsahResourceID: String): String = {
+    def salsahResourceId2Iri(salsahResourceID: String): IRI = {
         val knoraResourceID = salsahId2KnoraId(BigInt(salsahResourceID), ResourceIdFactor)
         s"http://data.knora.org/$knoraResourceID"
     }
@@ -151,7 +151,7 @@ class KnoraIdUtil {
       *
       * @return a new resource IRI.
       */
-    def makeRandomResourceIri: String = {
+    def makeRandomResourceIri: IRI = {
         val knoraResourceID = makeRandomBase64EncodedUuid
         s"http://data.knora.org/$knoraResourceID"
     }
@@ -163,7 +163,7 @@ class KnoraIdUtil {
       * @param salsahValueID    the SALSAH value ID.
       * @return a value IRI.
       */
-    def salsahValueId2Iri(salsahResourceID: String, salsahValueID: String): String = {
+    def salsahValueId2Iri(salsahResourceID: String, salsahValueID: String): IRI = {
         val knoraResourceID = salsahId2KnoraId(BigInt(salsahResourceID), ResourceIdFactor)
         val knoraValueID = salsahId2KnoraId(BigInt(salsahValueID), ValueIdFactor)
         s"http://data.knora.org/$knoraResourceID/values/$knoraValueID"
@@ -175,7 +175,7 @@ class KnoraIdUtil {
       * @param resourceIri the IRI of the resource that will contain the value.
       * @return a new value IRI.
       */
-    def makeRandomValueIri(resourceIri: String): String = {
+    def makeRandomValueIri(resourceIri: IRI): IRI = {
         val knoraValueID = makeRandomBase64EncodedUuid
         s"$resourceIri/values/$knoraValueID"
     }
@@ -187,7 +187,7 @@ class KnoraIdUtil {
       * @param salsahFileValueID the SALSAH file value ID.
       * @return a file value IRI.
       */
-    def salsahFileValueId2Iri(salsahResourceID: String, salsahFileValueID: String): String = {
+    def salsahFileValueId2Iri(salsahResourceID: String, salsahFileValueID: String): IRI = {
         val knoraResourceID = salsahId2KnoraId(BigInt(salsahResourceID), ResourceIdFactor)
         val knoraFileValueID = salsahId2KnoraId(BigInt(salsahFileValueID), FileValueIdFactor)
         s"http://data.knora.org/$knoraResourceID/reps/$knoraFileValueID"
@@ -199,7 +199,7 @@ class KnoraIdUtil {
       * @param resourceIri the IRI of the resource that will have the representation.
       * @return a new representation IRI.
       */
-    def makeRandomFileValueIri(resourceIri: String): String = {
+    def makeRandomFileValueIri(resourceIri: IRI): IRI = {
         val knoraValueID = makeRandomBase64EncodedUuid
         s"$resourceIri/reps/$knoraValueID"
     }
@@ -210,7 +210,7 @@ class KnoraIdUtil {
       * @param salsahInstitutionID the SALSAH institution ID.
       * @return an institution IRI.
       */
-    def salsahInstitutionId2Iri(salsahInstitutionID: String): String = {
+    def salsahInstitutionId2Iri(salsahInstitutionID: String): IRI = {
         val knoraInstitutionID = salsahId2KnoraId(BigInt(salsahInstitutionID), InstitutionIdFactor)
         s"http://data.knora.org/institutions/$knoraInstitutionID"
     }
@@ -220,7 +220,7 @@ class KnoraIdUtil {
       *
       * @return a new institution IRI.
       */
-    def makeRandomInstitutionIri: String = {
+    def makeRandomInstitutionIri: IRI = {
         val knoraInstitutionID = makeRandomBase64EncodedUuid
         s"http://data.knora.org/institutions/$knoraInstitutionID"
     }
@@ -231,7 +231,7 @@ class KnoraIdUtil {
       * @param salsahProjectID the SALSAH project ID.
       * @return a project IRI.
       */
-    def salsahProjectId2Iri(salsahProjectID: String): String = {
+    def salsahProjectId2Iri(salsahProjectID: String): IRI = {
         val knoraProjectID = salsahId2KnoraId(BigInt(salsahProjectID), ProjectIdFactor)
         s"http://data.knora.org/projects/$knoraProjectID"
     }
@@ -241,7 +241,7 @@ class KnoraIdUtil {
       *
       * @return a new project IRI.
       */
-    def makeRandomProjectIri: String = {
+    def makeRandomProjectIri: IRI = {
         val knoraProjectID = makeRandomBase64EncodedUuid
         s"http://data.knora.org/projects/$knoraProjectID"
     }
@@ -252,7 +252,7 @@ class KnoraIdUtil {
       * @param salsahPersonID the SALSAH person ID.
       * @return a person IRI.
       */
-    def salsahPersonId2Iri(salsahPersonID: String): String = {
+    def salsahPersonId2Iri(salsahPersonID: String): IRI = {
         val knoraPersonID = salsahId2KnoraId(BigInt(salsahPersonID), PersonIdFactor)
         s"http://data.knora.org/users/$knoraPersonID"
     }
@@ -262,7 +262,7 @@ class KnoraIdUtil {
       *
       * @return a new person IRI.
       */
-    def makeRandomPersonIri: String = {
+    def makeRandomPersonIri: IRI = {
         val knoraPersonID = makeRandomBase64EncodedUuid
         s"http://data.knora.org/users/$knoraPersonID"
     }
@@ -273,7 +273,7 @@ class KnoraIdUtil {
       * @param salsahHListID the SALSAH hlist ID.
       * @return a hierarchical list IRI.
       */
-    def salsahHListId2Iri(salsahHListID: String): String = {
+    def salsahHListId2Iri(salsahHListID: String): IRI = {
         val knoraHListID = salsahId2KnoraId(BigInt(salsahHListID), HListIdFactor)
         s"http://data.knora.org/lists/$knoraHListID"
     }
@@ -283,7 +283,7 @@ class KnoraIdUtil {
       *
       * @return a new hierarchical list IRI.
       */
-    def makeRandomHListIri: String = {
+    def makeRandomHListIri: IRI = {
         val knoraHListID = makeRandomBase64EncodedUuid
         s"http://data.knora.org/lists/$knoraHListID"
     }
@@ -294,9 +294,20 @@ class KnoraIdUtil {
       * @param salsahSelectionID the SALSAH selection ID.
       * @return a selection IRI.
       */
-    def salsahSelectionId2Iri(salsahSelectionID: String): String = {
+    def salsahSelectionId2Iri(salsahSelectionID: String): IRI = {
         val knoraSelectionID = salsahId2KnoraId(BigInt(salsahSelectionID), SelectionIdFactor)
         s"http://data.knora.org/lists/$knoraSelectionID"
+    }
+
+    /**
+      * Creates a new standoff tag IRI based on a UUID.
+      *
+      * @param valueIri the IRI of the text value containing the standoff tag.
+      * @return a standoff tag IRI.
+      */
+    def makeRandomStandoffTagIri(valueIri: IRI): IRI = {
+        val standoffTagID = makeRandomBase64EncodedUuid
+        s"$valueIri/standoff/$standoffTagID"
     }
 
     /**
