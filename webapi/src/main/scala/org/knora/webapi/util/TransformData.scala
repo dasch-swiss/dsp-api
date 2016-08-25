@@ -252,5 +252,6 @@ object TransformData extends App {
 
         val input = trailArg[String](required = true, descr = "Input Turtle file")
         val output = trailArg[String](required = true, descr = "Output Turtle file")
+        verify()
     }
 }
