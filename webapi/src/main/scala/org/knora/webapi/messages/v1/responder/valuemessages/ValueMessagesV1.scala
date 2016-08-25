@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap}
+import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, KnoraIdUtil}
 import spray.httpx.SprayJsonSupport
 import spray.json._
 
@@ -644,6 +644,16 @@ case class StandoffPositionV1(start: Int,
 }
 
 /**
+  *
+  * Represents a [[StandoffPositionV1]] for a standoff tag of a certain type (standoff tag class) that is about to be created in the triplestore.
+  *
+  * @param standoffTagClassIri the standoff class IRI of the standoff node (its type).
+  * @param standoffPosition the standoff node's [[StandoffPositionV1]].
+  * @param standoffTagIri the standoff node's Iri.
+  */
+case class CreateStandoffPositionV1InTriplestore(standoffTagClassIri: IRI, standoffPosition: StandoffPositionV1, standoffTagIri: IRI)
+
+/**
   * Represents a textual value with additional information in standoff format.
   *
   * @param utf8str            text in mere utf8 representation (including newlines and carriage returns).
@@ -655,6 +665,8 @@ case class TextValueV1(utf8str: String,
                        resource_reference: Set[IRI] = Set.empty[IRI]) extends UpdateValueV1 with ApiValueV1 {
 
     import ApiValueV1JsonProtocol._
+
+    val knoraIdUtil = new KnoraIdUtil
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
@@ -675,16 +687,22 @@ case class TextValueV1(utf8str: String,
 
     /**
       * A convenience method that returns a flattened representation of `textattr`, in the form of a list of
-      * (attribute, position) tuples.
+      * [[CreateStandoffPositionV1InTriplestore]].
       *
-      * @return a list of tuples containing a standoff attribute name and a [[StandoffPositionV1]] object.
+      * @return a list of [[CreateStandoffPositionV1InTriplestore]] each representing a [[StandoffPositionV1]] object
+      *         along with is standoff tag class and IRI that is going to identify it in the triplestore.
       */
-    def flattenStandoff: Seq[(IRI, StandoffPositionV1)] = {
+    def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffPositionV1InTriplestore] = {
+
         textattr.toSeq.flatMap {
-            case (attribute: StandoffTagV1.Value, positions) =>
-                // attribute is an enumeration value
-                // get the IRI of the standoff tag
-                positions.map(position => (StandoffTagV1.EnumValueToIri(attribute), position))
+            case (standoffTagClass: StandoffTagV1.Value, positions: Seq[StandoffPositionV1]) =>
+                // standoffTagClass is an enumeration value
+                // get the IRI of the standoff tag class
+                positions.map((position: StandoffPositionV1) => CreateStandoffPositionV1InTriplestore(
+                    standoffTagClassIri = StandoffTagV1.EnumValueToIri(standoffTagClass),
+                    standoffPosition = position,
+                    standoffTagIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
+                ))
         }
     }
 

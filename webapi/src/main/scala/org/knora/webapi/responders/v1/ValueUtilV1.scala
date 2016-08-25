@@ -434,19 +434,19 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                     // for each attribute name, we may have several positions that have to be turned into a StandoffPositionV1
 
                     case standoffInfo =>
-                        val maybeResId = standoffInfo.get(OntologyConstants.KnoraBase.StandoffHasLink)
+                        val maybeResId = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasLink)
 
                         // If there's a resid, generate an href from it, because the SALSAH GUI expects this.
                         // Otherwise, use the href returned by the query, if present.
                         val maybeHref = if (maybeResId.nonEmpty) {
                             maybeResId
                         } else {
-                            standoffInfo.get(OntologyConstants.KnoraBase.StandoffHasHref)
+                            standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasHref)
                         }
 
                         StandoffPositionV1(
-                            start = standoffInfo(OntologyConstants.KnoraBase.StandoffHasStart).toInt,
-                            end = standoffInfo(OntologyConstants.KnoraBase.StandoffHasEnd).toInt,
+                            start = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
+                            end = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
                             href = maybeHref,
                             resid = maybeResId
                         )

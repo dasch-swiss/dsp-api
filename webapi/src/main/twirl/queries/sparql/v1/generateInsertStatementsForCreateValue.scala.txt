@@ -44,6 +44,7 @@
 @(valueIndex: Int,
   propertyIri: IRI,
   value: UpdateValueV1,
+  newValueIri: IRI,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   maybeComment: Option[String],
   valueOwner: IRI,
@@ -63,16 +64,18 @@
 
                 @* Create a Standoff node for each StandoffPositionV1. *@
 
-                @for((attribute, position) <- textValue.flattenStandoff) {
-                    ?newValue@valueIndex knora-base:valueHasStandoff
-                        [
+                @for(createStandoff <- textValue.prepareForSparqlInsert(newValueIri)) {
+                    ?newValue@valueIndex knora-base:valueHasStandoff <@createStandoff.standoffTagIri> .
+
+                    <@createStandoff.standoffTagIri>
+
                             @*
 
                             If the StandoffPositionV1 contains both a resid and an href, we assume that the href is
                             redundant (i.e. it's based on the resid), so we ignore it.
 
                             *@
-                            @(position.resid, position.href) match {
+                            @(createStandoff.standoffPosition.resid, createStandoff.standoffPosition.href) match {
                                 case (Some(resid), _) => {
                                     rdf:type knora-base:StandoffLinkTag ;
                                     knora-base:standoffTagHasLink <@resid> ;
@@ -84,13 +87,12 @@
                                 }
 
                                 case (None, None) => {
-                                    rdf:type <@attribute> ;
+                                    rdf:type <@createStandoff.standoffTagClassIri> ;
                                 }
                             }
 
-                            knora-base:standoffTagHasStart @position.start ;
-                            knora-base:standoffTagHasEnd @position.end
-                        ] .
+                            knora-base:standoffTagHasStart @createStandoff.standoffPosition.start ;
+                            knora-base:standoffTagHasEnd @createStandoff.standoffPosition.end .
                 }
             }
 

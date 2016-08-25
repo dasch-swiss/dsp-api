@@ -435,12 +435,15 @@ class ValuesResponderV1 extends ResponderV1 {
                                             valueIndex = valueToCreate.valueIndex,
                                             propertyIri = propertyIri,
                                             value = updateValueV1,
+                                            newValueIri = newValueIri,
                                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
                                             valueOwner = userIri,
                                             valueProject = createMultipleValuesRequest.projectIri,
                                             maybeValuePermissions = permissionsFromDefaults
                                         ).toString()
+
+                                        //println(insertSparql)
 
                                         (whereSparql, insertSparql)
                                 }
