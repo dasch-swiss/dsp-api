@@ -657,7 +657,7 @@
 
 ### http://www.knora.org/ontology/knora-base#standoffTagHasEndParentIndex
 
-:standoffTagHasEndIndex rdf:type owl:DatatypeProperty ;
+:standoffTagHasEndParentIndex rdf:type owl:DatatypeProperty ;
 
                   rdfs:subPropertyOf :systemProperty ;
 
@@ -1157,6 +1157,19 @@
             :subjectClassConstraint :ListNode ;
 
             :objectDatatypeConstraint xsd:boolean .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasRootNode
+
+:hasRootNode rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf :systemProperty ;
+
+            :subjectClassConstraint :ListNode ;
+
+            :objectDatatypeConstraint :ListNode .
+
 
 
 
