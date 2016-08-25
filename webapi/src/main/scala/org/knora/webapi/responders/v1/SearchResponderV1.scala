@@ -197,7 +197,7 @@ class SearchResponderV1 extends ResponderV1 {
                         val resourceLabel = firstRowMap("resourceLabel")
 
                         // Collect the matching values in the resource.
-                        val matchingValues: Vector[MatchingValue] = rows.filter(_.rowMap.get("valueObject").nonEmpty).foldLeft(Map.empty[IRI, MatchingValue]) {
+                        val mapOfMatchingValues: Map[IRI, MatchingValue] = rows.filter(_.rowMap.get("valueObject").nonEmpty).foldLeft(Map.empty[IRI, MatchingValue]) {
                             case (valuesAcc, row) =>
                                 // Convert the permissions on the matching value object into a ValueProps.
                                 val valueIri = row.rowMap(s"valueObject")
@@ -231,7 +231,12 @@ class SearchResponderV1 extends ResponderV1 {
                                 }
 
                                 valuesAcc ++ value
-                        }.toVector.sortBy(_._1).map(_._2).sortBy(_.propertyIri) // Sort by value IRI, then by property IRI, so the results are consistent between requests.
+                        }
+
+                        // Sort by value IRI, then by property IRI, so the results are consistent between requests.
+                        val vectorOfMatchingValues: Vector[(IRI, MatchingValue)] = mapOfMatchingValues.toVector
+                        val matchingValuesSortedByValueIri: Vector[MatchingValue] = vectorOfMatchingValues.sortBy(_._1).map(_._2)
+                        val matchingValues: Vector[MatchingValue] = matchingValuesSortedByValueIri.sortBy(_.propertyIri)
 
                         // Does the user have permission to see at least one matching value in the resource, or did the resource's label match?
                         if (matchingValues.nonEmpty || rows.exists(_.rowMap.get("valueObject").isEmpty)) {
@@ -504,84 +509,94 @@ class SearchResponderV1 extends ResponderV1 {
                         val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
                         val resourceLabel = firstRowMap("resourceLabel")
 
-                        // Collect the matching values in the resource.
-                        val matchingValues = rows.foldLeft(Map.empty[IRI, MatchingValue]) {
-                            case (valuesAcc, row) =>
-                                val valuesInRow: Seq[(IRI, MatchingValue)] = searchCriteria.zipWithIndex.map {
-                                    case (searchCriterion, index) =>
-                                        val valueIri = row.rowMap(s"valueObject$index")
-                                        val literal = row.rowMap(s"literal$index")
+                        // If there were search criteria referring to values, collect the matching values in the resource.
+                        val matchingValues: Vector[MatchingValue] = if (searchCriteria.nonEmpty) {
+                            // Construct a Map of value IRIs to MatchingValue objects found in the resource.
+                            val mapOfMatchingValues: Map[IRI, MatchingValue] = rows.foldLeft(Map.empty[IRI, MatchingValue]) {
+                                case (valuesAcc: Map[IRI, MatchingValue], row: VariableResultsRow) =>
+                                    // For each row, get the matching value for each search criterion.
+                                    val valuesInRow: Seq[(IRI, MatchingValue)] = searchCriteria.zipWithIndex.map {
+                                        case (searchCriterion, index) =>
+                                            val valueIri = row.rowMap(s"valueObject$index")
+                                            val literal = row.rowMap(s"literal$index")
+                                            val valuePermissionLiteral = row.rowMap.get(s"valuePermissions$index")
+                                            val valueOwner = row.rowMap(s"valueOwner$index")
 
-                                        // Convert the permissions on the matching value object into a ValueProps.
+                                            // If the value doesn't specify a project, it's implicitly in the resource's project.
+                                            val valueProject = row.rowMap.getOrElse(s"valueProject$index", resourceProject)
 
-                                        val valueOwner = row.rowMap(s"valueOwner$index")
-                                        val valueProject = row.rowMap.getOrElse(s"valueProject$index", resourceProject) // If the value doesn't specify a project, it's implicitly in the resource's project.
-                                        val valuePermissionLiteral = row.rowMap.get(s"valuePermissions$index")
+                                            // Is the matching value object a LinkValue?
+                                            val valuePermissionCode = if (searchCriterion.valueType == OntologyConstants.KnoraBase.Resource) {
+                                                // Yes. Handle it as a special case, because LinkValues for standoff links don't have permissions.
+                                                val linkValuePermissionCode = PermissionUtilV1.getUserPermissionOnLinkValueV1(
+                                                    linkValueIri = valueIri,
+                                                    predicateIri = searchCriterion.propertyIri,
+                                                    linkValueOwner = valueOwner,
+                                                    linkValueProject = valueProject,
+                                                    linkValuePermissionLiteral = valuePermissionLiteral,
+                                                    userProfile = searchGetRequest.userProfile
+                                                )
 
-                                        // Is the matching value object a LinkValue?
-                                        val valuePermissionCode = if (searchCriterion.valueType == OntologyConstants.KnoraBase.Resource) {
-                                            // Yes. Handle it as a special case, because LinkValues for standoff links don't have permissions.
-                                            val linkValuePermissionCode = PermissionUtilV1.getUserPermissionOnLinkValueV1(
-                                                linkValueIri = valueIri,
-                                                predicateIri = searchCriterion.propertyIri,
-                                                linkValueOwner = valueOwner,
-                                                linkValueProject = valueProject,
-                                                linkValuePermissionLiteral = valuePermissionLiteral,
-                                                userProfile = searchGetRequest.userProfile
+                                                // Get the permission code for the target resource.
+                                                val targetResourceIri = row.rowMap(s"targetResource$index")
+                                                val targetResourceOwner = row.rowMap(s"targetResourceOwner$index")
+                                                val targetResourceProject = row.rowMap(s"targetResourceProject$index")
+                                                val targetResourcePermissionLiteral = row.rowMap.get(s"targetResourcePermissions$index")
+
+                                                val targetResourcePermissionCode = PermissionUtilV1.getUserPermissionV1(
+                                                    subjectIri = targetResourceIri,
+                                                    subjectOwner = targetResourceOwner,
+                                                    subjectProject = targetResourceProject,
+                                                    subjectPermissionLiteral = targetResourcePermissionLiteral,
+                                                    userProfile = searchGetRequest.userProfile
+                                                )
+
+                                                // Only allow the user to see the match if they have view permission on both the link value and the target resource.
+                                                Seq(linkValuePermissionCode, targetResourcePermissionCode).min
+                                            } else {
+                                                // The matching object is an ordinary value, not a LinkValue.
+                                                PermissionUtilV1.getUserPermissionV1(
+                                                    subjectIri = valueIri,
+                                                    subjectOwner = valueOwner,
+                                                    subjectProject = valueProject,
+                                                    subjectPermissionLiteral = valuePermissionLiteral,
+                                                    userProfile = searchGetRequest.userProfile
+                                                )
+                                            }
+
+                                            val propertyIri = searchCriterion.propertyIri
+                                            val propertyLabel = propertyInfo.propertyEntityInfoMap(propertyIri).getPredicateObject(OntologyConstants.Rdfs.Label) match {
+                                                case Some(label) => label
+                                                case None => throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
+                                            }
+
+                                            valueIri -> MatchingValue(
+                                                valueTypeIri = searchCriterion.valueType,
+                                                propertyIri = propertyIri,
+                                                propertyLabel = propertyLabel,
+                                                literal = literal,
+                                                valuePermissionCode = valuePermissionCode
                                             )
+                                    }
 
-                                            // Get the permission code for the target resource.
-                                            val targetResourceIri = row.rowMap(s"targetResource$index")
-                                            val targetResourceOwner = row.rowMap(s"targetResourceOwner$index")
-                                            val targetResourceProject = row.rowMap(s"targetResourceProject$index")
-                                            val targetResourcePermissionLiteral = row.rowMap.get(s"targetResourcePermissions$index")
+                                    // Filter out the values that the user doesn't have permission to see.
+                                    val filteredValues: Seq[(IRI, MatchingValue)] = valuesInRow.filter {
+                                        case (matchingValueIri, matchingValue) => matchingValue.valuePermissionCode.nonEmpty
+                                    }
 
-                                            val targetResourcePermissionCode = PermissionUtilV1.getUserPermissionV1(
-                                                subjectIri = targetResourceIri,
-                                                subjectOwner = targetResourceOwner,
-                                                subjectProject = targetResourceProject,
-                                                subjectPermissionLiteral = targetResourcePermissionLiteral,
-                                                userProfile = searchGetRequest.userProfile
-                                            )
+                                    valuesAcc ++ filteredValues
+                            }
 
-                                            // Only allow the user to see the match if they have view permission on both the link value and the target resource.
-                                            Seq(linkValuePermissionCode, targetResourcePermissionCode).min
-                                        } else {
-                                            // The matching object is an ordinary value, not a LinkValue.
-                                            PermissionUtilV1.getUserPermissionV1(
-                                                subjectIri = valueIri,
-                                                subjectOwner = valueOwner,
-                                                subjectProject = valueProject,
-                                                subjectPermissionLiteral = valuePermissionLiteral,
-                                                userProfile = searchGetRequest.userProfile
-                                            )
-                                        }
+                            // Sort by value IRI, then by property IRI, so the results are consistent between requests.
+                            val vectorOfMatchingValues: Vector[(IRI, MatchingValue)] = mapOfMatchingValues.toVector
+                            val matchingValuesSortedByValueIri: Vector[MatchingValue] = vectorOfMatchingValues.sortBy(_._1).map(_._2)
+                            matchingValuesSortedByValueIri.sortBy(_.propertyIri)
+                        } else {
+                            Vector.empty[MatchingValue]
+                        }
 
-                                        val propertyIri = searchCriterion.propertyIri
-                                        val propertyLabel = propertyInfo.propertyEntityInfoMap(propertyIri).getPredicateObject(OntologyConstants.Rdfs.Label) match {
-                                            case Some(label) => label
-                                            case None => throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
-                                        }
-
-                                        valueIri -> MatchingValue(
-                                            valueTypeIri = searchCriterion.valueType,
-                                            propertyIri = propertyIri,
-                                            propertyLabel = propertyLabel,
-                                            literal = literal,
-                                            valuePermissionCode = valuePermissionCode
-                                        )
-                                }
-
-                                // Filter out the values that the user doesn't have permission to see.
-                                val filteredValues = valuesInRow.filter {
-                                    case (matchingValueIri, matchingValue) => matchingValue.valuePermissionCode.nonEmpty
-                                }
-
-                                valuesAcc ++ filteredValues
-                        }.toVector.sortBy(_._1).map(_._2).sortBy(_.propertyIri) // Sort by value IRI, then by property IRI, so the results are consistent between requests.
-
-                        // Does the user have permission to see at least one matching value in the resource?
-                        if (matchingValues.nonEmpty) {
+                        // Does the user have permission to see at least one matching value in the resource, or were there no search criteria referring to values?
+                        if (matchingValues.nonEmpty || searchCriteria.isEmpty) {
                             // Yes. Make a search result for the resource.
 
                             val resourceClassIconURL = resourceClassIcon.map {
