@@ -91,6 +91,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
     private val thirdThingIri = new MutableTestIri
     private val fourthThingIri = new MutableTestIri
     private val fifthThingIri = new MutableTestIri
+    private val sixthThingIri = new MutableTestIri
 
     val incunabulaBookBiechlin = "http://data.knora.org/9935159f67" // incunabula book with title "Eyn biechlin ..."
     val incunabulaBookQuadra = "http://data.knora.org/861b5644b302" // incunabula book with title Quadragesimale
@@ -1181,6 +1182,96 @@ class ResourcesV1E2ESpec extends E2ESpec {
             }
         }
 
+        "create a sixth resource of type anything:Thing with internal links to two different resources" in {
+
+            val textattrStringified =
+                s"""
+                  {
+                      "bold": [{
+                          "start": 0,
+                          "end": 4
+                      }],
+                      "underline": [{
+                          "start": 0,
+                          "end": 4},
+                          {"start": 5,
+                            "end": 9
+                      }],
+                      "_link": [{
+                          "start": 10,
+                          "end": 15,
+                          "href": "$incunabulaBookQuadra",
+                          "resid": "$incunabulaBookQuadra"
+                      },
+                      {
+                         "start": 5,
+                         "end": 9,
+                         "href": "$incunabulaBookQuadra",
+                         "resid": "$incunabulaBookQuadra"
+                      },
+                      {
+                          "start": 10,
+                          "end": 15,
+                          "href": "http://www.google.ch"
+                      },
+                      {
+                          "start": 0,
+                          "end": 4,
+                          "href": "$incunabulaBookBiechlin",
+                          "resid": "$incunabulaBookBiechlin"
+                      }]
+                  }
+                """.toJson.compactPrint
+
+            val params =
+                s"""
+              {
+              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
+              	"label": "A second thing",
+              	"project_id": "http://data.knora.org/projects/anything",
+              	"properties": {
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["$incunabulaBookBiechlin", "$incunabulaBookQuadra"], "utf8str":"This text links to a thing"}}],
+                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+              	}
+              }
+                """
+
+            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUser, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val resId = getResIriFromJsonResponse(response)
+
+                sixthThingIri.set(resId)
+
+            }
+
+        }
+
+        "get the sixth resource of type anything:Thingwith internal links to two different resources" in {
+            Get("/v1/resources/" + URLEncoder.encode(sixthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUser, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val textValues = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText").asInstanceOf[JsArray].elements
+                val firstTextValue = textValues.head.asJsObject.fields
+
+                val resourceReference: Vector[JsValue] = firstTextValue("resource_reference").asInstanceOf[JsArray].elements
+
+                assert(resourceReference.length == 2, "resource_reference's length is wrong")
+
+                assert(
+                    resourceReference.map(_.asInstanceOf[JsString].value).sorted == Vector(incunabulaBookBiechlin, incunabulaBookQuadra).sorted,
+                    "IRIs in resource_reference do not correspond"
+                )
+
+            }
+        }
 
 
 
