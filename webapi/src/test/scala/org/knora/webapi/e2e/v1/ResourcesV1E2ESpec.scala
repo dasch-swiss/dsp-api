@@ -89,6 +89,8 @@ class ResourcesV1E2ESpec extends E2ESpec {
     private val firstTextValueIRI = new MutableTestIri
     private val secondThingIri = new MutableTestIri
     private val thirdThingIri = new MutableTestIri
+    private val fourthThingIri = new MutableTestIri
+    private val fifthThingIri = new MutableTestIri
 
     val incunabulaBookBiechlin = "http://data.knora.org/9935159f67" // incunabula book with title "Eyn biechlin ..."
     val incunabulaBookQuadra = "http://data.knora.org/861b5644b302" // incunabula book with title Quadragesimale
@@ -975,5 +977,212 @@ class ResourcesV1E2ESpec extends E2ESpec {
                 assert(status == StatusCodes.OK, response.toString)
             }
         }
+
+
+        "create a fourth resource of type anything:Thing with a hyperlink in standoff" in {
+
+            val textattrStringified =
+                s"""
+                  {
+                      "_link": [{
+                          "start": 10,
+                          "end": 15,
+                          "href": "http://www.google.ch"
+                      }]
+                  }
+                """.toJson.compactPrint
+
+            val params =
+                s"""
+              {
+              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
+              	"label": "A second thing",
+              	"project_id": "http://data.knora.org/projects/anything",
+              	"properties": {
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"utf8str":"This text links to a thing"}}],
+                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+              	}
+              }
+                """
+
+            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUser, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val resId = getResIriFromJsonResponse(response)
+
+                fourthThingIri.set(resId)
+
+            }
+
+        }
+
+        "get the fourth resource of type anything:Thing, containing the hyperlink in standoff" in {
+            Get("/v1/resources/" + URLEncoder.encode(fourthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUser, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val textValues = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText").asInstanceOf[JsArray].elements
+                val firstTextValue = textValues.head.asJsObject.fields
+                val textattr = JsonParser(firstTextValue("textattr").asInstanceOf[JsString].value).asJsObject.fields
+                val links = textattr("_link").asInstanceOf[JsArray].elements
+                val link = links.head.asJsObject.fields
+
+                assert(
+                    link("start").asInstanceOf[JsNumber].value.toInt == 10 &&
+                        link("end").asInstanceOf[JsNumber].value.toInt == 15 &&
+                        link("href").asInstanceOf[JsString].value == "http://www.google.ch"
+                )
+            }
+        }
+
+
+        "create a fifth resource of type anything:Thing with various standoff markup including internal links and hyperlinks" in {
+
+            val textattrStringified =
+                s"""
+                  {
+                      "bold": [{
+                          "start": 0,
+                          "end": 4
+                      }],
+                      "underline": [{
+                          "start": 0,
+                          "end": 4},
+                          {"start": 5,
+                            "end": 9
+                      }],
+                      "_link": [{
+                          "start": 10,
+                          "end": 15,
+                          "href": "http://www.google.ch"
+                      },
+                      {
+                          "start": 0,
+                          "end": 4,
+                          "href": "$incunabulaBookBiechlin",
+                          "resid": "$incunabulaBookBiechlin"
+                      }]
+                  }
+                """.toJson.compactPrint
+
+            val params =
+                s"""
+              {
+              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
+              	"label": "A second thing",
+              	"project_id": "http://data.knora.org/projects/anything",
+              	"properties": {
+              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["$incunabulaBookBiechlin"], "utf8str":"This text links to a thing"}}],
+                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+              	}
+              }
+                """
+
+            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUser, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val resId = getResIriFromJsonResponse(response)
+
+                fifthThingIri.set(resId)
+
+            }
+
+        }
+
+        "get the fifth resource of type anything:Thing, containing various standoff markup" in {
+            Get("/v1/resources/" + URLEncoder.encode(fifthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUser, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val textValues = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText").asInstanceOf[JsArray].elements
+                val firstTextValue = textValues.head.asJsObject.fields
+
+                val resourceReference = firstTextValue("resource_reference").asInstanceOf[JsArray].elements
+
+                val textattr = JsonParser(firstTextValue("textattr").asInstanceOf[JsString].value).asJsObject.fields
+
+                val links: Vector[JsValue] = textattr("_link").asInstanceOf[JsArray].elements
+
+                val boldElements = textattr("bold").asInstanceOf[JsArray].elements
+
+                val hyperref: Boolean = links.exists {
+                    (link: JsValue) =>
+
+                        val linkFields = link.asJsObject.fields
+
+                        linkFields("start").asInstanceOf[JsNumber].value.toInt == 10 &&
+                            linkFields("end").asInstanceOf[JsNumber].value.toInt == 15 &&
+                            linkFields("href").asInstanceOf[JsString].value == "http://www.google.ch" &&
+                            linkFields.get("resid").isEmpty
+                }
+
+                val standoff: Boolean = links.exists {
+                    (link: JsValue) =>
+
+                        val linkFields = link.asJsObject.fields
+
+                        linkFields("start").asInstanceOf[JsNumber].value.toInt == 0 &&
+                            linkFields("end").asInstanceOf[JsNumber].value.toInt == 4 &&
+                            linkFields("href").asInstanceOf[JsString].value == incunabulaBookBiechlin &&
+                            linkFields("resid").asInstanceOf[JsString].value == incunabulaBookBiechlin
+                }
+
+                val boldField = boldElements.head.asJsObject.fields
+
+                val underlineElements = textattr("underline").asInstanceOf[JsArray].elements
+
+                val underline1: Boolean = underlineElements.exists {
+                    (currentUnderline: JsValue) =>
+
+                        val underlineField = currentUnderline.asJsObject.fields
+
+                        underlineField("start").asInstanceOf[JsNumber].value.toInt == 0 &&
+                            underlineField("end").asInstanceOf[JsNumber].value.toInt == 4
+
+                }
+
+                val underline2: Boolean = underlineElements.exists {
+                    (currentUnderline: JsValue) =>
+
+                        val underlineField = currentUnderline.asJsObject.fields
+
+                            underlineField("start").asInstanceOf[JsNumber].value.toInt == 5 &&
+                                underlineField("end").asInstanceOf[JsNumber].value.toInt == 9
+
+                }
+
+
+                assert(resourceReference.length == 1 && resourceReference.head.asInstanceOf[JsString].value == incunabulaBookBiechlin, "resource_reference is wrong")
+
+                assert(links.length == 2, "there should be two elements for _link returned")
+
+                assert(hyperref, "hyperlink is not returned correctly")
+
+                assert(standoff, "standoff is not returned correctly")
+
+                assert(boldElements.length == 1 && boldField("start").asInstanceOf[JsNumber].value.toInt == 0 &&
+                    boldField("end").asInstanceOf[JsNumber].value.toInt == 4, "bold is not returned correctly")
+
+                assert(underlineElements.length == 2 && underline1 && underline2, "underline is not returned correctly")
+
+
+            }
+        }
+
+
+
+
     }
 }

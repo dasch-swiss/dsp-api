@@ -528,6 +528,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return 19 books when we search for all books in the Incunabula test data" in {
+            // http://localhost:3333/v1/search/?searchtype=extended&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
                 searchValue = Vector(),
