@@ -239,7 +239,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with RequestBuilding {
             Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test") ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 // assert(status === StatusCodes.OK)
-                assert(responseAs[String] contains "\"hashedpassword\":null")
+                assert(responseAs[String] contains "\"password\":null")
                 assert(responseAs[String] contains "\"token\":null")
             }
         }
