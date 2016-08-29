@@ -84,9 +84,9 @@
 					}
 
 					if (cur_node.nodeName.toLowerCase() == 'p' || cur_node.nodeName.toLowerCase() == 'li' || cur_node.nodeName.toLowerCase()[0] == 'h') {
-						// it is a block element, insert a \r later so that in utf8str their string representations are not attached to each other
-						control_chars.push({pos: char_count, 'char': '\r'});
-						char_count++; // increment by one for '\r' to be inserted
+						// it is a block element, insert a \u001E later so that in utf8str their string representations are not attached to each other
+						control_chars.push({pos: char_count, 'char': '\u001E'});
+						char_count++; // increment by one for '\u001E' to be inserted
 						
 						// the children have been processed (we know the length now), add the prop
 						add_prop(localdata.settings.matching[cur_node.nodeName.toLowerCase()], tmp_char_count, char_count - tmp_char_count);
@@ -332,8 +332,8 @@
 
 		// replace '\n' with <br>
 		html = html.replace(/\n/g, '<br/>');
-		// remove \r since they are represented by block elements
-		html = html.replace(/\r/g, '');
+		// remove \u001E since they are represented by block elements
+		html = html.replace(/\u001E/g, '');
 
 
 		return html;
@@ -600,7 +600,7 @@
 			
 			var htmlstr = localdata.editor.getData();
 			htmlstr = htmlstr.replace(/\n/g, ''); // remove newlines and carriage returns from html string
-			htmlstr = htmlstr.replace(/\r/g, '');
+			htmlstr = htmlstr.replace(/\u001E/g, '');
 
 			//htmlstr = localdata.editor.dataProcessor.toHtml(htmlstr);
 

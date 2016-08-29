@@ -18,36 +18,49 @@ package org.knora.webapi.util
 
 import java.io._
 
-import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
+import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.rio.turtle._
 import org.eclipse.rdf4j.rio.{RDFHandler, RDFWriter}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import org.rogach.scallop._
 
-import scala.collection.immutable.{Iterable, TreeMap}
+import scala.collection.immutable.TreeMap
+import scala.collection.{SortedSet, mutable}
 
 /**
   * Updates the structure of Knora repository data to accommodate changes in Knora.
   */
 object TransformData extends App {
-    private val PermissionsTransformation = "permissions"
-    private val ValueHasStringTransformation = "strings"
-    private val StandoffTransformation = "standoff"
+    private val PermissionsTransformationOption = "permissions"
+    private val MissingValueHasStringTransformationOption = "strings"
+    private val StandoffTransformationOption = "standoff"
+    private val AllTransformationsOption = "all"
+
+    private val allTransformations = Vector(
+        PermissionsTransformationOption,
+        MissingValueHasStringTransformationOption,
+        StandoffTransformationOption
+    )
+
+    private val TempFilePrefix = "TransformData"
+    private val TempFileSuffix = ".ttl"
 
     private val HasRestrictedViewPermission = "http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission"
     private val HasViewPermission = "http://www.knora.org/ontology/knora-base#hasViewPermission"
     private val HasModifyPermission = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
     private val HasDeletePermission = "http://www.knora.org/ontology/knora-base#hasDeletePermission"
     private val HasChangeRightsPermission = "http://www.knora.org/ontology/knora-base#hasChangeRightsPermission"
+    private val HasChangeRightsPermisson = "http://www.knora.org/ontology/knora-base#hasChangeRightsPermisson" // This misspelling occurs in some old test data
 
     private val allOldPermissions = Set(
         HasRestrictedViewPermission,
         HasViewPermission,
         HasModifyPermission,
         HasDeletePermission,
-        HasChangeRightsPermission
+        HasChangeRightsPermission,
+        HasChangeRightsPermisson
     )
 
     private val oldPermissionIri2Abbreviation = Map(
@@ -55,56 +68,171 @@ object TransformData extends App {
         HasViewPermission -> OntologyConstants.KnoraBase.ViewPermission,
         HasModifyPermission -> OntologyConstants.KnoraBase.ModifyPermission,
         HasDeletePermission -> OntologyConstants.KnoraBase.DeletePermission,
-        HasChangeRightsPermission -> OntologyConstants.KnoraBase.ChangeRightsPermission
+        HasChangeRightsPermission -> OntologyConstants.KnoraBase.ChangeRightsPermission,
+        HasChangeRightsPermisson -> OntologyConstants.KnoraBase.ChangeRightsPermission
     )
 
     val conf = new Conf(args)
-    val transformation = conf.transform()
-    val inputFile = conf.input()
-    val outputFile = conf.output()
+    val transformationOption = conf.transform()
+    val inputFile = new File(conf.input())
+    val outputFile = new File(conf.output())
 
-    val fileInputStream = new FileInputStream(new File(inputFile))
-    val fileOutputStream = new FileOutputStream(new File(outputFile))
-    val turtleParser = new TurtleParser()
-    val turtleWriter = new TurtleWriter(fileOutputStream)
-
-    val handler = transformation match {
-        case PermissionsTransformation => new PermissionsHandler(turtleWriter)
-        case ValueHasStringTransformation => new ValueHasStringHandler(turtleWriter)
-        case StandoffTransformation => new StandoffHandler(turtleWriter)
-        case _ => throw new Exception(s"Unsupported transformation $transformation")
+    if (transformationOption == AllTransformationsOption) {
+        runAllTransformations(inputFile, outputFile)
+    } else {
+        runTransformation(transformationOption, inputFile, outputFile)
     }
 
-    turtleParser.setRDFHandler(handler)
-    turtleParser.parse(fileInputStream, inputFile)
-    fileOutputStream.close()
-    fileInputStream.close()
+    /**
+      * Runs all transformations, using temporary files as needed.
+      *
+      * @param inputFile  the input file.
+      * @param outputFile the output file.
+      */
+    private def runAllTransformations(inputFile: File, outputFile: File): Unit = {
+        /**
+          * Associates a transformation with an input file and and output file, either of which may be a temporary file.
+          *
+          * @param transformation     the name of the transformation.
+          * @param inputFileForTrans  the input file to be used for the transformation.
+          * @param outputFileForTrans the output file to be used for the transformation.
+          */
+        case class TransformationWithFiles(transformation: String, inputFileForTrans: File, outputFileForTrans: File)
+
+        // Make a list of transformations to be run, with an input file and an output file for each one, generating
+        // temporary file names as needed.
+        val transformationsWithFiles: Vector[TransformationWithFiles] = allTransformations.foldLeft(Vector.empty[TransformationWithFiles]) {
+            case (acc, trans) =>
+                // Is this is the first transformation?
+                val inputFileForTrans = if (trans == allTransformations.head) {
+                    // Yes. Use the user's input file as the input file for the transformation.
+                    inputFile
+                } else {
+                    // No. Use the previous transformation's output file as the input file for this transformation.
+                    acc.last.outputFileForTrans
+                }
+
+                // Is this the last transformation?
+                val outputFileForTrans = if (trans == allTransformations.last) {
+                    // Yes. Use the user's output file as the output file for the transformation.
+                    outputFile
+                } else {
+                    // No. Use a temporary file.
+                    File.createTempFile(TempFilePrefix, TempFileSuffix)
+                }
+
+                acc :+ TransformationWithFiles(
+                    transformation = trans,
+                    inputFileForTrans = inputFileForTrans,
+                    outputFileForTrans = outputFileForTrans
+                )
+        }
+
+        // Run all the transformations.
+        for (transformationWithFiles <- transformationsWithFiles) {
+            runTransformation(
+                transformation = transformationWithFiles.transformation,
+                inputFile = transformationWithFiles.inputFileForTrans,
+                outputFile = transformationWithFiles.outputFileForTrans
+            )
+        }
+    }
+
+    /**
+      * Runs the specified transformation.
+      *
+      * @param transformation the name of the transformation to be run.
+      * @param inputFile      the input file.
+      * @param outputFile     the output file.
+      */
+    private def runTransformation(transformation: String, inputFile: File, outputFile: File): Unit = {
+        // println(s"Running transformation $transformation with inputFile $inputFile and outputFile $outputFile")
+
+        val fileInputStream = new FileInputStream(inputFile)
+        val fileOutputStream = new FileOutputStream(outputFile)
+        val turtleParser = new TurtleParser()
+        val turtleWriter = new TurtleWriter(fileOutputStream)
+
+        val handler = transformation match {
+            case PermissionsTransformationOption => new PermissionsHandler(turtleWriter)
+            case MissingValueHasStringTransformationOption => new ValueHasStringHandler(turtleWriter)
+            case StandoffTransformationOption => new StandoffHandler(turtleWriter)
+            case _ => throw new Exception(s"Unsupported transformation $transformation")
+        }
+
+        turtleParser.setRDFHandler(handler)
+        turtleParser.parse(fileInputStream, inputFile.getAbsolutePath)
+        fileOutputStream.close()
+        fileInputStream.close()
+    }
+
 
     /**
       * An abstract [[RDFHandler]] that collects all statements so they can be processed when the end of the
-      * input file is reached. Subclasses need to implement only `endRDF`.
+      * input file is reached. Subclasses need to implement only `endRDF`, which must call `turtleWriter.endRDF()`
+      * when finished.
+      *
+      * @param turtleWriter an [[RDFWriter]] that writes to the output file.
       */
     protected abstract class StatementCollectingHandler(turtleWriter: RDFWriter) extends RDFHandler {
+        /**
+          * An instance of [[org.openrdf.model.ValueFactory]] for creating RDF statements.
+          */
         protected val valueFactory = SimpleValueFactory.getInstance()
+
+        /**
+          * A collection of all the statements in the input file, grouped and sorted by subject IRI.
+          */
         protected var statements = TreeMap.empty[IRI, Vector[Statement]]
 
-        protected def getObject(subjectStatements: Vector[Statement], predicateIri: IRI): String = {
-            subjectStatements.find(_.getPredicate.stringValue == predicateIri).get.getObject.stringValue
+        /**
+          * A convenience method that returns the first object of the specified predicate in a list of statements.
+          *
+          * @param subjectStatements the statements to search.
+          * @param predicateIri      the predicate to search for.
+          * @return the first object found for the specified predicate.
+          */
+        protected def getObject(subjectStatements: Vector[Statement], predicateIri: IRI): Option[String] = {
+            subjectStatements.find(_.getPredicate.stringValue == predicateIri).map(_.getObject.stringValue)
         }
 
+        /**
+          * Adds a statement to the collection `statements`.
+          *
+          * @param st the statement to be added.
+          */
         override def handleStatement(st: Statement): Unit = {
             val subjectIri = st.getSubject.stringValue()
             val currentStatementsForSubject = statements.getOrElse(subjectIri, Vector.empty[Statement])
-            statements += (subjectIri -> (currentStatementsForSubject :+ st))
+
+            if (st.getPredicate.stringValue == OntologyConstants.Rdf.Type) {
+                // Make rdf:type the first statement for the subject.
+                statements += (subjectIri -> (st +: currentStatementsForSubject))
+            } else {
+                statements += (subjectIri -> (currentStatementsForSubject :+ st))
+            }
         }
 
-        override def handleComment(comment: IRI): Unit = {}
+        /**
+          * Does nothing (comments are ignored).
+          *
+          * @param comment a Turtle comment.
+          */
+        override def handleComment(comment: String): Unit = {}
 
-
-        override def handleNamespace(prefix: IRI, uri: IRI): Unit = {
+        /**
+          * Writes the specified namepace declaration to the output file.
+          *
+          * @param prefix the namespace prefix.
+          * @param uri    the namespace URI.
+          */
+        override def handleNamespace(prefix: String, uri: String): Unit = {
             turtleWriter.handleNamespace(prefix, uri)
         }
 
+        /**
+          * Calls `turtleWriter.startRDF()`.
+          */
         override def startRDF(): Unit = {
             turtleWriter.startRDF()
         }
@@ -159,7 +287,7 @@ object TransformData extends App {
     private class ValueHasStringHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
 
         private def maybeWriteValueHasString(subjectIri: IRI, subjectStatements: Vector[Statement]): Unit = {
-            val resourceClass = getObject(subjectStatements, OntologyConstants.Rdf.Type)
+            val resourceClass = getObject(subjectStatements, OntologyConstants.Rdf.Type).get
 
             // Is this Knora value object?
             if (resourceClass.startsWith(OntologyConstants.KnoraBase.KnoraBasePrefixExpansion) && resourceClass.endsWith("Value")) {
@@ -170,17 +298,17 @@ object TransformData extends App {
                     // No. Generate one.
 
                     val stringLiteral = resourceClass match {
-                        case OntologyConstants.KnoraBase.IntValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasInteger)
-                        case OntologyConstants.KnoraBase.BooleanValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasBoolean)
-                        case OntologyConstants.KnoraBase.UriValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasUri)
-                        case OntologyConstants.KnoraBase.DecimalValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasDecimal)
+                        case OntologyConstants.KnoraBase.IntValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasInteger).get
+                        case OntologyConstants.KnoraBase.BooleanValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasBoolean).get
+                        case OntologyConstants.KnoraBase.UriValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasUri).get
+                        case OntologyConstants.KnoraBase.DecimalValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasDecimal).get
 
                         case OntologyConstants.KnoraBase.DateValue =>
-                            val startJDC = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasStartJDC)
-                            val endJDC = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasEndJDC)
-                            val startPrecision = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasStartPrecision)
-                            val endPrecision = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasEndPrecision)
-                            val calendar = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasCalendar)
+                            val startJDC = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasStartJDC).get
+                            val endJDC = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasEndJDC).get
+                            val startPrecision = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasStartPrecision).get
+                            val endPrecision = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasEndPrecision).get
+                            val calendar = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasCalendar).get
 
                             val jdcValue = JulianDayCountValueV1(
                                 dateval1 = startJDC.toInt,
@@ -192,14 +320,14 @@ object TransformData extends App {
 
                             jdcValue.toString
 
-                        case OntologyConstants.KnoraBase.ColorValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasColor)
-                        case OntologyConstants.KnoraBase.GeomValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasGeometry)
-                        case OntologyConstants.KnoraBase.StillImageFileValue => getObject(subjectStatements, OntologyConstants.KnoraBase.OriginalFilename)
-                        case OntologyConstants.KnoraBase.ListValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasListNode)
+                        case OntologyConstants.KnoraBase.ColorValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasColor).get
+                        case OntologyConstants.KnoraBase.GeomValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasGeometry).get
+                        case OntologyConstants.KnoraBase.StillImageFileValue => getObject(subjectStatements, OntologyConstants.KnoraBase.OriginalFilename).get
+                        case OntologyConstants.KnoraBase.ListValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasListNode).get
 
                         case OntologyConstants.KnoraBase.IntervalValue =>
-                            val intervalStart = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasIntervalStart)
-                            val intervalEnd = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasIntervalEnd)
+                            val intervalStart = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasIntervalStart).get
+                            val intervalEnd = getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasIntervalEnd).get
 
                             val intervalValue = IntervalValueV1(
                                 timeval1 = BigDecimal(intervalStart),
@@ -208,8 +336,8 @@ object TransformData extends App {
 
                             intervalValue.toString
 
-                        case OntologyConstants.KnoraBase.GeonameValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasGeonameCode)
-                        case OntologyConstants.KnoraBase.LinkValue => getObject(subjectStatements, OntologyConstants.Rdf.Object)
+                        case OntologyConstants.KnoraBase.GeonameValue => getObject(subjectStatements, OntologyConstants.KnoraBase.ValueHasGeonameCode).get
+                        case OntologyConstants.KnoraBase.LinkValue => getObject(subjectStatements, OntologyConstants.Rdf.Object).get
 
                         case _ => throw InconsistentTriplestoreDataException(s"Unsupported value type $resourceClass")
                     }
@@ -251,10 +379,13 @@ object TransformData extends App {
             OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "StandoffHref" -> OntologyConstants.KnoraBase.StandoffHrefTag
         )
 
+        private val StandoffHasStart = OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "standoffHasStart"
+        private val StandoffHasEnd = OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "standoffHasEnd"
+
         // A map of old standoff predicates to new ones.
         private val oldToNewPredicateIris = Map(
-            OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "standoffHasStart" -> OntologyConstants.KnoraBase.StandoffTagHasStart,
-            OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "standoffHasEnd" -> OntologyConstants.KnoraBase.StandoffTagHasEnd,
+            StandoffHasStart -> OntologyConstants.KnoraBase.StandoffTagHasStart,
+            StandoffHasEnd -> OntologyConstants.KnoraBase.StandoffTagHasEnd,
             OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "standoffHasLink" -> OntologyConstants.KnoraBase.StandoffTagHasLink,
             OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "standoffHasHref" -> OntologyConstants.KnoraBase.StandoffTagHasHref
         )
@@ -263,30 +394,34 @@ object TransformData extends App {
             // Make a flat list of all statements in the data.
             val allStatements: Vector[Statement] = statements.values.flatten.toVector
 
-            // Find all the old standoff tag IRIs in the data, and make a Map of old standoff blank node identifiers
-            // to new standoff tag IRIs.
-            val standoffTagIriMap: Map[IRI, IRI] = allStatements.foldLeft(Map.empty[IRI, IRI]) {
-                case (acc, statement: Statement) =>
-                    val predicate = statement.getPredicate.stringValue()
+            // A Map of standoff tag IRIs to their containing text value IRIs.
+            val standoffTagIrisToTextValueIris = new mutable.HashMap[IRI, IRI]()
 
-                    // Does this statement point to a standoff node?
-                    if (predicate == OntologyConstants.KnoraBase.ValueHasStandoff) {
-                        // Yes.
-                        val oldStandoffIri = statement.getObject.stringValue()
+            // A Map of old standoff tag blank node identifiers to new standoff tag IRIs.
+            val standoffTagIriMap = mutable.HashMap[IRI, IRI]()
 
-                        // Is the object an old-style blank node identifier?
-                        if (!oldStandoffIri.contains("/standoff/")) {
-                            // Yes. Make a new IRI for it.
-                            val valueObjectIri = statement.getSubject.stringValue()
-                            val newStandoffIri = knoraIdUtil.makeRandomStandoffTagIri(valueObjectIri)
-                            acc + (oldStandoffIri -> newStandoffIri)
-                        } else {
-                            // No. Leave it as is.
-                            acc
-                        }
+            // Populate standoffTagIriMap and standoffTagIrisToTextValueIris.
+            for (statement <- allStatements) {
+                val predicate = statement.getPredicate.stringValue()
+
+                // Does this statement point to a standoff node?
+                if (predicate == OntologyConstants.KnoraBase.ValueHasStandoff) {
+                    // Yes.
+                    val valueObjectIri = statement.getSubject.stringValue()
+                    val oldStandoffIri = statement.getObject.stringValue()
+
+                    // Is the object an old-style blank node identifier?
+                    val standoffTagIri = if (!oldStandoffIri.contains("/standoff/")) {
+                        // Yes. Make a new IRI for it.
+                        val newStandoffIri = knoraIdUtil.makeRandomStandoffTagIri(valueObjectIri)
+                        standoffTagIriMap += (oldStandoffIri -> newStandoffIri)
+                        newStandoffIri
                     } else {
-                        acc
+                        oldStandoffIri
                     }
+
+                    standoffTagIrisToTextValueIris += (standoffTagIri -> valueObjectIri)
+                }
             }
 
             // Replace blank node identifiers with IRIs.
@@ -320,18 +455,48 @@ object TransformData extends App {
             val (standoffStatements: Vector[Statement], nonStandoffStatements: Vector[Statement]) = statementsWithNewIris.partition(statement => standoffTagIris.contains(statement.getSubject.stringValue()))
             val groupedStandoffStatements: Map[Resource, Vector[Statement]] = standoffStatements.groupBy(_.getSubject)
 
-            // Transform the structure of each standoff tag.
-            val transformedStandoff: Vector[Statement] = groupedStandoffStatements.flatMap {
-                case (tag, tagStatements) =>
-                    val oldTagClassIri = getObject(tagStatements, OntologyConstants.Rdf.Type)
-                    val tagName = getObject(tagStatements, StandoffHasAttribute)
+            // A data structure to store the positions of linefeeds to be inserted in text values, replacing linebreak tags.
+            val linefeedsToInsert = new mutable.HashMap[IRI, SortedSet[Int]]
 
-                    // If the old tag name is "_link", the tag is either a StandoffLink or a StandoffHref. Map the old class name the new one.
-                    val newTagClassIri = if (tagName == "_link") {
-                        oldToNewClassIris(oldTagClassIri)
-                    } else {
-                        // Otherwise, generate the new class name from the tag name.
-                        StandoffTagV1.EnumValueToIri(StandoffTagV1.lookup(tagName, () => throw InconsistentTriplestoreDataException(s"Unrecognised standoff tag name $tagName")))
+            // IRIs of removed standoff linebreak tags.
+            val removedLinebreakTagIris = new mutable.HashSet[IRI]
+
+            // Remove the linebreak tags.
+            val standoffWithoutLinebreakTags = groupedStandoffStatements.filter {
+                case (tag, tagStatements) =>
+                    getObject(tagStatements, StandoffHasAttribute) match {
+                        case Some("linebreak") =>
+                            // If we got a linebreak tag, delete it and save its position so we can add a linefeed to the text value later.
+                            val tagIri = tag.stringValue()
+                            val textValueIri = standoffTagIrisToTextValueIris(tagIri)
+                            val currentLinefeedsForTextValue = linefeedsToInsert.getOrElse(textValueIri, SortedSet.empty[Int])
+                            val linefeedPos = getObject(tagStatements, StandoffHasStart).get.toInt
+                            linefeedsToInsert += (textValueIri -> (currentLinefeedsForTextValue + linefeedPos))
+                            removedLinebreakTagIris += tagIri
+                            false
+
+                        case _ => true
+                    }
+            }
+
+            // Transform the structure of each standoff tag.
+            val transformedStandoff: Vector[Statement] = standoffWithoutLinebreakTags.flatMap {
+                case (tag, tagStatements) =>
+                    val oldTagClassIri = getObject(tagStatements, OntologyConstants.Rdf.Type).get
+                    val textValueIri = standoffTagIrisToTextValueIris(tag.stringValue)
+                    val linefeedsToInsertForTextValue = linefeedsToInsert.get(textValueIri)
+                    val maybeTagName = getObject(tagStatements, StandoffHasAttribute)
+
+                    val newTagClassIri = maybeTagName match {
+                        case Some(tagName) =>
+                            if (tagName == "_link") {
+                                oldToNewClassIris(oldTagClassIri)
+                            } else {
+                                // Otherwise, generate the new class name from the tag name.
+                                StandoffTagV1.EnumValueToIri(StandoffTagV1.lookup(tagName, () => throw InconsistentTriplestoreDataException(s"Unrecognised standoff tag name $tagName")))
+                            }
+
+                        case None => oldTagClassIri
                     }
 
                     // Throw away the standoffHasAttribute statement.
@@ -351,12 +516,49 @@ object TransformData extends App {
                                         valueFactory.createIRI(newTagClassIri)
                                     )
 
+                                case StandoffHasStart =>
+                                    val currentStartPos = statement.getObject.stringValue.toInt
+
+                                    val newStartPos = linefeedsToInsertForTextValue match {
+                                        case Some(linefeeds) =>
+                                            // Count the number of linefeeds whose positions are less than or equal
+                                            // to the current value of standoffHasStart, and increment standoffHasStart
+                                            // by that number.
+                                            val linefeedsToInsertBeforeTag = linefeeds.count(_ <= currentStartPos)
+                                            currentStartPos + linefeedsToInsertBeforeTag
+
+                                        case None => currentStartPos
+                                    }
+
+                                    valueFactory.createStatement(
+                                        statement.getSubject,
+                                        valueFactory.createIRI(oldToNewPredicateIris(StandoffHasStart)),
+                                        valueFactory.createLiteral(newStartPos)
+                                    )
+
+                                case StandoffHasEnd =>
+                                    val currentEndPos = statement.getObject.stringValue.toInt
+
+                                    val newEndPos = linefeedsToInsertForTextValue match {
+                                        case Some(linefeeds) =>
+
+                                            // Count the number of linefeeds whose positions are less than
+                                            // to the current value of standoffHasEnd, and increment standoffHasEnd
+                                            // by that number.
+                                            val linefeedsToInsertBeforeTag = linefeeds.count(_ < currentEndPos)
+                                            currentEndPos + linefeedsToInsertBeforeTag
+
+                                        case None => currentEndPos
+                                    }
+
+                                    valueFactory.createStatement(
+                                        statement.getSubject,
+                                        valueFactory.createIRI(oldToNewPredicateIris(StandoffHasEnd)),
+                                        valueFactory.createLiteral(newEndPos)
+                                    )
+
                                 case _ =>
                                     // Replace other old predicates with new ones.
-                                    val newPredicate = oldToNewPredicateIris.getOrElse(oldPredicate, oldPredicate)
-
-                                    // println(s"Replacing $oldPredicate with $newPredicate")
-
                                     valueFactory.createStatement(
                                         statement.getSubject,
                                         valueFactory.createIRI(oldToNewPredicateIris.getOrElse(oldPredicate, oldPredicate)),
@@ -366,8 +568,68 @@ object TransformData extends App {
                     }
             }.toVector
 
+            // Fix the objects of valueHasString by replacing \r with INFORMATION SEPARATOR TWO and inserting
+            // linefeeds that were previously represented as "linebreak" standoff tags.
+            val transformedNonStandoffStatements = nonStandoffStatements.foldLeft(Vector.empty[Statement]) {
+                case (acc, statement) =>
+                    statement.getPredicate.stringValue match {
+                        case OntologyConstants.KnoraBase.ValueHasString =>
+                            // Replace \r with INFORMATION SEPARATOR TWO.
+                            val objectWithSeparators = statement.getObject.stringValue.replace('\r', FormatConstants.INFORMATION_SEPARATOR_TWO)
+
+                            // Insert linefeeds that were previously represented as "linebreak" standoff tags.
+                            val objectWithLinefeeds: String = linefeedsToInsert.get(statement.getSubject.stringValue) match {
+                                case Some(linefeeds) =>
+                                    // Each time we add a linefeed to the string, the positions of all the remaining
+                                    // linefeeds to be added must be shifted to the right. Do this shifting in advance,
+                                    // by adding the position of each linefeed to its index.
+                                    val adjustedLinefeeds: SortedSet[Int] = linefeeds.zipWithIndex.map {
+                                        case (pos, index) => pos + index
+                                    }
+
+                                    val stringBuilder = new StringBuilder()
+
+                                    // Make a list of the Unicode code points in the string. We can't just iterate over
+                                    // the Char values in the string, because the JVM uses UTF-16 internally, and it uses
+                                    // surrogate pairs of Chars for Unicode values that won't fit in a 16-bit Char. So
+                                    // a single character could actually be represented by two UTF-16 Chars. We assume
+                                    // that a standoff position is the index of a code point.
+
+                                    val codePoints: Vector[String] = objectWithSeparators.codePoints.toArray.toVector.map {
+                                        codePoint => new String(Character.toChars(codePoint))
+                                    }
+
+                                    // Iterate over the code points in the string, adding line feeds at the appropriate
+                                    // positions.
+                                    for ((codePointStr, pos) <- codePoints.zipWithIndex) {
+                                        if (adjustedLinefeeds.contains(pos)) {
+                                            stringBuilder.append('\n')
+                                        }
+
+                                        stringBuilder.append(codePointStr)
+                                    }
+
+                                    stringBuilder.toString
+
+                                case None => objectWithSeparators
+                            }
+
+                            acc :+ valueFactory.createStatement(
+                                statement.getSubject,
+                                statement.getPredicate,
+                                valueFactory.createLiteral(objectWithLinefeeds)
+                            )
+
+                        case OntologyConstants.KnoraBase.ValueHasStandoff if removedLinebreakTagIris.contains(statement.getObject.stringValue) =>
+                            // This is a valueHasStandoff statement referring to a linebreak tag that was removed, so ignore it.
+                            acc
+
+                        case _ => acc :+ statement
+                    }
+            }
+
             // Recombine the transformed standoff tags with the rest of the statements in the data.
-            val allTransformedStatements = transformedStandoff ++ nonStandoffStatements
+            val allTransformedStatements = transformedStandoff ++ transformedNonStandoffStatements
 
             // Sort them by subject IRI.
             val sortedStatements = allTransformedStatements.sortBy(_.getSubject.stringValue())
@@ -389,17 +651,18 @@ object TransformData extends App {
             s"""
                |Updates the structure of Knora repository data to accommodate changes in Knora.
                |
-               |Usage: org.knora.webapi.util.TransformData -t [$PermissionsTransformation|$ValueHasStringTransformation|$StandoffTransformation] input output
+               |Usage: org.knora.webapi.util.TransformData -t [$PermissionsTransformationOption|$MissingValueHasStringTransformationOption|$StandoffTransformationOption|$AllTransformationsOption] input output
             """.stripMargin)
 
         val transform = opt[String](
             required = true,
-            validate = t => Set(PermissionsTransformation, ValueHasStringTransformation, StandoffTransformation).contains(t),
-            descr = s"Selects a transformation. Available transformations: '$PermissionsTransformation' (combines old-style multiple permission statements into single permission statements), '$ValueHasStringTransformation' (adds missing valueHasString), '$StandoffTransformation' (transforms old-style standoff into new-style standoff)"
+            validate = t => Set(PermissionsTransformationOption, MissingValueHasStringTransformationOption, StandoffTransformationOption, AllTransformationsOption).contains(t),
+            descr = s"Selects a transformation. Available transformations: '$PermissionsTransformationOption' (combines old-style multiple permission statements into single permission statements), '$MissingValueHasStringTransformationOption' (adds missing valueHasString), '$StandoffTransformationOption' (transforms old-style standoff into new-style standoff), '$AllTransformationsOption' (all of the above)"
         )
 
         val input = trailArg[String](required = true, descr = "Input Turtle file")
         val output = trailArg[String](required = true, descr = "Output Turtle file")
         verify()
     }
+
 }

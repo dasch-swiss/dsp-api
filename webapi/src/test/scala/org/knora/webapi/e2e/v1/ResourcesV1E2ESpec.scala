@@ -1254,7 +1254,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
         }
 
-        "get the sixth resource of type anything:Thingwith internal links to two different resources" in {
+        "get the sixth resource of type anything:Thing with internal links to two different resources" in {
             Get("/v1/resources/" + URLEncoder.encode(sixthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUser, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1272,8 +1272,6 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
             }
         }
-
-
 
     }
 }

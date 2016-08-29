@@ -76,12 +76,14 @@ includes a command-line program that works on RDF data files in Turtle_ format. 
   [info] 
   [info] Updates the structure of Knora repository data to accommodate changes in Knora.
   [info] 
-  [info] Usage: org.knora.webapi.util.TransformData -t [permissions|strings] input output
+  [info] Usage: org.knora.webapi.util.TransformData -t [permissions|strings|standoff|all] input output
   [info]             
   [info]   -t, --transform  <arg>   Selects a transformation. Available transformations:
   [info]                            'permissions' (combines old-style multiple permission
   [info]                            statements into single permission statements),
-  [info]                            'strings' (adds missing valueHasString)
+  [info]                            'strings' (adds missing valueHasString), 'standoff'
+  [info]                            (transforms old-style standoff into new-style
+  [info]                            standoff), 'all' (all of the above)
   [info]       --help               Show help message
   [info] 
   [info]  trailing arguments:
@@ -92,14 +94,20 @@ The currently available transformations are:
 
 permissions
   Combines old-style permission statements (``hasViewPermission``, ``hasModifyPermission``, etc.) into
-  one `hasPermissions` statement per resource or value, as described in the section **Permissions** in
+  one ``hasPermissions`` statement per resource or value, as described in the section **Permissions** in
   :ref:`knora-ontologies`.
 
 strings
   Adds missing ``valueHasString`` statements to Knora value objects.
 
-``TransformData`` runs only one transformation at a time, so if you need to run multiple transformations,
-you must run it once per transformation, taking the output of each run as the input for the next run.
+standoff
+  Transforms old-style standoff markup (containing tag names as strings) to new-style standoff markup
+  (using different OWL class names for different tags).
+
+all
+  Runs all of the above transformations.
+
+Transformations that are not needed have no effect.
 
 The program uses the Turtle parsing and formatting library from RDF4J_. Additional transformations can
 be implemented as subclasses of ``org.eclipse.rdf4j.rio.RDFHandler``.
