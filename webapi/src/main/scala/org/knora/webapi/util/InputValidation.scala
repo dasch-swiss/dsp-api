@@ -83,7 +83,6 @@ object InputValidation {
 
     def toSparqlEncodedString(s: String): String = {
         // http://www.morelab.deusto.es/code_injection/
-        // TODO: if the user submits backslashes, could the possibly neutralize the backslashes we insert?
 
         StringUtils.replaceEach(
             s,

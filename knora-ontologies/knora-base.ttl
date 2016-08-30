@@ -1658,18 +1658,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#valueHasURI
-
-:valueHasURI rdf:type owl:DatatypeProperty ;
-
-             rdfs:subPropertyOf :valueHas ;
-
-             :subjectClassConstraint :Value ;
-
-             :objectDatatypeConstraint xsd:anyURI .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#website
 
 :website rdf:type owl:DatatypeProperty ;
