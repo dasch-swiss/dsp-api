@@ -422,26 +422,31 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       */
     private def makeTextValue(valueProps: ValueProps): ApiValueV1 = {
 
-        val groupedByAttr: Map[String, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(_ (OntologyConstants.KnoraBase.StandoffHasAttribute)).map {
-            case (attr: String, standoffInfos: Seq[Map[String, String]]) =>
+        val groupedByAttr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(row =>
+            // group by the enumeration name of the standoff tag IRI by converting the standoff tag IRI
+            // standoff lik and href tags have the same enumeration name, so the groupBy has to combine their standoff positions
+            StandoffTagV1.IriToEnumValue(row(OntologyConstants.Rdf.Type))
+        ).map {
+            case (tagName: StandoffTagV1.Value, standoffInfos: Seq[Map[String, String]]) =>
+
                 // we grouped by the attribute name, return it as the key of that Map
-                (attr, standoffInfos.map {
+                (tagName, standoffInfos.map {
                     // for each attribute name, we may have several positions that have to be turned into a StandoffPositionV1
 
                     case standoffInfo =>
-                        val maybeResId = standoffInfo.get(OntologyConstants.KnoraBase.StandoffHasLink)
+                        val maybeResId = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasLink)
 
                         // If there's a resid, generate an href from it, because the SALSAH GUI expects this.
                         // Otherwise, use the href returned by the query, if present.
                         val maybeHref = if (maybeResId.nonEmpty) {
                             maybeResId
                         } else {
-                            standoffInfo.get(OntologyConstants.KnoraBase.StandoffHasHref)
+                            standoffInfo.get(OntologyConstants.KnoraBase.ValueHasUri)
                         }
 
                         StandoffPositionV1(
-                            start = standoffInfo(OntologyConstants.KnoraBase.StandoffHasStart).toInt,
-                            end = standoffInfo(OntologyConstants.KnoraBase.StandoffHasEnd).toInt,
+                            start = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
+                            end = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
                             href = maybeHref,
                             resid = maybeResId
                         )
@@ -449,15 +454,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         }
 
         // map over all _link attributes to collect IRIs that are referred to
-        val resids: Seq[IRI] = groupedByAttr.get(StandoffConstantsV1.LINK_ATTR) match {
-            case Some(links: Seq[StandoffPositionV1]) => links.foldLeft(Set.empty[IRI]) {
-                // use a set to eliminate redundancy of identical Iris
-                case (acc, position) => position.resid match {
-                    case Some(resid: IRI) => acc + resid
-                    case None => acc
-                }
-            }.toVector
-            case None => Vector.empty[IRI]
+        val resids: Set[IRI] = groupedByAttr.get(StandoffTagV1.link) match {
+            case Some(links: Seq[StandoffPositionV1]) => InputValidation.getResourceIrisFromStandoffLinkTags(links)
+            case None => Set.empty[IRI]
         }
 
         // If there's an empty string in the data (which does sometimes happen), the store package will remove it from

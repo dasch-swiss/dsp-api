@@ -527,6 +527,23 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "return 19 books when we search for all books in the Incunabula test data" in {
+            // http://localhost:3333/v1/search/?searchtype=extended&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = incunabulaUser,
+                searchValue = Vector(),
+                compareProps = Vector(),
+                propertyIri = Vector(),
+                filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(19)
+            }
+        }
+
         "return 19 books when we search for all books that have a title in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=EXISTS&searchval
             actorUnderTest ! ExtendedSearchGetRequestV1(

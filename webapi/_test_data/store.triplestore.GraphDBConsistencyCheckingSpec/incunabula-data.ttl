@@ -206,14 +206,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
 	knora-base:valueHasString "213610" ;
 	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue .
-
-_:node1ap8ommgkx1 knora-base:standoffHasAttribute "linebreak" ;
-	knora-base:standoffHasStart 64 ;
-	knora-base:standoffHasEnd 64 ;
-	a knora-base:StandoffVisualAttribute .
-
-<http://data.knora.org/482a33d65c36/values/a4167701aa4d03> knora-base:valueHasStandoff _:node1ap8ommgkx1 ;
+	a knora-base:TextValue ;
 	knora-base:valueCreationDate "2016-03-02T15:05:55Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
 # ## ###########################################

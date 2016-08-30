@@ -259,6 +259,38 @@
 
             knora-base:hasDefaultDeletePermission knora-base:Owner .
 
+
+
+    ### ###########################################
+    ### beol:comment
+
+    :comment rdf:type owl:ObjectProperty ;
+
+                  rdfs:subPropertyOf knora-base:hasComment ;
+
+                  rdfs:label "Kommentar"@de ,
+                             "Commentaire"@fr ,
+                             "Commento"@it ,
+                             "Comment"@en ;
+
+                  rdfs:comment """Bemerkungen"""@de ;
+
+                  knora-base:subjectClassConstraint knora-base:Resource ;
+
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+
+                  salsah-gui:guiOrder "5"^^xsd:integer ;
+
+                  salsah-gui:guiElement salsah-gui:Richtext ;
+
+                  knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
+                                                      knora-base:KnownUser ;
+
+                  knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                  knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+
     ##########################################################
     #
     # RESOURCES
@@ -287,7 +319,12 @@
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :location ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :comment ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          ] ;
 
           knora-base:resourceIcon "manuscript.gif" ;
 
@@ -326,7 +363,12 @@
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :seqnum ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :comment ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          ] ;
 
           knora-base:resourceIcon "page.gif" ;
 

@@ -1,3 +1,19 @@
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * This file is part of Knora.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.knora.webapi.e2e.v1
 
 import java.net.URLEncoder
@@ -21,7 +37,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
-  * Created by benjamingeer on 12/07/16.
+  * Tests the values route.
   */
 class ValuesV1E2ESpec extends E2ESpec {
 
@@ -124,7 +140,7 @@ class ValuesV1E2ESpec extends E2ESpec {
                   |    "project_id": "http://data.knora.org/projects/anything",
                   |    "res_id": "http://data.knora.org/a-thing",
                   |    "prop": "http://www.knora.org/ontology/anything#hasText",
-                  |    "richtext_value": {"utf8str":"This comment refers to another resource","textattr":"{\"_link\":[{\"start\":31,\"end\":39,\"resid\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
+                  |    "richtext_value": {"utf8str":"This comment refers to another resource","textattr":"{\"_link\":[{\"start\":31,\"end\":39,\"resid\":\"http://data.knora.org/another-thing\",\"href\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
                   |}
                 """.stripMargin
 
@@ -143,7 +159,7 @@ class ValuesV1E2ESpec extends E2ESpec {
                   |    "project_id": "http://data.knora.org/projects/anything",
                   |    "res_id": "http://data.knora.org/a-thing",
                   |    "prop": "http://www.knora.org/ontology/anything#hasText",
-                  |    "richtext_value": {"utf8str":"This remark refers to another resource","textattr":"{\"_link\":[{\"start\":30,\"end\":38,\"resid\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
+                  |    "richtext_value": {"utf8str":"This remark refers to another resource","textattr":"{\"_link\":[{\"start\":30,\"end\":38,\"resid\":\"http://data.knora.org/another-thing\",\"href\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
                   |}
                 """.stripMargin
 

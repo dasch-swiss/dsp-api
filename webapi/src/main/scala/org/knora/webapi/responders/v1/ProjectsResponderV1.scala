@@ -26,6 +26,7 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.PermissionUtilV1
 import org.knora.webapi.{IRI, NotFoundException, OntologyConstants, UnexpectedMessageException}
 
 import scala.concurrent.Future

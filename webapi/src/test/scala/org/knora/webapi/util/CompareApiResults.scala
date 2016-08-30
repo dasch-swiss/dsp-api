@@ -41,7 +41,7 @@ object CompareApiResults extends App {
     // private val password = "DeineMutter"
 
     private val mappingReader = new SalsahOntologyMappingReader()
-    private val iriUtil = new KnoraIriUtil()
+    private val iriUtil = new KnoraIdUtil
     private var verbose = false
 
     private var currentResourceID: Option[String] = None

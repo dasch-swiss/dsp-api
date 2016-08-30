@@ -110,11 +110,10 @@
 	knora-base:valueHasString "Ich liebe die Dinge, sie sind alles für mich." ;
 	knora-base:valueHasOrder 0 .
 
-_:node1ap8od853x1 knora-base:standoffHasAttribute "_link" ;
-	knora-base:standoffHasStart 14 ;
-	knora-base:standoffHasEnd 19 ;
-	a knora-base:StandoffLink ;
-	knora-base:standoffHasLink <http://data.knora.org/a-thing> .
+_:node1ap8od853x1 knora-base:standoffTagHasStart 14 ;
+	knora-base:standoffTagHasEnd 19 ;
+	a knora-base:StandoffLinkTag ;
+	knora-base:standoffTagHasLink <http://data.knora.org/a-thing> .
 
 <http://data.knora.org/a-thing-with-text-values/values/1> knora-base:valueHasStandoff _:node1ap8od853x1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
@@ -126,11 +125,10 @@ _:node1ap8od853x1 knora-base:standoffHasAttribute "_link" ;
 	knora-base:valueHasString "Na ja, die Dinge sind OK." ;
 	knora-base:valueHasOrder 0 .
 
-_:node1ap8od853x2 knora-base:standoffHasAttribute "_link" ;
-	knora-base:standoffHasStart 11 ;
-	knora-base:standoffHasEnd 16 ;
-	a knora-base:StandoffLink ;
-	knora-base:standoffHasLink <http://data.knora.org/a-thing> .
+_:node1ap8od853x2 knora-base:standoffTagHasStart 11 ;
+	knora-base:standoffTagHasEnd 16 ;
+	a knora-base:StandoffLinkTag ;
+	knora-base:standoffTagHasLink <http://data.knora.org/a-thing> .
 
 <http://data.knora.org/a-thing-with-text-values/values/2> knora-base:valueHasStandoff _:node1ap8od853x2 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
@@ -175,11 +173,10 @@ _:node1ap8od853x2 knora-base:standoffHasAttribute "_link" ;
 	knora-base:valueHasString "This is a standoff link." ;
 	knora-base:valueHasOrder 0 .
 
-_:node1ap8od853x3 knora-base:standoffHasAttribute "_link" ;
-	knora-base:standoffHasStart 10 ;
-	knora-base:standoffHasEnd 23 ;
-	a knora-base:StandoffLink ;
-	knora-base:standoffHasLink <http://data.knora.org/project-thing-2> .
+_:node1ap8od853x3 knora-base:standoffTagHasStart 10 ;
+	knora-base:standoffTagHasEnd 23 ;
+	a knora-base:StandoffLinkTag ;
+	knora-base:standoffTagHasLink <http://data.knora.org/project-thing-2> .
 
 <http://data.knora.org/project-thing-1/values/2> knora-base:valueHasStandoff _:node1ap8od853x3 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;

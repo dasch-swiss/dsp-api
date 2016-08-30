@@ -50,7 +50,7 @@ class ResourcesResponderV1 extends ResponderV1 {
     val valueUtilV1 = new ValueUtilV1(settings)
 
     // Creates IRIs for new Knora value objects.
-    val knoraIriUtil = new KnoraIriUtil
+    val knoraIdUtil = new KnoraIdUtil
 
     /**
       * Receives a message extending [[ResourcesResponderRequestV1]], and returns an appropriate response message, or
@@ -1325,6 +1325,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                 )
                 generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- (responderManager ? generateSparqlForValuesRequest).mapTo[GenerateSparqlToCreateMultipleValuesResponseV1]
 
+                //_ = println(generateSparqlForValuesResponse.insertSparql)
+
                 // Generate SPARQL for creating the resource, and include the SPARQL for creating the values.
                 createNewResourceSparql = queries.sparql.v1.txt.createNewResource(
                     triplestore = settings.triplestoreType,
@@ -1393,7 +1395,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             }
 
             namedGraph = settings.projectNamedGraphs(projectIri).data
-            resourceIri: IRI = knoraIriUtil.makeRandomResourceIri
+            resourceIri: IRI = knoraIdUtil.makeRandomResourceIri
 
             // check if the user has the permissions to create a new resource in the given project
             // get project info that includes the permissions the current user has on the project
@@ -1953,7 +1955,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         // value object IRI, since links don't have IRIs of their own.
 
                         // Convert the link property IRI to a link value property IRI.
-                        val linkValuePropertyIri = knoraIriUtil.linkPropertyIriToLinkValuePropertyIri(propertyIri)
+                        val linkValuePropertyIri = knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(propertyIri)
 
                         // Get the details of the link value that's pointed to by that link value property, and that has the target resource as its rdf:object.
                         val (linkValueIri, linkValueProps) = groupedPropertiesByType.groupedLinkValueProperties.groupedProperties.getOrElse(linkValuePropertyIri,

@@ -136,7 +136,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val currentGeomValueIri = new MutableTestIri
     private val partOfLinkValueIri = new MutableTestIri
 
-    private def checkComment1aResponse(response: CreateValueResponseV1, utf8str: String, textattr: Map[String, Seq[StandoffPositionV1]] = Map.empty[String, Seq[StandoffPositionV1]]): Unit = {
+    private def checkComment1aResponse(response: CreateValueResponseV1, utf8str: String, textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = Map.empty[StandoffTagV1.Value, Seq[StandoffPositionV1]]): Unit = {
         assert(response.rights == 8, "rights was not 8")
         assert(response.value.asInstanceOf[TextValueV1].utf8str == utf8str, "comment value did not match")
         assert(response.value.asInstanceOf[TextValueV1].textattr == textattr, "textattr did not match")
@@ -163,7 +163,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         assert(response.value.asInstanceOf[TextValueV1].textattr == textattr, "textattr did not match")
     }
 
-    private def checkComment1bResponse(response: ChangeValueResponseV1, utf8str: String, textattr: Map[String, Seq[StandoffPositionV1]] = Map.empty[String, Seq[StandoffPositionV1]]): Unit = {
+    private def checkComment1bResponse(response: ChangeValueResponseV1, utf8str: String, textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = Map.empty[StandoffTagV1.Value, Seq[StandoffPositionV1]]): Unit = {
         assert(response.rights == 8, "rights was not 8")
         assert(response.value.asInstanceOf[TextValueV1].utf8str == utf8str, "comment value did not match")
         assert(response.value.asInstanceOf[TextValueV1].textattr == textattr, "textattr did not match")
@@ -234,11 +234,11 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     // a sample set of text attributes
     private val sampleTextattr = Map(
-        "bold" -> Vector(StandoffPositionV1(
+        StandoffTagV1.bold -> Vector(StandoffPositionV1(
             start = 0,
             end = 7
         )),
-        "p" -> Vector(StandoffPositionV1(
+        StandoffTagV1.paragraph -> Vector(StandoffPositionV1(
             start = 0,
             end = 10
         ))
@@ -715,13 +715,13 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val textValueWithResourceRef = TextValueV1(
                 utf8str = "This comment refers to another resource",
                 textattr = Map(
-                    StandoffConstantsV1.LINK_ATTR -> Vector(StandoffPositionV1(
+                    StandoffTagV1.link -> Vector(StandoffPositionV1(
                         start = 31,
                         end = 39,
                         resid = Some(zeitglöckleinIri)
                     ))
                 ),
-                resource_reference = Vector(zeitglöckleinIri)
+                resource_reference = Set(zeitglöckleinIri)
             )
 
             actorUnderTest ! CreateValueRequestV1(
@@ -790,7 +790,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val textValueWithResourceRef = TextValueV1(
                 utf8str = "This updated comment refers to another resource",
                 textattr = Map(
-                    StandoffConstantsV1.LINK_ATTR -> Vector(
+                    StandoffTagV1.link -> Vector(
                         StandoffPositionV1(
                             start = 39,
                             end = 47,
@@ -803,7 +803,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                resource_reference = Vector(zeitglöckleinIri)
+                resource_reference = Set(zeitglöckleinIri)
             )
 
             actorUnderTest ! ChangeValueRequestV1(
@@ -868,13 +868,13 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val textValueWithResourceRef = TextValueV1(
                 utf8str = "This remark refers to another resource",
                 textattr = Map(
-                    StandoffConstantsV1.LINK_ATTR -> Vector(StandoffPositionV1(
+                    StandoffTagV1.link -> Vector(StandoffPositionV1(
                         start = 30,
                         end = 38,
                         resid = Some(zeitglöckleinIri)
                     ))
                 ),
-                resource_reference = Vector(zeitglöckleinIri)
+                resource_reference = Set(zeitglöckleinIri)
             )
 
             actorUnderTest ! CreateValueRequestV1(
@@ -1068,7 +1068,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val textValueWithResourceRef = TextValueV1(
                 utf8str = "This updated comment refers again to another resource",
                 textattr = Map(
-                    StandoffConstantsV1.LINK_ATTR -> Vector(
+                    StandoffTagV1.link -> Vector(
                         StandoffPositionV1(
                             start = 45,
                             end = 53,
@@ -1076,7 +1076,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                resource_reference = Vector(zeitglöckleinIri)
+                resource_reference = Set(zeitglöckleinIri)
             )
 
             actorUnderTest ! ChangeValueRequestV1(

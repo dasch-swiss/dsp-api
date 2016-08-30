@@ -43,7 +43,7 @@ import scala.concurrent.Future
   */
 class ValuesResponderV1 extends ResponderV1 {
     // Creates IRIs for new Knora value objects.
-    val knoraIriUtil = new KnoraIriUtil
+    val knoraIdUtil = new KnoraIdUtil
 
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
@@ -285,8 +285,12 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Then, get the standoff resource references from all the text values to be created.
                 // The 'collect' method builds a new list by applying a partial function to all elements of the list
                 // on which the function is defined.
-                resourceReferencesForAllTextValues: Iterable[Seq[IRI]] = allValuesToCreate.collect {
-                    case CreateValueV1WithComment(textValueV1: TextValueV1, _) => textValueV1.resource_reference
+                resourceReferencesForAllTextValues: Iterable[Set[IRI]] = allValuesToCreate.collect {
+                    case CreateValueV1WithComment(textValueV1: TextValueV1, _) =>
+                        // check that resource references are consistent in `resource_reference` and linking standoff tags
+                        checkTextValueResourceRefs(textValueV1)
+
+                        textValueV1.resource_reference
                 }
 
                 // Combine those resource references into a single list, so if there are n text values with a reference to
@@ -314,7 +318,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             insertDirectLink = true,
                             deleteDirectLink = false,
                             linkValueExists = false,
-                            newLinkValueIri = knoraIriUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
+                            newLinkValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
                             linkTargetIri = targetIri,
                             currentReferenceCount = 0,
                             newReferenceCount = initialReferenceCount,
@@ -371,7 +375,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         val sparqlGenerationResultForProperty: SparqlGenerationResultForProperty = valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
                             case (propertyAcc: SparqlGenerationResultForProperty, valueToCreate: NumberedValueToCreate) =>
                                 val updateValueV1 = valueToCreate.createValueV1WithComment.updateValueV1
-                                val newValueIri = knoraIriUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
+                                val newValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
 
                                 // How we generate the SPARQL depends on whether we're creating a link or an ordinary value.
                                 val (whereSparql: String, insertSparql: String) = valueToCreate.createValueV1WithComment.updateValueV1 match {
@@ -431,12 +435,15 @@ class ValuesResponderV1 extends ResponderV1 {
                                             valueIndex = valueToCreate.valueIndex,
                                             propertyIri = propertyIri,
                                             value = updateValueV1,
+                                            newValueIri = newValueIri,
                                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
                                             valueOwner = userIri,
                                             valueProject = createMultipleValuesRequest.projectIri,
                                             maybeValuePermissions = permissionsFromDefaults
                                         ).toString()
+
+                                        //println(insertSparql)
 
                                         (whereSparql, insertSparql)
                                 }
@@ -456,8 +463,11 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 // Concatenate all the generated SPARQL into one string for the WHERE clause and one string for the INSERT clause, sorting
                 // the values by their indexes.
+
                 resultsForAllProperties: Iterable[SparqlGenerationResultForProperty] = sparqlGenerationResults.values
                 allWhereSparql: String = resultsForAllProperties.flatMap(result => result.whereSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n")
+
+                // The SPARQL for the INSERT clause also contains the SPARQL that was generated to insert standoff links.
                 allInsertSparql: String = resultsForAllProperties.flatMap(result => result.insertSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n") + standoffLinkInsertSparql
 
                 // Collect all the UnverifiedValueV1s for each property.
@@ -705,7 +715,7 @@ class ValuesResponderV1 extends ResponderV1 {
             // If we're updating a link, findResourceWithValueResult will contain the IRI of the property that points to the
             // knora-base:LinkValue, but we'll need the IRI of the corresponding link property.
             val propertyIri = changeValueRequest.value match {
-                case linkUpdateV1: LinkUpdateV1 => knoraIriUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
+                case linkUpdateV1: LinkUpdateV1 => knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
                 case _ => findResourceWithValueResult.propertyIri
             }
 
@@ -828,7 +838,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                     case _ =>
                         // We're updating an ordinary value. Generate an IRI for the new version of the value.
-                        val newValueIri = knoraIriUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
+                        val newValueIri = knoraIdUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
 
                         // Give the new version the same project and permissions as the previous version.
 
@@ -904,7 +914,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Everything looks OK, so update the comment.
 
                 // Generate an IRI for the new value.
-                newValueIri = knoraIriUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
+                newValueIri = knoraIdUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
 
                 // Generate a SPARQL update.
                 sparqlUpdate = queries.sparql.v1.txt.changeComment(
@@ -998,7 +1008,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         case (p, o) => p == OntologyConstants.KnoraBase.HasPermissions
                     }.map(_._2)
 
-                    val linkPropertyIri = knoraIriUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
+                    val linkPropertyIri = knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
 
                     for {
                         sparqlTemplateLinkUpdate <- decrementLinkValue(
@@ -1018,7 +1028,6 @@ class ValuesResponderV1 extends ResponderV1 {
                             linkUpdate = sparqlTemplateLinkUpdate,
                             maybeComment = deleteValueRequest.deleteComment
                         ).toString()
-
                     } yield (sparqlUpdate, sparqlTemplateLinkUpdate.newLinkValueIri)
 
                 case other =>
@@ -1038,7 +1047,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                     valuePermissions = None,
                                     userProfile = deleteValueRequest.userProfile
                                 )
-                            }
+                            }.toVector
 
                             Future.sequence(linkUpdateFutures)
 
@@ -1789,7 +1798,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                                  updateResourceLastModificationDate: Boolean,
                                                  userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         // Generate an IRI for the new value.
-        val newValueIri = knoraIriUtil.makeRandomValueIri(resourceIri)
+        val newValueIri = knoraIdUtil.makeRandomValueIri(resourceIri)
 
         for {
         // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
@@ -1810,7 +1819,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             valuePermissions = None,
                             userProfile = userProfile
                         )
-                    }
+                    }.toVector
 
                     Future.sequence(standoffLinkUpdatesForAddedResourceRefs)
 
@@ -1975,14 +1984,13 @@ class ValuesResponderV1 extends ResponderV1 {
 
                     // Identify the resource references that have been added or removed in the new version of
                     // the value.
-                    val currentResourceRefs = currentTextValue.resource_reference.toSet
-                    val newResourceRefs = newTextValue.resource_reference.toSet
+                    val currentResourceRefs = currentTextValue.resource_reference
+                    val newResourceRefs = newTextValue.resource_reference
                     val addedResourceRefs = newResourceRefs -- currentResourceRefs
                     val removedResourceRefs = currentResourceRefs -- newResourceRefs
 
                     // Construct a SparqlTemplateLinkUpdate for each reference that was added.
-                    val standoffLinkUpdatesForAddedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] =
-                    addedResourceRefs.toVector.map {
+                    val standoffLinkUpdatesForAddedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] = addedResourceRefs.toVector.map {
                         targetResourceIri =>
                             incrementLinkValue(
                                 sourceResourceIri = resourceIri,
@@ -1996,8 +2004,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     }
 
                     // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
-                    val standoffLinkUpdatesForRemovedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] =
-                    removedResourceRefs.toVector.map {
+                    val standoffLinkUpdatesForRemovedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] = removedResourceRefs.toVector.map {
                         removedTargetResource =>
                             decrementLinkValue(
                                 sourceResourceIri = resourceIri,
@@ -2097,7 +2104,7 @@ class ValuesResponderV1 extends ResponderV1 {
             )
 
             // Generate an IRI for the new LinkValue.
-            newLinkValueIri = knoraIriUtil.makeRandomValueIri(sourceResourceIri)
+            newLinkValueIri = knoraIdUtil.makeRandomValueIri(sourceResourceIri)
 
             linkUpdate = maybeLinkValueQueryResult match {
                 case Some(linkValueQueryResult) =>
@@ -2193,8 +2200,8 @@ class ValuesResponderV1 extends ResponderV1 {
                     // resources should be removed.
                     val deleteDirectLink = linkValueQueryResult.directLinkExists && newReferenceCount == 0
 
-                    // Generate an IRI for the new version of the LinkValue.
-                    val newLinkValueIri = knoraIriUtil.makeRandomValueIri(sourceResourceIri)
+                    // Generate an IRI for the new LinkValue.
+                    val newLinkValueIri = knoraIdUtil.makeRandomValueIri(sourceResourceIri)
 
                     SparqlTemplateLinkUpdate(
                         linkPropertyIri = linkPropertyIri,
@@ -2226,12 +2233,12 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     @throws(classOf[BadRequestException])
     private def checkTextValueResourceRefs(textValue: TextValueV1): Unit = {
-        val resourceRefsInStandoff: Set[IRI] = textValue.textattr.get(StandoffConstantsV1.LINK_ATTR) match {
+        val resourceRefsInStandoff: Set[IRI] = textValue.textattr.get(StandoffTagV1.link) match {
             case Some(positions) => positions.flatMap(_.resid).toSet
             case None => Set.empty[IRI]
         }
 
-        if (resourceRefsInStandoff != textValue.resource_reference.toSet) {
+        if (resourceRefsInStandoff != textValue.resource_reference) {
             throw BadRequestException(s"The list of resource references in this text value does not match the resource references in its Standoff markup: $textValue")
         }
     }
