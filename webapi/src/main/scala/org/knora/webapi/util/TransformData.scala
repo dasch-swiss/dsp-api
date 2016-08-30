@@ -376,7 +376,7 @@ object TransformData extends App {
         // A Map of some old standoff class names to new ones.
         private val oldToNewClassIris = Map(
             OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "StandoffLink" -> OntologyConstants.KnoraBase.StandoffLinkTag,
-            OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "StandoffHref" -> OntologyConstants.KnoraBase.StandoffHrefTag
+            OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "StandoffHref" -> OntologyConstants.KnoraBase.StandoffUriTag
         )
 
         private val StandoffHasStart = OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "standoffHasStart"
@@ -387,7 +387,7 @@ object TransformData extends App {
             StandoffHasStart -> OntologyConstants.KnoraBase.StandoffTagHasStart,
             StandoffHasEnd -> OntologyConstants.KnoraBase.StandoffTagHasEnd,
             OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "standoffHasLink" -> OntologyConstants.KnoraBase.StandoffTagHasLink,
-            OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "standoffHasHref" -> OntologyConstants.KnoraBase.StandoffTagHasHref
+            OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "standoffHasHref" -> OntologyConstants.KnoraBase.ValueHasUri
         )
 
         override def endRDF(): Unit = {

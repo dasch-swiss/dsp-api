@@ -113,8 +113,8 @@ DELETE {
                                 }
 
                                 case (None, Some(href)) => {
-                                    rdf:type knora-base:StandoffHrefTag ;
-                                    knora-base:standoffTagHasHref <@href> ;
+                                    rdf:type knora-base:StandoffUriTag ;
+                                    knora-base:valueHasUri <@href> ;
                                 }
 
                                 case (None, None) => {

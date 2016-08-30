@@ -177,7 +177,6 @@ object OntologyConstants {
 
         val StandoffTagHasStart = "http://www.knora.org/ontology/knora-base#standoffTagHasStart"
         val StandoffTagHasEnd = "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"
-        val StandoffTagHasHref = "http://www.knora.org/ontology/knora-base#standoffTagHasHref"
         val StandoffTagHasLink = "http://www.knora.org/ontology/knora-base#standoffTagHasLink"
         val HasStandoffLinkTo = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
         val HasStandoffLinkToValue = "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue"
@@ -189,7 +188,7 @@ object OntologyConstants {
         val StandoffStrikethroughTag = "http://www.knora.org/ontology/knora-base#StandoffStrikethroughTag"
 
         val StandoffLinkTag = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
-        val StandoffHrefTag = "http://www.knora.org/ontology/knora-base#StandoffHrefTag"
+        val StandoffUriTag = "http://www.knora.org/ontology/knora-base#StandoffUriTag"
 
         val StandoffHeader1Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader1Tag"
         val StandoffHeader2Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader2Tag"

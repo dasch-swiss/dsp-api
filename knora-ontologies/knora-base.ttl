@@ -617,7 +617,7 @@
 
                  rdfs:subPropertyOf :systemProperty ;
 
-                 :subjectClassConstraint :StandoffHrefTag ;
+                 :subjectClassConstraint :StandoffUriTag ;
 
                  :objectDatatypeConstraint xsd:anyURI .
 
@@ -956,6 +956,8 @@
 
             rdfs:comment "Indicates when a resource or value was deleted"@en ;
 
+            # No :subjectClassConstraint, because this can be used with :Resource or :Value.
+
             :objectDatatypeConstraint xsd:dateTimeStamp .
 
 
@@ -1131,6 +1133,8 @@
            rdfs:subPropertyOf :systemProperty ;
 
            rdfs:comment "Exists and is true if the resource has been deleted"@en ;
+
+           # No :subjectClassConstraint, because this can be used with :Resource or :Value.
 
            :objectDatatypeConstraint xsd:boolean .
 
@@ -1395,6 +1399,8 @@
 
               rdfs:subPropertyOf :systemProperty ;
 
+              # No :subjectClassConstraint, because this can be used with :Resource or :Value.
+
               :objectDatatypeConstraint xsd:string .
 
 
@@ -1415,9 +1421,9 @@
 
 :valueHas rdf:type owl:DatatypeProperty ;
 
-          rdfs:subPropertyOf :systemProperty ;
+          # No :subjectClassConstraint, because this can be used with :Value or :StandoffTag.
 
-          :subjectClassConstraint :Value .
+          rdfs:subPropertyOf :systemProperty .
 
 
 
@@ -1425,11 +1431,11 @@
 
 :valueHasCalendar rdf:type owl:DatatypeProperty ;
 
-                  rdfs:comment "Name of the calendar to be used. Allowed values currently are \"GREGORIAN\", \"JULIAN\", \"JEWISH\", \"REVOLUTIONARY\". This list may be expanded in the future."@en ;
+                  rdfs:comment "Name of the calendar to be used, such as \"GREGORIAN\" or \"JULIAN\"."@en ;
 
                   rdfs:subPropertyOf :valueHas ;
 
-                  :subjectClassConstraint :DateValue ;
+                  :subjectClassConstraint :DateBase ;
 
                   :objectDatatypeConstraint xsd:string .
 
@@ -1443,7 +1449,7 @@
 
                rdfs:subPropertyOf :valueHas ;
 
-               :subjectClassConstraint :ColorValue ;
+               :subjectClassConstraint :ColorBase ;
 
                :objectDatatypeConstraint xsd:string .
 
@@ -1457,7 +1463,7 @@
 
                 rdfs:subPropertyOf :valueHas ;
 
-                :subjectClassConstraint :DateValue ;
+                :subjectClassConstraint :DateBase ;
 
                 :objectDatatypeConstraint xsd:integer .
 
@@ -1471,7 +1477,7 @@
 
                       rdfs:subPropertyOf :valueHas ;
 
-                      :subjectClassConstraint :DateValue ;
+                      :subjectClassConstraint :DateBase ;
 
                       :objectDatatypeConstraint xsd:string .
 
@@ -1483,7 +1489,7 @@
 
                rdfs:subPropertyOf :valueHas ;
 
-               :subjectClassConstraint :DecimalValue ;
+               :subjectClassConstraint :DecimalBase ;
 
                :objectDatatypeConstraint xsd:decimal .
 
@@ -1521,7 +1527,7 @@
 
                  rdfs:subPropertyOf :valueHas ;
 
-                 :subjectClassConstraint :IntValue ;
+                 :subjectClassConstraint :IntBase ;
 
                  :objectDatatypeConstraint xsd:integer .
 
@@ -1533,7 +1539,7 @@
 
                  rdfs:subPropertyOf :valueHas ;
 
-                 :subjectClassConstraint :BooleanValue ;
+                 :subjectClassConstraint :BooleanBase ;
 
                  :objectDatatypeConstraint xsd:boolean .
 
@@ -1545,7 +1551,7 @@
 
                  rdfs:subPropertyOf :valueHas ;
 
-                 :subjectClassConstraint :UriValue ;
+                 :subjectClassConstraint :UriBase ;
 
                  :objectDatatypeConstraint xsd:anyURI .
 
@@ -1557,7 +1563,7 @@
 
                      rdfs:subPropertyOf :valueHas ;
 
-                     :subjectClassConstraint :IntervalValue ;
+                     :subjectClassConstraint :IntervalBase ;
 
                      :objectDatatypeConstraint xsd:decimal .
 
@@ -1569,7 +1575,7 @@
 
                        rdfs:subPropertyOf :valueHas ;
 
-                       :subjectClassConstraint :IntervalValue ;
+                       :subjectClassConstraint :IntervalBase ;
 
                        :objectDatatypeConstraint xsd:decimal .
 
@@ -1618,7 +1624,7 @@
 
                   rdfs:subPropertyOf :valueHas ;
 
-                  :subjectClassConstraint :DateValue ;
+                  :subjectClassConstraint :DateBase ;
 
                   :objectDatatypeConstraint xsd:integer .
 
@@ -1632,7 +1638,7 @@
 
                         rdfs:subPropertyOf :valueHas ;
 
-                        :subjectClassConstraint :DateValue ;
+                        :subjectClassConstraint :DateBase ;
 
                         :objectDatatypeConstraint xsd:string .
 
@@ -2432,14 +2438,6 @@
                rdfs:comment "Represents structural markup information in a TextValue"@en .
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffReferenceTag
-
-:StandoffReferenceTag rdf:type owl:Class ;
-
-               rdfs:subClassOf :StandoffTag ;
-
-               rdfs:comment "Represents references in a TextValue"@en .
-
 
 ###  http://www.knora.org/ontology/knora-base#StandoffDataTypeTag
 
@@ -2457,25 +2455,11 @@
 #################################################################
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffHrefTag
-
-:StandoffHrefTag rdf:type owl:Class ;
-
-              rdfs:subClassOf :StandoffReferenceTag ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :standoffTagHasHref ;
-                                owl:cardinality "1"^^xsd:nonNegativeInteger
-                              ] ;
-
-              rdfs:comment "Represents a hyperlink in a TextValue"@en .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#StandoffLinkTag
 
 :StandoffLinkTag rdf:type owl:Class ;
 
-              rdfs:subClassOf :StandoffReferenceTag ,
+              rdfs:subClassOf :StandoffTag ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :standoffTagHasLink ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
@@ -2484,6 +2468,14 @@
               rdfs:comment "Represents a reference to a Knora resource in a TextValue"@en .
 
 
+###  http://www.knora.org/ontology/knora-base#StandoffUriTag
+
+:StandoffUriTag rdf:type owl:Class ;
+
+              rdfs:subClassOf :StandoffDataTypeTag ,
+                              :UriBase ;
+
+              rdfs:comment "Represents an arbitrary URI in a TextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffDateValueTag
@@ -2503,6 +2495,7 @@
                 rdfs:subClassOf :StandoffStructuralTag ;
 
                 rdfs:comment "Represents a paragraph in a TextValue"@en .
+
 
 ###  http://www.knora.org/ontology/knora-base#StandoffHeader1Tag
 

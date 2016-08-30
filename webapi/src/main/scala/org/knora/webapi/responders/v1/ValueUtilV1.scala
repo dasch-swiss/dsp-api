@@ -441,7 +441,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                         val maybeHref = if (maybeResId.nonEmpty) {
                             maybeResId
                         } else {
-                            standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasHref)
+                            standoffInfo.get(OntologyConstants.KnoraBase.ValueHasUri)
                         }
 
                         StandoffPositionV1(

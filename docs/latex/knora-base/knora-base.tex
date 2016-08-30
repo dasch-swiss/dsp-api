@@ -625,7 +625,7 @@ In the Knora base ontology, a \texttt{TextValue} can have one or more standoff t
 	\item[standoffTagHasEnd (1)] The index of the last character in the text that has the attribute, plus 1.
 \end{description}
 
-The \texttt{StandoffTag} class is not used directly in RDF data; instead, its subclasses are used. A few subclasses are currently provided, and more will be added to support TEI semantics. A project can define its own custom standoff tag classes.
+The \texttt{StandoffTag} class is not used directly in RDF data; instead, its subclasses are used. A few subclasses are currently provided, and more will be added to support TEI semantics. In a future version of the Knora API server, a project will be able to define its own custom standoff tag classes.
 
 \subsection{Subclasses of StandoffTag}
 
@@ -661,28 +661,26 @@ Represents an element of the structure of a text. Subclasses:
 
 \subsubsection{StandoffDataTypeTag}
 
-Associates a complex value, such as a date, with a substring in a text. There is currently one subclass:
+Associates data in some Knora value type with a substring in a text. Subclasses:
 
 \begin{itemize}
-	\item \texttt{StandoffDateValueTag} Represents a date, in the same form that is used for \texttt{kb:DateValue}.
+	\item \texttt{StandoffUriTag} Indicates that a substring is associated with a URI.
+	\item \texttt{StandoffDateValueTag} Indicates that a substring represents a date, which is stored in the same form that is used for \texttt{kb:DateValue}.
 \end{itemize}
 
-\subsubsection{StandoffReferenceTag}
-
-Represents a reference to data outside the text. Subclasses:
-
-\begin{itemize}
-	\item \texttt{StandoffHrefTag} Indicates that a substring is associated with a resource on the Internet, i.e.\ a URL.
-	\item \texttt{StandoffLinkTag} Indicates that a substring is associated with a Knora resource. For example, if a repository contains resources representing persons, a text could be marked up so that each time a person's name is mentioned, a \texttt{StandoffLinkTag} connects the name to the Knora resource describing that person. See the next section for details.
-\end{itemize}
-
-\subsubsection{Standoff Links}
+\subsubsection{StandoffLinkTag}
 
 \label{subsubsec:standoff-link}
 
-One of the design goals of the Knora ontology is to make it easy and efficient to find out which resources contain references to a given resource. Direct links are easier and more efficient to query than indirect links. Therefore, when a text value contains a resource reference in its standoff nodes, there must also be a direct link between the containing resource and the target resource, along with an RDF reification (a \texttt{kb:LinkValue}) describing the link, as discussed in Section~\ref{sec:links}. In this case, the link property is always \texttt{kb:hasStandoffLinkTo}, and the link value property (which points to the \texttt{LinkValue}) is always \texttt{kb:hasStandoffLinkToValue}.
+A \texttt{StandoffLinkTag} Indicates that a substring is associated with a Knora resource. For example, if a repository contains resources representing persons, a text could be marked up so that each time a person's name is mentioned, a \texttt{StandoffLinkTag} connects the name to the Knora resource describing that person. Property:
 
-The Knora API server automatically creates and updates direct links and reifications for standoff resource references when it creates and updates text values. To do this, it keeps track of the number of text values in each resource that contain at least one standoff reference to a given target resource. It stores this number as the reference count of the \texttt{LinkValue} (see Section~\ref{subsubsec:linkvalue}) describing the direct link. Each time this number changes, it makes a new version of the \texttt{LinkValue}, with an updated reference count. When the reference count reaches zero, it removes the direct link and makes a new version of the \texttt{LinkValue}, marked with \texttt{kb:isDeleted}.
+\begin{description}
+	\item[standoffTagHasLink (1)] The IRI of the resource that is referred to.
+\end{description}
+
+One of the design goals of the Knora ontology is to make it easy and efficient to find out which resources contain references to a given resource. Direct links are easier and more efficient to query than indirect links. Therefore, when a text value contains a resource reference in its standoff nodes, the Knora API server automatically creates a direct link between the containing resource and the target resource, along with an RDF reification (a \texttt{kb:LinkValue}) describing the link, as discussed in Section~\ref{sec:links}. In this case, the link property is always \texttt{kb:hasStandoffLinkTo}, and the link value property (which points to the \texttt{LinkValue}) is always \texttt{kb:hasStandoffLinkToValue}.
+
+The Knora API server automatically updates direct links and reifications for standoff resource references when text values are updated. To do this, it keeps track of the number of text values in each resource that contain at least one standoff reference to a given target resource. It stores this number as the reference count of the \texttt{LinkValue} (see Section~\ref{subsubsec:linkvalue}) describing the direct link. Each time this number changes, it makes a new version of the \texttt{LinkValue}, with an updated reference count. When the reference count reaches zero, it removes the direct link and makes a new version of the \texttt{LinkValue}, marked with \texttt{kb:isDeleted}.
 
 For example, if \texttt{data:R1} is a resource with a text value in which the resource \texttt{data:R2} is referenced, the repository could contain the following triples:
 
@@ -753,7 +751,7 @@ edge [<-,cyan!60!green] node[text style,above]{valueHasRefCount} (link);
 
 \subsection{Standoff in Digital Editions}
 
-\emph{The features in this section are under development.}
+\emph{The features described in this section are under development.}
 
 Knora's standoff is designed to make it possible to convert XML documents to standoff and back. One application for this feature is an editing workflow in which an editor works in an XML editor, and the resulting XML documents are converted to standoff and stored in Knora, where they can be searched and annotated.
 

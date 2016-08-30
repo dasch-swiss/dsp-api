@@ -599,7 +599,7 @@ object StandoffTagV1 extends Enumeration {
         OntologyConstants.KnoraBase.StandoffUnderlineTag -> underline,
         OntologyConstants.KnoraBase.StandoffStrikethroughTag -> strikethrough,
         OntologyConstants.KnoraBase.StandoffLinkTag -> link,
-        OntologyConstants.KnoraBase.StandoffHrefTag -> link,
+        OntologyConstants.KnoraBase.StandoffUriTag -> link,
         OntologyConstants.KnoraBase.StandoffHeader1Tag -> header1,
         OntologyConstants.KnoraBase.StandoffHeader2Tag -> header2,
         OntologyConstants.KnoraBase.StandoffHeader3Tag -> header3,
