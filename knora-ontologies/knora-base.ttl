@@ -2493,7 +2493,7 @@
                         rdfs:subClassOf :StandoffDataTypeTag,
                                         :DateBase ;
 
-                        rdfs:comment "Represents a DateValue in a TextValue"@en .
+                        rdfs:comment "Represents a date in a TextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffParagraphTag
@@ -2546,7 +2546,7 @@
 
                 rdfs:subClassOf :StandoffStructuralTag ;
 
-                rdfs:comment "Represents a header of level 3 in a TextValue"@en .
+                rdfs:comment "Represents a header of level 5 in a TextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffHeader6Tag
@@ -2555,7 +2555,7 @@
 
                 rdfs:subClassOf :StandoffStructuralTag ;
 
-                rdfs:comment "Represents a header of level 3 in a TextValue"@en .
+                rdfs:comment "Represents a header of level 6 in a TextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffOrderedListTag
@@ -2584,14 +2584,6 @@
 
                 rdfs:comment "Represents a list element in a TextValue"@en .
 
-
-###  http://www.knora.org/ontology/knora-base#StandoffStyleTag
-
-:StandoffStyleTag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffVisualTag ;
-
-                rdfs:comment "Represents a style in a TextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffItalicTag
