@@ -90,6 +90,7 @@ DELETE {
             queries.sparql.v1.txt.generateInsertStatementsForCreateValue(valueIndex = 0,
                                                                          propertyIri = propertyIri,
                                                                          value = value,
+                                                                         newValueIri = newValueIri,
                                                                          linkUpdates = linkUpdates,
                                                                          maybeComment = maybeComment,
                                                                          valueOwner = valueOwner,

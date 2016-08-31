@@ -32,8 +32,6 @@ object ResourcesResponderV1SpecFullData {
 
     val settings = Settings(system)
 
-    val emptyTextattr = Map.empty[String, Seq[StandoffPositionV1]]
-
     // The expected response to a "full" resource request for a book.
     val expectedBookResourceFullResponse = ResourceFullResponseV1(
         userdata = UserDataV1(
@@ -107,8 +105,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/8653a672"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "Berthold, der Bruder"
                 )),
                 occurrence = Some("0-n"),
@@ -130,8 +126,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/c3295339"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
                 )),
                 occurrence = Some("1-n"),
@@ -178,18 +172,12 @@ object ResourcesResponderV1SpecFullData {
                 ),
                 values = Vector(
                     TextValueV1(
-                        resource_reference = Vector.empty[IRI],
-                        textattr = emptyTextattr,
                         utf8str = "Schramm Bd. XXI, S. 27"
                     ),
                     TextValueV1(
-                        resource_reference = Vector.empty[IRI],
-                        textattr = emptyTextattr,
                         utf8str = "GW 4168"
                     ),
                     TextValueV1(
-                        resource_reference = Vector.empty[IRI],
-                        textattr = emptyTextattr,
                         utf8str = "ISTC ib00512000"
                     )
                 ),
@@ -212,8 +200,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/92faf25701"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "Universit\u00E4ts- und Stadtbibliothek K\u00F6ln, Sign: AD+S167"
                 )),
                 occurrence = Some("0-1"),
@@ -235,8 +221,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/10e00c7acc2704"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1"
                 )),
                 occurrence = Some("0-1"),
@@ -258,8 +242,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/5524469101"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "Dimension: 8\u00B0"
                 )),
                 occurrence = Some("0-1"),
@@ -281,8 +263,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/0ca74ce5"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "Basel"
                 )),
                 occurrence = Some("0-1"),
@@ -327,8 +307,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/497df9ab"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "Johann Amerbach"
                 )),
                 occurrence = Some("0-n"),
@@ -600,8 +578,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/61cb927602"),
                 values = Vector(TextValueV1(
-                    resource_reference = Nil,
-                    textattr = Map(),
                     utf8str = "a1r, Titelblatt"
                 )),
                 occurrence = Some("0-1"),
@@ -623,8 +599,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/3e3d4dc0e922"),
                 values = Vector(TextValueV1(
-                    resource_reference = Nil,
-                    textattr = Map(),
                     utf8str = "Titel: \"Das andechtig zitglo(e)gglyn | des lebens vnd lide(n)s christi nach | den xxiiij stunden v\u00DFgeteilt.\"\nHolzschnitt: Schlaguhr mit Zifferblatt f\u00FCr 24 Stunden, auf deren oberem Rand zu beiden Seiten einer Glocke die Verk\u00FCndigungsszene mit Maria (links) und dem Engel (rechts) zu sehen ist.\nBord\u00FCre: Ranken mit Fabelwesen, Holzschnitt.\nKolorierung: Rot, Blau, Gr\u00FCn, Gelb, Braun.\nBeschriftung oben Mitte (Graphitstift) \"B 1\"."
                 )),
                 occurrence = Some("0-1"),
@@ -646,8 +620,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/e80b2d895f23"),
                 values = Vector(TextValueV1(
-                    resource_reference = Nil,
-                    textattr = Map(),
                     utf8str = "Schramm, Bd. 21, Abb. 601."
                 )),
                 occurrence = Some("0-n"),
@@ -669,8 +641,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/aa488c2203"),
                 values = Vector(TextValueV1(
-                    resource_reference = Nil,
-                    textattr = Map(),
                     utf8str = "ad+s167_druck1=0001.tif"
                 )),
                 occurrence = Some("1"),
@@ -953,6 +923,268 @@ object ResourcesResponderV1SpecFullData {
             restype_name = Some("http://www.knora.org/ontology/incunabula#page"),
             restype_id = "http://www.knora.org/ontology/incunabula#page",
             person_id = "http://data.knora.org/users/91e19f1e01",
+            project_id = "http://data.knora.org/projects/77275339"
+        ))
+    )
+
+    val expectedRegionFullResource = ResourceFullResponseV1(
+        userdata = UserDataV1(
+            password = None,
+            email = Some("test@test.ch"),
+            lastname = Some("Test"),
+            firstname = Some("User"),
+            username = Some("testuser"),
+            token = None,
+            user_id = Some("http://data.knora.org/users/b83acc5f05"),
+            lang = "de"
+        ),
+        access = "OK",
+        incoming = Vector(
+            IncomingV1(
+                value = Some("Gleicher Holzschnitt"),
+                resinfo = ResourceInfoV1(
+                    firstproperty = Some("Gleicher Holzschnitt"),
+                    value_of = 0,
+                    lastmod = "0000-00-00 00:00:00",
+                    resclass_has_location = false,
+                    resclass_name = "object",
+                    locdata = None,
+                    locations = None,
+                    preview = None,
+                    restype_iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "knora-base/link.gif"),
+                    restype_description = Some("Verknüpfung mehrerer Resourcen (Systemobject)"),
+                    restype_label = Some("Verknüpfungsobjekt"),
+                    restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
+                    restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
+                    person_id = "http://data.knora.org/users/91e19f1e01",
+                    project_id = "http://data.knora.org/projects/77275339"
+                ),
+                ext_res_id = ExternalResourceIDV1(
+                    pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
+                    id = "http://data.knora.org/faa4d435a9f7"
+                )
+            ),
+            IncomingV1(
+                value = Some("Gleicher Holzschnitt wie in deutscher Ausgabe Seite b8v"),
+                resinfo = ResourceInfoV1(
+                    firstproperty = Some("Gleicher Holzschnitt wie in deutscher Ausgabe Seite b8v"),
+                    value_of = 0,
+                    lastmod = "0000-00-00 00:00:00",
+                    resclass_has_location = false,
+                    resclass_name = "object",
+                    locdata = None,
+                    locations = None,
+                    preview = None,
+                    restype_iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "knora-base/region.gif"),
+                    restype_description = Some("This Resource represents a geometric region of a resource. The geometry is represented currently as JSON string."),
+                    restype_label = Some("Region"),
+                    restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
+                    restype_id = "http://www.knora.org/ontology/knora-base#Region",
+                    person_id = "http://data.knora.org/users/91e19f1e01",
+                    project_id = "http://data.knora.org/projects/77275339"
+                ),
+                ext_res_id = ExternalResourceIDV1(
+                    pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
+                    id = "http://data.knora.org/c5cf5a2bc6be"
+                )
+            ),
+            IncomingV1(
+                value = Some("Derselbe Holzschnitt wird auch auf Seite b8v der deutschen Ausgabe des Narrenschiffs verwendet."),
+                resinfo = ResourceInfoV1(
+                    firstproperty = Some("Derselbe Holzschnitt wird auch auf Seite b8v der deutschen Ausgabe des Narrenschiffs verwendet."),
+                    value_of = 0,
+                    lastmod = "0000-00-00 00:00:00",
+                    resclass_has_location = false,
+                    resclass_name = "object",
+                    locdata = None,
+                    locations = None,
+                    preview = None,
+                    restype_iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "knora-base/region.gif"),
+                    restype_description = Some("This Resource represents a geometric region of a resource. The geometry is represented currently as JSON string."),
+                    restype_label = Some("Region"),
+                    restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
+                    restype_id = "http://www.knora.org/ontology/knora-base#Region",
+                    person_id = "http://data.knora.org/users/1458b20f08",
+                    project_id = "http://data.knora.org/projects/77275339"
+                ),
+                ext_res_id = ExternalResourceIDV1(
+                    pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
+                    id = "http://data.knora.org/c9824353ae06"
+                )
+            ),
+            IncomingV1(
+                value = Some("Der Holzschnitt wird auf Seite b8v der deutschen Ausgabe des Narrenschiffs und c7r der lateinischen Ausgabe des Narrenschiffs verwendet."),
+                resinfo = ResourceInfoV1(
+                    firstproperty = Some("Der Holzschnitt wird auf Seite b8v der deutschen Ausgabe des Narrenschiffs und c7r der lateinischen Ausgabe des Narrenschiffs verwendet."),
+                    value_of = 0,
+                    lastmod = "0000-00-00 00:00:00",
+                    resclass_has_location = false,
+                    resclass_name = "object",
+                    locdata = None,
+                    locations = None,
+                    preview = None,
+                    restype_iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "knora-base/link.gif"),
+                    restype_description = Some("Verknüpfung mehrerer Resourcen (Systemobject)"),
+                    restype_label = Some("Verknüpfungsobjekt"),
+                    restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
+                    restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
+                    person_id = "http://data.knora.org/users/1458b20f08",
+                    project_id = "http://data.knora.org/projects/77275339"
+                ),
+                ext_res_id = ExternalResourceIDV1(
+                    pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
+                    id = "http://data.knora.org/8e88d28dae06"
+                )
+            )
+        ),
+        props = Some(PropsV1(properties = Vector(
+            PropertyV1(
+                locations = Nil,
+                value_rights = Vector(Some(6)),
+                value_firstprops = Vector(None),
+                value_iconsrcs = Vector(None),
+                value_restype = Vector(None),
+                comments = Vector(""),
+                value_ids = Vector("http://data.knora.org/047db418ae06/values/7331b94196a104"),
+                values = Vector(TextValueV1(
+                    resource_reference = Set("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"), // TODO: Why is this a Value onject IRI?
+                    textattr = Map(
+                        StandoffTagV1.paragraph -> Vector(StandoffPositionV1(
+                            href = None,
+                            resid = None,
+                            end = 94,
+                            start = 0
+                        )),
+                        StandoffTagV1.link -> Vector(StandoffPositionV1(
+                            href = Some("http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06%2Fvalues%2F2428fc96-1383-4457-9704-077b37256103"),
+                            resid = Some("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"),
+                            end = 39,
+                            start = 36
+                        ))
+                    ),
+                    utf8str = "Derselbe Holzschnitt wird auf Seite c7r der lateinischen Ausgabe des Narrenschiffs verwendet.\r"
+                )),
+                occurrence = Some("1-n"),
+                attributes = "",
+                label = Some("Kommentar"),
+                is_annotation = "0",
+                guielement = None,
+                guiorder = None,
+                valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
+                regular_property = 1,
+                pid = "http://www.knora.org/ontology/knora-base#hasComment"
+            ),
+            PropertyV1(
+                locations = Nil,
+                value_rights = Vector(Some(6)),
+                value_firstprops = Vector(None),
+                value_iconsrcs = Vector(None),
+                value_restype = Vector(None),
+                comments = Vector(""),
+                value_ids = Vector("http://data.knora.org/047db418ae06/values/cca179c00527"),
+                values = Vector(ColorValueV1(color = "#ff3333")),
+                occurrence = Some("1"),
+                attributes = "ncolors=8",
+                label = Some("Farbe"),
+                is_annotation = "0",
+                guielement = Some("colorpicker"),
+                guiorder = None,
+                valuetype_id = Some("http://www.knora.org/ontology/knora-base#ColorValue"),
+                regular_property = 1,
+                pid = "http://www.knora.org/ontology/knora-base#hasColor"
+            ),
+            PropertyV1(
+                locations = Nil,
+                value_rights = Vector(Some(6)),
+                value_firstprops = Vector(None),
+                value_iconsrcs = Vector(None),
+                value_restype = Vector(None),
+                comments = Vector(""),
+                value_ids = Vector("http://data.knora.org/047db418ae06/values/097826870527"),
+                values = Vector(GeomValueV1(geom = "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.24285714285714285,\"y\":0.1712962962962963},{\"x\":0.8678571428571429,\"y\":0.16666666666666666},{\"x\":0.8892857142857142,\"y\":0.7222222222222222},{\"x\":0.25,\"y\":0.7361111111111112},{\"x\":0.2392857142857143,\"y\":0.16898148148148148}],\"type\":\"polygon\"}")),
+                occurrence = Some("1-n"),
+                attributes = "width=95%;rows=4;wrap=soft",
+                label = Some("Geometrie"),
+                is_annotation = "0",
+                guielement = Some("geometry"),
+                guiorder = None,
+                valuetype_id = Some("http://www.knora.org/ontology/knora-base#GeomValue"),
+                regular_property = 1,
+                pid = "http://www.knora.org/ontology/knora-base#hasGeometry"
+            ),
+            PropertyV1(
+                locations = Nil,
+                value_rights = Vector(Some(6)),
+                value_firstprops = Vector(Some("Derselbe Holzschnitt wird auch auf Seite b8v der deutschen Ausgabe des Narrenschiffs verwendet.")),
+                value_iconsrcs = Vector(Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "knora-base/region.gif")),
+                value_restype = Vector(Some("Region")),
+                comments = Vector(""),
+                value_ids = Vector("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"),
+                values = Vector(LinkV1(
+                    valueResourceClassIcon = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "knora-base/region.gif"),
+                    valueResourceClassLabel = Some("Region"),
+                    valueResourceClass = Some("http://www.knora.org/ontology/knora-base#Region"),
+                    valueLabel = Some("Derselbe Holzschnitt wird auch auf Seite b8v der deutschen Ausgabe des Narrenschiffs verwendet."),
+                    targetResourceIri = "http://data.knora.org/c9824353ae06"
+                )),
+                occurrence = None,
+                attributes = "",
+                label = None,
+                is_annotation = "0",
+                guielement = None,
+                guiorder = None,
+                valuetype_id = Some("http://www.knora.org/ontology/knora-base#Resource"),
+                regular_property = 1,
+                pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
+            ),
+            PropertyV1(
+                locations = Nil,
+                value_rights = Vector(Some(6)),
+                value_firstprops = Vector(Some("b8v")),
+                value_iconsrcs = Vector(Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/page.gif")),
+                value_restype = Vector(Some("Seite")),
+                comments = Vector(""),
+                value_ids = Vector("http://data.knora.org/047db418ae06/values/2335c869-b649-4dd8-b4b5-e82c88449d62"),
+                values = Vector(LinkV1(
+                    valueResourceClassIcon = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/page.gif"),
+                    valueResourceClassLabel = Some("Seite"),
+                    valueResourceClass = Some("http://www.knora.org/ontology/incunabula#page"),
+                    valueLabel = Some("b8v"),
+                    targetResourceIri = "http://data.knora.org/883be8542e03"
+                )),
+                occurrence = Some("1"),
+                attributes = "",
+                label = None,
+                is_annotation = "0",
+                guielement = None,
+                guiorder = None,
+                valuetype_id = Some("http://www.knora.org/ontology/knora-base#Representation"),
+                regular_property = 1,
+                pid = "http://www.knora.org/ontology/knora-base#isRegionOf"
+            )
+        ))),
+        resdata = Some(ResourceDataV1(
+            rights = Some(6),
+            iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "knora-base/region.gif"),
+            restype_label = Some("Region"),
+            restype_name = "http://www.knora.org/ontology/knora-base#Region",
+            res_id = "http://data.knora.org/047db418ae06"
+        )),
+        resinfo = Some(ResourceInfoV1(
+            firstproperty = Some("Derselbe Holzschnitt wird auf Seite c7r der lateinischen Ausgabe des Narrenschiffs verwendet."),
+            value_of = 0,
+            lastmod = "0000-00-00 00:00:00",
+            resclass_has_location = false,
+            resclass_name = "object",
+            locdata = None,
+            locations = None,
+            preview = None,
+            restype_iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "knora-base/region.gif"),
+            restype_description = Some("This Resource represents a geometric region of a resource. The geometry is represented currently as JSON string."),
+            restype_label = Some("Region"),
+            restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
+            restype_id = "http://www.knora.org/ontology/knora-base#Region",
+            person_id = "http://data.knora.org/users/1458b20f08",
             project_id = "http://data.knora.org/projects/77275339"
         ))
     )

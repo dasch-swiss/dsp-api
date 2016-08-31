@@ -84,7 +84,7 @@ object CacheUtil {
                     cacheConfig.timeToLiveSeconds,
                     cacheConfig.timeToIdleSeconds)
                 cacheManager.addCache(cache)
-                cache.getCacheEventNotificationService.registerListener(new MyCacheEventListener(log))
+                cache.getCacheEventNotificationService.registerListener(new LoggingCacheEventListener(log))
                 log.debug(s"CacheUtil: Created application cache '${cacheConfig.cacheName}'")
         }
     }
@@ -304,7 +304,7 @@ object CacheUtil {
 
 }
 
-class MyCacheEventListener(log: Logger) extends CacheEventListener {
+class LoggingCacheEventListener(log: Logger) extends CacheEventListener {
 
     def notifyElementRemoved(cache: Ehcache, element: Element): Unit = {
         log.debug("notifyElementRemoved " + cache.getName + element.toString)

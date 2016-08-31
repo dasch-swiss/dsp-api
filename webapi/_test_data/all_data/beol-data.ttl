@@ -20,13 +20,14 @@
 	knora-base:projectDescription "BEOL" ;
 	knora-base:projectKeyword "BEOL" ;
 	knora-base:projectLogo "beol_logo.png" .
+	
 # ## ###########################################
 # ## <http://data.knora.org/users/PSGbemdjZi4kQ6GHJVkLGF>
 
 <http://data.knora.org/users/PSGbemdjZi4kQ6GHJVkLGF> a knora-base:User ;
 	knora-base:userid "beol" ;
-	foaf:lastName "BEOL" ;
-	foaf:firstName "BEOL" ;
+	foaf:familyName "BEOL" ;
+	foaf:givenName "BEOL" ;
 	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 	knora-base:email "t.schweizer@unibas.ch" ;
 	knora-base:preferredLanguage "de" ;

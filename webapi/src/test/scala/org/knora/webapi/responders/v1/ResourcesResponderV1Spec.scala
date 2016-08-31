@@ -125,7 +125,7 @@ object ResourcesResponderV1Spec {
                             None,
                             "",
                             "Siehe Seite c5v",
-                            TextValueV1("Siehe Seite c5v", Map(), Vector()),
+                            TextValueV1("Siehe Seite c5v"),
                             "http://data.knora.org/021ec18f1735/values/8a96c303338201",
                             None,
                             None))),
@@ -186,7 +186,7 @@ object ResourcesResponderV1Spec {
                                 None),
                             "http://data.knora.org/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
                             None,
-                            None))))))
+                            None))))), userdata = incunabulaUser.userData)
 
     private val hasOtherThingIncomingLink = IncomingV1(
         value = Some("A thing that only project members can see"),
@@ -291,7 +291,6 @@ object ResourcesResponderV1Spec {
         regular_property = 1,
         pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
     )
-
 }
 
 
@@ -722,17 +721,17 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val citation2 = TextValueV1(
                 utf8str = "This citation refers to another resource",
                 textattr = Map(
-                    "bold" -> Vector(StandoffPositionV1(
+                    StandoffTagV1.bold -> Vector(StandoffPositionV1(
                         start = 5,
                         end = 13
                     )),
-                    StandoffConstantsV1.LINK_ATTR -> Vector(StandoffPositionV1(
+                    StandoffTagV1.link -> Vector(StandoffPositionV1(
                         start = 32,
                         end = 40,
                         resid = Some("http://data.knora.org/c5058f3a")
                     ))
                 ),
-                resource_reference = Vector("http://data.knora.org/c5058f3a")
+                resource_reference = Set("http://data.knora.org/c5058f3a")
             )
             val citation3 = TextValueV1("und noch eines")
             val citation4 = TextValueV1("noch ein letztes")
@@ -963,6 +962,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     }
 
                     linkProps.size should ===(2)
+
                     linkProps.contains(hasStandoffLinkToOutgoingLink) should ===(true)
                     linkProps.contains(hasOtherThingOutgoingLink) should ===(true)
             }

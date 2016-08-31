@@ -95,38 +95,37 @@ DELETE {
 
                 @* Create a Standoff node for each StandoffPositionV1. *@
 
-                @for((attribute, position) <- textValue.flattenStandoff) {
-                    ?newValue knora-base:valueHasStandoff
-                        [
+                @for(createStandoff <- textValue.prepareForSparqlInsert(newValueIri)) {
+                    ?newValue knora-base:valueHasStandoff <@createStandoff.standoffTagIri> .
+
+                    <@createStandoff.standoffTagIri>
+
                             @*
 
                             If the StandoffPositionV1 contains both a resid and an href, we assume that the href is
                             redundant (i.e. it's based on the resid), so we ignore it.
 
                             *@
-                            @(position.resid, position.href) match {
+                            @(createStandoff.standoffPosition.resid, createStandoff.standoffPosition.href) match {
                                 case (Some(resid), _) => {
-                                    rdf:type knora-base:StandoffLink ;
-                                    knora-base:standoffHasAttribute "@attribute" ;
-                                    knora-base:standoffHasLink <@resid> ;
+                                    rdf:type knora-base:StandoffLinkTag ;
+                                    knora-base:standoffTagHasLink <@resid> ;
                                 }
 
                                 case (None, Some(href)) => {
-                                    rdf:type knora-base:StandoffHref ;
-                                    knora-base:standoffHasAttribute "@attribute" ;
-                                    knora-base:standoffHasHref <@href> ;
+                                    rdf:type knora-base:StandoffUriTag ;
+                                    knora-base:valueHasUri <@href> ;
                                 }
 
                                 case (None, None) => {
-                                    rdf:type knora-base:StandoffVisualAttribute ;
-                                    knora-base:standoffHasAttribute "@attribute" ;
+                                    rdf:type <@createStandoff.standoffTagClassIri> ;
                                 }
                             }
 
-                            knora-base:standoffHasStart @position.start ;
-                            knora-base:standoffHasEnd @position.end
-                        ] .
+                            knora-base:standoffTagHasStart @createStandoff.standoffPosition.start ;
+                            knora-base:standoffTagHasEnd @createStandoff.standoffPosition.end .
                 }
+
             }
 
             case intValue: IntegerValueV1 => {

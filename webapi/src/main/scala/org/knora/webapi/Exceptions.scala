@@ -135,6 +135,12 @@ case class DuplicateValueException(message: String = "Duplicate values are not p
 case class OntologyConstraintException(message: String) extends RequestRejectedException(message)
 
 /**
+  * An exception indicating that the submitted standoff is not valid.
+  * @param message a description of the error.
+  */
+case class InvalidStandoffException(message: String) extends RequestRejectedException(message)
+
+/**
   * An abstract class for exceptions indicating that something went wrong and it's not the client's fault.
   *
   * @param message a description of the error.

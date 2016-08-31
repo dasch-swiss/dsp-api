@@ -29,6 +29,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.util.InputValidation.RichtextComponents
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 import spray.http.HttpEntity.NonEmpty
@@ -47,7 +48,7 @@ object ValuesRouteV1 extends Authenticator {
     private def makeVersionHistoryRequestMessage(iris: Seq[IRI], userProfile: UserProfileV1): ValueVersionHistoryGetRequestV1 = {
         if (iris.length != 3) throw BadRequestException("Version history request requires resource IRI, property IRI, and current value IRI")
 
-        val Vector(resourceIriStr, propertyIriStr, currentValueIriStr) = iris
+        val Seq(resourceIriStr, propertyIriStr, currentValueIriStr) = iris
 
         val resourceIri = InputValidation.toIri(resourceIriStr, () => throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
         val propertyIri = InputValidation.toIri(propertyIriStr, () => throw BadRequestException(s"Invalid property IRI: $propertyIriStr"))
@@ -64,7 +65,7 @@ object ValuesRouteV1 extends Authenticator {
     private def makeLinkValueGetRequestMessage(iris: Seq[IRI], userProfile: UserProfileV1): LinkValueGetRequestV1 = {
         if (iris.length != 3) throw BadRequestException("Link value request requires subject IRI, predicate IRI, and object IRI")
 
-        val Vector(subjectIriStr, predicateIriStr, objectIriStr) = iris
+        val Seq(subjectIriStr, predicateIriStr, objectIriStr) = iris
 
         val subjectIri = InputValidation.toIri(subjectIriStr, () => throw BadRequestException(s"Invalid subject IRI: $subjectIriStr"))
         val predicateIri = InputValidation.toIri(predicateIriStr, () => throw BadRequestException(s"Invalid predicate IRI: $predicateIriStr"))
@@ -89,11 +90,12 @@ object ValuesRouteV1 extends Authenticator {
         val (value: UpdateValueV1, commentStr: Option[String]) = apiRequest match {
 
             case CreateValueApiRequestV1(_, _, _, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
-                // textattr is a string that can be parsed into Map[String, Seq[StandoffPositionV1]]
-                val textattr: Map[String, Seq[StandoffPositionV1]] = InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]])
-                val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
+                val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext)
 
-                (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
+                (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str),
+                    textattr = richtextComponents.textattr,
+                    resource_reference = richtextComponents.resource_reference),
+                    comment)
 
             case CreateValueApiRequestV1(_, _, _, _, Some(intValue: Int), _, _, _, _, _, _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)
 
@@ -151,11 +153,12 @@ object ValuesRouteV1 extends Authenticator {
         // TODO: Support the rest of the value types.
         val (value: UpdateValueV1, commentStr: Option[String]) = apiRequest match {
             case ChangeValueApiRequestV1(_, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
-                // textattr is a string that can be parsed into Map[String, Seq[StandoffPositionV1]]
-                val textattr: Map[String, Seq[StandoffPositionV1]] = InputValidation.validateTextattr(JsonParser(richtext.textattr).convertTo[Map[String, Seq[StandoffPositionV1]]])
-                val resourceReference: Seq[IRI] = InputValidation.validateResourceReference(richtext.resource_reference)
+                val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext)
 
-                (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str), textattr = textattr, resource_reference = resourceReference), comment)
+                (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str),
+                    textattr = richtextComponents.textattr,
+                    resource_reference = richtextComponents.resource_reference),
+                    comment)
 
             case ChangeValueApiRequestV1(_, _, Some(intValue: Int), _, _, _, _, _, _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)
 

@@ -311,10 +311,12 @@ Each Knora value can grant permissions (see Section~\ref{sec:authorization}).
 
 \subsubsection{TextValue}
 
-Represents text, possibly including markup. Property:
+Represents text, possibly including markup. The text is the object of the \texttt{valueHasString} property. A line break is represented as a Unicode line feed character (\texttt{U+000A}). The non-printing Unicode character \texttt{INFORMATION SEPARATOR TWO (U+001E)} can be used to separate words that are separated only by standoff markup (see below), so they are recognised as separate in a full-text search index.
+
+Markup is stored using this property:
 
 \begin{description}
-	\item[valueHasStandoff (0-n)] Points to a Standoff node. See Section~\ref{sec:standoff}.
+	\item[valueHasStandoff (0-n)] Points to a standoff markup tag. See Section~\ref{sec:standoff}.
 \end{description}
 
 \subsubsection{DateValue}
@@ -606,61 +608,87 @@ edge [<-,cyan!60!green] node[text style,above]{valueHasRefCount} (link);
 \label{fig:basic-link-graph}
 \end{figure}
 
-\section{Text with Standoff Nodes}
+\section{Text with Standoff Markup}
 
 \label{sec:standoff}
 
 Knora is designed to be able to store text with markup, which can indicate formatting and structure, as well as the complex observations involved in transcribing handwritten manuscripts. One popular way of representing text in the humanities is to encode it as TEI/XML\footnote{TEI refers both to an organization and an XML-based markup language (or more precisely: a set of grammar modules -- XML schemas -- that can be combined to define a markup language). For reasons of clarity, we use the term TEI/XML to refer to the markup language.} using the \href{http://www.tei-c.org/index.xml}{Text Encoding Initiative (TEI)} guidelines~\cite{P5}. In Knora, a TEI/XML document can be stored as a file with attached metadata.
 
-However, Knora also supports \enquote{standoff} nodes, which are stored separately from the text. This has some advantages over embedded markup such as XML.\footnote{It is also possible to encode standoff markup using XML. For example, the TEI discusses standoff markup in its guidelines~\cite[chapters 16.9 and 20.4]{P5}. However, standoff markup is not widely applied in the TEI community. The main focus lies on encoding a hierarchy of elements.} While XML requires markup to have a hierarchical structure, and does not allow overlapping tags, standoff nodes do not have these limitations~\cite{Schmidt_Standoff}. A \enquote{standoff node} can assign an attribute to any substring in the text by giving its start and end positions.\footnote{Unlike in corpus linguistics, we do not use any tokenization resulting in a form of predefined segmentation that would limit the user's possibility to freely annotate any ranges in the text.} For example, suppose we have the following text:
+However, Knora also supports \enquote{standoff} tags, which are stored separately from the text. This has some advantages over embedded markup such as XML.\footnote{It is also possible to encode standoff markup using XML. For example, the TEI discusses standoff markup in its guidelines~\cite[chapters 16.9 and 20.4]{P5}. However, standoff markup is not widely applied in the TEI community. The main focus lies on encoding a hierarchy of elements.} While XML requires markup to have a hierarchical structure, and does not allow overlapping tags, standoff nodes do not have these limitations~\cite{Schmidt_Standoff}. A standoff tag can be attached to any substring in the text by giving its start and end positions.\footnote{Unlike in corpus linguistics, we do not use any tokenization resulting in a form of predefined segmentation that would limit the user's possibility to freely annotate any ranges in the text.} For example, suppose we have the following text:
 
 \begin{quote}
 This \textit{sentence \textbf{has overlapping}}\textbf{ visual} attributes.
 \end{quote}
 
-This would require just two standoff nodes: \texttt{(italic, start=5, end=29)} and \texttt{(bold, start=14, end=36)}.
+This would require just two standoff tags: \texttt{(italic, start=5, end=29)} and \texttt{(bold, start=14, end=36)}.
 
-Moreover, standoff makes it possible to mark up the same text in different, possibly incompatible ways, allowing for different interpretations without making redundant copies of the text. In the Knora base ontology, any text value can have standoff nodes.
+Moreover, standoff makes it possible to mark up the same text in different, possibly incompatible ways, allowing for different interpretations without making redundant copies of the text. In the Knora base ontology, any text value can have standoff tags.
 
 By representing standoff as RDF triples, Knora makes markup searchable across multiple text documents in a repository. For example, if a repository contains documents in which references to persons are indicated in standoff, it is straightforward to find all the documents mentioning a particular person. Knora's standoff support is intended to make it possible to convert documents with embedded, hierarchical markup, such as TEI/XML, into RDF standoff and back again, with no data loss, thus bringing the benefits of RDF to existing TEI-encoded documents (cf.~\cite[3]{Schmidt_Standoff}).
 
-In the Knora base ontology, a \texttt{TextValue} can have one or more standoff nodes. Each standoff node indicates the start and end positions of a substring in the text that has a particular attribute. The OWL class \texttt{kb:Standoff}, which is the base class of all standoff node classes, has these properties:
+In the Knora base ontology, a \texttt{TextValue} can have one or more standoff tags. Each standoff tag indicates the start and end positions of a substring in the text that has a particular attribute. The OWL class \texttt{kb:StandoffTag}, which is the base class of all standoff node classes, has these properties:
 
 \begin{description}
-	\item[standoffHasAttribute (1)] The name of the attribute.
-	\item[standoffHasStart (1)] The index of the first character in the text that has the attribute.
-	\item[standoffHasEnd (1)] The index of the last character in the text that has the attribute, plus 1.
+	\item[standoffTagHasStart (1)] The index of the first character in the text that has the attribute.
+	\item[standoffTagHasEnd (1)] The index of the last character in the text that has the attribute, plus 1.
 \end{description}
 
-The \texttt{Standoff} class is not used directly in RDF data; instead, its subclasses are used. A few subclasses are currently provided, and more will be added to support TEI semantics.
+The \texttt{StandoffTag} class is not used directly in RDF data; instead, its subclasses are used. A few subclasses are currently provided, and more will be added to support TEI semantics. In a future version of the Knora API server, a project will be able to define its own custom standoff tag classes.
 
-\subsection{Subclasses of Standoff}
+\subsection{Subclasses of StandoffTag}
 
-\subsubsection{StandoffVisualAttribute}
+\subsubsection{StandoffVisualTag}
 
-Represents a formatting attribute such as {\it boldface} or {\bf italics}. The value of \texttt{standoffHasAttribute} is the name of the formatting attribute, and can be any string. It is up to the text renderer to interpret these names.
+Represents a typographical style. Subclasses:
 
-\subsubsection{StandoffHref}
+\begin{itemize}
+	\item \texttt{StandoffItalicTag}
+	\item \texttt{StandoffBoldTag}
+	\item \texttt{StandoffUnderlineTag}
+	\item \texttt{StandoffStrikethroughTag}
+	\item \texttt{StandoffSuperscriptTag}
+	\item \texttt{StandoffSubscriptTag}
+\end{itemize}
 
-Indicates that a substring is associated with a resource on the Internet, i.e.\ a URL. It has this property:
+\subsubsection{StandoffStructuralTag}
 
-\begin{description}
-	\item[standoffHasHref (1)] An \texttt{xsd:anyURI} representing the URL.
-\end{description}
+Represents an element of the structure of a text. Subclasses:
 
-\subsubsection{StandoffLink}
+\begin{itemize}
+	\item \texttt{StandoffParagraphTag}
+	\item \texttt{StandoffHeader1Tag}
+	\item \texttt{StandoffHeader2Tag}
+	\item \texttt{StandoffHeader3Tag}
+	\item \texttt{StandoffHeader4Tag}
+	\item \texttt{StandoffHeader5Tag}
+	\item \texttt{StandoffHeader6Tag}
+	\item \texttt{StandoffOrderedListTag}
+	\item \texttt{StandoffUnorderedListTag}
+	\item \texttt{StandoffListElementTag}
+\end{itemize}
+
+\subsubsection{StandoffDataTypeTag}
+
+Associates data in some Knora value type with a substring in a text. Subclasses:
+
+\begin{itemize}
+	\item \texttt{StandoffUriTag} Indicates that a substring is associated with a URI.
+	\item \texttt{StandoffDateValueTag} Indicates that a substring represents a date, which is stored in the same form that is used for \texttt{kb:DateValue}.
+\end{itemize}
+
+\subsubsection{StandoffLinkTag}
 
 \label{subsubsec:standoff-link}
 
-Indicates that a substring is associated with a Knora resource. For example, if a repository contains resources representing persons, a text could be marked up so that each time a person's name is mentioned, a \texttt{StandoffLink} connects the name to the Knora resource describing that person. It has this property:
+A \texttt{StandoffLinkTag} Indicates that a substring is associated with a Knora resource. For example, if a repository contains resources representing persons, a text could be marked up so that each time a person's name is mentioned, a \texttt{StandoffLinkTag} connects the name to the Knora resource describing that person. Property:
 
 \begin{description}
-	\item[standoffHasLink (1)] The resource that the link points to.
+	\item[standoffTagHasLink (1)] The IRI of the resource that is referred to.
 \end{description}
 
-One of the design goals of the Knora ontology is to make it easy and efficient to find out which resources contain references to a given resource. Direct links are easier and more efficient to query than indirect links. Therefore, when a text value contains a resource reference in its standoff nodes, there must also be a direct link between the containing resource and the target resource, along with an RDF reification (a \texttt{kb:LinkValue}) describing the link, as discussed in Section~\ref{sec:links}. In this case, the link property is always \texttt{kb:hasStandoffLinkTo}, and the link value property (which points to the \texttt{LinkValue}) is always \texttt{kb:hasStandoffLinkToValue}.
+One of the design goals of the Knora ontology is to make it easy and efficient to find out which resources contain references to a given resource. Direct links are easier and more efficient to query than indirect links. Therefore, when a text value contains a resource reference in its standoff nodes, the Knora API server automatically creates a direct link between the containing resource and the target resource, along with an RDF reification (a \texttt{kb:LinkValue}) describing the link, as discussed in Section~\ref{sec:links}. In this case, the link property is always \texttt{kb:hasStandoffLinkTo}, and the link value property (which points to the \texttt{LinkValue}) is always \texttt{kb:hasStandoffLinkToValue}.
 
-The Knora API server automatically creates and updates direct links and reifications for standoff resource references when it creates and updates text values. To do this, it keeps track of the number of text values in each resource that contain at least one standoff reference to a given target resource. It stores this number as the reference count of the \texttt{LinkValue} (see Section~\ref{subsubsec:linkvalue}) describing the direct link. Each time this number changes, it makes a new version of the \texttt{LinkValue}, with an updated reference count. When the reference count reaches zero, it removes the direct link and makes a new version of the \texttt{LinkValue}, marked with \texttt{kb:isDeleted}.
+The Knora API server automatically updates direct links and reifications for standoff resource references when text values are updated. To do this, it keeps track of the number of text values in each resource that contain at least one standoff reference to a given target resource. It stores this number as the reference count of the \texttt{LinkValue} (see Section~\ref{subsubsec:linkvalue}) describing the direct link. Each time this number changes, it makes a new version of the \texttt{LinkValue}, with an updated reference count. When the reference count reaches zero, it removes the direct link and makes a new version of the \texttt{LinkValue}, marked with \texttt{kb:isDeleted}.
 
 For example, if \texttt{data:R1} is a resource with a text value in which the resource \texttt{data:R2} is referenced, the repository could contain the following triples:
 
@@ -671,15 +699,15 @@ data:V1 rdf:type kb:TextValue ;
     kb:valueHasString "This link is internal." ;
     kb:valueHasStandoff data:SO1 .
 
-data:SO1 rdf:type kb:StandoffLink ;
-    kb:standoffHasStart: 5 ;
-    kb:standoffHasEnd: 9 ;
-    kb:standoffHasLink data:R2 .
+data:SO1 rdf:type kb:StandoffLinkTag ;
+    kb:standoffTagHasStart: 5 ;
+    kb:standoffTagHasEnd: 9 ;
+    kb:standoffTagHasLink data:R2 .
 
 data:R1 kb:hasStandoffLinkTo data:R2 .
 data:R1 kb:hasStandoffLinkToValue data:LV1 . 
 
-data:LV1 rdf:type kb:LinkValue ;            
+data:LV1 rdf:type kb:LinkValue ;
     rdf:subject data:R1 ;
     rdf:predicate kb:hasStandoffLinkTo ;
     rdf:object data:R2 ;
@@ -705,13 +733,13 @@ edge [<-,cyan!60!green] node[text style,above]{valueHasString} (hasComment);
 \node[vertex style=Green, below of=r1,xshift=3em,yshift=-4em] (so1) {SO1}
 edge [<-,cyan!60!blue] node[text style,above]{valueHasStandoff} (hasComment);
 \node[literal style=Red, below of=so1,xshift=-3em,yshift=-8em] (start) {5}
-edge [<-,cyan!60!green] node[text style,above]{standoffHasStart} (so1);
+edge [<-,cyan!60!green] node[text style,above]{standoffTagHasStart} (so1);
 \node[literal style=Red, below of=so1,xshift=3em,yshift=-8em] (end) {9}
-edge [<-,cyan!60!green] node[text style,above]{standoffHasEnd} (so1);
+edge [<-,cyan!60!green] node[text style,above]{standoffTagHasEnd} (so1);
 
 \node[vertex style=Gray, right of=r1,xshift=16em] (r2) {R2}
 edge [<-,cyan!60!green] node[text style,above]{hasStandoffLinkTo} (r1)
-edge [<-,cyan!60!green, bend left=22] node[text style,above]{standoffHasLink} (so1);
+edge [<-,cyan!60!green, bend left=22] node[text style,above]{standoffTagHasLink} (so1);
 
 \node[vertex style=Orange, right of=so1,xshift=10em,yshift=0em] (link) {LV1}
 edge [->,cyan!60!green, bend left=10] node[text style,above]{subject} (r1)
@@ -728,6 +756,26 @@ edge [<-,cyan!60!green] node[text style,above]{valueHasRefCount} (link);
 \caption{An RDF graph showing a link resulting from a reference to a resource in a standoff node.}
 \label{fig:standoff-link-graph}
 \end{figure}
+
+\subsection{Standoff in Digital Editions}
+
+\emph{The features described in this section are under development.}
+
+Knora's standoff is designed to make it possible to convert XML documents to standoff and back. One application for this feature is an editing workflow in which an editor works in an XML editor, and the resulting XML documents are converted to standoff and stored in Knora, where they can be searched and annotated.
+
+If an editor wants to correct text that has been imported from XML into standoff, the text can be exported as XML, edited, and imported again. To preserve annotations on standoff tags across edits, each tag can automatically be given a UUID. In a future version of the Knora base ontology, it will be possible to create annotations that point to UUIDs rather than to IRIs. When a text is exported to XML, the UUIDs can be included in the XML. When the edited XML is imported again, it can be converted to new standoff tags with the same UUIDs. Annotations that applied to standoff tags in the previous version of the text will therefore also apply to equivalent tags in the new version.
+
+When text is converted from XML into standoff, tags are also given indexes, which are numbered from 0 within the context of a particular text. This makes it possible to order tags that share the same position, and to preserve the hierarchy of the original XML document. An ordinary, hierarchical XML tag is converted to a standoff tag that has one index, as well as the index of its parent tag, if any. The Knora base ontology also supports non-hierarchical markup such as CLIX\cite{CLIX}, which enables overlapping markup to be represented in XML. When non-hierarchical markup is converted to standoff, both the start position and the end position of the standoff tag have indexes and parent indexes.
+
+To support these features, a standoff tag can have these additional properties:
+
+\begin{description}
+	\item[standoffTagHasStartIndex (0-1)] The index of the start position.
+	\item[standoffTagHasEndIndex (0-1)] The index of the end position, if this is a non-hierarchical tag.
+	\item[standoffTagHasStartParentIndex (0-1)] The index of the tag, if any, that contains the start position.
+	\item[standoffTagHasEndParentIndex (0-1)] The index of the tag, if any, that contains the end position, if this is a non-hierarchical tag.
+	\item[standoffTagHasUUID (0-1)] A UUID that can be used to annotate a standoff tag that may be present in different versions of a text, or in different layers of a text (such as a diplomatic transcription and an edited critical text).
+\end{description}
 
 \section{Authorization}
 

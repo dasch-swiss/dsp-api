@@ -91,15 +91,15 @@ class SipiV1E2ESpec extends E2ESpec {
                 "http://www.knora.org/ontology/incunabula#pagenum" -> Seq(CreateResourceValueV1(
                     richtext_value = Some(CreateRichtextV1(
                         utf8str = "test_page",
-                        textattr = "{}",
-                        resource_reference = List.empty[String]
+                        textattr = None,
+                        resource_reference = None
                     ))
                 )),
                 "http://www.knora.org/ontology/incunabula#origname" -> Seq(CreateResourceValueV1(
                     richtext_value = Some(CreateRichtextV1(
                         utf8str = "test",
-                        textattr = "{}",
-                        resource_reference = List.empty[String]
+                        textattr = None,
+                        resource_reference = None
                     ))
                 )),
                 "http://www.knora.org/ontology/incunabula#partOf" -> Seq(CreateResourceValueV1(

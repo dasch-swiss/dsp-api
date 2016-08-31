@@ -28,11 +28,7 @@ import org.knora.webapi._
 import scala.annotation.tailrec
 import scala.math.BigInt
 
-/**
-  * Converts SALSAH data IDs to Knora IRIs, generates random Knora IRIs for new data, and provides functions
-  * for manipulating Knora IRIs.
-  */
-class KnoraIriUtil {
+object KnoraIdUtil {
     private val Big256 = BigInt("256")
     private val ResourceIdFactor = BigInt("982451653")
     private val ValueIdFactor = BigInt("961751491")
@@ -42,7 +38,20 @@ class KnoraIriUtil {
     private val InstitutionIdFactor = BigInt("961756489")
     private val HListIdFactor = BigInt("961754009")
     private val SelectionIdFactor = BigInt("961754011")
+
+    private val CanonicalUuidLength = 36
+    private val Base64UuidLength = 22
+}
+
+/**
+  * Converts SALSAH data IDs to Knora IRIs, generates random Knora IRIs for new data, and provides functions
+  * for manipulating Knora IRIs.
+  */
+class KnoraIdUtil {
+    import KnoraIdUtil._
+
     private val base64Encoder = Base64.getUrlEncoder.withoutPadding
+    private val base64Decoder = Base64.getUrlDecoder
 
     /**
       * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
@@ -51,8 +60,18 @@ class KnoraIriUtil {
       *
       * @return a random, Base64-encoded UUID.
       */
-    private def makeRandomBase64EncodedUuid: String = {
+    def makeRandomBase64EncodedUuid: String = {
         val uuid = UUID.randomUUID
+        base64EncodeUuid(uuid)
+    }
+
+    /**
+      * Base64-encodes a [[UUID]] using a URL and filename safe Base64 encoder from [[java.util.Base64]],
+      * without padding. This results in a 22-character string that can be used as a unique identifier in IRIs.
+      * @param uuid the [[UUID]] to be encoded.
+      * @return a 22-character string representing the UUID.
+      */
+    def base64EncodeUuid(uuid: UUID): String = {
         val bytes = Array.ofDim[Byte](16)
         val byteBuffer = ByteBuffer.wrap(bytes)
         byteBuffer.putLong(uuid.getMostSignificantBits)
@@ -61,12 +80,68 @@ class KnoraIriUtil {
     }
 
     /**
+      * Decodes a Base64-encoded UUID.
+      * @param base64Uuid the Base64-encoded UUID to be decoded.
+      * @return the equivalent [[UUID]].
+      */
+    def base64DecodeUuid(base64Uuid: String): UUID = {
+        val bytes = base64Decoder.decode(base64Uuid)
+        val byteBuffer = ByteBuffer.wrap(bytes)
+        new UUID(byteBuffer.getLong, byteBuffer.getLong)
+    }
+
+    /**
+      * Encodes a [[UUID]] as a string in one of two formats:
+      *
+      * - The canonical 36-character format.
+      * - The 22-character Base64-encoded format returned by [[base64EncodeUuid]].
+      *
+      * @param uuid the UUID to be encoded.
+      * @param useBase64 if `true`, uses Base64 encoding.
+      * @return the encoded UUID.
+      */
+    def encodeUuid(uuid: UUID, useBase64: Boolean): String = {
+        if (useBase64) {
+            base64EncodeUuid(uuid)
+        } else {
+            uuid.toString
+        }
+    }
+
+    /**
+      * Decodes a string representing a UUID in one of two formats:
+      *
+      * - The canonical 36-character format.
+      * - The 22-character Base64-encoded format returned by [[base64EncodeUuid]].
+      *
+      * @param uuidStr the string to be decoded.
+      * @return the equivalent [[UUID]].
+      */
+    def decodeUuid(uuidStr: String): UUID = {
+        if (uuidStr.length == 22) {
+            base64DecodeUuid(uuidStr)
+        } else {
+            UUID.fromString(uuidStr)
+        }
+    }
+
+    /**
+      * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
+      *
+      * @param idStr the string to check.
+      * @return `true` if the string is the right length to be a canonical or Base64-encoded UUID.
+      */
+    def couldBeUuid(idStr: String): Boolean = {
+        idStr.length == CanonicalUuidLength || idStr.length == Base64UuidLength
+    }
+
+    /**
       * Converts a SALSAH resource ID into a Knora resource IRI.
       *
       * @param salsahResourceID the SALSAH resource ID.
       * @return a resource IRI.
       */
-    def salsahResourceId2Iri(salsahResourceID: String): String = {
+    def salsahResourceId2Iri(salsahResourceID: String): IRI = {
         val knoraResourceID = salsahId2KnoraId(BigInt(salsahResourceID), ResourceIdFactor)
         s"http://data.knora.org/$knoraResourceID"
     }
@@ -76,7 +151,7 @@ class KnoraIriUtil {
       *
       * @return a new resource IRI.
       */
-    def makeRandomResourceIri: String = {
+    def makeRandomResourceIri: IRI = {
         val knoraResourceID = makeRandomBase64EncodedUuid
         s"http://data.knora.org/$knoraResourceID"
     }
@@ -88,7 +163,7 @@ class KnoraIriUtil {
       * @param salsahValueID    the SALSAH value ID.
       * @return a value IRI.
       */
-    def salsahValueId2Iri(salsahResourceID: String, salsahValueID: String): String = {
+    def salsahValueId2Iri(salsahResourceID: String, salsahValueID: String): IRI = {
         val knoraResourceID = salsahId2KnoraId(BigInt(salsahResourceID), ResourceIdFactor)
         val knoraValueID = salsahId2KnoraId(BigInt(salsahValueID), ValueIdFactor)
         s"http://data.knora.org/$knoraResourceID/values/$knoraValueID"
@@ -100,7 +175,7 @@ class KnoraIriUtil {
       * @param resourceIri the IRI of the resource that will contain the value.
       * @return a new value IRI.
       */
-    def makeRandomValueIri(resourceIri: String): String = {
+    def makeRandomValueIri(resourceIri: IRI): IRI = {
         val knoraValueID = makeRandomBase64EncodedUuid
         s"$resourceIri/values/$knoraValueID"
     }
@@ -112,7 +187,7 @@ class KnoraIriUtil {
       * @param salsahFileValueID the SALSAH file value ID.
       * @return a file value IRI.
       */
-    def salsahFileValueId2Iri(salsahResourceID: String, salsahFileValueID: String): String = {
+    def salsahFileValueId2Iri(salsahResourceID: String, salsahFileValueID: String): IRI = {
         val knoraResourceID = salsahId2KnoraId(BigInt(salsahResourceID), ResourceIdFactor)
         val knoraFileValueID = salsahId2KnoraId(BigInt(salsahFileValueID), FileValueIdFactor)
         s"http://data.knora.org/$knoraResourceID/reps/$knoraFileValueID"
@@ -124,7 +199,7 @@ class KnoraIriUtil {
       * @param resourceIri the IRI of the resource that will have the representation.
       * @return a new representation IRI.
       */
-    def makeRandomFileValueIri(resourceIri: String): String = {
+    def makeRandomFileValueIri(resourceIri: IRI): IRI = {
         val knoraValueID = makeRandomBase64EncodedUuid
         s"$resourceIri/reps/$knoraValueID"
     }
@@ -135,7 +210,7 @@ class KnoraIriUtil {
       * @param salsahInstitutionID the SALSAH institution ID.
       * @return an institution IRI.
       */
-    def salsahInstitutionId2Iri(salsahInstitutionID: String): String = {
+    def salsahInstitutionId2Iri(salsahInstitutionID: String): IRI = {
         val knoraInstitutionID = salsahId2KnoraId(BigInt(salsahInstitutionID), InstitutionIdFactor)
         s"http://data.knora.org/institutions/$knoraInstitutionID"
     }
@@ -145,7 +220,7 @@ class KnoraIriUtil {
       *
       * @return a new institution IRI.
       */
-    def makeRandomInstitutionIri: String = {
+    def makeRandomInstitutionIri: IRI = {
         val knoraInstitutionID = makeRandomBase64EncodedUuid
         s"http://data.knora.org/institutions/$knoraInstitutionID"
     }
@@ -156,7 +231,7 @@ class KnoraIriUtil {
       * @param salsahProjectID the SALSAH project ID.
       * @return a project IRI.
       */
-    def salsahProjectId2Iri(salsahProjectID: String): String = {
+    def salsahProjectId2Iri(salsahProjectID: String): IRI = {
         val knoraProjectID = salsahId2KnoraId(BigInt(salsahProjectID), ProjectIdFactor)
         s"http://data.knora.org/projects/$knoraProjectID"
     }
@@ -166,7 +241,7 @@ class KnoraIriUtil {
       *
       * @return a new project IRI.
       */
-    def makeRandomProjectIri: String = {
+    def makeRandomProjectIri: IRI = {
         val knoraProjectID = makeRandomBase64EncodedUuid
         s"http://data.knora.org/projects/$knoraProjectID"
     }
@@ -177,7 +252,7 @@ class KnoraIriUtil {
       * @param salsahPersonID the SALSAH person ID.
       * @return a person IRI.
       */
-    def salsahPersonId2Iri(salsahPersonID: String): String = {
+    def salsahPersonId2Iri(salsahPersonID: String): IRI = {
         val knoraPersonID = salsahId2KnoraId(BigInt(salsahPersonID), PersonIdFactor)
         s"http://data.knora.org/users/$knoraPersonID"
     }
@@ -187,7 +262,7 @@ class KnoraIriUtil {
       *
       * @return a new person IRI.
       */
-    def makeRandomPersonIri: String = {
+    def makeRandomPersonIri: IRI = {
         val knoraPersonID = makeRandomBase64EncodedUuid
         s"http://data.knora.org/users/$knoraPersonID"
     }
@@ -198,7 +273,7 @@ class KnoraIriUtil {
       * @param salsahHListID the SALSAH hlist ID.
       * @return a hierarchical list IRI.
       */
-    def salsahHListId2Iri(salsahHListID: String): String = {
+    def salsahHListId2Iri(salsahHListID: String): IRI = {
         val knoraHListID = salsahId2KnoraId(BigInt(salsahHListID), HListIdFactor)
         s"http://data.knora.org/lists/$knoraHListID"
     }
@@ -208,7 +283,7 @@ class KnoraIriUtil {
       *
       * @return a new hierarchical list IRI.
       */
-    def makeRandomHListIri: String = {
+    def makeRandomHListIri: IRI = {
         val knoraHListID = makeRandomBase64EncodedUuid
         s"http://data.knora.org/lists/$knoraHListID"
     }
@@ -219,9 +294,20 @@ class KnoraIriUtil {
       * @param salsahSelectionID the SALSAH selection ID.
       * @return a selection IRI.
       */
-    def salsahSelectionId2Iri(salsahSelectionID: String): String = {
+    def salsahSelectionId2Iri(salsahSelectionID: String): IRI = {
         val knoraSelectionID = salsahId2KnoraId(BigInt(salsahSelectionID), SelectionIdFactor)
         s"http://data.knora.org/lists/$knoraSelectionID"
+    }
+
+    /**
+      * Creates a new standoff tag IRI based on a UUID.
+      *
+      * @param valueIri the IRI of the text value containing the standoff tag.
+      * @return a standoff tag IRI.
+      */
+    def makeRandomStandoffTagIri(valueIri: IRI): IRI = {
+        val standoffTagID = makeRandomBase64EncodedUuid
+        s"$valueIri/standoff/$standoffTagID"
     }
 
     /**

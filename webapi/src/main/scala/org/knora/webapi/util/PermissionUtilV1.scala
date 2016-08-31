@@ -18,12 +18,11 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v1
+package org.knora.webapi.util
 
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoV1, PropertyEntityInfoV1, ResourceEntityInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.v1.GroupedProps.{ValueLiterals, ValueProps}
-import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 
 /**
@@ -378,7 +377,7 @@ object PermissionUtilV1 {
       *         [[OntologyConstants.KnoraBase.PermissionAbbreviations]], and the values are sets of
       *         user group IRIs.
       */
-    private def parsePermissions(maybePermissionListStr: Option[String]): Map[String, Set[IRI]] = {
+    def parsePermissions(maybePermissionListStr: Option[String]): Map[String, Set[IRI]] = {
         maybePermissionListStr match {
             case Some(permissionListStr) =>
                 val permissions: Seq[String] = permissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
@@ -410,7 +409,7 @@ object PermissionUtilV1 {
       *                    user group IRIs.
       * @return a formatted string literal that can be used as the object of the predicate `knora-base:hasPermissions`.
       */
-    private def formatPermissions(permissions: Map[String, Set[IRI]]): Option[String] = {
+    def formatPermissions(permissions: Map[String, Set[IRI]]): Option[String] = {
         if (permissions.nonEmpty) {
             val permissionsLiteral = new StringBuilder
 

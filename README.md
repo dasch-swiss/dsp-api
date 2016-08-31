@@ -17,7 +17,7 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 * Offers a generic HTTP-based API, implemented in [Scala](http://www.scala-lang.org/), for querying, annotating, and linking together heterogeneous data in a unified way.
     * Handles authentication and authorization.
     * Provides automatic versioning of data.
-* Includes a high-performance media server called Sipi (to be released soon), implemented in C++.
+* Includes [Sipi](https://github.com/dhlab-basel/Sipi), a high-performance media server implemented in C++.
 * Provides a general-purpose, browser-based Virtual Research Environment called SALSAH (to be released soon).
 
 ## Status

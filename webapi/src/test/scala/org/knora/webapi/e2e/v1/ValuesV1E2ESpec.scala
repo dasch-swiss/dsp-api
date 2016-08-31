@@ -1,3 +1,19 @@
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * This file is part of Knora.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.knora.webapi.e2e.v1
 
 import java.net.URLEncoder
@@ -5,8 +21,7 @@ import java.net.URLEncoder
 import akka.actor.{ActorSystem, Props}
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.IRI
-import org.knora.webapi.LiveActorMaker
+import org.knora.webapi.{IRI, LiveActorMaker}
 import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
@@ -22,7 +37,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
-  * Created by benjamingeer on 12/07/16.
+  * Tests the values route.
   */
 class ValuesV1E2ESpec extends E2ESpec {
 
@@ -102,6 +117,22 @@ class ValuesV1E2ESpec extends E2ESpec {
             }
         }
 
+
+        "get a link value" in {
+            Get(s"/v1/links/${URLEncoder.encode("http://data.knora.org/contained-thing-1", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#isPartOfOtherThing", "UTF-8")}/${URLEncoder.encode("http://data.knora.org/containing-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val linkValue = JsonParser(response.entity.asString).asJsObject.fields("value").asJsObject.fields
+
+                assert(
+                    linkValue("subjectIri").asInstanceOf[JsString].value == "http://data.knora.org/contained-thing-1" &&
+                        linkValue("predicateIri").asInstanceOf[JsString].value == "http://www.knora.org/ontology/anything#isPartOfOtherThing" &&
+                        linkValue("objectIri").asInstanceOf[JsString].value == "http://data.knora.org/containing-thing" &&
+                        linkValue("referenceCount").asInstanceOf[JsNumber].value.toInt == 1
+                )
+            }
+        }
+
         "add a text value containing a standoff reference to another resource" in {
             val params =
                 """
@@ -109,7 +140,7 @@ class ValuesV1E2ESpec extends E2ESpec {
                   |    "project_id": "http://data.knora.org/projects/anything",
                   |    "res_id": "http://data.knora.org/a-thing",
                   |    "prop": "http://www.knora.org/ontology/anything#hasText",
-                  |    "richtext_value": {"utf8str":"This comment refers to another resource","textattr":"{\"_link\":[{\"start\":31,\"end\":39,\"resid\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
+                  |    "richtext_value": {"utf8str":"This comment refers to another resource","textattr":"{\"_link\":[{\"start\":31,\"end\":39,\"resid\":\"http://data.knora.org/another-thing\",\"href\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
                   |}
                 """.stripMargin
 
@@ -128,7 +159,7 @@ class ValuesV1E2ESpec extends E2ESpec {
                   |    "project_id": "http://data.knora.org/projects/anything",
                   |    "res_id": "http://data.knora.org/a-thing",
                   |    "prop": "http://www.knora.org/ontology/anything#hasText",
-                  |    "richtext_value": {"utf8str":"This remark refers to another resource","textattr":"{\"_link\":[{\"start\":30,\"end\":38,\"resid\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
+                  |    "richtext_value": {"utf8str":"This remark refers to another resource","textattr":"{\"_link\":[{\"start\":30,\"end\":38,\"resid\":\"http://data.knora.org/another-thing\",\"href\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
                   |}
                 """.stripMargin
 
@@ -137,6 +168,21 @@ class ValuesV1E2ESpec extends E2ESpec {
                 val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
                 val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
                 textValueIri.set(valueIri)
+            }
+        }
+
+        "get the version history of a value" in {
+            Get(s"/v1/values/history/${URLEncoder.encode("http://data.knora.org/a-thing", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#hasText", "UTF-8")}/${URLEncoder.encode(textValueIri.get, "UTF-8")}") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val versionHistory: JsValue = JsonParser(response.entity.asString).asJsObject.fields("valueVersions")
+
+                val (mostRecentVersion, originalVersion) = versionHistory match {
+                    case JsArray(Vector(mostRecent, original)) => (mostRecent.asJsObject.fields, original.asJsObject.fields)
+                }
+
+                assert(mostRecentVersion("previousValue").asInstanceOf[JsString].value == originalVersion("valueObjectIri").asInstanceOf[JsString].value)
+                assert(originalVersion("previousValue") == JsNull)
             }
         }
 
@@ -170,5 +216,6 @@ class ValuesV1E2ESpec extends E2ESpec {
                 assert(status == StatusCodes.OK, response.toString)
             }
         }
+
     }
 }
