@@ -62,7 +62,7 @@ Specifically, consistency checking should prevent the following:
   object property has an object of the wrong class (GraphDB's consistency checke
   cannot check the types of literals).
 - An object property has an object that does not exist (i.e. the object is an IRI
-  that is not used as the subect of any statements in the repository). This can be treated
+  that is not used as the subject of any statements in the repository). This can be treated
   as if the object is of the wrong type (i.e. it can cause a violation of
   ``knora-base:objectClassConstraint``, because there is no compatible ``rdf:type`` statement
   for the object).
@@ -85,7 +85,7 @@ Instances of ``Resource`` and ``Value`` can be marked as deleted, using the prop
 ``isDeleted``. This must be taken into account as follows:
 
 - With ``owl:cardinality 1`` or ``owl:maxCardinality 1``, if the object of the
-  property can be marked as deleted, the property must not have more than object that has
+  property can be marked as deleted, the property must not have more than one object that has
   not been marked as deleted. In other words, it's OK if there is more than one object, as
   long only one of them has ``knora-base:isDeleted false``.
 - With ``owl:cardinality 1`` or ``owl:minCardinality 1``, the property must
