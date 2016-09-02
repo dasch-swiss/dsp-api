@@ -885,8 +885,8 @@ For more information about OWL cardinalities, see~\cite[§2.1, Object Property R
 When a project-specific ontology defines a property, it must indicate the types that are allowed as subjects and objects of the property. This is done using the following Knora-specific properties:
 
 \begin{description}
-	\item[subjectClassConstraint] Specifies the class that subjects of the property must belong to. Knora will attempt to enforce this constraint.
-	\item[objectClassConstraint] If the property is an object property, specifies the class that objects of the property must belong to. Knora will attempt to enforce this constraint.
+	\item[subjectClassConstraint] Specifies the class that subjects of the property must belong to. This constraint is recommended but not required. Knora will attempt to enforce this constraint.
+	\item[objectClassConstraint] If the property is an object property, specifies the class that objects of the property must belong to. Every subproperty of \texttt{kb:hasValue} or a \texttt{kb:hasLinkTo} (i.e. every property of a resource that points to a \texttt{kb:Value} or to another resource) is required have this constraint, because the Knora API server relies on it to know what type of object to expect for the property. Knora will attempt to enforce this constraint.
 	\item[objectDatatypeConstraint] If the property is a datatype property, specifies the type of literals that can be objects of the property. Knora will not attempt to enforce this constraint, but it is useful for documentation purposes.
 \end{description}
 

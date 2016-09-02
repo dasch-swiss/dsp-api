@@ -44,19 +44,28 @@ on data (see :ref:`knora-ontologies` for details):
 
 1. A property definition should specify the types that are allowed as subjects
    and objects of the property, using ``knora-base:subjectClassConstraint`` and
-   (if it is an object property) ``knora-base:objectClassConstraint``.
+   (if it is an object property) ``knora-base:objectClassConstraint``. Every subproperty of
+   ``knora-base:hasValue`` or a ``knora-base:hasLinkTo`` (i.e. every property of a resource
+   that points to a ``knora-base:Value`` or to another resource) is required have this constraint,
+   because the Knora API server relies on it to know what type of object to expect for the property.
+   Use of ``knora-base:subjectClassConstraint`` is recommended but not required.
 2. A class definition should use OWL cardinalities (see
    `OWL 2 Quick Reference Guide`_) to indicate the properties that instances of
    the class are allowed to have, and to constrain the number of objects that each
-   property can have.
+   property can have. Subclasses of ``knora-base:Resource`` are required to have
+   a cardinality for each subproperty of ``knora-base:hasValue`` or a ``knora-base:hasLinkTo``
+   that resources of that class can have.
 
 Specifically, consistency checking should prevent the following:
 
 - An object property or datatype property has a subject of the wrong class, or an
-  object property has an object of the wrong class (GraphDB's consistency checker
+  object property has an object of the wrong class (GraphDB's consistency checke
   cannot check the types of literals).
-- An object property has an object that does not exist. This can be treated as if
-  the object is of the wrong type.
+- An object property has an object that does not exist (i.e. the object is an IRI
+  that is not used as the subect of any statements in the repository). This can be treated
+  as if the object is of the wrong type (i.e. it can cause a violation of
+  ``knora-base:objectClassConstraint``, because there is no compatible ``rdf:type`` statement
+  for the object).
 - A class has ``owl:cardinality 1`` or ``owl:minCardinality 1`` on an object property
   or datatype property, and an instance of the class does not have that property.
 - A class has ``owl:cardinality 1`` or ``owl:maxCardinality 1`` on an object property
@@ -281,10 +290,10 @@ cardinality:
 
 ::
 
-Consistency: cardinality_1_not_less_any_object
-    i p r [Context <onto:_cardinality_1_table>]
-    ------------------------------------
-    i p j
+    Consistency: cardinality_1_not_less_any_object
+        i p r [Context <onto:_cardinality_1_table>]
+        ------------------------------------
+        i p j
 
 
 Knora allows a subproperty of ``knora-base:hasValue`` or
