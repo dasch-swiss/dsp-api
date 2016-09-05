@@ -147,6 +147,7 @@ class OntologyResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
+        case LoadOntologiesRequest() => future2Message(sender(), loadOntologies(), log)
         case EntityInfoGetRequestV1(resourceIris, propertyIris, userProfile) => future2Message(sender(), getEntityInfoResponseV1(resourceIris, propertyIris, userProfile), log)
         case ResourceTypeGetRequestV1(resourceTypeIri, userProfile) => future2Message(sender(), getResourceTypeResponseV1(resourceTypeIri, userProfile), log)
         case checkSubClassRequest: CheckSubClassRequestV1 => future2Message(sender(), checkSubClass(checkSubClassRequest), log)
@@ -156,6 +157,98 @@ class OntologyResponderV1 extends ResponderV1 {
         case PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile) => future2Message(sender(), getPropertyTypesForResourceType(restypeId, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // New implementation
+
+
+
+    private def loadOntologies(): Future[LoadOntologiesResponse] = {
+        def getAllBaseDefs(iri: IRI, shallowInheritance: Map[IRI, Set[IRI]]): Set[IRI] = {
+            shallowInheritance.get(iri) match {
+                case Some(baseDefs) =>
+                    baseDefs ++ baseDefs.flatMap(baseDef => getAllBaseDefs(baseDef, shallowInheritance))
+
+                case None => Set.empty[IRI]
+            }
+        }
+
+        OntologyCache.clear()
+
+        for {
+            resourceDefsSparql <- Future(queries.sparql.v1.txt.getResourceClassDefinitions(triplestore = settings.triplestoreType).toString())
+            resourceDefsResponse <- (storeManager ? SparqlSelectRequest(resourceDefsSparql)).mapTo[SparqlSelectResponse]
+            resourceDefsRows = resourceDefsResponse.results.bindings
+            graphClassPairs: Set[(IRI, IRI)] = resourceDefsRows.map(row => (row.rowMap("graph"), row.rowMap("resourceClass"))).toSet
+            graphClassMap: Map[IRI, Set[IRI]] = graphClassPairs.groupBy(_._1).map { case (graphIri, pairs) => (graphIri, pairs.map(_._2)) }
+            _ = OntologyCache.namedGraphResourceClasses ++= graphClassMap
+
+
+            propertyDefsSparql = queries.sparql.v1.txt.getPropertyDefinitions(triplestore = settings.triplestoreType).toString()
+            propertyDefsResponse <- (storeManager ? SparqlSelectRequest(propertyDefsSparql)).mapTo[SparqlSelectResponse]
+            propertyDefsRows = propertyDefsResponse.results.bindings
+            graphPropPairs: Set[(IRI, IRI)] = propertyDefsRows.map(row => (row.rowMap("graph"), row.rowMap("prop"))).toSet
+            graphPropMap: Map[IRI, Set[IRI]] = graphPropPairs.groupBy(_._1).map { case (graphIri, pairs) => (graphIri, pairs.map(_._2)) }
+            _ = OntologyCache.namedGraphProperties ++= graphPropMap
+
+            resourceDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = resourceDefsRows.groupBy(_.rowMap("resourceClass"))
+            resourceClassIris = resourceDefsGrouped.keySet
+
+            propertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = propertyDefsRows.groupBy(_.rowMap("prop"))
+            propertyIris = propertyDefsGrouped.keySet
+
+            shallowResourceInheritance: Map[IRI, Set[IRI]] = resourceDefsGrouped.map {
+                case (resourceIri, rows) =>
+                    val baseClasses = rows.foldLeft(Set.empty[IRI]) {
+                        case (acc, row) => row.rowMap.get("resourceClassPred") match {
+                            case Some(pred) if pred == OntologyConstants.Rdfs.SubClassOf =>
+                                val baseClass = row.rowMap("resourceClassObj")
+
+                                // Filter out base classes represented by blank nodes.
+                                if (!baseClass.startsWith("_")) {
+                                    acc + baseClass
+                                } else {
+                                    acc
+                                }
+
+                            case _ => acc
+                        }
+                    }
+
+                    (resourceIri, baseClasses)
+            }
+
+            shallowPropertyInheritance: Map[IRI, Set[IRI]] = propertyDefsGrouped.map {
+                case (propertyIri, rows) =>
+                    val baseProperties = rows.filter(_.rowMap("propPred") == OntologyConstants.Rdfs.SubPropertyOf).map(_.rowMap("propObj")).toSet
+                    (propertyIri, baseProperties)
+            }
+
+            fullResourceInheritance: Map[String, Set[IRI]] = resourceClassIris.map {
+                resourceClassIri => (resourceClassIri, getAllBaseDefs(resourceClassIri, shallowResourceInheritance))
+            }.toMap
+
+            fullPropertyInheritance: Map[String, Set[IRI]] = propertyIris.map {
+                propertyIri => (propertyIri, getAllBaseDefs(propertyIri, shallowPropertyInheritance))
+            }.toMap
+
+
+            linkProps: Set[IRI] = propertyIris.filter(prop => fullPropertyInheritance(prop).contains(OntologyConstants.KnoraBase.HasLinkTo))
+            linkValueProps: Set[IRI] = propertyIris.filter(prop => fullPropertyInheritance(prop).contains(OntologyConstants.KnoraBase.HasLinkToValue))
+            fileValueProps: Set[IRI] = propertyIris.filter(prop => fullPropertyInheritance(prop).contains(OntologyConstants.KnoraBase.HasFileValue))
+
+        /*
+        resourceCardinalities = resourceDefsGrouped.map {
+
+        }*/
+
+        } yield LoadOntologiesResponse()
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     /**
       * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.
@@ -758,4 +851,18 @@ class OntologyResponderV1 extends ResponderV1 {
 
     }
 
+}
+
+object OntologyCache {
+    val propertyDefs = new collection.mutable.HashMap[IRI, PropertyEntityInfoV1]
+    val resourceClassDefs = new collection.mutable.HashMap[IRI, ResourceEntityInfoV1]
+    val namedGraphResourceClasses = new collection.mutable.HashMap[IRI, Set[IRI]]
+    val namedGraphProperties = new collection.mutable.HashMap[IRI, Set[IRI]]
+
+    def clear(): Unit = {
+        propertyDefs.clear()
+        resourceClassDefs.clear()
+        namedGraphResourceClasses.clear()
+        namedGraphProperties.clear()
+    }
 }

@@ -34,6 +34,17 @@ import spray.json._
 sealed trait OntologyResponderRequestV1 extends KnoraRequestV1
 
 /**
+  * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
+  * starts, before it accepts any API requests. A successful response will be a [[LoadOntologiesResponse]].
+  */
+case class LoadOntologiesRequest() extends OntologyResponderRequestV1
+
+/**
+  * Indicates that all ontologies were loaded.
+  */
+case class LoadOntologiesResponse()
+
+/**
   * Requests all available information about a list of ontology entities (resource classes and/or properties). A successful response will be an
   * [[EntityInfoGetResponseV1]].
   *

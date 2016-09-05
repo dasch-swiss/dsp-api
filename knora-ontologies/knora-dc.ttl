@@ -299,31 +299,3 @@
       knora-base:objectClassConstraint knora-base:TextValue ;
       
       rdfs:subPropertyOf knora-base:hasValue .
-
-
-
-
-
-
-#################################################################
-#
-#    Classes
-#
-#################################################################
-
-
-###  http://www.knora.org/ontology/knora-base#DateValue
-
-knora-base:DateValue rdf:type owl:Class .
-
-
-
-###  http://www.knora.org/ontology/knora-base#Resource
-
-knora-base:Resource rdf:type owl:Class .
-
-
-
-###  http://www.knora.org/ontology/knora-base#TextValue
-
-knora-base:TextValue rdf:type owl:Class .

@@ -35,7 +35,8 @@ object OntologyConstants {
     object Rdfs {
         val Label = "http://www.w3.org/2000/01/rdf-schema#label"
         val Comment = "http://www.w3.org/2000/01/rdf-schema#comment"
-        val SubclassOf = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
+        val SubClassOf = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
+        val SubPropertyOf = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf"
     }
 
     object Owl {
@@ -68,6 +69,7 @@ object OntologyConstants {
         val ObjectClassConstraint = "http://www.knora.org/ontology/knora-base#objectClassConstraint"
 
         val HasLinkTo = "http://www.knora.org/ontology/knora-base#hasLinkTo"
+        val HasLinkToValue = "http://www.knora.org/ontology/knora-base#hasLinkToValue"
         val IsRegionOf = "http://www.knora.org/ontology/knora-base#isRegionOf"
 
         val ValueHasString = "http://www.knora.org/ontology/knora-base#valueHasString"
