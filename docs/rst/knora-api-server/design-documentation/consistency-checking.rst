@@ -120,21 +120,52 @@ settings:
 The path to ``KnoraRules.pie`` must be an absolute path. The scripts provided
 with Knora to create test repositories set this path automatically.
 
-A GraphDB consistency rule is composed of two parts: a pattern that will match
-if corresponding triples are found in the data, and an optional pattern that
-will match if corresponding triples are not found in the data. If both
-parts match, this means that there is a consistency violation, and the
-transaction will be rolled back. A rule is written in this form:
+Consistency checking in GraphDB relies on reasoning. GraphDB's reasoning
+is Forward-chaining_, which means that reasoning is applied to the contents
+of each update, before the update transaction is committed, and the inferred
+statements are added to the repository.
+
+A GraphDB rules file can contain two types of rules: inference rules and
+consistency rules. Before committing an update transaction, GraphDB applies
+inference rules, then consistency rules. If any of the consistency rules are
+violated, the transaction is rolled back.
+
+An inference rule has this form:
 
 ::
 
-    Consistency: <rule name>
-        <pattern for triples found in the data>
+    Id: <rule_name>
+        <premises> <optional_constraints>
         -------------------------------
-        <pattern for triples not found in the data>
+        <consequences> <optional_constraints>
 
-The triple patterns can contain variable names for subjects, predicates, and
-objects, as well as actual property names.
+The premises are a pattern that tries to match statements found in the data.
+Optional constraints, which are enclosed in square brackets, make it possible
+to specify the premises more precisely, or to specify a named graph (see
+examples below). Consequences are the statements that will be inferred if the
+premises match. A line of hyphens separates premises from consequences.
+
+A GraphDB consistency rule has a similar form:
+
+::
+
+    Consistency: <rule_name>
+        <premises> <optional_constraints>
+        -------------------------------
+        <consequences> <optional_constraints>
+
+The differences between inference rules and consistency rules are:
+
+- A consistency rule begins with ``Consistency`` instead of ``Id``.
+- In a consistency rule, the consequences are optional. Instead of representing
+  statements to be inferred, they represent statements that must exist if the premises
+  are satisfied. In other words, if the premises are satisfied and the consequences
+  are not found, the rule is violated.
+- If a consistency rule doesn't specify any consequences, and the premises are
+  satisfied, the rule is violated.
+
+Rules use variable names for subjects, predicates, and objects, and they can use actual
+property names.
 
 Subject and object class constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -193,7 +224,8 @@ two optimisations suggested by Ontotext:
 1. Add custom inference rules to make tables (i.e. named graphs) of pre-calculated
    information about the cardinalities on properties of subjects,
    and use those tables to simplify the consistency rules.
-2. Use ``[Cut]`` to avoid generating redundant compiled rules.
+2. Use the ``[Cut]`` constraint to avoid generating certain redundant compiled rules
+   (see `Entailment rules`_).
 
 For example, to construct a table of subjects belonging to classes that have
 ``owl:maxCardinality 1`` on some property ``p``, we use the following custom
@@ -208,11 +240,20 @@ inference rule:
         ------------------------------------
         i p r [Context <onto:_maxCardinality_1_table>]
 
-Note that we have defined the prefix ``onto`` as ``http://www.ontotext.com/``
-in the ``Prefices`` section of the rules file. Now, to find out whether a
-subject belongs to a class with that cardinality on a given property, we only
-need to match one triple. The revised implementation of the rule
-``max_cardinality_1_with_deletion_flag`` is as follows:
+The constraint ``[Context <onto:_maxCardinality_1_table>]`` means that the
+inferred triples are added to the context (i.e. the named graph)
+``http://www.ontotext.com/_maxCardinality_1_table``.  (Note that we have defined the prefix
+``onto`` as ``http://www.ontotext.com/`` in the ``Prefices`` section of the rules file.)
+As the GraphDB documentation on Rules_ explains:
+
+    If the context is provided, the statements produced as rule consequences are
+    not ‘visible’ during normal query answering. Instead, they can only be used as
+    input to this or other rules and only when the rule premise explicitly uses
+    the given context.
+
+Now, to find out whether a subject belongs to a class with that cardinality on
+a given property, we only need to match one triple. The revised implementation
+of the rule ``max_cardinality_1_with_deletion_flag`` is as follows:
 
 ::
 
@@ -223,6 +264,9 @@ need to match one triple. The revised implementation of the rule
         j <knora-base:isDeleted> "false"^^xsd:boolean
         k <knora-base:isDeleted> "false"^^xsd:boolean
         ------------------------------------
+
+The constraint ``[Constraint j != k]`` means that the premises will be satisfied only
+if the variables ``j`` and ``k`` do not refer to the same thing.
 
 With these optimisations, the rule is faster by several orders of magnitude.
 
@@ -325,3 +369,6 @@ for that property.
 .. _Ontotext GraphDB: https://ontotext.com/products/graphdb/
 .. _OWL 2 Quick Reference Guide: https://www.w3.org/TR/owl2-quick-reference/
 .. _Reasoning: http://graphdb.ontotext.com/documentation/standard/reasoning.html
+.. _Rules: http://graphdb.ontotext.com/documentation/standard/reasoning.html#rules
+.. _Entailment rules: http://graphdb.ontotext.com/documentation/standard/reasoning.html#entailment-rules
+.. _Forward-chaining: http://graphdb.ontotext.com/documentation/standard/introduction-to-semantic-web.html#reasoning-strategies
