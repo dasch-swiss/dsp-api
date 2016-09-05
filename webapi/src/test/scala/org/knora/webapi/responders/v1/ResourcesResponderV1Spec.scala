@@ -281,7 +281,7 @@ object ResourcesResponderV1Spec {
             valueLabel = Some("Another thing that only project members can see"),
             targetResourceIri = "http://data.knora.org/project-thing-2"
         )),
-        occurrence = None,
+        occurrence = Some("0-n"),
         attributes = "restypeid=http://www.knora.org/ontology/knora-base#Resource",
         label = Some("hat Standoff Link zu"),
         is_annotation = "0",
@@ -962,6 +962,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     }
 
                     linkProps.size should ===(2)
+
                     linkProps.contains(hasStandoffLinkToOutgoingLink) should ===(true)
                     linkProps.contains(hasOtherThingOutgoingLink) should ===(true)
             }

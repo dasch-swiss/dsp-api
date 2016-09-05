@@ -30,16 +30,17 @@
 
 #################################################################
 #
-#    Base property for Knora system properties
+#    Base property of properties whose objects can't be marked
+#    as deleted
 #
 #################################################################
 
 
-###  http://www.knora.org/ontology/knora-base#systemProperty
+###  http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted
 
-:systemProperty rdf:type rdf:Property ;
+:objectCannotBeMarkedAsDeleted rdf:type rdf:Property ;
 
-                rdfs:comment "The base property of Knora system properties, i.e. properties that do not point to Knora resources or values"@en .
+                rdfs:comment "The base property of properties whose objects can't be marked as deleted"@en .
 
 
 
@@ -149,11 +150,11 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#hasContent
+###  http://www.knora.org/ontology/knora-base#resourceProperty
 
-:hasContent rdf:type owl:ObjectProperty ;
+:resourceProperty rdf:type owl:ObjectProperty ;
 
-          rdfs:comment "The base property of properties that point to Knora resources and values"@en ;
+          rdfs:comment "The base property of properties that point from Knora resources to Knora resources or values. These properties are required to have cardinalities in the resource classes in which they are used."@en ;
 
           :subjectClassConstraint :Resource .
 
@@ -179,7 +180,7 @@
 
 :attachedToProject rdf:type owl:ObjectProperty ;
 
-                   rdfs:subPropertyOf :systemProperty ;
+                   rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                    rdfs:comment "Connects a Resource or a Value to a project"@en ;
 
@@ -191,7 +192,7 @@
 
 :attachedToUser rdf:type owl:ObjectProperty ;
 
-                rdfs:subPropertyOf :systemProperty ;
+                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                 rdfs:comment "Connects a Resource or a Value to a user"@en ;
 
@@ -203,7 +204,7 @@
 
 :belongsTo rdf:type owl:ObjectProperty ;
 
-           rdfs:subPropertyOf :systemProperty ;
+           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
            rdfs:comment "Indicates which Institution a knoraProject belongs to"@en ;
 
@@ -217,7 +218,7 @@
 
 :currentproject rdf:type owl:ObjectProperty ;
 
-                rdfs:subPropertyOf :systemProperty ;
+                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                 rdfs:comment "This property indicates, which is the \"current project\" of a given user. A user can be part of any number of projects, but only one can be the active project."@en ;
 
@@ -454,7 +455,7 @@
 
 :hasLinkTo rdf:type owl:ObjectProperty ;
 
-           rdfs:subPropertyOf :hasContent ;
+           rdfs:subPropertyOf :resourceProperty ;
 
            rdfs:label "hat Link zu"@de ,
                       "has Link to"@en ,
@@ -578,7 +579,7 @@
 
 :standoffTagHasLink rdf:type owl:ObjectProperty ;
 
-                 rdfs:subPropertyOf :systemProperty ;
+                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                  :objectClassConstraint :Resource ;
 
@@ -591,7 +592,7 @@
 
 :standoffTagHasStart rdf:type owl:DatatypeProperty ;
 
-                  rdfs:subPropertyOf :systemProperty ;
+                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                   :subjectClassConstraint :StandoffTag ;
 
@@ -603,7 +604,7 @@
 
 :standoffTagHasEnd rdf:type owl:DatatypeProperty ;
 
-                rdfs:subPropertyOf :systemProperty ;
+                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                 :subjectClassConstraint :StandoffTag ;
 
@@ -615,7 +616,7 @@
 
 :standoffTagHasHref rdf:type owl:DatatypeProperty ;
 
-                 rdfs:subPropertyOf :systemProperty ;
+                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                  :subjectClassConstraint :StandoffUriTag ;
 
@@ -626,7 +627,7 @@
 
 :standoffTagHasStartIndex rdf:type owl:DatatypeProperty ;
 
-                  rdfs:subPropertyOf :systemProperty ;
+                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                   :subjectClassConstraint :StandoffTag ;
 
@@ -637,7 +638,7 @@
 
 :standoffTagHasEndIndex rdf:type owl:DatatypeProperty ;
 
-                  rdfs:subPropertyOf :systemProperty ;
+                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                   :subjectClassConstraint :StandoffTag ;
 
@@ -648,7 +649,7 @@
 
 :standoffTagHasStartParentIndex rdf:type owl:DatatypeProperty ;
 
-                  rdfs:subPropertyOf :systemProperty ;
+                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                   :subjectClassConstraint :StandoffTag ;
 
@@ -659,7 +660,7 @@
 
 :standoffTagHasEndParentIndex rdf:type owl:DatatypeProperty ;
 
-                  rdfs:subPropertyOf :systemProperty ;
+                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                   :subjectClassConstraint :StandoffTag ;
 
@@ -670,7 +671,7 @@
 
 :standoffTagHasUUID rdf:type owl:DatatypeProperty ;
 
-                  rdfs:subPropertyOf :systemProperty ;
+                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                   :subjectClassConstraint :StandoffTag ;
 
@@ -685,7 +686,7 @@
 
                 rdfs:comment "A hierarchical list is formed using the \"hasSubListNode\"-property"@en ;
 
-                rdfs:subPropertyOf :systemProperty ;
+                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                 :objectClassConstraint :ListNode ;
 
@@ -697,7 +698,7 @@
 
 :hasValue rdf:type owl:ObjectProperty ;
 
-          rdfs:subPropertyOf :hasContent ;
+          rdfs:subPropertyOf :resourceProperty ;
 
           :subjectClassConstraint :Resource ;
 
@@ -736,7 +737,7 @@
 
 :isInGroup rdf:type owl:ObjectProperty ;
 
-           rdfs:subPropertyOf :systemProperty ;
+           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
            rdfs:comment "The given User is part of the given UserGroup"@en ;
 
@@ -752,7 +753,7 @@
 
 :isInProject rdf:type owl:ObjectProperty ;
 
-             rdfs:subPropertyOf :systemProperty ;
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
              rdfs:comment "The given User is part of the given knoraProject"@en ;
 
@@ -830,8 +831,6 @@
 
 :previousValue rdf:type owl:ObjectProperty ;
 
-               rdfs:subPropertyOf :systemProperty ;
-
                rdfs:comment "Points to the previous verson of a value"@en ;
 
                :subjectClassConstraint :Value ;
@@ -861,7 +860,7 @@
 
 :standoffHasLink rdf:type owl:ObjectProperty ;
 
-                 rdfs:subPropertyOf :systemProperty ;
+                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                  :objectClassConstraint :Resource ;
 
@@ -873,7 +872,7 @@
 
 :valueHasStandoff rdf:type owl:ObjectProperty ;
 
-                  rdfs:subPropertyOf :systemProperty ;
+                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                   :objectClassConstraint :StandoffTag ;
 
@@ -902,7 +901,7 @@
 
 :hasPermissions rdf:type owl:DatatypeProperty ;
 
-                rdfs:subPropertyOf :systemProperty ;
+                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                 :objectDatatypeConstraint xsd:string .
 
@@ -912,7 +911,7 @@
 
 :address rdf:type owl:DatatypeProperty ;
 
-         rdfs:subPropertyOf :systemProperty ;
+         rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
          :objectDatatypeConstraint xsd:string ;
 
@@ -924,7 +923,7 @@
 
 :projectBasepath rdf:type owl:DatatypeProperty ;
 
-          rdfs:subPropertyOf :systemProperty ;
+          rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
           rdfs:comment "Basepath for digital objects which belong to this project"@en ;
 
@@ -938,7 +937,7 @@
 
 :creationDate rdf:type owl:DatatypeProperty ;
 
-              rdfs:subPropertyOf :systemProperty ;
+              rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
               rdfs:comment "Indicates when a resource was created"@en ;
 
@@ -952,7 +951,7 @@
 
 :deleteDate rdf:type owl:DatatypeProperty ;
 
-            rdfs:subPropertyOf :systemProperty ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
             rdfs:comment "Indicates when a resource or value was deleted"@en ;
 
@@ -966,7 +965,7 @@
 
 :description rdf:type owl:DatatypeProperty ;
 
-             rdfs:subPropertyOf :systemProperty ;
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
              rdfs:comment "A description of a resource class or a property class"@en ;
 
@@ -978,7 +977,7 @@
 
 :projectDescription rdf:type owl:DatatypeProperty ;
 
-             rdfs:subPropertyOf :systemProperty ;
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
              rdfs:comment "A description of a Knora project"@en ;
 
@@ -1028,7 +1027,7 @@
 
 :email rdf:type owl:DatatypeProperty ;
 
-       rdfs:subPropertyOf :systemProperty ;
+       rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
        rdfs:comment "The email address of a person or institution"@en ;
 
@@ -1130,7 +1129,7 @@
 
 :isDeleted rdf:type owl:DatatypeProperty ;
 
-           rdfs:subPropertyOf :systemProperty ;
+           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
            rdfs:comment "Exists and is true if the resource has been deleted"@en ;
 
@@ -1156,7 +1155,7 @@
 
 :isRootNode rdf:type owl:DatatypeProperty ;
 
-           rdfs:subPropertyOf :systemProperty ;
+           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
             :subjectClassConstraint :ListNode ;
 
@@ -1168,7 +1167,7 @@
 
 :hasRootNode rdf:type owl:ObjectProperty ;
 
-           rdfs:subPropertyOf :systemProperty ;
+           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
             :subjectClassConstraint :ListNode ;
 
@@ -1181,7 +1180,7 @@
 
 :lastModificationDate rdf:type owl:DatatypeProperty ;
 
-                      rdfs:subPropertyOf :systemProperty ;
+                      rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                       :subjectClassConstraint :Resource ;
 
@@ -1193,7 +1192,7 @@
 
 :listNodePosition rdf:type owl:DatatypeProperty ;
 
-                 rdfs:subPropertyOf :systemProperty ;
+                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                   :subjectClassConstraint :ListNode ;
 
@@ -1205,7 +1204,7 @@
 
 :listNodeName rdf:type owl:DatatypeProperty ;
 
-               rdfs:subPropertyOf :systemProperty ;
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                :subjectClassConstraint :ListNode ;
 
@@ -1217,7 +1216,7 @@
 
 :name rdf:type owl:DatatypeProperty ;
 
-      rdfs:subPropertyOf :systemProperty ;
+      rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
       :objectDatatypeConstraint xsd:string .
 
@@ -1251,7 +1250,7 @@
 
 :password rdf:type owl:DatatypeProperty ;
 
-          rdfs:subPropertyOf :systemProperty ;
+          rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
           rdfs:comment "An encrypted credential for access"@en ;
 
@@ -1265,7 +1264,7 @@
 
 :phone rdf:type owl:DatatypeProperty ;
 
-       rdfs:subPropertyOf :systemProperty ;
+       rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
        rdfs:comment "Phone number of a person, institution, etc."@en ;
 
@@ -1277,7 +1276,7 @@
 
 :preferredLanguage rdf:type owl:DatatypeProperty ;
 
-                   rdfs:subPropertyOf :systemProperty ;
+                   rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                    rdfs:comment "Language (\"en\", \"de\", \"fr\", \"it\", \"gr\", etc.)"@en ;
 
@@ -1289,7 +1288,7 @@
 
 :protocol rdf:type owl:DatatypeProperty ;
 
-          rdfs:subPropertyOf :systemProperty ;
+          rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
           rdfs:comment "An Internet protocol (\"http\", \"https\", etc.)"@en ;
 
@@ -1317,7 +1316,7 @@
 
            :objectDatatypeConstraint xsd:string ;
 
-           rdfs:subPropertyOf :systemProperty .
+           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
@@ -1329,7 +1328,7 @@
 
            :objectDatatypeConstraint xsd:string ;
 
-           rdfs:subPropertyOf :systemProperty .
+           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
@@ -1339,7 +1338,7 @@
 
            rdfs:comment "A comma-delimited list of keywords describing a project"@en ;
 
-           rdfs:subPropertyOf :systemProperty ;
+           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
            :subjectClassConstraint :knoraProject ;
 
@@ -1351,7 +1350,7 @@
 
 :projectLogo rdf:type owl:DatatypeProperty ;
 
-           rdfs:subPropertyOf :systemProperty ;
+           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
            :subjectClassConstraint :knoraProject ;
 
@@ -1373,7 +1372,7 @@
 
         :objectDatatypeConstraint xsd:string ;
 
-        rdfs:subPropertyOf :systemProperty .
+        rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
@@ -1397,7 +1396,7 @@
 
               rdfs:comment "A comment explaining why a resource or value was marked as deleted"@en ;
 
-              rdfs:subPropertyOf :systemProperty ;
+              rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
               # No :subjectClassConstraint, because this can be used with :Resource or :Value.
 
@@ -1421,9 +1420,9 @@
 
 :valueHas rdf:type owl:DatatypeProperty ;
 
-          # No :subjectClassConstraint, because this can be used with :Value or :StandoffTag.
+          :subjectClassConstraint :ValueBase ;
 
-          rdfs:subPropertyOf :systemProperty .
+          rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
@@ -1662,7 +1661,7 @@
 
 :website rdf:type owl:DatatypeProperty ;
 
-         rdfs:subPropertyOf :systemProperty ;
+         rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
          rdfs:comment "The URL of a web site"@en ;
 
@@ -1752,7 +1751,8 @@
 
 :ColorBase rdf:type owl:Class ;
 
-           rdfs:subClassOf [ rdf:type owl:Restriction ;
+           rdfs:subClassOf :ValueBase ,
+                           [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasColor ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
@@ -1804,26 +1804,27 @@
 
 :DateBase rdf:type owl:Class ;
 
-          rdfs:subClassOf [ rdf:type owl:Restriction ;
-                           owl:onProperty :valueHasCalendar ;
-                           owl:cardinality "1"^^xsd:nonNegativeInteger
-                         ] ,
-                         [ rdf:type owl:Restriction ;
-                           owl:onProperty :valueHasEndPrecision ;
-                           owl:cardinality "1"^^xsd:nonNegativeInteger
-                         ] ,
-                         [ rdf:type owl:Restriction ;
-                           owl:onProperty :valueHasEndJDC ;
-                           owl:cardinality "1"^^xsd:nonNegativeInteger
-                         ] ,
-                         [ rdf:type owl:Restriction ;
-                           owl:onProperty :valueHasStartPrecision ;
-                           owl:cardinality "1"^^xsd:nonNegativeInteger
-                         ] ,
-                         [ rdf:type owl:Restriction ;
-                           owl:onProperty :valueHasStartJDC ;
-                           owl:cardinality "1"^^xsd:nonNegativeInteger
-                         ] .
+          rdfs:subClassOf :ValueBase ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :valueHasCalendar ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :valueHasEndPrecision ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :valueHasEndJDC ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :valueHasStartPrecision ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :valueHasStartJDC ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] .
 
 
 ###  http://www.knora.org/ontology/knora-base#DateValue
@@ -1931,7 +1932,8 @@
 
 :DecimalBase rdf:type owl:Class ;
 
-             rdfs:subClassOf [ rdf:type owl:Restriction ;
+             rdfs:subClassOf :ValueBase ,
+                             [ rdf:type owl:Restriction ;
                                owl:onProperty :valueHasDecimal ;
                                owl:cardinality "1"^^xsd:nonNegativeInteger
                              ] .
@@ -2012,7 +2014,8 @@
 
 :IntBase rdf:type owl:Class ;
 
-          rdfs:subClassOf [ rdf:type owl:Restriction ;
+          rdfs:subClassOf :ValueBase ,
+                          [ rdf:type owl:Restriction ;
                             owl:onProperty :valueHasInteger ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] .
@@ -2031,7 +2034,8 @@
 
 :BooleanBase rdf:type owl:Class ;
 
-             rdfs:subClassOf [ rdf:type owl:Restriction ;
+             rdfs:subClassOf :ValueBase ,
+                             [ rdf:type owl:Restriction ;
                                owl:onProperty :valueHasBoolean ;
                                owl:cardinality "1"^^xsd:nonNegativeInteger
                              ] .
@@ -2052,7 +2056,8 @@
 
 :UriBase rdf:type owl:Class ;
 
-         rdfs:subClassOf [ rdf:type owl:Restriction ;
+         rdfs:subClassOf :ValueBase ,
+                         [ rdf:type owl:Restriction ;
                            owl:onProperty :valueHasUri ;
                            owl:cardinality "1"^^xsd:nonNegativeInteger
                          ] .
@@ -2070,7 +2075,8 @@
 
 :IntervalBase rdf:type owl:Class ;
 
-              rdfs:subClassOf [ rdf:type owl:Restriction ;
+              rdfs:subClassOf :ValueBase ,
+                              [ rdf:type owl:Restriction ;
                                 owl:onProperty :valueHasIntervalEnd ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
@@ -2309,6 +2315,14 @@
           rdfs:subClassOf [ rdf:type owl:Restriction ;
                             owl:onProperty :isDeleted ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :hasStandoffLinkTo ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :hasStandoffLinkToValue ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :hasRepresentation ;
@@ -2764,12 +2778,17 @@
            rdfs:comment "A group of Knora users"@en .
 
 
+###  http://www.knora.org/ontology/knora-base#ValueBase
+
+:ValueBase rdf:type owl:Class .
+
 
 ###  http://www.knora.org/ontology/knora-base#Value
 
 :Value rdf:type owl:Class ;
 
-       rdfs:subClassOf [ rdf:type owl:Restriction ;
+       rdfs:subClassOf :ValueBase,
+                       [ rdf:type owl:Restriction ;
                          owl:onProperty :valueCreationDate ;
                          owl:cardinality "1"^^xsd:nonNegativeInteger
                        ] ,
