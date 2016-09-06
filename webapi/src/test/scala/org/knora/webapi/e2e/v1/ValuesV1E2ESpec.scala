@@ -23,6 +23,7 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.{IRI, LiveActorMaker}
 import org.knora.webapi.e2e.E2ESpec
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
@@ -70,6 +71,7 @@ class ValuesV1E2ESpec extends E2ESpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(), 10.seconds)
     }
 
     "The Values Endpoint" should {

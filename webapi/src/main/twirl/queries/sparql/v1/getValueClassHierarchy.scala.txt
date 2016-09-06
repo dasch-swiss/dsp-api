@@ -21,43 +21,28 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets information about resource classes.
+ * Gets the class hierarchy of Knora value classes.
  *
  * @param triplestore the name of the triplestore being used.
- * @param entityIris a list of IRIs of resource classes to get information about.
  *@
-@(triplestore: String,
-  entityIris: Seq[IRI])
+@(triplestore: String)
 
-
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-SELECT ?s ?p ?o ?oProp ?oVal ?lang
+SELECT ?valueClass ?baseClass
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    @for((entityIri, index) <- entityIris.zipWithIndex) {
-        @if(index > 0) {
-            UNION
-        }
+    ?valueClass rdfs:subClassOf* knora-base:Value .
 
-        {
-            @*
-
-            Get all predicates and objects of the class being queried, except rdfs:subClassOf.
-
-            *@
-
-            BIND(IRI("@entityIri") as ?s)
-            ?s rdfs:subClassOf* knora-base:Resource .
-            ?s ?p ?o .
-            FILTER(?p != rdfs:subClassOf)
-            BIND(lang(?o) as ?lang)
-        }
+    OPTIONAL {
+        ?valueClass rdfs:subClassOf* ?baseClass .
+        FILTER (!isBlank(?baseClass))
     }
 }

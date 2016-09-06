@@ -30,12 +30,14 @@ import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{FakeTriplestore, SparqlUtil}
+import org.knora.webapi.util.FakeTriplestore
+import org.knora.webapi.util.SparqlResultProtocol._
+import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.io.Source
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
@@ -162,7 +164,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
             // _ = println(s"Result: $logDelimiter$resultStr")
 
             // Parse the response as a JSON object and generate a response message.
-            responseMessage <- SparqlUtil.parseJsonResponse(sparql, resultStr, log)
+            responseMessage <- parseJsonResponse(sparql, resultStr)
         } yield responseMessage
     }
 
@@ -322,6 +324,19 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
         resppnseStrFuture onComplete {
             case Success(responseStr) => log.info(s"Connection OK: ${responseStr.length}")
             case Failure(t) => log.error("Failed to connect to triplestore: " + t.getMessage)
+        }
+    }
+
+    private def parseJsonResponse(sparql: String, resultStr: String): Future[SparqlSelectResponse] = {
+        val parseTry = Try {
+            resultStr.parseJson.convertTo[SparqlSelectResponse]
+        }
+
+        parseTry match {
+            case Success(parsed) => Future.successful(parsed)
+            case Failure(e) =>
+                log.error(e, s"Couldn't parse response from triplestore:$logDelimiter$resultStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql")
+                Future.failed(TriplestoreResponseException("Couldn't parse JSON from triplestore", e, log))
         }
     }
 }

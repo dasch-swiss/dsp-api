@@ -33,7 +33,7 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-SELECT ?graph ?resourceClass ?resourceClassPred ?resourceClassObj ?restrictionPred ?restrictionObj
+SELECT ?graph ?resourceClass ?resourceClassPred ?resourceClassObj ?resourceClassObjLang ?cardinalityProp ?cardinality ?cardinalityVal
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -48,12 +48,15 @@ WHERE {
     {
         ?resourceClass rdfs:subClassOf ?restriction .
         ?restriction rdf:type owl:Restriction .
-        ?restriction owl:onProperty ?restrictionProp .
-        ?restrictionProp rdfs:subPropertyOf+ knora-base:resourceProperty .
-        ?restriction ?restrictionPred ?restrictionObj .
+        ?restriction owl:onProperty ?cardinalityProp .
+        ?cardinalityProp rdfs:subPropertyOf+ knora-base:resourceProperty .
+        ?restriction ?cardinality ?cardinalityVal .
+        FILTER(?cardinality = owl:cardinality || ?cardinality = owl:minCardinality || ?cardinality = owl:maxCardinality)
     }
     UNION
     {
         ?resourceClass ?resourceClassPred ?resourceClassObj .
+        FILTER(?resourceClassPred != rdf:type && !isBlank(?resourceClassObj))
+        BIND(lang(?resourceClassObj) as ?resourceClassObjLang)
     }
 }

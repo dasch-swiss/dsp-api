@@ -23,12 +23,12 @@ package org.knora.webapi.responders.v1
 import akka.actor.Props
 import akka.testkit._
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
-import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.duration._
 
@@ -330,6 +330,9 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
+
+        responderManager ! LoadOntologiesRequest()
+        expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
     "The search responder" should {

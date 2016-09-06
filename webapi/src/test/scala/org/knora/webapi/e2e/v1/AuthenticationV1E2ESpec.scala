@@ -21,6 +21,7 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.LiveActorMaker
 import org.knora.webapi.e2e.E2ESpec
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
@@ -89,6 +90,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(), 10.seconds)
     }
     "The Authentication Route ('v1/authenticate') with credentials supplied via URL parameters " should {
         "succeed with authentication and correct username / correct password " in {

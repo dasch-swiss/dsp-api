@@ -25,6 +25,7 @@ import java.util.UUID
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -154,7 +155,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         // expected Standoff information for <http://data.knora.org/e41ab5695c/values/d3398239089e04> in incunabula-data.ttl
         val textattr = Map(
-            "bold" -> Vector(StandoffPositionV1(
+            StandoffTagV1.bold -> Vector(StandoffPositionV1(
                 start = 21,
                 end = 25
             ))
@@ -255,6 +256,9 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
+
+        responderManager ! LoadOntologiesRequest()
+        expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
     "The values responder" should {

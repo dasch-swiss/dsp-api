@@ -25,6 +25,7 @@ import akka.io.IO
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.http._
+import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
@@ -43,7 +44,6 @@ import scala.concurrent.duration._
   * by those three actors.
   */
 object KnoraService {
-
 
     /**
       * The applications actor system.
@@ -72,36 +72,38 @@ object KnoraService {
     val settings = Settings(system)
 
     /**
-      * Starts Knora.
+      * Starts the Knora API server.
       */
-    def start = {
+    def start(): Unit = {
+        implicit val timeout = Timeout(300.seconds)
         CacheUtil.createCaches(settings.caches)
 
         if (StartupFlags.loadDemoData.get) {
             println("Start loading of demo data ...")
-            implicit val timeout = Timeout(300.seconds)
             val configList = settings.tripleStoreConfig.getConfigList("rdf-data")
             val rdfDataObjectList = configList.map {
                 config => RdfDataObjectFactory(config)
             }
             val resultFuture = storeManager ? ResetTriplestoreContent(rdfDataObjectList)
-            val result = Await.result(resultFuture, timeout.duration).asInstanceOf[ResetTriplestoreContentACK]
-            println("... loading of demo data finished!")
+            Await.result(resultFuture, timeout.duration).asInstanceOf[ResetTriplestoreContentACK]
+            println("... loading of demo data finished.")
         }
+
+        val ontologyCacheFuture = responderManager ? LoadOntologiesRequest()
+        Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[LoadOntologiesResponse]
 
         if (StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get) {
-            println("WARNING: Resetting Triplestore Content over HTTP is turned ON!")
+            println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
         }
 
-
         IO(Http) ! Http.Bind(knoraHttpServiceManager, settings.httpInterface, port = settings.httpPort)
-        println(s"Knora Webapi started! You can access it on http://${settings.httpInterface}:${settings.httpPort}.")
+        println(s"Knora API Server started. You can access it on http://${settings.httpInterface}:${settings.httpPort}.")
     }
 
     /**
       * Stops Knora.
       */
-    def stop() = {
+    def stop(): Unit = {
         system.terminate()
         CacheUtil.removeAllCaches()
         //Kamon.shutdown()

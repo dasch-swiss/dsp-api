@@ -27,6 +27,7 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.e2e.E2ESpec
+import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
@@ -83,6 +84,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(), 10.seconds)
     }
 
     private val firstThingIri = new MutableTestIri

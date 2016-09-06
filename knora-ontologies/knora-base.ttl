@@ -322,12 +322,11 @@
 
               :subjectClassConstraint :StillImageRepresentation ;
 
-			  :hasDefaultRestrictedViewPermission :UnknownUser ;
+			        :hasDefaultRestrictedViewPermission :UnknownUser ;
 
-      		  :hasDefaultViewPermission :KnownUser ;
+        		  :hasDefaultViewPermission :KnownUser ;
 
-      		  :hasDefaultModifyPermission :ProjectMember ,
-                                          :Owner ;
+      	  	  :hasDefaultModifyPermission :ProjectMember , :Owner ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -2122,7 +2121,9 @@
 
          :resourceIcon "link.gif"^^xsd:string ;
 
-         :hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember" ;
+         :hasDefaultViewPermission :UnknownUser , :KnownUser ;
+
+         :hasDefaultModifyPermission :ProjectMember ;
 
          rdfs:comment "Verknüpfung mehrerer Resourcen"@de ,
                       "Represents a generic link object"@en .
@@ -2283,7 +2284,9 @@
 
         :resourceIcon "region.gif"^^xsd:string ;
 
-        :hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember" ;
+        :hasDefaultViewPermission :UnknownUser , :KnownUser ;
+
+        :hasDefaultModifyPermission :ProjectMember ;
 
         rdfs:comment "Represents a geometric region of a resource. The geometry is represented currently as JSON string."@en .
 

@@ -22,7 +22,6 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
-import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
@@ -47,101 +46,6 @@ class OntologyResponderV1 extends ResponderV1 {
     private val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
-      * This was used to query the named graphs in SPARQL. In the future, we may need it again.
-      * Currently, we se a workaround (`getNamedGraph`).
-      * // get a list of the named graphs for ontology information
-      * private val namedGraphs: Seq[IRI] = settings.projectNamedGraphs.map {
-      * case (project: IRI, namedGraph: ProjectNamedGraphs) => namedGraph.ontology
-      * }.toList
-      */
-
-    /**
-      * Keys for the ontology cache.
-      */
-    private object OntologyCacheKeys {
-
-        import scala.math.Ordered.orderingToOrdered
-
-        /**
-          * The type of ontology cache keys for instances of [[ResourceEntityInfoV1]].
-          *
-          * @param resourceClassIri  the IRI of the resource class described.
-          * @param preferredLanguage the user's preferred language, which the key's value will use if it was available.
-          */
-        class ResourceEntityInfoKey(val resourceClassIri: IRI, val preferredLanguage: String) extends Ordered[ResourceEntityInfoKey] {
-            def compare(that: ResourceEntityInfoKey): Int = {
-                (this.resourceClassIri, this.preferredLanguage) compare(that.resourceClassIri, that.preferredLanguage)
-            }
-
-            override def equals(that: Any): Boolean = {
-                that match {
-                    case otherEntityInfoKey: ResourceEntityInfoKey =>
-                        this.resourceClassIri == otherEntityInfoKey.resourceClassIri && this.preferredLanguage == otherEntityInfoKey.preferredLanguage
-                    case _ => false
-                }
-            }
-
-            override def hashCode(): Int = {
-                new HashCodeBuilder(17, 37).append(resourceClassIri).append(preferredLanguage).toHashCode
-            }
-
-            override def toString: String = s"ResourceEntityInfoKey($resourceClassIri, $preferredLanguage)"
-        }
-
-        /**
-          * The type of ontology cache keys for instances of [[PropertyEntityInfoV1]].
-          *
-          * @param propertyIri       the IRI of the property described.
-          * @param preferredLanguage the user's preferred language, which the key's value will use if it was available.
-          */
-        class PropertyEntityInfoKey(val propertyIri: IRI, val preferredLanguage: String) extends Ordered[PropertyEntityInfoKey] {
-            def compare(that: PropertyEntityInfoKey): Int = {
-                (this.propertyIri, this.preferredLanguage) compare(that.propertyIri, that.preferredLanguage)
-            }
-
-            override def equals(that: Any): Boolean = {
-                that match {
-                    case otherEntityInfoKey: PropertyEntityInfoKey =>
-                        this.propertyIri == otherEntityInfoKey.propertyIri && this.preferredLanguage == otherEntityInfoKey.preferredLanguage
-                    case _ => false
-                }
-            }
-
-            override def hashCode(): Int = {
-                new HashCodeBuilder(19, 39).append(propertyIri).append(preferredLanguage).toHashCode
-            }
-
-            override def toString: String = s"PropertyEntityInfoKey($propertyIri, $preferredLanguage)"
-        }
-
-        /**
-          * The type of ontology cache keys for instances of [[NamedGraphEntityInfoV1]].
-          *
-          * @param namedGraphIri the Iri of the named graph.
-          */
-        class NamedGraphInfoKey(val namedGraphIri: IRI) extends Ordered[NamedGraphInfoKey] {
-            def compare(that: NamedGraphInfoKey): Int = {
-                (this.namedGraphIri) compare (that.namedGraphIri)
-            }
-
-            override def equals(that: Any): Boolean = {
-                that match {
-                    case otherEntityInfoKey: NamedGraphInfoKey =>
-                        this.namedGraphIri == otherEntityInfoKey.namedGraphIri
-                    case _ => false
-                }
-            }
-
-            override def hashCode(): Int = {
-                new HashCodeBuilder(21, 41).append(namedGraphIri).toHashCode
-            }
-
-            override def toString: String = s"NamedGraphInfoKey($namedGraphIri)"
-        }
-
-    }
-
-    /**
       * Receives a message extending [[OntologyResponderRequestV1]], and returns an appropriate response message, or
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
@@ -158,97 +62,309 @@ class OntologyResponderV1 extends ResponderV1 {
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // New implementation
-
-
-
+    /**
+      * Loads and caches all ontology information.
+      * @return a [[LoadOntologiesResponse]].
+      */
     private def loadOntologies(): Future[LoadOntologiesResponse] = {
-        def getAllBaseDefs(iri: IRI, shallowInheritance: Map[IRI, Set[IRI]]): Set[IRI] = {
-            shallowInheritance.get(iri) match {
+        case class OwlCardinality(propertyIri: IRI, cardinalityIri: IRI, cardinalityValue: Int, isLinkProp: Boolean, isLinkValueProp: Boolean, isFileValueProp: Boolean)
+
+        /**
+          * Recursively walks up an entity hierarchy, collecting the IRIs of all base entities.
+          *
+          * @param iri             the IRI of an entity.
+          * @param directRelations a map of entities to their direct base entities.
+          * @return all the base entities of the specified entity.
+          */
+        def getAllBaseDefs(iri: IRI, directRelations: Map[IRI, Set[IRI]]): Set[IRI] = {
+            directRelations.get(iri) match {
                 case Some(baseDefs) =>
-                    baseDefs ++ baseDefs.flatMap(baseDef => getAllBaseDefs(baseDef, shallowInheritance))
+                    baseDefs ++ baseDefs.flatMap(baseDef => getAllBaseDefs(baseDef, directRelations))
 
                 case None => Set.empty[IRI]
             }
         }
 
-        OntologyCache.clear()
+        /**
+          * Given a resource class, recursively adds its inherited cardinalities to the cardinalities it defines
+          * directly. A cardinality for a subproperty in a subclass overrides a cardinality for a base property in
+          * a base class.
+          *
+          * @param resourceClassIri                 the IRI of the resource class whose properties are to be computed.
+          * @param directSubClassRelations          a map of the cardinalities defined directly on each resource class.
+          * @param allSubPropertyRelations          a map in which each property IRI points to the full set of its base properties.
+          * @param directResourceClassCardinalities a map of the cardinalities defined directly on each resource class.
+          * @return the IRIs of the properties that have cardinalities on the resource class, or that it inherits
+          *         from its base classes.
+          */
+        def inheritCardinalities(resourceClassIri: IRI,
+                                 directSubClassRelations: Map[IRI, Set[IRI]],
+                                 allSubPropertyRelations: Map[IRI, Set[IRI]],
+                                 directResourceClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]]): Map[IRI, OwlCardinality] = {
+            // Recursively get properties that are available to inherit from base classes.
+            val cardinalitiesAvailableToInherit: Map[IRI, OwlCardinality] = directSubClassRelations(resourceClassIri).foldLeft(Map.empty[IRI, OwlCardinality]) {
+                case (acc, baseClass) =>
+                    acc ++ inheritCardinalities(
+                        resourceClassIri = baseClass,
+                        directSubClassRelations = directSubClassRelations,
+                        allSubPropertyRelations = allSubPropertyRelations,
+                        directResourceClassCardinalities = directResourceClassCardinalities
+                    )
+            }
+
+            // Get the properties that have cardinalities defined directly on this class.
+            val thisClassCardinalities: Map[IRI, OwlCardinality] = directResourceClassCardinalities(resourceClassIri)
+
+            // From the properties that are available to inherit, filter out the ones that are overridden by properties
+            // with cardinalities defined directly on this class.
+            val inheritedCardinalities: Map[IRI, OwlCardinality] = cardinalitiesAvailableToInherit.filterNot {
+                case (baseClassProp, baseClassCardinality) => thisClassCardinalities.exists {
+                    case (thisClassProp, cardinality) => allSubPropertyRelations(thisClassProp).contains(baseClassProp)
+                }
+            }
+
+            // Add the inherited properties to the ones with directly defined cardinalities.
+            thisClassCardinalities ++ inheritedCardinalities
+        }
 
         for {
+        // Get all resource class definitions.
             resourceDefsSparql <- Future(queries.sparql.v1.txt.getResourceClassDefinitions(triplestore = settings.triplestoreType).toString())
-            resourceDefsResponse <- (storeManager ? SparqlSelectRequest(resourceDefsSparql)).mapTo[SparqlSelectResponse]
-            resourceDefsRows = resourceDefsResponse.results.bindings
-            graphClassPairs: Set[(IRI, IRI)] = resourceDefsRows.map(row => (row.rowMap("graph"), row.rowMap("resourceClass"))).toSet
-            graphClassMap: Map[IRI, Set[IRI]] = graphClassPairs.groupBy(_._1).map { case (graphIri, pairs) => (graphIri, pairs.map(_._2)) }
-            _ = OntologyCache.namedGraphResourceClasses ++= graphClassMap
+            resourceDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resourceDefsSparql)).mapTo[SparqlSelectResponse]
+            resourceDefsRows: Seq[VariableResultsRow] = resourceDefsResponse.results.bindings
 
+            // Get the value class hierarchy.
+            valueClassesSparql = queries.sparql.v1.txt.getValueClassHierarchy(triplestore = settings.triplestoreType).toString()
+            valueClassesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(valueClassesSparql)).mapTo[SparqlSelectResponse]
+            valueClassesRows: Seq[VariableResultsRow] = valueClassesResponse.results.bindings
 
+            // Get all property definitions.
             propertyDefsSparql = queries.sparql.v1.txt.getPropertyDefinitions(triplestore = settings.triplestoreType).toString()
-            propertyDefsResponse <- (storeManager ? SparqlSelectRequest(propertyDefsSparql)).mapTo[SparqlSelectResponse]
-            propertyDefsRows = propertyDefsResponse.results.bindings
-            graphPropPairs: Set[(IRI, IRI)] = propertyDefsRows.map(row => (row.rowMap("graph"), row.rowMap("prop"))).toSet
-            graphPropMap: Map[IRI, Set[IRI]] = graphPropPairs.groupBy(_._1).map { case (graphIri, pairs) => (graphIri, pairs.map(_._2)) }
-            _ = OntologyCache.namedGraphProperties ++= graphPropMap
+            propertyDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(propertyDefsSparql)).mapTo[SparqlSelectResponse]
+            propertyDefsRows: Seq[VariableResultsRow] = propertyDefsResponse.results.bindings
 
+            // Make a map of IRIs of named graphs to IRIs of resource classes defined in each one.
+            graphClassMap: Map[IRI, Set[IRI]] = resourceDefsRows.groupBy(_.rowMap("graph")).map {
+                case (graphIri: IRI, graphRows: Seq[VariableResultsRow]) =>
+                    graphIri -> graphRows.map(_.rowMap("resourceClass")).toSet
+            }
+
+            // Make a map of IRIs of named graphs to IRIs of properties defined in each one.
+            graphPropMap: Map[IRI, Set[IRI]] = propertyDefsRows.groupBy(_.rowMap("graph")).map {
+                case (graphIri, graphRows) =>
+                    graphIri -> graphRows.map(_.rowMap("prop")).toSet
+            }
+
+            // Group the rows representing resource class definitions by resource class IRI.
             resourceDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = resourceDefsRows.groupBy(_.rowMap("resourceClass"))
             resourceClassIris = resourceDefsGrouped.keySet
 
+            // Group the rows representing property definitions by property IRI.
             propertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = propertyDefsRows.groupBy(_.rowMap("prop"))
             propertyIris = propertyDefsGrouped.keySet
 
-            shallowResourceInheritance: Map[IRI, Set[IRI]] = resourceDefsGrouped.map {
-                case (resourceIri, rows) =>
-                    val baseClasses = rows.foldLeft(Set.empty[IRI]) {
-                        case (acc, row) => row.rowMap.get("resourceClassPred") match {
-                            case Some(pred) if pred == OntologyConstants.Rdfs.SubClassOf =>
-                                val baseClass = row.rowMap("resourceClassObj")
+            // Group the rows representing value class relations by value class IRI.
+            valueClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = valueClassesRows.groupBy(_.rowMap("valueClass"))
 
-                                // Filter out base classes represented by blank nodes.
-                                if (!baseClass.startsWith("_")) {
-                                    acc + baseClass
-                                } else {
-                                    acc
-                                }
-
-                            case _ => acc
-                        }
-                    }
-
-                    (resourceIri, baseClasses)
+            // Make a map of resource class IRIs to their immediate base classes.
+            directResourceSubClassRelations: Map[IRI, Set[IRI]] = resourceDefsGrouped.map {
+                case (resourceClassIri, rows) =>
+                    val baseClasses = rows.filter(_.rowMap.get("resourceClassPred").contains(OntologyConstants.Rdfs.SubClassOf)).map(_.rowMap("resourceClassObj")).toSet
+                    (resourceClassIri, baseClasses)
             }
 
-            shallowPropertyInheritance: Map[IRI, Set[IRI]] = propertyDefsGrouped.map {
+            // Make a map of property IRIs to their immediate base properties.
+            directSubPropertyRelations: Map[IRI, Set[IRI]] = propertyDefsGrouped.map {
                 case (propertyIri, rows) =>
-                    val baseProperties = rows.filter(_.rowMap("propPred") == OntologyConstants.Rdfs.SubPropertyOf).map(_.rowMap("propObj")).toSet
+                    val baseProperties = rows.filter(_.rowMap.get("propPred").contains(OntologyConstants.Rdfs.SubPropertyOf)).map(_.rowMap("propObj")).toSet
                     (propertyIri, baseProperties)
             }
 
-            fullResourceInheritance: Map[String, Set[IRI]] = resourceClassIris.map {
-                resourceClassIri => (resourceClassIri, getAllBaseDefs(resourceClassIri, shallowResourceInheritance))
+            // Make a map in which each resource class IRI points to the full set of its base classes. A class is also
+            // a subclass of itself.
+            allResourceSubClassRelations: Map[IRI, Set[IRI]] = resourceClassIris.map {
+                resourceClassIri => (resourceClassIri, getAllBaseDefs(resourceClassIri, directResourceSubClassRelations) + resourceClassIri)
             }.toMap
 
-            fullPropertyInheritance: Map[String, Set[IRI]] = propertyIris.map {
-                propertyIri => (propertyIri, getAllBaseDefs(propertyIri, shallowPropertyInheritance))
+            // Make a map in which each property IRI points to the full set of its base properties. A property is also
+            // a subproperty of itself.
+            allSubPropertyRelations: Map[IRI, Set[IRI]] = propertyIris.map {
+                propertyIri => (propertyIri, getAllBaseDefs(propertyIri, directSubPropertyRelations) + propertyIri)
             }.toMap
 
+            // Make a map in which each value class IRI points to the full set of its base classes (excluding the ones
+            // whose names end in "Base", since they aren't used directly). A class is also a subclass of itself (this
+            // is handled by the SPARQL query).
+            allValueSubClassRelations: Map[IRI, Set[IRI]] = valueClassesGrouped.map {
+                case (valueClassIri, baseClassRows) =>
+                    valueClassIri -> baseClassRows.map(_.rowMap("baseClass")).filterNot(_.endsWith("Base")).toSet
+            }
 
-            linkProps: Set[IRI] = propertyIris.filter(prop => fullPropertyInheritance(prop).contains(OntologyConstants.KnoraBase.HasLinkTo))
-            linkValueProps: Set[IRI] = propertyIris.filter(prop => fullPropertyInheritance(prop).contains(OntologyConstants.KnoraBase.HasLinkToValue))
-            fileValueProps: Set[IRI] = propertyIris.filter(prop => fullPropertyInheritance(prop).contains(OntologyConstants.KnoraBase.HasFileValue))
+            // Make a set of all subproperties of knora-base:hasLinkTo.
+            linkProps: Set[IRI] = propertyIris.filter(prop => allSubPropertyRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkTo))
 
-        /*
-        resourceCardinalities = resourceDefsGrouped.map {
+            // Make a set of all subproperties of knora-base:hasLinkToValue.
+            linkValueProps: Set[IRI] = propertyIris.filter(prop => allSubPropertyRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkToValue))
 
-        }*/
+            // Make a set of all subproperties of knora-base:hasFileValue.
+            fileValueProps: Set[IRI] = propertyIris.filter(prop => allSubPropertyRelations(prop).contains(OntologyConstants.KnoraBase.HasFileValue))
 
+            // Make a map of the cardinalities defined directly on each resource class. Each resource class IRI points to a map of
+            // property IRIs to OwlCardinality objects.
+            directResourceClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]] = resourceDefsGrouped.map {
+                case (resourceClassIri, rows) =>
+                    val resourceClassCardinalities: Map[IRI, OwlCardinality] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
+                        cardinalityRow =>
+                            val cardinalityRowMap = cardinalityRow.rowMap
+                            val propertyIri = cardinalityRowMap("cardinalityProp")
+
+                            val owlCardinality = OwlCardinality(
+                                propertyIri = propertyIri,
+                                cardinalityIri = cardinalityRowMap("cardinality"),
+                                cardinalityValue = cardinalityRowMap("cardinalityVal").toInt,
+                                isLinkProp = linkProps.contains(propertyIri),
+                                isLinkValueProp = linkValueProps.contains(propertyIri),
+                                isFileValueProp = fileValueProps.contains(propertyIri)
+                            )
+
+                            propertyIri -> owlCardinality
+                    }.toMap
+
+                    resourceClassIri -> resourceClassCardinalities
+            }
+
+            // Allow each resource class to inherit cardinalities from its base classes.
+            resourceCardinalitiesWithInheritance: Map[IRI, Set[OwlCardinality]] = resourceClassIris.map {
+                resourceClassIri =>
+                    val resourceClassCardinalities: Set[OwlCardinality] = inheritCardinalities(
+                        resourceClassIri = resourceClassIri,
+                        directSubClassRelations = directResourceSubClassRelations,
+                        allSubPropertyRelations = allSubPropertyRelations,
+                        directResourceClassCardinalities = directResourceClassCardinalities
+                    ).values.toSet
+
+                    resourceClassIri -> resourceClassCardinalities
+            }.toMap
+
+            // Construct a ResourceEntityInfoV1 for each resource class.
+            resourceEntityInfos: Map[IRI, ResourceEntityInfoV1] = resourceDefsGrouped.map {
+                case (resourceClassIri, resourceClassRows) =>
+                    // Group the rows for each resource class by predicate IRI.
+                    val groupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = resourceClassRows.filter(_.rowMap.contains("resourceClassPred")).groupBy(_.rowMap("resourceClassPred")) - OntologyConstants.Rdfs.SubClassOf
+
+                    val predicates: Map[IRI, PredicateInfoV1] = groupedByPredicate.map {
+                        case (predicateIri, predicateRows) =>
+                            val (predicateRowsWithLang, predicateRowsWithoutLang) = predicateRows.partition(_.rowMap.contains("resourceClassObjLang"))
+                            val objects = predicateRowsWithoutLang.map(_.rowMap("resourceClassObj")).toSet
+                            val objectsWithLang = predicateRowsWithLang.map {
+                                predicateRow => predicateRow.rowMap("resourceClassObjLang") -> predicateRow.rowMap("resourceClassObj")
+                            }.toMap
+
+                            predicateIri -> PredicateInfoV1(
+                                predicateIri = predicateIri,
+                                ontologyIri = getOntologyIri(resourceClassIri),
+                                objects = objects,
+                                objectsWithLang = objectsWithLang
+                            )
+                    }
+
+                    // Get the OWL cardinalities for the class.
+                    val owlCardinalities = resourceCardinalitiesWithInheritance(resourceClassIri)
+
+                    // Identify the link properties, like value properties, and file value properties in the cardinalities.
+                    val linkProps = owlCardinalities.filter(_.isLinkProp).map(_.propertyIri)
+                    val linkValueProps = owlCardinalities.filter(_.isLinkValueProp).map(_.propertyIri)
+                    val fileValueProps = owlCardinalities.filter(_.isFileValueProp).map(_.propertyIri)
+
+                    // Make sure there is a link value property for each link property.
+                    val missingLinkValueProps = linkProps.map(linkProp => knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(linkProp)) -- linkValueProps
+                    if (missingLinkValueProps.nonEmpty) {
+                        throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has cardinalities for one or more link properties without corresponding link value properties. The missing link value property or properties: ${missingLinkValueProps.mkString(", ")}")
+                    }
+
+                    // Make sure there is a link property for each link value property.
+                    val missingLinkProps = linkValueProps.map(linkValueProp => knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(linkValueProp)) -- linkProps
+                    if (missingLinkProps.nonEmpty) {
+                        throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has cardinalities for one or more link value properties without corresponding link properties. The missing link property or properties: ${missingLinkProps.mkString(", ")}")
+                    }
+
+                    val resourceEntityInfo = ResourceEntityInfoV1(
+                        resourceClassIri = resourceClassIri,
+                        predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for resource class $resourceClassIri" }),
+                        cardinalities = owlCardinalities.map {
+                            owlCardinality =>
+                                // Convert the OWL cardinality to a Knora Cardinality enum value.
+                                owlCardinality.propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
+                                    propertyIri = owlCardinality.propertyIri,
+                                    owlCardinalityIri = owlCardinality.cardinalityIri,
+                                    owlCardinalityValue = owlCardinality.cardinalityValue
+                                )
+                        }.toMap,
+                        linkProperties = linkProps,
+                        linkValueProperties = linkValueProps,
+                        fileValueProperties = fileValueProps
+                    )
+
+                    resourceClassIri -> resourceEntityInfo
+            }
+
+            // Construct a PropertyEntityInfoV1 for each property definition.
+            propertyEntityInfos: Map[String, PropertyEntityInfoV1] = propertyDefsGrouped.map {
+                case (propertyIri, propertyRows) =>
+                    // Group the rows for each resource class by predicate IRI.
+                    val groupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = propertyRows.groupBy(_.rowMap("propPred")) - OntologyConstants.Rdfs.SubPropertyOf
+
+                    val predicates: Map[IRI, PredicateInfoV1] = groupedByPredicate.map {
+                        case (predicateIri, predicateRows) =>
+                            val (predicateRowsWithLang, predicateRowsWithoutLang) = predicateRows.partition(_.rowMap.contains("propObjLang"))
+                            val objects = predicateRowsWithoutLang.map(_.rowMap("propObj")).toSet
+                            val objectsWithLang = predicateRowsWithLang.map {
+                                predicateRow => predicateRow.rowMap("propObjLang") -> predicateRow.rowMap("propObj")
+                            }.toMap
+
+                            predicateIri -> PredicateInfoV1(
+                                predicateIri = predicateIri,
+                                ontologyIri = getOntologyIri(propertyIri),
+                                objects = objects,
+                                objectsWithLang = objectsWithLang
+                            )
+                    }
+
+                    val propertyEntityInfo = PropertyEntityInfoV1(
+                        propertyIri = propertyIri,
+                        isLinkProp = linkProps.contains(propertyIri),
+                        isLinkValueProp = linkValueProps.contains(propertyIri),
+                        isFileValueProp = fileValueProps.contains(propertyIri),
+                        predicates = predicates
+                    )
+
+                    propertyIri -> propertyEntityInfo
+            }
+
+            // Populate the ontology cache. TODO: Use a proper cache.
+            _ = OntologyCache.populateCache(
+                namedGraphResourceClasses = graphClassMap,
+                namedGraphProperties = graphPropMap,
+                resourceClassDefs = resourceEntityInfos,
+                subClassRelations = allResourceSubClassRelations ++ allValueSubClassRelations,
+                propertyDefs = propertyEntityInfos
+            )
         } yield LoadOntologiesResponse()
     }
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+      * Gets the IRI of the ontology that an entity belongs to, assuming that the entity IRI has the form `http://something.something#entityName`.
+      * The ontology IRI is assumed to be the part before the `#`. TODO: is this adequate?
+      *
+      * @param entityIri the entity IRI (e.g. `http://www.knora.org/ontology/incunabula#publisher`).
+      * @return the part before the `#`.
+      */
+    private def getOntologyIri(entityIri: IRI): String = {
+        entityIri.split("#")(0)
+    }
 
     /**
       * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.
@@ -259,255 +375,12 @@ class OntologyResponderV1 extends ResponderV1 {
       * @return an [[EntityInfoGetResponseV1]].
       */
     private def getEntityInfoResponseV1(resourceIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV1] = {
-
-        /**
-          * Gets the IRI of the ontology that an entity belongs to, assuming that the entity IRI has the form `http://something.something#entityName`.
-          * The ontology IRI is assumed to be the part before the `#`. TODO: is this adequate?
-          *
-          * @param entityIri the entity IRI (e.g. `http://www.knora.org/ontology/incunabula#publisher`).
-          * @return the part before the `#`.
-          */
-        def getOntologyIri(entityIri: IRI): String = {
-            entityIri.split("#")(0)
-        }
-
-        /**
-          * Queries the ontology for the given resource entity Iris and returns a Map of [[ResourceEntityInfoV1]] to be cached.
-          *
-          * @param resourceIris the resource entity Iris to be queried.
-          * @return a Map of [[ResourceEntityInfoV1]] to be cached.
-          */
-        def queryResourceEntityInfoResponse(resourceIris: Set[OntologyCacheKeys.ResourceEntityInfoKey]): Future[Map[OntologyCacheKeys.ResourceEntityInfoKey, ResourceEntityInfoV1]] = {
-
-            case class OwlCardinality(propertyIri: IRI, cardinalityIri: IRI, cardinalityValue: Int, isLinkProp: Boolean, isLinkValueProp: Boolean, isFileValueProp: Boolean)
-
-            val resourceClassIris = resourceIris.map(_.resourceClassIri).toVector
-
-            for {
-            // Get information about resource classes.
-                sparqlQueryStringForResourceClasses <- Future(queries.sparql.v1.txt.getResourceClassInfo(
-                    triplestore = settings.triplestoreType,
-                    entityIris = resourceClassIris
-                ).toString())
-                // _ = println(sparqlQueryStringForResourceClasses)
-                resourceClassesResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryStringForResourceClasses)).mapTo[SparqlSelectResponse]
-
-                // Filter the query results to get text in the user's preferred language (or the application's default language),
-                // if possible.
-                resourceClassesFilteredByLanguage = SparqlUtil.filterByLanguage(response = resourceClassesResponse,
-                    langSpecificColumnName = "o",
-                    preferredLanguage = userProfile.userData.lang,
-                    settings = settings
-                )
-
-                // Group the resource query results by subject (resource class IRI).
-                resourceClassesGroupedBySubject: Map[IRI, Seq[VariableResultsRow]] = resourceClassesFilteredByLanguage.groupBy(_.rowMap("s"))
-
-                // Ensure that all the queried IRIs actually refer to resource classes.
-                incorrectIris = resourceClassIris.toSet -- resourceClassesGroupedBySubject.keySet
-                _ = if (incorrectIris.nonEmpty) {
-                    val incorrectIrisStr = incorrectIris.mkString(", ")
-                    throw BadRequestException(s"One or more requested IRIs do not refer to subclasses of knora-base:Resource: $incorrectIrisStr")
-                }
-
-                // Get information about resource class cardinalities.
-                sparqlQueryStringForCardinalities = queries.sparql.v1.txt.getResourceClassCardinalities(
-                    triplestore = settings.triplestoreType,
-                    entityIris = resourceClassIris
-                ).toString()
-                // _ = println(sparqlQueryStringForCardinalities)
-                cardinalitiesResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryStringForCardinalities)).mapTo[SparqlSelectResponse]
-
-                // Group the resource query results by subject (resource class IRI).
-                cardinalitiesGroupedBySubject: Map[IRI, Seq[VariableResultsRow]] = cardinalitiesResponse.results.bindings.groupBy(_.rowMap("s"))
-
-                // Convert the results for each subject into an ResourceEntityInfoV1.
-                resourceEntities: Map[OntologyCacheKeys.ResourceEntityInfoKey, ResourceEntityInfoV1] = resourceClassesGroupedBySubject.map {
-                    case (resourceClass: IRI, rows: Seq[VariableResultsRow]) =>
-
-                        // Group resource class info by predicates (e.g. rdf:type)
-                        val groupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = rows.groupBy(_.rowMap("p"))
-
-                        // Get the cardinality information for each subject.
-                        val owlCardinalities = cardinalitiesGroupedBySubject.get(resourceClass) match {
-                            case Some(cardinalityRows) =>
-                                cardinalityRows.filter {
-                                    cardinalityRow =>
-                                        // Only return cardinalities for Knora value properties or Knora link properties (not for Knora system
-                                        // properties).
-                                        val cardinalityRowMap = cardinalityRow.rowMap
-                                        InputValidation.optionStringToBoolean(cardinalityRowMap.get("isKnoraValueProp")) || InputValidation.optionStringToBoolean(cardinalityRowMap.get("isLinkProp"))
-                                }.map {
-                                    cardinalityRow =>
-                                        val cardinalityRowMap = cardinalityRow.rowMap
-                                        OwlCardinality(
-                                            propertyIri = cardinalityRowMap("cardinalityProp"),
-                                            cardinalityIri = cardinalityRowMap("cardinality"),
-                                            cardinalityValue = cardinalityRowMap("cardinalityVal").toInt,
-                                            isLinkProp = InputValidation.optionStringToBoolean(cardinalityRowMap.get("isLinkProp")),
-                                            isLinkValueProp = InputValidation.optionStringToBoolean(cardinalityRowMap.get("isLinkValueProp")),
-                                            isFileValueProp = InputValidation.optionStringToBoolean(cardinalityRowMap.get("isFileValueProp"))
-                                        )
-                                }
-
-                            case None =>
-                                // TODO: can there be a resource class without cardinalities?
-                                Nil
-                        }
-
-                        // Identify the link properties, like value properties, and file value properties in the cardinalities.
-                        val linkProps = owlCardinalities.filter(_.isLinkProp).map(_.propertyIri).toSet
-                        val linkValueProps = owlCardinalities.filter(_.isLinkValueProp).map(_.propertyIri).toSet
-                        val fileValueProps = owlCardinalities.filter(_.isFileValueProp).map(_.propertyIri).toSet
-
-                        // Make sure there is a link value property for each link property.
-                        val missingLinkValueProps = linkProps.map(linkProp => knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(linkProp)) -- linkValueProps
-                        if (missingLinkValueProps.nonEmpty) {
-                            throw InconsistentTriplestoreDataException(s"Resource class $resourceClass has cardinalities for one or more link properties without corresponding link value properties. The missing link value property or properties: ${missingLinkValueProps.mkString(", ")}")
-                        }
-
-                        // Make sure there is a link property for each link value property.
-                        val missingLinkProps = linkValueProps.map(linkValueProp => knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(linkValueProp)) -- linkProps
-                        if (missingLinkProps.nonEmpty) {
-                            throw InconsistentTriplestoreDataException(s"Resource class $resourceClass has cardinalities for one or more link value properties without corresponding link properties. The missing link property or properties: ${missingLinkProps.mkString(", ")}")
-                        }
-                        // Make a PredicateInfoV1 for each of the subject's predicates.
-                        val predicates: Map[IRI, PredicateInfoV1] = groupedByPredicate.map {
-                            case (predicateIri, predicateRowList) =>
-                                predicateIri -> PredicateInfoV1(
-                                    predicateIri = predicateIri,
-                                    ontologyIri = getOntologyIri(predicateIri),
-                                    // Don't include cardinalities among the predicates, because we return them separately.
-                                    objects = predicateRowList.map(row => row.rowMap("o")).toSet
-                                )
-                        }
-
-                        new OntologyCacheKeys.ResourceEntityInfoKey(resourceClass, userProfile.userData.lang) -> ResourceEntityInfoV1(
-                            resourceIri = resourceClass,
-                            predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for resource class $resourceClass" }),
-                            cardinalities = owlCardinalities.map {
-                                owlCardinality =>
-                                    // Convert the OWL cardinality to a Knora Cardinality enum value.
-                                    val propertyIri = owlCardinality.propertyIri
-                                    val owlCardinalityIri = owlCardinality.cardinalityIri
-                                    val owlCardinalityValue = owlCardinality.cardinalityValue
-                                    val card = Cardinality.owlCardinality2KnoraCardinality(propertyIri, owlCardinalityIri, owlCardinalityValue)
-                                    propertyIri -> card
-                            }.toMap,
-                            linkProperties = linkProps,
-                            linkValueProperties = linkValueProps,
-                            fileValueProperties = fileValueProps
-                        )
-
-
-                }(breakOut) // http://stackoverflow.com/questions/1715681/scala-2-8-breakout
-
-            } yield new ErrorHandlingMap(resourceEntities, { key: OntologyCacheKeys.ResourceEntityInfoKey => s"Ontology entity $key not found" })
-        }
-
-        /**
-          * Queries the ontology for the given property entity Iris and returns a Map of [[PropertyEntityInfoV1]] to be cached.
-          *
-          * @param propertyIris the property entity Iris to be queried.
-          * @return a Map of [[PropertyEntityInfoV1]] to be cached.
-          */
-        def queryPropertyEntityInfoResponse(propertyIris: Set[OntologyCacheKeys.PropertyEntityInfoKey]): Future[Map[OntologyCacheKeys.PropertyEntityInfoKey, PropertyEntityInfoV1]] = {
-
-            for {
-            // get information about property entities
-                sparqlQueryStringForProps <- Future(queries.sparql.v1.txt.getEntityInfoForProps(
-                    triplestore = settings.triplestoreType,
-                    entityIris = propertyIris.map(_.propertyIri).toVector
-                ).toString())
-                propertiesResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryStringForProps)).mapTo[SparqlSelectResponse]
-
-                // Filter the query results to get text in the user's preferred language (or the application's default language),
-                // if possible.
-                propertiesFilteredByLanguage = SparqlUtil.filterByLanguage(response = propertiesResponse,
-                    langSpecificColumnName = "o",
-                    preferredLanguage = userProfile.userData.lang,
-                    settings = settings
-                )
-
-                // Group the property query results by subject.
-                propertiesGroupedBySubject: Map[IRI, Seq[VariableResultsRow]] = propertiesFilteredByLanguage.groupBy(_.rowMap("s"))
-
-                // Convert the results for each subject into an ResourceEntityInfoV1.
-                propertyEntities: Map[OntologyCacheKeys.PropertyEntityInfoKey, PropertyEntityInfoV1] = propertiesGroupedBySubject.map {
-                    case (propertyIri: IRI, rows: Seq[VariableResultsRow]) =>
-
-                        val isLinkProp = rows.head.rowMap.get("isLinkProp").exists(_.toBoolean)
-
-                        // group by predicates (e.g. rdfs:subPropertyOf, rdf:type)
-                        val groupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = rows.groupBy(_.rowMap("p"))
-
-                        // Make a PredicateInfoV1 for each of the subject's predicates.
-                        val predicates: Map[IRI, PredicateInfoV1] = groupedByPredicate.map {
-                            case (predicateIri, predicateRowList) =>
-                                predicateIri -> PredicateInfoV1(
-                                    predicateIri = predicateIri,
-                                    ontologyIri = getOntologyIri(propertyIri),
-                                    objects = predicateRowList.map(row => row.rowMap("o")).toSet
-                                )
-                        }
-
-                        new OntologyCacheKeys.PropertyEntityInfoKey(propertyIri, userProfile.userData.lang) -> PropertyEntityInfoV1(
-                            propertyIri = propertyIri,
-                            isLinkProp = isLinkProp,
-                            predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for ontology entity $propertyIri" })
-                        )
-
-                }(breakOut) // http://stackoverflow.com/questions/1715681/scala-2-8-breakout
-
-            } yield new ErrorHandlingMap(propertyEntities, { key: OntologyCacheKeys.PropertyEntityInfoKey => s"Ontology entity $key not found" })
-
-        }
-
-        for {
-
-        // if no resource Iris are given, just return an empty Map
-            resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV1] <- if (resourceIris.nonEmpty) {
-                for {
-                // Get the resource entity info from the cache, or query the triplestore and add the resource entity info to the cache.
-                    resourceCacheResultMap <- CacheUtil.getOrCacheItems(
-                        cacheName = OntologyCacheName,
-                        cacheKeys = resourceIris.map(iri => new OntologyCacheKeys.ResourceEntityInfoKey(iri, userProfile.userData.lang)),
-                        queryFun = queryResourceEntityInfoResponse
-                    )
-
-                    resourceEntityInfoMapToWrap = resourceCacheResultMap.map {
-                        case (entityInfoKey, entityInfo) => entityInfoKey.resourceClassIri -> entityInfo
-                    }
-
-                    resInfo = new ErrorHandlingMap(resourceEntityInfoMapToWrap, { key: IRI => s"Ontology entity $key not found" })
-
-                } yield resInfo
-            } else {
-                Future(Map.empty[IRI, ResourceEntityInfoV1])
-            }
-
-            // if no property Iris are given, just return an empty Map
-            propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1] <- if (propertyIris.nonEmpty) {
-                for {
-                // Get the property entity info from the cache, or query the triplestore and add the property entity info to the cache.
-                    propertyCacheResultMap: Map[OntologyCacheKeys.PropertyEntityInfoKey, PropertyEntityInfoV1] <- CacheUtil.getOrCacheItems(
-                        cacheName = OntologyCacheName,
-                        cacheKeys = propertyIris.map(iri => new OntologyCacheKeys.PropertyEntityInfoKey(iri, userProfile.userData.lang)),
-                        queryFun = queryPropertyEntityInfoResponse
-                    )
-
-                    propertyEntityInfoMapToWrap: Map[IRI, PropertyEntityInfoV1] = propertyCacheResultMap.map {
-                        case (entityInfoKey: OntologyCacheKeys.PropertyEntityInfoKey, entityInfo: PropertyEntityInfoV1) => entityInfoKey.propertyIri -> entityInfo
-                    }
-
-                    propInfo = new ErrorHandlingMap(propertyEntityInfoMapToWrap, { key: IRI => s"Ontology entity $key not found" })
-
-                } yield propInfo
-            } else {
-                Future(Map.empty[IRI, PropertyEntityInfoV1])
-            }
-
-        } yield EntityInfoGetResponseV1(resourceEntityInfoMap = resourceEntityInfoMap, propertyEntityInfoMap = propertyEntityInfoMap)
+        Future(
+            EntityInfoGetResponseV1(
+                resourceEntityInfoMap = OntologyCache.resourceClassDefs.filterKeys(resourceIris),
+                propertyEntityInfoMap = OntologyCache.propertyDefs.filterKeys(propertyIris)
+            )
+        )
     }
 
 
@@ -523,17 +396,17 @@ class OntologyResponderV1 extends ResponderV1 {
 
         for {
         // Get all information about the resource type, including its property cardinalities.
-            resourceInfoResponse: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(resourceIris = Set(resourceTypeIri), userProfile = userProfile)
-            resourceInfo: ResourceEntityInfoV1 = resourceInfoResponse.resourceEntityInfoMap(resourceTypeIri)
+            resourceClassInfoResponse: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(resourceIris = Set(resourceTypeIri), userProfile = userProfile)
+            resourceClassInfo: ResourceEntityInfoV1 = resourceClassInfoResponse.resourceEntityInfoMap(resourceTypeIri)
 
             // Get all information about those properties.
-            propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceInfo.cardinalities.keySet, userProfile = userProfile)
+            propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceClassInfo.cardinalities.keySet, userProfile = userProfile)
 
             // Build the property definitions.
-            propertyDefinitions: Set[PropertyDefinitionV1] = resourceInfo.cardinalities.filterNot {
+            propertyDefinitions: Set[PropertyDefinitionV1] = resourceClassInfo.cardinalities.filterNot {
                 // filter out the properties that point to LinkValue objects
                 case (propertyIri, cardinality) =>
-                    resourceInfo.linkValueProperties(propertyIri)
+                    resourceClassInfo.linkValueProperties(propertyIri)
             }.map {
                 case (propertyIri: IRI, cardinality: Cardinality.Value) =>
                     propertyInfo.propertyEntityInfoMap.get(propertyIri) match {
@@ -547,8 +420,8 @@ class OntologyResponderV1 extends ResponderV1 {
                                 PropertyDefinitionV1(
                                     id = propertyIri,
                                     name = propertyIri,
-                                    label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
-                                    description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
+                                    label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                    description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                                     vocabulary = entityInfo.predicates.values.head.ontologyIri,
                                     occurrence = cardinality.toString,
                                     valuetype_id = OntologyConstants.KnoraBase.LinkValue,
@@ -561,8 +434,8 @@ class OntologyResponderV1 extends ResponderV1 {
                                 PropertyDefinitionV1(
                                     id = propertyIri,
                                     name = propertyIri,
-                                    label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
-                                    description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
+                                    label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                    description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                                     vocabulary = entityInfo.predicates.values.head.ontologyIri,
                                     occurrence = cardinality.toString,
                                     valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
@@ -579,9 +452,9 @@ class OntologyResponderV1 extends ResponderV1 {
             resourceTypeResponse = ResourceTypeResponseV1(
                 restype_info = ResTypeInfoV1(
                     name = resourceTypeIri,
-                    label = resourceInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
-                    description = resourceInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
-                    iconsrc = resourceInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon),
+                    label = resourceClassInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                    description = resourceClassInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                    iconsrc = resourceClassInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon),
                     properties = propertyDefinitions
                 ),
                 userProfile.userData
@@ -590,26 +463,17 @@ class OntologyResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Checks whether a certain OWL class is a subclass of another OWL class.
+      * Checks whether a certain Knora resource or value class is a subclass of another class.
       *
       * @param checkSubClassRequest a [[CheckSubClassRequestV1]]
       * @return a [[CheckSubClassResponseV1]].
       */
     private def checkSubClass(checkSubClassRequest: CheckSubClassRequestV1): Future[CheckSubClassResponseV1] = {
-        // TODO: cache this data.
-
-        for {
-            sparqlQuery <- Future(
-                queries.sparql.v1.txt.checkSubClass(
-                    triplestore = settings.triplestoreType,
-                    subClassIri = checkSubClassRequest.subClassIri,
-                    superClassIri = checkSubClassRequest.superClassIri
-                ).toString()
+        Future(
+            CheckSubClassResponseV1(
+                isSubClass = OntologyCache.subClassRelations(checkSubClassRequest.subClassIri).contains(checkSubClassRequest.superClassIri)
             )
-
-            queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-
-        } yield CheckSubClassResponseV1(isSubClass = queryResponse.results.bindings.nonEmpty)
+        )
     }
 
     /**
@@ -646,53 +510,13 @@ class OntologyResponderV1 extends ResponderV1 {
       * @return a [[NamedGraphEntityInfoV1]].
       */
     private def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
-
-        def queryNamedGraphEntityV1(namedGraphInfoKey: OntologyCacheKeys.NamedGraphInfoKey): Future[NamedGraphEntityInfoV1] = {
-            val namedGraphIriToQuery = namedGraphInfoKey.namedGraphIri
-
-            for {
-                resourceTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getResourceTypesForNamedGraph(
-                    namedGraph = namedGraphIriToQuery,
-                    triplestore = settings.triplestoreType
-                ).toString())
-                resourceTypesInNamedGraphResponse <- (storeManager ? SparqlSelectRequest(resourceTypesInNamedGraphSparql)).mapTo[SparqlSelectResponse]
-
-                resourceClassIrisInNamedGraph = resourceTypesInNamedGraphResponse.results.bindings.map {
-                    (row) => row.rowMap("class")
-                }.toVector
-
-                propertyTypesInNamedGraphSparql <- Future(queries.sparql.v1.txt.getPropertyTypesForNamedGraph(
-                    namedGraph = namedGraphIriToQuery,
-                    triplestore = settings.triplestoreType
-                ).toString())
-                propertyTypesInNamedGraphResponse <- (storeManager ? SparqlSelectRequest(propertyTypesInNamedGraphSparql)).mapTo[SparqlSelectResponse]
-
-                propertyTypeIrisInNamedGraph = propertyTypesInNamedGraphResponse.results.bindings.map {
-                    (row) => row.rowMap("property")
-                }.toVector
-
-
-                // cache these results
-                namedGraphEntity = NamedGraphEntityInfoV1(
-                    namedGraphIri = namedGraphIriToQuery,
-                    propertyIris = propertyTypeIrisInNamedGraph,
-                    resourceClasses = resourceClassIrisInNamedGraph
-                )
-            } yield namedGraphEntity
-        }
-
-        for {
-
-            cacheKeyForNamedGraph <- Future(new OntologyCacheKeys.NamedGraphInfoKey(namedGraphIri))
-
-            namedGraphCacheResult <- CacheUtil.getOrCacheItem(
-                cacheName = OntologyCacheName,
-                cacheKey = cacheKeyForNamedGraph,
-                queryFun = queryNamedGraphEntityV1
+        Future(
+            NamedGraphEntityInfoV1(
+                namedGraphIri = namedGraphIri,
+                propertyIris = OntologyCache.namedGraphProperties(namedGraphIri),
+                resourceClasses = OntologyCache.namedGraphResourceClasses(namedGraphIri)
             )
-        } yield namedGraphCacheResult
-
-
+        )
     }
 
     /**
@@ -712,14 +536,14 @@ class OntologyResponderV1 extends ResponderV1 {
                 namedGraphEntityInfo: NamedGraphEntityInfoV1 <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
 
                 // get resinfo for each resource class in namedGraphEntityInfo
-                resInfosForNamedGraphFuture: Seq[Future[(String, ResourceTypeResponseV1)]] = namedGraphEntityInfo.resourceClasses.map {
+                resInfosForNamedGraphFuture: Set[Future[(String, ResourceTypeResponseV1)]] = namedGraphEntityInfo.resourceClasses.map {
                     (resClassIri) =>
                         for {
                             resInfo <- getResourceTypeResponseV1(resClassIri, userProfile)
                         } yield (resClassIri, resInfo)
                 }
 
-                resInfosForNamedGraph <- Future.sequence(resInfosForNamedGraphFuture)
+                resInfosForNamedGraph: Set[(IRI, ResourceTypeResponseV1)] <- Future.sequence(resInfosForNamedGraphFuture)
 
                 resourceTypes: Vector[ResourceTypeV1] = resInfosForNamedGraph.map {
                     case (resClassIri, resInfo) =>
@@ -733,7 +557,7 @@ class OntologyResponderV1 extends ResponderV1 {
 
                         ResourceTypeV1(
                             id = resClassIri,
-                            label = resInfo.restype_info.label.getOrElse(throw InconsistentTriplestoreDataException(s"No label given for ${resClassIri}")),
+                            label = resInfo.restype_info.label.getOrElse(throw InconsistentTriplestoreDataException(s"No label given for $resClassIri")),
                             properties = properties
                         )
                 }.toVector
@@ -774,9 +598,11 @@ class OntologyResponderV1 extends ResponderV1 {
         def getPropertiesForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[Vector[PropertyDefinitionInNamedGraphV1]] = {
             for {
                 namedGraphEntityInfo <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
-                propertyIris: Vector[IRI] = namedGraphEntityInfo.propertyIris
-                entities: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = propertyIris.toSet, userProfile = userProfile)
-                propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1] = entities.propertyEntityInfoMap
+                propertyIris: Set[IRI] = namedGraphEntityInfo.propertyIris
+                entities: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = propertyIris, userProfile = userProfile)
+                propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1] = entities.propertyEntityInfoMap.filterNot {
+                    case (propertyIri, propertyEntityInfo) => propertyEntityInfo.isLinkValueProp
+                }
 
                 propertyDefinitions: Vector[PropertyDefinitionInNamedGraphV1] = propertyEntityInfoMap.map {
                     case (propertyIri: IRI, entityInfo: PropertyEntityInfoV1) =>
@@ -789,8 +615,8 @@ class OntologyResponderV1 extends ResponderV1 {
                             PropertyDefinitionInNamedGraphV1(
                                 id = propertyIri,
                                 name = propertyIri,
-                                label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
-                                description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
+                                label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                                 vocabulary = entityInfo.predicates.values.head.ontologyIri,
                                 valuetype_id = OntologyConstants.KnoraBase.LinkValue,
                                 attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
@@ -801,8 +627,8 @@ class OntologyResponderV1 extends ResponderV1 {
                             PropertyDefinitionInNamedGraphV1(
                                 id = propertyIri,
                                 name = propertyIri,
-                                label = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Label),
-                                description = entityInfo.getPredicateObject(OntologyConstants.Rdfs.Comment),
+                                label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                                 vocabulary = entityInfo.predicates.values.head.ontologyIri,
                                 valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
                                 attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute)),
@@ -854,15 +680,21 @@ class OntologyResponderV1 extends ResponderV1 {
 }
 
 object OntologyCache {
-    val propertyDefs = new collection.mutable.HashMap[IRI, PropertyEntityInfoV1]
-    val resourceClassDefs = new collection.mutable.HashMap[IRI, ResourceEntityInfoV1]
-    val namedGraphResourceClasses = new collection.mutable.HashMap[IRI, Set[IRI]]
-    val namedGraphProperties = new collection.mutable.HashMap[IRI, Set[IRI]]
+    var propertyDefs: Map[IRI, PropertyEntityInfoV1] = Map.empty[IRI, PropertyEntityInfoV1]
+    var resourceClassDefs: Map[IRI, ResourceEntityInfoV1] = Map.empty[IRI, ResourceEntityInfoV1]
+    var namedGraphResourceClasses: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]]
+    var namedGraphProperties: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]]
+    var subClassRelations: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]]
 
-    def clear(): Unit = {
-        propertyDefs.clear()
-        resourceClassDefs.clear()
-        namedGraphResourceClasses.clear()
-        namedGraphProperties.clear()
+    def populateCache(namedGraphResourceClasses: Map[IRI, Set[IRI]],
+                      namedGraphProperties: Map[IRI, Set[IRI]],
+                      resourceClassDefs: Map[IRI, ResourceEntityInfoV1],
+                      subClassRelations: Map[IRI, Set[IRI]],
+                      propertyDefs: Map[IRI, PropertyEntityInfoV1]): Unit = {
+        OntologyCache.namedGraphResourceClasses = new ErrorHandlingMap(namedGraphResourceClasses, { key => s"Named graph not found: $key" })
+        OntologyCache.namedGraphProperties = new ErrorHandlingMap(namedGraphProperties, { key => s"Named graph not found: $key" })
+        OntologyCache.resourceClassDefs = new ErrorHandlingMap(resourceClassDefs, { key => s"Resource class not found: $key" })
+        OntologyCache.subClassRelations = new ErrorHandlingMap(subClassRelations, { key => s"Class not found: $key" })
+        OntologyCache.propertyDefs = new ErrorHandlingMap(propertyDefs, { key => s"Property not found: $key" })
     }
 }

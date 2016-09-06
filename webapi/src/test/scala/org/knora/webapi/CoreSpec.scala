@@ -56,7 +56,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     final override def beforeAll() {
         atStartup()
         CacheUtil.createCaches(settings.caches)
-        // memusage
+        // memusage()
     }
 
     protected def atStartup() {}
@@ -65,7 +65,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
         system.terminate()
         atTermination()
         CacheUtil.removeAllCaches()
-        // memusage
+        // memusage()
     }
 
     protected def atTermination() {}
@@ -79,7 +79,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
 
     def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load()))
 
-    def memusage: Unit = {
+    def memusage(): Unit = {
         // memory info
         val mb = 1024 * 1024
         val runtime = Runtime.getRuntime

@@ -85,7 +85,7 @@ case class ResourceTypeResponseV1(restype_info: ResTypeInfoV1,
 }
 
 /**
-  * Checks whether an OWL class is a subclass of (or identical to) another OWL class. This message is used
+  * Checks whether a Knora resource or value class is a subclass of (or identical to) another class. This message is used
   * internally by Knora, and is not part of Knora API v1. A successful response will be a [[CheckSubClassResponseV1]].
   *
   * @param subClassIri   the IRI of the subclass.
@@ -184,10 +184,11 @@ case class PropertyTypesForResourceTypeResponseV1(properties: Vector[PropertyDef
 /**
   * Represents a predicate that is asserted about a given ontology entity, and the objects of that predicate.
   *
-  * @param ontologyIri the IRI of the ontology in which the assertions occur.
-  * @param objects     the objects of the predicate.
+  * @param ontologyIri     the IRI of the ontology in which the assertions occur.
+  * @param objects         the objects of the predicate that have no language codes.
+  * @param objectsWithLang the objects of the predicate that have language codes: a Map of language codes to literals.
   */
-case class PredicateInfoV1(predicateIri: IRI, ontologyIri: IRI, objects: Set[String])
+case class PredicateInfoV1(predicateIri: IRI, ontologyIri: IRI, objects: Set[String], objectsWithLang: Map[String, String])
 
 object Cardinality extends Enumeration {
     type Cardinality = Value
@@ -255,16 +256,54 @@ sealed trait EntityInfoV1 {
     val predicates: Map[IRI, PredicateInfoV1]
 
     /**
-      * Returns the first object specified for a given predicate.
+      * Returns an object for a given predicate. If requested, attempts to return the object in the user's preferred
+      * language, in the system's default language, or in any language, in that order.
       *
       * @param predicateIri the IRI of the predicate.
-      * @return the predicate's first object, or [[None]] if this entity doesn't have the specified predicate, or
+      * @param preferredLangs the user's preferred language and the system's default language.
+      * @return an object for the predicate, or [[None]] if this entity doesn't have the specified predicate, or
       *         if the predicate has no objects.
       */
-    def getPredicateObject(predicateIri: IRI): Option[String] = {
+    def getPredicateObject(predicateIri: IRI, preferredLangs: Option[(String, String)] = None): Option[String] = {
+        // Does the predicate exist?
         predicates.get(predicateIri) match {
             case Some(predicateInfo) =>
-                predicateInfo.objects.headOption
+                // Yes. Were preferred languages specified?
+                preferredLangs match {
+                    case Some((userLang, defaultLang)) =>
+                        // Yes. Is the object available in the user's preferred language?
+                        predicateInfo.objectsWithLang.get(userLang) match {
+                            case Some(objectInUserLang) =>
+                                // Yes.
+                                Some(objectInUserLang)
+                            case None =>
+                                // The object is not available in the user's preferred language. Is it available
+                                // in the system default language?
+                                predicateInfo.objectsWithLang.get(defaultLang) match {
+                                    case Some(objectInDefaultLang) =>
+                                        // Yes.
+                                        Some(objectInDefaultLang)
+                                    case None =>
+                                        // The object is not available in the system default language. Is it available
+                                        // without a language tag?
+                                        predicateInfo.objects.headOption match {
+                                            case Some(objectWithoutLang) =>
+                                                // Yes.
+                                                Some(objectWithoutLang)
+                                            case None =>
+                                                // The object is not available without a language tag. Return it in
+                                                // any other language.
+                                                predicateInfo.objectsWithLang.values.headOption
+                                        }
+                                }
+                        }
+
+                    case None =>
+                        // Preferred languages were not specified. Take the first object without a language tag.
+                        predicateInfo.objects.headOption
+
+                }
+
             case None => None
         }
     }
@@ -288,16 +327,17 @@ sealed trait EntityInfoV1 {
 /**
   * Represents the assertions about a given resource entity.
   *
-  * @param resourceIri         the IRI of the queried entity.
+  * @param resourceClassIri    the IRI of the resource class.
   * @param predicates          a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
-  * @param cardinalities       a [[Map]] of predicates representing cardinalities to [[Cardinality.Value]] objects.
-  * @param linkProperties      a [[Set]] of IRIs of properties of the resource that point to other resources.
-  * @param linkValueProperties a [[Set]] of IRIs of properties of the resource
+  * @param cardinalities       a [[Map]] of properties to [[Cardinality.Value]] objects representing the resource class's
+  *                            cardinalities on those properties.
+  * @param linkProperties      a [[Set]] of IRIs of properties of the resource class that point to other resources.
+  * @param linkValueProperties a [[Set]] of IRIs of properties of the resource class
   *                            that point to `LinkValue` objects.
-  * @param fileValueProperties a [[Set]] of IRIs of properties of the resource
+  * @param fileValueProperties a [[Set]] of IRIs of properties of the resource class
   *                            that point to `FileValue` objects.
   */
-case class ResourceEntityInfoV1(resourceIri: IRI,
+case class ResourceEntityInfoV1(resourceClassIri: IRI,
                                 predicates: Map[IRI, PredicateInfoV1],
                                 cardinalities: Map[IRI, Cardinality.Value],
                                 linkProperties: Set[IRI],
@@ -309,10 +349,14 @@ case class ResourceEntityInfoV1(resourceIri: IRI,
   *
   * @param propertyIri the Iri of the queried property entity.
   * @param isLinkProp  `true` if the property is a subproperty of `knora-base:hasLinkTo`.
+  * @param isLinkValueProp  `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
+  * @param isFileValueProp  `true` if the property is a subproperty of `knora-base:hasFileValue`.
   * @param predicates  a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
   */
 case class PropertyEntityInfoV1(propertyIri: IRI,
                                 isLinkProp: Boolean,
+                                isLinkValueProp: Boolean,
+                                isFileValueProp: Boolean,
                                 predicates: Map[IRI, PredicateInfoV1]) extends EntityInfoV1
 
 /**
@@ -323,8 +367,8 @@ case class PropertyEntityInfoV1(propertyIri: IRI,
   * @param propertyIris    the properties defined in the named graph.
   */
 case class NamedGraphEntityInfoV1(namedGraphIri: IRI,
-                                  resourceClasses: Vector[IRI],
-                                  propertyIris: Vector[IRI])
+                                  resourceClasses: Set[IRI],
+                                  propertyIris: Set[IRI])
 
 /**
   * Represents information about a resource type.

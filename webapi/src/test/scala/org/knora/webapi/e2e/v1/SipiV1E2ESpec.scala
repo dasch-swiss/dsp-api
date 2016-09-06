@@ -28,6 +28,7 @@ import akka.actor._
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.e2e.E2ESpec
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
@@ -81,6 +82,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(), 10.seconds)
     }
 
     object RequestParams {
