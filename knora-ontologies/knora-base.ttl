@@ -2671,7 +2671,7 @@
 
 :StillImageRepresentation rdf:type owl:Class ;
 
-                          rdfs:subClassOf :Representation  ,
+                          rdfs:subClassOf :Representation ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :hasStillImageFileValue ;
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger

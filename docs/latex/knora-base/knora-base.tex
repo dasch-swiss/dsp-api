@@ -79,7 +79,7 @@
 \title{The Knora Base Ontology}
 \author{Lukas Rosenthaler, Benjamin Geer, Tobias Schweizer, Ivan Subotic\\Digital Humanities Lab, University of Basel}
 
-\date{3 August 2016}
+\date{7 September 2016}
 
 \begin{document}
 
@@ -875,6 +875,24 @@ Knora supports, and attempts to enforce, the following cardinality constraints:
 	\item[owl:maxCardinality 1] A resource of this class may have zero or one instance of the specified property.
 	\item[owl:minCardinality 0] A resource of this class may have zero or more instances of the specified property.
 \end{description}
+
+Knora requires cardinalities to be defined using blank nodes, as in the following example from \texttt{knora-base}:
+
+\begin{verbatim}
+:Representation rdf:type owl:Class ;
+    rdfs:subClassOf :Resource ,
+        [ rdf:type owl:Restriction ;
+          owl:onProperty :hasFileValue ;
+          owl:minCardinality "1"^^xsd:nonNegativeInteger ] .
+        
+:StillImageRepresentation rdf:type owl:Class ;
+    rdfs:subClassOf :Representation ,
+        [ rdf:type owl:Restriction ;
+          owl:onProperty :hasStillImageFileValue ;
+          owl:minCardinality "1"^^xsd:nonNegativeInteger ] .
+\end{verbatim}
+
+A resource class inherits cardinalities from its superclasses. Also, cardinalities in the subclass can override cardinalities that would otherwise be inherited from the superclass. Specifically, if a superclass has a cardinality on a property P, and a subclass has a cardinality on a subproperty of P, the subclass's cardinality overrides the superclass's cardinality. In the example above, \texttt{hasStillImageFileValue} is a subproperty of \texttt{hasFileValue}. Therefore, the cardinality on \texttt{hasStillImageFileValue} overrides (i.e. replaces) the one on \texttt{hasFileValue}.
 
 For more information about OWL cardinalities, see~\cite[§2.1, Object Property Restrictions]{OWL_2_Quick_Reference_Guide}.
 

@@ -29,6 +29,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 
 import scala.collection.breakOut
 import scala.concurrent.Future
@@ -36,14 +37,40 @@ import scala.concurrent.Future
 /**
   * Handles requests for information about ontology entities.
   *
-  * The results of these requests are cached to improve performance. To clear the cache, you currently have to restart
-  * the application. When updates are implemented in this responder, it will clear its cache on each update.
+  * All ontology data is loaded and cached when the application starts. To refresh the cache, you currently have to restart
+  * the application.
   */
 class OntologyResponderV1 extends ResponderV1 {
 
-    private val OntologyCacheName = "ontologyCache"
     private val knoraIdUtil = new KnoraIdUtil
     private val valueUtilV1 = new ValueUtilV1(settings)
+    private val valueFactory = SimpleValueFactory.getInstance()
+
+    /**
+      * The name of the ontology cache.
+      */
+    private val OntologyCacheName = "ontologyCache"
+
+    /**
+      * The cache key under which cached ontology data is stored.
+      */
+    private val OntologyCacheKey = "ontologyCacheData"
+
+    /**
+      * A container for all the cached ontology data.
+      *
+      * @param namedGraphResourceClasses a map of named graph IRIs to sets of resource IRIs defined in each named graph.
+      * @param namedGraphProperties a map of property IRIs to sets of property IRIs defined in each named graph.
+      * @param resourceClassDefs a map of resource class IRIs to resource class definitions.
+      * @param subClassRelations a map of IRIs of resource and value classes to sets of the IRIs of their base classes.
+      * @param propertyDefs a map of property IRIs to property definitions.
+      */
+    case class OntologyCacheData(namedGraphResourceClasses: Map[IRI, Set[IRI]],
+                                 namedGraphProperties: Map[IRI, Set[IRI]],
+                                 resourceClassDefs: Map[IRI, ResourceEntityInfoV1],
+                                 subClassRelations: Map[IRI, Set[IRI]],
+                                 propertyDefs: Map[IRI, PropertyEntityInfoV1])
+
 
     /**
       * Receives a message extending [[OntologyResponderRequestV1]], and returns an appropriate response message, or
@@ -64,10 +91,38 @@ class OntologyResponderV1 extends ResponderV1 {
 
     /**
       * Loads and caches all ontology information.
+      *
       * @return a [[LoadOntologiesResponse]].
       */
     private def loadOntologies(): Future[LoadOntologiesResponse] = {
-        case class OwlCardinality(propertyIri: IRI, cardinalityIri: IRI, cardinalityValue: Int, isLinkProp: Boolean, isLinkValueProp: Boolean, isFileValueProp: Boolean)
+        /**
+          * A temporary container for information about an OWL cardinality and the property it applies to.
+          *
+          * @param propertyIri the IRI of the property that the cardinality applies to.
+          * @param cardinalityIri the IRI of the cardinality (e.g. `http://www.w3.org/2002/07/owl#minCardinality`).
+          * @param cardinalityValue the value of the cardinality (in Knora, this is always 0 or 1).
+          * @param isLinkProp `true` if the property is a subproperty of `knora-base:hasLinkTo`.
+          * @param isLinkValueProp `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
+          * @param isFileValueProp `true` if the property is a subproperty of `knora-base:hasFileValue`.
+          */
+        case class OwlCardinality(propertyIri: IRI,
+                                  cardinalityIri: IRI,
+                                  cardinalityValue: Int,
+                                  isLinkProp: Boolean,
+                                  isLinkValueProp: Boolean,
+                                  isFileValueProp: Boolean)
+
+        /**
+          * Gets the IRI of the ontology that an entity belongs to. This is assumed to be the namespace
+          * part of the IRI of the entity (i.e. everything up to and including the first `#` character or the last `/`
+          * character), minus the trailing `#` or `/`.
+          *
+          * @param entityIri the entity IRI.
+          * @return the IRI of the ontology that the entity belongs to.
+          */
+        def getOntologyIri(entityIri: IRI): IRI = {
+            valueFactory.createIRI(entityIri).getNamespace.stripSuffix("#").stripSuffix("/")
+        }
 
         /**
           * Recursively walks up an entity hierarchy, collecting the IRIs of all base entities.
@@ -341,29 +396,33 @@ class OntologyResponderV1 extends ResponderV1 {
                     propertyIri -> propertyEntityInfo
             }
 
-            // Populate the ontology cache. TODO: Use a proper cache.
-            _ = OntologyCache.populateCache(
-                namedGraphResourceClasses = graphClassMap,
-                namedGraphProperties = graphPropMap,
-                resourceClassDefs = resourceEntityInfos,
-                subClassRelations = allResourceSubClassRelations ++ allValueSubClassRelations,
-                propertyDefs = propertyEntityInfos
+            // Cache all the data.
+
+            ontologyCacheData = OntologyCacheData(
+                namedGraphResourceClasses = new ErrorHandlingMap[IRI, Set[IRI]](graphClassMap, { key => s"Named graph not found: $key" }),
+                namedGraphProperties = new ErrorHandlingMap[IRI, Set[IRI]](graphPropMap, { key => s"Named graph not found: $key" }),
+                resourceClassDefs = new ErrorHandlingMap[IRI, ResourceEntityInfoV1](resourceEntityInfos, { key => s"Resource class not found: $key" }),
+                subClassRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSubClassRelations ++ allValueSubClassRelations, { key => s"Class not found: $key" }),
+                propertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV1](propertyEntityInfos, { key => s"Property not found: $key" })
             )
+
+            _ = CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = ontologyCacheData)
+
         } yield LoadOntologiesResponse()
     }
 
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     /**
-      * Gets the IRI of the ontology that an entity belongs to, assuming that the entity IRI has the form `http://something.something#entityName`.
-      * The ontology IRI is assumed to be the part before the `#`. TODO: is this adequate?
+      * Gets the ontology data from the cache.
       *
-      * @param entityIri the entity IRI (e.g. `http://www.knora.org/ontology/incunabula#publisher`).
-      * @return the part before the `#`.
+      * @return an [[OntologyCacheData]]
       */
-    private def getOntologyIri(entityIri: IRI): String = {
-        entityIri.split("#")(0)
+    private def getCacheData: Future[OntologyCacheData] = {
+        Future {
+            CacheUtil.get[OntologyCacheData](cacheName = OntologyCacheName, key = OntologyCacheKey) match {
+                case Some(data) => data
+                case None => throw ApplicationCacheException(s"Key '$OntologyCacheKey' not found in application cache '$OntologyCacheName'")
+            }
+        }
     }
 
     /**
@@ -375,14 +434,14 @@ class OntologyResponderV1 extends ResponderV1 {
       * @return an [[EntityInfoGetResponseV1]].
       */
     private def getEntityInfoResponseV1(resourceIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV1] = {
-        Future(
-            EntityInfoGetResponseV1(
-                resourceEntityInfoMap = OntologyCache.resourceClassDefs.filterKeys(resourceIris),
-                propertyEntityInfoMap = OntologyCache.propertyDefs.filterKeys(propertyIris)
+        for {
+            cacheData <- getCacheData
+            response = EntityInfoGetResponseV1(
+                resourceEntityInfoMap = cacheData.resourceClassDefs.filterKeys(resourceIris),
+                propertyEntityInfoMap = cacheData.propertyDefs.filterKeys(propertyIris)
             )
-        )
+        } yield response
     }
-
 
     /**
       * Given the IRI of a resource type, returns a [[ResourceTypeResponseV1]] describing the resource type and its possible
@@ -469,11 +528,12 @@ class OntologyResponderV1 extends ResponderV1 {
       * @return a [[CheckSubClassResponseV1]].
       */
     private def checkSubClass(checkSubClassRequest: CheckSubClassRequestV1): Future[CheckSubClassResponseV1] = {
-        Future(
-            CheckSubClassResponseV1(
-                isSubClass = OntologyCache.subClassRelations(checkSubClassRequest.subClassIri).contains(checkSubClassRequest.superClassIri)
+        for {
+            cacheData <- getCacheData
+            response = CheckSubClassResponseV1(
+                isSubClass = cacheData.subClassRelations(checkSubClassRequest.subClassIri).contains(checkSubClassRequest.superClassIri)
             )
-        )
+        } yield response
     }
 
     /**
@@ -510,13 +570,14 @@ class OntologyResponderV1 extends ResponderV1 {
       * @return a [[NamedGraphEntityInfoV1]].
       */
     private def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
-        Future(
-            NamedGraphEntityInfoV1(
+        for {
+            cacheData <- getCacheData
+            response = NamedGraphEntityInfoV1(
                 namedGraphIri = namedGraphIri,
-                propertyIris = OntologyCache.namedGraphProperties(namedGraphIri),
-                resourceClasses = OntologyCache.namedGraphResourceClasses(namedGraphIri)
+                propertyIris = cacheData.namedGraphProperties(namedGraphIri),
+                resourceClasses = cacheData.namedGraphResourceClasses(namedGraphIri)
             )
-        )
+        } yield response
     }
 
     /**
@@ -677,24 +738,4 @@ class OntologyResponderV1 extends ResponderV1 {
 
     }
 
-}
-
-object OntologyCache {
-    var propertyDefs: Map[IRI, PropertyEntityInfoV1] = Map.empty[IRI, PropertyEntityInfoV1]
-    var resourceClassDefs: Map[IRI, ResourceEntityInfoV1] = Map.empty[IRI, ResourceEntityInfoV1]
-    var namedGraphResourceClasses: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]]
-    var namedGraphProperties: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]]
-    var subClassRelations: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]]
-
-    def populateCache(namedGraphResourceClasses: Map[IRI, Set[IRI]],
-                      namedGraphProperties: Map[IRI, Set[IRI]],
-                      resourceClassDefs: Map[IRI, ResourceEntityInfoV1],
-                      subClassRelations: Map[IRI, Set[IRI]],
-                      propertyDefs: Map[IRI, PropertyEntityInfoV1]): Unit = {
-        OntologyCache.namedGraphResourceClasses = new ErrorHandlingMap(namedGraphResourceClasses, { key => s"Named graph not found: $key" })
-        OntologyCache.namedGraphProperties = new ErrorHandlingMap(namedGraphProperties, { key => s"Named graph not found: $key" })
-        OntologyCache.resourceClassDefs = new ErrorHandlingMap(resourceClassDefs, { key => s"Resource class not found: $key" })
-        OntologyCache.subClassRelations = new ErrorHandlingMap(subClassRelations, { key => s"Class not found: $key" })
-        OntologyCache.propertyDefs = new ErrorHandlingMap(propertyDefs, { key => s"Property not found: $key" })
-    }
 }
