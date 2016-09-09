@@ -429,7 +429,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val pubdateField = editFields(11)
+            val pubdateField = editFields(12)
 
             page.clickEditButton(pubdateField)
 
@@ -496,7 +496,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             //
 
             // get the field representing the seqnum of the page
-            val seqnumField = editFields(10)
+            val seqnumField = editFields(11)
 
             page.clickEditButton(seqnumField)
 
@@ -603,7 +603,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val descriptionField = editFields(7)
+            val descriptionField = editFields(8)
 
             page.clickEditButton(descriptionField)
 
@@ -686,7 +686,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val seasonField = editFields(15)
+            val seasonField = editFields(16)
 
             page.clickEditButton(seasonField)
 
@@ -729,7 +729,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val seasonField = editFields(15)
+            val seasonField = editFields(16)
 
             page.clickAddButton(seasonField)
 
