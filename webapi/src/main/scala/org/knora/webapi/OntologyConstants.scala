@@ -96,6 +96,7 @@ object OntologyConstants {
 
         val PreviousValue = "http://www.knora.org/ontology/knora-base#previousValue"
 
+        val HasValue = "http://www.knora.org/ontology/knora-base#hasValue"
         val HasFileValue = "http://www.knora.org/ontology/knora-base#hasFileValue"
         val HasStillImageFileValue = "http://www.knora.org/ontology/knora-base#hasStillImageFileValue"
         val HasMovingImageFileValue = "http://www.knora.org/ontology/knora-base#hasMovingImageFileValue"

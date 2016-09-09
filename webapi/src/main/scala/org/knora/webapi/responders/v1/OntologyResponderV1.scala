@@ -214,8 +214,8 @@ class OntologyResponderV1 extends ResponderV1 {
             resourceDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = resourceDefsRows.groupBy(_.rowMap("resourceClass"))
             resourceClassIris = resourceDefsGrouped.keySet
 
-            // Group the rows representing property definitions by property IRI.
-            propertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = propertyDefsRows.groupBy(_.rowMap("prop"))
+            // Group the rows representing property definitions by property IRI. Exclude knora-base:hasValue, which is never used directly.
+            propertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = propertyDefsRows.groupBy(_.rowMap("prop")) - OntologyConstants.KnoraBase.HasValue
             propertyIris = propertyDefsGrouped.keySet
 
             // Group the rows representing value class relations by value class IRI.
