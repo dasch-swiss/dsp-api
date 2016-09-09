@@ -27,7 +27,7 @@
 :lastname rdf:type owl:ObjectProperty ;
 
           rdfs:subPropertyOf knora-base:hasValue,
-							 foaf:lastName ;
+							 foaf:familyName ;
 
           rdfs:label "Name"@de ;
 
@@ -58,7 +58,7 @@
 :firstname rdf:type owl:ObjectProperty ;
 
            rdfs:subPropertyOf knora-base:hasValue,
-							  foaf:firstName ;
+							  foaf:givenName ;
 
            rdfs:label "Vorname"@de ,
                       "First name"@en ;
