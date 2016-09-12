@@ -330,10 +330,18 @@ class SearchResponderV1 extends ResponderV1 {
                         propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $prop has no knora-base:objectClassConstraint"))
                     }
 
-                    // check if the valuetype of the given propertyIri conforms to the given compop
-                    if (!validTypeCompopCombos(propertyObjectClassConstraint).contains(compop)) {
-                        // the given combination of propertyIri valtype and compop is not allowed
-                        throw BadRequestException(s"The combination of propertyIri and compop is invalid")
+                    // Ensure that the property's objectClassConstraint is valid, and that the specified operator can be
+                    // used with it.
+                    validTypeCompopCombos.get(propertyObjectClassConstraint) match {
+                        case Some(validOps) =>
+                            if (!validOps.contains(compop)) {
+                                // The class specified in the property's objectClassConstraint can't be used with the specified operator.
+                                throw BadRequestException(s"The combination of propertyIri and compop is invalid")
+                            }
+
+                        case None =>
+                            // The class specified in the property's objectClassConstraint is invalid.
+                            throw BadRequestException(s"Property $prop has an invalid knora-base:objectClassConstraint: $propertyObjectClassConstraint")
                     }
 
                     val searchParamWithoutValue = SearchCriterion(
