@@ -25,6 +25,7 @@ import java.util.UUID
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -534,6 +535,9 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
+
+        responderManager ! LoadOntologiesRequest(incunabulaUser)
+        expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
     "The resources responder" should {

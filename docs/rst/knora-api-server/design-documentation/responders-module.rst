@@ -25,40 +25,51 @@ Responders Module
 Version 1.0 Responders
 ----------------------
 
-TDOO
-
 ResponderManagerV1
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 
 CkanResponderV1
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
 HierarchicalListsResponderV1
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 OntologyResponderV1
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
+
+The ontology responder provides information derived from all the ontologies in
+the repository, including Knora ontologies as well as project-specific
+ontologies. Most importantly, it provides information about resource classes
+and properties. This includes the cardinalities defined on each resource
+class, and takes into account the rules of cardinality inheritance, as
+described in the section **OWL Cardinalities** in :ref:`knora-ontologies`.
+
+For performance reasons, all ontology data is loaded and cached at application
+startup. Currently, to refresh the cache, you must restart the application.
+To maximise performance, the SPARQL queries used by the ontology responder
+are very simple, and the responder calculates class hierarchies and cardinality
+inheritance in Scala.
 
 ProjectsResponderV1
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 RepresentationsResponderV1
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ResourcesResponderV1
 ^^^^^^^^^^^^^^^^^^^^
 
 SearchResponderV1
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 
 UsersResponderV1
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 ValuesResponderV1
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 
 Shared
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^
 
   * ResponderV1
   * ValueUtilV1

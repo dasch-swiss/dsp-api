@@ -38,7 +38,7 @@ import scala.concurrent.duration._
 /**
   * Tests the SALSAH web interface using Selenium.
   */
-class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
+class SearchAndEditSpec extends SalsahSpec {
     /*
 
        We use the Selenium API directly instead of the ScalaTest wrapper, because the Selenium API is more
@@ -49,20 +49,18 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
      */
 
-    val page = new SalsahPage
+    private val page = new SalsahPage
 
     // How long to wait for results obtained using the 'eventually' function
-    implicit val patienceConfig = page.patienceConfig
+    implicit private val patienceConfig = page.patienceConfig
 
-    implicit val timeout = Timeout(180.seconds)
+    implicit private val timeout = Timeout(180.seconds)
 
-    implicit val system = ActorSystem()
+    implicit private val system = ActorSystem()
 
-    implicit val dispatcher = system.dispatcher
+    implicit private val dispatcher = system.dispatcher
 
-    val settings = new SettingsImpl(ConfigFactory.load())
-
-    val rdfDataObjectsJsonList =
+    private val rdfDataObjectsJsonList: String =
         """
             [
                 {"path": "../knora-ontologies/knora-base.ttl", "name": "http://www.knora.org/ontology/knora-base"},
@@ -72,6 +70,8 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
                 {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
                 {"path": "_test_data/ontologies/images-demo-onto.ttl", "name": "http://www.knora.org/ontology/images"},
                 {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"},
+                {"path": "_test_data/ontologies/beol-onto.ttl", "name": "http://www.knora.org/ontology/beol"},
+                {"path": "_test_data/all_data/beol-data.ttl", "name": "http://www.knora.org/data/beol"},
                 {"path": "_test_data/ontologies/anything-onto.ttl", "name": "http://www.knora.org/ontology/anything"},
                 {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"}
             ]
@@ -100,26 +100,8 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
 
     "The SALSAH home page" should {
         "load test data" in {
-            // define a pipeline function that gets turned into a generic [[HTTP Response]] (containing JSON)
-            val pipeline: HttpRequest => Future[HttpResponse] = (
-                addHeader("Accept", "application/json")
-                    ~> sendReceive
-                    ~> unmarshal[HttpResponse]
-                )
-
-            val loadRequest: HttpRequest = Post(s"${settings.baseKNORAUrl}/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList))
-
-            val loadRequestFuture: Future[HttpResponse] = for {
-                postRequest <- Future(loadRequest)
-                pipelineResult <- pipeline(postRequest)
-            } yield pipelineResult
-
-            val loadRequestResponse = Await.result(loadRequestFuture, Duration("180 seconds"))
-
-            assert(loadRequestResponse.status == StatusCodes.OK)
+            loadTestData(rdfDataObjectsJsonList)
         }
-
-
 
         "have the correct title" in {
             page.load()
@@ -429,7 +411,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val pubdateField = editFields(11)
+            val pubdateField = editFields(12)
 
             page.clickEditButton(pubdateField)
 
@@ -496,7 +478,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             //
 
             // get the field representing the seqnum of the page
-            val seqnumField = editFields(10)
+            val seqnumField = editFields(11)
 
             page.clickEditButton(seqnumField)
 
@@ -603,7 +585,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val descriptionField = editFields(7)
+            val descriptionField = editFields(8)
 
             page.clickEditButton(descriptionField)
 
@@ -686,7 +668,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val seasonField = editFields(15)
+            val seasonField = editFields(16)
 
             page.clickEditButton(seasonField)
 
@@ -729,7 +711,7 @@ class SearchAndEditSpec extends WordSpecLike with ShouldMatchers {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val seasonField = editFields(15)
+            val seasonField = editFields(16)
 
             page.clickAddButton(seasonField)
 

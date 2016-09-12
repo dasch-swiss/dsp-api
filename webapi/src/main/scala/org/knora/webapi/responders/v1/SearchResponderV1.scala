@@ -192,7 +192,7 @@ class SearchResponderV1 extends ResponderV1 {
 
                         val resourceClassIri = firstRowMap("resourceClass")
                         val resourceEntityInfoMap = entityInfoResponse.resourceEntityInfoMap(resourceClassIri)
-                        val resourceClassLabel = resourceEntityInfoMap.getPredicateObject(OntologyConstants.Rdfs.Label)
+                        val resourceClassLabel = resourceEntityInfoMap.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage))
                         val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
                         val resourceLabel = firstRowMap("resourceLabel")
 
@@ -216,7 +216,7 @@ class SearchResponderV1 extends ResponderV1 {
                                 val value: Option[(IRI, MatchingValue)] = valuePermissionCode.map {
                                     permissionCode =>
                                         val propertyIri = row.rowMap("resourceProperty")
-                                        val propertyLabel = entityInfoResponse.propertyEntityInfoMap(propertyIri).getPredicateObject(OntologyConstants.Rdfs.Label) match {
+                                        val propertyLabel = entityInfoResponse.propertyEntityInfoMap(propertyIri).getPredicateObject(OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage)) match {
                                             case Some(label) => label
                                             case None => throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
                                         }
@@ -505,7 +505,7 @@ class SearchResponderV1 extends ResponderV1 {
 
                         val resourceClassIri = firstRowMap("resourceClass")
                         val resourceEntityInfoMap = entityInfoResponse.resourceEntityInfoMap(resourceClassIri)
-                        val resourceClassLabel = resourceEntityInfoMap.getPredicateObject(OntologyConstants.Rdfs.Label)
+                        val resourceClassLabel = resourceEntityInfoMap.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage))
                         val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
                         val resourceLabel = firstRowMap("resourceLabel")
 
@@ -565,7 +565,7 @@ class SearchResponderV1 extends ResponderV1 {
                                             }
 
                                             val propertyIri = searchCriterion.propertyIri
-                                            val propertyLabel = propertyInfo.propertyEntityInfoMap(propertyIri).getPredicateObject(OntologyConstants.Rdfs.Label) match {
+                                            val propertyLabel = propertyInfo.propertyEntityInfoMap(propertyIri).getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage)) match {
                                                 case Some(label) => label
                                                 case None => throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
                                             }

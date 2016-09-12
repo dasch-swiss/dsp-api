@@ -20,43 +20,43 @@
 
 @import org.knora.webapi.IRI
 
-@*
- * Gets all the property types for the given named graph.
+@**
+ * Gets all the resource class definitions.
  *
- * @param namedGraph the Iri of the named graph to search in.
  * @param triplestore the name of the triplestore being used.
  *@
-@(namedGraph: IRI,
-  triplestore: String)
+@(triplestore: String)
 
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-SELECT ?property
+SELECT ?graph ?resourceClass ?resourceClassPred ?resourceClassObj ?resourceClassObjLang ?cardinalityProp ?cardinality ?cardinalityVal
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
+    GRAPH ?graph {
+        ?resourceClass rdf:type owl:Class .
+    }
+
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+
     {
-        GRAPH <@namedGraph> {
-            ?property rdf:type owl:ObjectProperty .
-        }
-
-        ?property rdfs:subPropertyOf+ knora-base:hasValue .
-
-        MINUS {
-            ?property rdfs:subPropertyOf* knora-base:hasLinkToValue .
-        }
+        ?resourceClass rdfs:subClassOf ?restriction .
+        ?restriction rdf:type owl:Restriction .
+        ?restriction owl:onProperty ?cardinalityProp .
+        ?cardinalityProp rdfs:subPropertyOf+ knora-base:resourceProperty .
+        ?restriction ?cardinality ?cardinalityVal .
+        FILTER(?cardinality = owl:cardinality || ?cardinality = owl:minCardinality || ?cardinality = owl:maxCardinality)
     }
     UNION
     {
-        GRAPH <@namedGraph> {
-            ?property rdf:type owl:ObjectProperty .
-        }
-
-        ?property rdfs:subPropertyOf* knora-base:hasLinkTo .
+        ?resourceClass ?resourceClassPred ?resourceClassObj .
+        FILTER(?resourceClassPred != rdf:type && !isBlank(?resourceClassObj))
+        BIND(lang(?resourceClassObj) as ?resourceClassObjLang)
     }
 }
