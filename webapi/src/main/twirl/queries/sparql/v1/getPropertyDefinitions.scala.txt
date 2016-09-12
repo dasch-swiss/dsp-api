@@ -21,50 +21,28 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets information about OWL entities.
+ * Gets all the property definitions.
  *
  * @param triplestore the name of the triplestore being used.
- * @param entityIris a list of IRIs of OWL entities to get information about.
  *@
-@(triplestore: String,
-  entityIris: Seq[IRI])
+@(triplestore: String)
 
-
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
-SELECT ?s ?isLinkProp ?p ?o ?lang
+SELECT ?graph ?prop ?propPred ?propObj ?propObjLang
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    @for((entityIri, index) <- entityIris.zipWithIndex) {
-        @if(index > 0) {
-            UNION
-        }
-
-        {
-            BIND(IRI("@entityIri") as ?s)
-
-            ?s rdfs:subPropertyOf* ?superProp .
-            ?superProp ?p ?o .
-            BIND(lang(?o) as ?lang)
-
-            MINUS {
-                BIND(IRI("@entityIri") as ?s)
-                ?s rdfs:subPropertyOf* ?otherSuperProp .
-                ?otherSuperProp rdfs:subPropertyOf+ ?superProp .
-                ?otherSuperProp ?otherPropP ?otherPropO .
-                ?otherPropP rdfs:subPropertyOf* ?p .
-            }
-
-            OPTIONAL {
-                ?s rdfs:subPropertyOf* knora-base:hasLinkTo .
-                BIND(true AS ?isLinkProp)
-            }
-        }
+    GRAPH ?graph {
+        ?prop rdf:type owl:ObjectProperty .
     }
+
+    ?prop rdfs:subPropertyOf+ knora-base:resourceProperty .
+    ?prop ?propPred ?propObj .
+    BIND(lang(?propObj) as ?propObjLang)
 }

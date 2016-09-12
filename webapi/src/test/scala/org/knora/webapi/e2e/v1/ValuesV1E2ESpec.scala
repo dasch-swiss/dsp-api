@@ -23,6 +23,8 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.{IRI, LiveActorMaker}
 import org.knora.webapi.e2e.E2ESpec
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
@@ -47,10 +49,24 @@ class ValuesV1E2ESpec extends E2ESpec {
          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
+    private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
+
+    private val incunabulaUser = UserProfileV1(
+        projects = Vector("http://data.knora.org/projects/77275339"),
+        groups = Nil,
+        userData = UserDataV1(
+            email = Some("test@test.ch"),
+            lastname = Some("Test"),
+            firstname = Some("User"),
+            username = Some("testuser"),
+            token = None,
+            user_id = Some("http://data.knora.org/users/b83acc5f05"),
+            lang = "de"
+        )
+    )
 
     implicit val timeout: Timeout = 300.seconds
 
@@ -60,7 +76,7 @@ class ValuesV1E2ESpec extends E2ESpec {
     private val textValueIri = new MutableTestIri
     private val linkValueIri = new MutableTestIri
 
-    val rdfDataObjects = List(
+    private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
@@ -70,6 +86,7 @@ class ValuesV1E2ESpec extends E2ESpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 10.seconds)
     }
 
     "The Values Endpoint" should {
