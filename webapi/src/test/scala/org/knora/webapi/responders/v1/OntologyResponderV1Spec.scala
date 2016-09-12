@@ -1172,7 +1172,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest()
+        responderManager ! LoadOntologiesRequest(OntologyResponderV1Spec.userProfileWithGerman)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

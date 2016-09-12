@@ -53,11 +53,12 @@ case class UserProfileByUsernameGetRequestV1(username: String) extends UsersResp
 /**
   * Represents a user's profile.
   *
-  * @param userData basic information about the user.
-  * @param groups   the groups that the user belongs to.
-  * @param projects the projects that the user belongs to.
+  * @param userData     basic information about the user.
+  * @param groups       the groups that the user belongs to.
+  * @param projects     the projects that the user belongs to.
+  * @param isSystemUser `true` if this [[UserProfileV1]] represents the Knora API server itself.
   */
-case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects: Seq[IRI] = Nil) {
+case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects: Seq[IRI] = Nil, isSystemUser: Boolean = false) {
     def passwordMatch(password: String): Boolean = {
         val md = java.security.MessageDigest.getInstance("SHA-1")
         userData.password.exists { hp =>

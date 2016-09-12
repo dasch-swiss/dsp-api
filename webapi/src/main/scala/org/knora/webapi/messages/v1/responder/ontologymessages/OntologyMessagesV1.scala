@@ -36,13 +36,17 @@ sealed trait OntologyResponderRequestV1 extends KnoraRequestV1
 /**
   * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
   * starts, before it accepts any API requests. A successful response will be a [[LoadOntologiesResponse]].
+  *
+  * @param userProfile the profile of the user making the request.
   */
-case class LoadOntologiesRequest() extends OntologyResponderRequestV1
+case class LoadOntologiesRequest(userProfile: UserProfileV1) extends OntologyResponderRequestV1
 
 /**
   * Indicates that all ontologies were loaded.
   */
-case class LoadOntologiesResponse()
+case class LoadOntologiesResponse() extends KnoraResponseV1 {
+    def toJsValue = JsObject(Map("result" -> JsString("Ontologies loaded.")))
+}
 
 /**
   * Requests all available information about a list of ontology entities (resource classes and/or properties). A successful response will be an
@@ -259,7 +263,7 @@ sealed trait EntityInfoV1 {
       * Returns an object for a given predicate. If requested, attempts to return the object in the user's preferred
       * language, in the system's default language, or in any language, in that order.
       *
-      * @param predicateIri the IRI of the predicate.
+      * @param predicateIri   the IRI of the predicate.
       * @param preferredLangs the user's preferred language and the system's default language.
       * @return an object for the predicate, or [[None]] if this entity doesn't have the specified predicate, or
       *         if the predicate has no objects.
@@ -347,11 +351,11 @@ case class ResourceEntityInfoV1(resourceClassIri: IRI,
 /**
   * Represents the assertions about a given property entity.
   *
-  * @param propertyIri the Iri of the queried property entity.
-  * @param isLinkProp  `true` if the property is a subproperty of `knora-base:hasLinkTo`.
-  * @param isLinkValueProp  `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
-  * @param isFileValueProp  `true` if the property is a subproperty of `knora-base:hasFileValue`.
-  * @param predicates  a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
+  * @param propertyIri     the Iri of the queried property entity.
+  * @param isLinkProp      `true` if the property is a subproperty of `knora-base:hasLinkTo`.
+  * @param isLinkValueProp `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
+  * @param isFileValueProp `true` if the property is a subproperty of `knora-base:hasFileValue`.
+  * @param predicates      a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
   */
 case class PropertyEntityInfoV1(propertyIri: IRI,
                                 isLinkProp: Boolean,

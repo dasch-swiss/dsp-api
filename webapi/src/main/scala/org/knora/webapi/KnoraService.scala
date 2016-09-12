@@ -26,6 +26,7 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.http._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
@@ -48,28 +49,32 @@ object KnoraService {
     /**
       * The applications actor system.
       */
-    implicit lazy val system = ActorSystem("webapi")
+    implicit lazy private val system = ActorSystem("webapi")
 
     /**
       * The supervisor actor that receives HTTP requests.
       */
-    val knoraHttpServiceManager = system.actorOf(Props(new KnoraHttpServiceManager with LiveActorMaker), name = KNORA_HTTP_SERVICE_MANAGER_ACTOR_NAME)
+    private val knoraHttpServiceManager = system.actorOf(Props(new KnoraHttpServiceManager with LiveActorMaker), name = KNORA_HTTP_SERVICE_MANAGER_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
       */
-    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
       */
-    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    //
     /**
       * The application's configuration.
       */
-    val settings = Settings(system)
+    private val settings = Settings(system)
+
+    /**
+      * A user representing the Knora API server, used for initialisation on startup.
+      */
+    private val systemUser = UserProfileV1(userData = UserDataV1(lang = "en"), isSystemUser = true)
 
     /**
       * Starts the Knora API server.
@@ -89,7 +94,7 @@ object KnoraService {
             println("... loading of demo data finished.")
         }
 
-        val ontologyCacheFuture = responderManager ? LoadOntologiesRequest()
+        val ontologyCacheFuture = responderManager ? LoadOntologiesRequest(systemUser)
         Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[LoadOntologiesResponse]
 
         if (StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get) {

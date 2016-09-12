@@ -331,7 +331,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest()
+        responderManager ! LoadOntologiesRequest(incunabulaUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

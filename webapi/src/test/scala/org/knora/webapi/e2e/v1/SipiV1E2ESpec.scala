@@ -31,6 +31,7 @@ import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
@@ -56,21 +57,35 @@ class SipiV1E2ESpec extends E2ESpec {
 
 
 
-    val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
 
-    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
-    val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
+    private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
+    private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    implicit val timeout: Timeout = 300.seconds
+    implicit private val timeout: Timeout = 300.seconds
+
+    private val incunabulaUser = UserProfileV1(
+        projects = Vector("http://data.knora.org/projects/77275339"),
+        groups = Nil,
+        userData = UserDataV1(
+            email = Some("test@test.ch"),
+            lastname = Some("Test"),
+            firstname = Some("User"),
+            username = Some("testuser"),
+            token = None,
+            user_id = Some("http://data.knora.org/users/b83acc5f05"),
+            lang = "de"
+        )
+    )
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
 
-    val user = "root"
-    val password = "test"
+    private val username = "root"
+    private val password = "test"
 
-    val rdfDataObjects = List(
+    private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
@@ -82,7 +97,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 10.seconds)
     }
 
     object RequestParams {
@@ -146,7 +161,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
             RequestParams.createTmpFileDir()
 
-            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password)) ~> resourcesPath ~> check {
 
                 val tmpFile = SourcePath.getSourcePath()
 
@@ -169,7 +184,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
             RequestParams.createTmpFileDir()
 
-            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password)) ~> resourcesPath ~> check {
 
                 val tmpFile = SourcePath.getSourcePath()
 
@@ -191,7 +206,7 @@ class SipiV1E2ESpec extends E2ESpec {
                 ))
             )
 
-            Post("/v1/resources", HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(username, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
@@ -214,7 +229,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
             val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
 
-            Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(user, password)) ~> valuesPath ~> check {
+            Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(username, password)) ~> valuesPath ~> check {
 
                 val tmpFile = SourcePath.getSourcePath()
 
@@ -239,7 +254,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
             val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
 
-            Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(user, password)) ~> valuesPath ~> check {
+            Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(username, password)) ~> valuesPath ~> check {
 
                 val tmpFile = SourcePath.getSourcePath()
 
@@ -265,7 +280,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
             val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
 
-            Put("/v1/filevalue/" + resIri, HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(user, password)) ~> valuesPath ~> check {
+            Put("/v1/filevalue/" + resIri, HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(username, password)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
 

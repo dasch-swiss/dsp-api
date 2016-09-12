@@ -81,7 +81,7 @@ route. Your object should look something like this:
 
     object SampleRouteV1 extends Authenticator {
 
-        def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+        def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
             implicit val system: ActorSystem = _system
             implicit val executionContext = system.dispatcher
             implicit val timeout = settings.defaultTimeout

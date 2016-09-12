@@ -57,6 +57,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                         val resourceTypeIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid resource type IRI: $iri"))
                         makeResourceTypeRequestMessage(iri, userProfile)
                     }
+
                     RouteUtilV1.runJsonRoute(
                         requestMessageTry,
                         requestContext,
@@ -81,6 +82,7 @@ object ResourceTypesRouteV1 extends Authenticator {
 
                         ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile)
                     }
+
                     RouteUtilV1.runJsonRoute(
                         requestMessageTry,
                         requestContext,
@@ -119,6 +121,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                                 }
                         }
                     }
+
                     RouteUtilV1.runJsonRoute(
                         requestMessageTry,
                         requestContext,
@@ -135,6 +138,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                         val userProfile = getUserProfileV1(requestContext)
                         NamedGraphsGetRequestV1(userProfile)
                     }
+
                     RouteUtilV1.runJsonRoute(
                         requestMessageTry,
                         requestContext,
@@ -144,8 +148,22 @@ object ResourceTypesRouteV1 extends Authenticator {
                     )
 
             }
+        } ~ path("v1" / "vocabularies" / "reload") {
+            get {
+                requestContext =>
+                    val requestMessageTry = Try {
+                        val userProfile = getUserProfileV1(requestContext)
+                        LoadOntologiesRequest(userProfile)
+                    }
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
         }
-
-
     }
 }

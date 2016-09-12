@@ -3305,7 +3305,7 @@ class HierarchicalListsResponderV1Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest()
+        responderManager ! LoadOntologiesRequest(userProfile)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

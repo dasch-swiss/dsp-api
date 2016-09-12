@@ -22,6 +22,7 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
@@ -29,7 +30,6 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 
 import scala.collection.breakOut
 import scala.concurrent.Future
@@ -60,10 +60,10 @@ class OntologyResponderV1 extends ResponderV1 {
       * A container for all the cached ontology data.
       *
       * @param namedGraphResourceClasses a map of named graph IRIs to sets of resource IRIs defined in each named graph.
-      * @param namedGraphProperties a map of property IRIs to sets of property IRIs defined in each named graph.
-      * @param resourceClassDefs a map of resource class IRIs to resource class definitions.
-      * @param subClassRelations a map of IRIs of resource and value classes to sets of the IRIs of their base classes.
-      * @param propertyDefs a map of property IRIs to property definitions.
+      * @param namedGraphProperties      a map of property IRIs to sets of property IRIs defined in each named graph.
+      * @param resourceClassDefs         a map of resource class IRIs to resource class definitions.
+      * @param subClassRelations         a map of IRIs of resource and value classes to sets of the IRIs of their base classes.
+      * @param propertyDefs              a map of property IRIs to property definitions.
       */
     case class OntologyCacheData(namedGraphResourceClasses: Map[IRI, Set[IRI]],
                                  namedGraphProperties: Map[IRI, Set[IRI]],
@@ -78,7 +78,7 @@ class OntologyResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case LoadOntologiesRequest() => future2Message(sender(), loadOntologies(), log)
+        case LoadOntologiesRequest(userProfile) => future2Message(sender(), loadOntologies(userProfile), log)
         case EntityInfoGetRequestV1(resourceIris, propertyIris, userProfile) => future2Message(sender(), getEntityInfoResponseV1(resourceIris, propertyIris, userProfile), log)
         case ResourceTypeGetRequestV1(resourceTypeIri, userProfile) => future2Message(sender(), getResourceTypeResponseV1(resourceTypeIri, userProfile), log)
         case checkSubClassRequest: CheckSubClassRequestV1 => future2Message(sender(), checkSubClass(checkSubClassRequest), log)
@@ -92,18 +92,21 @@ class OntologyResponderV1 extends ResponderV1 {
     /**
       * Loads and caches all ontology information.
       *
+      * @param userProfile the profile of the user making the request.
       * @return a [[LoadOntologiesResponse]].
       */
-    private def loadOntologies(): Future[LoadOntologiesResponse] = {
+    private def loadOntologies(userProfile: UserProfileV1): Future[LoadOntologiesResponse] = {
+        // TODO: determine whether the user is authorised to reload the ontologies (depends on pull request #168).
+
         /**
           * A temporary container for information about an OWL cardinality and the property it applies to.
           *
-          * @param propertyIri the IRI of the property that the cardinality applies to.
-          * @param cardinalityIri the IRI of the cardinality (e.g. `http://www.w3.org/2002/07/owl#minCardinality`).
+          * @param propertyIri      the IRI of the property that the cardinality applies to.
+          * @param cardinalityIri   the IRI of the cardinality (e.g. `http://www.w3.org/2002/07/owl#minCardinality`).
           * @param cardinalityValue the value of the cardinality (in Knora, this is always 0 or 1).
-          * @param isLinkProp `true` if the property is a subproperty of `knora-base:hasLinkTo`.
-          * @param isLinkValueProp `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
-          * @param isFileValueProp `true` if the property is a subproperty of `knora-base:hasFileValue`.
+          * @param isLinkProp       `true` if the property is a subproperty of `knora-base:hasLinkTo`.
+          * @param isLinkValueProp  `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
+          * @param isFileValueProp  `true` if the property is a subproperty of `knora-base:hasFileValue`.
           */
         case class OwlCardinality(propertyIri: IRI,
                                   cardinalityIri: IRI,
