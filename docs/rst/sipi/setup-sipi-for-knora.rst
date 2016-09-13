@@ -28,7 +28,7 @@ In order to serve files to the client application like the Salsah GUI, Sipi must
 Sipi can be downloaded from its own github-repository: https://github.com/dhlab-basel/Sipi.
 Please follow the instructions given in the README to compile it on your system.
 
-Once it is compiled, you can run Sipi with the following option: ``build/sipi -config sipi.knora-config.lua``. Please see ``sipi.knora-config.lua`` for the settings like URL, port number etc.
+Once it is compiled, you can run Sipi with the following option: ``local/bin/sipi -config sipi.knora-config.lua``. Please see ``sipi.knora-config.lua`` for the settings like URL, port number etc.
 These settings need to be set accordingly in Knora's ``application.conf``. If you use the default settings both in Sipi and Knora, there is no need to change these settings.
 
 Whenever a file is requested from Sipi (e.g. a browser trying to dereference an image link served by Knora), a preflight function is called.
@@ -42,8 +42,8 @@ If the user has no permissions, Sipi refuses to serve the file. However, all of 
 See :ref:`sharing_sessionid_with_sipi` for more information about sharing the session id.
 
 
-Test Sipi
-=========
+Using Sipi in Test Mode
+=======================
 
-If you just want to test Sipi with Knora without serving the actual files, you can simply start Sipi like this: ``build/sipi -config sipi.knora-test-config.lua``.
+If you just want to test Sipi with Knora without serving the actual files (e.g. when executing browser tests), you can simply start Sipi like this: ``local/bin/sipi -config sipi.knora-test-config.lua``.
 Then always the same test file will be served which is included in Sipi. In test mode, Sipi will not aks Knora about the user's permission on the requested file.
