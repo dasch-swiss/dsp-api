@@ -201,10 +201,11 @@ class OntologyResponderV1 extends ResponderV1 {
             propertyDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(propertyDefsSparql)).mapTo[SparqlSelectResponse]
             propertyDefsRows: Seq[VariableResultsRow] = propertyDefsResponse.results.bindings
 
-            // Make a map of IRIs of named graphs to IRIs of resource classes defined in each one.
+            // Make a map of IRIs of named graphs to IRIs of resource classes defined in each one, excluding resource
+            // classes that can't be instantiated directly.
             graphClassMap: Map[IRI, Set[IRI]] = resourceDefsRows.groupBy(_.rowMap("graph")).map {
                 case (graphIri: IRI, graphRows: Seq[VariableResultsRow]) =>
-                    graphIri -> (graphRows.map(_.rowMap("resourceClass")).toSet - OntologyConstants.KnoraBase.Resource)
+                    graphIri -> (graphRows.map(_.rowMap("resourceClass")).toSet -- OntologyConstants.KnoraBase.AbstractResourceClasses)
             }
 
             // Make a map of IRIs of named graphs to IRIs of properties defined in each one.
@@ -215,7 +216,7 @@ class OntologyResponderV1 extends ResponderV1 {
 
             // Group the rows representing resource class definitions by resource class IRI.
             resourceDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = resourceDefsRows.groupBy(_.rowMap("resourceClass"))
-            resourceClassIris = resourceDefsGrouped.keySet - OntologyConstants.KnoraBase.Resource
+            resourceClassIris = resourceDefsGrouped.keySet
 
             // Group the rows representing property definitions by property IRI. Exclude knora-base:hasValue, which is never used directly.
             propertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = propertyDefsRows.groupBy(_.rowMap("prop")) - OntologyConstants.KnoraBase.HasValue
@@ -304,9 +305,9 @@ class OntologyResponderV1 extends ResponderV1 {
                     resourceClassIri -> resourceClassCardinalities
             }.toMap
 
-            // Now that we've done cardinality inheritance, remove knora-base:Resource from our resource class
-            // definitions, because it can't be instantiated directly.
-            concreteResourceDefsGrouped = resourceDefsGrouped - OntologyConstants.KnoraBase.Resource
+            // Now that we've done cardinality inheritance, remove the resource class definitions that can't be
+            // instantiated directly.
+            concreteResourceDefsGrouped = resourceDefsGrouped -- OntologyConstants.KnoraBase.AbstractResourceClasses
 
             // Construct a ResourceEntityInfoV1 for each resource class.
             resourceEntityInfos: Map[IRI, ResourceEntityInfoV1] = concreteResourceDefsGrouped.map {

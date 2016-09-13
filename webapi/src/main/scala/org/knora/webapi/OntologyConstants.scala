@@ -65,6 +65,26 @@ object OntologyConstants {
         val KnoraBasePrefixExpansion = "http://www.knora.org/ontology/knora-base#"
 
         val Resource = "http://www.knora.org/ontology/knora-base#Resource"
+        val ExternalResource = "http://www.knora.org/ontology/knora-base#ExternalResource"
+        val Representation = "http://www.knora.org/ontology/knora-base#Representation"
+        val AudioRepresentation = "http://www.knora.org/ontology/knora-base#AudioRepresentation"
+        val DDDRepresentation = "http://www.knora.org/ontology/knora-base#DDDrepresentation"
+        val DocumentRepresentation = "http://www.knora.org/ontology/knora-base#DocumentRepresentation"
+        val MovingImageRepresentation = "http://www.knora.org/ontology/knora-base#MovingImageRepresentation"
+        val StillImageRepresentation = "http://www.knora.org/ontology/knora-base#StillImageRepresentation"
+        val TextRepresentation = "http://www.knora.org/ontology/knora-base#TextRepresentation"
+
+        val AbstractResourceClasses = Set(
+            Resource,
+            ExternalResource,
+            Representation,
+            AudioRepresentation,
+            DDDRepresentation,
+            DocumentRepresentation,
+            MovingImageRepresentation,
+            StillImageRepresentation,
+            TextRepresentation
+        )
 
         val ObjectClassConstraint = "http://www.knora.org/ontology/knora-base#objectClassConstraint"
 
