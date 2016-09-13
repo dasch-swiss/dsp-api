@@ -1018,5 +1018,21 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     response.resource_context.res_id should ===(None)
             }
         }
+
+        "not create an instance of knora-base:Resource" in {
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/knora-base#Resource",
+                label = "Test Resource",
+                projectIri = "http://data.knora.org/projects/77275339",
+                values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
+                file = None,
+                userProfile = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
     }
 }
