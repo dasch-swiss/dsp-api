@@ -71,7 +71,6 @@ class SearchAndEditSpec extends SalsahSpec {
                 {"path": "_test_data/ontologies/images-demo-onto.ttl", "name": "http://www.knora.org/ontology/images"},
                 {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"},
                 {"path": "_test_data/ontologies/beol-onto.ttl", "name": "http://www.knora.org/ontology/beol"},
-                {"path": "_test_data/all_data/beol-data.ttl", "name": "http://www.knora.org/data/beol"},
                 {"path": "_test_data/ontologies/anything-onto.ttl", "name": "http://www.knora.org/ontology/anything"},
                 {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"}
             ]
