@@ -261,11 +261,6 @@ export module resourceResponseFormats {
         value_of:string|number;
 
         /**
-         * The given user's permissions on the resource
-         */
-        permissions:Array<permissionItem>;
-
-        /**
          * Date of last modification
          */
         lastmod:string;
