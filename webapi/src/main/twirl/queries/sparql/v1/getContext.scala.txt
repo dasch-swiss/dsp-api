@@ -34,7 +34,7 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 
-SELECT ?seqnum ?sourceObject ?sourceObjectAttachedToUser ?sourceObjectAttachedToProject ?sourceObjectPermissions ?linkValue ?linkValueOwner ?linkValueProject ?linkValuePermissions ?firstprop ?fileValue ?isPreview ?internalFilename ?internalMimeType ?originalFilename ?dimX ?dimY ?qualityLevel ?fileValuePermissions ?fileValueAttachedToUser ?fileValueAttachedToProject
+SELECT ?sourceObject ?sourceObjectAttachedToUser ?sourceObjectAttachedToProject ?sourceObjectPermissions ?seqnum ?linkValue ?linkValueOwner ?linkValueProject ?linkValuePermissions ?firstprop ?fileValue ?isPreview ?internalFilename ?internalMimeType ?originalFilename ?dimX ?dimY ?qualityLevel ?fileValuePermissions ?fileValueAttachedToUser ?fileValueAttachedToProject
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -50,15 +50,17 @@ WHERE {
     # Find something that relates to this resource via partOf.
 
     ?linkingProp rdfs:subPropertyOf+ knora-base:isPartOf .
-    ?seqProp rdfs:subPropertyOf+ knora-base:seqnum .
 
     ?sourceObject ?linkingProp ?resource ;
       knora-base:isDeleted false .
 
-    ?sourceObject ?seqProp ?seqnumVal .
-    ?seqnumVal knora-base:valueHasInteger ?seqnum .
-    ?sourceObject rdfs:label ?firstprop .
+    OPTIONAL {
+        ?seqProp rdfs:subPropertyOf+ knora-base:seqnum .
+        ?sourceObject ?seqProp ?seqnumVal .
+        ?seqnumVal knora-base:valueHasInteger ?seqnum .
+    }
 
+    ?sourceObject rdfs:label ?firstprop .
     ?sourceObject knora-base:attachedToUser ?sourceObjectAttachedToUser .
     ?sourceObject knora-base:attachedToProject ?sourceObjectAttachedToProject .
 
@@ -114,4 +116,4 @@ WHERE {
         }
     }
 }
-ORDER BY ?seqnum ?isPreview
+ORDER BY ?seqnum ?sourceObject ?isPreview

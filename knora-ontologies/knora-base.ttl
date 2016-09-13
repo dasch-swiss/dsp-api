@@ -2328,14 +2328,6 @@
                             owl:minCardinality "0"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :hasRepresentation ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger
-                          ] ,
-                          [ rdf:type owl:Restriction ;
-                            owl:onProperty :hasRepresentationValue ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger
-                          ] ,
-                          [ rdf:type owl:Restriction ;
                             owl:onProperty :attachedToUser ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
@@ -2353,10 +2345,6 @@
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :lastModificationDate ;
-                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                          ] ,
-                          [ rdf:type owl:Restriction ;
-                            owl:onProperty :seqnum ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;

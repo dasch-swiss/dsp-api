@@ -677,7 +677,7 @@ class ResourcesResponderV1 extends ResponderV1 {
           */
         case class SourceObject(id: IRI,
                                 firstprop: Option[String],
-                                seqnum: Int,
+                                seqnum: Option[Int],
                                 permissionCode: Option[Int],
                                 fileValues: Vector[StillImageFileValue] = Vector.empty[StillImageFileValue])
 
@@ -777,7 +777,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             SourceObject(id = row.rowMap("sourceObject"),
                 firstprop = row.rowMap.get("firstprop"),
-                seqnum = row.rowMap("seqnum").toInt,
+                seqnum = row.rowMap.get("seqnum").map(_.toInt),
                 permissionCode = permissionCode,
                 fileValues = createStillImageFileValueFromResultRow(row).toVector
             )
@@ -869,7 +869,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 val currentSourceObj = acc.last
 
                                 // Does the current row refer to the current SourceObject?
-                                if (currentSourceObj.seqnum == row.rowMap("seqnum").toInt) {
+                                if (currentSourceObj.id == row.rowMap("sourceObject")) {
                                     // Yes. Add the additional file value to the existing SourceObject.
                                     acc.dropRight(1) :+ currentSourceObj.copy(fileValues = currentSourceObj.fileValues ++ createStillImageFileValueFromResultRow(row))
                                 } else {

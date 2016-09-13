@@ -218,17 +218,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 PropertyDefinitionV1(
                     gui_name = None,
-                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Representation"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                    occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."),
-                    label = Some("hat Repräsentation"),
-                    name = "http://www.knora.org/ontology/knora-base#hasRepresentation",
-                    id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = None,
                     attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Resource"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-n",
@@ -384,28 +373,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 PropertyDefinitionV1(
                     gui_name = None,
-                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Representation"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                    occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."),
-                    label = Some("hat Repräsentation"),
-                    name = "http://www.knora.org/ontology/knora-base#hasRepresentation",
-                    id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = None,
-                    attributes = None,
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#IntValue",
-                    occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("Indicates the position of a resource within a sequence"),
-                    label = Some("Sequenznummer"),
-                    name = "http://www.knora.org/ontology/knora-base#seqnum",
-                    id = "http://www.knora.org/ontology/knora-base#seqnum"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = None,
                     attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Resource"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-n",
@@ -473,28 +440,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 PropertyDefinitionV1(
                     gui_name = None,
-                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Representation"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                    occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."),
-                    label = Some("hat Repräsentation"),
-                    name = "http://www.knora.org/ontology/knora-base#hasRepresentation",
-                    id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = None,
-                    attributes = None,
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#IntValue",
-                    occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("Indicates the position of a resource within a sequence"),
-                    label = Some("Sequenznummer"),
-                    name = "http://www.knora.org/ontology/knora-base#seqnum",
-                    id = "http://www.knora.org/ontology/knora-base#seqnum"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = None,
                     attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Resource"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-n",
@@ -546,28 +491,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     label = Some("Kommentar"),
                     name = "http://www.knora.org/ontology/knora-base#hasComment",
                     id = "http://www.knora.org/ontology/knora-base#hasComment"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = None,
-                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Representation"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                    occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."),
-                    label = Some("hat Repräsentation"),
-                    name = "http://www.knora.org/ontology/knora-base#hasRepresentation",
-                    id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = None,
-                    attributes = None,
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#IntValue",
-                    occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("Indicates the position of a resource within a sequence"),
-                    label = Some("Sequenznummer"),
-                    name = "http://www.knora.org/ontology/knora-base#seqnum",
-                    id = "http://www.knora.org/ontology/knora-base#seqnum"
                 ),
                 PropertyDefinitionV1(
                     gui_name = None,
@@ -623,20 +546,12 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                         id = "http://www.knora.org/ontology/incunabula#publoc"
                     ),
                     PropertyTypeV1(
-                        label = "Sequence number",
-                        id = "http://www.knora.org/ontology/knora-base#seqnum"
-                    ),
-                    PropertyTypeV1(
                         label = "has Standoff Link to",
                         id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
                     ),
                     PropertyTypeV1(
                         label = "Creator",
                         id = "http://www.knora.org/ontology/incunabula#hasAuthor"
-                    ),
-                    PropertyTypeV1(
-                        label = "has Representation",
-                        id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
                     ),
                     PropertyTypeV1(
                         label = "Location",
@@ -701,10 +616,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                         id = "http://www.knora.org/ontology/incunabula#origname"
                     ),
                     PropertyTypeV1(
-                        label = "has Representation",
-                        id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
-                    ),
-                    PropertyTypeV1(
                         label = "Randleistentyp links",
                         id = "http://www.knora.org/ontology/incunabula#hasLeftSideband"
                     ),
@@ -742,16 +653,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             ResourceTypeV1(
                 properties = Vector(
                     PropertyTypeV1(
-                        label = "Sequence number",
-                        id = "http://www.knora.org/ontology/knora-base#seqnum"
-                    ),
-                    PropertyTypeV1(
                         label = "has Standoff Link to",
                         id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
-                    ),
-                    PropertyTypeV1(
-                        label = "has Representation",
-                        id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
                     ),
                     PropertyTypeV1(
                         label = "Kommentar (Richtext)",
@@ -779,16 +682,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                         id = "http://www.knora.org/ontology/incunabula#miscHasColor"
                     ),
                     PropertyTypeV1(
-                        label = "Sequence number",
-                        id = "http://www.knora.org/ontology/knora-base#seqnum"
-                    ),
-                    PropertyTypeV1(
                         label = "has Standoff Link to",
                         id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
-                    ),
-                    PropertyTypeV1(
-                        label = "has Representation",
-                        id = "http://www.knora.org/ontology/knora-base#hasRepresentation"
                     ),
                     PropertyTypeV1(
                         label = "Geometrie",
