@@ -1396,6 +1396,10 @@ class ResourcesResponderV1 extends ResponderV1 {
                 }
             }
 
+            _ = if (resourceClassIri == OntologyConstants.KnoraBase.Resource) {
+                throw BadRequestException(s"Instances of knora-base:Resource cannot be created, only instances of subclasses")
+            }
+
             namedGraph = settings.projectNamedGraphs(projectIri).data
             resourceIri: IRI = knoraIdUtil.makeRandomResourceIri
 

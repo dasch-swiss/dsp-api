@@ -201,10 +201,11 @@ class OntologyResponderV1 extends ResponderV1 {
             propertyDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(propertyDefsSparql)).mapTo[SparqlSelectResponse]
             propertyDefsRows: Seq[VariableResultsRow] = propertyDefsResponse.results.bindings
 
-            // Make a map of IRIs of named graphs to IRIs of resource classes defined in each one.
+            // Make a map of IRIs of named graphs to IRIs of resource classes defined in each one, excluding resource
+            // classes that can't be instantiated directly.
             graphClassMap: Map[IRI, Set[IRI]] = resourceDefsRows.groupBy(_.rowMap("graph")).map {
                 case (graphIri: IRI, graphRows: Seq[VariableResultsRow]) =>
-                    graphIri -> graphRows.map(_.rowMap("resourceClass")).toSet
+                    graphIri -> (graphRows.map(_.rowMap("resourceClass")).toSet -- OntologyConstants.KnoraBase.AbstractResourceClasses)
             }
 
             // Make a map of IRIs of named graphs to IRIs of properties defined in each one.
@@ -304,8 +305,12 @@ class OntologyResponderV1 extends ResponderV1 {
                     resourceClassIri -> resourceClassCardinalities
             }.toMap
 
+            // Now that we've done cardinality inheritance, remove the resource class definitions that can't be
+            // instantiated directly.
+            concreteResourceDefsGrouped = resourceDefsGrouped -- OntologyConstants.KnoraBase.AbstractResourceClasses
+
             // Construct a ResourceEntityInfoV1 for each resource class.
-            resourceEntityInfos: Map[IRI, ResourceEntityInfoV1] = resourceDefsGrouped.map {
+            resourceEntityInfos: Map[IRI, ResourceEntityInfoV1] = concreteResourceDefsGrouped.map {
                 case (resourceClassIri, resourceClassRows) =>
                     // Group the rows for each resource class by predicate IRI.
                     val groupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = resourceClassRows.filter(_.rowMap.contains("resourceClassPred")).groupBy(_.rowMap("resourceClassPred")) - OntologyConstants.Rdfs.SubClassOf
