@@ -115,19 +115,19 @@ class ResourceCreationSpec extends SalsahSpec {
 
             val rows = page.getInputRowsForResourceCreationForm()
 
-            val address = page.getInputForResourceCreationForm(rows(1))
+            val address = page.getInputForResourceCreationForm(rows(0))
 
             address.sendKeys("Musterstrasse 32")
 
-            val place = page.getInputForResourceCreationForm(rows(2))
+            val place = page.getInputForResourceCreationForm(rows(1))
 
             place.sendKeys("Basel")
 
-            val firstName = page.getInputForResourceCreationForm(rows(6))
+            val firstName = page.getInputForResourceCreationForm(rows(5))
 
             firstName.sendKeys("Testvorname")
 
-            val familyName = page.getInputForResourceCreationForm(rows(10))
+            val familyName = page.getInputForResourceCreationForm(rows(8))
 
             familyName.sendKeys("Testperson")
 
@@ -153,7 +153,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
             floatVal.sendKeys("5.3")
 
-            val textVal =  page.getInputForResourceCreationForm(rows(11))
+            val textVal =  page.getInputForResourceCreationForm(rows(10))
 
             textVal.sendKeys("Dies ist ein Test")
 

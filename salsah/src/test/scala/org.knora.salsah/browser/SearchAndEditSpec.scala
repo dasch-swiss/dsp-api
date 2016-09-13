@@ -411,7 +411,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val pubdateField = editFields(12)
+            val pubdateField = editFields(10)
 
             page.clickEditButton(pubdateField)
 
@@ -478,7 +478,7 @@ class SearchAndEditSpec extends SalsahSpec {
             //
 
             // get the field representing the seqnum of the page
-            val seqnumField = editFields(11)
+            val seqnumField = editFields(10)
 
             page.clickEditButton(seqnumField)
 
@@ -499,7 +499,7 @@ class SearchAndEditSpec extends SalsahSpec {
             //
 
             // get the field representing the pagenum of the page
-            val pagenumField = editFields(3)
+            val pagenumField = editFields(2)
 
             page.clickEditButton(pagenumField)
 
@@ -542,7 +542,7 @@ class SearchAndEditSpec extends SalsahSpec {
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
             // get the field representing the seqnum of the page
-            val creatorField = editFields(1)
+            val creatorField = editFields(0)
 
             page.clickAddButton(creatorField)
 
@@ -585,7 +585,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val descriptionField = editFields(8)
+            val descriptionField = editFields(7)
 
             page.clickEditButton(descriptionField)
 
@@ -624,7 +624,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val partOfField = editFields(2)
+            val partOfField = editFields(1)
 
             page.clickEditButton(partOfField)
 
@@ -668,7 +668,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val seasonField = editFields(16)
+            val seasonField = editFields(14)
 
             page.clickEditButton(seasonField)
 
@@ -711,7 +711,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val seasonField = editFields(16)
+            val seasonField = editFields(14)
 
             page.clickAddButton(seasonField)
 
