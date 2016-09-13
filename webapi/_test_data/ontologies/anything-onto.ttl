@@ -421,30 +421,6 @@
                knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
 
 
-:seqnum rdf:type owl:ObjectProperty ;
-
-       rdfs:subPropertyOf knora-base:seqnum ;
-
-       rdfs:label "Sequenznummer"@de ,
-                  "Sequence number"@en ,
-                  "Numéro de séquence"@fr ,
-                  "Numero di sequenza"@it ;
-
-       knora-base:subjectClassConstraint :Thing ;
-
-       knora-base:objectClassConstraint knora-base:IntValue ;
-
-       salsah-gui:guiOrder "16"^^xsd:integer ;
-
-       salsah-gui:guiElement salsah-gui:Spinbox ;
-
-       salsah-gui:guiAttribute "min=0" ,
-                                "max=-1" ;
-
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
-
 
 :Thing rdf:type owl:Class ;
 
