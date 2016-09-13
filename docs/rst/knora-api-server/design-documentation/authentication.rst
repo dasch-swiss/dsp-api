@@ -108,12 +108,21 @@ the same route and provide the logout parameter
 **/v1/authenticate?logout**. This will delete the cache entry and remove
 the session id from the cookie on the client.
 
+
+Submitting Credentials in the URL or in the HTTP Authentication Header
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As an alternative to creating a session, the client may also submit the credentials:
+ - in the URL (when doing a HTTP-GET request) submitting the parameters ``username`` and ``password`` (e.g. http://knora-host/resources/resIri?username=user&password=pw)
+ - in the HTTP header (`HTTP basic authentication`_) when doing a HTTP request to the API (all methods). When using Python's module ``requests``,
+   the credentials can simply be submitted as a tuple with each request using the param ``auth`` (`python requests`_).
+
 Workflow
 ^^^^^^^^^^
 
 1. The login form on the client can use */v1/authentication* to check if
-   the username/password combination provide by the user is correct. The
-   username and password can be provided as URL parameters
+   the username/password combination provided by the user is correct. The
+   username and password can be provided as URL parameters (see above).
 
 2. on the server, this gets checked and a corresponding result as
    described will be returned
@@ -157,3 +166,4 @@ text. Since we will use HTTPS this shouldn't be a problem. The second
 iteration, could encrypt the username/password.
 
 .. _HTTP basic authentication: https://en.wikipedia.org/wiki/Basic_access_authentication
+.. _python requests: http://docs.python-requests.org/en/master/user/authentication/#basic-authentication
