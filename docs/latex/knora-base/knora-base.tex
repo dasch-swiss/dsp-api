@@ -79,7 +79,7 @@
 \title{The Knora Base Ontology}
 \author{Lukas Rosenthaler, Benjamin Geer, Tobias Schweizer, Ivan Subotic\\Digital Humanities Lab, University of Basel}
 
-\date{7 September 2016}
+\date{13 September 2016}
 
 \begin{document}
 
@@ -274,6 +274,16 @@ Its subclasses, which are intended to be used directly in data, include:
 There are two ways for a project to design classes for representations. The simpler way is to create a resource class that represents a thing in the world (such as \texttt{ex:Painting}) and also belongs to a subclass of \texttt{Representation}. This is adequate if the class can have only one type of file attached to it. For example, if paintings are represented only by still images, \texttt{ex:Painting} could be a subclass of \texttt{Still\-Image\-Representation}. This is the only approach supported in version 1 of the Knora API.
 
 The more flexible approach, which is allowed by the Knora base ontology and will be supported by version 2 of the Knora API, is for each \texttt{ex:Painting} to use the \texttt{kb:hasRepresentation} property to point to other resources containing files that represent the painting. Each of these other resources can extend a different subclass of \texttt{Representation}. For example, a painting could have a \texttt{Still\-Image\-Representation} as well as a \texttt{DDDrepresentation}.
+
+\subsubsection{Standard Resource Classes}
+
+In general, each project using Knora must define its own subclasses of \texttt{kb:Resource}. However, the Knora base ontology provides some standard subclasses of \texttt{kb:Resource}, which are intended to be used by any project:
+
+\begin{description}
+	\item[Region] Represents a region of a \texttt{Representation} (see Section~\ref{subsubsec:representations}).
+	\item[Annotation] Represents an annotation of a resource. The \texttt{hasComment} property points to the text of the annotation.
+	\item[LinkObj] Represents a link that connects two or more resources. A \texttt{LinkObj} has a \texttt{hasLinkTo} property pointing to each resource that it connects, as well as a \texttt{hasLinkToValue} property pointing to a reification of each of these direct links (see Section~\ref{sec:links}). A \texttt{LinkObj} is more complex (and hence less convenient and readable) than a simple direct link, but it has the advantage that it can be annotated using an \texttt{Annotation}. For improved readability, a project can make its own subclasses of \texttt{LinkObj} with specific meanings.
+\end{description}
 
 \subsection{Values}
 
@@ -716,7 +726,7 @@ data:LV1 rdf:type kb:LinkValue ;
 
 Figure~\ref{fig:standoff-link-graph} illustrates the result.
 
-Link values created automatically for resource references in standoff are automatically visible to all users, as long as they have permission to see the source and target resources. The owner of these link values is always \texttt{kb:SystemUser} (see Section \ref{subsec:users-and-groups}).
+Link values created automatically for resource references in standoff are automatically visible to all users, as long as they have permission to see the source and target resources. The owner of these link values is always \texttt{kb:SystemUser} (see Section~\ref{subsec:users-and-groups}).
 
 \begin{figure}[h]
 \centering
