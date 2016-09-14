@@ -42,6 +42,7 @@
 
                 rdfs:comment "The base property of properties whose objects can't be marked as deleted"@en .
 
+rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 #################################################################
@@ -2316,6 +2317,10 @@
 :Resource rdf:type owl:Class ;
 
           rdfs:subClassOf [ rdf:type owl:Restriction ;
+                            owl:onProperty rdfs:label ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
                             owl:onProperty :isDeleted ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,

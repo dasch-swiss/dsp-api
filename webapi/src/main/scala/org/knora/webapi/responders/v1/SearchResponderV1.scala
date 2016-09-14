@@ -336,7 +336,7 @@ class SearchResponderV1 extends ResponderV1 {
                         case Some(validOps) =>
                             if (!validOps.contains(compop)) {
                                 // The class specified in the property's objectClassConstraint can't be used with the specified operator.
-                                throw BadRequestException(s"The combination of propertyIri and compop is invalid")
+                                throw BadRequestException(s"Operator $compop cannot be used with property $prop")
                             }
 
                         case None =>
@@ -515,7 +515,7 @@ class SearchResponderV1 extends ResponderV1 {
                         val resourceEntityInfoMap = entityInfoResponse.resourceEntityInfoMap(resourceClassIri)
                         val resourceClassLabel = resourceEntityInfoMap.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage))
                         val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
-                        val resourceLabel = firstRowMap("resourceLabel")
+                        val resourceLabel = firstRowMap.getOrElse("resourceLabel", throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no rdfs:label"))
 
                         // If there were search criteria referring to values, collect the matching values in the resource.
                         val matchingValues: Vector[MatchingValue] = if (searchCriteria.nonEmpty) {
