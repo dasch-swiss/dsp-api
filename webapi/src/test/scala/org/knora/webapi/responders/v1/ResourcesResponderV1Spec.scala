@@ -1034,5 +1034,22 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
         }
+
+        "change a resource's label" in {
+            val myNewLabel = "my new beautiful label"
+
+            actorUnderTest ! ChangeResourceLabelRequestV1(
+                resourceIri = "http://data.knora.org/c5058f3a",
+                label = myNewLabel,
+                userProfile = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case response: ChangeResourceLabelResponseV1 =>
+                    response.label should ===(myNewLabel)
+            }
+
+        }
     }
 }

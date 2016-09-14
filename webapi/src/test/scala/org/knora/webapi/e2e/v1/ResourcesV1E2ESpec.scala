@@ -1290,5 +1290,31 @@ class ResourcesV1E2ESpec extends E2ESpec {
             }
         }
 
+        "change a resources label" in {
+
+            val newLabel = "my new label"
+
+            val params =
+                s"""
+                  {
+                    "label": "$newLabel"
+                  }
+                """.stripMargin
+
+            Put("/v1/resources/label/" + URLEncoder.encode("http://data.knora.org/c5058f3a", "UTF-8"),HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val label = JsonParser(response.entity.asString).asJsObject.fields.get("label") match {
+                    case Some(JsString(label)) => label
+                    case None => throw InvalidApiJsonException(s"The response does not contain a field called 'label'")
+                    case other => throw InvalidApiJsonException(s"The response does not contain a label of type JsString, but ${other}")
+                }
+
+                assert(label == newLabel, "label has not been updated correctly")
+
+
+            }
+        }
+
     }
 }

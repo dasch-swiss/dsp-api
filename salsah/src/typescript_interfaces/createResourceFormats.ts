@@ -208,5 +208,30 @@ export module createResourceFormats {
 
     }
 
+    /**
+     * Represents a request to change a resource's label.
+     *
+     * This definition describes the JSON to be sent as the HTTP body in a PUT request to http://host/v1/resources/label/resourceIri
+     */
+    export interface changeResourceLabelRequest {
 
+        /**
+         * The new label of the resource.
+         */
+        label: string;
+    }
+
+    export interface changeResourceLabelResponse extends basicMessageComponents.basicResponse {
+
+        /**
+         * The IRI of the resource whose label has been changed.
+         */
+        res_id: basicMessageComponents.KnoraIRI;
+
+        /**
+         * The new label of the resource.
+         */
+        label: string;
+
+    }
 }
