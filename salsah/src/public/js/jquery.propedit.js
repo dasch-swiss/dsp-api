@@ -1260,9 +1260,22 @@
 				}
 			};
 
-			postdata['LABEL'] = function(value_container, prop, res_id, sipi_response, is_new_value) {
-				alert('NOW WE WOULD POST THE DATA!');
-			}
+			postdata['LABEL'] = function(value_container, prop, value_index, value, is_new_value) {
+				data = {
+					label: value.utf8str
+				};
+				SALSAH.ApiPut('resources/label/' + encodeURIComponent(res_id), data, function(data) {
+					if (data.status == ApiErrors.OK) {
+						propinfo[active.prop].values[active.value_index] = data.label;
+
+						active.value_container.empty();
+						// TODO: this does not work yet!
+						reset_value(active.value_container, active.prop, active.value_index);
+					} else {
+						alert(status.errormsg);
+					}
+				});
+			};
 			
 			if (active !== undefined) {
 				if (!confirm(strings._canceditquest)) return;
