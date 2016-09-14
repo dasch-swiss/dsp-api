@@ -147,10 +147,14 @@ lazy val webApiLibs = Seq(
     "org.jodd" % "jodd" % "3.2.6",
     "joda-time" % "joda-time" % "2.9.1",
     "org.joda" % "joda-convert" % "1.8",
+    "com.sksamuel.diff" % "diff" % "1.1.11",
+    "org.xmlunit" % "xmlunit-core" % "2.1.1",
     // testing
     "com.typesafe.akka" %% "akka-testkit" % "2.4.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.scalatest" %% "scalatest" % "2.2.6" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
-    "io.spray" %% "spray-testkit" % "1.3.3" % "test, fuseki, fuseki-tomcat, graphdb, tdb"
+    "io.spray" %% "spray-testkit" % "1.3.3" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
+    "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.0M3",
+    "org.rogach" %% "scallop" % "2.0.1"
 )
 
 lazy val javaRunOptions = Seq(

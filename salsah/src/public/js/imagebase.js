@@ -503,7 +503,7 @@ $(function() {
 				tabele.find('.delres').click(
 					function(event) {
 						if (confirm(strings._delentry)) {
-							SALSAH.ApiDelete('resources/' + $(event.target).data('res_id'), function(data) {
+							SALSAH.ApiDelete('resources/' + encodeURIComponent($(event.target).data('res_id')), function(data) {
 								if (data.status == ApiErrors.OK) {
 									viewer.destroy();
 								}
@@ -1426,7 +1426,7 @@ $(function() {
 					window_html.find('.delres').click(
 						function(event) {
 							if (confirm(strings._delentry)) {
-								SALSAH.ApiDelete('resources/' + $(event.target).data('res_id'), function(data) {
+								SALSAH.ApiDelete('resources/' + encodeURIComponent($(event.target).data('res_id')), function(data) {
 									if (data.status == ApiErrors.OK) {
 										//viewer.destroy(); // viewer is not defined in this scope, rather it is the retobj of this func.
 										window_html.win('deleteWindow');
@@ -2750,7 +2750,7 @@ $(function() {
 							function(event) {
 								var res_id = $(event.target).data('res_id');
 								if (confirm(strings._delentry)) {
-									SALSAH.ApiDelete('resources/' + $(event.target).data('res_id'), function(data) {
+									SALSAH.ApiDelete('resources/' + encodeURIComponent($(event.target).data('res_id')), function(data) {
 										if (data.status == ApiErrors.OK) {
 											// XXXXXXXXXXXXXXX
 											metadata_area_tabs.tabs('remove', 'regions'); // remove region tab and all associated data (e.g.data_hook).

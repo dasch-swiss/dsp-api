@@ -22,7 +22,6 @@ package org.knora.webapi.store.triplestore.http
 
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
-import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging, Status}
 import dispatch._
@@ -31,12 +30,14 @@ import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{FakeTriplestore, SparqlUtil}
+import org.knora.webapi.util.FakeTriplestore
+import org.knora.webapi.util.SparqlResultProtocol._
+import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.io.Source
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
@@ -60,8 +61,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
     // HTTP paths for SPARQL queries.
     private val queryRequestPath = settings.triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE => triplestore / "openrdf-sesame" / "repositories" / settings.triplestoreDatabaseName
-        case HTTP_GRAPH_DB_FREE_TS_TYPE => triplestore / "repositories" / settings.triplestoreDatabaseName
+        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => triplestore / "repositories" / settings.triplestoreDatabaseName
         case HTTP_SESAME_TS_TYPE => triplestore / "openrdf-sesame" / "repositories" / settings.triplestoreDatabaseName
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => triplestore / settings.triplestoreDatabaseName / "query"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => triplestore / settings.fusekiTomcatContext / settings.triplestoreDatabaseName / "query"
@@ -69,8 +69,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
     // HTTP paths for SPARQL Update operations.
     private val updateRequestPath = settings.triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE => triplestore / "openrdf-sesame" / "repositories" / settings.triplestoreDatabaseName / "statements"
-        case HTTP_GRAPH_DB_FREE_TS_TYPE => triplestore / "repositories" / settings.triplestoreDatabaseName / "statements"
+        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => triplestore / "repositories" / settings.triplestoreDatabaseName / "statements"
         case HTTP_SESAME_TS_TYPE => triplestore / "openrdf-sesame" / "repositories" / settings.triplestoreDatabaseName / "statements"
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => triplestore / settings.triplestoreDatabaseName / "update"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => triplestore / settings.fusekiTomcatContext / settings.triplestoreDatabaseName / "update"
@@ -140,6 +139,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
     /**
       * Given the SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResponse]].
+      *
       * @param sparql the SPARQL SELECT query string
       * @return a [[SparqlSelectResponse]].
       */
@@ -164,12 +164,13 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
             // _ = println(s"Result: $logDelimiter$resultStr")
 
             // Parse the response as a JSON object and generate a response message.
-            responseMessage <- SparqlUtil.parseJsonResponse(sparql, resultStr, log)
+            responseMessage <- parseJsonResponse(sparql, resultStr)
         } yield responseMessage
     }
 
     /**
       * Performs a SPARQL update operation.
+      *
       * @param sparqlUpdate the SPARQL update.
       * @return a [[SparqlUpdateResponse]].
       */
@@ -177,7 +178,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
         // println(logDelimiter + sparqlUpdate)
 
         for {
-            // Send the request to the triplestore.
+        // Send the request to the triplestore.
             _ <- getTriplestoreHttpResponse(sparqlUpdate, update = true)
 
             // If we're using GraphDB, update the full-text search index.
@@ -194,6 +195,7 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
     /**
       * Submits a SPARQL request to the triplestore and returns the response as a string.
+      *
       * @param sparql the SPARQL request to be submitted.
       * @param update `true` if this is an update request.
       * @return the triplestore's response.
@@ -281,10 +283,10 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
                 if (tsType == HTTP_GRAPH_DB_TS_TYPE || tsType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
                     /* need to update the lucene index */
                     val indexUpdateSparqlString =
-                        """
+                    """
                             PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
                             INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
-                        """
+                    """
                     Await.result(getTriplestoreHttpResponse(indexUpdateSparqlString, update = true), 5.seconds)
                 }
 
@@ -322,6 +324,19 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
         resppnseStrFuture onComplete {
             case Success(responseStr) => log.info(s"Connection OK: ${responseStr.length}")
             case Failure(t) => log.error("Failed to connect to triplestore: " + t.getMessage)
+        }
+    }
+
+    private def parseJsonResponse(sparql: String, resultStr: String): Future[SparqlSelectResponse] = {
+        val parseTry = Try {
+            resultStr.parseJson.convertTo[SparqlSelectResponse]
+        }
+
+        parseTry match {
+            case Success(parsed) => Future.successful(parsed)
+            case Failure(e) =>
+                log.error(e, s"Couldn't parse response from triplestore:$logDelimiter$resultStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql")
+                Future.failed(TriplestoreResponseException("Couldn't parse JSON from triplestore", e, log))
         }
     }
 }

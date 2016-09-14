@@ -41,7 +41,7 @@ object GraphDBTriplestoreSpec {
                 dbtype = "graphdb"
 
                 graphdb {
-                    port = 8080
+                    port = 7200
                     repository-name = "knora-test-unit"
                     username = "admin"
                     password = "root"

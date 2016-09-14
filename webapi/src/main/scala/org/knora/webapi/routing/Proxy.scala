@@ -23,8 +23,8 @@ package org.knora.webapi.routing
 import akka.actor.ActorSystem
 import akka.io.IO
 import spray.can.Http
-import spray.http.{Uri, HttpHeaders, HttpHeader, HttpRequest}
-import spray.routing.{Route, RequestContext}
+import spray.http.{HttpHeader, HttpHeaders, HttpRequest, Uri}
+import spray.routing.{RequestContext, Route}
 
 /**
   * This trait provides proxy capabilities to routes, i.e. it allows to tunnel a http requests to an external service
@@ -37,7 +37,8 @@ trait Proxy {
 
     /**
       * Used to tunnel the requests to another server and then pipe the result back to the client.
-      * @param uri the new URI to which the request will be tunneled
+      *
+      * @param uri           the new URI to which the request will be tunneled
       * @param unmatchedPath the part of the route that should be appended to the uri
       * @return
       */
@@ -59,7 +60,7 @@ trait Proxy {
         )
 
     private def proxyRequest(updateRequest: RequestContext => HttpRequest)(implicit system: ActorSystem): Route =
-        ctx => IO(Http)(system) tell (updateRequest(ctx), ctx.responder)
+        ctx => IO(Http)(system) tell(updateRequest(ctx), ctx.responder)
 
     private def stripHostHeader(headers: List[HttpHeader]) = {
         println(s"headers before strip: ${headers.toString}")
@@ -67,10 +68,6 @@ trait Proxy {
         println(s"headers after strip: ${strippedHeaders.toString}")
         strippedHeaders
     }
-
-
-
-
 
 
 }

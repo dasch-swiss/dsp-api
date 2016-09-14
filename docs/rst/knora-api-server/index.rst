@@ -33,6 +33,7 @@ with `Ontotext GraphDB`_ and `Apache Jena`_.
    deployment/index
    design-documentation/index
    development/index
+   api_v1/index
 
 .. _Ontotext GraphDB: http://ontotext.com/products/graphdb/
 .. _Apache Jena: https://jena.apache.org/

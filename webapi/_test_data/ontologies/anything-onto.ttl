@@ -376,6 +376,52 @@
 
 
 
+:isPartOfOtherThing rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:isPartOf ;
+
+               rdfs:label "ist ein Teil von"@de ,
+                          "fait partie de"@fr ,
+                          "fa parte da"@it ,
+                          "is part of"@en ;
+
+               knora-base:subjectClassConstraint :Thing ;
+
+               knora-base:objectClassConstraint :Thing ;
+
+               salsah-gui:guiOrder "15"^^xsd:integer ;
+
+               salsah-gui:guiElement salsah-gui:Searchbox ;
+
+               knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+               knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
+:isPartOfOtherThingValue rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:isPartOfValue ;
+
+               rdfs:label "ist ein Teil von"@de ,
+                          "fait partie de"@fr ,
+                          "fa parte da"@it ,
+                          "is part of"@en ;
+
+               knora-base:subjectClassConstraint :Thing ;
+
+               knora-base:objectClassConstraint knora-base:LinkValue ;
+
+               salsah-gui:guiOrder "15"^^xsd:integer ;
+
+               salsah-gui:guiElement salsah-gui:Searchbox ;
+
+               knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+               knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+
+
+
 :Thing rdf:type owl:Class ;
 
       rdfs:subClassOf knora-base:Resource ,
@@ -395,6 +441,15 @@
                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :isPartOfOtherThing ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :isPartOfOtherThingValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,                      [
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasThingPicture ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger

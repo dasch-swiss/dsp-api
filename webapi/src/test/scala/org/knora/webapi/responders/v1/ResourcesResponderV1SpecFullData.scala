@@ -32,8 +32,6 @@ object ResourcesResponderV1SpecFullData {
 
     val settings = Settings(system)
 
-    val emptyTextattr = Map.empty[String, Seq[StandoffPositionV1]]
-
     // The expected response to a "full" resource request for a book.
     val expectedBookResourceFullResponse = ResourceFullResponseV1(
         userdata = UserDataV1(
@@ -64,20 +62,6 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Verkn\u00FCpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
-                    permissions = Vector(
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#KnownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#UnknownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        )
-                    ),
                     person_id = "http://data.knora.org/users/91e19f1e01",
                     project_id = "http://data.knora.org/projects/77275339"
                 ),
@@ -102,20 +86,6 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Verkn\u00FCpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
-                    permissions = Vector(
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#KnownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#UnknownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        )
-                    ),
                     person_id = "http://data.knora.org/users/b83acc5f05",
                     project_id = "http://data.knora.org/projects/77275339"
                 ),
@@ -135,8 +105,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/8653a672"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "Berthold, der Bruder"
                 )),
                 occurrence = Some("0-n"),
@@ -158,8 +126,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/c3295339"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
                 )),
                 occurrence = Some("1-n"),
@@ -206,18 +172,12 @@ object ResourcesResponderV1SpecFullData {
                 ),
                 values = Vector(
                     TextValueV1(
-                        resource_reference = Vector.empty[IRI],
-                        textattr = emptyTextattr,
                         utf8str = "Schramm Bd. XXI, S. 27"
                     ),
                     TextValueV1(
-                        resource_reference = Vector.empty[IRI],
-                        textattr = emptyTextattr,
                         utf8str = "GW 4168"
                     ),
                     TextValueV1(
-                        resource_reference = Vector.empty[IRI],
-                        textattr = emptyTextattr,
                         utf8str = "ISTC ib00512000"
                     )
                 ),
@@ -240,8 +200,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/92faf25701"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "Universit\u00E4ts- und Stadtbibliothek K\u00F6ln, Sign: AD+S167"
                 )),
                 occurrence = Some("0-1"),
@@ -263,8 +221,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/10e00c7acc2704"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1"
                 )),
                 occurrence = Some("0-1"),
@@ -286,8 +242,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/5524469101"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "Dimension: 8\u00B0"
                 )),
                 occurrence = Some("0-1"),
@@ -309,8 +263,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/0ca74ce5"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "Basel"
                 )),
                 occurrence = Some("0-1"),
@@ -355,8 +307,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/497df9ab"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector.empty[IRI],
-                    textattr = emptyTextattr,
                     utf8str = "Johann Amerbach"
                 )),
                 occurrence = Some("0-n"),
@@ -436,33 +386,14 @@ object ResourcesResponderV1SpecFullData {
                 value_ids = Nil,
                 values = Nil,
                 occurrence = Some("0-n"),
-                attributes = "restypeid=http://www.knora.org/ontology/knora-base#Representation",
-                label = Some("hat Repräsentation"),
+                attributes = "restypeid=http://www.knora.org/ontology/knora-base#Resource",
+                label = Some("hat Standoff Link zu"),
                 is_annotation = "0",
                 guielement = None,
                 guiorder = None,
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#LinkValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/knora-base#hasRepresentation"
-            ),
-            PropertyV1(
-                locations = Nil,
-                value_rights = Nil,
-                value_firstprops = Nil,
-                value_iconsrcs = Nil,
-                value_restype = Nil,
-                comments = Nil,
-                value_ids = Nil,
-                values = Nil,
-                occurrence = Some("0-1"),
-                attributes = "",
-                label = Some("Sequenznummer"),
-                is_annotation = "0",
-                guielement = None,
-                guiorder = None,
-                valuetype_id = Some("http://www.knora.org/ontology/knora-base#IntValue"),
-                regular_property = 1,
-                pid = "http://www.knora.org/ontology/knora-base#seqnum"
+                pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
             )
 
         ))),
@@ -487,24 +418,6 @@ object ResourcesResponderV1SpecFullData {
             restype_label = Some("Buch"),
             restype_name = Some("http://www.knora.org/ontology/incunabula#book"),
             restype_id = "http://www.knora.org/ontology/incunabula#book",
-            permissions = Vector(
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#Owner",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#KnownUser",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#UnknownUser",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission"
-                )
-            ),
             person_id = "http://data.knora.org/users/91e19f1e01",
             project_id = "http://data.knora.org/projects/77275339"
         ))
@@ -627,8 +540,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/61cb927602"),
                 values = Vector(TextValueV1(
-                    resource_reference = Nil,
-                    textattr = Map(),
                     utf8str = "a1r, Titelblatt"
                 )),
                 occurrence = Some("0-1"),
@@ -650,8 +561,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/3e3d4dc0e922"),
                 values = Vector(TextValueV1(
-                    resource_reference = Nil,
-                    textattr = Map(),
                     utf8str = "Titel: \"Das andechtig zitglo(e)gglyn | des lebens vnd lide(n)s christi nach | den xxiiij stunden v\u00DFgeteilt.\"\nHolzschnitt: Schlaguhr mit Zifferblatt f\u00FCr 24 Stunden, auf deren oberem Rand zu beiden Seiten einer Glocke die Verk\u00FCndigungsszene mit Maria (links) und dem Engel (rechts) zu sehen ist.\nBord\u00FCre: Ranken mit Fabelwesen, Holzschnitt.\nKolorierung: Rot, Blau, Gr\u00FCn, Gelb, Braun.\nBeschriftung oben Mitte (Graphitstift) \"B 1\"."
                 )),
                 occurrence = Some("0-1"),
@@ -673,8 +582,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/e80b2d895f23"),
                 values = Vector(TextValueV1(
-                    resource_reference = Nil,
-                    textattr = Map(),
                     utf8str = "Schramm, Bd. 21, Abb. 601."
                 )),
                 occurrence = Some("0-n"),
@@ -696,8 +603,6 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/aa488c2203"),
                 values = Vector(TextValueV1(
-                    resource_reference = Nil,
-                    textattr = Map(),
                     utf8str = "ad+s167_druck1=0001.tif"
                 )),
                 occurrence = Some("1"),
@@ -821,14 +726,14 @@ object ResourcesResponderV1SpecFullData {
                 value_ids = Nil,
                 values = Nil,
                 occurrence = Some("0-n"),
-                attributes = "restypeid=http://www.knora.org/ontology/knora-base#Representation",
-                label = Some("hat Repräsentation"),
+                attributes = "restypeid=http://www.knora.org/ontology/knora-base#Resource",
+                label = Some("hat Standoff Link zu"),
                 is_annotation = "0",
                 guielement = None,
                 guiorder = None,
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#LinkValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/knora-base#hasRepresentation"
+                pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
             ),
             PropertyV1(
                 locations = Nil,
@@ -960,24 +865,6 @@ object ResourcesResponderV1SpecFullData {
             restype_label = Some("Seite"),
             restype_name = Some("http://www.knora.org/ontology/incunabula#page"),
             restype_id = "http://www.knora.org/ontology/incunabula#page",
-            permissions = Vector(
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#KnownUser",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#UnknownUser",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#Owner",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                )
-            ),
             person_id = "http://data.knora.org/users/91e19f1e01",
             project_id = "http://data.knora.org/projects/77275339"
         ))
@@ -1012,20 +899,6 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Verknüpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
-                    permissions = Vector(
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#KnownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#UnknownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        )
-                    ),
                     person_id = "http://data.knora.org/users/91e19f1e01",
                     project_id = "http://data.knora.org/projects/77275339"
                 ),
@@ -1050,20 +923,6 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Region"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
                     restype_id = "http://www.knora.org/ontology/knora-base#Region",
-                    permissions = Vector(
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#KnownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#UnknownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        )
-                    ),
                     person_id = "http://data.knora.org/users/91e19f1e01",
                     project_id = "http://data.knora.org/projects/77275339"
                 ),
@@ -1088,20 +947,6 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Region"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
                     restype_id = "http://www.knora.org/ontology/knora-base#Region",
-                    permissions = Vector(
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#KnownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#UnknownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        )
-                    ),
                     person_id = "http://data.knora.org/users/1458b20f08",
                     project_id = "http://data.knora.org/projects/77275339"
                 ),
@@ -1126,20 +971,6 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Verknüpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
-                    permissions = Vector(
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#KnownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        ),
-                        Tuple2(
-                            _2 = "http://www.knora.org/ontology/knora-base#UnknownUser",
-                            _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                        )
-                    ),
                     person_id = "http://data.knora.org/users/1458b20f08",
                     project_id = "http://data.knora.org/projects/77275339"
                 ),
@@ -1159,15 +990,15 @@ object ResourcesResponderV1SpecFullData {
                 comments = Vector(""),
                 value_ids = Vector("http://data.knora.org/047db418ae06/values/7331b94196a104"),
                 values = Vector(TextValueV1(
-                    resource_reference = Vector("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"),
+                    resource_reference = Set("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"), // TODO: Why is this a Value onject IRI?
                     textattr = Map(
-                        "p" -> Vector(StandoffPositionV1(
+                        StandoffTagV1.paragraph -> Vector(StandoffPositionV1(
                             href = None,
                             resid = None,
                             end = 94,
                             start = 0
                         )),
-                        "_link" -> Vector(StandoffPositionV1(
+                        StandoffTagV1.link -> Vector(StandoffPositionV1(
                             href = Some("http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06%2Fvalues%2F2428fc96-1383-4457-9704-077b37256103"),
                             resid = Some("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"),
                             end = 39,
@@ -1296,20 +1127,6 @@ object ResourcesResponderV1SpecFullData {
             restype_label = Some("Region"),
             restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
             restype_id = "http://www.knora.org/ontology/knora-base#Region",
-            permissions = Vector(
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#ProjectMember",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasModifyPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#KnownUser",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                ),
-                Tuple2(
-                    _2 = "http://www.knora.org/ontology/knora-base#UnknownUser",
-                    _1 = "http://www.knora.org/ontology/knora-base#hasViewPermission"
-                )
-            ),
             person_id = "http://data.knora.org/users/1458b20f08",
             project_id = "http://data.knora.org/projects/77275339"
         ))

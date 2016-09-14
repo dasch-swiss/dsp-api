@@ -72,8 +72,10 @@ INSERT {
             rdf:subject ?linkSource ;
             rdf:predicate ?linkProperty ;
             rdf:object ?linkTarget ;
+            knora-base:valueHasString "@linkUpdate.linkTargetIri" ;
             knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
             knora-base:valueCreationDate ?currentTime ;
+            knora-base:deleteDate ?currentTime ;
             knora-base:previousValue ?currentLinkValue ;
             @maybeComment match {
                 case Some(comment) => {
@@ -88,8 +90,28 @@ INSERT {
                 @{throw SparqlGenerationException(s"linkUpdate.newReferenceCount must be 0 in this SPARQL template"); ()}
             }
 
-        @for(assertion <- linkUpdate.permissionRelevantAssertions) {
-           ?newLinkValue <@assertion._1> <@assertion._2> .
+        ?newLinkValue knora-base:attachedToUser <@linkUpdate.newLinkValueOwner> .
+
+        @linkUpdate.newLinkValueProject match {
+
+            case Some(linkValueProject) => {
+
+                ?newLinkValue knora-base:attachedToProject <@linkValueProject> .
+
+            }
+
+            case None => {}
+        }
+
+        @linkUpdate.newLinkValuePermissions match {
+
+            case Some(linkValuePermissions) => {
+
+                ?newLinkValue knora-base:hasPermissions "@linkValuePermissions" .
+
+            }
+
+            case None => {}
         }
 
         @* Attach the new LinkValue to its containing resource. *@

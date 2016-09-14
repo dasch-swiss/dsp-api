@@ -81,6 +81,7 @@ trait KnoraException extends Serializable {
 /**
   * An abstract base class for exceptions indicating that something about a request made it impossible to fulfil (e.g.
   * it was malformed or referred to nonexistent data).
+  *
   * @param message a description of the error.
   */
 abstract class RequestRejectedException(message: String) extends Exception(message) with KnoraException
@@ -92,30 +93,35 @@ object RequestRejectedException {
 
 /**
   * An exception indicating that the request parameters did not make sense.
+  *
   * @param message a description of the error.
   */
 case class BadRequestException(message: String) extends RequestRejectedException(message)
 
 /**
   * An exception indicating that a user has provided bad credentials.
+  *
   * @param message a description of the error.
   */
 case class BadCredentialsException(message: String) extends RequestRejectedException(message)
 
 /**
   * An exception indicating that a user has made a request for which the user lacks the necessary permission.
+  *
   * @param message a description of the error.
   */
 case class ForbiddenException(message: String) extends RequestRejectedException(message)
 
 /**
   * An exception indicating that the requested data was not found.
+  *
   * @param message a description of the error.
   */
 case class NotFoundException(message: String) extends RequestRejectedException(message)
 
 /**
   * An exception indicating that a requested update is not allowed because it would create a duplicate value.
+  *
   * @param message a description of the error.
   */
 case class DuplicateValueException(message: String = "Duplicate values are not permitted") extends RequestRejectedException(message)
@@ -123,14 +129,22 @@ case class DuplicateValueException(message: String = "Duplicate values are not p
 /**
   * An exception indicating that a requested update is not allowed because it would violate an ontology constraint,
   * e.g. an `knora-base:objectClassConstraint` or an OWL cardinality restriction.
+  *
   * @param message a description of the error.
   */
 case class OntologyConstraintException(message: String) extends RequestRejectedException(message)
 
 /**
-  * An abstract class for exceptions indicating that something went wrong and it's not the client's fault.
+  * An exception indicating that the submitted standoff is not valid.
   * @param message a description of the error.
-  * @param cause the original exception representing the cause of the error, if any.
+  */
+case class InvalidStandoffException(message: String) extends RequestRejectedException(message)
+
+/**
+  * An abstract class for exceptions indicating that something went wrong and it's not the client's fault.
+  *
+  * @param message a description of the error.
+  * @param cause   the original exception representing the cause of the error, if any.
   */
 abstract class InternalServerException(message: String, cause: Option[Throwable] = None) extends Exception(message, cause.orNull) with KnoraException
 
@@ -142,21 +156,24 @@ object InternalServerException {
 /**
   * An exception indicating that a requested update was not performed, although it was expected to succeed.
   * This probably indicates a bug.
+  *
   * @param message a description of the error.
   */
 case class UpdateNotPerformedException(message: String = "A requested update was not performed. Please report this as a possible bug.") extends InternalServerException(message)
 
 /**
   * An abstract class for exceptions indicating that something went wrong with the triplestore.
+  *
   * @param message a description of the error.
-  * @param cause the original exception representing the cause of the error, if any.
+  * @param cause   the original exception representing the cause of the error, if any.
   */
 abstract class TriplestoreException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
 
 /**
   * Indicates that the network connection to the triplestore failed.
+  *
   * @param message a description of the error.
-  * @param cause the original exception representing the cause of the error, if any.
+  * @param cause   the original exception representing the cause of the error, if any.
   */
 case class TriplestoreConnectionException(message: String, cause: Option[Throwable] = None) extends TriplestoreException(message, cause)
 
@@ -167,8 +184,9 @@ object TriplestoreConnectionException {
 
 /**
   * Indicates that we tried using a feature which is unsuported by the selected triplestore.
+  *
   * @param message a description of the error.
-  * @param cause the original exception representing the cause of the error, if any.
+  * @param cause   the original exception representing the cause of the error, if any.
   */
 case class TriplestoreUnsupportedFeatureException(message: String, cause: Option[Throwable] = None) extends TriplestoreException(message, cause)
 
@@ -179,8 +197,9 @@ object TriplestoreUnsupportedFeatureException {
 
 /**
   * Indicates that something inside the Triplestore package went wrong. More details can be given in the message parameter.
+  *
   * @param message a description of the error.
-  * @param cause the original exception representing the cause of the error, if any.
+  * @param cause   the original exception representing the cause of the error, if any.
   */
 case class TriplestoreInternalException(message: String, cause: Option[Throwable] = None) extends TriplestoreException(message, cause)
 
@@ -191,8 +210,9 @@ object TriplestoreInternalException {
 
 /**
   * Indicates that something happened that should be impossible.
+  *
   * @param message a description of the error.
-  * @param cause the original exception representing the cause of the error, if any.
+  * @param cause   the original exception representing the cause of the error, if any.
   */
 case class AssertionException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
 
@@ -204,8 +224,9 @@ object AssertionException {
 
 /**
   * Indicates that the triplestore returned an error message, or a response that could not be parsed.
+  *
   * @param message a description of the error.
-  * @param cause the original exception representing the cause of the error, if any.
+  * @param cause   the original exception representing the cause of the error, if any.
   */
 case class TriplestoreResponseException(message: String, cause: Option[Throwable] = None) extends TriplestoreException(message, cause)
 
@@ -216,6 +237,7 @@ object TriplestoreResponseException {
 
 /**
   * Indicates that the triplestore returned inconsistent data.
+  *
   * @param message a description of the error.
   */
 case class InconsistentTriplestoreDataException(message: String, cause: Option[Throwable] = None) extends TriplestoreException(message, cause)
@@ -227,8 +249,9 @@ object InconsistentTriplestoreDataException {
 
 /**
   * Indicates that the API server generated invalid JSON in an API response.
+  *
   * @param message a description of the error.
-  * @param cause the original exception representing the cause of the error, if any.
+  * @param cause   the original exception representing the cause of the error, if any.
   */
 case class InvalidApiJsonException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
 
@@ -239,6 +262,7 @@ object InvalidApiJsonException {
 
 /**
   * Indicates that an application lock could not be acquired.
+  *
   * @param message a description of the error.
   */
 case class ApplicationLockException(message: String) extends InternalServerException(message)
@@ -250,18 +274,21 @@ case class TransactionManagementException(message: String) extends InternalServe
 
 /**
   * Indicates that an Akka actor received an unexpected message.
+  *
   * @param message a description of the error.
   */
 case class UnexpectedMessageException(message: String) extends InternalServerException(message)
 
 /**
   * Indicates that an error occurred in the application's cache.
+  *
   * @param message a description of the error.
   */
 case class ApplicationCacheException(message: String) extends InternalServerException(message)
 
 /**
   * Indicates that an error occurred during the generation of SPARQL query code.
+  *
   * @param message a description of the error.
   */
 case class SparqlGenerationException(message: String) extends InternalServerException(message)
@@ -273,12 +300,14 @@ case class WrapperException(e: Throwable) extends InternalServerException(e.toSt
 
 /**
   * Indicates that an error occurred when trying to write a file to the disk.
+  *
   * @param message a description of the error.
   */
 case class FileWriteException(message: String) extends InternalServerException(message)
 
 /**
   * Indicates that a request attempted to use a feature that has not yet been implemented.
+  *
   * @param message a description of the error.
   */
 case class NotImplementedException(message: String) extends InternalServerException(message)
@@ -286,6 +315,7 @@ case class NotImplementedException(message: String) extends InternalServerExcept
 
 /**
   * Indicates that an error occurred with Sipi not relating to the user's request (it is not the user's fault).
+  *
   * @param message a description of the error.
   */
 case class SipiException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
@@ -297,6 +327,7 @@ object SipiException {
 
 /**
   * An abstract base class for exceptions indicating that something about a configuration made it impossible to start.
+  *
   * @param message a description of the error.
   */
 abstract class ApplicationConfigurationException(message: String) extends Exception(message) with KnoraException
@@ -308,6 +339,7 @@ object ApplicationConfigurationException {
 
 /**
   * Indicates that an unsupported triplestore was selected in the configuration
+  *
   * @param message a description of the error.
   */
 case class UnsuportedTriplestoreException(message: String) extends ApplicationConfigurationException(message)
@@ -319,6 +351,7 @@ case class UnsuportedTriplestoreException(message: String) extends ApplicationCo
 object ExceptionUtil {
     /**
       * Checks whether an exception is serializable.
+      *
       * @param e the exception to be checked.
       * @return `true` if the exception is serializable, otherwise `false`.
       */
@@ -335,6 +368,7 @@ object ExceptionUtil {
       * Checks whether an exception is serializable. If it is serializable, it is returned as-is. If not,
       * the exception is logged with its stack trace, and a string representation of it is returned in a
       * [[WrapperException]].
+      *
       * @param e the exception to be checked.
       * @return the same exception, or a [[WrapperException]].
       */

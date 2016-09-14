@@ -21,28 +21,27 @@
 @import org.knora.webapi.IRI
 
 @**
- * Checks whether an OWL class is a subclass of (or identical to) another OWL class.
+ * Checks whether a knora-base:Resource exists and is deleted.
  *
- * @param subClassIri the IRI of the subclass.
  * @param triplestore the name of the triplestore being used.
- * @param superClassIri the IRI of the superclass.
+ * @param resourceIri the IRI of the resource.
  *@
 @(triplestore: String,
-  subClassIri: IRI,
-  superClassIri: IRI)
+  resourceIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?isSubClass
+SELECT ?isDeleted
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND(IRI("@subClassIri") AS ?subClass)
-    BIND(IRI("@superClassIri") AS ?superClass)
+    BIND(IRI("@resourceIri") AS ?resource)
 
-    ?subClass rdfs:subClassOf* ?superClass .
-    BIND(true AS ?isSubClass)
+    ?resource knora-base:isDeleted ?isDeleted ;
+        rdf:type ?resourceClass .
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
 }

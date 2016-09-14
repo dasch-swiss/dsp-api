@@ -29,7 +29,7 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.valuemessages.{CreateRichtextV1, StandoffPositionV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{CreateRichtextV1, StandoffTagV1, StandoffPositionV1, TextValueV1}
 import spray.json.JsonParser
 
 
@@ -83,7 +83,6 @@ object InputValidation {
 
     def toSparqlEncodedString(s: String): String = {
         // http://www.morelab.deusto.es/code_injection/
-        // TODO: if the user submits backslashes, could the possibly neutralize the backslashes we insert?
 
         StringUtils.replaceEach(
             s,
@@ -189,35 +188,128 @@ object InputValidation {
     */
 
     /**
-      * Validate textattr (member of [[CreateRichtextV1]]): convert every attribute name to a save String
-      * and process each StandoffPositionV1's arguments.
+      * Represents the optional components of a [[TextValueV1]]: `textattr` and `resource_reference`.
+      *
+      * @param textattr           the standoff tags of a [[TextValueV1]].
+      * @param resource_reference the resources referred to by a [[TextValueV1]]
+      */
+    case class RichtextComponents(textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]], resource_reference: Set[IRI])
+
+    /**
+      * Processes the optional components of a [[TextValueV1]]: `textattr` and `resource_reference`.
+      * Returns a [[RichtextComponents]] that can be used to create a [[TextValueV1]].
+      *
+      * @param richtext the data submitted by the client.
+      * @return a [[RichtextComponents]].
+      */
+    def handleRichtext(richtext: CreateRichtextV1): RichtextComponents = {
+        import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
+
+        // parse `textattr` into a [[Map[StandoffTagV1.Value, Seq[StandoffPositionV1]]]]
+        val textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = richtext.textattr match {
+            case Some(textattrString: String) =>
+
+                // convert the given string into a [[Map[StandoffTagV1.Value, Seq[StandoffPositionV1]]]]
+                val parsedTextattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] =
+                    JsonParser(textattrString).convertTo[Map[String, Seq[StandoffPositionV1]]].map {
+                        case (tagname: String, standoffPos: Seq[StandoffPositionV1]) =>
+                            // turn tag name into a [[StandoffTagV1.Value]]
+                            (StandoffTagV1.lookup(tagname, () => throw BadRequestException(s"Standoff tag not supported: $tagname")), standoffPos)
+                    }
+
+                validateStandoffPositions(parsedTextattr)
+
+            case None =>
+                Map.empty[StandoffTagV1.Value, Seq[StandoffPositionV1]]
+        }
+
+        // make sure that `resource_reference` contains valid IRIs
+        val resourceReference: Set[IRI] = richtext.resource_reference match {
+            case Some(resRefs: Seq[IRI]) =>
+                InputValidation.validateResourceReference(resRefs)
+            case None =>
+                Set.empty[IRI]
+        }
+
+        // collect the standoff link tags' IRIs (`resid`)
+        val resIrisfromStandoffLinkTags: Set[IRI] = textattr.get(StandoffTagV1.link) match {
+            case Some(links: Seq[StandoffPositionV1]) => InputValidation.getResourceIrisFromStandoffLinkTags(links)
+            case None => Set.empty[IRI]
+        }
+
+        // check if resources references in standoff link tags exactly correspond to those submitted in richtext.resource_reference
+        if (resourceReference != resIrisfromStandoffLinkTags) throw BadRequestException("Submitted resource references in standoff link tags and in member 'resource_reference' are inconsistent")
+
+        RichtextComponents(textattr = textattr, resource_reference = resourceReference)
+
+    }
+
+    /**
+      * Validate textattr (member of [[CreateRichtextV1]]): check for required members of _link standoff tags and
+      * and validate each StandoffPositionV1's arguments.
       *
       * @param textattr text attributes sent by the client as part of a richtext object
       * @return validated text attributes
       */
-    def validateTextattr(textattr: Map[String, Seq[StandoffPositionV1]]): Map[String, Seq[StandoffPositionV1]] = {
+    private def validateStandoffPositions(textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]]): Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = {
         textattr.map {
-            case (attr: String, positions: Seq[StandoffPositionV1]) => (InputValidation.toSparqlEncodedString(attr), positions.map {
-                    case (position: StandoffPositionV1) => StandoffPositionV1(start = position.start, end = position.end, href = position.href match {
-                            case Some(href) => Some(InputValidation.toIri(href, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute href $href")))
-                            case _ => None
-                        }, resid = position.resid match {
-                            case Some(resid) => Some(InputValidation.toIri(resid, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute resid $resid")))
-                            case _ => None
-                        })
-                })
+            case (tagName: StandoffTagV1.Value, positions: Seq[StandoffPositionV1]) =>
+                val standoffPositionsForTagName: Seq[StandoffPositionV1] = tagName match {
+                    // depending on whether it is a linking tag or not, process the arguments
+                    case linkingTag: StandoffTagV1.Value if linkingTag == StandoffTagV1.link =>
+                        // it is a linking tag:
+                        // "href" is required for all positions belonging to this tag, "resid" may be given in case it is an internal link to a Knora resource
+                        positions.map {
+                            position: StandoffPositionV1 => StandoffPositionV1(start = position.start, end = position.end, href = position.href match {
+                                case Some(href) => Some(InputValidation.toIri(href, () => throw BadRequestException(s"Invalid URL in attribute href: $href")))
+                                case None => throw BadRequestException(s"No href given for standoff tag of type ${StandoffTagV1.link}")
+                            }, resid = position.resid match {
+                                case Some(resid) => Some(InputValidation.toIri(resid, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute resid $resid")))
+                                case None => None
+                            })
+                        }
+                    case nonLinkingTag: StandoffTagV1.Value =>
+                        // only "start" and "end" are required, no further members allowed
+                        positions.map {
+                            position: StandoffPositionV1 => StandoffPositionV1(start = position.start, end = position.end, href = position.href match {
+                                case Some(href) => throw BadRequestException(s"href given for non linking standoff tag $nonLinkingTag")
+                                case None => None
+                            }, resid = position.resid match {
+                                case Some(resid) => throw BadRequestException(s"resid given for non linking standoff tag $nonLinkingTag")
+                                case None => None
+                            })
+                        }
+                }
+
+                (tagName, standoffPositionsForTagName)
         }
     }
 
     /**
-      * Validate resource_references (member of [[CreateRichtextV1]]): all references must be valid Knora Iris.
+      * Validate resource_reference (member of [[CreateRichtextV1]]): all references must be valid Knora Iris.
       *
       * @param resRefs resource references sent by the client as patr of a richtext object
       * @return validate resource references
       */
-    def validateResourceReference(resRefs: Seq[IRI]): Seq[IRI] = {
+    private def validateResourceReference(resRefs: Seq[IRI]): Set[IRI] = {
         resRefs.map {
             case (ref: IRI) => InputValidation.toIri(ref, () => throw BadRequestException(s"Invalid Knora resource IRI $ref"))
+        }.toSet
+    }
+
+    /**
+      * Map over all standoff link tags to collect IRIs that are referred to.
+      *
+      * @param links The list of [[StandoffPositionV1]] for [[StandoffTagV1.link]].
+      * @return a set of Iris referred to in the [[StandoffPositionV1]].
+      */
+    def getResourceIrisFromStandoffLinkTags(links: Seq[StandoffPositionV1]): Set[IRI] = {
+        links.foldLeft(Set.empty[IRI]) {
+            // use a set to eliminate redundancy of identical Iris
+            case (acc, position) => position.resid match {
+                case Some(resid: IRI) => acc + resid
+                case None => acc
+            }
         }
     }
 
@@ -248,7 +340,9 @@ object InputValidation {
 
         val fileName: File = File.createTempFile("tmp_", ".bin", new File(settings.tmpDataDir))
 
-        if (!fileName.canWrite) throw FileWriteException(s"File ${fileName} cannot be written.")
+        if (!fileName.canWrite) throw FileWriteException(s"File ${
+            fileName
+        } cannot be written.")
 
         // write given file to disk
         Files.write(fileName.toPath, binaryData)

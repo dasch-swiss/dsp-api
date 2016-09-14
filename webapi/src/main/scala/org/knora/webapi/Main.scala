@@ -20,8 +20,6 @@
 
 package org.knora.webapi
 
-import shapeless.headOption
-
 /**
   * Starts [[KnoraService]].
   */

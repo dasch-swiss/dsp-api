@@ -74,12 +74,12 @@
 
 \usepackage{hyperref}
 \usepackage[textwidth=3cm]{todonotes}
-\newcommand{\issue}[2]{\todo{\href{http://git.iml.unibas.ch/salsah-suite/knora/issues/#1}{Issue #1: #2}}}
+\newcommand{\issue}[2]{\todo{\href{https://github.com/dhlab-basel/Knora/issues/#1}{Issue #1: #2}}}
 
 \title{The Knora Base Ontology}
 \author{Lukas Rosenthaler, Benjamin Geer, Tobias Schweizer, Ivan Subotic\\Digital Humanities Lab, University of Basel}
 
-\date{11 March 2016}
+\date{13 September 2016}
 
 \begin{document}
 
@@ -213,13 +213,13 @@ In Knora, each item of data belongs to some particular project. Each project usi
 
 \begin{description}
 	\item[shortname (1)] A short name that can be used to identify the project in configuration files and the like.
-	\item[basepath (1)] The filesystem path of the directory where the project's files are stored. \issue{290}{Should this be in the triplestore?}
+	\item[basepath (1)] The filesystem path of the directory where the project's files are stored.
 	\item[foaf:name (0-1)] The name of the project.
 	\item[description (0-1)] A description of the project.
 	\item[belongsTo (0-1)] The \texttt{kb:Institution} that the project belongs to.
 \end{description}
 
-Resources and values are associated with a project by means of the \texttt{kb:attached\-To\-Project} property, as described in Section~\ref{sec:data-model}. Users are associated with a project by means of the \texttt{kb:is\-In\-Project} property, as described in Section~\ref{sec:authorization}.
+Resources and values are associated with a project by means of the \texttt{kb:attached\-To\-Project} property, as described in Section~\ref{sec:data-model}. Users are associated with a project by means of the \texttt{kb:is\-In\-Project} property, as described in Section~\ref{subsec:users-and-groups}.
 
 \subsection{Resources}
 
@@ -227,11 +227,13 @@ Resources and values are associated with a project by means of the \texttt{kb:at
 
 All the content produced by a project (e.g. digitised primary source materials or research data) must be stored in objects that belong to subclasses of \texttt{kb:Resource}, so that the Knora API server can query and update that content. Each project using the Knora base ontology must define its own OWL classes, derived from \texttt{kb:Resource}, to represent the types of data it deals with.
 
-Resources have properties that point to different parts of the content they contain. For example, a resource representing a book could have a property called \texttt{hasAuthor}, pointing to the author of the book. There are two possible kinds of content in a Knora resource: Knora values (see Section~\ref{subsec:values}) or links to other resources (see Section~\ref{sec:links}). Properties that point to Knora values must be subproperties of \texttt{kb:hasValue}, and properties that point to other resources must be subproperties of \texttt{kb:hasLinkTo}. \todo{Add a list of the Knora properties that projects are, and are not, allowed to use directly, and explain why.} Each property definition must specify the types that its subjects and objects must belong to (see Section~\ref{subsec:property-restrictions} for details).
+Resources have properties that point to different parts of the content they contain. For example, a resource representing a book could have a property called \texttt{hasAuthor}, pointing to the author of the book. There are two possible kinds of content in a Knora resource: Knora values (see Section~\ref{subsec:values}) or links to other resources (see Section~\ref{sec:links}). Properties that point to Knora values must be subproperties of \texttt{kb:hasValue}, and properties that point to other resources must be subproperties of \texttt{kb:hasLinkTo}. \issue{138}{Add a list of the Knora properties that projects are, and are not, allowed to use directly, and explain why.} Each property definition must specify the types that its subjects and objects must belong to (see Section~\ref{subsec:property-restrictions} for details).
 
 Each project-specific resource class definition must use OWL cardinality restrictions to specify the properties that resources of that class can have (see Section~\ref{subsec:cardinalities} for details).
 
-Resources are not versioned; only their values are versioned (see Section~\ref{subsec:values}). A resource can be marked as deleted. It then remains in the repository, but becomes invisible to ordinary queries. It cannot be undeleted, because even though resources are not versioned, it is necessary to be able to find out when a resource was deleted. If desired, a new resource can be created by copying data from a deleted resource.
+Resources are not versioned; only their values are versioned (see Section~\ref{subsec:values}).
+
+A resource can be marked as deleted. An optional \texttt{kb:delete\-Comment} may be added to explain why the resource has been marked as deleted. Deleted resources are normally hidden. They cannot be undeleted, because even though resources are not versioned, it is necessary to be able to find out when a resource was deleted. If desired, a new resource can be created by copying data from a deleted resource.
 
 \subsubsection{Properties of Resource}
 
@@ -241,8 +243,9 @@ Resources are not versioned; only their values are versioned (see Section~\ref{s
   \item[attachedToProject (1)] The project that the resource is part of.
   \item[lastModificationDate (0-1)] A timestamp indicating when the resource (or one of its values) was last modified.
   \item[seqnum (0-1)] The sequence number of the resource, if it is part of an ordered group of resources, such as the pages in a book. 
-  \item[isDeleted (0-1)] Indicates whether the resource has been deleted.
+  \item[isDeleted (1)] Indicates whether the resource has been deleted.
   \item[deleteDate (0-1)] If the resource has been deleted, indicates when it was deleted.
+  \item[deleteComment (0-1)] If the resource has been deleted, indicates why it was deleted.
 \end{description}
 
 Resources can have properties that point to other resources; see Section~\ref{sec:links}. A resource grants permissions to groups of users; see Section~\ref{sec:authorization}.
@@ -272,6 +275,16 @@ There are two ways for a project to design classes for representations. The simp
 
 The more flexible approach, which is allowed by the Knora base ontology and will be supported by version 2 of the Knora API, is for each \texttt{ex:Painting} to use the \texttt{kb:hasRepresentation} property to point to other resources containing files that represent the painting. Each of these other resources can extend a different subclass of \texttt{Representation}. For example, a painting could have a \texttt{Still\-Image\-Representation} as well as a \texttt{DDDrepresentation}.
 
+\subsubsection{Standard Resource Classes}
+
+In general, each project using Knora must define its own subclasses of \texttt{kb:Resource}. However, the Knora base ontology provides some standard subclasses of \texttt{kb:Resource}, which are intended to be used by any project:
+
+\begin{description}
+	\item[Region] Represents a region of a \texttt{Representation} (see Section~\ref{subsubsec:representations}).
+	\item[Annotation] Represents an annotation of a resource. The \texttt{hasComment} property points to the text of the annotation.
+	\item[LinkObj] Represents a link that connects two or more resources. A \texttt{LinkObj} has a \texttt{hasLinkTo} property pointing to each resource that it connects, as well as a \texttt{hasLinkToValue} property pointing to a reification of each of these direct links (see Section~\ref{sec:links}). A \texttt{LinkObj} is more complex (and hence less convenient and readable) than a simple direct link, but it has the advantage that it can be annotated using an \texttt{Annotation}. For improved readability, a project can make its own subclasses of \texttt{LinkObj} with specific meanings.
+\end{description}
+
 \subsection{Values}
 
 \label{subsec:values}
@@ -282,7 +295,11 @@ A value is always part of one particular resource, which points to it using some
 
 Knora values are versioned. Existing values are not modified. Instead, a new version of an existing value is created. The new version is linked to the old version via the \texttt{previousValue} property.
 
-\enquote{Deleting} a value means creating a new version, marked with \texttt{kb:is\-Deleted} and pointing to the previous version. A triple then points from the containing resource to this new, deleted version of the value, which remains in the repository but is invisible to ordinary queries. To simplify the enforcement of ontology constraints, and for consistency with resource updates, no new versions of a deleted value can be made; it is not possible to undelete. Instead, if desired, a new value can be created by copying data from a deleted value.
+\enquote{Deleting} a value means marking it with \texttt{kb:is\-Deleted}. An optional \texttt{kb:delete\-Comment} may be added to explain why the value has been marked as deleted. Deleted values are normally hidden.
+
+Most types of values are marked as deleted without creating a new version of the value. However, link values must be treated as a special case. Before a \texttt{LinkValue} can be marked as deleted, its reference count must be decremented to 0. Therefore, a new version of the \texttt{LinkValue} is made, with a reference count of 0, and it is this new version that is marked as deleted.
+
+To simplify the enforcement of ontology constraints, and for consistency with resource updates, no new versions of a deleted value can be made; it is not possible to undelete. Instead, if desired, a new value can be created by copying data from a deleted value.
 
 \subsubsection{Properties of Value}
 
@@ -293,7 +310,9 @@ Knora values are versioned. Existing values are not modified. Instead, a new ver
   \item[valueHasString (1)] A human-readable string representation of the value's contents, which is available to Knora's full-text search index.
   \item[valueHasOrder (0-1)] A resource may have several properties of the same type with different values (which will be of the same class), and it may be necessary to indicate an order in which these values occur. For example, a book may have several authors which should appear in a defined order. Hence, \texttt{valueHasOrder}, when present, points to an integer literal indicating the order of a given value relative to the other values of the same property. These integers will not necessarily start at any particular number, and will not necessarily be consecutive.
   \item[previousValue (0-1)] The previous version of the value.
-  \item[isDeleted (0-1)] Indicates whether the value has been deleted.
+  \item[isDeleted (1)] Indicates whether the value has been deleted.
+  \item[deleteDate (0-1)] If the value has been deleted, indicates when it was deleted.
+  \item[deleteComment (0-1)] If the value has been deleted, indicates why it was deleted.
 \end{description}
 
 Each Knora value can grant permissions (see Section~\ref{sec:authorization}).
@@ -302,10 +321,12 @@ Each Knora value can grant permissions (see Section~\ref{sec:authorization}).
 
 \subsubsection{TextValue}
 
-Represents text, possibly including markup. Property:
+Represents text, possibly including markup. The text is the object of the \texttt{valueHasString} property. A line break is represented as a Unicode line feed character (\texttt{U+000A}). The non-printing Unicode character \texttt{INFORMATION SEPARATOR TWO (U+001E)} can be used to separate words that are separated only by standoff markup (see below), so they are recognised as separate in a full-text search index.
+
+Markup is stored using this property:
 
 \begin{description}
-	\item[valueHasStandoff (0-n)] Points to a Standoff node. See Section~\ref{sec:standoff}.
+	\item[valueHasStandoff (0-n)] Points to a standoff markup tag. See Section~\ref{sec:standoff}.
 \end{description}
 
 \subsubsection{DateValue}
@@ -336,12 +357,20 @@ Represents an arbitrary-precision decimal number. Property:
 	\item[valueHasDecimal (1)] An \texttt{xsd:decimal}.
 \end{description}
 
-\subsubsection{TimeValue}
+\subsubsection{UriValue}
 
-Represents a precise point on a timeline, e.g. relative to the beginning of an audio or video file. Property:
+Represents a non-Knora URI. Property:
 
 \begin{description}
-	\item[valueHasTime (1)]	An \texttt{xsd:decimal} representing a number of seconds from the beginning of the timeline.
+	\item[valueHasUri (1)] An \texttt{xsd:anyURI}.
+\end{description}
+
+\subsubsection{BooleanValue}
+
+Represents a boolean value. Property:
+
+\begin{description}
+	\item[valueHasBoolean (1)] An \texttt{xsd:boolean}.
 \end{description}
 
 \subsubsection{GeomValue}
@@ -589,71 +618,87 @@ edge [<-,cyan!60!green] node[text style,above]{valueHasRefCount} (link);
 \label{fig:basic-link-graph}
 \end{figure}
 
-\section{Text with Standoff Nodes}
+\section{Text with Standoff Markup}
 
 \label{sec:standoff}
 
 Knora is designed to be able to store text with markup, which can indicate formatting and structure, as well as the complex observations involved in transcribing handwritten manuscripts. One popular way of representing text in the humanities is to encode it as TEI/XML\footnote{TEI refers both to an organization and an XML-based markup language (or more precisely: a set of grammar modules -- XML schemas -- that can be combined to define a markup language). For reasons of clarity, we use the term TEI/XML to refer to the markup language.} using the \href{http://www.tei-c.org/index.xml}{Text Encoding Initiative (TEI)} guidelines~\cite{P5}. In Knora, a TEI/XML document can be stored as a file with attached metadata.
 
-However, Knora also supports \enquote{standoff} nodes, which are stored separately from the text. This has some advantages over embedded markup such as XML.\footnote{It is also possible to encode standoff markup using XML. For example, the TEI discusses standoff markup in its guidelines~\cite[chapters 16.9 and 20.4]{P5}. However, standoff markup is not widely applied in the TEI community. The main focus lies on encoding a hierarchy of elements.} While XML requires markup to have a hierarchical structure, and does not allow overlapping tags, standoff nodes do not have these limitations~\cite{Schmidt_Standoff}. A \enquote{standoff node} can assign an attribute to any substring in the text by giving its start and end positions.\footnote{Unlike in corpus linguistics, we do not use any tokenization resulting in a form of predefined segmentation that would limit the user's possibility to freely annotate any ranges in the text.} For example, suppose we have the following text:
+However, Knora also supports \enquote{standoff} tags, which are stored separately from the text. This has some advantages over embedded markup such as XML.\footnote{It is also possible to encode standoff markup using XML. For example, the TEI discusses standoff markup in its guidelines~\cite[chapters 16.9 and 20.4]{P5}. However, standoff markup is not widely applied in the TEI community. The main focus lies on encoding a hierarchy of elements.} While XML requires markup to have a hierarchical structure, and does not allow overlapping tags, standoff nodes do not have these limitations~\cite{Schmidt_Standoff}. A standoff tag can be attached to any substring in the text by giving its start and end positions.\footnote{Unlike in corpus linguistics, we do not use any tokenization resulting in a form of predefined segmentation that would limit the user's possibility to freely annotate any ranges in the text.} For example, suppose we have the following text:
 
 \begin{quote}
 This \textit{sentence \textbf{has overlapping}}\textbf{ visual} attributes.
 \end{quote}
 
-This would require just two standoff nodes: \texttt{(italic, start=5, end=29)} and \texttt{(bold, start=14, end=36)}.
+This would require just two standoff tags: \texttt{(italic, start=5, end=29)} and \texttt{(bold, start=14, end=36)}.
 
-Moreover, standoff makes it possible to mark up the same text in different, possibly incompatible ways, allowing for different interpretations without making redundant copies of the text. In the Knora base ontology, any text value can have standoff nodes.
+Moreover, standoff makes it possible to mark up the same text in different, possibly incompatible ways, allowing for different interpretations without making redundant copies of the text. In the Knora base ontology, any text value can have standoff tags.
 
-By representing standoff as RDF triples, Knora makes markup searchable across multiple text documents in a repository. For example, if a repository contains documents in which references to persons are indicated in standoff, it is straightforward to find all the documents mentioning a particular person. Knora's standoff support is intended to make it possible to convert documents with embedded, hierarchical markup, such as TEI/XML, into RDF standoff and back again, with no data loss, thus bringing the benefits of RDF to existing TEI-encoded documents (cf.~\cite[3]{Schmidt_Standoff}). While standoff nodes directly referring to positions in the text represent flat structures, the representation of XML-based markup or any hierarchical structures in standoff is enabled by introducing terminal and nonterminal nodes~\cite{PAULA, POWLA}.\issue{292}{Nonterminal nodes do not exist yet in the ontology.} Nonterminal nodes may represent hierarchical structures like lists: individual list elements refer to index positions in the text and point to a common nonterminal node representing their parent element (cf.~\cite[229]{POWLA}). A purely flat approach (terminal nodes only) would mean that relations between single standoff nodes could not be handled at all by Knora. Taking the example of a list, the following embedded markup would not be represented correctly:
+By representing standoff as RDF triples, Knora makes markup searchable across multiple text documents in a repository. For example, if a repository contains documents in which references to persons are indicated in standoff, it is straightforward to find all the documents mentioning a particular person. Knora's standoff support is intended to make it possible to convert documents with embedded, hierarchical markup, such as TEI/XML, into RDF standoff and back again, with no data loss, thus bringing the benefits of RDF to existing TEI-encoded documents (cf.~\cite[3]{Schmidt_Standoff}).
 
-\begin{lstlisting}[language=HTML,caption={List in HTML},label=lst:list]
-<ol>
-	<li>first element</li>
-	<li>second element</li>
-	<li>third element</li>
-</ol>
-\end{lstlisting}
-
-Applying a purely flat approach, only the index positions of the elements would be stored, but not the information that \texttt{<ol>} actually contains all the \texttt{<li>} elements. This information would only implicitly be given because the \texttt{<ol>} spans the range of all the \texttt{<li>} elements. By representing all the \texttt{<li>} elements as terminal nodes and the \texttt{<ol>} as a nonterminal node, we are able to represent a truly hierarchical relation as standoff.\footnote{Schmidt~\cite{Schmidt_Standoff} differentiates between `standoff properties' and `standoff markup'. The first term refers to an approach where attributes may freely overlap. The latter represents structures that comply with a context-free grammar such as an XML schema or a DTD (no overlap allowed). However, we think that hierarchies are not a restriction per se because there might be structures that are in fact hierarchical and should be represented as such also in standoff.} The main benefit of using standoff nodes is that our approach may represent hierarchical relations (if the relation we want to represent is in fact a hierarchy), but does not require markup information to be hierarchical due to syntactical restrictions.\todo{How do we differentiate between truly hierarchical structures and structures that are just encoded as a hierarchy for a given XML file?} 
-
-In the Knora base ontology, a \texttt{TextValue} can have one or more standoff nodes. Each standoff node indicates the start and end positions of a substring in the text that has a particular attribute. The OWL class \texttt{kb:Standoff}, which is the base class of all standoff node classes, has these properties:
+In the Knora base ontology, a \texttt{TextValue} can have one or more standoff tags. Each standoff tag indicates the start and end positions of a substring in the text that has a particular attribute. The OWL class \texttt{kb:StandoffTag}, which is the base class of all standoff node classes, has these properties:
 
 \begin{description}
-	\item[standoffHasAttribute (1)] The name of the attribute.
-	\item[standoffHasStart (1)] The index of the first character in the text that has the attribute.
-	\item[standoffHasEnd (1)] The index of the last character in the text that has the attribute, plus 1.
+	\item[standoffTagHasStart (1)] The index of the first character in the text that has the attribute.
+	\item[standoffTagHasEnd (1)] The index of the last character in the text that has the attribute, plus 1.
 \end{description}
 
-The \texttt{Standoff} class is not used directly in RDF data; instead, its subclasses are used. A few subclasses are currently provided, and more will be added to support TEI semantics.
+The \texttt{StandoffTag} class is not used directly in RDF data; instead, its subclasses are used. A few subclasses are currently provided, and more will be added to support TEI semantics. In a future version of the Knora API server, a project will be able to define its own custom standoff tag classes.
 
-\subsection{Subclasses of Standoff}
+\subsection{Subclasses of StandoffTag}
 
-\subsubsection{StandoffVisualAttribute}
+\subsubsection{StandoffVisualTag}
 
-Represents a formatting attribute such as {\it boldface} or {\bf italics}. The value of \texttt{standoffHasAttribute} is the name of the formatting attribute, and can be any string. It is up to the text renderer to interpret these names.
+Represents a typographical style. Subclasses:
 
-\subsubsection{StandoffHref}
+\begin{itemize}
+	\item \texttt{StandoffItalicTag}
+	\item \texttt{StandoffBoldTag}
+	\item \texttt{StandoffUnderlineTag}
+	\item \texttt{StandoffStrikethroughTag}
+	\item \texttt{StandoffSuperscriptTag}
+	\item \texttt{StandoffSubscriptTag}
+\end{itemize}
 
-Indicates that a substring is associated with a resource on the Internet, i.e.\ a URL. It has this property:
+\subsubsection{StandoffStructuralTag}
 
-\begin{description}
-	\item[standoffHasHref (1)] An \texttt{xsd:anyURI} representing the URL.
-\end{description}
+Represents an element of the structure of a text. Subclasses:
 
-\subsubsection{StandoffLink}
+\begin{itemize}
+	\item \texttt{StandoffParagraphTag}
+	\item \texttt{StandoffHeader1Tag}
+	\item \texttt{StandoffHeader2Tag}
+	\item \texttt{StandoffHeader3Tag}
+	\item \texttt{StandoffHeader4Tag}
+	\item \texttt{StandoffHeader5Tag}
+	\item \texttt{StandoffHeader6Tag}
+	\item \texttt{StandoffOrderedListTag}
+	\item \texttt{StandoffUnorderedListTag}
+	\item \texttt{StandoffListElementTag}
+\end{itemize}
+
+\subsubsection{StandoffDataTypeTag}
+
+Associates data in some Knora value type with a substring in a text. Subclasses:
+
+\begin{itemize}
+	\item \texttt{StandoffUriTag} Indicates that a substring is associated with a URI.
+	\item \texttt{StandoffDateValueTag} Indicates that a substring represents a date, which is stored in the same form that is used for \texttt{kb:DateValue}.
+\end{itemize}
+
+\subsubsection{StandoffLinkTag}
 
 \label{subsubsec:standoff-link}
 
-Indicates that a substring is associated with a Knora resource. For example, if a repository contains resources representing persons, a text could be marked up so that each time a person's name is mentioned, a \texttt{StandoffLink} connects the name to the Knora resource describing that person. It has this property:
+A \texttt{StandoffLinkTag} Indicates that a substring is associated with a Knora resource. For example, if a repository contains resources representing persons, a text could be marked up so that each time a person's name is mentioned, a \texttt{StandoffLinkTag} connects the name to the Knora resource describing that person. Property:
 
 \begin{description}
-	\item[standoffHasLink (1)] The resource that the link points to.
+	\item[standoffTagHasLink (1)] The IRI of the resource that is referred to.
 \end{description}
 
-One of the design goals of the Knora ontology is to make it easy and efficient to find out which resources contain references to a given resource. Direct links are easier and more efficient to query than indirect links. Therefore, when a text value contains a resource reference in its standoff nodes, there must also be a direct link between the containing resource and the target resource, along with an RDF reification (a \texttt{kb:LinkValue}) describing the link, as discussed in Section~\ref{sec:links}. In this case, the link property is always \texttt{kb:hasStandoffLinkTo}, and the link value property (which points to the \texttt{LinkValue}) is always \texttt{kb:hasStandoffLinkToValue}.
+One of the design goals of the Knora ontology is to make it easy and efficient to find out which resources contain references to a given resource. Direct links are easier and more efficient to query than indirect links. Therefore, when a text value contains a resource reference in its standoff nodes, the Knora API server automatically creates a direct link between the containing resource and the target resource, along with an RDF reification (a \texttt{kb:LinkValue}) describing the link, as discussed in Section~\ref{sec:links}. In this case, the link property is always \texttt{kb:hasStandoffLinkTo}, and the link value property (which points to the \texttt{LinkValue}) is always \texttt{kb:hasStandoffLinkToValue}.
 
-The Knora API server automatically creates and updates direct links and reifications for standoff resource references when it creates and updates text values. To do this, it keeps track of the number of text values in each resource that contain at least one standoff reference to a given target resource. It stores this number as the reference count of the \texttt{LinkValue} (see Section~\ref{subsubsec:linkvalue}) describing the direct link. Each time this number changes, it makes a new version of the \texttt{LinkValue}, with an updated reference count. When the reference count reaches zero, it removes the direct link and makes a new version of the \texttt{LinkValue}, marked with \texttt{kb:isDeleted}.
+The Knora API server automatically updates direct links and reifications for standoff resource references when text values are updated. To do this, it keeps track of the number of text values in each resource that contain at least one standoff reference to a given target resource. It stores this number as the reference count of the \texttt{LinkValue} (see Section~\ref{subsubsec:linkvalue}) describing the direct link. Each time this number changes, it makes a new version of the \texttt{LinkValue}, with an updated reference count. When the reference count reaches zero, it removes the direct link and makes a new version of the \texttt{LinkValue}, marked with \texttt{kb:isDeleted}.
 
 For example, if \texttt{data:R1} is a resource with a text value in which the resource \texttt{data:R2} is referenced, the repository could contain the following triples:
 
@@ -664,15 +709,15 @@ data:V1 rdf:type kb:TextValue ;
     kb:valueHasString "This link is internal." ;
     kb:valueHasStandoff data:SO1 .
 
-data:SO1 rdf:type kb:StandoffLink ;
-    kb:standoffHasStart: 5 ;
-    kb:standoffHasEnd: 9 ;
-    kb:standoffHasLink data:R2 .
+data:SO1 rdf:type kb:StandoffLinkTag ;
+    kb:standoffTagHasStart: 5 ;
+    kb:standoffTagHasEnd: 9 ;
+    kb:standoffTagHasLink data:R2 .
 
 data:R1 kb:hasStandoffLinkTo data:R2 .
 data:R1 kb:hasStandoffLinkToValue data:LV1 . 
 
-data:LV1 rdf:type kb:LinkValue ;            
+data:LV1 rdf:type kb:LinkValue ;
     rdf:subject data:R1 ;
     rdf:predicate kb:hasStandoffLinkTo ;
     rdf:object data:R2 ;
@@ -680,6 +725,8 @@ data:LV1 rdf:type kb:LinkValue ;
 \end{verbatim}
 
 Figure~\ref{fig:standoff-link-graph} illustrates the result.
+
+Link values created automatically for resource references in standoff are automatically visible to all users, as long as they have permission to see the source and target resources. The owner of these link values is always \texttt{kb:SystemUser} (see Section~\ref{subsec:users-and-groups}).
 
 \begin{figure}[h]
 \centering
@@ -696,13 +743,13 @@ edge [<-,cyan!60!green] node[text style,above]{valueHasString} (hasComment);
 \node[vertex style=Green, below of=r1,xshift=3em,yshift=-4em] (so1) {SO1}
 edge [<-,cyan!60!blue] node[text style,above]{valueHasStandoff} (hasComment);
 \node[literal style=Red, below of=so1,xshift=-3em,yshift=-8em] (start) {5}
-edge [<-,cyan!60!green] node[text style,above]{standoffHasStart} (so1);
+edge [<-,cyan!60!green] node[text style,above]{standoffTagHasStart} (so1);
 \node[literal style=Red, below of=so1,xshift=3em,yshift=-8em] (end) {9}
-edge [<-,cyan!60!green] node[text style,above]{standoffHasEnd} (so1);
+edge [<-,cyan!60!green] node[text style,above]{standoffTagHasEnd} (so1);
 
 \node[vertex style=Gray, right of=r1,xshift=16em] (r2) {R2}
 edge [<-,cyan!60!green] node[text style,above]{hasStandoffLinkTo} (r1)
-edge [<-,cyan!60!green, bend left=22] node[text style,above]{standoffHasLink} (so1);
+edge [<-,cyan!60!green, bend left=22] node[text style,above]{standoffTagHasLink} (so1);
 
 \node[vertex style=Orange, right of=so1,xshift=10em,yshift=0em] (link) {LV1}
 edge [->,cyan!60!green, bend left=10] node[text style,above]{subject} (r1)
@@ -720,11 +767,33 @@ edge [<-,cyan!60!green] node[text style,above]{valueHasRefCount} (link);
 \label{fig:standoff-link-graph}
 \end{figure}
 
+\subsection{Standoff in Digital Editions}
+
+\emph{The features described in this section are under development.}
+
+Knora's standoff is designed to make it possible to convert XML documents to standoff and back. One application for this feature is an editing workflow in which an editor works in an XML editor, and the resulting XML documents are converted to standoff and stored in Knora, where they can be searched and annotated.
+
+If an editor wants to correct text that has been imported from XML into standoff, the text can be exported as XML, edited, and imported again. To preserve annotations on standoff tags across edits, each tag can automatically be given a UUID. In a future version of the Knora base ontology, it will be possible to create annotations that point to UUIDs rather than to IRIs. When a text is exported to XML, the UUIDs can be included in the XML. When the edited XML is imported again, it can be converted to new standoff tags with the same UUIDs. Annotations that applied to standoff tags in the previous version of the text will therefore also apply to equivalent tags in the new version.
+
+When text is converted from XML into standoff, tags are also given indexes, which are numbered from 0 within the context of a particular text. This makes it possible to order tags that share the same position, and to preserve the hierarchy of the original XML document. An ordinary, hierarchical XML tag is converted to a standoff tag that has one index, as well as the index of its parent tag, if any. The Knora base ontology also supports non-hierarchical markup such as CLIX\cite{CLIX}, which enables overlapping markup to be represented in XML. When non-hierarchical markup is converted to standoff, both the start position and the end position of the standoff tag have indexes and parent indexes.
+
+To support these features, a standoff tag can have these additional properties:
+
+\begin{description}
+	\item[standoffTagHasStartIndex (0-1)] The index of the start position.
+	\item[standoffTagHasEndIndex (0-1)] The index of the end position, if this is a non-hierarchical tag.
+	\item[standoffTagHasStartParentIndex (0-1)] The index of the tag, if any, that contains the start position.
+	\item[standoffTagHasEndParentIndex (0-1)] The index of the tag, if any, that contains the end position, if this is a non-hierarchical tag.
+	\item[standoffTagHasUUID (0-1)] A UUID that can be used to annotate a standoff tag that may be present in different versions of a text, or in different layers of a text (such as a diplomatic transcription and an edited critical text).
+\end{description}
+
 \section{Authorization}
 
 \label{sec:authorization}
 
 \subsection{Users and Groups}
+
+\label{subsec:users-and-groups}
 
 Each Knora user is represented by an object belonging to the class \texttt{kb:User}, which is a subclass of \texttt{foaf:Person}, and has the following properties:
 
@@ -749,16 +818,19 @@ Knora's concept of access control is that an object (a resource or value) can gr
 
 A project-specific ontology can define additional groups, which must belong to the OWL class \texttt{kb:UserGroup}.
 
+There is one built-in \texttt{SystemUser}, which is the owner of link values created automatically for resource references in standoff markup (see Section~\ref{subsubsec:standoff-link}).
+
 \subsection{Permissions}
 
-The owner of an object is always allowed to perform any operation on it. An object can grant the following permissions:
+The owner of an object is always allowed to perform any operation on it. An object can grant the following permissions, which are stored in a compact format in a single string, which is the object of the predicate 
+\texttt{kb:hasPermissions}:
 
 \begin{enumerate}
-	\item \texttt{hasRestrictedViewPermission}: Allows a restricted view of the object, e.g.\ a view of an image with a watermark.
-	\item \texttt{hasViewPermission}: Allows an unrestricted view of the object. Having view permission on a resource only affects the user's ability to view information about the resource other than its values. To view a value, she must have view permission on the value itself.
-	\item \texttt{hasModifyPermission}: For values, this permission allows a new version of a value to be created. For resources, this allows the user to create a new value (as opposed to a new version of an existing value), or to change information about the resource other than its values. When he wants to make a new version of a value, his permissions on the containing resource are not relevant. However, when he wants to change the target of a link, the old link must be deleted and a new one created, so he needs modify permission on the resource.
-	\item \texttt{hasDeletePermission}: Allows the item to be marked as deleted.
-	\item \texttt{hasChangeRightsPermission}: Allows the permissions granted by the object to be changed.
+	\item \textbf{Restricted view permission (\texttt{RV})} Allows a restricted view of the object, e.g.\ a view of an image with a watermark.
+	\item \textbf{View permission (\texttt{V})} Allows an unrestricted view of the object. Having view permission on a resource only affects the user's ability to view information about the resource other than its values. To view a value, she must have view permission on the value itself.
+	\item \textbf{Modify permission (\texttt{M})} For values, this permission allows a new version of a value to be created. For resources, this allows the user to create a new value (as opposed to a new version of an existing value), or to change information about the resource other than its values. When he wants to make a new version of a value, his permissions on the containing resource are not relevant. However, when he wants to change the target of a link, the old link must be deleted and a new one created, so he needs modify permission on the resource.
+	\item \textbf{Delete permission (\texttt{D})} Allows the item to be marked as deleted.
+	\item \textbf{Change rights permission (\texttt{CR})} Allows the permissions granted by the object to be changed.
 \end{enumerate}
 
 Each permission in the above list implies all lower-numbered permissions. A user's permission level on a particular object is calculated in the following way:
@@ -770,6 +842,23 @@ Each permission in the above list implies all lower-numbered permissions. A user
     \item From the resulting list, select the highest-level permission.
     \item If the result is that she would have no permissions, give her whatever permission \texttt{UnknownUser} would have.
 \end{enumerate}
+
+To view a link between resources, a user needs permission to view the source and target resources. He also needs permission to view the \texttt{LinkValue} representing the link, unless the link property is \texttt{hasStandoffLinkTo} (see \ref{subsubsec:standoff-link}).
+
+The format of the object of \texttt{kb:hasPermissions} is as follows:
+
+\begin{itemize}
+	\item Each permission is represented by the one-letter or two-letter abbreviation given above.
+	\item Each permission abbreviation is followed by a space, then a comma-separated list of groups that the permission is granted to.
+	\item The IRIs of built-in groups are shortened using the \texttt{knora-base} prefix.
+	\item Multiple permissions are separated by a vertical bar (\texttt{|}).
+\end{itemize}
+
+For example, if an object grants view permission to unknown and known users, and modify permission to project members, the resulting permission literal would be:
+
+\begin{verbatim}
+V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember
+\end{verbatim}
 
 \section{Consistency Checking}
 
@@ -786,7 +875,9 @@ The implementation of consistency checking is partly triplestore-dependent; Knor
 
 \label{subsec:cardinalities}
 
-As noted in Section~\ref{subsec:resources}, each subclass of \texttt{Resource} must use OWL cardinality restrictions to specify the properties it can have. More specifically, a resource is allowed to have a property that is a subproperty of \texttt{kb:hasValue} only if the resource's class has some cardinality for that property. In addition, Knora supports, and attempts to enforce, the following cardinality constraints:
+As noted in Section~\ref{subsec:resources}, each subclass of \texttt{Resource} must use OWL cardinality restrictions to specify the properties it can have. More specifically, a resource is allowed to have a property that is a subproperty of \texttt{kb:hasValue} or \texttt{kb:hasLinkTo} only if the resource's class has some cardinality for that property. Similarly, a value is allowed to have a subproperty of \texttt{kb:valueHas} only if the value's class has some cardinality for that property.
+
+Knora supports, and attempts to enforce, the following cardinality constraints:
  
 \begin{description}
 	\item[owl:cardinality 1] A resource of this class must have exactly one instance of the specified property.
@@ -794,6 +885,24 @@ As noted in Section~\ref{subsec:resources}, each subclass of \texttt{Resource} m
 	\item[owl:maxCardinality 1] A resource of this class may have zero or one instance of the specified property.
 	\item[owl:minCardinality 0] A resource of this class may have zero or more instances of the specified property.
 \end{description}
+
+Knora requires cardinalities to be defined using blank nodes, as in the following example from \texttt{knora-base}:
+
+\begin{verbatim}
+:Representation rdf:type owl:Class ;
+    rdfs:subClassOf :Resource ,
+        [ rdf:type owl:Restriction ;
+          owl:onProperty :hasFileValue ;
+          owl:minCardinality "1"^^xsd:nonNegativeInteger ] .
+        
+:StillImageRepresentation rdf:type owl:Class ;
+    rdfs:subClassOf :Representation ,
+        [ rdf:type owl:Restriction ;
+          owl:onProperty :hasStillImageFileValue ;
+          owl:minCardinality "1"^^xsd:nonNegativeInteger ] .
+\end{verbatim}
+
+A resource class inherits cardinalities from its superclasses. Also, cardinalities in the subclass can override cardinalities that would otherwise be inherited from the superclass. Specifically, if a superclass has a cardinality on a property P, and a subclass has a cardinality on a subproperty of P, the subclass's cardinality overrides the superclass's cardinality. In the example above, \texttt{hasStillImageFileValue} is a subproperty of \texttt{hasFileValue}. Therefore, the cardinality on \texttt{hasStillImageFileValue} overrides (i.e. replaces) the one on \texttt{hasFileValue}.
 
 For more information about OWL cardinalities, see~\cite[§2.1, Object Property Restrictions]{OWL_2_Quick_Reference_Guide}.
 
@@ -804,8 +913,8 @@ For more information about OWL cardinalities, see~\cite[§2.1, Object Property R
 When a project-specific ontology defines a property, it must indicate the types that are allowed as subjects and objects of the property. This is done using the following Knora-specific properties:
 
 \begin{description}
-	\item[subjectClassConstraint] Specifies the class that subjects of the property must belong to. Knora will attempt to enforce this constraint.
-	\item[objectClassConstraint] If the property is an object property, specifies the class that objects of the property must belong to. Knora will attempt to enforce this constraint.
+	\item[subjectClassConstraint] Specifies the class that subjects of the property must belong to. This constraint is recommended but not required. Knora will attempt to enforce this constraint.
+	\item[objectClassConstraint] If the property is an object property, specifies the class that objects of the property must belong to. Every subproperty of \texttt{kb:hasValue} or a \texttt{kb:hasLinkTo} (i.e. every property of a resource that points to a \texttt{kb:Value} or to another resource) is required have this constraint, because the Knora API server relies on it to know what type of object to expect for the property. Knora will attempt to enforce this constraint.
 	\item[objectDatatypeConstraint] If the property is a datatype property, specifies the type of literals that can be objects of the property. Knora will not attempt to enforce this constraint, but it is useful for documentation purposes.
 \end{description}
 

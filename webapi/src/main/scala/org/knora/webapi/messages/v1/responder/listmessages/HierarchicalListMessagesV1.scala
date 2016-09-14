@@ -21,8 +21,8 @@
 package org.knora.webapi.messages.v1.responder.listmessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -39,14 +39,16 @@ sealed trait ListsResponderRequestV1 extends KnoraRequestV1 {
 
 /**
   * Requests a list. A successful response will be a [[HListGetResponseV1]].
-  * @param iri the IRI of the list.
+  *
+  * @param iri         the IRI of the list.
   * @param userProfile the profile of the user making the request.
   */
 case class HListGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends ListsResponderRequestV1
 
 /**
   * Requests a selection (flat list). A successful response will be a [[SelectionGetResponseV1]].
-  * @param iri the IRI of the list.
+  *
+  * @param iri         the IRI of the list.
   * @param userProfile the profile of the user making the request.
   */
 case class SelectionGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends ListsResponderRequestV1
@@ -54,7 +56,8 @@ case class SelectionGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends L
 /**
   * Requests the path from the root node of a list to a particular node. A successful response will be
   * a [[NodePathGetResponseV1]].
-  * @param iri the IRI of the node.
+  *
+  * @param iri         the IRI of the node.
   * @param userProfile the profile of the user making the request.
   */
 case class NodePathGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends ListsResponderRequestV1
@@ -65,6 +68,7 @@ case class NodePathGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends Li
 sealed abstract class ListsGetResponseV1 extends KnoraResponseV1 {
     /**
       * Information about the user that made the request.
+      *
       * @return a [[UserDataV1]].
       */
     def userdata: UserDataV1
@@ -72,7 +76,8 @@ sealed abstract class ListsGetResponseV1 extends KnoraResponseV1 {
 
 /**
   * Provides a hierarchical list representing a "hlist" in the old SALSAH.
-  * @param hlist the list requested.
+  *
+  * @param hlist    the list requested.
   * @param userdata information about the user that made the request.
   */
 case class HListGetResponseV1(hlist: Seq[HierarchicalListV1], userdata: UserDataV1) extends ListsGetResponseV1 {
@@ -81,8 +86,9 @@ case class HListGetResponseV1(hlist: Seq[HierarchicalListV1], userdata: UserData
 
 /**
   * Provides a hierarchical list representing a "selection" in the old SALSAH.
+  *
   * @param selection the list requested.
-  * @param userdata information about the user that made the request.
+  * @param userdata  information about the user that made the request.
   */
 case class SelectionGetResponseV1(selection: Seq[HierarchicalListV1], userdata: UserDataV1) extends ListsGetResponseV1 {
     def toJsValue = HierarchicalListV1JsonProtocol.selectionGetResponseV1Format.write(this)
@@ -90,6 +96,7 @@ case class SelectionGetResponseV1(selection: Seq[HierarchicalListV1], userdata: 
 
 /**
   * Responds to a [[NodePathGetRequestV1]] by providing the path to a particular hierarchical list node.
+  *
   * @param nodelist a list of the nodes composing the path from the list's root node up to and including the specified node.
   * @param userdata information about the user that made the request.
   */
@@ -102,19 +109,21 @@ case class NodePathGetResponseV1(nodelist: Seq[NodePathElementV1], userdata: Use
 
 /**
   * Represents a hierarchical list node in Knora API v1 format.
-  * @param id the IRI of the list node.
-  * @param name the name of the list node.
-  * @param label the label of the list node.
+  *
+  * @param id       the IRI of the list node.
+  * @param name     the name of the list node.
+  * @param label    the label of the list node.
   * @param children the list node's child nodes.
-  * @param level the depth of the node in the tree.
+  * @param level    the depth of the node in the tree.
   * @param position the position of the node among its siblings.
   */
 case class HierarchicalListV1(id: IRI, name: Option[String], label: Option[String], children: Seq[HierarchicalListV1], level: Int, position: Int)
 
 /**
   * Represents a node on a hierarchical list path.
-  * @param id the IRI of the list node.
-  * @param name the name of the list node.
+  *
+  * @param id    the IRI of the list node.
+  * @param name  the name of the list node.
   * @param label the label of the list node.
   */
 case class NodePathElementV1(id: IRI, name: Option[String], label: Option[String])
@@ -132,6 +141,7 @@ object HierarchicalListV1JsonProtocol extends DefaultJsonProtocol with NullOptio
     implicit object HierarchicalListV1JsonFormat extends JsonFormat[HierarchicalListV1] {
         /**
           * Recursively converts a [[HierarchicalListV1]] to a [[JsValue]].
+          *
           * @param tree a [[HierarchicalListV1]].
           * @return a [[JsValue]].
           */

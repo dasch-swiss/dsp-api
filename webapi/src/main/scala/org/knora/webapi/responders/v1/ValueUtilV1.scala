@@ -20,15 +20,13 @@
 
 package org.knora.webapi.responders.v1
 
-import java.net.URLEncoder
-
 import akka.actor.ActorSelection
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{CheckSubClassRequestV1, CheckSubClassResponseV1}
-import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
@@ -55,7 +53,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     def makeSipiImagePreviewGetUrlFromFilename(filename: String): String = {
-        s"${settings.sipiIIIFGetUrl}/${filename}/full/full/0/default.jpg"
+        s"${settings.sipiIIIFGetUrl}/$filename/full/full/0/default.jpg"
     }
 
     /**
@@ -128,7 +126,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * This method requires the Iri segment before the last slash to be a unique identifier for all the ontologies used with Knora..
       *
       * @param resourceClassIri the Iri of the resource class in question.
-      * @param iconsSrc the name of the icon file.
+      * @param iconsSrc         the name of the icon file.
       */
     def makeResourceClassIconURL(resourceClassIri: IRI, iconsSrc: String): IRI = {
         // get ontology name, e.g. "knora-base" from "http://www.knora.org/ontology/knora-base#Region"
@@ -195,10 +193,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     /**
       * Checks that a value type is valid for the `knora-base:objectClassConstraint` of a property.
       *
-      * @param propertyIri the IRI of the property.
-      * @param valueType the IRI of the value type.
+      * @param propertyIri                   the IRI of the property.
+      * @param valueType                     the IRI of the value type.
       * @param propertyObjectClassConstraint the IRI of the property's `knora-base:objectClassConstraint`.
-      * @param responderManager a reference to the Knora API Server responder manager.
+      * @param responderManager              a reference to the Knora API Server responder manager.
       * @return A future containing Unit on success, or a failed future if the value type is not valid for the property's range.
       */
     def checkValueTypeForPropertyObjectClassConstraint(propertyIri: IRI,
@@ -424,26 +422,31 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       */
     private def makeTextValue(valueProps: ValueProps): ApiValueV1 = {
 
-        val groupedByAttr: Map[String, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(_ (OntologyConstants.KnoraBase.StandoffHasAttribute)).map {
-            case (attr: String, standoffInfos: Seq[Map[String, String]]) =>
+        val groupedByAttr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(row =>
+            // group by the enumeration name of the standoff tag IRI by converting the standoff tag IRI
+            // standoff lik and href tags have the same enumeration name, so the groupBy has to combine their standoff positions
+            StandoffTagV1.IriToEnumValue(row(OntologyConstants.Rdf.Type))
+        ).map {
+            case (tagName: StandoffTagV1.Value, standoffInfos: Seq[Map[String, String]]) =>
+
                 // we grouped by the attribute name, return it as the key of that Map
-                (attr, standoffInfos.map {
+                (tagName, standoffInfos.map {
                     // for each attribute name, we may have several positions that have to be turned into a StandoffPositionV1
 
                     case standoffInfo =>
-                        val maybeResId = standoffInfo.get(OntologyConstants.KnoraBase.StandoffHasLink)
+                        val maybeResId = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasLink)
 
                         // If there's a resid, generate an href from it, because the SALSAH GUI expects this.
                         // Otherwise, use the href returned by the query, if present.
                         val maybeHref = if (maybeResId.nonEmpty) {
                             maybeResId
                         } else {
-                            standoffInfo.get(OntologyConstants.KnoraBase.StandoffHasHref)
+                            standoffInfo.get(OntologyConstants.KnoraBase.ValueHasUri)
                         }
 
                         StandoffPositionV1(
-                            start = standoffInfo(OntologyConstants.KnoraBase.StandoffHasStart).toInt,
-                            end = standoffInfo(OntologyConstants.KnoraBase.StandoffHasEnd).toInt,
+                            start = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
+                            end = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
                             href = maybeHref,
                             resid = maybeResId
                         )
@@ -451,15 +454,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         }
 
         // map over all _link attributes to collect IRIs that are referred to
-        val resids: Seq[IRI] = groupedByAttr.get(StandoffConstantsV1.LINK_ATTR) match {
-            case Some(links: Seq[StandoffPositionV1]) => links.foldLeft(Set.empty[IRI]) {
-                // use a set to eliminate redundancy of identical Iris
-                case (acc, position) => position.resid match {
-                    case Some(resid: IRI) => acc + resid
-                    case None => acc
-                }
-            }.toVector
-            case None => Vector.empty[IRI]
+        val resids: Set[IRI] = groupedByAttr.get(StandoffTagV1.link) match {
+            case Some(links: Seq[StandoffPositionV1]) => InputValidation.getResourceIrisFromStandoffLinkTags(links)
+            case None => Set.empty[IRI]
         }
 
         // If there's an empty string in the data (which does sometimes happen), the store package will remove it from

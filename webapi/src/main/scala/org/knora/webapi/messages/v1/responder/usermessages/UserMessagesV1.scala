@@ -37,12 +37,14 @@ sealed trait UsersResponderRequestV1 extends KnoraRequestV1
 
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
+  *
   * @param userIri the IRI of the user to be queried.
   */
 case class UserProfileGetRequestV1(userIri: IRI) extends UsersResponderRequestV1
 
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
+  *
   * @param username the username of the user to be queried.
   */
 case class UserProfileByUsernameGetRequestV1(username: String) extends UsersResponderRequestV1
@@ -50,11 +52,13 @@ case class UserProfileByUsernameGetRequestV1(username: String) extends UsersResp
 
 /**
   * Represents a user's profile.
-  * @param userData basic information about the user.
-  * @param groups the groups that the user belongs to.
-  * @param projects the projects that the user belongs to.
+  *
+  * @param userData     basic information about the user.
+  * @param groups       the groups that the user belongs to.
+  * @param projects     the projects that the user belongs to.
+  * @param isSystemUser `true` if this [[UserProfileV1]] represents the Knora API server itself.
   */
-case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects: Seq[IRI] = Nil) {
+case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects: Seq[IRI] = Nil, isSystemUser: Boolean = false) {
     def passwordMatch(password: String): Boolean = {
         val md = java.security.MessageDigest.getInstance("SHA-1")
         userData.password.exists { hp =>
@@ -66,6 +70,7 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
 
     /**
       * Creating a [[UserProfileV1]] with sensitive information stripped.
+      *
       * @return a [[UserProfileV1]]
       */
     def getCleanUserProfileV1: UserProfileV1 = {
@@ -90,21 +95,20 @@ case class UserProfileV1(userData: UserDataV1, groups: Seq[IRI] = Nil, projects:
 }
 
 
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
 /**
   * Represents basic information about a user.
-  * @param lang The ISO 639-1 code of the user's preferred language.
-  * @param user_id The user's IRI.
-  * @param token TODO: document this
-  * @param username The user's username.
+  *
+  * @param lang      The ISO 639-1 code of the user's preferred language.
+  * @param user_id   The user's IRI.
+  * @param token     TODO: document this
+  * @param username  The user's username.
   * @param firstname The user's given name.
-  * @param lastname The user's surname.
-  * @param email The user's email address.
-  * @param password The user's hashed password.
+  * @param lastname  The user's surname.
+  * @param email     The user's email address.
+  * @param password  The user's hashed password.
   * @param active_project
   * @param projects
   * @param projects_info

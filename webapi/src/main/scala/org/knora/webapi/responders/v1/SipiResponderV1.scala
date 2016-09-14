@@ -23,15 +23,14 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.sipimessages.RepresentationV1JsonProtocol._
+import org.knora.webapi.messages.v1.responder.sipimessages.SipiConstants.FileType
 import org.knora.webapi.messages.v1.responder.sipimessages._
-import RepresentationV1JsonProtocol._
-import SipiConstants.FileType
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{ApiValueV1, FileValueV1, StillImageFileValueV1}
-import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.InputValidation
+import org.knora.webapi.util.{InputValidation, PermissionUtilV1}
 import spray.client.pipelining._
 import spray.http._
 import spray.json._

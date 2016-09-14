@@ -44,69 +44,67 @@
 @(valueIndex: Int,
   propertyIri: IRI,
   value: UpdateValueV1,
+  newValueIri: IRI,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   maybeComment: Option[String],
-  permissionRelevantAssertions: Seq[(IRI, IRI)])
+  valueOwner: IRI,
+  valueProject: IRI,
+  maybeValuePermissions: Option[String])
 
         # Value @valueIndex
         # Property: @propertyIri
 
         @* Construct the value. *@
         ?newValue@valueIndex rdf:type ?valueType@valueIndex ;
-            knora-base:isDeleted false .
+            knora-base:isDeleted false  ;
+            knora-base:valueHasString """@value.toString""" .
 
         @value match {
             case textValue: TextValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasString """@textValue.utf8str""" .
-
                 @* Create a Standoff node for each StandoffPositionV1. *@
 
-                @for((attribute, position) <- textValue.flattenStandoff) {
-                    ?newValue@valueIndex knora-base:valueHasStandoff
-                        [
+                @for(createStandoff <- textValue.prepareForSparqlInsert(newValueIri)) {
+                    ?newValue@valueIndex knora-base:valueHasStandoff <@createStandoff.standoffTagIri> .
+
+                    <@createStandoff.standoffTagIri>
+
                             @*
 
                             If the StandoffPositionV1 contains both a resid and an href, we assume that the href is
                             redundant (i.e. it's based on the resid), so we ignore it.
 
                             *@
-                            @(position.resid, position.href) match {
+                            @(createStandoff.standoffPosition.resid, createStandoff.standoffPosition.href) match {
                                 case (Some(resid), _) => {
-                                    rdf:type knora-base:StandoffLink ;
-                                    knora-base:standoffHasAttribute "@attribute" ;
-                                    knora-base:standoffHasLink <@resid> ;
+                                    rdf:type knora-base:StandoffLinkTag ;
+                                    knora-base:standoffTagHasLink <@resid> ;
                                 }
 
                                 case (None, Some(href)) => {
-                                    rdf:type knora-base:StandoffHref ;
-                                    knora-base:standoffHasAttribute "@attribute" ;
-                                    knora-base:standoffHasHref <@href> ;
+                                    rdf:type knora-base:StandoffUriTag ;
+                                    knora-base:valueHasUri <@href> ;
                                 }
 
                                 case (None, None) => {
-                                    rdf:type knora-base:StandoffVisualAttribute ;
-                                    knora-base:standoffHasAttribute "@attribute" ;
+                                    rdf:type <@createStandoff.standoffTagClassIri> ;
                                 }
                             }
 
-                            knora-base:standoffHasStart @position.start ;
-                            knora-base:standoffHasEnd @position.end
-                        ] .
+                            knora-base:standoffTagHasStart @createStandoff.standoffPosition.start ;
+                            knora-base:standoffTagHasEnd @createStandoff.standoffPosition.end .
                 }
             }
 
             case intValue: IntegerValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasInteger @intValue.ival ;
-                                     knora-base:valueHasString """@intValue.toString""" .
+                ?newValue@valueIndex knora-base:valueHasInteger @intValue.ival .
 
             }
 
             case decimalValue: DecimalValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasDecimal "@decimalValue.dval"^^xsd:decimal ;
-                                     knora-base:valueHasString """@decimalValue.toString""" .
+                ?newValue@valueIndex knora-base:valueHasDecimal "@decimalValue.dval"^^xsd:decimal .
 
             }
 
@@ -119,7 +117,6 @@
             case uriValue: UriValueV1 => {
 
                 ?newValue@valueIndex knora-base:valueHasUri """@uriValue.uri""" .
-                ?newValue@valueIndex knora-base:valueHasString """@uriValue.toString""" .
 
             }
 
@@ -129,22 +126,19 @@
                                      knora-base:valueHasEndJDC @jdcValue.dateval2 ;
                                      knora-base:valueHasStartPrecision "@jdcValue.dateprecision1" ;
                                      knora-base:valueHasEndPrecision "@jdcValue.dateprecision2" ;
-                                     knora-base:valueHasCalendar "@jdcValue.calendar" ;
-                                     knora-base:valueHasString """@jdcValue.toString""" .
+                                     knora-base:valueHasCalendar "@jdcValue.calendar" .
 
             }
 
             case colorValue: ColorValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasColor """@colorValue.color""" ;
-                                     knora-base:valueHasString """@colorValue.toString""" .
+                ?newValue@valueIndex knora-base:valueHasColor """@colorValue.color""" .
 
             }
 
             case geometryValue: GeomValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasGeometry """@geometryValue.geom""" ;
-                                     knora-base:valueHasString """@geometryValue.toString""" .
+                ?newValue@valueIndex knora-base:valueHasGeometry """@geometryValue.geom""" .
 
             }
 
@@ -162,13 +156,11 @@
                     ?newValue@valueIndex knora-base:isPreview true .
                 }
 
-                ?newValue@valueIndex knora-base:valueHasString """@stillImageFileValue.toString""" .
             }
 
             case listValue: HierarchicalListValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasListNode <@listValue.hierarchicalListIri> ;
-                                     knora-base:valueHasString """@listValue.toString""" .
+                ?newValue@valueIndex knora-base:valueHasListNode <@listValue.hierarchicalListIri> .
 
             }
 
@@ -181,8 +173,7 @@
 
             case geonameValue: GeonameValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasGeonameCode """@geonameValue.geonameCode""" ;
-                                     knora-base:valueHasString """@geonameValue.toString""" .
+                ?newValue@valueIndex knora-base:valueHasGeonameCode """@geonameValue.geonameCode""" .
 
             }
 
@@ -202,9 +193,18 @@
             case None => {}
         }
 
-        @* Insert the value's permission-relevant assertions (its owner, project, and permissions). *@
-        @for(assertion <- permissionRelevantAssertions) {
-            ?newValue@valueIndex <@assertion._1> <@assertion._2> .
+        ?newValue@valueIndex knora-base:attachedToUser <@valueOwner> ;
+            knora-base:attachedToProject <@valueProject> .
+
+        @maybeValuePermissions match {
+
+            case Some(valuePermissions) => {
+
+                ?newValue@valueIndex knora-base:hasPermissions "@valuePermissions" .
+
+            }
+
+            case None => {}
         }
 
         ?newValue@valueIndex knora-base:valueHasOrder ?nextOrder@valueIndex ;

@@ -21,8 +21,8 @@
 package org.knora.webapi.messages.v1.responder.ontologymessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,12 +34,27 @@ import spray.json._
 sealed trait OntologyResponderRequestV1 extends KnoraRequestV1
 
 /**
+  * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
+  * starts, before it accepts any API requests. A successful response will be a [[LoadOntologiesResponse]].
+  *
+  * @param userProfile the profile of the user making the request.
+  */
+case class LoadOntologiesRequest(userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
+/**
+  * Indicates that all ontologies were loaded.
+  */
+case class LoadOntologiesResponse() extends KnoraResponseV1 {
+    def toJsValue = JsObject(Map("result" -> JsString("Ontologies loaded.")))
+}
+
+/**
   * Requests all available information about a list of ontology entities (resource classes and/or properties). A successful response will be an
   * [[EntityInfoGetResponseV1]].
   *
   * @param resourceClassIris the IRIs of the resource entities to be queried.
-  * @param propertyIris the IRIs of the property entities to be queried.
-  * @param userProfile the profile of the user making the request.
+  * @param propertyIris      the IRIs of the property entities to be queried.
+  * @param userProfile       the profile of the user making the request.
   */
 case class EntityInfoGetRequestV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
 
@@ -58,7 +73,7 @@ case class EntityInfoGetResponseV1(resourceEntityInfoMap: Map[IRI, ResourceEntit
   * [[ResourceTypeResponseV1]].
   *
   * @param resourceTypeIri the IRI of the resource type to be queried.
-  * @param userProfile the profile of the user making the request.
+  * @param userProfile     the profile of the user making the request.
   */
 case class ResourceTypeGetRequestV1(resourceTypeIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
 
@@ -66,7 +81,7 @@ case class ResourceTypeGetRequestV1(resourceTypeIri: IRI, userProfile: UserProfi
   * Represents the Knora API v1 JSON response to a request for information about a resource type.
   *
   * @param restype_info basic information about the resource type.
-  * @param userdata      information about the user that made the request.
+  * @param userdata     information about the user that made the request.
   */
 case class ResourceTypeResponseV1(restype_info: ResTypeInfoV1,
                                   userdata: UserDataV1) extends KnoraResponseV1 {
@@ -74,10 +89,10 @@ case class ResourceTypeResponseV1(restype_info: ResTypeInfoV1,
 }
 
 /**
-  * Checks whether an OWL class is a subclass of (or identical to) another OWL class. This message is used
+  * Checks whether a Knora resource or value class is a subclass of (or identical to) another class. This message is used
   * internally by Knora, and is not part of Knora API v1. A successful response will be a [[CheckSubClassResponseV1]].
   *
-  * @param subClassIri the IRI of the subclass.
+  * @param subClassIri   the IRI of the subclass.
   * @param superClassIri the IRI of the superclass.
   */
 case class CheckSubClassRequestV1(subClassIri: IRI, superClassIri: IRI) extends OntologyResponderRequestV1
@@ -103,7 +118,7 @@ case class NamedGraphsGetRequestV1(userProfile: UserProfileV1) extends OntologyR
   * It contains all the existing named graphs.
   *
   * @param vocabularies all the existing named graphs.
-  * @param userdata    information about the user that made the request.
+  * @param userdata     information about the user that made the request.
   */
 case class NamedGraphsResponseV1(vocabularies: Vector[NamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.namedGraphsResponseV1Format.write(this)
@@ -112,7 +127,7 @@ case class NamedGraphsResponseV1(vocabularies: Vector[NamedGraphV1], userdata: U
 /**
   * Requests all resource classes that are defined in the given named graph.
   *
-  * @param namedGraph the named graph for which the resource classes shall be returned.
+  * @param namedGraph  the named graph for which the resource classes shall be returned.
   * @param userProfile the profile of the user making the request.
   */
 case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
@@ -122,7 +137,7 @@ case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userP
   * It contains all the resource classes for a named graph.
   *
   * @param resourcetypes the resource classes for the queried named graph.
-  * @param userdata information about the user that made the request.
+  * @param userdata      information about the user that made the request.
   */
 case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Vector[ResourceTypeV1], userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.resourceTypesForNamedGraphResponseV1Format.write(this)
@@ -132,7 +147,7 @@ case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Vector[ResourceTy
   * Requests all property types that are defined in the given named graph.
   * If the named graph is not set, the property types of all named graphs are requested.
   *
-  * @param namedGraph the named graph to query for or None if all the named graphs should be queried.
+  * @param namedGraph  the named graph to query for or None if all the named graphs should be queried.
   * @param userProfile the profile of the user making the request.
   */
 case class PropertyTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
@@ -142,7 +157,7 @@ case class PropertyTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userP
   * It contains all property types for the requested named graph.
   *
   * @param properties the property types for the requested named graph.
-  * @param userdata information about the user that made the request.
+  * @param userdata   information about the user that made the request.
   */
 case class PropertyTypesForNamedGraphResponseV1(properties: Vector[PropertyDefinitionInNamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.propertyTypesForNamedGraphResponseV1Format.write(this)
@@ -152,7 +167,7 @@ case class PropertyTypesForNamedGraphResponseV1(properties: Vector[PropertyDefin
   * Gets all property types that are defined for the given resource class.
   *
   * @param resourceClassIri the Iri of the resource class to query for.
-  * @param userProfile the profile of the user making the request.
+  * @param userProfile      the profile of the user making the request.
   */
 case class PropertyTypesForResourceTypeGetRequestV1(resourceClassIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
 
@@ -161,7 +176,7 @@ case class PropertyTypesForResourceTypeGetRequestV1(resourceClassIri: IRI, userP
   * It contains all the property types for the requested resource class.
   *
   * @param properties the property types for the requested resource class.
-  * @param userdata information about the user that made the request.
+  * @param userdata   information about the user that made the request.
   */
 case class PropertyTypesForResourceTypeResponseV1(properties: Vector[PropertyDefinitionV1], userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.propertyTypesForResourceTypeResponseV1Format.write(this)
@@ -173,10 +188,11 @@ case class PropertyTypesForResourceTypeResponseV1(properties: Vector[PropertyDef
 /**
   * Represents a predicate that is asserted about a given ontology entity, and the objects of that predicate.
   *
-  * @param ontologyIri the IRI of the ontology in which the assertions occur.
-  * @param objects the objects of the predicate.
+  * @param ontologyIri     the IRI of the ontology in which the assertions occur.
+  * @param objects         the objects of the predicate that have no language codes.
+  * @param objectsWithLang the objects of the predicate that have language codes: a Map of language codes to literals.
   */
-case class PredicateInfoV1(predicateIri: IRI, ontologyIri: IRI, objects: Set[String])
+case class PredicateInfoV1(predicateIri: IRI, ontologyIri: IRI, objects: Set[String], objectsWithLang: Map[String, String])
 
 object Cardinality extends Enumeration {
     type Cardinality = Value
@@ -204,10 +220,10 @@ object Cardinality extends Enumeration {
     /**
       * Converts information about an OWL cardinality restriction to a [[Value]] of this enumeration.
       *
-      * @param propertyIri the IRI of the property that the OWL cardinality applies to.
-      * @param owlCardinalityIri the IRI of the OWL cardinality, which must be a member of the set
-      *                          [[OntologyConstants.Owl.cardinalityOWLRestrictions]]. Qualified and unqualified
-      *                          cardinalities are treated as equivalent.
+      * @param propertyIri         the IRI of the property that the OWL cardinality applies to.
+      * @param owlCardinalityIri   the IRI of the OWL cardinality, which must be a member of the set
+      *                            [[OntologyConstants.Owl.cardinalityOWLRestrictions]]. Qualified and unqualified
+      *                            cardinalities are treated as equivalent.
       * @param owlCardinalityValue the integer value associated with the cardinality.
       * @return a [[Value]].
       */
@@ -244,16 +260,54 @@ sealed trait EntityInfoV1 {
     val predicates: Map[IRI, PredicateInfoV1]
 
     /**
-      * Returns the first object specified for a given predicate.
+      * Returns an object for a given predicate. If requested, attempts to return the object in the user's preferred
+      * language, in the system's default language, or in any language, in that order.
       *
-      * @param predicateIri the IRI of the predicate.
-      * @return the predicate's first object, or [[None]] if this entity doesn't have the specified predicate, or
+      * @param predicateIri   the IRI of the predicate.
+      * @param preferredLangs the user's preferred language and the system's default language.
+      * @return an object for the predicate, or [[None]] if this entity doesn't have the specified predicate, or
       *         if the predicate has no objects.
       */
-    def getPredicateObject(predicateIri: IRI): Option[String] = {
+    def getPredicateObject(predicateIri: IRI, preferredLangs: Option[(String, String)] = None): Option[String] = {
+        // Does the predicate exist?
         predicates.get(predicateIri) match {
             case Some(predicateInfo) =>
-                predicateInfo.objects.headOption
+                // Yes. Were preferred languages specified?
+                preferredLangs match {
+                    case Some((userLang, defaultLang)) =>
+                        // Yes. Is the object available in the user's preferred language?
+                        predicateInfo.objectsWithLang.get(userLang) match {
+                            case Some(objectInUserLang) =>
+                                // Yes.
+                                Some(objectInUserLang)
+                            case None =>
+                                // The object is not available in the user's preferred language. Is it available
+                                // in the system default language?
+                                predicateInfo.objectsWithLang.get(defaultLang) match {
+                                    case Some(objectInDefaultLang) =>
+                                        // Yes.
+                                        Some(objectInDefaultLang)
+                                    case None =>
+                                        // The object is not available in the system default language. Is it available
+                                        // without a language tag?
+                                        predicateInfo.objects.headOption match {
+                                            case Some(objectWithoutLang) =>
+                                                // Yes.
+                                                Some(objectWithoutLang)
+                                            case None =>
+                                                // The object is not available without a language tag. Return it in
+                                                // any other language.
+                                                predicateInfo.objectsWithLang.values.headOption
+                                        }
+                                }
+                        }
+
+                    case None =>
+                        // Preferred languages were not specified. Take the first object without a language tag.
+                        predicateInfo.objects.headOption
+
+                }
+
             case None => None
         }
     }
@@ -277,16 +331,17 @@ sealed trait EntityInfoV1 {
 /**
   * Represents the assertions about a given resource entity.
   *
-  * @param resourceIri the IRI of the queried entity.
-  * @param predicates a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
-  * @param cardinalities a [[Map]] of predicates representing cardinalities to [[Cardinality.Value]] objects.
-  * @param linkProperties a [[Set]] of IRIs of properties of the resource that point to other resources.
-  * @param linkValueProperties a [[Set]] of IRIs of properties of the resource
+  * @param resourceClassIri    the IRI of the resource class.
+  * @param predicates          a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
+  * @param cardinalities       a [[Map]] of properties to [[Cardinality.Value]] objects representing the resource class's
+  *                            cardinalities on those properties.
+  * @param linkProperties      a [[Set]] of IRIs of properties of the resource class that point to other resources.
+  * @param linkValueProperties a [[Set]] of IRIs of properties of the resource class
   *                            that point to `LinkValue` objects.
-  * @param fileValueProperties a [[Set]] of IRIs of properties of the resource
+  * @param fileValueProperties a [[Set]] of IRIs of properties of the resource class
   *                            that point to `FileValue` objects.
   */
-case class ResourceEntityInfoV1(resourceIri: IRI,
+case class ResourceEntityInfoV1(resourceClassIri: IRI,
                                 predicates: Map[IRI, PredicateInfoV1],
                                 cardinalities: Map[IRI, Cardinality.Value],
                                 linkProperties: Set[IRI],
@@ -296,33 +351,37 @@ case class ResourceEntityInfoV1(resourceIri: IRI,
 /**
   * Represents the assertions about a given property entity.
   *
-  * @param propertyIri the Iri of the queried property entity.
-  * @param isLinkProp `true` if the property is a subproperty of `knora-base:hasLinkTo`.
-  * @param predicates a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
+  * @param propertyIri     the Iri of the queried property entity.
+  * @param isLinkProp      `true` if the property is a subproperty of `knora-base:hasLinkTo`.
+  * @param isLinkValueProp `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
+  * @param isFileValueProp `true` if the property is a subproperty of `knora-base:hasFileValue`.
+  * @param predicates      a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
   */
 case class PropertyEntityInfoV1(propertyIri: IRI,
                                 isLinkProp: Boolean,
+                                isLinkValueProp: Boolean,
+                                isFileValueProp: Boolean,
                                 predicates: Map[IRI, PredicateInfoV1]) extends EntityInfoV1
 
 /**
   * Represents the assertions about a given named graph entity.
   *
-  * @param namedGraphIri the Iri of the named graph.
+  * @param namedGraphIri   the Iri of the named graph.
   * @param resourceClasses the resource classes defined in the named graph.
-  * @param propertyIris the properties defined in the named graph.
+  * @param propertyIris    the properties defined in the named graph.
   */
 case class NamedGraphEntityInfoV1(namedGraphIri: IRI,
-                                  resourceClasses: Vector[IRI],
-                                  propertyIris: Vector[IRI])
+                                  resourceClasses: Set[IRI],
+                                  propertyIris: Set[IRI])
 
 /**
   * Represents information about a resource type.
   *
-  * @param name the IRI of the resource type.
-  * @param label the label of the resource type.
+  * @param name        the IRI of the resource type.
+  * @param label       the label of the resource type.
   * @param description a description of the resource type.
-  * @param iconsrc an icon representing the resource type.
-  * @param properties a list of definitions of properties that resources of this type can have.
+  * @param iconsrc     an icon representing the resource type.
+  * @param properties  a list of definitions of properties that resources of this type can have.
   */
 case class ResTypeInfoV1(name: IRI,
                          label: Option[String],
@@ -348,16 +407,16 @@ trait PropertyDefinitionBaseV1 {
 /**
   * Describes a property type that resources of some particular type can have.
   *
-  * @param id the IRI of the property definition.
-  * @param name the IRI of the property definition.
-  * @param label the label of the property definition.
-  * @param description a description of the property definition.
-  * @param vocabulary the IRI of the vocabulary (i.e. the named graph) that the property definition belongs to.
-  * @param occurrence the cardinality of this property: 1, 1-n, 0-1, or 0-n.
+  * @param id           the IRI of the property definition.
+  * @param name         the IRI of the property definition.
+  * @param label        the label of the property definition.
+  * @param description  a description of the property definition.
+  * @param vocabulary   the IRI of the vocabulary (i.e. the named graph) that the property definition belongs to.
+  * @param occurrence   the cardinality of this property: 1, 1-n, 0-1, or 0-n.
   * @param valuetype_id the IRI of a subclass of `knora-base:Value`, representing the type of value that this property contains.
-  * @param attributes HTML attributes to be used with the property's GUI element.
-  * @param gui_name the IRI of a named individual of type `salsah-gui:Guielement`, representing the type of GUI element
-  *                 that should be used for inputting values for this property.
+  * @param attributes   HTML attributes to be used with the property's GUI element.
+  * @param gui_name     the IRI of a named individual of type `salsah-gui:Guielement`, representing the type of GUI element
+  *                     that should be used for inputting values for this property.
   */
 case class PropertyDefinitionV1(id: IRI,
                                 name: IRI,
@@ -372,36 +431,36 @@ case class PropertyDefinitionV1(id: IRI,
 /**
   * Describes a property type that a named graph contains.
   *
-  * @param id the IRI of the property definition.
-  * @param name the IRI of the property definition.
-  * @param label the label of the property definition.
-  * @param description a description of the property definition.
-  * @param vocabulary the IRI of the vocabulary (i.e. the named graph) that the property definition belongs to.
+  * @param id           the IRI of the property definition.
+  * @param name         the IRI of the property definition.
+  * @param label        the label of the property definition.
+  * @param description  a description of the property definition.
+  * @param vocabulary   the IRI of the vocabulary (i.e. the named graph) that the property definition belongs to.
   * @param valuetype_id the IRI of a subclass of `knora-base:Value`, representing the type of value that this property contains.
-  * @param attributes HTML attributes to be used with the property's GUI element.
-  * @param gui_name the IRI of a named individual of type `salsah-gui:Guielement`, representing the type of GUI element
-  *                 that should be used for inputting values for this property.
+  * @param attributes   HTML attributes to be used with the property's GUI element.
+  * @param gui_name     the IRI of a named individual of type `salsah-gui:Guielement`, representing the type of GUI element
+  *                     that should be used for inputting values for this property.
   */
 case class PropertyDefinitionInNamedGraphV1(id: IRI,
-                                name: IRI,
-                                label: Option[String],
-                                description: Option[String],
-                                vocabulary: IRI,
-                                valuetype_id: IRI,
-                                attributes: Option[String],
-                                gui_name: Option[String]) extends PropertyDefinitionBaseV1
+                                            name: IRI,
+                                            label: Option[String],
+                                            description: Option[String],
+                                            vocabulary: IRI,
+                                            valuetype_id: IRI,
+                                            attributes: Option[String],
+                                            gui_name: Option[String]) extends PropertyDefinitionBaseV1
 
 
 /**
   * Represents a named graph (corresponds to a vocabulary in the SALSAH prototype).
   *
-  * @param id the id of the named graph.
-  * @param shortname the short name of the named graph.
-  * @param longname the full name of the named graph.
+  * @param id          the id of the named graph.
+  * @param shortname   the short name of the named graph.
+  * @param longname    the full name of the named graph.
   * @param description a description of the named graph.
-  * @param project_id the project belonging to the named graph.
-  * @param uri the Iri of the named graph.
-  * @param active indicates if this is named graph the user's project belongs to.
+  * @param project_id  the project belonging to the named graph.
+  * @param uri         the Iri of the named graph.
+  * @param active      indicates if this is named graph the user's project belongs to.
   */
 case class NamedGraphV1(id: IRI,
                         shortname: String,
@@ -416,8 +475,8 @@ case class NamedGraphV1(id: IRI,
 /**
   * Represents a resource class and its properties.
   *
-  * @param id the IRI of the resource class.
-  * @param label the label of the resource class.
+  * @param id         the IRI of the resource class.
+  * @param label      the label of the resource class.
   * @param properties the properties of the resource class.
   */
 case class ResourceTypeV1(id: IRI, label: String, properties: Vector[PropertyTypeV1]) {
@@ -427,7 +486,7 @@ case class ResourceTypeV1(id: IRI, label: String, properties: Vector[PropertyTyp
 /**
   * Represents a property type.
   *
-  * @param id the IRI of the property type.
+  * @param id    the IRI of the property type.
   * @param label the label of the property type.
   */
 case class PropertyTypeV1(id: IRI, label: String) {

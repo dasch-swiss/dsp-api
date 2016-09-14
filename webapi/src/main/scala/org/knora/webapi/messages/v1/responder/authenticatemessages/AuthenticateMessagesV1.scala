@@ -28,6 +28,7 @@ import spray.json._
 
 /**
   * Represents an API request payload that asks the Knora API server to create a new session
+  *
   * @param username
   * @param password
   */
