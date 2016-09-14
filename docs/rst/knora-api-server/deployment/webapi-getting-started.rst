@@ -71,7 +71,7 @@ includes a command-line program that works on RDF data files in Turtle_ format. 
 
 ::
 
-  run-main org.knora.webapi.util.TransformData --help
+  > run-main org.knora.webapi.util.TransformData --help
   [info] Running org.knora.webapi.util.TransformData --help
   [info] 
   [info] Updates the structure of Knora repository data to accommodate changes in Knora.

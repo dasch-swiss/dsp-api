@@ -194,7 +194,7 @@ class SearchResponderV1 extends ResponderV1 {
                         val resourceEntityInfoMap = entityInfoResponse.resourceEntityInfoMap(resourceClassIri)
                         val resourceClassLabel = resourceEntityInfoMap.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage))
                         val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
-                        val resourceLabel = firstRowMap("resourceLabel")
+                        val resourceLabel = firstRowMap.getOrElse("resourceLabel", throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no rdfs:label"))
 
                         // Collect the matching values in the resource.
                         val mapOfMatchingValues: Map[IRI, MatchingValue] = rows.filter(_.rowMap.get("valueObject").nonEmpty).foldLeft(Map.empty[IRI, MatchingValue]) {
