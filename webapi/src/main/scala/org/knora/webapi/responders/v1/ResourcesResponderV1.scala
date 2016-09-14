@@ -68,6 +68,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1) => future2Message(sender(), checkResourceClass(resourceIri, owlClass, userProfile), log)
         case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile), log)
         case resourceDeleteRequest: ResourceDeleteRequestV1 => future2Message(sender(), deleteResourceV1(resourceDeleteRequest), log)
+        case ChangeResourceLabelRequestV1(resourceIri, label, userProfile, apiRequestID) => future2Message(sender(), changeResourceLabelV1(resourceIri, label, apiRequestID, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -1547,6 +1548,71 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
         } yield ResourceCheckClassResponseV1(isInClass = subClassResponse.isSubClass)
+    }
+
+    /**
+      * Changes a resource's label.
+      *
+      * @param resourceIri the IRI of the resource.
+      * @param label the new label.
+      * @param apiRequestID the the ID of the API request.
+      * @param userProfile the profile of the user making the request.
+      * @return a [[ChangeResourceLabelResponseV1]].
+      */
+    private def changeResourceLabelV1(resourceIri: IRI, label: String, apiRequestID: UUID, userProfile: UserProfileV1): Future[ChangeResourceLabelResponseV1] = {
+
+        def makeTaskFuture(userIri: IRI): Future[ChangeResourceLabelResponseV1] = {
+
+            for {
+            // get the resource's permissions
+                (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceIri, userProfile = userProfile, queryOntology = false)
+
+                // check if the given user may change its label
+                _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
+                    throw ForbiddenException(s"User $userIri does not have permission to change the label of resource $resourceIri")
+                }
+
+                // the user has sufficient permissions to change the resource's label
+                sparqlUpdate = queries.sparql.v1.txt.changeResourceLabel(
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceIri,
+                    label = label
+                ).toString()
+
+            // Do the update.
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+
+            // Check whether the update succeeded.
+            sparqlQuery = queries.sparql.v1.txt.checkResourceLabelChange(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri,
+                label = label
+            ).toString()
+            sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            rows = sparqlSelectResponse.results.bindings
+
+            _ = if (rows.isEmpty) {
+                throw UpdateNotPerformedException(s"The label of the resource ${resourceIri} was not updated correctly. Please report this as a possible bug.")
+            }
+
+            } yield ChangeResourceLabelResponseV1(res_id = resourceIri, label = label, userProfile.userData)
+        }
+
+        for {
+        // Don't allow anonymous users to change a resource's label.
+            userIri <- userProfile.userData.user_id match {
+                case Some(iri) => Future(iri)
+                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to change a resource's label"))
+            }
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the resource.
+            taskResult <- ResourceLocker.runWithResourceLock(
+                apiRequestID,
+                resourceIri,
+                () => makeTaskFuture(userIri)
+            )
+        } yield taskResult
+
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

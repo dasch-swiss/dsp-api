@@ -75,6 +75,13 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
                                  geoname_value: Option[String] = None,
                                  comment: Option[String] = None)
 
+/**
+  * Represents an API request that asks the Knora API server to change a resource's label.
+  *
+  * @param label the resource's new label.
+  */
+case class ChangeResourceLabelApiRequestV1(label: String)
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
@@ -288,6 +295,28 @@ case class PropertiesGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends 
   */
 case class PropertiesGetResponseV1(properties: PropsGetV1, userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceV1JsonProtocol.propertiesGetResponseV1Format.write(this)
+}
+
+/**
+  * Requests the label of a resource to be changed.
+  *
+  * @param resourceIri the Iri of the resource whose label should be changed.
+  * @param label the new value of the label.
+  * @param userProfile information about the user that made the request.
+  * @param apiRequestID  the ID of the API request.
+  *
+  */
+case class ChangeResourceLabelRequestV1(resourceIri: IRI, label: String, userProfile: UserProfileV1, apiRequestID: UUID) extends ResourcesResponderRequestV1
+
+/**
+  * Represents the answer to a [[ChangeResourceLabelRequestV1]].
+  *
+  * @param res_id the IRI of the resource whose label was changed.
+  * @param label the resource's new label.
+  * @param userdata information about the user that made the request.
+  */
+case class ChangeResourceLabelResponseV1(res_id: IRI, label: String, userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = ResourceV1JsonProtocol.changeResourceLabelResponseV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -958,6 +987,7 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
 
     implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat13(CreateResourceValueV1)
     implicit val createResourceApiRequestV1Format: RootJsonFormat[CreateResourceApiRequestV1] = jsonFormat5(CreateResourceApiRequestV1)
+    implicit val ChangeResourceLabelApiRequestV1Format: RootJsonFormat[ChangeResourceLabelApiRequestV1] = jsonFormat1(ChangeResourceLabelApiRequestV1)
     implicit val resourceInfoResponseV1Format: RootJsonFormat[ResourceInfoResponseV1] = jsonFormat3(ResourceInfoResponseV1)
     implicit val resourceDataV1Format: JsonFormat[ResourceDataV1] = jsonFormat5(ResourceDataV1)
     implicit val externalResourceIDV1Format: JsonFormat[ExternalResourceIDV1] = jsonFormat2(ExternalResourceIDV1)
@@ -972,6 +1002,7 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val resourceCreateValueResponseV1Format: RootJsonFormat[ResourceCreateValueResponseV1] = jsonFormat2(ResourceCreateValueResponseV1)
     implicit val resourceCreateResponseV1Format: RootJsonFormat[ResourceCreateResponseV1] = jsonFormat3(ResourceCreateResponseV1)
     implicit val resourceDeleteResponseV1Format: RootJsonFormat[ResourceDeleteResponseV1] = jsonFormat2(ResourceDeleteResponseV1)
+    implicit val changeResourceLabelResponseV1Format: RootJsonFormat[ChangeResourceLabelResponseV1] = jsonFormat3(ChangeResourceLabelResponseV1)
 }
 
 /**

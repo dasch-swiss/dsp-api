@@ -1,0 +1,75 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Modifies a resource's label.
+ *
+ * @param dataNamedGraph the named graph to update.
+ * @param triplestore the name of the triplestore being used.
+ * @param resourceIri the IRI of the resource containing the value.
+ * @param label the resource's new label.
+ *@
+@(triplestore: String,
+  resourceIri: IRI,
+  label: String)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+DELETE {
+    @* Detach the current label from the resource. *@
+    ?resource rdfs:label ?currentLabel .
+
+    @* Delete the resource's last modification date so we can update it. *@
+    ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+} INSERT {
+    @* Add the new label to the resource. *@
+    ?resource rdfs:label ?newLabel .
+
+    @* Update the resource's last modification date. *@
+    ?resource knora-base:lastModificationDate ?currentTime .
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@resourceIri") AS ?resource)
+    BIND(NOW() AS ?currentTime)
+    BIND("@label" AS ?newLabel)
+
+    ?resource knora-base:isDeleted false .
+
+    ?resource rdfs:label ?currentLabel .
+
+    @* Get the resource's last modification date, if it has one, so we can update it. *@
+
+    OPTIONAL {
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+    }
+}
+
+
+
