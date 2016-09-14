@@ -76,6 +76,7 @@ Specifically, consistency checking should prevent the following:
   for that property.
 - An instance of ``knora-base:Value`` has a subproperty of ``knora-base:valueHas``,
   and its class has no cardinality for that property.
+- A datatype property has an empty string as an object.
 
 Cardinalities in base classes are inherited by derived classes. Derived classes
 can override inherited cardinalities by making them more restrictive, i.e. by specifying
@@ -166,6 +167,18 @@ The differences between inference rules and consistency rules are:
 
 Rules use variable names for subjects, predicates, and objects, and they can use actual
 property names.
+
+Empty string as object
+~~~~~~~~~~~~~~~~~~~~~~
+
+If subject ``i`` has a predicate ``p`` whose object is an empty string,
+the constraint is violated:
+
+::
+
+    Consistency: empty_string
+        i p ""
+        ------------------------------------
 
 Subject and object class constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
