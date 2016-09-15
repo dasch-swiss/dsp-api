@@ -1572,12 +1572,18 @@ class ResourcesResponderV1 extends ResponderV1 {
                     throw ForbiddenException(s"User $userIri does not have permission to change the label of resource $resourceIri")
                 }
 
+                // get the named graph the resource is contained in by the resource's project
+                namedGraph = settings.projectNamedGraphs(resourceInfo.project_id).data
+
                 // the user has sufficient permissions to change the resource's label
                 sparqlUpdate = queries.sparql.v1.txt.changeResourceLabel(
+                    dataNamedGraph = namedGraph,
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceIri,
                     label = label
                 ).toString()
+
+            //_ = print(sparqlUpdate)
 
             // Do the update.
             sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]

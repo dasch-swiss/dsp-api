@@ -28,7 +28,8 @@
  * @param resourceIri the IRI of the resource containing the value.
  * @param label the resource's new label.
  *@
-@(triplestore: String,
+@(dataNamedGraph: IRI,
+  triplestore: String,
   resourceIri: IRI,
   label: String)
 
@@ -38,6 +39,7 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
+WITH <@dataNamedGraph>
 DELETE {
     @* Detach the current label from the resource. *@
     ?resource rdfs:label ?currentLabel .
@@ -60,9 +62,7 @@ WHERE {
     BIND(NOW() AS ?currentTime)
     BIND("@label" AS ?newLabel)
 
-    ?resource rdf:type ?resourceClass ;
-            knora-base:isDeleted false .
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?resource knora-base:isDeleted false .
 
     ?resource rdfs:label ?currentLabel .
 
