@@ -1588,10 +1588,12 @@ class ResourcesResponderV1 extends ResponderV1 {
                 resourceIri = resourceIri,
                 label = label
             ).toString()
+
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = sparqlSelectResponse.results.bindings
 
-            _ = if (rows.isEmpty) {
+            // we expect exactly one row to be returned if the label was updated correctly in the data.
+            _ = if (rows.length != 1) {
                 throw UpdateNotPerformedException(s"The label of the resource ${resourceIri} was not updated correctly. Please report this as a possible bug.")
             }
 

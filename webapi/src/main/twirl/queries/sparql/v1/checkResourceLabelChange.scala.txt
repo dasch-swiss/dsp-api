@@ -21,10 +21,11 @@
 @import org.knora.webapi.IRI
 
 @**
- * Checks whether a knora-base:Resource exists and is deleted.
+ * Checks whether the rdfs:label of a resource has been updated correctly.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.
+ * @param the resource's new label that is expected to exist in the triplestore.
  *@
 @(triplestore: String,
   resourceIri: IRI,
@@ -43,7 +44,9 @@ WHERE {
     BIND(IRI("@resourceIri") AS ?resource)
     BIND("@label" AS ?newLabel)
 
-    ?resource knora-base:isDeleted false .
+    ?resource rdf:type ?resourceClass ;
+            knora-base:isDeleted false .
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
 
     ?resource rdfs:label ?newLabel
 }

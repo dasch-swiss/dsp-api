@@ -21,7 +21,7 @@
 @import org.knora.webapi.IRI
 
 @**
- * Modifies a resource's label.
+ * Modifies a resource's rdfs:label.
  *
  * @param dataNamedGraph the named graph to update.
  * @param triplestore the name of the triplestore being used.
@@ -60,7 +60,9 @@ WHERE {
     BIND(NOW() AS ?currentTime)
     BIND("@label" AS ?newLabel)
 
-    ?resource knora-base:isDeleted false .
+    ?resource rdf:type ?resourceClass ;
+            knora-base:isDeleted false .
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
 
     ?resource rdfs:label ?currentLabel .
 
