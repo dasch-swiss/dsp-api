@@ -39,30 +39,36 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-WITH <@dataNamedGraph>
 DELETE {
-    @* Detach the current label from the resource. *@
-    ?resource rdfs:label ?currentLabel .
+    GRAPH ?dataNamedGraph {
+        @* Detach the current label from the resource. *@
+        ?resource rdfs:label ?currentLabel .
 
-    @* Delete the resource's last modification date so we can update it. *@
-    ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+        @* Delete the resource's last modification date so we can update it. *@
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+    }
 } INSERT {
-    @* Add the new label to the resource. *@
-    ?resource rdfs:label ?newLabel .
+    GRAPH ?dataNamedGraph {
+        @* Add the new label to the resource. *@
+        ?resource rdfs:label ?newLabel .
 
-    @* Update the resource's last modification date. *@
-    ?resource knora-base:lastModificationDate ?currentTime .
+        @* Update the resource's last modification date. *@
+        ?resource knora-base:lastModificationDate ?currentTime .
+    }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
 @if(triplestore.startsWith("graphdb")) {
     USING <http://www.ontotext.com/explicit>
 }
 WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
     BIND(IRI("@resourceIri") AS ?resource)
     BIND(NOW() AS ?currentTime)
     BIND("@label" AS ?newLabel)
 
-    ?resource knora-base:isDeleted false .
+    ?resource rdf:type ?resourceClass ;
+        knora-base:isDeleted false .
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
 
     ?resource rdfs:label ?currentLabel .
 
