@@ -165,7 +165,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
                 val tmpFile = SourcePath.getSourcePath()
 
-                assert(!tmpFile.exists(), s"Tmp file ${tmpFile} was not deleted.")
+                assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
@@ -191,7 +191,7 @@ class SipiV1E2ESpec extends E2ESpec {
                 // this test is expected to fail
 
                 // check that the tmp file is also deleted in case the test fails
-                assert(!tmpFile.exists(), s"Tmp file ${tmpFile} was not deleted.")
+                assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
                 assert(status != StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
@@ -233,7 +233,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
                 val tmpFile = SourcePath.getSourcePath()
 
-                assert(!tmpFile.exists(), s"Tmp file ${tmpFile} was not deleted.")
+                assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
 
@@ -261,7 +261,7 @@ class SipiV1E2ESpec extends E2ESpec {
                 // this test is expected to fail
 
                 // check that the tmp file is also deleted in case the test fails
-                assert(!tmpFile.exists(), s"Tmp file ${tmpFile} was not deleted.")
+                assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
                 assert(status != StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
 

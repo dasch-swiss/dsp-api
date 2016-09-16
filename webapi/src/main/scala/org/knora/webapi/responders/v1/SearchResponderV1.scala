@@ -404,7 +404,7 @@ class SearchResponderV1 extends ResponderV1 {
                             case OntologyConstants.KnoraBase.TextValue =>
                                 // http://www.morelab.deusto.es/code_injection/
                                 // http://stackoverflow.com/questions/29601839/prevent-sparql-injection-generic-solution-triplestore-independent
-                                val searchString = InputValidation.toSparqlEncodedString(searchval)
+                                val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                                 val (matchBooleanPositiveTerms, matchBooleanNegativeTerms) = if (compop == SearchComparisonOperatorV1.MATCH_BOOLEAN) {
                                     val terms = searchString.asInstanceOf[String].split("\\s+").toSet

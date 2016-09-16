@@ -22,7 +22,7 @@ package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import org.knora.webapi.SettingsImpl
+import org.knora.webapi.{BadRequestException, SettingsImpl}
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiFileInfoGetRequestV1
 import org.knora.webapi.routing.{Authenticator, Proxy, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
@@ -51,7 +51,7 @@ object SipiRouteV1 extends Authenticator with Proxy {
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
                         //val fileValueIRI = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid file value IRI: $iri"))
-                        val filename = InputValidation.toSparqlEncodedString(file)
+                        val filename = InputValidation.toSparqlEncodedString(file, () => throw BadRequestException(s"Invalid filename: '$file'"))
                         SipiFileInfoGetRequestV1(filename, userProfile)
                     }
                     RouteUtilV1.runJsonRoute(

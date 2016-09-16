@@ -81,7 +81,9 @@ object InputValidation {
         }
     }
 
-    def toSparqlEncodedString(s: String): String = {
+    def toSparqlEncodedString(s: String, errorFun: () => Nothing): String = {
+        if (s.isEmpty || s.contains("\r")) errorFun()
+
         // http://www.morelab.deusto.es/code_injection/
 
         StringUtils.replaceEach(
@@ -91,16 +93,14 @@ object InputValidation {
                 "\"",
                 "'",
                 "\t",
-                "\n",
-                "\r"
+                "\n"
             ),
             Array(
                 "\\\\",
                 "\\\"",
                 "\\'",
                 "\\t",
-                "\\n",
-                "\\r"
+                "\\n"
             )
         )
     }
