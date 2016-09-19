@@ -76,14 +76,15 @@ includes a command-line program that works on RDF data files in Turtle_ format. 
   [info] 
   [info] Updates the structure of Knora repository data to accommodate changes in Knora.
   [info] 
-  [info] Usage: org.knora.webapi.util.TransformData -t [permissions|strings|standoff|all] input output
+  [info] Usage: org.knora.webapi.util.TransformData -t [deleted|permissions|strings|standoff|all] input output
   [info]             
   [info]   -t, --transform  <arg>   Selects a transformation. Available transformations:
-  [info]                            'permissions' (combines old-style multiple permission
-  [info]                            statements into single permission statements),
-  [info]                            'strings' (adds missing valueHasString), 'standoff'
-  [info]                            (transforms old-style standoff into new-style
-  [info]                            standoff), 'all' (all of the above)
+  [info]                            'deleted' (adds missing 'knora-base:isDeleted'
+  [info]                            statements), 'permissions' (combines old-style
+  [info]                            multiple permission statements into single permission
+  [info]                            statements), 'strings' (adds missing valueHasString),
+  [info]                            'standoff' (transforms old-style standoff into
+  [info]                            new-style standoff), 'all' (all of the above)
   [info]       --help               Show help message
   [info] 
   [info]  trailing arguments:
@@ -91,6 +92,10 @@ includes a command-line program that works on RDF data files in Turtle_ format. 
   [info]   output (required)   Output Turtle file
 
 The currently available transformations are:
+
+deleted
+  Adds ``knora-base:isDeleted false`` to resources and values that don't have a ``knora-base:isDeleted``
+  predicate.
 
 permissions
   Combines old-style permission statements (``hasViewPermission``, ``hasModifyPermission``, etc.) into

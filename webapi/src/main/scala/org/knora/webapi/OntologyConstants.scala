@@ -155,9 +155,16 @@ object OntologyConstants {
         val LinkValue = "http://www.knora.org/ontology/knora-base#LinkValue"
         val GeonameValue = "http://www.knora.org/ontology/knora-base#GeonameValue"
 
+        val ListNode = "http://www.knora.org/ontology/knora-base#ListNode"
+
         val IsInGroup = "http://www.knora.org/ontology/knora-base#isInGroup"
         val IsInProject = "http://www.knora.org/ontology/knora-base#isInProject"
         val IsDeleted = "http://www.knora.org/ontology/knora-base#isDeleted"
+
+        val User = "http://www.knora.org/ontology/knora-base#User"
+        val UserGroup = "http://www.knora.org/ontology/knora-base#UserGroup"
+        val KnoraProject = "http://www.knora.org/ontology/knora-base#knoraProject"
+        val Institution = "http://www.knora.org/ontology/knora-base#Institution"
 
         val UnknownUser = "http://www.knora.org/ontology/knora-base#UnknownUser"
         val KnownUser = "http://www.knora.org/ontology/knora-base#KnownUser"
