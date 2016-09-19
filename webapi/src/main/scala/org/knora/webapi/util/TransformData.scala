@@ -33,12 +33,14 @@ import scala.collection.{SortedSet, mutable}
   * Updates the structure of Knora repository data to accommodate changes in Knora.
   */
 object TransformData extends App {
+    private val IsDeletedTransformationOption = "deleted"
     private val PermissionsTransformationOption = "permissions"
     private val MissingValueHasStringTransformationOption = "strings"
     private val StandoffTransformationOption = "standoff"
     private val AllTransformationsOption = "all"
 
     private val allTransformations = Vector(
+        IsDeletedTransformationOption,
         PermissionsTransformationOption,
         MissingValueHasStringTransformationOption,
         StandoffTransformationOption
@@ -70,6 +72,14 @@ object TransformData extends App {
         HasDeletePermission -> OntologyConstants.KnoraBase.DeletePermission,
         HasChangeRightsPermission -> OntologyConstants.KnoraBase.ChangeRightsPermission,
         HasChangeRightsPermisson -> OntologyConstants.KnoraBase.ChangeRightsPermission
+    )
+
+    private val StandardClassesWithoutIsDeleted = Set(
+        OntologyConstants.KnoraBase.User,
+        OntologyConstants.KnoraBase.UserGroup,
+        OntologyConstants.KnoraBase.KnoraProject,
+        OntologyConstants.KnoraBase.Institution,
+        OntologyConstants.KnoraBase.ListNode
     )
 
     val conf = new Conf(args)
@@ -154,6 +164,7 @@ object TransformData extends App {
         val turtleWriter = new TurtleWriter(fileOutputStream)
 
         val handler = transformation match {
+            case IsDeletedTransformationOption => new IsDeletedHandler(turtleWriter)
             case PermissionsTransformationOption => new PermissionsHandler(turtleWriter)
             case MissingValueHasStringTransformationOption => new ValueHasStringHandler(turtleWriter)
             case StandoffTransformationOption => new StandoffHandler(turtleWriter)
@@ -235,6 +246,48 @@ object TransformData extends App {
           */
         override def startRDF(): Unit = {
             turtleWriter.startRDF()
+        }
+    }
+
+    /**
+      * Adds `knora-base:isDeleted false` to resources and values that don't have a `knora-base:isDeleted` predicate.
+      *
+      * @param turtleWriter an [[RDFWriter]] that writes to the output file.
+      */
+    private class IsDeletedHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
+        override def endRDF(): Unit = {
+            statements.foreach {
+                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+                    // Check whether the subject already has a knora-base:isDeleted predicate.
+                    val hasIsDeleted = subjectStatements.exists(_.getPredicate.stringValue == OntologyConstants.KnoraBase.IsDeleted)
+                    val isStandoff = subjectStatements.exists(_.getPredicate.stringValue == OntologyConstants.KnoraBase.StandoffTagHasStart)
+
+                    subjectStatements.foreach {
+                        statement =>
+                            turtleWriter.handleStatement(statement)
+
+                            // If this statement provides the rdf:type of the subject, and the subject doesn't have a
+                            // knora-base:isDeleted predicate, check whether it needs one.
+                            if (statement.getPredicate.stringValue == OntologyConstants.Rdf.Type && !hasIsDeleted) {
+                                val rdfType = statement.getObject.stringValue
+
+                                // If the rdf:type isn't one of the standard classes that can't be marked as deleted,
+                                // and the subject isn't a standoff tag, assume it must be a Resource or Value,
+                                // and add knora-base:isDeleted false.
+                                if (!(StandardClassesWithoutIsDeleted.contains(rdfType) || isStandoff)) {
+                                    val isDeletedStatement = valueFactory.createStatement(
+                                        statement.getSubject,
+                                        valueFactory.createIRI(OntologyConstants.KnoraBase.IsDeleted),
+                                        valueFactory.createLiteral(false)
+                                    )
+
+                                    turtleWriter.handleStatement(isDeletedStatement)
+                                }
+                            }
+                    }
+            }
+
+            turtleWriter.endRDF()
         }
     }
 
@@ -651,13 +704,13 @@ object TransformData extends App {
             s"""
                |Updates the structure of Knora repository data to accommodate changes in Knora.
                |
-               |Usage: org.knora.webapi.util.TransformData -t [$PermissionsTransformationOption|$MissingValueHasStringTransformationOption|$StandoffTransformationOption|$AllTransformationsOption] input output
+               |Usage: org.knora.webapi.util.TransformData -t [$IsDeletedTransformationOption|$PermissionsTransformationOption|$MissingValueHasStringTransformationOption|$StandoffTransformationOption|$AllTransformationsOption] input output
             """.stripMargin)
 
         val transform = opt[String](
             required = true,
-            validate = t => Set(PermissionsTransformationOption, MissingValueHasStringTransformationOption, StandoffTransformationOption, AllTransformationsOption).contains(t),
-            descr = s"Selects a transformation. Available transformations: '$PermissionsTransformationOption' (combines old-style multiple permission statements into single permission statements), '$MissingValueHasStringTransformationOption' (adds missing valueHasString), '$StandoffTransformationOption' (transforms old-style standoff into new-style standoff), '$AllTransformationsOption' (all of the above)"
+            validate = t => Set(IsDeletedTransformationOption, PermissionsTransformationOption, MissingValueHasStringTransformationOption, StandoffTransformationOption, AllTransformationsOption).contains(t),
+            descr = s"Selects a transformation. Available transformations: '$IsDeletedTransformationOption' (adds missing 'knora-base:isDeleted' statements), '$PermissionsTransformationOption' (combines old-style multiple permission statements into single permission statements), '$MissingValueHasStringTransformationOption' (adds missing valueHasString), '$StandoffTransformationOption' (transforms old-style standoff into new-style standoff), '$AllTransformationsOption' (all of the above)"
         )
 
         val input = trailArg[String](required = true, descr = "Input Turtle file")

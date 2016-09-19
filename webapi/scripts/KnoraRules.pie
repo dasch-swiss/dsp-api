@@ -297,7 +297,15 @@ Id: maxCardinality_1_table
 
 
 /*
- * Consistency checks for subject and object class constraints.
+ * A consistency rule that disallows empty strings.
+ */
+ Consistency: empty_string
+     i p ""
+     ------------------------------------
+
+
+/*
+ * Consistency rules for subject and object class constraints.
  */
 
 // The subject of a property must belong to the class specified in the property's knora-base:subjectClassConstraint.
@@ -316,7 +324,7 @@ Consistency: object_class_constraint
 
 
 /*
- * Consistency checks for cardinalities on any properties.
+ * Consistency rules for cardinalities on any properties.
  */
 
 // With owl:minCardinality 1, the property must have an object. It's OK if the object is marked as deleted.
@@ -333,7 +341,7 @@ Consistency: cardinality_1_not_less_any_object
 
 
 /*
- * Consistency checks for cardinalities on properties whose objects cannot be marked as deleted
+ * Consistency rules for cardinalities on properties whose objects cannot be marked as deleted
  * using the boolean flag knora-base:isDeleted.
  */
 
@@ -357,7 +365,7 @@ Consistency: cardinality_1_not_greater_without_deletion_flag
 
 
 /*
- * Consistency checks for cardinalities on properties whose objects can be marked as deleted
+ * Consistency rules for cardinalities on properties whose objects can be marked as deleted
  * using the boolean flag knora-base:isDeleted. Here we take advantage of the fact that every class
  * that *allows* knora-base:isDeleted also *requires* knora-base:isDeleted. So an object that can be
  * marked as deleted, but has not been marked as deleted, will have knora-base:isDeleted false.

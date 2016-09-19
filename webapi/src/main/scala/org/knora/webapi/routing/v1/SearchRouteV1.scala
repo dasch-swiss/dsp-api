@@ -153,7 +153,7 @@ object SearchRouteV1 extends Authenticator {
             case other => None
         }
 
-        val searchString = InputValidation.toSparqlEncodedString(searchval)
+        val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
 
         val showNRows: Int = params.get("show_nrows") match {
             case Some(showNRowsStr) =>

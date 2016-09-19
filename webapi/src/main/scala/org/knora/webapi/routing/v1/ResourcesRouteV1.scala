@@ -78,18 +78,18 @@ object ResourcesRouteV1 extends Authenticator {
 
         def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiResponderConversionPathRequestV1] = None, userProfile: UserProfileV1): ResourceCreateRequestV1 = {
 
-            val projectIri = InputValidation.toIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI ${apiRequest.project_id}"))
-            val resourceTypeIri = InputValidation.toIri(apiRequest.restype_id, () => throw BadRequestException(s"Invalid resource IRI ${apiRequest.restype_id}"))
-            val label = InputValidation.toSparqlEncodedString(apiRequest.label)
+            val projectIri = InputValidation.toIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
+            val resourceTypeIri = InputValidation.toIri(apiRequest.restype_id, () => throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
+            val label = InputValidation.toSparqlEncodedString(apiRequest.label, () => throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
 
             // for GUI-case:
             // file has already been stored by Sipi.
             // TODO: in the old SALSAH, the file params were sent as a property salsah:__location__ -> the GUI has to be adapated
             val paramConversionRequest: Option[SipiResponderConversionFileRequestV1] = apiRequest.file match {
                 case Some(createFile: CreateFileV1) => Some(SipiResponderConversionFileRequestV1(
-                    originalFilename = InputValidation.toSparqlEncodedString(createFile.originalFilename),
-                    originalMimeType = InputValidation.toSparqlEncodedString(createFile.originalMimeType),
-                    filename = InputValidation.toSparqlEncodedString(createFile.filename),
+                    originalFilename = InputValidation.toSparqlEncodedString(createFile.originalFilename, () => throw BadRequestException(s"The original filename is invalid: '${createFile.originalFilename}'")),
+                    originalMimeType = InputValidation.toSparqlEncodedString(createFile.originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '${createFile.originalMimeType}'")),
+                    filename = InputValidation.toSparqlEncodedString(createFile.filename, () => throw BadRequestException(s"Invalid filename: '${createFile.filename}'")),
                     userProfile = userProfile
                 ))
                 case None => None
@@ -108,7 +108,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                                     val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext)
 
-                                    CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str),
+                                    CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str}'")),
                                         textattr = richtextComponents.textattr,
                                         resource_reference = richtextComponents.resource_reference),
                                         comment)
@@ -182,7 +182,7 @@ object ResourcesRouteV1 extends Authenticator {
         def makeResourceDeleteMessage(resIri: IRI, deleteComment: Option[String], userProfile: UserProfileV1) = {
             ResourceDeleteRequestV1(
                 resourceIri = InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: $resIri")),
-                deleteComment = deleteComment.map(comment => InputValidation.toSparqlEncodedString(comment)),
+                deleteComment = deleteComment.map(comment => InputValidation.toSparqlEncodedString(comment, () => throw BadRequestException(s"Invalid comment: '$comment'"))),
                 userProfile = userProfile,
                 apiRequestID = UUID.randomUUID
             )
@@ -237,7 +237,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                         // input validation
 
-                        val searchString = InputValidation.toSparqlEncodedString(searchstr)
+                        val searchString = InputValidation.toSparqlEncodedString(searchstr, () => throw BadRequestException(s"Invalid search string: '$searchstr'"))
 
                         val resourceTypeIri: Option[IRI] = restype match {
                             case ("-1") => None
@@ -333,9 +333,12 @@ object ResourcesRouteV1 extends Authenticator {
                         // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
                         val sourcePath = InputValidation.saveFileToTmpLocation(settings, nonEmpty.data.toByteArray)
 
+                        val originalFilename = bodyPartFile.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
+                        val originalMimeType = nonEmpty.contentType.toString
+
                         val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
-                            originalFilename = InputValidation.toSparqlEncodedString(bodyPartFile.filename.getOrElse(throw BadRequestException(s"Filename is not given"))),
-                            originalMimeType = InputValidation.toSparqlEncodedString(nonEmpty.contentType.toString),
+                            originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
+                            originalMimeType = InputValidation.toSparqlEncodedString(originalMimeType, () => throw BadRequestException(s"Original MIME type is invalid: '$originalMimeType'")),
                             source = sourcePath,
                             userProfile = userProfile
                         )

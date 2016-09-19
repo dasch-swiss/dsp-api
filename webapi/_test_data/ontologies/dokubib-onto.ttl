@@ -3,7 +3,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix foaf: <http://xmln.com/foaf/0.1/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix dc: <http://www.knora.org/ontology/dc#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
@@ -28,7 +28,7 @@
 
           rdfs:subPropertyOf foaf:familyName ;
 
-          rdfs:label "Name"@de ;
+          rdfs:label """Name"""@de ;
 
           rdfs:comment """Nachname einer Person"""@de ,
                        """Last name of a person"""@en ;
@@ -44,11 +44,11 @@
           salsah-gui:guiAttribute "size=32" ,
                                   "maxlength=32" ;
 
-          knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                knora-base:Owner ;
-
           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                              knora-base:UnknownUser .
+                                              knora-base:UnknownUser ;
+
+          knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                knora-base:Owner .
 
 
 ### ###########################################
@@ -58,8 +58,8 @@
 
            rdfs:subPropertyOf foaf:givenName ;
 
-           rdfs:label "Vorname"@de ,
-                      "First name"@en ;
+           rdfs:label """Vorname"""@de ,
+                      """First name"""@en ;
 
            rdfs:comment """Vorname einer Person"""@de ,
                         """First name of a person"""@en ;
@@ -89,8 +89,8 @@
 
              rdfs:subPropertyOf knora-base:hasValue ;
 
-             rdfs:label "Institution"@de ,
-                        "Institution"@en ;
+             rdfs:label """Institution"""@de ,
+                        """Institution"""@en ;
 
              rdfs:comment """Institution"""@de ;
 
@@ -119,8 +119,8 @@
 
          rdfs:subPropertyOf knora-base:hasValue ;
 
-         rdfs:label "Adresse"@de ,
-                    "Address"@en ;
+         rdfs:label """Adresse"""@de ,
+                    """Address"""@en ;
 
          rdfs:comment """Adresse (Strassenname, Nummer etc.)"""@de ;
 
@@ -146,8 +146,8 @@
 
       rdfs:subPropertyOf knora-base:hasValue ;
 
-      rdfs:label "Ort"@de ,
-                 "City"@en ;
+      rdfs:label """Ort"""@de ,
+                 """City"""@en ;
 
       knora-base:subjectClassConstraint :person ;
 
@@ -174,8 +174,8 @@
 
          rdfs:subPropertyOf knora-base:hasValue ;
 
-         rdfs:label "Postleitzahl"@de ,
-                    "ZIP-Code"@en ;
+         rdfs:label """Postleitzahl"""@de ,
+                    """ZIP-Code"""@en ;
 
          rdfs:comment """Postleitzajl"""@de ;
 
@@ -204,7 +204,7 @@
 
        rdfs:subPropertyOf foaf:phone ;
 
-       rdfs:label "Telefon"@de ;
+       rdfs:label """Telefon"""@de ;
 
        knora-base:subjectClassConstraint :person ;
 
@@ -228,7 +228,7 @@
 
      rdfs:subPropertyOf knora-base:hasValue ;
 
-     rdfs:label "Fax"@de ;
+     rdfs:label """Fax"""@de ;
 
      rdfs:comment """FAx"""@de ;
 
@@ -254,8 +254,8 @@
 
        rdfs:subPropertyOf knora-base:hasValue ;
 
-       rdfs:label "Email"@de ,
-                  "Email"@en ;
+       rdfs:label """Email"""@de ,
+                  """Email"""@en ;
 
        knora-base:subjectClassConstraint :person ;
 
@@ -279,10 +279,10 @@
 
          rdfs:subPropertyOf knora-base:hasValue ;
 
-         rdfs:label "Bildart"@de ,
-                    "Type d'image"@fr ,
-                    "tipo di immagine"@it ,
-                    "Image type"@en ;
+         rdfs:label """Bildart"""@de ,
+                    """Type d'image"""@fr ,
+                    """tipo di immagine"""@it ,
+                    """Image type"""@en ;
 
          knora-base:subjectClassConstraint :bildformat ;
 
@@ -308,10 +308,10 @@
 
               rdfs:subPropertyOf dc:date ;
 
-              rdfs:label "Erwerbsdatum"@de ,
-                         "Date d'acquisition"@fr ,
-                         "Data di acquisizione"@it ,
-                         "Date of acquisition"@en ;
+              rdfs:label """Erwerbsdatum"""@de ,
+                         """Date d'acquisition"""@fr ,
+                         """Data di acquisizione"""@it ,
+                         """Date of acquisition"""@en ;
 
               knora-base:subjectClassConstraint :bildformat ;
 
@@ -332,10 +332,10 @@
 
         rdfs:subPropertyOf knora-base:hasValue ;
 
-        rdfs:label "Format"@de ,
-                   "Format"@fr ,
-                   "Formato"@it ,
-                   "Format"@en ;
+        rdfs:label """Format"""@de ,
+                   """Format"""@fr ,
+                   """Formato"""@it ,
+                   """Format"""@en ;
 
         knora-base:subjectClassConstraint :bildformat ;
 
@@ -364,10 +364,10 @@
 
                 knora-base:objectClassConstraint knora-base:LinkValue ;
 
-                rdfs:label "Lieferant"@de ,
-                           "Fournisseur"@fr ,
-                           "Fornitore"@it ,
-                           "Supplier"@en ;
+                rdfs:label """Lieferant"""@de ,
+                           """Fournisseur"""@fr ,
+                           """Fornitore"""@it ,
+                           """Supplier"""@en ;
 
                 knora-base:subjectClassConstraint :bildformat ;
 
@@ -375,8 +375,7 @@
 
                 salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                salsah-gui:guiAttribute "restypeid=32" ,
-                                        "numprops=2" .
+                salsah-gui:guiAttribute "numprops=2" .
 
 
 ### ###########################################
@@ -386,10 +385,10 @@
 
            rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-           rdfs:label "Lieferant"@de ,
-                      "Fournisseur"@fr ,
-                      "Fornitore"@it ,
-                      "Supplier"@en ;
+           rdfs:label """Lieferant"""@de ,
+                      """Fournisseur"""@fr ,
+                      """Fornitore"""@it ,
+                      """Supplier"""@en ;
 
            knora-base:subjectClassConstraint :bildformat ;
 
@@ -399,8 +398,7 @@
 
            salsah-gui:guiElement salsah-gui:Searchbox ;
 
-           salsah-gui:guiAttribute "restypeid=32" ,
-                                   "numprops=2" ;
+           salsah-gui:guiAttribute "numprops=2" ;
 
            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
                                                  knora-base:Owner .
@@ -413,10 +411,10 @@
 
             rdfs:subPropertyOf knora-base:hasValue ;
 
-            rdfs:label "Stückzahl"@de ,
-                       "Nombre d'élements"@fr ,
-                       "Numero d'immagini"@it ,
-                       "No. of items"@en ;
+            rdfs:label """Stückzahl"""@de ,
+                       """Nombre d'élements"""@fr ,
+                       """Numero d'immagini"""@it ,
+                       """No. of items"""@en ;
 
             knora-base:subjectClassConstraint :bildformat ;
 
@@ -440,10 +438,10 @@
 
             rdfs:subPropertyOf knora-base:hasValue ;
 
-            rdfs:label "Zugangsart"@de ,
-                       "Type d'acquisition"@fr ,
-                       "Tipo d'acquisizione"@it ,
-                       "Type of acquisition"@en ;
+            rdfs:label """Zugangsart"""@de ,
+                       """Type d'acquisition"""@fr ,
+                       """Tipo d'acquisizione"""@it ,
+                       """Type of acquisition"""@en ;
 
             rdfs:comment """Die Art und Wiese, wie ein Objekt in den Besitz der Dokumentationsbibliothek gelangt ist."""@de ;
 
@@ -468,10 +466,10 @@
 
        rdfs:subPropertyOf knora-base:hasValue ;
 
-       rdfs:label "Preis"@de ,
-                  "Prix"@fr ,
-                  "Prezzo"@it ,
-                  "Price"@en ;
+       rdfs:label """Preis"""@de ,
+                  """Prix"""@fr ,
+                  """Prezzo"""@it ,
+                  """Price"""@en ;
 
        knora-base:subjectClassConstraint :bildformat ;
 
@@ -495,10 +493,10 @@
 
                rdfs:subPropertyOf dc:date ;
 
-               rdfs:label "Eingangsdatum"@de ,
-                          "Date de réception"@fr ,
-                          "Data di ricevimento"@it ,
-                          "Date of receipt"@en ;
+               rdfs:label """Eingangsdatum"""@de ,
+                          """Date de réception"""@fr ,
+                          """Data di ricevimento"""@it ,
+                          """Date of receipt"""@en ;
 
                knora-base:subjectClassConstraint :bildformat ;
 
@@ -508,8 +506,8 @@
 
                salsah-gui:guiElement salsah-gui:Date ;
 
-               knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
-                                                   knora-base:KnownUser ;
+               knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                                   knora-base:UnknownUser ;
 
                knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
                                                      knora-base:Owner .
@@ -522,10 +520,10 @@
 
          rdfs:subPropertyOf knora-base:hasValue ;
 
-         rdfs:label "Kommentar"@de ,
-                    "Commentaire"@fr ,
-                    "Commento"@it ,
-                    "Comment"@en ;
+         rdfs:label """Kommentar"""@de ,
+                    """Commentaire"""@fr ,
+                    """Commento"""@it ,
+                    """Comment"""@en ;
 
          rdfs:comment """Unstrukturierte Bemerkungen zu einem Objekt"""@de ;
 
@@ -552,10 +550,10 @@
 
        rdfs:subPropertyOf knora-base:hasValue ;
 
-       rdfs:label "Titel"@de ,
-                  "Titre"@fr ,
-                  "Titolo"@it ,
-                  "Title"@en ;
+       rdfs:label """Titel"""@de ,
+                  """Titre"""@fr ,
+                  """Titolo"""@it ,
+                  """Title"""@en ;
 
        knora-base:subjectClassConstraint :bild ;
 
@@ -581,10 +579,10 @@
 
           rdfs:subPropertyOf knora-base:hasValue ;
 
-          rdfs:label "Signatur"@de ,
-                     "Signature"@fr ,
-                     "Firma"@it ,
-                     "Signature"@en ;
+          rdfs:label """Signatur"""@de ,
+                     """Signature"""@fr ,
+                     """Firma"""@it ,
+                     """Signature"""@en ;
 
           rdfs:comment """Die spezielle Signatur für die Dokumentationsbibliothek St. Moritz"""@de ;
 
@@ -612,10 +610,10 @@
 
         rdfs:subPropertyOf knora-base:hasValue ;
 
-        rdfs:label "Bildnummer"@de ,
-                   "Image ID"@fr ,
-                   "Immagine ID"@it ,
-                   "Picture ID"@en ;
+        rdfs:label """Bildnummer"""@de ,
+                   """Image ID"""@fr ,
+                   """Immagine ID"""@it ,
+                   """Picture ID"""@en ;
 
         knora-base:subjectClassConstraint :bild ;
 
@@ -642,10 +640,10 @@
 
              rdfs:subPropertyOf dc:description ;
 
-             rdfs:label "Beschreibung"@de ,
-                        "Description"@fr ,
-                        "Descrizione"@it ,
-                        "Description"@en ;
+             rdfs:label """Beschreibung"""@de ,
+                        """Description"""@fr ,
+                        """Descrizione"""@it ,
+                        """Description"""@en ;
 
              knora-base:subjectClassConstraint :bild ;
 
@@ -673,10 +671,10 @@
 
             rdfs:subPropertyOf knora-base:hasValue ;
 
-            rdfs:label "Jahreszeit"@de ,
-                       "Saison"@fr ,
-                       "Stagione"@it ,
-                       "Season"@en ;
+            rdfs:label """Jahreszeit"""@de ,
+                       """Saison"""@fr ,
+                       """Stagione"""@it ,
+                       """Season"""@en ;
 
             knora-base:subjectClassConstraint :bild ;
 
@@ -702,10 +700,10 @@
 
            rdfs:subPropertyOf knora-base:hasValue ;
 
-           rdfs:label "Jahrzehnt"@de ,
-                      "Décennie"@fr ,
-                      "Decennio"@it ,
-                      "Decade"@en ;
+           rdfs:label """Jahrzehnt"""@de ,
+                      """Décennie"""@fr ,
+                      """Decennio"""@it ,
+                      """Decade"""@en ;
 
            knora-base:subjectClassConstraint :bild ;
 
@@ -728,10 +726,10 @@
 
             rdfs:subPropertyOf knora-base:hasValue ;
 
-            rdfs:label "Jahr"@de ,
-                       "Année"@fr ,
-                       "Anno"@it ,
-                       "Year"@en ;
+            rdfs:label """Jahr"""@de ,
+                       """Année"""@fr ,
+                       """Anno"""@it ,
+                       """Year"""@en ;
 
             knora-base:subjectClassConstraint :bild ;
 
@@ -760,7 +758,7 @@
 
                  knora-base:objectClassConstraint knora-base:LinkValue ;
 
-                 rdfs:label "Bildformat"@de ;
+                 rdfs:label """Bildformat"""@de ;
 
                  rdfs:comment """Bildfromat"""@de ,
                               """Format Image"""@fr ,
@@ -773,8 +771,7 @@
 
                  salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                 salsah-gui:guiAttribute "restypeid=33" ,
-                                         "numprops=1" .
+                 salsah-gui:guiAttribute "numprops=1" .
 
 
 ### ###########################################
@@ -784,7 +781,7 @@
 
             rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-            rdfs:label "Bildformat"@de ;
+            rdfs:label """Bildformat"""@de ;
 
             rdfs:comment """Bildfromat"""@de ,
                          """Format Image"""@fr ,
@@ -799,8 +796,7 @@
 
             salsah-gui:guiElement salsah-gui:Searchbox ;
 
-            salsah-gui:guiAttribute "restypeid=33" ,
-                                    "numprops=1" ;
+            salsah-gui:guiAttribute "numprops=1" ;
 
             knora-base:hasDefaultViewPermission knora-base:KnownUser ;
 
@@ -815,10 +811,10 @@
 
                  rdfs:subPropertyOf dc:date ;
 
-                 rdfs:label "Erfassungsdatum"@de ,
-                            "Date d'acquisition"@fr ,
-                            "Data di acquisizione"@it ,
-                            "Date of acquisition"@en ;
+                 rdfs:label """Erfassungsdatum"""@de ,
+                            """Date d'acquisition"""@fr ,
+                            """Data di acquisizione"""@it ,
+                            """Date of acquisition"""@en ;
 
                  knora-base:subjectClassConstraint :bild ;
 
@@ -841,10 +837,10 @@
 
                 rdfs:subPropertyOf dc:date ;
 
-                rdfs:label "Mutationsdatum"@de ,
-                           "Date de mutation"@fr ,
-                           "Mutazione data"@it ,
-                           "Mutation date"@en ;
+                rdfs:label """Mutationsdatum"""@de ,
+                           """Date de mutation"""@fr ,
+                           """Mutazione data"""@it ,
+                           """Mutation date"""@en ;
 
                 knora-base:subjectClassConstraint :bild ;
 
@@ -865,10 +861,10 @@
 
             rdfs:subPropertyOf knora-base:hasValue ;
 
-            rdfs:label "Bearbeiter"@de ,
-                       "Editeur"@fr ,
-                       "Editore"@it ,
-                       "Editor"@en ;
+            rdfs:label """Bearbeiter"""@de ,
+                       """Editeur"""@fr ,
+                       """Editore"""@it ,
+                       """Editor"""@en ;
 
             knora-base:subjectClassConstraint :bild ;
 
@@ -892,10 +888,10 @@
 
                rdfs:subPropertyOf knora-base:hasValue ;
 
-               rdfs:label "Negativnummer"@de ,
-                          "Nombre du négative"@fr ,
-                          "Numero del negativo"@it ,
-                          "Number of negative"@en ;
+               rdfs:label """Negativnummer"""@de ,
+                          """Nombre du négative"""@fr ,
+                          """Numero del negativo"""@it ,
+                          """Number of negative"""@en ;
 
                knora-base:subjectClassConstraint :bild ;
 
@@ -910,8 +906,8 @@
 
                knora-base:hasDefaultViewPermission knora-base:KnownUser ;
 
-               knora-base:hasDefaultDeletePermission knora-base:Owner ,
-                                                     knora-base:ProjectMember .
+               knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                     knora-base:Owner .
 
 
 ### ###########################################
@@ -923,10 +919,10 @@
 
               knora-base:objectClassConstraint knora-base:LinkValue ;
 
-              rdfs:label "Urheber"@de ,
-                         "Auteur"@fr ,
-                         "Autore"@it ,
-                         "Creator"@en ;
+              rdfs:label """Urheber"""@de ,
+                         """Auteur"""@fr ,
+                         """Autore"""@it ,
+                         """Creator"""@en ;
 
               rdfs:comment """An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity."""@de ;
 
@@ -936,8 +932,7 @@
 
               salsah-gui:guiElement salsah-gui:Searchbox ;
 
-              salsah-gui:guiAttribute "restypeid=32" ,
-                                      "numprops=2" .
+              salsah-gui:guiAttribute "numprops=2" .
 
 
 ### ###########################################
@@ -947,10 +942,10 @@
 
          rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-         rdfs:label "Urheber"@de ,
-                    "Auteur"@fr ,
-                    "Autore"@it ,
-                    "Creator"@en ;
+         rdfs:label """Urheber"""@de ,
+                    """Auteur"""@fr ,
+                    """Autore"""@it ,
+                    """Creator"""@en ;
 
          rdfs:comment """An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity."""@de ;
 
@@ -962,8 +957,7 @@
 
          salsah-gui:guiElement salsah-gui:Searchbox ;
 
-         salsah-gui:guiAttribute "restypeid=32" ,
-                                 "numprops=2" ;
+         salsah-gui:guiAttribute "numprops=2" ;
 
          knora-base:hasDefaultViewPermission knora-base:KnownUser ,
                                              knora-base:UnknownUser ;
@@ -981,7 +975,7 @@
 
                 knora-base:objectClassConstraint knora-base:LinkValue ;
 
-                rdfs:label "Copyright"@de ;
+                rdfs:label """Copyright"""@de ;
 
                 rdfs:comment """Copyright"""@de ,
                              """Droit d'auteur"""@fr ,
@@ -994,8 +988,7 @@
 
                 salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                salsah-gui:guiAttribute "restypeid=32" ,
-                                        "numprops=2" .
+                salsah-gui:guiAttribute "numprops=2" .
 
 
 ### ###########################################
@@ -1005,7 +998,7 @@
 
            rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-           rdfs:label "Copyright"@de ;
+           rdfs:label """Copyright"""@de ;
 
            rdfs:comment """Copyright"""@de ,
                         """Droit d'auteur"""@fr ,
@@ -1020,14 +1013,13 @@
 
            salsah-gui:guiElement salsah-gui:Searchbox ;
 
-           salsah-gui:guiAttribute "restypeid=32" ,
-                                   "numprops=2" ;
-
-           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                               knora-base:UnknownUser ;
+           salsah-gui:guiAttribute "numprops=2" ;
 
            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                 knora-base:Owner .
+                                                 knora-base:Owner ;
+
+           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                               knora-base:UnknownUser .
 
 ##########################################################
 #
@@ -1045,11 +1037,11 @@
                         [
                            rdf:type owl:Restriction ;
                            owl:onProperty :lastname ;
-                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
                         [
                            rdf:type owl:Restriction ;
                            owl:onProperty :firstname ;
-                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
                         [
                            rdf:type owl:Restriction ;
                            owl:onProperty :institution ;
@@ -1081,18 +1073,18 @@
 
         knora-base:resourceIcon "person.png" ;
 
-        rdfs:label "Person"@de ,
-                   "Personne"@fr ,
-                   "Persona"@it ,
-                   "Person"@en ;
+        rdfs:label """Person"""@de ,
+                   """Personne"""@fr ,
+                   """Persona"""@it ,
+                   """Person"""@en ;
 
         rdfs:comment """Person"""@de ;
 
-        knora-base:hasDefaultChangeRightsPermission knora-base:Owner ,
-                                                    knora-base:ProjectMember ;
+        knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
+                                            knora-base:KnownUser ;
 
-        knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                            knora-base:UnknownUser .
+        knora-base:hasDefaultChangeRightsPermission knora-base:ProjectMember ,
+                                                    knora-base:Owner .
 
 
 ### ###########################################
@@ -1144,16 +1136,16 @@
 
             knora-base:resourceIcon "bildformat.png" ;
 
-            rdfs:label "Bildformat"@de ,
-                       "Format d'image"@fr ,
-                       "Formato d'immagine"@it ,
-                       "Image format"@en ;
-
-            knora-base:hasDefaultChangeRightsPermission knora-base:Owner ,
-                                                        knora-base:ProjectMember ;
+            rdfs:label """Bildformat"""@de ,
+                       """Format d'image"""@fr ,
+                       """Formato d'immagine"""@it ,
+                       """Image format"""@en ;
 
             knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                                knora-base:UnknownUser .
+                                                knora-base:UnknownUser ;
+
+            knora-base:hasDefaultChangeRightsPermission knora-base:ProjectMember ,
+                                                        knora-base:Owner .
 
 
 ### ###########################################
@@ -1165,11 +1157,11 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :titel ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :signatur ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :bildnr ;
@@ -1177,19 +1169,19 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :description ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :jahreszeit ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :jahrzehnt ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :jahr_exakt ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :bildformatValue ;
@@ -1201,15 +1193,15 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :erfassungsdatum ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :mutationsdatum ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :bearbeiter ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :negativnummer ;
@@ -1233,17 +1225,17 @@
 
       knora-base:resourceIcon "bild.png" ;
 
-      rdfs:label "Bild"@de ,
-                 "Image"@fr ,
-                 "Immagine"@it ,
-                 "Image"@en ;
+      rdfs:label """Bild"""@de ,
+                 """Image"""@fr ,
+                 """Immagine"""@it ,
+                 """Image"""@en ;
 
       rdfs:comment """Ein Bild/Fotografie et. der Dokumentationsbibliothek St. Moritz"""@de ;
 
-      knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+      knora-base:hasDefaultChangeRightsPermission knora-base:Owner ,
+                                                  knora-base:ProjectMember ;
 
       knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
 
-      knora-base:hasDefaultChangeRightsPermission knora-base:ProjectMember ,
-                                                  knora-base:Owner .
+      knora-base:hasDefaultViewPermission knora-base:KnownUser .
 

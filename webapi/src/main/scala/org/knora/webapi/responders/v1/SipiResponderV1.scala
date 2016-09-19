@@ -190,22 +190,22 @@ class SipiResponderV1 extends ResponderV1 {
 
                     // create two StillImageFileValueV1s
                     Vector(StillImageFileValueV1(// full representation
-                        internalMimeType = InputValidation.toSparqlEncodedString(imageConversionResult.mimetype_full),
-                        originalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.original_filename),
-                        originalMimeType = Some(InputValidation.toSparqlEncodedString(imageConversionResult.original_mimetype)),
+                        internalMimeType = InputValidation.toSparqlEncodedString(imageConversionResult.mimetype_full, () => throw BadRequestException(s"The internal MIME type returned by Sipi is invalid: '${imageConversionResult.mimetype_full}")),
+                        originalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.original_filename, () => throw BadRequestException(s"The original filename returned by Sipi is invalid: '${imageConversionResult.original_filename}")),
+                        originalMimeType = Some(InputValidation.toSparqlEncodedString(imageConversionResult.original_mimetype, () => throw BadRequestException(s"The original MIME type returned by Sipi is invalid: '${imageConversionResult.original_mimetype}"))),
                         dimX = imageConversionResult.nx_full,
                         dimY = imageConversionResult.ny_full,
-                        internalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.filename_full),
+                        internalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.filename_full, () => throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${imageConversionResult.filename_full}")),
                         qualityLevel = 100,
                         qualityName = Some(SipiConstants.StillImage.fullQuality)
                     ),
                         StillImageFileValueV1(// thumbnail representation
-                            internalMimeType = InputValidation.toSparqlEncodedString(imageConversionResult.mimetype_thumb),
-                            originalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.original_filename),
-                            originalMimeType = Some(InputValidation.toSparqlEncodedString(imageConversionResult.original_mimetype)),
+                            internalMimeType = InputValidation.toSparqlEncodedString(imageConversionResult.mimetype_thumb, () => throw BadRequestException(s"The internal MIME type returned by Sipi is invalid: '${imageConversionResult.mimetype_full}")),
+                            originalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.original_filename, () => throw BadRequestException(s"The original filename returned by Sipi is invalid: '${imageConversionResult.original_filename}")),
+                            originalMimeType = Some(InputValidation.toSparqlEncodedString(imageConversionResult.original_mimetype, () => throw BadRequestException(s"The original MIME type returned by Sipi is invalid: '${imageConversionResult.original_mimetype}"))),
                             dimX = imageConversionResult.nx_thumb,
                             dimY = imageConversionResult.ny_thumb,
-                            internalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.filename_thumb),
+                            internalFilename = InputValidation.toSparqlEncodedString(imageConversionResult.filename_thumb, () => throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${imageConversionResult.filename_thumb}")),
                             qualityLevel = 10,
                             qualityName = Some(SipiConstants.StillImage.thumbnailQuality),
                             isPreview = true

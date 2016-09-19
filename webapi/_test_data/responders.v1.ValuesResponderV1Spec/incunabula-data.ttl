@@ -113,7 +113,7 @@
 	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 	knora-base:valueHasOrder 0 ;
-	knora-base:valueHasString "" ;
+	knora-base:valueHasString "The author" ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
 

@@ -92,7 +92,7 @@ object ValuesRouteV1 extends Authenticator {
             case CreateValueApiRequestV1(_, _, _, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
                 val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext)
 
-                (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str),
+                (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str}'")),
                     textattr = richtextComponents.textattr,
                     resource_reference = richtextComponents.resource_reference),
                     comment)
@@ -138,7 +138,7 @@ object ValuesRouteV1 extends Authenticator {
             resourceIri = resourceIri,
             propertyIri = propertyIri,
             value = value,
-            comment = commentStr.map(str => InputValidation.toSparqlEncodedString(str)),
+            comment = commentStr.map(str => InputValidation.toSparqlEncodedString(str, () => throw BadRequestException(s"Invalid comment: '$str'"))),
             userProfile = userProfile,
             apiRequestID = UUID.randomUUID
         )
@@ -155,7 +155,7 @@ object ValuesRouteV1 extends Authenticator {
             case ChangeValueApiRequestV1(_, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
                 val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext)
 
-                (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str),
+                (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str}'")),
                     textattr = richtextComponents.textattr,
                     resource_reference = richtextComponents.resource_reference),
                     comment)
@@ -202,7 +202,7 @@ object ValuesRouteV1 extends Authenticator {
         ChangeValueRequestV1(
             valueIri = valueIri,
             value = value,
-            comment = commentStr.map(str => InputValidation.toSparqlEncodedString(str)),
+            comment = commentStr.map(str => InputValidation.toSparqlEncodedString(str, () => throw BadRequestException(s"Invalid comment: '$str'"))),
             userProfile = userProfile,
             apiRequestID = UUID.randomUUID
         )
@@ -211,7 +211,7 @@ object ValuesRouteV1 extends Authenticator {
     private def makeChangeCommentRequestMessage(valueIriStr: IRI, comment: String, userProfile: UserProfileV1): ChangeCommentRequestV1 = {
         ChangeCommentRequestV1(
             valueIri = InputValidation.toIri(valueIriStr, () => throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
-            comment = InputValidation.toSparqlEncodedString(comment),
+            comment = InputValidation.toSparqlEncodedString(comment, () => throw BadRequestException(s"Invalid comment: '$comment'")),
             userProfile = userProfile,
             apiRequestID = UUID.randomUUID
         )
@@ -220,7 +220,7 @@ object ValuesRouteV1 extends Authenticator {
     private def makeDeleteValueRequest(valueIriStr: IRI, deleteComment: Option[String], userProfile: UserProfileV1): DeleteValueRequestV1 = {
         DeleteValueRequestV1(
             valueIri = InputValidation.toIri(valueIriStr, () => throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
-            deleteComment = deleteComment.map(comment => InputValidation.toSparqlEncodedString(comment)),
+            deleteComment = deleteComment.map(comment => InputValidation.toSparqlEncodedString(comment, () => throw BadRequestException(s"Invalid comment: '$comment'"))),
             userProfile = userProfile,
             apiRequestID = UUID.randomUUID
         )
@@ -241,9 +241,9 @@ object ValuesRouteV1 extends Authenticator {
         if (apiRequest.nonEmpty) {
             // GUI-case
             val fileRequest = SipiResponderConversionFileRequestV1(
-                originalFilename = InputValidation.toSparqlEncodedString(apiRequest.get.file.originalFilename),
-                originalMimeType = InputValidation.toSparqlEncodedString(apiRequest.get.file.originalMimeType),
-                filename = InputValidation.toSparqlEncodedString(apiRequest.get.file.filename),
+                originalFilename = InputValidation.toSparqlEncodedString(apiRequest.get.file.originalFilename, () => throw BadRequestException(s"The original filename is invalid: '${apiRequest.get.file.originalFilename}'")),
+                originalMimeType = InputValidation.toSparqlEncodedString(apiRequest.get.file.originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '${apiRequest.get.file.originalMimeType}'")),
+                filename = InputValidation.toSparqlEncodedString(apiRequest.get.file.filename, () => throw BadRequestException(s"Invalid filename: '${apiRequest.get.file.filename}'")),
                 userProfile = userProfile
             )
             ChangeFileValueRequestV1(
@@ -428,10 +428,12 @@ object ValuesRouteV1 extends Authenticator {
                         // TODO: add a script that cleans files in the tmp location that have a certain age
                         // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
                         val sourcePath = InputValidation.saveFileToTmpLocation(settings, nonEmpty.data.toByteArray)
+                        val originalFilename = bodyPartFile.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
+                        val originalMimeType = nonEmpty.contentType.toString
 
                         val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
-                            originalFilename = InputValidation.toSparqlEncodedString(bodyPartFile.filename.getOrElse(throw BadRequestException(s"Filename is not given"))),
-                            originalMimeType = InputValidation.toSparqlEncodedString(nonEmpty.contentType.toString),
+                            originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"The original filename is invalid: '$originalFilename'")),
+                            originalMimeType = InputValidation.toSparqlEncodedString(originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '$originalMimeType'")),
                             source = sourcePath,
                             userProfile = userProfile
                         )

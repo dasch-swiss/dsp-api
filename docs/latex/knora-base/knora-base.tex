@@ -79,7 +79,7 @@
 \title{The Knora Base Ontology}
 \author{Lukas Rosenthaler, Benjamin Geer, Tobias Schweizer, Ivan Subotic\\Digital Humanities Lab, University of Basel}
 
-\date{13 September 2016}
+\date{14 September 2016}
 
 \begin{document}
 
@@ -862,11 +862,12 @@ V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember
 
 \section{Consistency Checking}
 
-Knora tries to enforce repository consistency by checking constraints that are specified in the Knora base ontology and in project-specific ontologies. Two types of constraints are enforced:
+Knora tries to enforce repository consistency by checking constraints that are specified in the Knora base ontology and in project-specific ontologies. Three types of consistency rules are enforced:
 
 \begin{itemize}
-	\item Cardinalities in OWL class definitions.
-	\item Constraints on the types of the subjects and objects of OWL object properties.
+	\item Cardinalities in OWL class definitions must be satisfied.
+	\item Constraints on the types of the subjects and objects of OWL object properties must be satisfied.
+	\item A datatype property may not have an empty string as an object.
 \end{itemize}
 
 The implementation of consistency checking is partly triplestore-dependent; Knora may be able to provide stricter checks with some triplestores than with others.
