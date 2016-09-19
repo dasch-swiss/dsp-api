@@ -413,7 +413,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                         val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
 
-                        val label = InputValidation.toSparqlEncodedString(apiRequest.label)
+                        val label = InputValidation.toSparqlEncodedString(apiRequest.label, () => throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
 
                         ChangeResourceLabelRequestV1(
                             resourceIri = resIri,
