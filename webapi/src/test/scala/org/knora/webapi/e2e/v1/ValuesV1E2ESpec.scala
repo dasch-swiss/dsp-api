@@ -150,6 +150,22 @@ class ValuesV1E2ESpec extends E2ESpec {
             }
         }
 
+        "not add an empty text value to a resource" in {
+            val params =
+                """
+                  |{
+                  |    "project_id": "http://data.knora.org/projects/anything",
+                  |    "res_id": "http://data.knora.org/a-thing",
+                  |    "prop": "http://www.knora.org/ontology/anything#hasText",
+                  |    "richtext_value": {"utf8str":""}
+                  |}
+                """.stripMargin
+
+            Post("/v1/values", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+                assert(status == StatusCodes.BadRequest, response.toString)
+            }
+        }
+
         "add a text value containing a standoff reference to another resource" in {
             val params =
                 """
