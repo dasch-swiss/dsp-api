@@ -1,0 +1,123 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX onto: <http://www.ontotext.com/>
+
+SELECT ?resource ?resourceLabel ?path ?depth ?direction
+FROM NAMED onto:explicit
+WHERE
+{
+    {
+        SELECT ?resource ?resourceLabel
+               (GROUP_CONCAT(CONCAT(STR(?prop), ' ', STR(?intermediateResource2)); separator="|") AS ?path)
+               (COUNT(?intermediateResource1) AS ?depth)
+               ("outbound" AS ?direction)
+        WHERE
+        {
+            {
+                SELECT ?initialResource ?resource
+                WHERE
+                {
+                    # Bind the initial source node to ?initialResource.
+                    BIND(<i:5> AS ?initialResource)
+
+                    # Find all intermediate nodes reachable transitively via p:base from ?initialResource.
+                    ?initialResource <p:base>* ?intermediateResource .
+                    
+                    # Filter out intermediate nodes that are bound to ?intermediateResource if these use an unwanted link
+                    # on the last hop from some other node that is also reachable from ?initialResource.
+
+                    OPTIONAL
+                    {
+                        ?excludedResource <p:exclude> ?intermediateResource .
+                        ?initialResource <p:base>* ?excludedResource .
+                    }
+                    
+                    FILTER(!BOUND(?excludedResource))
+
+                    # Get the last hop from the intermediate node to ?resource.
+                    ?intermediateResource <p:base> ?resource .
+
+                    # Filter it out if it is an unwanted one.
+                    GRAPH onto:explicit { ?intermediateResource ?lastProp ?resource }
+                    FILTER(?lastProp != <p:exclude>)
+                }
+            }
+            
+            # Get the explicit property used to connect each intermediate resource with the next one.
+
+            ?initialResource <p:base>* ?intermediateResource1 .
+            ?intermediateResource1 <p:base> ?intermediateResource2 .
+            ?intermediateResource2 <p:base>* ?resource .
+            ?resource rdfs:label ?resourceLabel .
+            # TODO: get the permissions on ?resource.
+            
+            OPTIONAL
+            {
+                GRAPH onto:explicit
+                {
+                    ?intermediateResource1 ?prop ?intermediateResource2 .
+                    # TODO: Get the permissions on the link.
+                }
+            }
+        }
+        GROUP BY ?resource ?resourceLabel
+        HAVING(COUNT(?intermediateResource1) <= 3 && COUNT(?intermediateResource1) > 0)
+    }
+    UNION
+    {
+        SELECT ?resource ?resourceLabel
+               (GROUP_CONCAT(CONCAT(STR(?prop), ' ', STR(?intermediateResource2)); separator="|") AS ?path)
+               (COUNT(?intermediateResource1) AS ?depth)
+               ("inbound" AS ?direction)
+        WHERE
+        {
+            {
+                SELECT ?initialResource ?resource
+                WHERE
+                {
+                    # Bind the initial source node to ?initialResource.
+                    BIND(<i:5> AS ?initialResource)
+
+                    # Find all intermediate nodes that can reaqch ?initialResource transitively via p:base.
+                    ?intermediateResource <p:base>* ?initialResource .
+
+                    # Filter out intermediate nodes that are bound to ?intermediateResource if these use an unwanted link
+                    # on the last hop from some other node that can also reach ?initialResource.
+
+                    OPTIONAL
+                    {
+                        ?intermediateResource <p:exclude> ?excludedResource .
+                        ?excludedResource <p:base>* ?initialResource .
+                    }
+                    
+                    FILTER(!BOUND(?excludedResource))
+
+                    # Get the last hop from the intermediate node to ?initialResource.
+                    ?resource <p:base> ?intermediateResource .
+
+                    # Filter it out if it is an unwanted one.
+                    GRAPH onto:explicit { ?resource ?lastProp ?intermediateResource }
+                    FILTER(?lastProp != <p:exclude>)
+                }
+            }
+
+            # Get the explicit property used to connect each intermediate resource with the next one.
+            
+            ?resource <p:base>* ?intermediateResource1 .
+            ?intermediateResource1 <p:base> ?intermediateResource2 .
+            ?intermediateResource2 <p:base>* ?initialResource .
+            ?resource rdfs:label ?resourceLabel .
+            # TODO: get the permissions on ?resource.
+
+            OPTIONAL
+            {
+                GRAPH onto:explicit
+                {
+                    ?intermediateResource1 ?prop ?intermediateResource2 .
+                    # TODO: Get the permissions on the link.
+                }
+            }
+        }
+        GROUP BY ?resource ?resourceLabel
+        HAVING(COUNT(?intermediateResource1) <= 3 && COUNT(?intermediateResource1) > 0)
+    }
+}
