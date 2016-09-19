@@ -16,17 +16,15 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-*******************************
-Developing the Knora API Server
-*******************************
 
-.. toctree::
-   :maxdepth: 2
+Starting Fuseki 2
+==================
 
-   fuseki
-   graphdb
-   build-process
-   intellij-config
-   documentation
-   test-tags
-   testing-with-fuseki
+Inside the Knora API server git repository, there is a folder called
+``triplestores/fuseki`` containing a script named ``fuseki-server``. All needed
+configuration files are in place. To start Fuseki 2, just run this
+script:
+
+::
+
+  $ ./fuseki-server
