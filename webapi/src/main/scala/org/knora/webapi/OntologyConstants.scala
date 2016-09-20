@@ -252,6 +252,8 @@ object OntologyConstants {
           */
         val SystemUser = "http://www.knora.org/ontology/knora-base#SystemUser"
 
+        val CreationDate = "http://www.knora.org/ontology/knora-base#creationDate"
+        val ValueCreationDate = "http://www.knora.org/ontology/knora-base#valueCreationDate"
     }
 
     object SalsahGui {

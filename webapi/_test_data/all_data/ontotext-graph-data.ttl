@@ -1,5 +1,9 @@
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-insert data {
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix anything: <http://www.knora.org/ontology/anything#> .
+
     <p:1> rdfs:subPropertyOf <p:base>.
     <p:2> rdfs:subPropertyOf <p:base>.
     <p:3> rdfs:subPropertyOf <p:base>.
@@ -13,21 +17,24 @@ insert data {
     <i:4> <p:4> <i:5>.   
     <i:5> <p:exclude> <i-n:5>. <i-n:5> <p:2> <i:21> .   
     <i:5> <p:1> <i:6>.   
-    <i:5> <p:1> <i:6.1>.   
-    <i:6.1> <p:2> <i:7.1>.   
-    <i:6.1> <p:exclude> <i-n:7.1>.   
-    <i:6> <p:2> <i:7>.   
-    <i:7> <p:3> <i:8>.   
-    <i:8> <p:4> <i:9>.   
-    <i:9> <p:1> <i:10>.   
+    <i:5> <p:1> <i:6.1>.
+#    <i:5> <p:1> <i:10>.
+    <i:6.1> <p:2> <i:7.1>.
+    <i:6.1> <p:exclude> <i-n:7.1>.
+    <i:6> <p:2> <i:7>.
+    <i:6> <p:exclude> <i:7>.
+    <i:7> <p:3> <i:8>.
+    <i:8> <p:4> <i:9>.
+    <i:9> <p:1> <i:10>.
     <i:10> <p:exclude> <i-n:10>. <i-n:10> <p:2> <i:22> .   
     <i:10> <p:2> <i:11>.   
     <i:11> <p:3> <i:12>.   
-    <i:12> <p:4> <i:13>.   
-    <i:13> <p:1> <i:14>.   
+    <i:12> <p:4> <i:13>.
+    <i:13> <p:1> <i:14>.
     <i:14> <p:2> <i:15>.   
-    <i:15> <p:3> <i:16>.   
-    <i:16> <p:4> <i:17>.   
+    <i:14> <p:deleted> true .
+    <i:15> <p:3> <i:16>.
+    <i:16> <p:4> <i:17>.
 
     <i:1> rdfs:label "label i:1".
     <i:2> rdfs:label "label i:2".
@@ -54,4 +61,3 @@ insert data {
     <i-n:7.1> rdfs:label "excluded label i-n:7.1".
     <i:21> rdfs:label "label i:21" .
     <i:22> rdfs:label "label i:22" .
-}

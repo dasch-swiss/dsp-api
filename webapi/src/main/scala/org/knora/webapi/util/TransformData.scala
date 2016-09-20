@@ -26,8 +26,8 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import org.rogach.scallop._
 
-import scala.collection.immutable.TreeMap
-import scala.collection.{SortedSet, mutable}
+import scala.collection.immutable.{SortedSet, TreeMap}
+import scala.collection.mutable
 
 /**
   * Updates the structure of Knora repository data to accommodate changes in Knora.
@@ -168,6 +168,7 @@ object TransformData extends App {
             case PermissionsTransformationOption => new PermissionsHandler(turtleWriter)
             case MissingValueHasStringTransformationOption => new ValueHasStringHandler(turtleWriter)
             case StandoffTransformationOption => new StandoffHandler(turtleWriter)
+            case "graph" => new GraphHandler(turtleWriter)
             case _ => throw new Exception(s"Unsupported transformation $transformation")
         }
 
@@ -186,6 +187,8 @@ object TransformData extends App {
       * @param turtleWriter an [[RDFWriter]] that writes to the output file.
       */
     protected abstract class StatementCollectingHandler(turtleWriter: RDFWriter) extends RDFHandler {
+        protected val knoraIdUtil = new KnoraIdUtil
+
         /**
           * An instance of [[org.openrdf.model.ValueFactory]] for creating RDF statements.
           */
@@ -246,6 +249,243 @@ object TransformData extends App {
           */
         override def startRDF(): Unit = {
             turtleWriter.startRDF()
+        }
+    }
+
+    private class GraphHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
+        val initialNode = "i:5"
+
+        val names = Vector(
+            "Alpha",
+            "Bravo",
+            "Charlie",
+            "Delta",
+            "Echo",
+            "Foxtrot",
+            "Golf",
+            "Hotel",
+            "India",
+            "Juliet",
+            "Kilo",
+            "Lima",
+            "Mike",
+            "November",
+            "Oscar",
+            "Papa",
+            "Quebec",
+            "Romeo",
+            "Sierra",
+            "Tango",
+            "Uniform",
+            "Victor",
+            "Whiskey",
+            "X-ray",
+            "Yankee",
+            "Zulu"
+        )
+
+        case class LinkValueToCreate(linkValueIri: IRI, pred: IRI, obj: IRI)
+
+        override def endRDF(): Unit = {
+            val resourceIris: Map[IRI, IRI] = statements.keySet.filterNot(_.startsWith("p:")).map {
+                iri =>
+                    iri -> (if (iri == initialNode) "http://data.knora.org/anything/start" else knoraIdUtil.makeRandomResourceIri)
+            }.toMap
+
+            val resourceNames: Map[IRI, IRI] = resourceIris.keysIterator.toVector.sorted.zip(names).toMap
+
+            val statementsWithoutPropertyDefs = statements.filterNot {
+                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+                    subjectIri.startsWith("p:")
+            }
+
+            val statementsWithStartfirst: Vector[(IRI, Vector[Statement])] = Vector(initialNode -> statementsWithoutPropertyDefs(initialNode)) ++ (statementsWithoutPropertyDefs - initialNode).toVector
+
+            statementsWithStartfirst.foreach {
+                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+                    val resourceIri = resourceIris(subjectIri)
+                    val linkValuesToCreate = new mutable.ArrayBuffer[LinkValueToCreate]()
+
+                    turtleWriter.handleStatement(
+                        valueFactory.createStatement(
+                            valueFactory.createIRI(resourceIri),
+                            valueFactory.createIRI(OntologyConstants.Rdf.Type),
+                            valueFactory.createIRI("http://www.knora.org/ontology/anything#Thing")
+                        )
+                    )
+
+                    if (!subjectStatements.exists(_.getPredicate.stringValue.endsWith("deleted"))) {
+                        turtleWriter.handleStatement(
+                            valueFactory.createStatement(
+                                valueFactory.createIRI(resourceIri),
+                                valueFactory.createIRI(OntologyConstants.KnoraBase.IsDeleted),
+                                valueFactory.createLiteral(false)
+                            )
+                        )
+                    }
+
+                    turtleWriter.handleStatement(
+                        valueFactory.createStatement(
+                            valueFactory.createIRI(resourceIri),
+                            valueFactory.createIRI(OntologyConstants.KnoraBase.AttachedToUser),
+                            valueFactory.createIRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q")
+                        )
+                    )
+
+                    turtleWriter.handleStatement(
+                        valueFactory.createStatement(
+                            valueFactory.createIRI(resourceIri),
+                            valueFactory.createIRI(OntologyConstants.KnoraBase.AttachedToProject),
+                            valueFactory.createIRI("http://data.knora.org/projects/anything")
+                        )
+                    )
+
+                    turtleWriter.handleStatement(
+                        valueFactory.createStatement(
+                            valueFactory.createIRI(resourceIri),
+                            valueFactory.createIRI(OntologyConstants.KnoraBase.HasPermissions),
+                            valueFactory.createLiteral("V knora-base:KnownUser|M knora-base:ProjectMember")
+                        )
+                    )
+
+                    turtleWriter.handleStatement(
+                        valueFactory.createStatement(
+                            valueFactory.createIRI(resourceIri),
+                            valueFactory.createIRI(OntologyConstants.KnoraBase.CreationDate),
+                            valueFactory.createLiteral(new java.util.Date())
+                        )
+                    )
+
+                    for (statement <- subjectStatements) {
+                        val oldPredicate = statement.getPredicate.stringValue
+                        val oldObject = statement.getObject.stringValue
+
+                        val newPredicate = if (oldPredicate == OntologyConstants.Rdfs.Label) {
+                            oldPredicate
+                        } else if (oldPredicate.endsWith("deleted")) {
+                            OntologyConstants.KnoraBase.IsDeleted
+                        } else if (oldPredicate.endsWith("exclude")) {
+                            "http://www.knora.org/ontology/anything#isPartOfOtherThing"
+                        } else {
+                            "http://www.knora.org/ontology/anything#hasOtherThing"
+                        }
+
+                        val newObject = if (newPredicate == OntologyConstants.Rdfs.Label) {
+                            valueFactory.createLiteral(oldObject.replace("label " + subjectIri, resourceNames(subjectIri)))
+                        } else if (newPredicate == OntologyConstants.KnoraBase.IsDeleted) {
+                            valueFactory.createLiteral(oldObject.toBoolean)
+                        } else {
+                            valueFactory.createIRI(resourceIris(oldObject))
+                        }
+
+                        if (!(newPredicate == OntologyConstants.Rdfs.Label || newPredicate == OntologyConstants.KnoraBase.IsDeleted)) {
+                            val linkValueIri = knoraIdUtil.makeRandomValueIri(resourceIri)
+
+                            turtleWriter.handleStatement(
+                                valueFactory.createStatement(
+                                    valueFactory.createIRI(resourceIri),
+                                    valueFactory.createIRI(newPredicate + "Value"),
+                                    valueFactory.createIRI(linkValueIri)
+                                )
+                            )
+
+                            linkValuesToCreate += LinkValueToCreate(linkValueIri = linkValueIri, pred = newPredicate, obj = newObject.stringValue)
+                        }
+
+                        turtleWriter.handleStatement(
+                            valueFactory.createStatement(
+                                valueFactory.createIRI(resourceIri),
+                                valueFactory.createIRI(newPredicate),
+                                newObject
+                            )
+                        )
+                    }
+
+                    for (linkValueToCreate <- linkValuesToCreate) {
+                        turtleWriter.handleStatement(
+                            valueFactory.createStatement(
+                                valueFactory.createIRI(linkValueToCreate.linkValueIri),
+                                valueFactory.createIRI(OntologyConstants.Rdf.Type),
+                                valueFactory.createIRI(OntologyConstants.KnoraBase.LinkValue)
+                            )
+                        )
+
+                        turtleWriter.handleStatement(
+                            valueFactory.createStatement(
+                                valueFactory.createIRI(linkValueToCreate.linkValueIri),
+                                valueFactory.createIRI(OntologyConstants.Rdf.Subject),
+                                valueFactory.createIRI(resourceIri)
+                            )
+                        )
+
+                        turtleWriter.handleStatement(
+                            valueFactory.createStatement(
+                                valueFactory.createIRI(linkValueToCreate.linkValueIri),
+                                valueFactory.createIRI(OntologyConstants.Rdf.Predicate),
+                                valueFactory.createIRI(linkValueToCreate.pred)
+                            )
+                        )
+
+                        turtleWriter.handleStatement(
+                            valueFactory.createStatement(
+                                valueFactory.createIRI(linkValueToCreate.linkValueIri),
+                                valueFactory.createIRI(OntologyConstants.Rdf.Object),
+                                valueFactory.createIRI(linkValueToCreate.obj)
+                            )
+                        )
+
+                        turtleWriter.handleStatement(
+                            valueFactory.createStatement(
+                                valueFactory.createIRI(linkValueToCreate.linkValueIri),
+                                valueFactory.createIRI(OntologyConstants.KnoraBase.IsDeleted),
+                                valueFactory.createLiteral(false)
+                            )
+                        )
+
+                        turtleWriter.handleStatement(
+                            valueFactory.createStatement(
+                                valueFactory.createIRI(linkValueToCreate.linkValueIri),
+                                valueFactory.createIRI(OntologyConstants.KnoraBase.AttachedToUser),
+                                valueFactory.createIRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q")
+                            )
+                        )
+
+                        turtleWriter.handleStatement(
+                            valueFactory.createStatement(
+                                valueFactory.createIRI(linkValueToCreate.linkValueIri),
+                                valueFactory.createIRI(OntologyConstants.KnoraBase.HasPermissions),
+                                valueFactory.createLiteral("V knora-base:KnownUser|M knora-base:ProjectMember")
+                            )
+                        )
+
+                        turtleWriter.handleStatement(
+                            valueFactory.createStatement(
+                                valueFactory.createIRI(linkValueToCreate.linkValueIri),
+                                valueFactory.createIRI(OntologyConstants.KnoraBase.ValueCreationDate),
+                                valueFactory.createLiteral(new java.util.Date())
+                            )
+                        )
+
+                        turtleWriter.handleStatement(
+                            valueFactory.createStatement(
+                                valueFactory.createIRI(linkValueToCreate.linkValueIri),
+                                valueFactory.createIRI(OntologyConstants.KnoraBase.ValueHasString),
+                                valueFactory.createLiteral(linkValueToCreate.obj)
+                            )
+                        )
+
+                        turtleWriter.handleStatement(
+                            valueFactory.createStatement(
+                                valueFactory.createIRI(linkValueToCreate.linkValueIri),
+                                valueFactory.createIRI(OntologyConstants.KnoraBase.ValueHasRefCount),
+                                valueFactory.createLiteral(1)
+                            )
+                        )
+                    }
+
+            }
+
+            turtleWriter.endRDF()
         }
     }
 
@@ -421,8 +661,6 @@ object TransformData extends App {
       * Changes standoff blank nodes into `StandoffTag` objects.
       */
     private class StandoffHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
-        private val knoraIdUtil = new KnoraIdUtil
-
         // The obsolete standoffHasAttribute predicate.
         private val StandoffHasAttribute = OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "standoffHasAttribute"
 
@@ -709,7 +947,7 @@ object TransformData extends App {
 
         val transform = opt[String](
             required = true,
-            validate = t => Set(IsDeletedTransformationOption, PermissionsTransformationOption, MissingValueHasStringTransformationOption, StandoffTransformationOption, AllTransformationsOption).contains(t),
+            validate = t => Set("graph", IsDeletedTransformationOption, PermissionsTransformationOption, MissingValueHasStringTransformationOption, StandoffTransformationOption, AllTransformationsOption).contains(t),
             descr = s"Selects a transformation. Available transformations: '$IsDeletedTransformationOption' (adds missing 'knora-base:isDeleted' statements), '$PermissionsTransformationOption' (combines old-style multiple permission statements into single permission statements), '$MissingValueHasStringTransformationOption' (adds missing valueHasString), '$StandoffTransformationOption' (transforms old-style standoff into new-style standoff), '$AllTransformationsOption' (all of the above)"
         )
 
