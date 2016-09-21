@@ -557,7 +557,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
                 val incoming = JsonParser(response.entity.asString).asJsObject.fields.get("incoming") match {
                     case Some(incomingRefs: JsArray) => incomingRefs
                     case None => throw InvalidApiJsonException(s"The response does not contain a field called 'incoming'")
-                    case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsObject, but ${other}")
+                    case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsObject, but $other")
                 }
 
                 val firstElement = incoming.elements.headOption match {
