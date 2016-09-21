@@ -23,6 +23,7 @@ Developing the Knora API Server
 .. toctree::
    :maxdepth: 2
 
+   overview
    fuseki
    graphdb
    build-process
