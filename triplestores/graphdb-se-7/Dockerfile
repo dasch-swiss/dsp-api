@@ -1,19 +1,35 @@
-FROM subotic/tomcat:8-jdk8
+FROM ubuntu:16.04
 
 MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
 
-# Update base installation
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends
+# Silence debconf messages
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
-# Add GraphdSB-SE distribution (tar is automatically extracted by ADD command)
-ADD ./graphdb-se-6.6.4-war/*.war /usr/local/tomcat/webapps/
+# Install.
+RUN \
+  sed -i 's/# \(.*multiverse$\)/\1/g' /etc/apt/sources.list && \
+  apt-get update && \
+  apt-get -y upgrade && \
+  apt-get update && \
+  apt-get -y install openjdk-8-jdk && \
+  apt-get -y install byobu curl git htop man vim wget && \
+  apt-get -y install unzip && \
+  rm -rf /var/lib/apt/lists/*
+
+# Set environment variables
+ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+
+COPY ./graphdb-se-7.1.0-dist.zip /
+
+RUN unzip /graphdb-se-7.1.0-dist.zip && \
+    mv /graphdb-se-7.1.0 /graphdb && \
+    rm -rf /graphdb-se-7.1.0-dist.zip
 
 # Add and set license
 # Notice: License needs to be acquired separately and supplied before build
-ADD ./GRAPHDB_SE.license /usr/local/tomcat/
+COPY ./GRAPHDB_SE.license /graphdb
+COPY ./KnoraRules.pie /graphdb
 
-ADD ./KnoraRules.pie /usr/local/tomcat
+EXPOSE 7200
 
-EXPOSE 8080
-CMD ["catalina.sh", "run"]
+CMD ["/graphdb/bin/graphdb", "-Dgraphdb.license.file=/graphdb/GRAPHDB_SE.license"]
