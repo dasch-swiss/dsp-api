@@ -53,11 +53,12 @@ work out of the box with the following triplestores:
 
 * `Apache Jena`_, which is `free software`_. Knora comes bundled with Jena and with
   its standalone SPARQL server, Fuseki.
-  
+
+See the chapters on :ref:`starting-fuseki-2` and :ref:`starting-graphdb-se-7` for more details.
+
 
 SIPI
 ----
-
 
 Build SIPI Docker Image
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -70,15 +71,50 @@ To build the image, and push it to the docker hub, follow the following steps:
 
   $ git clone https://github.com/dhlab-basel/docker-sipi
   (copy the Kakadu distribution ``v7_8-01382N.zip`` to the ``docker-sipi`` directory)
-  $ docker build -t sipi
-  $ docker run --name sipi -d sipi
-  $ docker logs sipi
-  $ docker commit sipi dhlabbasel/sipi:versionXYZ
-  $ docker stop sipi
+  $ docker build -t dhlabbasel/sipi
+  $ docker run --name sipi --rm -it -p 1024:1024 dhlabbasel/sipi
+  (Ctrl-c out of terminal will stop and delete container)
+  $ docker push dhlabbasel/sipi
+
+Pushing the image to the docker hub requires prior authentication with ``$ docker login``. The user needs to be
+registered on ``hub.docker.com``. Also, the user needs to be allowed to push to the ``dblabbasel`` organisation.
+
 
 Running SIPI
 ^^^^^^^^^^^^^
 
+To use the docker image stored locally or on the docker hub repository type:
+
 ::
 
-  $ docker run --name sipi -p 1024:1024 dhlabbasel/sipi:versionXYZ
+  $ docker run --name sipi -d -p 1024:1024 dhlabbasel/sipi
+  
+This will create and start a docker container with the ``dhlabbasel/sipi`` image in the background. The default
+behaviour is to start Sipi by calling the following command:
+
+::
+
+  $ /sipi/local/bin/sipi -config /sipi/config/sipi.knora-test-config.lua
+
+
+To override this default behaviour, start the container by supplying another config file:
+
+::
+
+  $ docker run --name sipi \
+               -d \
+               -p 1024:1024 \
+               dhlabbasel/sipi \
+               /sipi/local/bin/sipi -config /sipi/config/sipi.config.lua
+
+You can also mount a directory (the local directory in this example), and use a config file that is outside of the
+docker container:
+
+::
+
+  $ docker run --name sipi \
+               -d \
+               -p 1024:1024 \
+               -v $PWD:/localdir \
+               dhlabbasel/sipi \
+               /sipi/local/bin/sipi -config /localdir/sipi.knora-test-config.lua
