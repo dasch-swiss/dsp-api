@@ -42,7 +42,7 @@ To be able to successfully run GraphDB inside docker three important steps need 
 Usage
 -----
 
-From inside the ``/triplestores/graphdb-se-7`` folder, type:
+From inside the ``triplestores/graphdb-se-7`` folder, type:
 
 ::
 
@@ -58,21 +58,27 @@ Do not forget the '.' in the first command.
 
 After the GraphDB inside the docker container has started, you can find the GraphDB workbench here: http://localhost:7200
 
-
-Advanced Usage
----------------
+Above, we create and start a transient container (``--rm`` flag). To create a container that we can stop and start again
+at a later time, follow the following steps:
 
 ::
 
   $ docker build -t graphdb <path-to-dockerfile>
-  $ docker run --name graphdb -d -it -p 7200:7200 graphdb
+  $ docker run --name graphdb -d -t -p 7200:7200 graphdb
+  
+  (to see the console output, attach to the container; to detach press Ctrl-c)
   $ docker attach graphdb
-  (to detach press ^p^q, to stop press ^c)
-  $ docker start graphdb
+    
+  (to stop the container)
   $ docker stop graphdb
+  
+  (to start the container again)
+  $ docker start graphdb
+  
+  (to remove the container; needs to be stopped)
   $ docker rm graphdb
 
  - ``--name`` give the container a name
  - ``-d`` run container in background and print container ID
- - ``-p`` forwards the exposed port to your host (or if you use boot2docker to this IP)
- - ``-it`` allows interactive mode, so you see if something get's deployed
+ - ``-t`` allocate a pseudo TTY, so you see the console output
+ - ``-p`` forwards the exposed port to your host

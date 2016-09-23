@@ -31,3 +31,4 @@ Developing the Knora API Server
    documentation
    test-tags
    testing-with-fuseki
+   docker-cheat-sheet

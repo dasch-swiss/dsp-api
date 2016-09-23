@@ -21,6 +21,10 @@
 Starting Fuseki 2
 ==================
 
+
+Locally
+-------
+
 Inside the Knora API server git repository, there is a folder called
 ``triplestores/fuseki`` containing a script named ``fuseki-server``. All needed
 configuration files are in place. To start Fuseki 2, just run this
@@ -29,3 +33,18 @@ script:
 ::
 
   $ ./fuseki-server
+
+Inside Docker
+--------------
+
+Inside the Knora API server git repository, there is a folder called ``triplestores/fuseki`` containing the
+``Dockerfile`` we can use to create the docker image:
+
+::
+
+  $ cd triplestores/fuseki
+  $ docker build -t fuseki .
+  $ docker run --rm -it -p 3030:3030 fuseki
+
+
+Do not forget the '.' in the first command.
