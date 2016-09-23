@@ -12,31 +12,41 @@ To be able to successfully run GraphDB inside docker one important step needs to
   1. Install Docker from http://docker.com.
 
 
-#### Simple Usage ####
+#### Usage ####
 
 ```
-$ docker build -t fuseki <path-to-dockerfile>
+$ docker build -t fuseki .
 $ docker run --rm -it -p 3030:3030 fuseki
 ```
 
- - ```--rm``` removes the container as soon as you stop it
- - ```-p``` forwards the exposed port to your host (or if you use boot2docker to this IP)
- - ```-it``` allows interactive mode, so you see if something get's deployed
- 
- 
-#### Advanced Usage ####
+Do not forget the '.' in the first command.
+
+ - ``--rm`` removes the container as soon as you stop it
+ - ``-p`` forwards the exposed port to your host (or if you use boot2docker to this IP)
+ - ``-it`` allows interactive mode, so you see if something get's deployed
+
+
+Above, we create and start a transient container (``--rm`` flag). To create a container that we can stop and start again
+at a later time, follow the following steps:
 
 ```
-$ docker build -t fuseki <path-to-dockerfile>
-$ docker run --name fuseki -d -it -p 3030:3030 fuseki
-$ docker attach fuseki
-(to detach press ^p^q, to stop press ^c)
-$ docker start fuseki
-$ docker stop fuseki
-$ docker rm fuseki
+  $ docker build -t fuseki .
+  $ docker run --name fuseki -d -t -p 3030:3030 fuseki
+  
+  (to see the console output, attach to the container; to detach press Ctrl-c)
+  $ docker attach fuseki
+    
+  (to stop the container)
+  $ docker stop fuseki
+  
+  (to start the container again)
+  $ docker start fuseki
+  
+  (to remove the container; needs to be stopped)
+  $ docker rm fuseki
 ```
 
- - ```--name``` give the container a name
- - ```-d``` run container in background and print container ID
- - ```-p``` forwards the exposed port to your host (or if you use boot2docker to this IP)
- - ```-it``` allows interactive mode, so you see if something get's deployed
+ - ``--name`` give the container a name
+ - ``-d`` run container in background and print container ID
+ - ``-t`` allocate a pseudo TTY, so you see the console output
+ - ``-p`` forwards the exposed port to your host
