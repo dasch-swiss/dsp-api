@@ -37,6 +37,9 @@ work out of the box with the following triplestores:
 
 TODO: explain how to get started with these.
 
+See the chapters on :ref:`starting-fuseki-2` and :ref:`starting-graphdb-se-7` for more details.
+
+
 Load Test Data
 ^^^^^^^^^^^^^^
 
