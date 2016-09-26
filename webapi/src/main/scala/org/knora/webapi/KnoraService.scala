@@ -78,7 +78,7 @@ trait KnoraService {
     /**
       * The application's configuration.
       */
-    private val settings = Settings(system)
+    val settings = Settings(system)
 
     /**
       * Provide logging
