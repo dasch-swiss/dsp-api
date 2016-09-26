@@ -56,6 +56,10 @@ work out of the box with the following triplestores:
 
 See the chapters on :ref:`starting-fuseki-2` and :ref:`starting-graphdb-se-7` for more details.
 
+.. _free software: http://www.gnu.org/philosophy/free-sw.en.html
+.. _Ontotext GraphDB: http://ontotext.com/products/graphdb/
+.. _Apache Jena: https://jena.apache.org/
+
 
 SIPI
 ----
