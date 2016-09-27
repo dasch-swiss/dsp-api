@@ -86,7 +86,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
             assert(BCrypt.checkpw("123456", BCrypt.hashpw("123456", BCrypt.gensalt())))
 
             // test UserProfileV1 BCrypt usage
-            assert(up.passwordMatch("123456"))
+            assert(up.passwordMatchBCrypt("123456"))
         }
     }
 }
