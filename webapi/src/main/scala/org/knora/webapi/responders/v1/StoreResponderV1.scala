@@ -18,19 +18,24 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
+import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, ResetTriplestoreContentResponseV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import scala.language.postfixOps
 
 /**
   * This responder is used by [[org.knora.webapi.routing.v1.StoreRouteV1]], for piping through HTTP requests to the
   * 'Store Module'
   */
 class StoreResponderV1 extends ResponderV1 {
+
+    override implicit val timeout = Timeout(300 seconds)
 
     def receive = {
         case ResetTriplestoreContentRequestV1(rdfDataObjects) => future2Message(sender(), resetTriplestoreContent(rdfDataObjects), log)
@@ -45,14 +50,23 @@ class StoreResponderV1 extends ResponderV1 {
       */
     private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentResponseV1] = {
 
-        //log.debug(s"resetTriplestoreContent called with: ${rdfDataObjects.toString}")
+        log.debug(s"resetTriplestoreContent called with: ${rdfDataObjects.toString}")
         log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
         if (!StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get) {
             Future(throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?"))
         } else {
+            
+            for {
+                resetResponse <- (storeManager ? ResetTriplestoreContent(rdfDataObjects)).mapTo[ResetTriplestoreContentACK]
+                loadOntologiesResponse <- (responderManager ? LoadOntologiesRequest).mapTo[LoadOntologiesResponse]
+            } yield ResetTriplestoreContentResponseV1("success")
+
+
+            /*
             val future = storeManager ? ResetTriplestoreContent(rdfDataObjects)
             val result = Await.result(future, 300.seconds)
             Future(ResetTriplestoreContentResponseV1(s"${result.toString}"))
+            */
         }
     }
 
