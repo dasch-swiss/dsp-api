@@ -19,36 +19,22 @@ package org.knora.webapi.routing
 import akka.actor.{ActorSystem, Props}
 import akka.pattern._
 import akka.util.Timeout
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.v1.responder.sessionmessages.SessionResponse
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.routing.v1.{AuthenticateRouteV1, ResourcesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.{LiveActorMaker, R2RSpec}
+import org.knora.webapi.{LiveActorMaker, R2RSpec, SharedTestData}
 import spray.http.HttpHeaders.{Cookie, `Set-Cookie`}
 import spray.http._
 import spray.httpx.RequestBuilding
-import spray.json.DefaultJsonProtocol
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-/**
-  * Represents a response Knora returns when communicating with the 'v1/session' route during the 'login' operation.
-  * @param status is the returned status code.
-  * @param message is the returned message.
-  * @param sid is the returned session id.
-  */
-case class SessionResponse(status: Int, message: String, sid: String)
-
-/**
-  * A spray-json protocol used for turning the JSON responses from the 'login' operation during communication with the
-  * 'v1/session' route into a case classes for easier testing.
-  */
-object JsonSessionResponseProtocol extends DefaultJsonProtocol {
-    implicit val SessionResponseFormat = jsonFormat3(SessionResponse)
-}
 
 /**
   * Route-to-Responder (R2R) test specification for testing authentication using [[AuthenticateRouteV1]]. This
@@ -64,7 +50,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with RequestBuilding {
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    import JsonSessionResponseProtocol._
+    import org.knora.webapi.messages.v1.responder.sessionmessages.JsonSessionResponseProtocol._
     import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
 
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -89,6 +75,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with RequestBuilding {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestData.rootUserProfileV1), 10.seconds)
     }
     "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via URL parameters " should {
         "succeed with authentication and correct username / correct password " in {
