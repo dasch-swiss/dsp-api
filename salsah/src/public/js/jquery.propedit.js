@@ -113,6 +113,7 @@
 			//
 			if (!propinfo[prop].values) return;
 
+
 			//
 			// here we test if we are wallowed to view the value. If not, we just return!
 			//
@@ -1274,6 +1275,7 @@
 					} else {
 						alert(status.errormsg);
 					}
+					active = undefined;
 				});
 			};
 			

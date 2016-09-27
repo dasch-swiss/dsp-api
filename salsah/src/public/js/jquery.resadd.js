@@ -248,6 +248,17 @@
 
 						formcontainer.append(form);
 
+						var labelprop = {
+							name: "__LABEL__",
+							gui_name: "text",
+							label: 'Label',
+							description: "** label **",
+							vocabulary: "http://www.knora.org/ontology/knora-base",
+							valuetype_id: "http://www.knora.org/ontology/knora-base#TextValue",
+							occurence: "1"
+						}
+						rtinfo.properties.unshift(labelprop);
+
 						for (var pinfo in rtinfo.properties) {
 							//
 							// now we check if for certain properties a value is given as parameter to $().resadd(). If so, this value is
@@ -626,6 +637,7 @@
 							for (var pinfo in rtinfo.properties) {
 								//propname = rtinfo.properties[pinfo].vocabulary + ':' + rtinfo.properties[pinfo].name;
 								propname = rtinfo.properties[pinfo].name;
+								//if (propname == '__LABEL__') continue;
 								if (!propvals[propname]) propvals[propname] = {};
 								//console.log(rtinfo.properties[pinfo].gui_name);
 								switch (rtinfo.properties[pinfo].gui_name) {
@@ -1032,14 +1044,18 @@
 
 							// TODO: handle GUI  element problem
 							//propvals["http://www.knora.org/ontology/knora-base#hasComment"] = undefined;
-
+							var tmplabel = propvals['__LABEL__'];
+							var tmplabelFirstElem = tmplabel[0];
+							var labelStr = tmplabelFirstElem.richtext_value.utf8str;
+							propvals['__LABEL__'] = undefined;
 
 							SALSAH.ApiPost('resources', {
 								restype_id: rtinfo.name,
 								properties: propvals,
 								project_id: SALSAH.userdata.projects[0], // TODO: take the user's active project here: https://github.com/dhlab-basel/Knora/issues/118
 								file: file,
-								label: "test" // TODO: add the first property's value here
+								label: labelStr
+
 							}, function(data) {
 								if (data.status == ApiErrors.OK) {
 									if (typeof localdata.settings.on_submit_cb === "function") {

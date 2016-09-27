@@ -74,6 +74,15 @@ $(function() {
 			}
 
 			propedit.append($('<hr>').addClass('propedit'));
+
+			//*******************************
+			propedit.append($('<div>')
+				.append($('<em>').addClass('propedit label').text('LABEL: '))
+				.append($('<div>').addClass('propedit ' + datafield + ' winid_' + settings.winid).data('propname', '__label__')));
+			//***************
+
+
+
 			if ((resource.resdata.rights >= Rights.RESOURCE_ACCESS_VIEW_RESTRICTED) && (resource.resinfo.locations))
 			{
 				propedit.append($('<div>')
@@ -86,6 +95,7 @@ $(function() {
 				{
 					if (propname == 'http://www.knora.org/ontology/knora-base#isRegionOf') continue;
 					if (propname == '__location__') continue;
+					if (propname == '__label__') continue;
 					propedit
 					.append($('<em>').addClass('propedit label').text(resource.props[propname].label + ' :'))
 					.append($('<div>').addClass('propedit ' + datafield + ' regnum_' + settings.regnum).data('propname', propname))
@@ -110,6 +120,7 @@ $(function() {
 						continue;
 					}
 					if (propname == '__location__') continue;
+					if (propname == '__label__') continue;
 					metadata_section
 					.append($('<em>').addClass('propedit label').append(propdata.label + ' :'))
 					.append($('<div>').addClass('propedit ' + datafield + ' winid_' + settings.winid).data('propname', propname))
@@ -129,6 +140,7 @@ $(function() {
 				for (propname in annotations) {
 					propdata = annotations[propname];
 					if (propname == '__location__') continue;
+					if (propname == '__label__') continue;
 					annotations_section
 					.append($('<em>').addClass('propedit label').append(propdata.label + ' :'))
 					.append($('<div>').addClass('propedit ' + datafield + ' winid_' + settings.winid).data('propname', propname))
@@ -189,6 +201,7 @@ $(function() {
 			{
 				if (propname == 'http://www.knora.org/ontology/knora-base#isRegionOf') continue;
 				if (propname == '__location__') continue;
+				if (propname == '__label__') continue;
 				petable
 				.append(
 					$('<tr>')
@@ -366,8 +379,35 @@ $(function() {
 	 * Adds a special property called __label__ to the properties of a resource, to enable viewing and editing 
 	 * of the resource's rdfs:label.
 	 */
-	var resource_label = function(props, resinfo) {
-		props.__label__ = {
+	var resource_label = function(data) {
+		var rights;
+		switch (data.resdata.rights) {
+			case Rights.RESOURCE_ACCESS_NONE: {
+				rights = Rights.VALUE_ACCESS_NONE;
+				break;
+			}
+			case Rights.RESOURCE_ACCESS_VIEW_RESTRICTED:
+			case Rights.RESOURCE_ACCESS_VIEW: {
+				rights = Rights.VALUE_ACCESS_VIEW;
+				break;
+			}
+			case Rights.RESOURCE_ACCESS_ANNOTATE:
+			case Rights.RESOURCE_ACCESS_EXTEND:
+			case Rights.RESOURCE_ACCESS_OVERRIDE: {
+				rights = Rights.VALUE_ACCESS_ANNOTATE;
+				break;
+			}
+			case Rights.RESOURCE_ACCESS_MODIFY:
+			case Rights.VALUE_ACCESS_DELETE:
+			case Rights.RESOURCE_ACCESS_RIGHTS: {
+				rights = Rights.VALUE_ACCESS_MODIFY
+				break;
+			}
+			default: {
+				rights = Rights.VALUE_ACCESS_NONE;
+			}
+		}
+		data.props.__label__ = {
 			attributes: "size=64;maxlength=64",
 			comments: [],
 			guielement: "text",
@@ -381,8 +421,8 @@ $(function() {
 			value_iconsrcs: [null],
 			value_ids: [null],
 			value_restype: [null],
-			value_rights: [3], // TODO: Take the rights from resdata !!!!!!!!!!!!
-			values: [resinfo.firstproperty],
+			value_rights: [rights],
+			values: [data.resinfo.firstproperty],
 			valuetype_id: 'LABEL'
 		};
 	}
@@ -404,7 +444,7 @@ $(function() {
 		SALSAH.ApiGet('resources', res_id, function(data2) {
 			if (data2.status == ApiErrors.OK) {
 
-				resource_label(data2.props, resinfo);
+				resource_label(data2);
 				var metadata_area_tabs = viewer.metadataArea();
 				var icon = $('<img>', {src: data2.resdata.iconsrc});//.dragndrop('makeDraggable', 'RESID', {resid: res_id});
 				var label = $('<div>').append(icon).append(data2.resdata.restype_label);
@@ -467,7 +507,7 @@ $(function() {
 	var movieMetadataArea = function(viewer, winid, res_id, resinfo, tabid) {
 		SALSAH.ApiGet('resources', res_id, function(data2) {
 			if (data2.status == ApiErrors.OK) {
-				resource_label(data2.props, resinfo);
+				resource_label(data2);
 				var metadata_area_tabs = viewer.metadataArea();
 				var icon = $('<img>', {src: data2.resdata.iconsrc}); //.dragndrop('makeDraggable', 'RESID', {resid: res_id});
 				var label1 = $('<div>').append(icon).append(data2.resdata.restype_label);
@@ -1417,7 +1457,7 @@ $(function() {
 						alert(strings._err_res_noacess); // comes from LocalAccess::showedit_properties....
 						window_html.win('unsetBusy');
 					}
-					resource_label(data.props, data.resinfo);
+					resource_label(data);
 					window_html.win('contentElement').css('overflow', 'auto'); // we have to set overlfow=auto to have a scrollbar, if the content does not fit....
 
 					metadataAreaDomCreate(window_html.win('content'), data, {winid: window_html.win('getId')});
@@ -1559,7 +1599,7 @@ $(function() {
 							reqtype: 'info'
 						}, function(data) {
 							if (data.status == ApiErrors.OK) {
-								resource_label(data.props, data.resinfo);
+								resource_label(data);
 								var resinfo = data.resource_info;
 								var linkitem = $('<div>', {title: 'remove on click', 'data-resid': dropdata.resid});
 								linkitem.append($('<img>', {src: resinfo.restype_iconsrc})).append(' ');
@@ -3138,7 +3178,7 @@ $(function() {
 			SALSAH.ApiGet('resources', compound_res_id, function(data) {
 				if (data.status == ApiErrors.OK) {
 
-					resource_label(data.props, data.resinfo);
+					resource_label(data);
 					var icon = $('<img>', {src: data.resdata.iconsrc});
 					var label = $('<div>').append(icon).append(data.resdata.restype_label);
 
