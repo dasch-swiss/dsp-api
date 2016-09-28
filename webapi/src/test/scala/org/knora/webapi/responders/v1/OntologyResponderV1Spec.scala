@@ -222,7 +222,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = None,
+                    description = Some("Represents a link in standoff markup from one resource to another."),
                     label = Some("hat Standoff Link zu"),
                     name = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
                     id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
@@ -377,7 +377,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = None,
+                    description = Some("Represents a link in standoff markup from one resource to another."),
                     label = Some("hat Standoff Link zu"),
                     name = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
                     id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
@@ -444,7 +444,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = None,
+                    description = Some("Represents a link in standoff markup from one resource to another."),
                     label = Some("hat Standoff Link zu"),
                     name = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
                     id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
@@ -498,7 +498,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("Represents a direct connection between two resources"),
+                    description = Some("Represents a link in standoff markup from one resource to another."),
                     label = Some("hat Standoff Link zu"),
                     name = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
                     id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
@@ -520,7 +520,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         sortedReceivedProperties.zip(sortedExpectedProperties).foreach {
             case (receivedProp: PropertyDefinitionV1, expectedProp: PropertyDefinitionV1) =>
-                assert(receivedProp == receivedProp, s"These props do not match:\n*** Received:\n${MessageUtil.toSource(receivedProp)}\n*** Expected:\n${MessageUtil.toSource(expectedProp)}")
+                assert(receivedProp == expectedProp, s"These props do not match:\n*** Received:\n${MessageUtil.toSource(receivedProp)}\n*** Expected:\n${MessageUtil.toSource(expectedProp)}")
         }
     }
 

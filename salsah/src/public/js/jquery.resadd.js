@@ -1038,7 +1038,7 @@
                              */
 							// propvals["http://www.knora.org/ontology/knora-base#hasRepresentation"] = undefined;
 							// propvals["http://www.knora.org/ontology/knora-base#seqnum"] = undefined;
-							propvals["http://www.knora.org/ontology/knora-base#hasStillImageFileValue"] = undefined;
+							//propvals["http://www.knora.org/ontology/knora-base#hasStillImageFileValue"] = undefined;
 							propvals["http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"] = undefined;
 
 

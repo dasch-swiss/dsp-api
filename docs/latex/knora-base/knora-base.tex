@@ -79,7 +79,7 @@
 \title{The Knora Base Ontology}
 \author{Lukas Rosenthaler, Benjamin Geer, Tobias Schweizer, Ivan Subotic\\Digital Humanities Lab, University of Basel}
 
-\date{14 September 2016}
+\date{28 September 2016}
 
 \begin{document}
 
@@ -225,9 +225,9 @@ Resources and values are associated with a project by means of the \texttt{kb:at
 
 \label{subsec:resources}
 
-All the content produced by a project (e.g. digitised primary source materials or research data) must be stored in objects that belong to subclasses of \texttt{kb:Resource}, so that the Knora API server can query and update that content. Each project using the Knora base ontology must define its own OWL classes, derived from \texttt{kb:Resource}, to represent the types of data it deals with.
+All the content produced by a project (e.g. digitised primary source materials or research data) must be stored in objects that belong to subclasses of \texttt{kb:Resource}, so that the Knora API server can query and update that content. Each project using the Knora base ontology must define its own OWL classes, derived from \texttt{kb:Resource}, to represent the types of data it deals with. A subclass of \texttt{kb:Resource} may additionally be a subclass of any other class, e.g. an industry-standard class such as \texttt{foaf:Person}; this can facilitate searches across projects.
 
-Resources have properties that point to different parts of the content they contain. For example, a resource representing a book could have a property called \texttt{hasAuthor}, pointing to the author of the book. There are two possible kinds of content in a Knora resource: Knora values (see Section~\ref{subsec:values}) or links to other resources (see Section~\ref{sec:links}). Properties that point to Knora values must be subproperties of \texttt{kb:hasValue}, and properties that point to other resources must be subproperties of \texttt{kb:hasLinkTo}. \issue{138}{Add a list of the Knora properties that projects are, and are not, allowed to use directly, and explain why.} Each property definition must specify the types that its subjects and objects must belong to (see Section~\ref{subsec:property-restrictions} for details).
+Resources have properties that point to different parts of the content they contain. For example, a resource representing a book could have a property called \texttt{hasAuthor}, pointing to the author of the book. There are two possible kinds of content in a Knora resource: Knora values (see Section~\ref{subsec:values}) or links to other resources (see Section~\ref{sec:links}). Properties that point to Knora values must be subproperties of \texttt{kb:hasValue}, and properties that point to other resources must be subproperties of \texttt{kb:hasLinkTo}.\issue{138}{Add a list of the Knora properties that projects are, and are not, allowed to use directly, and explain why.}\ Either of these two types of properties may also be a subproperty of any other property, e.g. an industry-standard property such as \texttt{foaf:name}; this can facilitate searches across projects. Each property definition must specify the types that its subjects and objects must belong to (see Section~\ref{subsec:property-restrictions} for details).
 
 Each project-specific resource class definition must use OWL cardinality restrictions to specify the properties that resources of that class can have (see Section~\ref{subsec:cardinalities} for details).
 
