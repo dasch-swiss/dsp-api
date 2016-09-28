@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/*
 package org.knora.webapi
 
 /**
@@ -31,3 +31,4 @@ package object http {
     val KNORA_HTTP_SERVICE_ROUTER_ACTOR_NAME = "knoraHttpServiceRouter"
     val KNORA_HTTP_SERVICE_ROUTER_ACTOR_PATH = KNORA_HTTP_SERVICE_MANAGER_ACTOR_PATH + "/" + KNORA_HTTP_SERVICE_ROUTER_ACTOR_NAME
 }
+*/

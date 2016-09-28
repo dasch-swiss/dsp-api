@@ -18,14 +18,16 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
 package org.knora.webapi.routing.v1
 
 import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -34,11 +36,7 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation.RichtextComponents
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
-import spray.http.HttpEntity.NonEmpty
-import spray.http._
 import spray.json._
-import spray.routing.Directives._
-import spray.routing._
 
 import scala.util.Try
 
@@ -190,82 +188,85 @@ object ResourcesRouteV1 extends Authenticator {
 
         path("v1" / "resources" / Segment) { resIri =>
             get {
-                requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query.toMap
-                        val requestType = params.getOrElse("reqtype", "")
-                        val resinfo: Boolean = params.getOrElse("resinfo", "") == "true"
-                        makeResourceRequestMessage(resIri = resIri, resinfo = resinfo, requestType = requestType, userProfile = userProfile)
-                    }
+                parameters("reqtype".?, "resinfo".as[Boolean].?) { (reqtypeParam, resinfoParam) =>
+                    requestContext =>
+                        val requestMessageTry = Try {
+                            val userProfile = getUserProfileV1(requestContext)
+                            val params = parameterMap
+                            val requestType = reqtypeParam.getOrElse("")
+                            val resinfo = resinfoParam.getOrElse(false)
+                            makeResourceRequestMessage(resIri = resIri, resinfo = resinfo, requestType = requestType, userProfile = userProfile)
+                        }
 
-                    RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                        RouteUtilV1.runJsonRoute(
+                            requestMessageTry,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
             } ~ delete {
-                requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query.toMap
-                        val deleteComment = params.get("deleteComment")
-                        makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteComment, userProfile = userProfile)
-                    }
+                parameters("deleteComment".?) { deleteCommentParam =>
+                    requestContext =>
+                        val requestMessageTry = Try {
+                            val userProfile = getUserProfileV1(requestContext)
+                            makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteCommentParam, userProfile = userProfile)
+                        }
 
-                    RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
+                        RouteUtilV1.runJsonRoute(
+                            requestMessageTry,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
         } ~ path("v1" / "resources") {
             get {
                 // search for resources matching the given search string (searchstr) and return their Iris.
-                requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query.toMap
-                        val searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
-                        val restype = params.getOrElse("restype_id", "-1") // default -1 means: no restriction at all
-                        val numprops = params.getOrElse("numprops", "1")
-                        val limit = params.getOrElse("limit", "11")
+                parameters("searchstr".?, "restype_id".?, "numprops".?, "limit".?) { (searchstrParam, restypeidParam) =>
+                    requestContext =>
+                        val requestMessageTry = Try {
+                            val userProfile = getUserProfileV1(requestContext)
+                            val params = requestContext.request.uri.query.toMap
+                            val searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
+                            val restype = params.getOrElse("restype_id", "-1") // default -1 means: no restriction at all
+                            val numprops = params.getOrElse("numprops", "1")
+                            val limit = params.getOrElse("limit", "11")
 
-                        // input validation
+                            // input validation
 
-                        val searchString = InputValidation.toSparqlEncodedString(searchstr, () => throw BadRequestException(s"Invalid search string: '$searchstr'"))
+                            val searchString = InputValidation.toSparqlEncodedString(searchstr, () => throw BadRequestException(s"Invalid search string: '$searchstr'"))
 
-                        val resourceTypeIri: Option[IRI] = restype match {
-                            case ("-1") => None
-                            case (restype: IRI) => Some(InputValidation.toIri(restype, () => throw BadRequestException(s"Invalid param restype: $restype")))
+                            val resourceTypeIri: Option[IRI] = restype match {
+                                case ("-1") => None
+                                case (restype: IRI) => Some(InputValidation.toIri(restype, () => throw BadRequestException(s"Invalid param restype: $restype")))
+                            }
+
+                            val numberOfProps: Int = InputValidation.toInt(numprops, () => throw BadRequestException(s"Invalid param numprops: $numprops")) match {
+                                case (number: Int) => if (number < 1) 1 else number // numberOfProps must not be smaller than 1
+                            }
+
+                            val limitOfResults = InputValidation.toInt(limit, () => throw BadRequestException(s"Invalid param limit: $limit"))
+
+                            makeResourceSearchRequestMessage(
+                                searchString = searchString,
+                                resourceTypeIri = resourceTypeIri,
+                                numberOfProps = numberOfProps,
+                                limitOfResults = limitOfResults,
+                                userProfile = userProfile
+                            )
                         }
 
-                        val numberOfProps: Int = InputValidation.toInt(numprops, () => throw BadRequestException(s"Invalid param numprops: $numprops")) match {
-                            case (number: Int) => if (number < 1) 1 else number // numberOfProps must not be smaller than 1
-                        }
-
-                        val limitOfResults = InputValidation.toInt(limit, () => throw BadRequestException(s"Invalid param limit: $limit"))
-
-                        makeResourceSearchRequestMessage(
-                            searchString = searchString,
-                            resourceTypeIri = resourceTypeIri,
-                            numberOfProps = numberOfProps,
-                            limitOfResults = limitOfResults,
-                            userProfile = userProfile
+                        RouteUtilV1.runJsonRoute(
+                            requestMessageTry,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
                         )
-                    }
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                }
             } ~ post {
                 // Create a new resource with he given type and possibly a file (GUI-case).
                 // The binary file is already managed by Sipi.
@@ -435,3 +436,4 @@ object ResourcesRouteV1 extends Authenticator {
         }
     }
 }
+*/

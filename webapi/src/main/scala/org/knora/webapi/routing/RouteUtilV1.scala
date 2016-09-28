@@ -22,14 +22,14 @@ package org.knora.webapi.routing
 
 import akka.actor.ActorSelection
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.{ApiStatusCodesV1, KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.MessageUtil
-import spray.http._
 import spray.json.{JsNumber, JsObject, JsString, JsValue}
-import spray.routing.RequestContext
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
@@ -60,7 +60,7 @@ object RouteUtilV1 {
                                                         settings: SettingsImpl,
                                                         responderManager: ActorSelection,
                                                         log: LoggingAdapter)
-                                                       (implicit timeout: Timeout, executionContext: ExecutionContext): Unit = {
+                                                       (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Check whether a request message was successfully generated.
         requestMessageTry match {
             case Success(requestMessage) =>
@@ -90,9 +90,7 @@ object RouteUtilV1 {
 
                 } yield knoraResponse
 
-                resultFuture.onComplete {
-                    resultTry => requestContext.complete(replyMessageTry2JsonHttpResponse(resultTry, settings, log))
-                }
+                requestContext.complete(replyMessage2JsonHttpResponse(resultFuture, settings, log))
 
             case Failure(ex) =>
                 // Was the error in generating the request message the client's fault?
@@ -131,7 +129,7 @@ object RouteUtilV1 {
                                                                                                      settings: SettingsImpl,
                                                                                                      responderManager: ActorSelection,
                                                                                                      log: LoggingAdapter)
-                                                                                                    (implicit timeout: Timeout, executionContext: ExecutionContext): Unit = {
+                                                                                                    (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Check whether a request message was successfully generated.
         requestMessageTry match {
             case Success(requestMessage) =>
@@ -161,9 +159,7 @@ object RouteUtilV1 {
 
                 } yield knoraResponse
 
-                resultFuture.onComplete {
-                    resultTry => requestContext.complete(replyMessageTry2HtmlHttpResponse[ReplyMessageT](resultTry, viewHandler, settings, log, responderManager))
-                }
+                requestContext.complete(replyMessage2JsonHttpResponse(resultFuture, settings, log))
 
             case Failure(ex) =>
                 // Was the error in generating the request message the client's fault?
@@ -186,12 +182,13 @@ object RouteUtilV1 {
       * the operation. If the operation was unsuccessful, returns an [[HttpResponse]] containing the error message from
       * the [[Try]]. The HTTP responses returned by this method contain appropriate HTTP status codes.
       *
-      * @param resultTry a [[Try]] containing the result of an operation performed by an Actor.
+      * @param resultFuture a [[Future]] containing the result of an operation performed by an Actor.
       * @return an [[HttpResponse]] containing a JSON representation of the result.
       */
-    private def replyMessageTry2JsonHttpResponse(resultTry: Try[KnoraResponseV1], settings: SettingsImpl, log: LoggingAdapter): HttpResponse = {
-        resultTry match {
-            case Success(jsonResponse) =>
+    private def replyMessage2JsonHttpResponse(resultFuture: Future[KnoraResponseV1], settings: SettingsImpl, log: LoggingAdapter): Future[HttpResponse] = for {
+        result <- resultFuture
+        response = result match {
+            case jsonResponse: KnoraResponseV1 =>
                 Try {
                     // The request was successful, so add a status of ApiStatusCodesV1.OK to the response.
                     val jsonResponseWithStatus = JsObject(jsonResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
@@ -200,7 +197,7 @@ object RouteUtilV1 {
                     HttpResponse(
                         status = StatusCodes.OK,
                         entity = HttpEntity(
-                            ContentType(MediaTypes.`application/json`, HttpCharsets.`UTF-8`),
+                            ContentType(MediaTypes.`application/json`),
                             jsonResponseWithStatus.compactPrint
                         )
                     )
@@ -213,12 +210,12 @@ object RouteUtilV1 {
                         exceptionToJsonHttpResponse(ex, settings)
                 }
 
-            case Failure(ex) =>
+            case ex: Exception =>
                 // The responder sent back an exception. Convert it to an HTTP response. We assume that it has already
                 // been logged by the responder, if appropriate.
                 exceptionToJsonHttpResponse(ex, settings)
         }
-    }
+    } yield response
 
     /**
       * Given a [[Try]] containing the result of processing an API request, checks whether the operation was successful and contains
@@ -291,7 +288,7 @@ object RouteUtilV1 {
 
         HttpResponse(
             status = httpStatus,
-            entity = HttpEntity(ContentType(MediaTypes.`application/json`, HttpCharsets.`UTF-8`), JsObject(responseFields).compactPrint)
+            entity = HttpEntity(ContentType(MediaTypes.`application/json`), JsObject(responseFields).compactPrint)
         )
     }
 
@@ -313,6 +310,7 @@ object RouteUtilV1 {
             status = httpStatus,
             entity = HttpEntity(
                 MediaTypes.`application/xml`,
+
                 <html xmlns="http://www.w3.org/1999/xhtml">
                     <head>
                         <title>Error</title>

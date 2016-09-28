@@ -17,13 +17,14 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/*
 package org.knora.webapi.http
 
 import akka.actor._
+import akka.http.scaladsl.server.Route
+import org.apache.http.protocol.HttpService
 import org.knora.webapi.Settings
 import org.knora.webapi.routing.v1._
-import spray.routing._
 
 /**
   * An Actor that receives HTTP requests and dispatches them to `spray-routing` routes.
@@ -49,5 +50,6 @@ class KnoraHttpService extends Actor with ActorLogging with HttpService with COR
 
     def actorRefFactory = context
 
-    def receive = runRoute(allowAllHosts(apiRoutes))
+    def receive = allowAllHosts orElse apiRoutes
 }
+*/

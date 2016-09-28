@@ -17,26 +17,22 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/*
 package org.knora.webapi.routing.v1
 
 import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation.RichtextComponents
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
-import spray.http.HttpEntity.NonEmpty
-import spray.http.{BodyPart, MultipartFormData}
-import spray.json.JsonParser
-import spray.routing.Directives._
-import spray.routing._
 
 import scala.util.Try
 
@@ -471,3 +467,4 @@ object ValuesRouteV1 extends Authenticator {
         }
     }
 }
+*/

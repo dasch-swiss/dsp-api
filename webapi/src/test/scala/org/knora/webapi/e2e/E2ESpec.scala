@@ -20,6 +20,8 @@
 
 package org.knora.webapi.e2e
 
+import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.apache.http.protocol.HttpService
 import org.knora.webapi.Settings
 import org.knora.webapi.util.CacheUtil
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}

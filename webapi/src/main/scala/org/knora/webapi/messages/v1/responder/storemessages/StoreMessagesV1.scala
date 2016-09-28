@@ -20,9 +20,10 @@
 
 package org.knora.webapi.messages.v1.responder.storemessages
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
-import spray.httpx.SprayJsonSupport
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

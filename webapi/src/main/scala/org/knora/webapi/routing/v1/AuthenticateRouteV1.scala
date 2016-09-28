@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/*
 package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
@@ -78,3 +78,4 @@ object AuthenticateRouteV1 extends Authenticator {
             }
     }
 }
+*/

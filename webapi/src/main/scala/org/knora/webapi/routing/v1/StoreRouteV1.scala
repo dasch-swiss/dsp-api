@@ -16,15 +16,16 @@
 
 package org.knora.webapi.routing.v1
 
+
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.v1.responder.storemessages.ResetTriplestoreContentRequestV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import spray.routing.Directives._
-import spray.routing._
 
 import scala.concurrent.duration._
 import scala.util.Try
@@ -39,8 +40,8 @@ object StoreRouteV1 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
+        import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport.sprayJsonUnmarshaller
         import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
-        import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
 
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
@@ -55,13 +56,14 @@ object StoreRouteV1 extends Authenticator {
                   * each named graph and in total, etc.
                   */
                 // TODO: Implement some simple return
+                    requestContext.complete("Hello World")
             }
         } ~
             path("v1" / "store" / "ResetTriplestoreContent") {
                 post {
                     /* ResetTriplestoreContent */
-                    entity(as[Seq[RdfDataObject]]) { apiRequest => requestContext =>
-
+                    entity(as[Seq[RdfDataObject]]) { apiRequest =>
+                        requestContext =>
                         val requestMessageTry = Try {
                             // create the message
                             ResetTriplestoreContentRequestV1(apiRequest)

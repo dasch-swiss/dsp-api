@@ -18,6 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
 package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
@@ -226,3 +227,4 @@ object SearchRouteV1 extends Authenticator {
             }
     }
 }
+*/

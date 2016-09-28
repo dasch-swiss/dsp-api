@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/*
 package org.knora.webapi.http
 
 /**
@@ -27,9 +27,9 @@ package org.knora.webapi.http
   * to the API from everywhere.
   */
 
-import spray.http.{HttpHeaders, HttpOrigin, SomeOrigins}
-import spray.routing.{Directive0, HttpService}
 
+import akka.http.scaladsl.model._
+import org.apache.http.protocol.HttpService
 
 /**
   * Trait containing methods that provide CORS support.
@@ -139,3 +139,4 @@ trait CORSSupport {
         }
     }
 }
+*/

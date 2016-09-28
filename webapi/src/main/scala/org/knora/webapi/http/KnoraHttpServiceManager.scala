@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/*
 package org.knora.webapi.http
 
 import akka.actor.{Actor, ActorLogging, Props, Status}
@@ -39,3 +39,4 @@ class KnoraHttpServiceManager extends Actor with ActorLogging {
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 }
+*/
