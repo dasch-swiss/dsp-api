@@ -885,6 +885,45 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 <http://xmlns.com/foaf/0.1/member> rdf:type owl:ObjectProperty .
 
 
+###  http://www.knora.org/ontology/knora-base#hasGivenName
+
+:hasGivenName rdf:type owl:ObjectProperty ;
+
+             rdfs:label "Vorname"@de ,
+                        "given name"@en ,
+                        "prénom"@fr ,
+                        "nome di battesimo"@it ;
+
+			 rdfs:comment """Represents a Given name."""@en ;
+
+             :objectClassConstraint :TextValue ;
+
+             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Richtext> ;
+
+             :subjectClassConstraint :Person ;
+
+             rdfs:subPropertyOf :hasValue, <http://xmlns.com/foaf/0.1/GivenName> .
+
+
+###  http://www.knora.org/ontology/knora-base#hasFamilyName
+
+:hasFamilyName rdf:type owl:ObjectProperty ;
+
+             rdfs:label "Nachname"@de ,
+                        "family name"@en ,
+                        "nom de famille"@fr ,
+                        "nome di famiglia"@it ;
+
+			 rdfs:comment """Represents a family name."""@en ;
+
+             :objectClassConstraint :TextValue ;
+
+             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Richtext> ;
+
+             :subjectClassConstraint :Person ;
+
+             rdfs:subPropertyOf :hasValue, <http://xmlns.com/foaf/0.1/familyName> .
+
 
 
 
@@ -2707,6 +2746,39 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                     rdfs:comment "A resource containing text files"@en .
 
 
+###  http://xmlns.com/foaf/0.1/Person
+
+<http://xmlns.com/foaf/0.1/Person> rdf:type owl:Class ;
+
+        rdfs:label "Person"@de ,
+                   "Person"@en ,
+                   "Personne"@fr ,
+                   "Persona"@it ;
+
+        rdfs:subClassOf :Resource .
+
+
+###  http://www.knora.org/ontology/knora-base#Person
+
+:Person rdf:type owl:Class ;
+
+        rdfs:subClassOf :Resource, <http://xmlns.com/foaf/0.1/Person>,
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :hasFamilyName ;
+                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                        ],
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :hasGivenName ;
+                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                        ] ;
+
+        rdfs:label "Person"@de ,
+                   "Person"@en ,
+                   "Personne"@fr ,
+                   "Persona"@it ;
+
+                   rdfs:comment "A resource representing a person"@en .
+
 
 ###  http://www.knora.org/ontology/knora-base#TextValue
 
@@ -2723,7 +2795,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 :User rdf:type owl:Class ;
 
-      rdfs:subClassOf <http://xmlns.com/foaf/0.1/Person> ,
+      rdfs:subClassOf #<http://xmlns.com/foaf/0.1/Person> ,
                       [ rdf:type owl:Restriction ;
                         owl:onProperty <http://xmlns.com/foaf/0.1/familyName> ;
                         owl:cardinality "1"^^xsd:nonNegativeInteger
