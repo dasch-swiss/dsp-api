@@ -233,7 +233,9 @@ Each project-specific resource class definition must use OWL cardinality restric
 
 Resources are not versioned; only their values are versioned (see Section~\ref{subsec:values}).
 
-A resource can be marked as deleted. An optional \texttt{kb:delete\-Comment} may be added to explain why the resource has been marked as deleted. Deleted resources are normally hidden. They cannot be undeleted, because even though resources are not versioned, it is necessary to be able to find out when a resource was deleted. If desired, a new resource can be created by copying data from a deleted resource.
+Every resource is required to have an \texttt{rdfs:label}. The object of this property is an \texttt{xsd:string}, rather than a Knora value; hence it is not versioned. A user who has modify permission on a resource (see Section~\ref{sec:authorization}) can change its label.
+
+A resource can be marked as deleted; the Knora API server does this by adding the predicate \texttt{kb:isDeleted true} to the resource. An optional \texttt{kb:delete\-Comment} may be added to explain why the resource has been marked as deleted. Deleted resources are normally hidden. They cannot be undeleted, because even though resources are not versioned, it is necessary to be able to find out when a resource was deleted. If desired, a new resource can be created by copying data from a deleted resource.
 
 \subsubsection{Properties of Resource}
 
