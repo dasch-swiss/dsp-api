@@ -898,7 +898,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
              :objectClassConstraint :TextValue ;
 
-             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Richtext> ;
+             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#SimpleText> ;
 
              :subjectClassConstraint :Person ;
 
@@ -918,12 +918,80 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
              :objectClassConstraint :TextValue ;
 
-             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Richtext> ;
+             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#SimpleText> ;
 
              :subjectClassConstraint :Person ;
 
              rdfs:subPropertyOf :hasValue, <http://xmlns.com/foaf/0.1/familyName> .
 
+
+###  http://www.knora.org/ontology/knora-base#hasGNDIdentifier
+
+:hasGNDIdentifier rdf:type owl:ObjectProperty ;
+
+                               rdfs:label "Gemeinsame Normdatei (GND)"@de ,
+                                          "Integrated Authority File"@en ;
+
+                  			   rdfs:comment """Represents a IAF identifier."""@en ;
+
+                               :objectClassConstraint :TextValue ;
+
+                               <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#SimpleText> ;
+
+                               :subjectClassConstraint :Person ;
+
+                               rdfs:subPropertyOf :hasValue .
+
+
+###  http://www.knora.org/ontology/knora-base#publicationHasAuthor
+
+:publicationHasAuthor rdf:type owl:ObjectProperty ;
+
+             rdfs:label "Autor"@de ,
+                        "Author"@en ,
+                        "Auteur"@fr ,
+                        "Autore"@it ;
+
+			 rdfs:comment """Represents the author of the publication."""@en ;
+
+             :objectClassConstraint :Person ;
+
+             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Searchbox> ;
+
+             :subjectClassConstraint :Publication ;
+
+             rdfs:subPropertyOf :hasLinkTo, <http://purl.org/dc/terms/creator> .
+
+
+###  http://www.knora.org/ontology/knora-base#publicationHasAuthorValue
+
+:publicationHasAuthorValue rdf:type owl:ObjectProperty ;
+
+               :objectClassConstraint :LinkValue ;
+
+               :subjectClassConstraint :Publication ;
+
+               rdfs:subPropertyOf :hasLinkToValue .
+
+
+###  http://www.knora.org/ontology/knora-base#publicationHasTitle
+
+:publicationHasTitle rdf:type owl:ObjectProperty ;
+
+                               rdfs:label "Titel"@de ,
+                                           "Titre"@fr ,
+                                           "Titolo"@it ,
+                                           "Title"@en ;
+
+                  			   rdfs:comment """Represents a title of a publication."""@en ;
+
+                               :objectClassConstraint :TextValue ;
+
+                               <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#SimpleText> ;
+
+                               :subjectClassConstraint :Publication ;
+
+                               rdfs:subPropertyOf :hasValue, <http://purl.org/dc/terms/title> .
 
 
 
@@ -2770,6 +2838,10 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasGivenName ;
                           owl:cardinality "1"^^xsd:nonNegativeInteger
+                        ],
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :hasGNDIdentifier ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                         ] ;
 
         rdfs:label "Person"@de ,
@@ -2778,6 +2850,59 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                    "Persona"@it ;
 
                    rdfs:comment "A resource representing a person"@en .
+
+
+### <http://purl.org/dc/terms/BibliographicResource>
+
+<http://purl.org/dc/terms/BibliographicResource> rdf:type owl:Class ;
+
+               rdfs:label "Bibliographic Resource"@en ;
+
+               rdfs:comment "A resource representing a Bibliographic Resource"@en ;
+
+               rdfs:subClassOf :Resource .
+
+
+###  http://www.knora.org/ontology/knora-base#Publication
+
+:Publication rdf:type owl:Class ;
+
+        rdfs:subClassOf :Resource, <http://purl.org/dc/terms/BibliographicResource>,
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :publicationHasAuthor ;
+                          owl:minCardinality "1"^^xsd:nonNegativeInteger
+                        ],
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :publicationHasAuthorValue ;
+                          owl:minCardinality "1"^^xsd:nonNegativeInteger
+                        ],
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :publicationHasTitle ;
+                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                        ];
+
+        rdfs:label "Publikation"@de ,
+                   "Publication"@en ,
+                   "Publication"@fr ,
+                   "Pubblicazione"@it ;
+
+                   rdfs:comment "A resource representing a publication"@en .
+
+
+###  http://www.knora.org/ontology/knora-base#JournalArticle
+
+:JournalArticle rdf:type owl:Class ;
+
+        rdfs:subClassOf :Publication;
+
+        rdfs:label "Artikel in Zeitschrift"@de ,
+                   "Journal Article"@en ,
+                   "Article"@fr ,
+                   "Articolo"@it ;
+
+                   rdfs:comment "A resource representing a journal article"@en .
+
+
 
 
 ###  http://www.knora.org/ontology/knora-base#TextValue
@@ -2951,13 +3076,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 ###  http://xmlns.com/foaf/0.1/Organization
 
 <http://xmlns.com/foaf/0.1/Organization> rdf:type owl:Class .
-
-
-
-###  http://xmlns.com/foaf/0.1/Person
-
-<http://xmlns.com/foaf/0.1/Person> rdf:type owl:Class .
-
 
 
 ###  http://xmlns.com/foaf/0.1/Project
