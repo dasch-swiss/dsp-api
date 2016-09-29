@@ -22,9 +22,11 @@ package org.knora.webapi
 
 import akka.actor._
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{Route, RouteResult}
+import akka.http.scaladsl.server.Route
 import akka.pattern._
+import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -37,8 +39,8 @@ import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.CacheUtil
 
 import scala.collection.JavaConversions._
-import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 /**
   * Provides methods for starting and stopping Knora from within another application. This is where the actor system
@@ -83,7 +85,7 @@ object KnoraService {
     private val systemUser = UserProfileV1(userData = UserDataV1(lang = "en"), isSystemUser = true)
 
 
-    private val apiRoutes: Route =
+    private val apiRoutes =
                 //ResourcesRouteV1.knoraApiPath(system, settings, log) ~
                 //ValuesRouteV1.knoraApiPath(system, settings, log) ~
                 //SipiRouteV1.knoraApiPath(system, settings, log) ~
@@ -102,6 +104,10 @@ object KnoraService {
       */
     def start(): Unit = {
         implicit val timeout = Timeout(300.seconds)
+        implicit val materializer = ActorMaterializer()
+        // needed for the future map/flatmap in the end
+        implicit val executionContext = system.dispatcher
+
         CacheUtil.createCaches(settings.caches)
 
         if (StartupFlags.loadDemoData.get) {
@@ -122,9 +128,15 @@ object KnoraService {
             println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
         }
 
-        //IO(Http) ! Http.Bind(knoraHttpServiceManager, settings.httpInterface, port = settings.httpPort)
-        Http().bindAndHandle(RouteResult.route2HandlerFlow(apiRoutes), settings.httpInterface, settings.httpPort)
+        val host = settings.httpInterface
+        val port = settings.httpPort
+        val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(Route.handlerFlow(apiRoutes), host, port)
         println(s"Knora API Server started. You can access it on http://${settings.httpInterface}:${settings.httpPort}.")
+
+        bindingFuture.onFailure {
+            case ex: Exception =>
+                log.error(ex, s"Failed to bind to ${settings.httpInterface}:${settings.httpPort}!")
+        }
     }
 
     /**

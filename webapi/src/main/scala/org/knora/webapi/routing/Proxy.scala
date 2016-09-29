@@ -17,14 +17,14 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/*
 package org.knora.webapi.routing
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.{RequestContext, Route}
 import akka.io.IO
-import spray.can.Http
-import spray.http.{HttpHeader, HttpHeaders, HttpRequest, Uri}
-import spray.routing.{RequestContext, Route}
 
 /**
   * This trait provides proxy capabilities to routes, i.e. it allows to tunnel a http requests to an external service
@@ -56,18 +56,19 @@ trait Proxy {
     private def updateRequest(uri: Uri, unmatchedPath: Uri.Path, updateUri: (Uri, Uri.Path, RequestContext) => Uri): RequestContext => HttpRequest =
         ctx => ctx.request.copy(
             uri = updateUri(uri, unmatchedPath, ctx),
-            headers = stripHostHeader(ctx.request.headers)
+            headers = stripHostHeader(ctx.request.headers.toList)
         )
 
     private def proxyRequest(updateRequest: RequestContext => HttpRequest)(implicit system: ActorSystem): Route =
         ctx => IO(Http)(system) tell(updateRequest(ctx), ctx.responder)
 
-    private def stripHostHeader(headers: List[HttpHeader]) = {
-        println(s"headers before strip: ${headers.toString}")
-        val strippedHeaders = headers filterNot (header => header is (HttpHeaders.Host.lowercaseName))
+    private def stripHostHeader(headersList: List[HttpHeader]) = {
+        println(s"headers before strip: ${headersList.toString}")
+        val strippedHeaders = headersList filterNot (hdr => hdr is (headers.Host.lowercaseName))
         println(s"headers after strip: ${strippedHeaders.toString}")
         strippedHeaders
     }
 
 
 }
+*/

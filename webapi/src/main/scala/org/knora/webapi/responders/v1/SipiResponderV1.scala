@@ -21,7 +21,9 @@
 package org.knora.webapi.responders.v1
 
 import akka.actor.Status
-import akka.http.scaladsl.client.RequestBuilding._
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.marshalling.Marshal
+import akka.http.scaladsl.model._
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.sipimessages.RepresentationV1JsonProtocol._
@@ -32,9 +34,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{ApiValueV1, FileVal
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{InputValidation, PermissionUtilV1}
-import spray.client.pipelining._
-import akka.http.scaladsl.
-import spray.http._
 import spray.json._
 
 import scala.concurrent.Future
@@ -55,8 +54,8 @@ class SipiResponderV1 extends ResponderV1 {
       */
     def receive = {
         case SipiFileInfoGetRequestV1(fileValueIri, userProfile) => future2Message(sender(), getFileInfoForSipiV1(fileValueIri, userProfile), log)
-        case convertPathRequest: SipiResponderConversionPathRequestV1 => future2Message(sender(), convertPathV1(convertPathRequest), log)
-        case convertFileRequest: SipiResponderConversionFileRequestV1 => future2Message(sender(), convertFileV1(convertFileRequest), log)
+        //case convertPathRequest: SipiResponderConversionPathRequestV1 => future2Message(sender(), convertPathV1(convertPathRequest), log)
+        //case convertFileRequest: SipiResponderConversionFileRequestV1 => future2Message(sender(), convertFileV1(convertFileRequest), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -95,6 +94,8 @@ class SipiResponderV1 extends ResponderV1 {
         )
     }
 
+
+    /*
     /**
       * Makes a conversion request to Sipi and creates a [[SipiResponderConversionResponseV1]]
       * containing the file values to be added to the triplestore.
@@ -105,6 +106,7 @@ class SipiResponderV1 extends ResponderV1 {
       */
     private def callSipiConvertRoute(url: String, conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
 
+        /*
         // define a pipeline function that gets turned into a generic [[HTTP Response]] (containing JSON)
         val pipeline: HttpRequest => Future[HttpResponse] = (
             addHeader("Accept", "application/json")
@@ -118,12 +120,18 @@ class SipiResponderV1 extends ResponderV1 {
             postRequest <- Future(Post(url, FormData(formData)))
             pipelineResult <- pipeline(postRequest)
         } yield pipelineResult
+        */
+
+        val conversionResultFuture: Future[HttpResponse] = for {
+            request <- Marshal(conversionRequest.toFormData()).to[RequestEntity]
+            response <- Http().singleRequest(HttpRequest(method = HttpMethods.POST, uri = url, entity = request))
+        } yield response
 
         //
         // handle unsuccessful requests to Sipi
         //
         val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
-            case noResponse: spray.can.Http.ConnectionAttemptFailedException =>
+            case noResponse: akka.http.scaladsl. spray.can.Http.ConnectionAttemptFailedException =>
                 // this problem is hardly the user's fault. Create a SipiException
                 throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
 
@@ -220,6 +228,7 @@ class SipiResponderV1 extends ResponderV1 {
         } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = fileTypeEnum)
     }
 
+
     /**
       * Convert a file that has been sent to Knora (non GUI-case).
       *
@@ -244,5 +253,7 @@ class SipiResponderV1 extends ResponderV1 {
 
         callSipiConvertRoute(url, conversionRequest)
     }
+
+    */
 
 }

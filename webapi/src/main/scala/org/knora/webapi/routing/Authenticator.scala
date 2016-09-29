@@ -21,6 +21,9 @@
 package org.knora.webapi.routing
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
+import akka.http.scaladsl.server.RequestContext
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
@@ -29,9 +32,7 @@ import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
 import org.knora.webapi.{BadCredentialsException, IRI, Settings}
 import org.slf4j.LoggerFactory
-import spray.http._
 import spray.json.{JsNumber, JsObject, JsString}
-import spray.routing._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -75,7 +76,7 @@ trait Authenticator {
                 val userProfile = getUserProfileV1(requestContext)
 
                 HttpResponse(
-                    headers = List(HttpHeaders.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sId))),
+                    headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sId))),
                     status = StatusCodes.OK,
                     entity = HttpEntity(
                         ContentTypes.`application/json`,
@@ -201,15 +202,15 @@ trait Authenticator {
       */
     def doLogout(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
 
-        val cookies: Seq[HttpCookie] = requestContext.request.cookies
+        val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
         cookies.find(_.name == "KnoraAuthentication") match {
             case Some(authCookie) =>
                 // maybe the value is in the cache or maybe it expired in the meantime.
-                CacheUtil.remove(cacheName, authCookie.content)
+                CacheUtil.remove(cacheName, authCookie.value)
             case None => // no cookie, so I can't do anything really
         }
         HttpResponse(
-            headers = List(HttpHeaders.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
+            headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
             status = StatusCodes.OK,
             entity = HttpEntity(
                 ContentTypes.`application/json`,
@@ -368,11 +369,11 @@ object Authenticator {
       * @return a [[ Option[UserProfileV1] ]]
       */
     private def getUserProfileV1FromSessionId(requestContext: RequestContext): Option[UserProfileV1] = {
-        val cookies: Seq[HttpCookie] = requestContext.request.cookies
+        val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
         cookies.find(_.name == "KnoraAuthentication") match {
             case Some(authCookie) =>
-                val value = CacheUtil.get[UserProfileV1](cacheName, authCookie.content)
-                log.debug(s"Found this session id: ${authCookie.content} leading to this content in the cache: $value")
+                val value = CacheUtil.get[UserProfileV1](cacheName, authCookie.value)
+                log.debug(s"Found this session id: ${authCookie.value} leading to this content in the cache: $value")
                 value
             case None =>
                 log.debug(s"No session id found")
@@ -393,7 +394,7 @@ object Authenticator {
       */
     private def extractCredentials(requestContext: RequestContext): Option[(String, String)] = {
         log.debug("extractCredentials start ...")
-        val params: Map[String, Seq[String]] = requestContext.request.uri.query.toMultiMap
+        val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
         val headers: Seq[HttpHeader] = requestContext.request.headers
 
 

@@ -31,6 +31,7 @@ import org.knora.webapi.messages.v1.responder.{ApiStatusCodesV1, KnoraRequestV1,
 import org.knora.webapi.util.MessageUtil
 import spray.json.{JsNumber, JsObject, JsString, JsValue}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
@@ -60,7 +61,7 @@ object RouteUtilV1 {
                                                         settings: SettingsImpl,
                                                         responderManager: ActorSelection,
                                                         log: LoggingAdapter)
-                                                       (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
+                                                       (implicit timeout: Timeout, executionContext: ExecutionContext) = {
         // Check whether a request message was successfully generated.
         requestMessageTry match {
             case Success(requestMessage) =>
@@ -129,7 +130,7 @@ object RouteUtilV1 {
                                                                                                      settings: SettingsImpl,
                                                                                                      responderManager: ActorSelection,
                                                                                                      log: LoggingAdapter)
-                                                                                                    (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
+                                                                                                    (implicit timeout: Timeout, executionContext: ExecutionContext) = {
         // Check whether a request message was successfully generated.
         requestMessageTry match {
             case Success(requestMessage) =>
@@ -197,7 +198,7 @@ object RouteUtilV1 {
                     HttpResponse(
                         status = StatusCodes.OK,
                         entity = HttpEntity(
-                            ContentType(MediaTypes.`application/json`),
+                            ContentTypes.`application/json`,
                             jsonResponseWithStatus.compactPrint
                         )
                     )
@@ -240,7 +241,7 @@ object RouteUtilV1 {
                     HttpResponse(
                         status = StatusCodes.OK,
                         entity = HttpEntity(
-                            ContentType(MediaTypes.`text/html`, HttpCharsets.`UTF-8`),
+                            ContentTypes.`text/html(UTF-8)`,
                             viewHandler(responderReply, responderManager)
                         )
                     )
@@ -309,8 +310,7 @@ object RouteUtilV1 {
         HttpResponse(
             status = httpStatus,
             entity = HttpEntity(
-                MediaTypes.`application/xml`,
-
+                ContentTypes.`text/xml(UTF-8)`,
                 <html xmlns="http://www.w3.org/1999/xhtml">
                     <head>
                         <title>Error</title>
