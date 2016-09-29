@@ -236,7 +236,7 @@ class OntologyResponderV1 extends ResponderV1 {
                     case (thisPropPredIri, thisPropPredInfo) =>
                         // Since we don't have information about subproperty relations between predicates of properties,
                         // the most we can do here is let a directly defined predicate override the same predicate
-                        // defined on a base predicates.
+                        // defined on a base property.
                         thisPropPredIri == basePropPredIri
                 }
             }
