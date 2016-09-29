@@ -234,11 +234,10 @@ class OntologyResponderV1 extends ResponderV1 {
             val inheritedPredicates: Map[IRI, PredicateInfoV1] = predicatesAvailableToInherit.filterNot {
                 case (basePropPredIri, basePropPredInfo) => thisPropertyPredicates.exists {
                     case (thisPropPredIri, thisPropPredInfo) =>
-                        // If we have no information about a predicate, we assume that it has no base properties.
-                        // In that case, the most we can do is let a directly defined predicate override the same
-                        // predicate defined on a base property.
-                        thisPropPredIri == basePropPredIri ||
-                            allSubPropertyRelations.getOrElse(thisPropPredIri, Set.empty[IRI]).contains(basePropPredIri)
+                        // Since we don't have information about subproperty relations between predicates of properties,
+                        // the most we can do here is let a directly defined predicate override the same predicate
+                        // defined on a base predicates.
+                        thisPropPredIri == basePropPredIri
                 }
             }
 
