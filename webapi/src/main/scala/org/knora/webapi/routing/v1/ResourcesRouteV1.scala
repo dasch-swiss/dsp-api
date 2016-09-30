@@ -18,7 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
+
 package org.knora.webapi.routing.v1
 
 import java.util.UUID
@@ -28,6 +28,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -36,7 +37,6 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation.RichtextComponents
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
-import spray.json._
 
 import scala.util.Try
 
@@ -225,11 +225,10 @@ object ResourcesRouteV1 extends Authenticator {
         } ~ path("v1" / "resources") {
             get {
                 // search for resources matching the given search string (searchstr) and return their Iris.
-                parameters("searchstr".?, "restype_id".?, "numprops".?, "limit".?) { (searchstrParam, restypeidParam) =>
                     requestContext =>
                         val requestMessageTry = Try {
                             val userProfile = getUserProfileV1(requestContext)
-                            val params = requestContext.request.uri.query.toMap
+                            val params = requestContext.request.uri.query().toMap
                             val searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
                             val restype = params.getOrElse("restype_id", "-1") // default -1 means: no restriction at all
                             val numprops = params.getOrElse("numprops", "1")
@@ -286,7 +285,9 @@ object ResourcesRouteV1 extends Authenticator {
                         log
                     )
                 }
-            } ~ post {
+            }
+            /*
+            ~ post {
                 // Create a new resource with the given type, properties, and binary data (file) (non GUI-case).
                 // The binary data are contained in the request and have to be temporarily stored by Knora.
                 // For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
@@ -361,12 +362,13 @@ object ResourcesRouteV1 extends Authenticator {
 
                 }
             }
+            */
         } ~ path("v1" / "resources.html" / Segment) { iri =>
             get {
                 requestContext =>
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query.toMap
+                        val params = requestContext.request.uri.query().toMap
                         val requestType = params.getOrElse("reqtype", "")
                         val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
 
@@ -436,4 +438,3 @@ object ResourcesRouteV1 extends Authenticator {
         }
     }
 }
-*/

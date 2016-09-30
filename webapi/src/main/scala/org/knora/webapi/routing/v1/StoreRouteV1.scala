@@ -38,7 +38,7 @@ case class Test(path: String, name: String)
   */
 object StoreRouteV1 extends Authenticator {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) = {
+    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) = Route {
 
         import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport.sprayJsonUnmarshaller
         import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._

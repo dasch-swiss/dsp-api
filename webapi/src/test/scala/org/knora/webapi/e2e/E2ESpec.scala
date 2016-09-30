@@ -21,17 +21,15 @@
 package org.knora.webapi.e2e
 
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import org.apache.http.protocol.HttpService
 import org.knora.webapi.Settings
 import org.knora.webapi.util.CacheUtil
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
-import spray.routing.HttpService
-import spray.testkit.ScalatestRouteTest
+
 
 /**
   * Created by subotic on 08.12.15.
   */
-class E2ESpec extends Suite with ScalatestRouteTest with WordSpecLike with Matchers with BeforeAndAfterAll with HttpService {
+class E2ESpec extends Suite with ScalatestRouteTest with WordSpecLike with Matchers with BeforeAndAfterAll {
 
     def actorRefFactory = system
 

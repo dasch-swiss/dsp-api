@@ -17,18 +17,18 @@
 package org.knora.webapi.e2e.v1
 
 import akka.actor.ActorDSL._
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorSystem, Props, Status}
+import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.util.Timeout
 import org.knora.webapi.e2e.E2ESpec
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, SparqlSelectRequest}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.StoreRouteV1
 import org.knora.webapi.store._
-import org.knora.webapi.{BadRequestException, LiveActorMaker, StartupFlags}
-import spray.http.MediaTypes._
-import spray.http._
-import spray.httpx.RequestBuilding
+import org.knora.webapi.{BadRequestException, LiveActorMaker, StartupFlags, UnexpectedMessageException}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -50,6 +50,8 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
     /* Start a live ResponderManager */
     private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
 
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+
     private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
@@ -69,26 +71,12 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
             ]
         """
 
-    /* Start a mocked StoreManager */
-    private val storeManagerProbe = actor(STORE_MANAGER_ACTOR_NAME)(new Act {
-        become {
-            case ResetTriplestoreContent(rdo) => {
-                if (rdo === rdfDataObjects) {
-                    Thread.sleep(10000)
-                    sender ! ResetTriplestoreContentACK
-                } else {
-                    throw BadRequestException(s"Payload not what is expected: ${rdo.toString}")
-                }
-            }
-            case _ => throw BadRequestException("Shouldn't be here")
-        }
-    })
-
     /* get the path of the route we want to test */
     private val storePath = StoreRouteV1.knoraApiPath(system, settings, log)
 
     /* set the timeout for the route test */
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(60).second)
+    implicit private val timeout: Timeout = 180.seconds
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(180).second)
 
 
     "The ResetTriplestoreContent Route ('v1/store/ResetTriplestoreContent')" should {
@@ -98,19 +86,24 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
               * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/v1/store/ResetTriplestoreContent
               */
             println("=>>")
+
             StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
+
             println("=>>" + Await.result(StartupFlags.allowResetTriplestoreContentOperationOverHTTP.future(), 5.seconds))
             log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
             println("=>>" + Await.result(StartupFlags.allowResetTriplestoreContentOperationOverHTTP.future(), 5.seconds))
-            Post("/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList)) ~> storePath ~> check {
+
+            Post("/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjectsJsonList)) ~> storePath ~> check {
                 log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
             }
         }
         "fail with resetting if startup flag is not set" in {
             StartupFlags.allowResetTriplestoreContentOperationOverHTTP send false
+
             log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
-            Post("/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList)) ~> storePath ~> check {
+
+            Post("/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjectsJsonList)) ~> storePath ~> check {
                 log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.Forbidden)
 

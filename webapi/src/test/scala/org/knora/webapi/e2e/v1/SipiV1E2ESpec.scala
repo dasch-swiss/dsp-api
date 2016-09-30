@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/*
 package org.knora.webapi.e2e.v1
 
 import java.io.File
@@ -25,6 +25,10 @@ import java.net.URLEncoder
 import java.nio.file.{Files, Paths}
 
 import akka.actor._
+import akka.http.scaladsl.model.Multipart.FormData.BodyPart
+import akka.http.scaladsl.model.{ContentType, HttpEntity, MediaTypes, StatusCodes}
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.e2e.E2ESpec
@@ -38,10 +42,10 @@ import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
 import org.knora.webapi.{FileWriteException, LiveActorMaker}
-import spray.http._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
 
 /**
   * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
@@ -221,7 +225,7 @@ class SipiV1E2ESpec extends E2ESpec {
             // check if the file exists
             assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
 
-            val formData = MultipartFormData(Seq(
+            val formData = MultiPart(Seq(
                 BodyPart(file = fileToSend, fieldName = "file", ContentType(mediaType = MediaTypes.`image/jpeg`))
             ))
 
@@ -287,3 +291,4 @@ class SipiV1E2ESpec extends E2ESpec {
         }
     }
 }
+*/

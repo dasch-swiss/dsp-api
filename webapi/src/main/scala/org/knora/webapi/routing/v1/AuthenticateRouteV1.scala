@@ -17,15 +17,15 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-/*
+
 package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.event.LoggingAdapter
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.routing.Authenticator
-import spray.routing.Directives._
-import spray.routing._
 
 /**
   * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
@@ -50,7 +50,7 @@ object AuthenticateRouteV1 extends Authenticator {
                 get {
                     requestContext => {
                         requestContext.complete {
-                            val params = requestContext.request.uri.query.toMap
+                            val params = requestContext.request.uri.query().toMap
                             if (params.contains("logout")) {
                                 doLogout(requestContext)
                             } else if (params.contains("login")) {
@@ -78,4 +78,3 @@ object AuthenticateRouteV1 extends Authenticator {
             }
     }
 }
-*/

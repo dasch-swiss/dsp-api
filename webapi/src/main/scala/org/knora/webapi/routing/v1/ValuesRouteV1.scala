@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-/*
+
 package org.knora.webapi.routing.v1
 
 import java.util.UUID
@@ -29,6 +29,7 @@ import akka.http.scaladsl.server.Route
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation.RichtextComponents
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
@@ -344,7 +345,7 @@ object ValuesRouteV1 extends Authenticator {
                 requestContext => {
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query.toMap
+                        val params = requestContext.request.uri.query().toMap
                         val deleteComment = params.get("deleteComment")
                         makeDeleteValueRequest(valueIriStr = valueIriStr, deleteComment = deleteComment, userProfile = userProfile)
                     }
@@ -410,7 +411,9 @@ object ValuesRouteV1 extends Authenticator {
                         log
                     )
                 }
-            } ~ put {
+            }
+            /*
+            ~ put {
                 entity(as[MultipartFormData]) { data => requestContext =>
                     val requestMessageTry = Try {
 
@@ -464,7 +467,7 @@ object ValuesRouteV1 extends Authenticator {
                     )
                 }
             }
+            */
         }
     }
 }
-*/

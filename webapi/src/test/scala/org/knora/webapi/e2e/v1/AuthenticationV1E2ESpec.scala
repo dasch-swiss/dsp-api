@@ -17,6 +17,11 @@
 package org.knora.webapi.e2e.v1
 
 import akka.actor.{ActorSystem, Props}
+import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.LiveActorMaker
@@ -29,11 +34,6 @@ import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.{AuthenticateRouteV1, ResourcesRouteV1}
 import org.knora.webapi.store._
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
-import spray.http.HttpHeaders.{Cookie, `Set-Cookie`}
-import spray.http._
-import spray.httpx.RequestBuilding
-import spray.httpx.unmarshalling._
-import spray.httpx.SprayJsonSupport._
 import spray.json.DefaultJsonProtocol
 
 import scala.concurrent.Await
@@ -51,7 +51,7 @@ case class SessionResponse(status: Int, message: String, sid: String)
   * A spray-json protocol used for turning the JSON responses from the 'login' operation during communication with the
   * 'v1/session' route into a case classes for easier testing.
   */
-object JsonSessionResponseProtocol extends DefaultJsonProtocol {
+object SessionResponseJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     implicit val SessionResponseFormat = jsonFormat3(SessionResponse)
 }
 
@@ -67,7 +67,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    import JsonSessionResponseProtocol._
+    import SessionResponseJsonSupport._
 
     private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
@@ -153,13 +153,13 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
                 assert(status === StatusCodes.OK)
                 /* store session */
                 sid = responseAs[SessionResponse].sid
-                assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, content = sid))))
+                assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(name = KNORA_AUTHENTICATION_COOKIE_NAME, value = sid))))
             }
         }
 
         "succeed with authentication when using correct session id in cookie" in {
             // authenticate by calling '/v2/session' without parameters but by providing session id in cookie from earlier login
-            Get("/v1/session") ~> Cookie(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
+            Get("/v1/session") ~> Cookie(HttpCookiePair(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
             }
@@ -167,7 +167,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
 
         "succeed with 'logout' when providing the session cookie " in {
             // do logout with stored session id
-            Get("/v1/session?logout") ~> Cookie(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
+            Get("/v1/session?logout") ~> Cookie(HttpCookiePair(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
                 assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
@@ -175,7 +175,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
         }
 
         "fail with authentication when providing the session cookie after logout" in {
-            Get("/v1/session") ~> Cookie(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
+            Get("/v1/session") ~> Cookie(HttpCookiePair(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.Unauthorized)
             }
@@ -198,7 +198,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with RequestBuilding {
         }
 
         "fail with authentication when using wrong session id in cookie " in {
-            Get("/v1/session") ~> Cookie(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "123456")) ~> authenticatePath ~> check {
+            Get("/v1/session") ~> Cookie(HttpCookiePair(KNORA_AUTHENTICATION_COOKIE_NAME, "123456")) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.Unauthorized)
             }
