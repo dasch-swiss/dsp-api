@@ -18,18 +18,17 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
 package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.event.LoggingAdapter
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
-import spray.routing.Directives._
-import spray.routing._
 
 import scala.util.Try
 
@@ -72,7 +71,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                 requestContext =>
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query.toMap
+                        val params = requestContext.request.uri.query().toMap
 
                         val vocabularyId = params.getOrElse("vocabulary", throw BadRequestException("Required param vocabulary is missing"))
 
@@ -98,7 +97,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                 requestContext =>
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query.toMap
+                        val params = requestContext.request.uri.query().toMap
 
                         val vocabularyId: Option[String] = params.get("vocabulary")
                         val resourcetypeId: Option[String] = params.get("restype")
@@ -168,4 +167,3 @@ object ResourceTypesRouteV1 extends Authenticator {
         }
     }
 }
-*/

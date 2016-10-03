@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-/*
+
 package org.knora.webapi.routing.v1
 
 import java.awt.image.BufferedImage
@@ -27,11 +27,11 @@ import javax.imageio.ImageIO
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaTypes}
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.routing.Authenticator
-import spray.http._
-import spray.routing.Directives._
-import spray.routing._
 
 /**
   * A route used for faking the image server.
@@ -43,7 +43,7 @@ object AssetsRouteV1 extends Authenticator {
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
 
-        path("v1" / "assets" / Rest) { assetId =>
+        path("v1" / "assets" / Remaining) { assetId =>
             get {
                 requestContext => {
                     requestContext.complete {
@@ -79,11 +79,10 @@ object AssetsRouteV1 extends Authenticator {
                         val byteArr: Array[Byte] = baos.toByteArray
                         baos.close()
 
-                        HttpResponse(entity = HttpEntity(MediaTypes.`image/png`, HttpData(byteArr)))
+                        HttpResponse(entity = HttpEntity(MediaTypes.`image/png`, byteArr))
                     }
                 }
             }
         }
     }
 }
-*/

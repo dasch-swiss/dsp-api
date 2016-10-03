@@ -19,10 +19,12 @@ package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.util.Timeout
-import org.knora.webapi.SettingsImpl
+import org.knora.webapi.{ForbiddenException, SettingsImpl}
 import org.knora.webapi.messages.v1.responder.storemessages.ResetTriplestoreContentRequestV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
@@ -31,12 +33,20 @@ import scala.concurrent.duration._
 import scala.util.Try
 
 
-case class Test(path: String, name: String)
-
 /**
-  * A route used to serve data to CKAN. It is used be the Ckan instance running under http://data.humanities.ch.
+  * A route used to send requests which can directly affect the data stored inside the triplestore.
   */
 object StoreRouteV1 extends Authenticator {
+
+
+    implicit def myExceptionHandler: ExceptionHandler =
+        ExceptionHandler {
+            case _: ForbiddenException =>
+                extractUri { uri =>
+                    println(s"Request to $uri could not be handled normally")
+                    complete(HttpResponse(InternalServerError, entity = "Bad numbers, bad result!!!"))
+                }
+        }
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) = Route {
 

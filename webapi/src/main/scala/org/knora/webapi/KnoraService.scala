@@ -86,17 +86,17 @@ object KnoraService {
 
 
     private val apiRoutes =
-                //ResourcesRouteV1.knoraApiPath(system, settings, log) ~
-                //ValuesRouteV1.knoraApiPath(system, settings, log) ~
-                //SipiRouteV1.knoraApiPath(system, settings, log) ~
-                //ListsRouteV1.knoraApiPath(system, settings, log) ~
-                //SearchRouteV1.knoraApiPath(system, settings, log) ~
-                //ResourceTypesRouteV1.knoraApiPath(system, settings, log) ~
-                //AuthenticateRouteV1.knoraApiPath(system, settings, log) ~
-                //AssetsRouteV1.knoraApiPath(system, settings, log) ~
-                //GraphDataRouteV1.knoraApiPath(system, settings, log) ~
+                ResourcesRouteV1.knoraApiPath(system, settings, log) ~
+                ValuesRouteV1.knoraApiPath(system, settings, log) ~
+                SipiRouteV1.knoraApiPath(system, settings, log) ~
+                ListsRouteV1.knoraApiPath(system, settings, log) ~
+                SearchRouteV1.knoraApiPath(system, settings, log) ~
+                ResourceTypesRouteV1.knoraApiPath(system, settings, log) ~
+                AuthenticateRouteV1.knoraApiPath(system, settings, log) ~
+                AssetsRouteV1.knoraApiPath(system, settings, log) ~
+                GraphDataRouteV1.knoraApiPath(system, settings, log) ~
                 ProjectsRouteV1.knoraApiPath(system, settings, log) ~
-                //CkanRouteV1.knoraApiPath(system, settings, log) ~
+                CkanRouteV1.knoraApiPath(system, settings, log) ~
                 StoreRouteV1.knoraApiPath(system, settings, log)
 
     /**

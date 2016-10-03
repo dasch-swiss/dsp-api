@@ -17,17 +17,17 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-/*
+
 package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanRequestV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import spray.routing.Directives._
-import spray.routing._
 
 import scala.concurrent.duration._
 import scala.util.Try
@@ -49,7 +49,7 @@ object CkanRouteV1 extends Authenticator {
                 requestContext =>
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query.toMap
+                        val params = requestContext.request.uri.query().toMap
                         val project: Option[Seq[String]] = params.get("project").map(_.split(","))
                         val limit: Option[Int] = params.get("limit").map(_.toInt)
                         val info: Boolean = params.getOrElse("info", false) == true
@@ -66,4 +66,3 @@ object CkanRouteV1 extends Authenticator {
         }
     }
 }
-*/

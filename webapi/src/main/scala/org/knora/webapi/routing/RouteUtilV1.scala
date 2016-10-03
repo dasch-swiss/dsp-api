@@ -73,13 +73,16 @@ object RouteUtilV1 {
                 val resultFuture: Future[KnoraResponseV1] = for {
                 // Make sure the responder sent a reply of type KnoraResponseV1.
                     knoraResponse <- (responderManager ? requestMessage).map {
-                        case replyMessage: KnoraResponseV1 => replyMessage
-
+                        case replyMessage: KnoraResponseV1 =>
+                            println(">>>>>>>>> ok")
+                            replyMessage
                         case other =>
+                            println(s">>>>>>>>> other: $other")
                             // The responder returned an unexpected message type. This isn't the client's fault, so log
                             // it and return an error message to the client.
                             val logErrorMsg = s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
                             val logEx = UnexpectedMessageException(logErrorMsg)
+                            println("before throwing error message")
                             log.error(logEx, logErrorMsg)
                             throw logEx
                     }
@@ -188,6 +191,7 @@ object RouteUtilV1 {
       */
     private def replyMessage2JsonHttpResponse(resultFuture: Future[KnoraResponseV1], settings: SettingsImpl, log: LoggingAdapter): Future[HttpResponse] = for {
         result <- resultFuture
+        _ = println(s"replyMessage2JsonHttpResponse -> result: $result")
         response = result match {
             case jsonResponse: KnoraResponseV1 =>
                 Try {

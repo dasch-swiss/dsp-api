@@ -18,18 +18,17 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
 package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.event.LoggingAdapter
 import org.knora.webapi.messages.v1.responder.searchmessages.{ExtendedSearchGetRequestV1, FulltextSearchGetRequestV1, SearchComparisonOperatorV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
-import spray.routing.Directives._
-import spray.routing._
 
 import scala.language.postfixOps
 import scala.util.Try
@@ -194,7 +193,7 @@ object SearchRouteV1 extends Authenticator {
                 requestContext => {
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
-                        val params: Map[String, Seq[String]] = requestContext.request.uri.query.toMultiMap
+                        val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
                         makeExtendedSearchRequestMessage(userProfile, params)
                     }
                     RouteUtilV1.runJsonRoute(
@@ -212,7 +211,7 @@ object SearchRouteV1 extends Authenticator {
                     requestContext => {
                         val requestMessageTry = Try {
                             val userProfile = getUserProfileV1(requestContext)
-                            val params: Map[String, String] = requestContext.request.uri.query.toMap
+                            val params: Map[String, String] = requestContext.request.uri.query().toMap
                             makeFulltextSearchRequestMessage(userProfile, searchval, params)
                         }
                         RouteUtilV1.runJsonRoute(
@@ -227,4 +226,3 @@ object SearchRouteV1 extends Authenticator {
             }
     }
 }
-*/

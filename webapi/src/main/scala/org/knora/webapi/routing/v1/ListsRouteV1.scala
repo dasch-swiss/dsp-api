@@ -17,17 +17,17 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-/*
+
 package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.event.LoggingAdapter
 import org.knora.webapi.messages.v1.responder.listmessages.{HListGetRequestV1, NodePathGetRequestV1, SelectionGetRequestV1}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
-import spray.routing.Directives._
-import spray.routing._
 
 import scala.util.Try
 
@@ -49,7 +49,7 @@ object ListsRouteV1 extends Authenticator {
                         val userProfile = getUserProfileV1(requestContext)
                         val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                        requestContext.request.uri.query.get("reqtype") match {
+                        requestContext.request.uri.query().get("reqtype") match {
                             case Some("node") => NodePathGetRequestV1(listIri, userProfile)
                             case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
                             case None => HListGetRequestV1(listIri, userProfile)
@@ -71,7 +71,7 @@ object ListsRouteV1 extends Authenticator {
                             val userProfile = getUserProfileV1(requestContext)
                             val selIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                            requestContext.request.uri.query.get("reqtype") match {
+                            requestContext.request.uri.query().get("reqtype") match {
                                 case Some("node") => NodePathGetRequestV1(selIri, userProfile)
                                 case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
                                 case None => SelectionGetRequestV1(selIri, userProfile)
@@ -88,4 +88,3 @@ object ListsRouteV1 extends Authenticator {
             }
     }
 }
-*/
