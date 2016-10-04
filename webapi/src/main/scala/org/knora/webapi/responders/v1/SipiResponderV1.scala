@@ -25,6 +25,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.pattern._
+import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.sipimessages.RepresentationV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiConstants.FileType
@@ -43,6 +44,8 @@ import scala.concurrent.Future
   * v1 format.
   */
 class SipiResponderV1 extends ResponderV1 {
+
+    implicit val materializer = ActorMaterializer()
 
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
@@ -95,7 +98,6 @@ class SipiResponderV1 extends ResponderV1 {
     }
 
 
-    /*
     /**
       * Makes a conversion request to Sipi and creates a [[SipiResponderConversionResponseV1]]
       * containing the file values to be added to the triplestore.
@@ -124,17 +126,27 @@ class SipiResponderV1 extends ResponderV1 {
 
         val conversionResultFuture: Future[HttpResponse] = for {
             request <- Marshal(conversionRequest.toFormData()).to[RequestEntity]
-            response <- Http().singleRequest(HttpRequest(method = HttpMethods.POST, uri = url, entity = request))
+            response <- Http().singleRequest(
+                HttpRequest(
+                    method = HttpMethods.POST,
+                    uri = url,
+                    entity = HttpEntity(
+                        MediaTypes.`application/json`,
+                        conversionRequest.toJsValue.compactPrint
+                    )
+                )
+            )
         } yield response
 
         //
         // handle unsuccessful requests to Sipi
         //
         val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
-            case noResponse: akka.http.scaladsl. spray.can.Http.ConnectionAttemptFailedException =>
+            case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
                 // this problem is hardly the user's fault. Create a SipiException
                 throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
 
+            /*
             case httpError: spray.httpx.UnsuccessfulResponseException =>
                 val statusCode: StatusCode = httpError.response.status
 
@@ -165,6 +177,7 @@ class SipiResponderV1 extends ResponderV1 {
                         }
                         throw SipiException(s"Sipi reported an internal server error ${statusCode} with ${errMsg}", e = httpError, log = log)
                 }
+            */
 
             case err =>
                 // unknown error
@@ -177,7 +190,7 @@ class SipiResponderV1 extends ResponderV1 {
             conversionResultResponse <- recoveredConversionResultFuture
 
             // get file type from Sipi response
-            responseAsMap: Map[String, JsValue] = conversionResultResponse.entity.asString.parseJson.asJsObject.fields
+            responseAsMap: Map[String, JsValue] = conversionResultResponse.entity.toString.parseJson.asJsObject.fields.toMap
 
             fileType: String = responseAsMap.getOrElse("file_type", throw SipiException(message = "Sipi did not return a file type")) match {
                 case JsString(ftype: String) => ftype
@@ -192,7 +205,7 @@ class SipiResponderV1 extends ResponderV1 {
                 case SipiConstants.FileType.IMAGE =>
                     // parse response as a [[SipiImageConversionResponse]]
                     val imageConversionResult = try {
-                        conversionResultResponse.entity.asString.parseJson.convertTo[SipiImageConversionResponse]
+                        conversionResultResponse.entity.toString.parseJson.convertTo[SipiImageConversionResponse]
                     } catch {
                         case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiImageConversionResponse", e = e, log = log)
                     }
@@ -253,7 +266,5 @@ class SipiResponderV1 extends ResponderV1 {
 
         callSipiConvertRoute(url, conversionRequest)
     }
-
-    */
 
 }

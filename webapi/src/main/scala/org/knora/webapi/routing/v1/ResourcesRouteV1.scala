@@ -25,8 +25,11 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.model.Multipart
+import akka.http.scaladsl.model.Multipart.FormData.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.util.ByteString
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -37,7 +40,9 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation.RichtextComponents
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
+import spray.json._
 
+import scala.concurrent.Future
 import scala.util.Try
 
 /**
@@ -286,35 +291,53 @@ object ResourcesRouteV1 extends Authenticator {
                     )
                 }
             }
-            /*
             ~ post {
                 // Create a new resource with the given type, properties, and binary data (file) (non GUI-case).
                 // The binary data are contained in the request and have to be temporarily stored by Knora.
                 // For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
-                entity(as[MultipartFormData]) { data => requestContext =>
+                entity(as[Multipart.FormData]) { formData => requestContext =>
 
                     val requestMessageTry = Try {
 
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        val partsFuture = formData.parts.mapAsync(1) { bodyPart: Multipart.FormData.BodyPart =>
+
+                            val name = bodyPart.name
+                            println(s"Got part. name: $name")
+
+                            bodyPart.name match {
+                                case "json" => Future(s"Received json: ${bodyPart.entity.toJson.toString}")
+                                case "file" => bodyPart.entity.dataBytes.runFold(ByteString.empty)(_ ++ _).map { contents =>
+                                    Future(s"Received file: ${bodyPart.filename} of size: ${contents.length}")
+                                }
+                            }
+                        }
+
+                        /*
+
                         // get all the body parts from multipart request
-                        val fields: Seq[BodyPart] = data.fields
+                        val fields: Seq[Multipart.FormData.BodyPart] = formData.parts
 
                         //
                         // turn Sequence of BodyParts into a Map(name -> BodyPart),
                         // according to the given keys in the HTTP request
                         // e.g. 'json' -> BodyPart or 'file' -> BodyPart
                         //
-                        val namedParts: Map[String, BodyPart] = fields.map {
+                        val namedParts: Map[String, Multipart.FormData.BodyPart] = fields.map {
                             // assumes that only one file is given (this may change for API V2)
-                            case (bodyPart: BodyPart) =>
-                                (bodyPart.dispositionParameterValue("name").getOrElse(throw BadRequestException("part of HTTP multipart request has no name")), bodyPart)
+                            case (bodyPart: Multipart.FormData.BodyPart) =>
+                                val bodyPartName = bodyPart.getName()
+                                if (bodyPartName.isEmpty) throw BadRequestException("part of HTTP multipart request has no name")
+                                (bodyPartName, bodyPart)
                         }.toMap
 
-                        val userProfile = getUserProfileV1(requestContext)
+
 
                         // get the json params (access first member of the tuple) and turn them into a case class
                         val apiRequest: CreateResourceApiRequestV1 = try {
                             namedParts.getOrElse("json", throw BadRequestException("Required param 'json' was not submitted"))
-                                .entity.asString.parseJson.convertTo[CreateResourceApiRequestV1]
+                                .entity.toString.parseJson.convertTo[CreateResourceApiRequestV1]
                         } catch {
                             case e: DeserializationException => throw BadRequestException("JSON params structure is invalid: " + e.toString)
                         }
@@ -323,17 +346,20 @@ object ResourcesRouteV1 extends Authenticator {
                         if (apiRequest.file.nonEmpty) throw BadRequestException("param 'file' is set for a post multipart request. This is not allowed.")
 
                         // get binary data from bodyPart 'file'
-                        val bodyPartFile: BodyPart = namedParts.getOrElse("file", throw BadRequestException("MultiPart Post request was sent but no files"))
+                        val bodyPartFile: Multipart.FormData.BodyPart = namedParts.getOrElse("file", throw BadRequestException("MultiPart Post request was sent but no files"))
 
                         // TODO: how to check if the user has sent multiple files?
-                        val nonEmpty: NonEmpty = bodyPartFile.entity
-                            .toOption.getOrElse(throw BadRequestException("no binary data submitted in multipart request"))
+                        val nonEmpty = bodyPartFile.entity
+                            //TODO: .toOption.getOrElse(throw BadRequestException("no binary data submitted in multipart request"))
+
+
+                        */
 
                         // save file to temporary location
                         // this file will be deleted by Knora once it is not needed anymore
                         // TODO: add a script that cleans files in the tmp location that have a certain age
                         // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
-                        val sourcePath = InputValidation.saveFileToTmpLocation(settings, nonEmpty.data.toByteArray)
+                        val sourcePath = InputValidation.saveFileToTmpLocation(settings, "".getBytes)
 
                         val originalFilename = bodyPartFile.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
                         val originalMimeType = nonEmpty.contentType.toString
@@ -350,6 +376,7 @@ object ResourcesRouteV1 extends Authenticator {
                             multipartConversionRequest = Some(sipiConvertPathRequest),
                             userProfile = userProfile
                         )
+
                     }
 
                     RouteUtilV1.runJsonRoute(
@@ -362,7 +389,6 @@ object ResourcesRouteV1 extends Authenticator {
 
                 }
             }
-            */
         } ~ path("v1" / "resources.html" / Segment) { iri =>
             get {
                 requestContext =>

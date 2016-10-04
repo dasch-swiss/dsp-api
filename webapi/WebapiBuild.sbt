@@ -103,6 +103,7 @@ lazy val webApiLibs = Seq(
     "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-xml-experimental" % akkaVersion,
+    "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     //CORS support
     "ch.megard" %% "akka-http-cors" % "0.1.7",
     // spray
@@ -157,6 +158,7 @@ lazy val webApiLibs = Seq(
     // testing
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "com.typesafe.akka" %% "akka-http-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
+    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     //"io.spray" %% "spray-testkit" % "1.3.3" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.0M3",
