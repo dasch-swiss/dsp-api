@@ -25,10 +25,12 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.model.Multipart
+import akka.http.scaladsl.model.{MediaTypes, Multipart}
 import akka.http.scaladsl.model.Multipart.FormData.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.Sink
 import akka.util.ByteString
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
@@ -53,6 +55,7 @@ object ResourcesRouteV1 extends Authenticator {
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
         implicit val system: ActorSystem = _system
+        implicit val materializer = ActorMaterializer()
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
@@ -290,29 +293,20 @@ object ResourcesRouteV1 extends Authenticator {
                         log
                     )
                 }
-            }
-            ~ post {
+            } ~ post {
                 // Create a new resource with the given type, properties, and binary data (file) (non GUI-case).
                 // The binary data are contained in the request and have to be temporarily stored by Knora.
                 // For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
                 entity(as[Multipart.FormData]) { formData => requestContext =>
 
+                    println("/v1/resources - Multipart.FormData")
                     val requestMessageTry = Try {
 
                         val userProfile = getUserProfileV1(requestContext)
 
-                        val partsFuture = formData.parts.mapAsync(1) { bodyPart: Multipart.FormData.BodyPart =>
+                        val namedParts = formData.parts.runForeach(println)
 
-                            val name = bodyPart.name
-                            println(s"Got part. name: $name")
 
-                            bodyPart.name match {
-                                case "json" => Future(s"Received json: ${bodyPart.entity.toJson.toString}")
-                                case "file" => bodyPart.entity.dataBytes.runFold(ByteString.empty)(_ ++ _).map { contents =>
-                                    Future(s"Received file: ${bodyPart.filename} of size: ${contents.length}")
-                                }
-                            }
-                        }
 
                         /*
 
@@ -355,14 +349,18 @@ object ResourcesRouteV1 extends Authenticator {
 
                         */
 
+                        val apiRequest = CreateResourceApiRequestV1("", "", Map("a" -> List(CreateResourceValueV1())), None, "")
+
                         // save file to temporary location
                         // this file will be deleted by Knora once it is not needed anymore
                         // TODO: add a script that cleans files in the tmp location that have a certain age
                         // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
                         val sourcePath = InputValidation.saveFileToTmpLocation(settings, "".getBytes)
 
-                        val originalFilename = bodyPartFile.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
-                        val originalMimeType = nonEmpty.contentType.toString
+                        //val originalFilename = bodyPartFile.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
+                        val originalFilename = "orginalname.tif"
+                        //val originalMimeType = nonEmpty.contentType.toString
+                        val originalMimeType = MediaTypes.`image/tiff`.toString
 
                         val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
                             originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
@@ -378,6 +376,8 @@ object ResourcesRouteV1 extends Authenticator {
                         )
 
                     }
+
+                    complete("success")
 
                     RouteUtilV1.runJsonRoute(
                         requestMessageTry,

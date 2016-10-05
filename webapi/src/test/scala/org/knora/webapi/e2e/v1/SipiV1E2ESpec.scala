@@ -22,11 +22,11 @@ package org.knora.webapi.e2e.v1
 
 import java.io.File
 import java.net.URLEncoder
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 
 import akka.actor._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.model.{HttpEntity, MediaTypes, Multipart, StatusCodes}
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.stream.scaladsl.{Source, _}
@@ -55,8 +55,8 @@ class SipiV1E2ESpec extends E2ESpec {
 
     override def testConfigSource =
         """
-         # akka.loglevel = "DEBUG"
-         # akka.stdout-loglevel = "DEBUG"
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
 
@@ -100,8 +100,8 @@ class SipiV1E2ESpec extends E2ESpec {
     )
 
     "Load test data" in {
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 10.seconds)
+        //Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
+        //Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 10.seconds)
     }
 
     object RequestParams {
@@ -159,25 +159,43 @@ class SipiV1E2ESpec extends E2ESpec {
             assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
 
             val formData = Multipart.FormData(
-                Source(
-                    List(
-                        Multipart.FormData.BodyPart(
-                            "json",
-                            HttpEntity(MediaTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint),
-                            Map("fieldName" -> "json")
-                        ),
-                        Multipart.FormData.BodyPart(
-                            "file",
-                            HttpEntity(MediaTypes.`image/jpeg`, fileToSend.length, FileIO.fromFile(fileToSend, chunkSize = 100000)),
-                            Map("filname" -> fileToSend.getName)
-                        )
-                    )
+                Multipart.FormData.BodyPart.Strict(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint)
+                ),
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(ContentTypes.`application/octet-stream`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
                 )
+            )
+
+            val formDataFile = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
+
+            val formDataJson = Multipart.FormData(
+                Multipart.FormData.BodyPart.Strict(
+                    "json",
+                    HttpEntity(MediaTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint)
+                )
+            )
+
+            val formDataCSV = Multipart.FormData(
+                    Multipart.FormData.BodyPart.Strict(
+                        "csv",
+                        HttpEntity(ContentTypes.`text/plain(UTF-8)`, "1,5,7\n11,13,17"),
+                        Map("filename" -> "data.csv")
+                    )
             )
 
             RequestParams.createTmpFileDir()
 
-            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", formDataCSV) ~> addCredentials(BasicHttpCredentials(username, password)) ~> resourcesPath ~> check {
 
                 val tmpFile = SourcePath.getSourcePath()
 
@@ -186,7 +204,7 @@ class SipiV1E2ESpec extends E2ESpec {
             }
         }
 
-        "try to create a resource sending binaries (multipart request) but fail because the mimetype is wrong" in {
+        "try to create a resource sending binaries (multipart request) but fail because the mimetype is wrong" ignore {
 
             val fileToSend = new File(RequestParams.pathToFile)
             // check if the file exists
@@ -197,14 +215,13 @@ class SipiV1E2ESpec extends E2ESpec {
                     List(
                         Multipart.FormData.BodyPart(
                             "json",
-                            HttpEntity(MediaTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint),
-                            Map("fieldName" -> "json")
+                            HttpEntity(MediaTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint)
                         ),
                         // set mimetype tiff, but jpeg is expected
                         Multipart.FormData.BodyPart(
                             "file",
                             HttpEntity(MediaTypes.`image/tiff`, fileToSend.length(), FileIO.fromFile(fileToSend, chunkSize = 100000)),
-                            Map("filname" -> fileToSend.getName)
+                            Map("filename" -> fileToSend.getName)
                         )
                     )
                 )
@@ -224,7 +241,7 @@ class SipiV1E2ESpec extends E2ESpec {
             }
         }
 
-        "create a resource with a digital representation doing a params only request without binary data (GUI-case)" in {
+        "create a resource with a digital representation doing a params only request without binary data (GUI-case)" ignore {
 
             val params = RequestParams.createResourceParams.copy(
                 file = Some(CreateFileV1(
@@ -243,7 +260,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
     "The Values endpoint" should {
 
-        "change the file value of an existing page (submitting binaries)" in {
+        "change the file value of an existing page (submitting binaries)" ignore {
 
             val fileToSend = new File(RequestParams.pathToFile)
             // check if the file exists
@@ -254,7 +271,7 @@ class SipiV1E2ESpec extends E2ESpec {
                     Multipart.FormData.BodyPart(
                         "file",
                         HttpEntity(MediaTypes.`image/jpeg`, fileToSend.length(), FileIO.fromFile(fileToSend, chunkSize = 100000)),
-                        Map("filname" -> fileToSend.getName)
+                        Map("filename" -> fileToSend.getName)
                     )
                 )
             )
@@ -273,7 +290,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
         }
 
-        "try to change the file value of an existing page (submitting binaries) but fail because the mimetype is wrong" in {
+        "try to change the file value of an existing page (submitting binaries) but fail because the mimetype is wrong" ignore {
 
             val fileToSend = new File(RequestParams.pathToFile)
             // check if the file exists
@@ -308,7 +325,7 @@ class SipiV1E2ESpec extends E2ESpec {
         }
 
 
-        "change the file value of an existing page (submitting params only, no binaries)" in {
+        "change the file value of an existing page (submitting params only, no binaries)" ignore {
 
             val params = ChangeFileValueApiRequestV1(
                 file = CreateFileV1(
