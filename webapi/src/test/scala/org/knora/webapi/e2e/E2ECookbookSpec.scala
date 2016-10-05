@@ -25,6 +25,7 @@ import akka.stream.scaladsl.FileIO
 import akka.util.ByteString
 
 import scala.concurrent.duration._
+import scala.util.Try
 
 /**
   * This Spec holds examples on how certain akka features can be used.
@@ -76,7 +77,7 @@ class E2ECookbookSpec extends E2ESpec {
         }
     }
     "the route receiving the upload request " should {
-        "write a posted file to a temporary file on disk and return file information " in {
+        "write a posted file to a temporary file on disk and return file information (using uploadedFile directive) " in {
             val pathToFile = "_test_data/test_route/images/Chlaus.jpg"
             val fileToSend = new File(pathToFile)
 
@@ -96,6 +97,43 @@ class E2ECookbookSpec extends E2ESpec {
                         case (info, tmpFile) ⇒
                             receivedFile = Some(tmpFile)
                             complete(info.toString)
+                    }
+                } ~> check {
+                    receivedFile.isDefined === true
+                    assert(responseAs[String] === FileInfo("file", "Chlaus.jpg", MediaTypes.`image/jpeg`).toString)
+                    assert(bincompare(fileToSend, receivedFile.get))
+                }
+            } finally {
+                receivedFile.foreach(_.delete())
+            }
+
+
+
+        }
+
+        "write a posted file to a temporary file on disk and return file information (using the stream API) " in {
+            val pathToFile = "_test_data/test_route/images/Chlaus.jpg"
+            val fileToSend = new File(pathToFile)
+
+            val formDataFile = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
+
+            @volatile var receivedFile: Option[File] = None
+
+            try {
+                Post("/", formDataFile) ~> {
+                    entity(as[Multipart.FormData]) { formData =>
+
+                        println("/v1/resources - Multipart.FormData")
+
+                        val namedParts = formData.parts.runForeach(p => (p.name, p))
+                        println(namedParts.toString)
+                        complete("")
                     }
                 } ~> check {
                     receivedFile.isDefined === true
