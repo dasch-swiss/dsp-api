@@ -20,10 +20,16 @@ import java.io.{BufferedInputStream, File, FileInputStream, InputStream}
 
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.MissingFormFieldRejection
+import akka.http.scaladsl.server.directives.BasicDirectives.{extractRequestContext => _, provide => _, _}
 import akka.http.scaladsl.server.directives.FileInfo
-import akka.stream.scaladsl.FileIO
+import akka.http.scaladsl.server.directives.FutureDirectives.{onSuccess => _, _}
+import akka.http.scaladsl.server.directives.MarshallingDirectives.{as => _, entity => _, _}
+import akka.http.scaladsl.server.directives.RouteDirectives.{complete => _, reject => _, _}
+import akka.stream.scaladsl.{FileIO, Sink, Source}
 import akka.util.ByteString
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Try
 
@@ -123,25 +129,30 @@ class E2ECookbookSpec extends E2ESpec {
                 )
             )
 
-            @volatile var receivedFile: Option[File] = None
+
 
             try {
                 Post("/", formDataFile) ~> {
                     entity(as[Multipart.FormData]) { formData =>
+                        extractRequestContext { ctx ⇒
+                            implicit val mat = ctx.materializer
+                            implicit val ec = ctx.executionContext
 
-                        println("/v1/resources - Multipart.FormData")
+                            val multiPartSource: Source[(FileInfo, Source[ByteString, Any]), Any] = formData.parts
+                                    .map(part ⇒ (FileInfo(part.name, part.filename.get, part.entity.contentType), part.entity.dataBytes))
 
-                        val namedParts = formData.parts.runForeach(p => (p.name, p))
-                        println(namedParts.toString)
-                        complete("")
+                            val multiPartF: Future[Map[FileInfo, ByteString]] = multiPartSource.runWith(Sink.seq[(FileInfo, Source[ByteString, Any])].to)
+
+                        }
                     }
+
                 } ~> check {
-                    receivedFile.isDefined === true
+                    //receivedFile.isDefined === true
                     assert(responseAs[String] === FileInfo("file", "Chlaus.jpg", MediaTypes.`image/jpeg`).toString)
-                    assert(bincompare(fileToSend, receivedFile.get))
+                    //assert(bincompare(fileToSend, receivedFile.get))
                 }
             } finally {
-                receivedFile.foreach(_.delete())
+                //receivedFile.foreach(_.delete())
             }
 
 
