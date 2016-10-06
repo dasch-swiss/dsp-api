@@ -61,7 +61,7 @@ object StoreRouteV1 extends Authenticator {
                 post {
                     /* ResetTriplestoreContent */
                     entity(as[Seq[RdfDataObject]]) { apiRequest => requestContext =>
-
+                        //println(s"Reset Triplestore Content request with ${apiRequest.toString}")
                         val requestMessageTry = Try {
                             // create the message
                             ResetTriplestoreContentRequestV1(apiRequest)
