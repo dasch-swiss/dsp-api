@@ -18,20 +18,24 @@ package org.knora.webapi.e2e
 
 import java.io.{BufferedInputStream, File, FileInputStream, InputStream}
 
-import akka.http.scaladsl.model._
+import akka.actor.ActorSystem
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonByteStringParserInput
+import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.MissingFormFieldRejection
-import akka.http.scaladsl.server.directives.BasicDirectives.{extractRequestContext => _, provide => _, _}
+import akka.http.scaladsl.server.directives.BasicDirectives.{extractRequestContext => _, provide => _}
 import akka.http.scaladsl.server.directives.FileInfo
-import akka.http.scaladsl.server.directives.FutureDirectives.{onSuccess => _, _}
-import akka.http.scaladsl.server.directives.MarshallingDirectives.{as => _, entity => _, _}
-import akka.http.scaladsl.server.directives.RouteDirectives.{complete => _, reject => _, _}
-import akka.stream.scaladsl.{FileIO, Sink, Source}
+import akka.http.scaladsl.server.directives.FutureDirectives.{onSuccess => _}
+import akka.http.scaladsl.server.directives.MarshallingDirectives.{as => _, entity => _}
+import akka.http.scaladsl.server.directives.RouteDirectives.{complete => _, reject => _}
+import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.stream.scaladsl.{FileIO, Sink}
 import akka.util.ByteString
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
-import scala.util.Try
+import spray.json._
+import spray.json.DefaultJsonProtocol._
+
+import scala.concurrent.duration.DurationInt
 
 /**
   * This Spec holds examples on how certain akka features can be used.
@@ -43,6 +47,8 @@ class E2ECookbookSpec extends E2ESpec {
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin
+
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
 
     "the uploadedFile directive" should {
 
@@ -117,11 +123,18 @@ class E2ECookbookSpec extends E2ESpec {
 
         }
 
-        "write a posted file to a temporary file on disk and return file information (using the stream API) " in {
+        "write a posted file to a temporary file on disk and return file information (using the akka-stream API) " in {
             val pathToFile = "_test_data/test_route/images/Chlaus.jpg"
             val fileToSend = new File(pathToFile)
 
+            val source = """{ "some": "JSON source" }"""
+            val jsonAst = source.parseJson // or JsonParser(source)
+
             val formDataFile = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(MediaTypes.`application/json`, jsonAst.compactPrint)
+                ),
                 Multipart.FormData.BodyPart(
                     "file",
                     HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
@@ -129,25 +142,55 @@ class E2ECookbookSpec extends E2ESpec {
                 )
             )
 
-
+            @volatile var receivedFile: Option[File] = None
 
             try {
                 Post("/", formDataFile) ~> {
-                    entity(as[Multipart.FormData]) { formData =>
+                    entity(as[Multipart.FormData]) { formdata =>
                         extractRequestContext { ctx ⇒
-                            implicit val mat = ctx.materializer
-                            implicit val ec = ctx.executionContext
+                            type Name = String
 
-                            val multiPartSource: Source[(FileInfo, Source[ByteString, Any]), Any] = formData.parts
-                                    .map(part ⇒ (FileInfo(part.name, part.filename.get, part.entity.contentType), part.entity.dataBytes))
+                            val jsonMap = formdata.parts.mapAsync(1) { p: Multipart.FormData.BodyPart =>
+                                if (p.name == "json") {
+                                    val read = p.entity.dataBytes.runFold(ByteString.empty)((whole, chunk) => whole ++ chunk)
+                                    read.map(read =>
+                                        Map(p.name -> read.utf8String.parseJson)
+                                    )
+                                } else {
+                                    Future(Map.empty[Name, JsValue])
+                                }
+                            }.runFold(Map.empty[Name, JsValue])((set, value) => set ++ value)
 
-                            val multiPartF: Future[Map[FileInfo, ByteString]] = multiPartSource.runWith(Sink.seq[(FileInfo, Source[ByteString, Any])].to)
+                            val fileMap = formdata.parts.mapAsync(1) { p: Multipart.FormData.BodyPart =>
+                                if (p.filename.isDefined) {
+                                    println(s"part named ${p.name} has file named ${p.filename}")
+                                    val tmpFile = File.createTempFile(s"userfile_${p.name}_${p.filename.getOrElse("")}", "")
+                                    val written = p.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
+                                    written.map { written =>
+                                        println(s"written result: ${written.wasSuccessful}, ${p.filename.get}, ${tmpFile.getAbsolutePath}")
+                                        Map(p.name -> FileInfo(p.filename.get, tmpFile.getAbsolutePath, MediaTypes.`image/jpeg`))
+                                    }
+                                } else {
+                                    Future(Map.empty[Name, FileInfo])
+                                }
+                            }.runFold(Map.empty[Name, FileInfo])((set, value) => set ++ value)
 
+
+
+                            val result = for {
+                                jm <- jsonMap
+                                fm <- fileMap
+
+                                res = jm.toString() + " / " + fm.toString()
+                            } yield res
+
+                            complete(result)
                         }
                     }
 
                 } ~> check {
                     //receivedFile.isDefined === true
+                    println(responseAs[String])
                     assert(responseAs[String] === FileInfo("file", "Chlaus.jpg", MediaTypes.`image/jpeg`).toString)
                     //assert(bincompare(fileToSend, receivedFile.get))
                 }

@@ -147,6 +147,7 @@ class SipiResponderV1 extends ResponderV1 {
                 throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
 
             /*
+            TODO: Need to handle these types of problems differently as akka-http does not throw these exceptions anymore
             case httpError: spray.httpx.UnsuccessfulResponseException =>
                 val statusCode: StatusCode = httpError.response.status
 
