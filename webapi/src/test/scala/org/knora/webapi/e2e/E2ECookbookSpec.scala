@@ -30,6 +30,7 @@ import akka.http.scaladsl.server.directives.RouteDirectives.{complete => _, reje
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.stream.scaladsl.{FileIO, Sink}
 import akka.util.ByteString
+import org.knora.webapi.BadRequestException
 
 import scala.concurrent.Future
 import spray.json._
@@ -163,12 +164,13 @@ class E2ECookbookSpec extends E2ESpec {
 
                             val fileMap = formdata.parts.mapAsync(1) { p: Multipart.FormData.BodyPart =>
                                 if (p.filename.isDefined) {
-                                    println(s"part named ${p.name} has file named ${p.filename}")
+                                    //println(s"part named ${p.name} has file named ${p.filename}")
                                     val tmpFile = File.createTempFile(s"userfile_${p.name}_${p.filename.getOrElse("")}", "")
                                     val written = p.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
                                     written.map { written =>
-                                        println(s"written result: ${written.wasSuccessful}, ${p.filename.get}, ${tmpFile.getAbsolutePath}")
-                                        Map(p.name -> FileInfo(p.filename.get, tmpFile.getAbsolutePath, MediaTypes.`image/jpeg`))
+                                        //println(s"written result: ${written.wasSuccessful}, ${p.filename.get}, ${tmpFile.getAbsolutePath}")
+                                        receivedFile = Some(tmpFile)
+                                        Map(p.name -> FileInfo(p.name, p.filename.get, p.entity.contentType))
                                     }
                                 } else {
                                     Future(Map.empty[Name, FileInfo])
@@ -181,7 +183,8 @@ class E2ECookbookSpec extends E2ESpec {
                                 jm <- jsonMap
                                 fm <- fileMap
 
-                                res = jm.toString() + " / " + fm.toString()
+                                _ = if (jm.contains("json") === false) throw BadRequestException("no json")
+                                res = fm.getOrElse("file", throw BadRequestException("no file")).toString
                             } yield res
 
                             complete(result)
@@ -190,9 +193,9 @@ class E2ECookbookSpec extends E2ESpec {
 
                 } ~> check {
                     //receivedFile.isDefined === true
-                    println(responseAs[String])
+                    //println(responseAs[String])
                     assert(responseAs[String] === FileInfo("file", "Chlaus.jpg", MediaTypes.`image/jpeg`).toString)
-                    //assert(bincompare(fileToSend, receivedFile.get))
+                    assert(bincompare(fileToSend, receivedFile.get))
                 }
             } finally {
                 //receivedFile.foreach(_.delete())

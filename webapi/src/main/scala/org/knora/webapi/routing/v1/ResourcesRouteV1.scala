@@ -21,6 +21,7 @@
 
 package org.knora.webapi.routing.v1
 
+import java.io.File
 import java.util.UUID
 
 import akka.actor.ActorSystem
@@ -29,9 +30,11 @@ import akka.http.scaladsl.model.{MediaTypes, Multipart}
 import akka.http.scaladsl.model.Multipart.FormData.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.directives.FileInfo
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Sink
-import akka.util.ByteString
+import akka.stream.scaladsl.{FileIO, Sink}
+import akka.util.{ByteString, Timeout}
+import scala.concurrent.duration._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -44,7 +47,7 @@ import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
 import spray.json._
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.util.Try
 
 /**
@@ -233,46 +236,46 @@ object ResourcesRouteV1 extends Authenticator {
         } ~ path("v1" / "resources") {
             get {
                 // search for resources matching the given search string (searchstr) and return their Iris.
-                    requestContext =>
-                        val requestMessageTry = Try {
-                            val userProfile = getUserProfileV1(requestContext)
-                            val params = requestContext.request.uri.query().toMap
-                            val searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
-                            val restype = params.getOrElse("restype_id", "-1") // default -1 means: no restriction at all
-                            val numprops = params.getOrElse("numprops", "1")
-                            val limit = params.getOrElse("limit", "11")
+                requestContext =>
+                    val requestMessageTry = Try {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val params = requestContext.request.uri.query().toMap
+                        val searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
+                        val restype = params.getOrElse("restype_id", "-1") // default -1 means: no restriction at all
+                        val numprops = params.getOrElse("numprops", "1")
+                        val limit = params.getOrElse("limit", "11")
 
-                            // input validation
+                        // input validation
 
-                            val searchString = InputValidation.toSparqlEncodedString(searchstr, () => throw BadRequestException(s"Invalid search string: '$searchstr'"))
+                        val searchString = InputValidation.toSparqlEncodedString(searchstr, () => throw BadRequestException(s"Invalid search string: '$searchstr'"))
 
-                            val resourceTypeIri: Option[IRI] = restype match {
-                                case ("-1") => None
-                                case (restype: IRI) => Some(InputValidation.toIri(restype, () => throw BadRequestException(s"Invalid param restype: $restype")))
-                            }
-
-                            val numberOfProps: Int = InputValidation.toInt(numprops, () => throw BadRequestException(s"Invalid param numprops: $numprops")) match {
-                                case (number: Int) => if (number < 1) 1 else number // numberOfProps must not be smaller than 1
-                            }
-
-                            val limitOfResults = InputValidation.toInt(limit, () => throw BadRequestException(s"Invalid param limit: $limit"))
-
-                            makeResourceSearchRequestMessage(
-                                searchString = searchString,
-                                resourceTypeIri = resourceTypeIri,
-                                numberOfProps = numberOfProps,
-                                limitOfResults = limitOfResults,
-                                userProfile = userProfile
-                            )
+                        val resourceTypeIri: Option[IRI] = restype match {
+                            case ("-1") => None
+                            case (restype: IRI) => Some(InputValidation.toIri(restype, () => throw BadRequestException(s"Invalid param restype: $restype")))
                         }
 
-                        RouteUtilV1.runJsonRoute(
-                            requestMessageTry,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
+                        val numberOfProps: Int = InputValidation.toInt(numprops, () => throw BadRequestException(s"Invalid param numprops: $numprops")) match {
+                            case (number: Int) => if (number < 1) 1 else number // numberOfProps must not be smaller than 1
+                        }
+
+                        val limitOfResults = InputValidation.toInt(limit, () => throw BadRequestException(s"Invalid param limit: $limit"))
+
+                        makeResourceSearchRequestMessage(
+                            searchString = searchString,
+                            resourceTypeIri = resourceTypeIri,
+                            numberOfProps = numberOfProps,
+                            limitOfResults = limitOfResults,
+                            userProfile = userProfile
                         )
+                    }
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
                 }
             } ~ post {
                 // Create a new resource with he given type and possibly a file (GUI-case).
@@ -297,15 +300,47 @@ object ResourcesRouteV1 extends Authenticator {
                 // Create a new resource with the given type, properties, and binary data (file) (non GUI-case).
                 // The binary data are contained in the request and have to be temporarily stored by Knora.
                 // For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
-                entity(as[Multipart.FormData]) { formData => requestContext =>
+                entity(as[Multipart.FormData]) { formdata: Multipart.FormData => requestContext =>
 
                     println("/v1/resources - Multipart.FormData")
                     val requestMessageTry = Try {
 
                         val userProfile = getUserProfileV1(requestContext)
 
-                        val namedParts = formData.parts.runForeach(println)
+                        type Name = String
 
+                        @volatile var receivedFile: Option[File] = None
+
+                        /* get the json data */
+                        val jsonMapFuture = formdata.parts.mapAsync(1) { p: Multipart.FormData.BodyPart =>
+                            if (p.name == "json") {
+                                val read = p.entity.dataBytes.runFold(ByteString.empty)((whole, chunk) => whole ++ chunk)
+                                read.map(read =>
+                                    Map(p.name -> read.utf8String.parseJson)
+                                )
+                            } else {
+                                Future(Map.empty[Name, JsValue])
+                            }
+                        }.runFold(Map.empty[Name, JsValue])((set, value) => set ++ value)
+
+                        /* get the file data */
+                        val fileMapFuture = formdata.parts.mapAsync(1) { p: Multipart.FormData.BodyPart =>
+                            if (p.filename.isDefined) {
+                                //println(s"part named ${p.name} has file named ${p.filename}")
+                                val tmpFile = File.createTempFile(s"userfile_${p.name}_${p.filename.getOrElse("")}", "")
+                                val written = p.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
+                                written.map { written =>
+                                    println(s"written result: ${written.wasSuccessful}, ${p.filename.get}, ${tmpFile.getAbsolutePath}")
+                                    receivedFile = Some(tmpFile)
+                                    Map(p.name -> FileInfo(p.name, p.filename.get, p.entity.contentType))
+                                }
+                            } else {
+                                throw BadRequestException("part of HTTP multipart request has no name")
+                            }
+                        }.runFold(Map.empty[Name, FileInfo])((set, value) => set ++ value)
+
+                        val jsonMap = Await.result(jsonMapFuture, Timeout(5.seconds).duration)
+                        val fileMap = Await.result(fileMapFuture, Timeout(10.seconds).duration)
 
 
                         /*
@@ -326,12 +361,12 @@ object ResourcesRouteV1 extends Authenticator {
                                 (bodyPartName, bodyPart)
                         }.toMap
 
-
+                        */
 
                         // get the json params (access first member of the tuple) and turn them into a case class
                         val apiRequest: CreateResourceApiRequestV1 = try {
-                            namedParts.getOrElse("json", throw BadRequestException("Required param 'json' was not submitted"))
-                                .entity.toString.parseJson.convertTo[CreateResourceApiRequestV1]
+                            jsonMap.getOrElse("json", throw BadRequestException("Required param 'json' was not submitted"))
+                                .convertTo[CreateResourceApiRequestV1]
                         } catch {
                             case e: DeserializationException => throw BadRequestException("JSON params structure is invalid: " + e.toString)
                         }
@@ -339,17 +374,16 @@ object ResourcesRouteV1 extends Authenticator {
                         // check if the API request contains file information: this is illegal for this route
                         if (apiRequest.file.nonEmpty) throw BadRequestException("param 'file' is set for a post multipart request. This is not allowed.")
 
+                        /*
                         // get binary data from bodyPart 'file'
                         val bodyPartFile: Multipart.FormData.BodyPart = namedParts.getOrElse("file", throw BadRequestException("MultiPart Post request was sent but no files"))
+
 
                         // TODO: how to check if the user has sent multiple files?
                         val nonEmpty = bodyPartFile.entity
                             //TODO: .toOption.getOrElse(throw BadRequestException("no binary data submitted in multipart request"))
-
-
                         */
 
-                        val apiRequest = CreateResourceApiRequestV1("", "", Map("a" -> List(CreateResourceValueV1())), None, "")
 
                         // save file to temporary location
                         // this file will be deleted by Knora once it is not needed anymore
@@ -358,9 +392,11 @@ object ResourcesRouteV1 extends Authenticator {
                         val sourcePath = InputValidation.saveFileToTmpLocation(settings, "".getBytes)
 
                         //val originalFilename = bodyPartFile.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
-                        val originalFilename = "orginalname.tif"
                         //val originalMimeType = nonEmpty.contentType.toString
-                        val originalMimeType = MediaTypes.`image/tiff`.toString
+                        val (originalFilename, originalMimeType) = fileMap.headOption match {
+                            case Some((name, fileinfo)) => (name, fileinfo.contentType.toString)
+                            case None => throw BadRequestException("MultiPart Post request was sent but no files")
+                        }
 
                         val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
                             originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
@@ -374,10 +410,7 @@ object ResourcesRouteV1 extends Authenticator {
                             multipartConversionRequest = Some(sipiConvertPathRequest),
                             userProfile = userProfile
                         )
-
                     }
-
-                    complete("success")
 
                     RouteUtilV1.runJsonRoute(
                         requestMessageTry,
