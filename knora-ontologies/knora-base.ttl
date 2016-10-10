@@ -925,14 +925,15 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
              rdfs:subPropertyOf :hasValue, foaf:familyName .
 
 
-###  http://www.knora.org/ontology/knora-base#hasGNDIdentifier
+###  http://www.knora.org/ontology/knora-base#hasIAFIdentifier
 
-:hasGNDIdentifier rdf:type owl:ObjectProperty ;
+:hasIAFIdentifier rdf:type owl:ObjectProperty ;
 
                                rdfs:label "Gemeinsame Normdatei (GND)"@de ,
                                           "Integrated Authority File"@en ;
 
-                  			   rdfs:comment """Represents a IAF identifier."""@en ;
+                  			   rdfs:comment """Repräsentiert eine GND-Nummer."""@de,
+                  			                """Represents a IAF identifier."""@en ;
 
                                :objectClassConstraint :TextValue ;
 
@@ -941,6 +942,45 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                                :subjectClassConstraint :Person ;
 
                                rdfs:subPropertyOf :hasValue .
+
+
+###  http://www.knora.org/ontology/knora-base#hasBirthDate
+
+:hasBirthDate rdf:type owl:ObjectProperty ;
+
+                               rdfs:label "Geburtsdatum"@de ,
+                                          "date of birth"@en ;
+
+                  			   rdfs:comment """Repräsentiert ein Geburtsdatum."""@de,
+                  			                """Represents a date of birth."""@en ;
+
+                               :objectClassConstraint :DateValue ;
+
+                               <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Date> ;
+
+                               :subjectClassConstraint :Person ;
+
+                               rdfs:subPropertyOf :hasValue, foaf:birthday .
+
+
+###  http://www.knora.org/ontology/knora-base#hasDeathDate
+
+:hasDeathDate rdf:type owl:ObjectProperty ;
+
+                               rdfs:label "Sterbedatum"@de ,
+                                          "date of death"@en ;
+
+                  			   rdfs:comment """Repräsentiert ein Sterbedatum."""@de,
+                  			                """Represents a date of death."""@en ;
+
+                               :objectClassConstraint :DateValue ;
+
+                               <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Date> ;
+
+                               :subjectClassConstraint :Person ;
+
+                               rdfs:subPropertyOf :hasValue .
+
 
 
 ###  http://www.knora.org/ontology/knora-base#publicationHasAuthor
@@ -2865,16 +2905,24 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
         rdfs:subClassOf :Resource, foaf:Person,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasFamilyName ;
-                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasGivenName ;
-                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
-                          owl:onProperty :hasGNDIdentifier ;
+                          owl:onProperty :hasIAFIdentifier ;
                           owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                        ] ;
+                        ],
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :hasBirthDate ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ],
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :hasDeathDate ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ];
 
         rdfs:label "Person"@de ,
                    "Person"@en ,
