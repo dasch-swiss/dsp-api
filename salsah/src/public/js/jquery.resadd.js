@@ -255,7 +255,7 @@
 							description: "** label **",
 							vocabulary: "http://www.knora.org/ontology/knora-base",
 							valuetype_id: "http://www.knora.org/ontology/knora-base#TextValue",
-							occurence: "1"
+							occurrence: "1"
 						}
 						rtinfo.properties.unshift(labelprop);
 
@@ -1033,14 +1033,15 @@
 								}
 							}
 
-							/**
-							  Ignore knora-base:Resource properties for the moment
-                             */
-							// propvals["http://www.knora.org/ontology/knora-base#hasRepresentation"] = undefined;
-							// propvals["http://www.knora.org/ontology/knora-base#seqnum"] = undefined;
-							//propvals["http://www.knora.org/ontology/knora-base#hasStillImageFileValue"] = undefined;
+							// Ignore knora-base:hasStandoffLinkTo, because it is not user-modifiable.
 							propvals["http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"] = undefined;
 
+							// Remove properties that have empty values because the user removed them from the form.
+							for (prop in propvals) {
+								if (jQuery.isEmptyObject(propvals[prop])) {
+									delete propvals[prop];
+								}
+							}
 
 							// TODO: handle GUI  element problem
 							//propvals["http://www.knora.org/ontology/knora-base#hasComment"] = undefined;
