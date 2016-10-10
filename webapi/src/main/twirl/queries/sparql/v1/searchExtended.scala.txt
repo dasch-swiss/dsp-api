@@ -92,8 +92,8 @@ WHERE {
         *@
 
         @if(searchCriterion.valueType != "http://www.knora.org/ontology/knora-base#Resource") {
-            ?p rdfs:subPropertyOf* <@{searchCriterion.propertyIri}> .
-            ?resource ?p ?valueObject@index .
+            ?p@index rdfs:subPropertyOf* <@{searchCriterion.propertyIri}> .
+            ?resource ?p@index ?valueObject@index .
         }
 
         @*

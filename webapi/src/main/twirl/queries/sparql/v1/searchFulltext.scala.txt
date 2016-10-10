@@ -154,7 +154,8 @@ WHERE {
         case Some(restypeIri) => {
 
             # filter by restypeIri
-            ?resource a <@restypeIri> .
+            ?resClass rdfs:subClassOf* <@restypeIri> .
+            ?resource a ?resClass .
         }
 
         case None => {}
