@@ -963,6 +963,8 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
              rdfs:subPropertyOf :hasLinkTo, dcterms:creator .
 
 
+
+
 ###  http://www.knora.org/ontology/knora-base#publicationHasAuthorValue
 
 :publicationHasAuthorValue rdf:type owl:ObjectProperty ;
@@ -994,6 +996,54 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                                rdfs:subPropertyOf :hasValue, dcterms:title .
 
 
+###  http://www.knora.org/ontology/knora-base#publicationHasDate
+:publicationHasDate rdf:type owl:ObjectProperty ;
+
+             rdfs:label "Datum der Veröffentlichung "@de ,
+                        "Publication Date "@en,
+                        "date de publication"@fr ,
+                        "data di pubblicazione"@it ;
+
+
+			 rdfs:comment """Represents a Publication Date."""@en ;
+
+             :objectClassConstraint :DateValue ;
+
+             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Date> ;
+
+             :subjectClassConstraint :Publication ;
+
+             rdfs:subPropertyOf :hasValue, dcterms:issued .
+
+
+###  http://www.knora.org/ontology/knora-base#publicationHasPublisher
+:publicationHasPublisher rdf:type owl:ObjectProperty ;
+
+             rdfs:label "Verlag"@de ,
+                        "Publisher "@en,
+                        "éditeur "@fr ,
+                        "casa editrice"@it ;
+
+			 rdfs:comment """Represents the publisher of the publication."""@en ;
+
+             :objectClassConstraint :Publisher ;
+
+             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Searchbox> ;
+
+             :subjectClassConstraint :Publication ;
+
+             rdfs:subPropertyOf :hasLinkTo, dcterms:publisher, foaf:Organization .
+
+
+###  http://www.knora.org/ontology/knora-base#publicationHasPublisherValue
+
+:publicationHasPublisherValue rdf:type owl:ObjectProperty ;
+
+               :objectClassConstraint :LinkValue ;
+
+               :subjectClassConstraint :Publication ;
+
+               rdfs:subPropertyOf :hasLinkToValue .
 
 
 #################################################################
@@ -2831,7 +2881,20 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                    "Personne"@fr ,
                    "Persona"@it ;
 
-                   rdfs:comment "A resource representing a person"@en .
+        rdfs:comment "A resource representing a person"@en .
+
+###  http://www.knora.org/ontology/knora-base#Publisher
+
+:Publisher rdf:type owl:Class ;
+
+        rdfs:subClassOf :Resource, foaf:Organization, dcterms:Publisher;
+
+        rdfs:label "Verlag"@de ,
+                   "Publisher"@en ,
+                   "éditeur "@fr ,
+                   "casa editrice"@it ;
+
+        rdfs:comment "A resource representing a Publisher"@en .
 
 
 ### <http://purl.org/dc/terms/BibliographicResource>
@@ -2859,6 +2922,18 @@ dcterms:BibliographicResource rdf:type owl:Class ;
                           owl:minCardinality "1"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
+                          owl:onProperty :publicationHasPublisher ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ],
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :publicationHasPublisherValue ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ],
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :publicationHasDate ;
+                          owl:minCardinality "1"^^xsd:date
+                                                ],
+                        [ rdf:type owl:Restriction ;
                           owl:onProperty :publicationHasTitle ;
                           owl:cardinality "1"^^xsd:nonNegativeInteger
                         ];
@@ -2868,7 +2943,7 @@ dcterms:BibliographicResource rdf:type owl:Class ;
                    "Publication"@fr ,
                    "Pubblicazione"@it ;
 
-                   rdfs:comment "A resource representing a publication"@en .
+        rdfs:comment "A resource representing a publication"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#JournalArticle
