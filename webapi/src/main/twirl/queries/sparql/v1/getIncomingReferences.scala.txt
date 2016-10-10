@@ -45,9 +45,15 @@ WHERE {
 
     ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
 
-    MINUS {
-        ?linkProp rdfs:subPropertyOf+ knora-base:isPartOf .
+    @* Here FILTER NOT EXISTS is more efficient than MINUS on Fuseki, but it returns different results on GraphDB. *@
+    @if(triplestore == "fuseki") {
+        FILTER NOT EXISTS
+    } else {
+        MINUS
     }
+        {
+            ?linkProp rdfs:subPropertyOf+ knora-base:isPartOf .
+        }
 
     ?referringResource ?linkProp ?resource ;
         knora-base:isDeleted false .
@@ -55,9 +61,15 @@ WHERE {
     {
         ?referringResource ?prop ?obj .
 
-        MINUS {
-            ?prop rdfs:subPropertyOf+ knora-base:hasValue .
+        @* Here FILTER NOT EXISTS is more efficient than MINUS on Fuseki, but it returns different results on GraphDB. *@
+        @if(triplestore == "fuseki") {
+            FILTER NOT EXISTS
+        } else {
+            MINUS
         }
+            {
+                ?prop rdfs:subPropertyOf+ knora-base:hasValue .
+            }
     }
     UNION
     {
