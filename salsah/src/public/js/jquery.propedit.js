@@ -74,10 +74,6 @@
 			simple_view_action: function() {}
 		};
 
-
-		// console.log("PROPINFO");
-		// console.log(propinfo);
-
 		$.extend(options, optpar);
 		/**
 		* private metthod used to reset just one value of a given property
@@ -113,11 +109,11 @@
 			//
 			if (!propinfo[prop].values) return;
 
-
 			//
 			// here we test if we are wallowed to view the value. If not, we just return!
 			//
 			if (propinfo[prop].value_rights[value_index] >= VALUE_ACCESS_VIEW) {
+
 				SALSAH.showval(value_container, propinfo[prop], value_index, options);
 				
 				if (readonly !== undefined) return; // no add/edit buttons etc.
@@ -217,7 +213,7 @@
 		};
 
 		var make_add_button = function (prop_container, prop) {
-			if ((parseInt(propinfo[prop].valuetype_id) == VALTYPE_GEOMETRY) && (options.canvas === undefined)) {
+			if ((parseInt(propinfo[prop].valuetype_id) == VALTYPE_GEOMETRY) && (options.canvas === undefined) || prop == PROP_HAS_STANDOFF_LINK_TO) {
 				return; // no add button
 			}
 			var add_button = false;
@@ -276,6 +272,7 @@
 			*/
 			prop_container.empty();
 			if (readonly !== undefined) alert(prop);
+
 			if ((propinfo[prop].values !== undefined) && (propinfo[prop].values.length > 0)) {
 				for (var i = 0; i < propinfo[prop].values.length; i++) {
 					var tmp_value_container = $('<div>').addClass('propedit value_container').data('valid', propinfo[prop].value_ids[i]).appendTo(prop_container);
@@ -1270,7 +1267,6 @@
 						propinfo[active.prop].values[active.value_index] = data.label;
 
 						active.value_container.empty();
-						// TODO: this does not work yet!
 						reset_value(active.value_container, active.prop, active.value_index);
 					} else {
 						alert(status.errormsg);
@@ -1912,6 +1908,7 @@
 			active = undefined;
 		};
 
+		// console.log("propedit iterating over props:")
 		var prop_index = 0;
 		return this.each(function() {
 			var prop = $(this).data('propname');

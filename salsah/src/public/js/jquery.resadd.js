@@ -33,6 +33,7 @@
  */
 (function($) {
 
+	'use strict';
 
 	var add_icon = new Image();
 	add_icon.src = SITE_URL + '/app/icons/16x16/add.png';
@@ -92,8 +93,26 @@
 						SALSAH.ApiGet(
 							'resourcetypes', param,
 							function(data) {
+								var i;
+
 								if (data.status == ApiErrors.OK) {
 									var restypes_sel = $this.find('select[name=selrestype]').empty(); //.append($('<option>', {value: 0}).text('-'));
+
+									// Remove knora-base:Region from the list of resource types that can be created here, because a region
+									// can only be created as a dependency of an image representation.
+
+									var region_index = -1;
+
+									for (i in data.resourcetypes) {
+										if (data.resourcetypes[i].id == RESOURCE_TYPE_REGION) {
+											region_index = i;
+										}
+									}
+
+									if (region_index > -1) {
+									    data.resourcetypes.splice(region_index, 1);
+									}
+
 									for (i in data.resourcetypes) {
 										restypes_sel.append($('<option>', {
 											value: data.resourcetypes[i].id
@@ -563,7 +582,7 @@
 														}
 													},
 												});
-												if (localdata.settings.viewer.topCanvas !== undefined) {
+												if (!(localdata.settings.viewer == undefined || localdata.settings.viewer.topCanvas == undefined)) {
 													localdata.settings.viewer.topCanvas().regions('setDefaultLineColor', colbox.colorpicker('value')); // init
 												}
 											} else {
@@ -1103,6 +1122,7 @@
 						'class': 'resadd'
 					});
 					if (localdata.settings.rtinfo === undefined) { // we don't know which resource type we want to add – present the selectors...
+						var vocsel;
 						//
 						// get vocabularies
 						//
@@ -1119,7 +1139,7 @@
 						SALSAH.ApiGet('vocabularies', function(data) {
 							if (data.status == ApiErrors.OK) {
 								var tmpele;
-								for (i in data.vocabularies) {
+								for (var i in data.vocabularies) {
 									vocsel.append(tmpele = $('<option>', {
 										value: data.vocabularies[i].id
 									}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));

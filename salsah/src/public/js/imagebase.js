@@ -2777,6 +2777,10 @@ $(function() {
 					if (regdata.status == ApiErrors.OK) {
 						//metadataAreaDomCreate(regmeta_area[regdata.regnum], winid, undefined, rr, regdata);
 
+						
+						resource_label(regdata);
+						
+
 						metadataAreaDomCreate(regmeta_area[index], regdata, {winid: winid, regnum: index});
 						regmeta_area[index].find('.datafield.regnum_' + index).propedit(
 							regdata.resdata, regdata.props, regdata.resinfo.project_id, {
