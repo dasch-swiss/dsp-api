@@ -925,6 +925,28 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
              rdfs:subPropertyOf :hasValue, foaf:familyName .
 
 
+
+###  http://www.knora.org/ontology/knora-base#hasFamilyName
+
+:hasName rdf:type owl:ObjectProperty ;
+
+             rdfs:label "Name"@de ,
+                        "Name"@en ,
+                        "nom"@fr ,
+                        "nome"@it ;
+
+			 rdfs:comment """Represents a Name."""@en ;
+
+             :objectClassConstraint :TextValue ;
+
+             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#SimpleText> ;
+
+             :subjectClassConstraint :Institution ;
+
+             rdfs:subPropertyOf :hasValue, foaf:name .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#hasIAFIdentifier
 
 :hasIAFIdentifier rdf:type owl:ObjectProperty ;
@@ -1066,13 +1088,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 			 rdfs:comment """Represents the publisher of the publication."""@en ;
 
-             :objectClassConstraint :Publisher ;
+             :objectClassConstraint :Institution ;
 
              <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Searchbox> ;
 
              :subjectClassConstraint :Publication ;
 
-             rdfs:subPropertyOf :hasLinkTo, dcterms:publisher, foaf:Organization .
+             rdfs:subPropertyOf :hasLinkTo , dcterms:publisher.
 
 
 ###  http://www.knora.org/ontology/knora-base#publicationHasPublisherValue
@@ -2170,7 +2192,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 :Institution rdf:type owl:Class ;
 
-             rdfs:subClassOf foaf:Organization ,
+             rdfs:subClassOf :Resource, foaf:Organization ,
                              [ rdf:type owl:Restriction ;
                                owl:onProperty :website ;
                                owl:minCardinality "0"^^xsd:nonNegativeInteger
@@ -2188,13 +2210,18 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                                owl:minCardinality "0"^^xsd:nonNegativeInteger
                              ] ,
                              [ rdf:type owl:Restriction ;
-                               owl:onProperty foaf:name ;
+                               owl:onProperty :hasName ;
                                owl:minCardinality "1"^^xsd:nonNegativeInteger
                              ] ,
                              [ rdf:type owl:Restriction ;
                                owl:onProperty :description ;
                                owl:minCardinality "0"^^xsd:nonNegativeInteger
                              ] ;
+
+             rdfs:label "Institution"@de ,
+                        "Institution"@en ,
+                        "Institution"@fr ,
+                        "Istituzione"@it ;
 
              rdfs:comment "An institution that has data in Knora"@en .
 
@@ -2930,30 +2957,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                    "Persona"@it ;
 
         rdfs:comment "A resource representing a person"@en .
-
-###  http://www.knora.org/ontology/knora-base#Publisher
-
-:Publisher rdf:type owl:Class ;
-
-        rdfs:subClassOf :Resource, foaf:Organization, dcterms:Publisher;
-
-        rdfs:label "Verlag"@de ,
-                   "Publisher"@en ,
-                   "éditeur "@fr ,
-                   "casa editrice"@it ;
-
-        rdfs:comment "A resource representing a Publisher"@en .
-
-
-### <http://purl.org/dc/terms/BibliographicResource>
-
-dcterms:BibliographicResource rdf:type owl:Class ;
-
-               rdfs:label "Bibliographic Resource"@en ;
-
-               rdfs:comment "A resource representing a Bibliographic Resource"@en ;
-
-               rdfs:subClassOf :Resource .
 
 
 ###  http://www.knora.org/ontology/knora-base#Publication
