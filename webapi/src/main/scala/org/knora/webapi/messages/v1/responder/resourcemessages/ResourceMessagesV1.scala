@@ -629,6 +629,7 @@ object SalsahGuiConversions {
         OntologyConstants.SalsahGui.Colorpicker -> "colorpicker",
         OntologyConstants.SalsahGui.List -> "hlist",
         OntologyConstants.SalsahGui.Radio -> "radio",
+        OntologyConstants.SalsahGui.Checkbox -> "checkbox",
         OntologyConstants.SalsahGui.Richtext -> "richtext",
         OntologyConstants.SalsahGui.Interval -> "interval",
         OntologyConstants.SalsahGui.Geonames -> "geoname",

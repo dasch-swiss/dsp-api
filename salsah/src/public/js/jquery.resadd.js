@@ -444,6 +444,20 @@
 										prop_status[propname].attributes = attributes; // save attributes for later use
 										break;
 									}
+								case 'checkbox':
+									{
+										create_entry(propname, function(ele, attr) {
+											var checkbox = $('<input>', {
+											    type: "checkbox"
+											});
+
+											checkbox.attr(attr);
+
+											checkbox.insertBefore(ele.find('.entrySep'));
+										});
+										prop_status[propname].attributes = attributes; // save attributes for later use
+										break;
+									}
 								case 'spinbox':
 									{
 										create_entry(propname, function(ele, attr) {
@@ -767,6 +781,22 @@
 											}
 											break;
 										}
+									case 'checkbox': {
+										ele = form.find('[name="' + propname + '"]');
+											if (ele.length == 1) {
+												propvals[propname] = [{boolean_value: ele.is(":checked")}];
+											} else if (ele.length > 1) {
+												propvals[propname] = [];
+												ele.each(function() {
+													vv = {
+														boolean_value: $(this).is(":checked")
+													};
+													propvals[propname].push(vv);
+												});
+											}
+											break;
+
+									}	
 									case 'spinbox':
 										{
 											ele = form.find('[name="' + propname + '"]');

@@ -225,6 +225,11 @@
                                   "rows=numeric" .
 
 
+###  http://www.knora.org/ontology/salsah-gui#Checkbox
+
+:Checkbox rdf:type :Guielement ,
+                   owl:NamedIndividual .
+
 
 ###  http://www.knora.org/ontology/salsah-gui#Fileupload
 

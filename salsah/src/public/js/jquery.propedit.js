@@ -572,6 +572,67 @@
 				}
 			};
 
+			postdata[VALTYPE_BOOLEAN] = function(value_container, prop, value_index, value, is_new_value) {
+				var data = {};
+				if (is_new_value) {
+					data.boolean_value = value;
+					data.res_id = res_id;
+					data.prop = prop;
+					data.project_id = project_id;
+					SALSAH.ApiPost('values', data, function(data) {
+						if (data.status == ApiErrors.OK) {
+
+							init_value_structure();
+
+							propinfo[active.prop].values[active.value_index] = data.value;
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+							propinfo[active.prop].value_rights[active.value_index] = data.rights;
+							propinfo[active.prop].value_iconsrcs[active.value_index] = null;
+							propinfo[active.prop].value_firstprops[active.value_index] = null;
+							propinfo[active.prop].value_restype[active.value_index] = null;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				} else {
+					data.boolean_value = value;
+					data.project_id = project_id;
+					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
+						if (data.status == ApiErrors.OK) {
+							propinfo[active.prop].values[active.value_index] = data.value;
+							// set new value Iri
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+
+
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				}
+			};
+
 			postdata[VALTYPE_RICHTEXT] = function(value_container, prop, value_index, value, is_new_value) {
 				var data = {};
 				if (is_new_value) {
@@ -1646,10 +1707,23 @@
 					}).css({cursor: 'pointer'}));
 					break;
 				}
+				case 'checkbox': {
+					var checkbox = $('<input>', {
+					    type: "checkbox"
+					});
+
+					if (propinfo[prop].values[value_index]) {
+						checkbox.attr('checked', true);
+					}
+
+					checkbox.attr(attributes);
+					value_container.append(checkbox);
+					value_container.append($('<img>', {src: save_icon.src, title: strings._save, 'class': 'propedit'}).click(function(event) {
+						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, checkbox.is(":checked"), is_new_value);
+					}).css({cursor: 'pointer'}));
+					break;
+				}
 				case 'hlist': {
-
-					
-
 					var hlist_id;
 					var attrs = propinfo[prop].attributes.split(';');
 					$.each(attrs, function() {
