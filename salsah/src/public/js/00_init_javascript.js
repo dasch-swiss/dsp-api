@@ -62,6 +62,7 @@ var VALTYPE_SELECTION = "http://www.knora.org/ontology/knora-base#ListValue"; //
 var VALTYPE_ICONCLASS = 13;
 var VALTYPE_RICHTEXT = "http://www.knora.org/ontology/knora-base#TextValue";
 var VALTYPE_GEONAME = 15;
+var VALTYPE_URI = "http://www.knora.org/ontology/knora-base#UriValue";
 
 var RESOURCE_TYPE_REGION = "http://www.knora.org/ontology/knora-base#Region";
 

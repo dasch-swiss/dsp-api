@@ -38,6 +38,10 @@ SALSAH.showval = function(value_container, prop, value_index, options)
 			value_container.append(prop.values[value_index]);
 			break;
 		}
+		case VALTYPE_URI: {
+			value_container.append(prop.values[value_index]);
+			break;
+		}
 		case VALTYPE_DATE: {
 			value_container.dateobj('init', prop.values[value_index]);
 			break;

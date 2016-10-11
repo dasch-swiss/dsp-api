@@ -646,7 +646,7 @@
 							var ele;
 							var vv;
 
-							create_richtext_value_params = function() {
+							var create_richtext_value_params = function() {
 								return {
 									textattr: JSON.stringify({}),
 									resource_reference: []
@@ -676,6 +676,8 @@
 												if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_FLOAT) {
 													// it is a float
 													propvals[propname] = [{decimal_value: parseFloat(ele.val())}];
+												} else if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_URI) {
+													propvals[propname] = [{uri_value: ele.val()}];
 												} else {
 													// it is a text
 													var richtext_value = create_richtext_value_params();
@@ -695,6 +697,10 @@
 														// it is a float
 														vv = {
 															decimal_value: parseFloat($(this).val())
+														};
+													} else if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_URI) {
+														vv = {
+															uri_value: $(this).val()
 														};
 													} else {
 														// it is a text
@@ -1056,7 +1062,7 @@
 							propvals["http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"] = undefined;
 
 							// Remove properties that have empty values because the user removed them from the form.
-							for (prop in propvals) {
+							for (var prop in propvals) {
 								if (jQuery.isEmptyObject(propvals[prop])) {
 									delete propvals[prop];
 								}
