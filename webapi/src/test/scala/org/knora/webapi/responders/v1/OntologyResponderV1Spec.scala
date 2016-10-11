@@ -84,6 +84,9 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val page = ResourceTypeResponseV1(
         userdata = UserDataV1(
+            projects_info = Nil,
+            projects = None,
+            active_project = None,
             password = None,
             email = Some("test@test.ch"),
             lastname = Some("Test"),
@@ -94,118 +97,9 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             lang = "de"
         ),
         restype_info = ResTypeInfoV1(
-            properties = Set(
+            properties = Vector(
                 PropertyDefinitionV1(
-                    gui_name = Some("searchbox"),
-                    attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/incunabula#Sideband"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                    occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Verweis auf einen Randleistentyp"),
-                    label = Some("Randleistentyp links"),
-                    name = "http://www.knora.org/ontology/incunabula#hasLeftSideband",
-                    id = "http://www.knora.org/ontology/incunabula#hasLeftSideband"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("richtext"),
-                    attributes = None,
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                    occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Beschreibung"),
-                    label = Some("Beschreibung (Richtext)"),
-                    name = "http://www.knora.org/ontology/incunabula#description",
-                    id = "http://www.knora.org/ontology/incunabula#description"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("textarea"),
-                    attributes = Some("wrap=soft;width=95%;rows=7"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                    occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Unstrukturierte Bemerkungen zu einem Objekt"),
-                    label = Some("Kommentar"),
-                    name = "http://www.knora.org/ontology/incunabula#page_comment",
-                    id = "http://www.knora.org/ontology/incunabula#page_comment"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("searchbox"),
-                    attributes = Some("restypeid=http://www.knora.org/ontology/incunabula#book"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                    occurrence = "1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."),
-                    label = Some("ist ein Teil von"),
-                    name = "http://www.knora.org/ontology/incunabula#partOf",
-                    id = "http://www.knora.org/ontology/incunabula#partOf"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("spinbox"),
-                    attributes = Some("min=0;max=-1"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#IntValue",
-                    occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Diese Property bezeichnet die Position in einer geordneten Reihenfolge"),
-                    label = Some("Sequenznummer"),
-                    name = "http://www.knora.org/ontology/incunabula#seqnum",
-                    id = "http://www.knora.org/ontology/incunabula#seqnum"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("text"),
-                    attributes = Some("size=54;maxlength=128"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                    occurrence = "1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Der originale Dateiname"),
-                    label = Some("Urspr\u00FCnglicher Dateiname"),
-                    name = "http://www.knora.org/ontology/incunabula#origname",
-                    id = "http://www.knora.org/ontology/incunabula#origname"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("text"),
-                    attributes = Some("min=4;max=8"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                    occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Eine eindeutige numerische Bezeichnung einer Buchseite"),
-                    label = Some("Seitenbezeichnung"),
-                    name = "http://www.knora.org/ontology/incunabula#pagenum",
-                    id = "http://www.knora.org/ontology/incunabula#pagenum"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("searchbox"),
-                    attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/incunabula#Sideband"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                    occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Verweis auf einen Randleistentyp"),
-                    label = Some("Randleistentyp rechts"),
-                    name = "http://www.knora.org/ontology/incunabula#hasRightSideband",
-                    id = "http://www.knora.org/ontology/incunabula#hasRightSideband"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("textarea"),
-                    attributes = Some("cols=60;wrap=soft;rows=3"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                    occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Stellt einen Verweis dar."),
-                    label = Some("Verweis"),
-                    name = "http://www.knora.org/ontology/incunabula#citation",
-                    id = "http://www.knora.org/ontology/incunabula#citation"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("pulldown"),
-                    attributes = Some("hlist=<http://data.knora.org/lists/4b6d86ce03>"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                    occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Transkription"),
-                    label = Some("Transkription"),
-                    name = "http://www.knora.org/ontology/incunabula#transcription",
-                    id = "http://www.knora.org/ontology/incunabula#transcription"
-                ),
-                PropertyDefinitionV1(
+                    guiorder = None,
                     gui_name = Some("fileupload"),
                     attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#StillImageFileValue",
@@ -217,51 +111,31 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     id = "http://www.knora.org/ontology/knora-base#hasStillImageFileValue"
                 ),
                 PropertyDefinitionV1(
-                    gui_name = None,
-                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Resource"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                    occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("Represents a link in standoff markup from one resource to another."),
-                    label = Some("hat Standoff Link zu"),
-                    name = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
-                    id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
-                )
-            ),
-            iconsrc = Some("page.gif"),
-            description = Some("Eine Seite ist ein Teil eines Buchs"),
-            label = Some("Seite"),
-            name = "http://www.knora.org/ontology/incunabula#page"
-        )
-    )
-
-    private val book = ResourceTypeResponseV1(
-        userdata = OntologyResponderV1Spec.userProfileWithGerman.userData,
-        restype_info = ResTypeInfoV1(
-            properties = Set(
-                PropertyDefinitionV1(
-                    gui_name = Some("textarea"),
-                    attributes = Some("wrap=soft;width=95%;rows=7"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                    occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Unstrukturierte Bemerkungen zu einem Objekt"),
-                    label = Some("Kommentar"),
-                    name = "http://www.knora.org/ontology/incunabula#book_comment",
-                    id = "http://www.knora.org/ontology/incunabula#book_comment"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("textarea"),
-                    attributes = Some("cols=60;rows=4;wrap=soft"),
+                    guiorder = Some(1),
+                    gui_name = Some("text"),
+                    attributes = Some("min=4;max=8"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-1",
                     vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Der Ort wo sich das physische Original befindet"),
-                    label = Some("Standort"),
-                    name = "http://www.knora.org/ontology/incunabula#location",
-                    id = "http://www.knora.org/ontology/incunabula#location"
+                    description = Some("Eine eindeutige numerische Bezeichnung einer Buchseite"),
+                    label = Some("Seitenbezeichnung"),
+                    name = "http://www.knora.org/ontology/incunabula#pagenum",
+                    id = "http://www.knora.org/ontology/incunabula#pagenum"
                 ),
                 PropertyDefinitionV1(
+                    guiorder = Some(2),
+                    gui_name = Some("searchbox"),
+                    attributes = Some("restypeid=http://www.knora.org/ontology/incunabula#book"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
+                    occurrence = "1",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."),
+                    label = Some("ist ein Teil von"),
+                    name = "http://www.knora.org/ontology/incunabula#partOf",
+                    id = "http://www.knora.org/ontology/incunabula#partOf"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(2),
                     gui_name = Some("richtext"),
                     attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
@@ -273,72 +147,19 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     id = "http://www.knora.org/ontology/incunabula#description"
                 ),
                 PropertyDefinitionV1(
-                    gui_name = Some("textarea"),
-                    attributes = Some("cols=60;wrap=soft;rows=3"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                    occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Eine Anmerkung zum Objekt"),
-                    label = Some("Anmerkung"),
-                    name = "http://www.knora.org/ontology/incunabula#note",
-                    id = "http://www.knora.org/ontology/incunabula#note"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("textarea"),
-                    attributes = Some("cols=60;wrap=soft;rows=3"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
+                    guiorder = Some(3),
+                    gui_name = Some("spinbox"),
+                    attributes = Some("min=0;max=-1"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#IntValue",
                     occurrence = "0-1",
                     vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Generelle physische Beschreibung des Objektes wie Material, Gr\u00F6sse etc."),
-                    label = Some("Physische Beschreibung"),
-                    name = "http://www.knora.org/ontology/incunabula#physical_desc",
-                    id = "http://www.knora.org/ontology/incunabula#physical_desc"
+                    description = Some("Diese Property bezeichnet die Position in einer geordneten Reihenfolge"),
+                    label = Some("Sequenznummer"),
+                    name = "http://www.knora.org/ontology/incunabula#seqnum",
+                    id = "http://www.knora.org/ontology/incunabula#seqnum"
                 ),
                 PropertyDefinitionV1(
-                    gui_name = Some("text"),
-                    attributes = Some("maxlength=255;size=60"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                    occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Erzeuger/Autor"),
-                    label = Some("Creator"),
-                    name = "http://www.knora.org/ontology/incunabula#hasAuthor",
-                    id = "http://www.knora.org/ontology/incunabula#hasAuthor"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("text"),
-                    attributes = Some("size=60;maxlength=200"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                    occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Uniform Resource Identifier"),
-                    label = Some("URI"),
-                    name = "http://www.knora.org/ontology/incunabula#url",
-                    id = "http://www.knora.org/ontology/incunabula#url"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("date"),
-                    attributes = Some("size=16;maxlength=32"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#DateValue",
-                    occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Datum der Herausgabe"),
-                    label = Some("Datum der Herausgabe"),
-                    name = "http://www.knora.org/ontology/incunabula#pubdate",
-                    id = "http://www.knora.org/ontology/incunabula#pubdate"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = Some("text"),
-                    attributes = Some("size=80;maxlength=255"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                    occurrence = "1-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
-                    description = Some("Titel"),
-                    label = Some("Titel"),
-                    name = "http://www.knora.org/ontology/incunabula#title",
-                    id = "http://www.knora.org/ontology/incunabula#title"
-                ),
-                PropertyDefinitionV1(
+                    guiorder = Some(5),
                     gui_name = Some("textarea"),
                     attributes = Some("cols=60;wrap=soft;rows=3"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
@@ -350,6 +171,127 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     id = "http://www.knora.org/ontology/incunabula#citation"
                 ),
                 PropertyDefinitionV1(
+                    guiorder = Some(6),
+                    gui_name = Some("textarea"),
+                    attributes = Some("wrap=soft;width=95%;rows=7"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
+                    occurrence = "0-n",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Unstrukturierte Bemerkungen zu einem Objekt"),
+                    label = Some("Kommentar"),
+                    name = "http://www.knora.org/ontology/incunabula#page_comment",
+                    id = "http://www.knora.org/ontology/incunabula#page_comment"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(7),
+                    gui_name = Some("text"),
+                    attributes = Some("size=54;maxlength=128"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
+                    occurrence = "1",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Der originale Dateiname"),
+                    label = Some("Urspr\u00FCnglicher Dateiname"),
+                    name = "http://www.knora.org/ontology/incunabula#origname",
+                    id = "http://www.knora.org/ontology/incunabula#origname"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(10),
+                    gui_name = Some("searchbox"),
+                    attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/incunabula#Sideband"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
+                    occurrence = "0-1",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Verweis auf einen Randleistentyp"),
+                    label = Some("Randleistentyp links"),
+                    name = "http://www.knora.org/ontology/incunabula#hasLeftSideband",
+                    id = "http://www.knora.org/ontology/incunabula#hasLeftSideband"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(11),
+                    gui_name = Some("searchbox"),
+                    attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/incunabula#Sideband"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
+                    occurrence = "0-1",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Verweis auf einen Randleistentyp"),
+                    label = Some("Randleistentyp rechts"),
+                    name = "http://www.knora.org/ontology/incunabula#hasRightSideband",
+                    id = "http://www.knora.org/ontology/incunabula#hasRightSideband"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(12),
+                    gui_name = Some("pulldown"),
+                    attributes = Some("hlist=<http://data.knora.org/lists/4b6d86ce03>"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
+                    occurrence = "0-n",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Transkription"),
+                    label = Some("Transkription"),
+                    name = "http://www.knora.org/ontology/incunabula#transcription",
+                    id = "http://www.knora.org/ontology/incunabula#transcription"
+                )
+            ),
+            iconsrc = Some("page.gif"),
+            description = Some("Eine Seite ist ein Teil eines Buchs"),
+            label = Some("Seite"),
+            name = "http://www.knora.org/ontology/incunabula#page"
+        )
+    )
+
+    private val book = ResourceTypeResponseV1(
+        userdata = UserDataV1(
+            projects_info = Nil,
+            projects = None,
+            active_project = None,
+            password = None,
+            email = Some("test@test.ch"),
+            lastname = Some("Test"),
+            firstname = Some("User"),
+            username = Some("testuser"),
+            token = None,
+            user_id = Some("http://data.knora.org/users/b83acc5f05"),
+            lang = "de"
+        ),
+        restype_info = ResTypeInfoV1(
+            properties = Vector(
+                PropertyDefinitionV1(
+                    guiorder = Some(1),
+                    gui_name = Some("text"),
+                    attributes = Some("size=80;maxlength=255"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
+                    occurrence = "1-n",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Titel"),
+                    label = Some("Titel"),
+                    name = "http://www.knora.org/ontology/incunabula#title",
+                    id = "http://www.knora.org/ontology/incunabula#title"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(2),
+                    gui_name = Some("text"),
+                    attributes = Some("maxlength=255;size=60"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
+                    occurrence = "0-n",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Erzeuger/Autor"),
+                    label = Some("Creator"),
+                    name = "http://www.knora.org/ontology/incunabula#hasAuthor",
+                    id = "http://www.knora.org/ontology/incunabula#hasAuthor"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(2),
+                    gui_name = Some("richtext"),
+                    attributes = None,
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
+                    occurrence = "0-1",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Beschreibung"),
+                    label = Some("Beschreibung (Richtext)"),
+                    name = "http://www.knora.org/ontology/incunabula#description",
+                    id = "http://www.knora.org/ontology/incunabula#description"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(3),
                     gui_name = Some("text"),
                     attributes = Some("maxlength=255;size=60"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
@@ -361,6 +303,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     id = "http://www.knora.org/ontology/incunabula#publisher"
                 ),
                 PropertyDefinitionV1(
+                    guiorder = Some(4),
                     gui_name = Some("text"),
                     attributes = Some("size=60;maxlength=100"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
@@ -372,15 +315,88 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     id = "http://www.knora.org/ontology/incunabula#publoc"
                 ),
                 PropertyDefinitionV1(
-                    gui_name = None,
-                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Resource"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
+                    guiorder = Some(5),
+                    gui_name = Some("textarea"),
+                    attributes = Some("cols=60;wrap=soft;rows=3"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("Represents a link in standoff markup from one resource to another."),
-                    label = Some("hat Standoff Link zu"),
-                    name = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
-                    id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Stellt einen Verweis dar."),
+                    label = Some("Verweis"),
+                    name = "http://www.knora.org/ontology/incunabula#citation",
+                    id = "http://www.knora.org/ontology/incunabula#citation"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(5),
+                    gui_name = Some("date"),
+                    attributes = Some("size=16;maxlength=32"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#DateValue",
+                    occurrence = "0-1",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Datum der Herausgabe"),
+                    label = Some("Datum der Herausgabe"),
+                    name = "http://www.knora.org/ontology/incunabula#pubdate",
+                    id = "http://www.knora.org/ontology/incunabula#pubdate"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(6),
+                    gui_name = Some("textarea"),
+                    attributes = Some("cols=60;rows=4;wrap=soft"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
+                    occurrence = "0-1",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Der Ort wo sich das physische Original befindet"),
+                    label = Some("Standort"),
+                    name = "http://www.knora.org/ontology/incunabula#location",
+                    id = "http://www.knora.org/ontology/incunabula#location"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(7),
+                    gui_name = Some("text"),
+                    attributes = Some("size=60;maxlength=200"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
+                    occurrence = "0-1",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Uniform Resource Identifier"),
+                    label = Some("URI"),
+                    name = "http://www.knora.org/ontology/incunabula#url",
+                    id = "http://www.knora.org/ontology/incunabula#url"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(9),
+                    gui_name = Some("textarea"),
+                    attributes = Some("cols=60;wrap=soft;rows=3"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
+                    occurrence = "0-1",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Generelle physische Beschreibung des Objektes wie Material, Gr\u00F6sse etc."),
+                    label = Some("Physische Beschreibung"),
+                    name = "http://www.knora.org/ontology/incunabula#physical_desc",
+                    id = "http://www.knora.org/ontology/incunabula#physical_desc"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(10),
+                    gui_name = Some("textarea"),
+                    attributes = Some("cols=60;wrap=soft;rows=3"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
+                    occurrence = "0-n",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Eine Anmerkung zum Objekt"),
+                    label = Some("Anmerkung"),
+                    name = "http://www.knora.org/ontology/incunabula#note",
+                    id = "http://www.knora.org/ontology/incunabula#note"
+                ),
+                PropertyDefinitionV1(
+                    guiorder = Some(12),
+                    gui_name = Some("textarea"),
+                    attributes = Some("wrap=soft;width=95%;rows=7"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
+                    occurrence = "0-n",
+                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    description = Some("Unstrukturierte Bemerkungen zu einem Objekt"),
+                    label = Some("Kommentar"),
+                    name = "http://www.knora.org/ontology/incunabula#book_comment",
+                    id = "http://www.knora.org/ontology/incunabula#book_comment"
                 )
             ),
             iconsrc = Some("book.gif"),
@@ -391,10 +407,23 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val region = ResourceTypeResponseV1(
-        userdata = OntologyResponderV1Spec.userProfileWithGerman.userData,
+        userdata = UserDataV1(
+            projects_info = Nil,
+            projects = None,
+            active_project = None,
+            password = None,
+            email = Some("test@test.ch"),
+            lastname = Some("Test"),
+            firstname = Some("User"),
+            username = Some("testuser"),
+            token = None,
+            user_id = Some("http://data.knora.org/users/b83acc5f05"),
+            lang = "de"
+        ),
         restype_info = ResTypeInfoV1(
-            properties = Set(
+            properties = Vector(
                 PropertyDefinitionV1(
+                    guiorder = None,
                     gui_name = Some("richtext"),
                     attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
@@ -406,6 +435,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     id = "http://www.knora.org/ontology/knora-base#hasComment"
                 ),
                 PropertyDefinitionV1(
+                    guiorder = None,
                     gui_name = Some("colorpicker"),
                     attributes = Some("ncolors=8"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#ColorValue",
@@ -417,17 +447,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     id = "http://www.knora.org/ontology/knora-base#hasColor"
                 ),
                 PropertyDefinitionV1(
-                    gui_name = Some("geometry"),
-                    attributes = Some("width=95%;rows=4;wrap=soft"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#GeomValue",
-                    occurrence = "1-n",
-                    vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("Represents a geometrical shape."),
-                    label = Some("Geometrie"),
-                    name = "http://www.knora.org/ontology/knora-base#hasGeometry",
-                    id = "http://www.knora.org/ontology/knora-base#hasGeometry"
-                ),
-                PropertyDefinitionV1(
+                    guiorder = None,
                     gui_name = None,
                     attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Representation"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
@@ -439,19 +459,20 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     id = "http://www.knora.org/ontology/knora-base#isRegionOf"
                 ),
                 PropertyDefinitionV1(
-                    gui_name = None,
-                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Resource"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                    occurrence = "0-n",
+                    guiorder = None,
+                    gui_name = Some("geometry"),
+                    attributes = Some("width=95%;rows=4;wrap=soft"),
+                    valuetype_id = "http://www.knora.org/ontology/knora-base#GeomValue",
+                    occurrence = "1-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("Represents a link in standoff markup from one resource to another."),
-                    label = Some("hat Standoff Link zu"),
-                    name = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
-                    id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
+                    description = Some("Represents a geometrical shape."),
+                    label = Some("Geometrie"),
+                    name = "http://www.knora.org/ontology/knora-base#hasGeometry",
+                    id = "http://www.knora.org/ontology/knora-base#hasGeometry"
                 )
             ),
             iconsrc = Some("region.gif"),
-            description = Some("This Resource represents a geometric region of a resource. The geometry is represented currently as JSON string."),
+            description = Some("Represents a geometric region of a resource. The geometry is represented currently as JSON string."),
             label = Some("Region"),
             name = "http://www.knora.org/ontology/knora-base#Region"
         )
@@ -459,9 +480,12 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val linkObject = ResourceTypeResponseV1(
         userdata = UserDataV1(
+            projects_info = Nil,
+            projects = None,
+            active_project = None,
             password = None,
             email = Some("test@test.ch"),
-            lastname = Some("test"),
+            lastname = Some("Test"),
             firstname = Some("User"),
             username = Some("testuser"),
             token = None,
@@ -469,8 +493,9 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             lang = "de"
         ),
         restype_info = ResTypeInfoV1(
-            properties = Set(
+            properties = Vector(
                 PropertyDefinitionV1(
+                    guiorder = None,
                     gui_name = None,
                     attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Resource"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
@@ -482,6 +507,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     id = "http://www.knora.org/ontology/knora-base#hasLinkTo"
                 ),
                 PropertyDefinitionV1(
+                    guiorder = None,
                     gui_name = Some("richtext"),
                     attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
@@ -491,21 +517,10 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     label = Some("Kommentar"),
                     name = "http://www.knora.org/ontology/knora-base#hasComment",
                     id = "http://www.knora.org/ontology/knora-base#hasComment"
-                ),
-                PropertyDefinitionV1(
-                    gui_name = None,
-                    attributes = Some("restypeid=http://www.knora.org/ontology/knora-base#Resource"),
-                    valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                    occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("Represents a link in standoff markup from one resource to another."),
-                    label = Some("hat Standoff Link zu"),
-                    name = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
-                    id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
                 )
             ),
             iconsrc = Some("link.gif"),
-            description = Some("Verkn\u00FCpfung mehrerer Resourcen (Systemobject)"),
+            description = Some("Verkn\u00FCpfung mehrerer Resourcen"),
             label = Some("Verkn\u00FCpfungsobjekt"),
             name = "http://www.knora.org/ontology/knora-base#LinkObj"
         )
@@ -544,10 +559,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     PropertyTypeV1(
                         label = "Publication location",
                         id = "http://www.knora.org/ontology/incunabula#publoc"
-                    ),
-                    PropertyTypeV1(
-                        label = "has Standoff Link to",
-                        id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
                     ),
                     PropertyTypeV1(
                         label = "Creator",
@@ -608,10 +619,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                         id = "http://www.knora.org/ontology/incunabula#page_comment"
                     ),
                     PropertyTypeV1(
-                        label = "has Standoff Link to",
-                        id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
-                    ),
-                    PropertyTypeV1(
                         label = "Urspr\u00FCnglicher Dateiname",
                         id = "http://www.knora.org/ontology/incunabula#origname"
                     ),
@@ -653,10 +660,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             ResourceTypeV1(
                 properties = Vector(
                     PropertyTypeV1(
-                        label = "has Standoff Link to",
-                        id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
-                    ),
-                    PropertyTypeV1(
                         label = "Kommentar (Richtext)",
                         id = "http://www.knora.org/ontology/incunabula#sideband_comment"
                     ),
@@ -680,10 +683,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     PropertyTypeV1(
                         label = "Farbe",
                         id = "http://www.knora.org/ontology/incunabula#miscHasColor"
-                    ),
-                    PropertyTypeV1(
-                        label = "has Standoff Link to",
-                        id = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
                     ),
                     PropertyTypeV1(
                         label = "Geometrie",
@@ -1080,7 +1079,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ResourceTypeResponseV1 => checkResourceTypeResponseV1(received = msg, expected = page)
+                case msg: ResourceTypeResponseV1 =>
+                    checkResourceTypeResponseV1(received = msg, expected = page)
             }
         }
 
@@ -1092,7 +1092,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ResourceTypeResponseV1 => checkResourceTypeResponseV1(received = msg, expected = book)
+                case msg: ResourceTypeResponseV1 =>
+                    checkResourceTypeResponseV1(received = msg, expected = book)
             }
         }
 
@@ -1104,7 +1105,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ResourceTypeResponseV1 => checkResourceTypeResponseV1(received = msg, expected = region)
+                case msg: ResourceTypeResponseV1 =>
+                    checkResourceTypeResponseV1(received = msg, expected = region)
             }
         }
 
@@ -1116,7 +1118,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ResourceTypeResponseV1 => checkResourceTypeResponseV1(received = msg, expected = linkObject)
+                case msg: ResourceTypeResponseV1 =>
+                    checkResourceTypeResponseV1(received = msg, expected = linkObject)
             }
         }
 

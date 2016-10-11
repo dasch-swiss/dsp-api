@@ -431,7 +431,7 @@ case class PropertyDefinitionV1(id: IRI,
                                 valuetype_id: IRI,
                                 attributes: Option[String],
                                 gui_name: Option[String],
-                                guiorder: Option[Int]) extends PropertyDefinitionBaseV1
+                                guiorder: Option[Int] = None) extends PropertyDefinitionBaseV1
 
 /**
   * Describes a property type that a named graph contains.
