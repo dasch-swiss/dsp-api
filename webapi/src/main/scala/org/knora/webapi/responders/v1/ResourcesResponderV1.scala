@@ -2040,7 +2040,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                 PropertyGetValueV1(id = id,
                     value = value,
                     textval = value.toString,
-                    comment = comment) // TODO: person_id and lastmod are not handled yet. Probably these are never used by the GUI.
+                    comment = if (comment.isEmpty) None else Some(comment)) // if propertyV1.comments (a sequence) is empty, comment is an empty string
+            // TODO: person_id and lastmod are not handled yet. Probably these are never used by the GUI.
         }
 
         // TODO: try to unify this with MessageUtil's convertCreateValueResponseV1ToResourceCreateValueResponseV1

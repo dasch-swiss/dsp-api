@@ -387,17 +387,24 @@ export module basicMessageComponents {
      */
     export type knoraValue = integer|decimal|boolean|richtext|interval|date|color|KnoraIRI|URI|geometry|geoname|KnoraListNodeIRI;
 
-    export interface richtextValue {
+    interface valueBase {
+
+        /**
+         * Comment on the value.
+         */
+        comment?: string;
+    }
+
+    export interface richtextValue extends valueBase {
 
         /**
          * A richtext value
          */
         richtext_value: richtext;
-
     }
 
 
-    export interface linkValue {
+    export interface linkValue extends valueBase {
 
         /**
          * A link to another Knora resource. Value must be a Knora IRI.
@@ -407,7 +414,7 @@ export module basicMessageComponents {
     }
 
 
-    export interface integerValue {
+    export interface integerValue extends valueBase {
 
         /**
          * An integer value
@@ -417,7 +424,7 @@ export module basicMessageComponents {
     }
 
 
-    export interface decimalValue {
+    export interface decimalValue extends valueBase {
 
         /**
          * A decimal value (floating point)
@@ -426,7 +433,7 @@ export module basicMessageComponents {
 
     }
 
-    export interface booleanValue {
+    export interface booleanValue extends valueBase {
 
         /**
          * A boolean value
@@ -435,7 +442,7 @@ export module basicMessageComponents {
 
     }
 
-    export interface uriValue {
+    export interface uriValue extends valueBase {
 
         /**
          * A URI value
@@ -444,7 +451,7 @@ export module basicMessageComponents {
 
     }
 
-    export interface dateValue {
+    export interface dateValue extends valueBase {
 
         /**
          * A date value.
@@ -452,7 +459,7 @@ export module basicMessageComponents {
         date_value: dateString;
     }
 
-    export interface colorValue {
+    export interface colorValue extends valueBase {
 
         /**
          * A color value
@@ -460,7 +467,7 @@ export module basicMessageComponents {
         color_value: color;
     }
 
-    export interface geometryValue {
+    export interface geometryValue extends valueBase {
 
         /**
          * A geometry value representing a region on a 2D surface.
@@ -469,7 +476,7 @@ export module basicMessageComponents {
     }
 
 
-    export interface hierarchicalListValue {
+    export interface hierarchicalListValue extends valueBase {
 
         /**
          * A list node IRI
@@ -478,7 +485,7 @@ export module basicMessageComponents {
 
     }
 
-    export interface intervalValue {
+    export interface intervalValue extends valueBase {
 
         /**
          * An interval value consisting of two time values
@@ -488,7 +495,7 @@ export module basicMessageComponents {
     }
 
 
-    export interface geonameValue {
+    export interface geonameValue extends valueBase {
 
         /**
          * A geoname value
