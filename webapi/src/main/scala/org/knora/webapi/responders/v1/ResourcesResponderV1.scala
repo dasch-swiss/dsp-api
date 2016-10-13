@@ -2005,7 +2005,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                             valueObjectIri = linkValueIri,
                             valueV1 = valueV1,
                             valuePermission = linkPermission,
-                            order = linkValueOrder
+                            order = linkValueOrder,
+                            comment = linkValueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasComment).map(_.literals.head) // get comment from reification statement 
                         )
                 }.toVector
 
