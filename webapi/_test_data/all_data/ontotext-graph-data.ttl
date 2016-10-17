@@ -4,60 +4,81 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix anything: <http://www.knora.org/ontology/anything#> .
 
-    <p:1> rdfs:subPropertyOf <p:base>.
-    <p:2> rdfs:subPropertyOf <p:base>.
-    <p:3> rdfs:subPropertyOf <p:base>.
-    <p:4> rdfs:subPropertyOf <p:base>.
-    <p:exclude> rdfs:subPropertyOf <p:base>.
-    
- 
-    <i:1> <p:1> <i:2>.   
-    <i:2> <p:2> <i:3>.   
-    <i:3> <p:3> <i:4>.   
-    <i:4> <p:4> <i:5>.   
-    <i:5> <p:exclude> <i-n:5>. <i-n:5> <p:2> <i:21> .   
-    <i:5> <p:1> <i:6>.   
-    <i:5> <p:1> <i:6.1>.
-#    <i:5> <p:1> <i:10>.
-    <i:6.1> <p:2> <i:7.1>.
-    <i:6.1> <p:exclude> <i-n:7.1>.
-    <i:6> <p:2> <i:7>.
-    <i:6> <p:exclude> <i:7>.
-    <i:7> <p:3> <i:8>.
-    <i:8> <p:4> <i:9>.
-    <i:9> <p:1> <i:10>.
-    <i:10> <p:exclude> <i-n:10>. <i-n:10> <p:2> <i:22> .   
-    <i:10> <p:2> <i:11>.   
-    <i:11> <p:3> <i:12>.   
-    <i:12> <p:4> <i:13>.
-    <i:13> <p:1> <i:14>.
-    <i:14> <p:2> <i:15>.   
-    <i:14> <p:deleted> true .
-    <i:15> <p:3> <i:16>.
-    <i:16> <p:4> <i:17>.
+<p:1> rdfs:subPropertyOf <p:base>.
+<p:2> rdfs:subPropertyOf <p:base>.
+<p:3> rdfs:subPropertyOf <p:base>.
+<p:4> rdfs:subPropertyOf <p:base>.
+<p:exclude> rdfs:subPropertyOf <p:base>.
 
-    <i:1> rdfs:label "label i:1".
-    <i:2> rdfs:label "label i:2".
-    <i:3> rdfs:label "label i:3".
-    <i:4> rdfs:label "label i:4".
-    <i:5> rdfs:label "label i:5".
-    <i:6> rdfs:label "label i:6".
-    <i:6.1> rdfs:label "label i:6.1".
-    <i:7> rdfs:label "label i:7".
-    <i:7.1> rdfs:label "label i:7.1".
-    <i:8> rdfs:label "label i:8".
-    <i:9> rdfs:label "label i:9".
-    <i:10> rdfs:label "label i:10".
-    <i:11> rdfs:label "label i:11".
-    <i:12> rdfs:label "label i:12".
-    <i:13> rdfs:label "label i:13".
-    <i:14> rdfs:label "label i:14".
-    <i:15> rdfs:label "label i:15".
-    <i:16> rdfs:label "label i:16".
-    <i:17> rdfs:label "label i:17".
+<i:1> <p:1> <i:2>. 
+<i:2> <p:2> <i:3>. 
+<i:3> <p:3> <i:4>. 
+<i:4> <p:4> <i:5>. 
+<i:5> <p:exclude> <i-n:5>. <i-n:5> <p:2> <i:21> . 
+<i:5> <p:1> <i:6>. 
+<i:5> <p:1> <i:6.1>.
+<i:5> <p:1> <i:10>.
+<i:6.1> <p:2> <i:7.1>. 
+<i:6.1> <p:exclude> <i-n:7.1>. 
+<i:6> <p:exclude> <i:7>. 
+<i:7> <p:3> <i:8>. 
+<i:8> <p:4> <i:9>. 
+<i:9> <p:1> <i:10>. 
+<i:10> <p:exclude> <i-n:10>. <i-n:10> <p:2> <i:22> . 
+<i:10> <p:2> <i:11>. 
+<i:11> <p:3> <i:12>. 
+<i:12> <p:4> <i:13>. 
+<i:13> <p:1> <i:14>. 
+<i:14> <p:2> <i:15>. 
+<i:15> <p:3> <i:16>. 
+<i:16> <p:4> <i:17>. 
 
-    <i-n:5> rdfs:label "excluded label i-n:5".
-    <i-n:10> rdfs:label "excluded label i-n:10".
-    <i-n:7.1> rdfs:label "excluded label i-n:7.1".
-    <i:21> rdfs:label "label i:21" .
-    <i:22> rdfs:label "label i:22" .
+<i:1> rdfs:label "label i:1".
+<i:1> <p:deleted> false .
+<i:2> rdfs:label "label i:2".
+<i:2> <p:deleted> false .
+<i:3> rdfs:label "label i:3".
+<i:3> <p:deleted> false .
+<i:4> rdfs:label "label i:4".
+<i:4> <p:deleted> false .
+<i:5> rdfs:label "label i:5".
+<i:5> <p:deleted> false .
+<i:6> rdfs:label "label i:6".
+<i:6> <p:deleted> false .
+<i:6.1> rdfs:label "label i:6.1".
+<i:6.1> <p:deleted> false .
+<i:7> rdfs:label "label i:7".
+<i:7> <p:deleted> false .
+<i:7.1> rdfs:label "label i:7.1".
+<i:7.1> <p:deleted> false .
+<i:8> rdfs:label "label i:8".
+<i:8> <p:deleted> false .
+<i:9> rdfs:label "label i:9".
+<i:9> <p:deleted> false .
+<i:10> rdfs:label "label i:10".
+<i:10> <p:deleted> false .
+<i:11> rdfs:label "label i:11".
+<i:11> <p:deleted> false .
+<i:12> rdfs:label "label i:12".
+<i:12> <p:deleted> false .
+<i:13> rdfs:label "label i:13".
+<i:13> <p:deleted> false .
+<i:14> rdfs:label "label i:14".
+<i:14> <p:deleted> true .
+<i:15> rdfs:label "label i:15".
+<i:15> <p:deleted> false .
+<i:16> rdfs:label "label i:16".
+<i:16> <p:deleted> false .
+<i:17> rdfs:label "label i:17".
+<i:17> <p:deleted> false .
+
+<i-n:5> rdfs:label "excluded label i-n:5".
+<i-n:5> <p:deleted> false .
+<i-n:10> rdfs:label "excluded label i-n:10".
+<i-n:10> <p:deleted> false .
+<i-n:7.1> rdfs:label "excluded label i-n:7.1".
+<i-n:7.1> <p:deleted> false .
+<i:21> rdfs:label "label i:21" .
+<i:21> <p:deleted> false .
+<i:22> rdfs:label "label i:22" .
+<i:22> <p:deleted> false .

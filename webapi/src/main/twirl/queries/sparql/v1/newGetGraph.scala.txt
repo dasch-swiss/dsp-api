@@ -1,0 +1,976 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Given the IRI of an initial resource, gets the graph of links to and from that resource, up to a specified
+ * depth, not including deleted links, links to or from deleted resources, or links that are subproperties of
+ * knora-base:isPartOf. The query returns results using CONSTRUCT, describing each node and each edge in the graph.
+ * Each subject is either a resource or a LinkValue.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param initialIri the IRI of the initial resource.
+ * @param depth the maximum depth of the search.
+ *@
+@(triplestore: String,
+  initialIri: IRI,
+  depth: Int)
+
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+CONSTRUCT
+{
+    ?node a ?nodeClass ;
+        rdfs:label ?nodeLabel ;
+        knora-base:attachedToUser ?nodeOwner ;
+        knora-base:attachedToProject ?nodeProject ;
+        knora-base:hasPermissions ?nodePermissions .
+
+    ?linkValue a knora-base:LinkValue ;
+        rdf:subject ?linkValueSubj ;
+        rdf:predicate ?linkValuePred ;
+        rdf:object ?linkValueObj ;
+        knora-base:attachedToUser ?linkValueOwner ;
+        knora-base:attachedToProject ?linkValueProject ;
+        knora-base:hasPermissions ?linkValuePermissions .
+}
+WHERE
+{
+    {
+        SELECT *  WHERE
+        {
+            {
+                BIND(IRI("@initialIri") AS ?initial) .
+                ?initial knora-base:isDeleted false .
+
+                {
+                    ?p1 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                    MINUS
+                    {
+                        ?p1 rdfs:subPropertyOf* knora-base:isPartOf .
+                    }
+
+                    ?initial ?p1 ?outbound1 .
+                    ?outbound1 knora-base:isDeleted false .
+
+                    ?outboundLinkValue1 a knora-base:LinkValue ;
+                        rdf:subject ?initial ;
+                        rdf:predicate ?p1 ;
+                        rdf:object ?outbound1 ;
+                        knora-base:isDeleted false .
+
+                    OPTIONAL
+                    {
+                        ?p2 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                        MINUS
+                        {
+                            ?p2 rdfs:subPropertyOf* knora-base:isPartOf .
+                        }
+
+                        ?outbound1 ?p2 ?outbound2 .
+                        ?outbound2 knora-base:isDeleted false .
+
+                        ?outboundLinkValue2 a knora-base:LinkValue ;
+                            rdf:subject ?outbound1 ;
+                            rdf:predicate ?p2 ;
+                            rdf:object ?outbound2 ;
+                            knora-base:isDeleted false .
+
+                        OPTIONAL
+                        {
+                            ?p3 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                            MINUS
+                            {
+                                ?p3 rdfs:subPropertyOf* knora-base:isPartOf .
+                            }
+
+                            ?outbound2 ?p3 ?outbound3 .
+                            ?outbound3 knora-base:isDeleted false .
+
+                            ?outboundLinkValue3 a knora-base:LinkValue ;
+                                rdf:subject ?outbound2 ;
+                                rdf:predicate ?p3 ;
+                                rdf:object ?outbound3 ;
+                                knora-base:isDeleted false .
+
+                            OPTIONAL
+                            {
+                                ?p4 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                MINUS
+                                {
+                                    ?p4 rdfs:subPropertyOf* knora-base:isPartOf .
+                                }
+
+                                ?outbound3 ?p4 ?outbound4 .
+                                ?outbound4 knora-base:isDeleted false .
+
+                                ?outboundLinkValue4 a knora-base:LinkValue ;
+                                    rdf:subject ?outbound3 ;
+                                    rdf:predicate ?p4 ;
+                                    rdf:object ?outbound4 ;
+                                    knora-base:isDeleted false .
+
+                                OPTIONAL
+                                {
+                                    ?p5 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                    MINUS
+                                    {
+                                        ?p5 rdfs:subPropertyOf* knora-base:isPartOf .
+                                    }
+
+                                    ?outbound4 ?p5 ?outbound5 .
+                                    ?outbound5 knora-base:isDeleted false .
+
+                                    ?outboundLinkValue5 a knora-base:LinkValue ;
+                                        rdf:subject ?outbound4 ;
+                                        rdf:predicate ?p5 ;
+                                        rdf:object ?outbound5 ;
+                                        knora-base:isDeleted false .
+
+                                    OPTIONAL
+                                    {
+                                        ?p6 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                        MINUS
+                                        {
+                                            ?p6 rdfs:subPropertyOf* knora-base:isPartOf .
+                                        }
+
+                                        ?outbound5 ?p6 ?outbound6 .
+                                        ?outbound6 knora-base:isDeleted false .
+
+                                        ?outboundLinkValue6 a knora-base:LinkValue ;
+                                            rdf:subject ?outbound5 ;
+                                            rdf:predicate ?p6 ;
+                                            rdf:object ?outbound6 ;
+                                            knora-base:isDeleted false .
+
+                                        OPTIONAL
+                                        {
+                                            ?p7 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                            MINUS
+                                            {
+                                                ?p7 rdfs:subPropertyOf* knora-base:isPartOf .
+                                            }
+
+                                            ?outbound6 ?p7 ?outbound7 .
+                                            ?outbound7 knora-base:isDeleted false .
+
+                                            ?outboundLinkValue7 a knora-base:LinkValue ;
+                                                rdf:subject ?outbound6 ;
+                                                rdf:predicate ?p7 ;
+                                                rdf:object ?outbound7 ;
+                                                knora-base:isDeleted false .
+
+                                            OPTIONAL
+                                            {
+                                                ?p8 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                                MINUS
+                                                {
+                                                    ?p8 rdfs:subPropertyOf* knora-base:isPartOf .
+                                                }
+
+                                                ?outbound7 ?p8 ?outbound8 .
+                                                ?outbound8 knora-base:isDeleted false .
+
+                                                ?outboundLinkValue8 a knora-base:LinkValue ;
+                                                    rdf:subject ?outbound7 ;
+                                                    rdf:predicate ?p8 ;
+                                                    rdf:object ?outbound8 ;
+                                                    knora-base:isDeleted false .
+
+                                                OPTIONAL
+                                                {
+                                                    ?p9 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                                    MINUS
+                                                    {
+                                                        ?p9 rdfs:subPropertyOf* knora-base:isPartOf .
+                                                    }
+
+                                                    ?outbound8 ?p9 ?outbound9 .
+                                                    ?outbound9 knora-base:isDeleted false .
+
+                                                    ?outboundLinkValue9 a knora-base:LinkValue ;
+                                                        rdf:subject ?outbound8 ;
+                                                        rdf:predicate ?p9 ;
+                                                        rdf:object ?outbound9 ;
+                                                        knora-base:isDeleted false .
+
+                                                    OPTIONAL
+                                                    {
+                                                        ?p10 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                                        MINUS
+                                                        {
+                                                            ?p10 rdfs:subPropertyOf* knora-base:isPartOf .
+                                                        }
+
+                                                        ?outbound9 ?p10 ?outbound10 .
+                                                        ?outbound10 knora-base:isDeleted false .
+
+                                                        ?outboundLinkValue10 a knora-base:LinkValue ;
+                                                            rdf:subject ?outbound9 ;
+                                                            rdf:predicate ?p10 ;
+                                                            rdf:object ?outbound10 ;
+                                                            knora-base:isDeleted false .
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                UNION
+                {
+                    ?q1 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                    MINUS
+                    {
+                        ?q1 rdfs:subPropertyOf* knora-base:isPartOf .
+                    }
+
+                    ?inbound1 ?q1 ?initial .
+                    ?inbound1 knora-base:isDeleted false .
+
+                    ?inboundLinkValue1 a knora-base:LinkValue ;
+                        rdf:subject ?inbound1 ;
+                        rdf:predicate ?q1 ;
+                        rdf:object ?initial ;
+                        knora-base:isDeleted false .
+
+                    OPTIONAL
+                    {
+                        ?q2 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                        MINUS
+                        {
+                            ?q2 rdfs:subPropertyOf* knora-base:isPartOf .
+                        }
+
+                        ?inbound2 ?q2 ?inbound1 .
+                        ?inbound2 knora-base:isDeleted false .
+
+                        ?inboundLinkValue2 a knora-base:LinkValue ;
+                            rdf:subject ?inbound2 ;
+                            rdf:predicate ?q2 ;
+                            rdf:object ?inbound1 ;
+                            knora-base:isDeleted false .
+
+                        OPTIONAL
+                        {
+                            ?q3 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                            MINUS
+                            {
+                                ?q3 rdfs:subPropertyOf* knora-base:isPartOf .
+                            }
+
+                            ?inbound3 ?q3 ?inbound2 .
+                            ?inbound3 knora-base:isDeleted false .
+
+                            ?inboundLinkValue3 a knora-base:LinkValue ;
+                                rdf:subject ?inbound3 ;
+                                rdf:predicate ?q3 ;
+                                rdf:object ?inbound2 ;
+                                knora-base:isDeleted false .
+
+                            OPTIONAL
+                            {
+                                ?q4 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                MINUS
+                                {
+                                    ?q4 rdfs:subPropertyOf* knora-base:isPartOf .
+                                }
+
+                                ?inbound4 ?q4 ?inbound3 .
+                                ?inbound4 knora-base:isDeleted false .
+
+                                ?inboundLinkValue4 a knora-base:LinkValue ;
+                                    rdf:subject ?inbound4 ;
+                                    rdf:predicate ?q4 ;
+                                    rdf:object ?inbound3 ;
+                                    knora-base:isDeleted false .
+
+                                OPTIONAL
+                                {
+                                    ?q5 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                    MINUS
+                                    {
+                                        ?q5 rdfs:subPropertyOf* knora-base:isPartOf .
+                                    }
+
+                                    ?inbound5 ?q5 ?inbound4 .
+                                    ?inbound5 knora-base:isDeleted false .
+
+                                    ?inboundLinkValue5 a knora-base:LinkValue ;
+                                        rdf:subject ?inbound5 ;
+                                        rdf:predicate ?q5 ;
+                                        rdf:object ?inbound4 ;
+                                        knora-base:isDeleted false .
+
+                                    OPTIONAL
+                                    {
+                                        ?q6 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                        MINUS
+                                        {
+                                            ?q6 rdfs:subPropertyOf* knora-base:isPartOf .
+                                        }
+
+                                        ?inbound6 ?q6 ?inbound5 .
+                                        ?inbound6 knora-base:isDeleted false .
+
+                                        ?inboundLinkValue6 a knora-base:LinkValue ;
+                                            rdf:subject ?inbound6 ;
+                                            rdf:predicate ?q6 ;
+                                            rdf:object ?inbound5 ;
+                                            knora-base:isDeleted false .
+
+                                        OPTIONAL
+                                        {
+                                            ?q7 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                            MINUS
+                                            {
+                                                ?q7 rdfs:subPropertyOf* knora-base:isPartOf .
+                                            }
+
+                                            ?inbound7 ?q7 ?inbound6 .
+                                            ?inbound7 knora-base:isDeleted false .
+
+                                            ?inboundLinkValue7 a knora-base:LinkValue ;
+                                                rdf:subject ?inbound7 ;
+                                                rdf:predicate ?q7 ;
+                                                rdf:object ?inbound6 ;
+                                                knora-base:isDeleted false .
+
+                                            OPTIONAL
+                                            {
+                                                ?q8 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                                MINUS
+                                                {
+                                                    ?q8 rdfs:subPropertyOf* knora-base:isPartOf .
+                                                }
+
+                                                ?inbound8 ?q8 ?inbound7 .
+                                                ?inbound8 knora-base:isDeleted false .
+
+                                                ?inboundLinkValue8 a knora-base:LinkValue ;
+                                                    rdf:subject ?inbound8 ;
+                                                    rdf:predicate ?q8 ;
+                                                    rdf:object ?inbound7 ;
+                                                    knora-base:isDeleted false .
+
+                                                OPTIONAL
+                                                {
+                                                    ?q9 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                                    MINUS
+                                                    {
+                                                        ?q9 rdfs:subPropertyOf* knora-base:isPartOf .
+                                                    }
+
+                                                    ?inbound9 ?q9 ?inbound8 .
+                                                    ?inbound9 knora-base:isDeleted false .
+
+                                                    ?inboundLinkValue9 a knora-base:LinkValue ;
+                                                        rdf:subject ?inbound9 ;
+                                                        rdf:predicate ?q9 ;
+                                                        rdf:object ?inbound8 ;
+                                                        knora-base:isDeleted false .
+
+                                                    OPTIONAL
+                                                    {
+                                                        ?q10 rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                                        MINUS
+                                                        {
+                                                            ?q10 rdfs:subPropertyOf* knora-base:isPartOf .
+                                                        }
+
+                                                        ?inbound10 ?q10 ?inbound9 .
+                                                        ?inbound10 knora-base:isDeleted false .
+
+                                                        ?inboundLinkValue10 a knora-base:LinkValue ;
+                                                            rdf:subject ?inbound10 ;
+                                                            rdf:predicate ?q10 ;
+                                                            rdf:object ?inbound9 ;
+                                                            knora-base:isDeleted false .
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    {
+        FILTER BOUND(?initial)
+        BIND(?initial AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?outbound1)
+        BIND(?outbound1 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?outbound2)
+        BIND(?outbound2 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?outbound3)
+        BIND(?outbound3 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?outbound4)
+        BIND(?outbound4 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?outbound5)
+        BIND(?outbound5 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?outbound6)
+        BIND(?outbound6 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?outbound7)
+        BIND(?outbound7 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?outbound8)
+        BIND(?outbound8 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?outbound9)
+        BIND(?outbound9 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?outbound10)
+        BIND(?outbound10 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?inbound1)
+        BIND(?inbound1 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?inbound2)
+        BIND(?inbound2 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?inbound3)
+        BIND(?inbound3 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?inbound4)
+        BIND(?inbound4 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?inbound5)
+        BIND(?inbound5 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?inbound6)
+        BIND(?inbound6 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?inbound7)
+        BIND(?inbound7 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?inbound8)
+        BIND(?inbound8 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?inbound9)
+        BIND(?inbound9 AS ?node)
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?inbound10)
+        BIND(?inbound10 AS ?node)
+
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
+    }
+    UNION
+    {
+        FILTER BOUND(?outboundLinkValue1)
+        BIND(?outboundLinkValue1 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?outboundLinkValue2)
+        BIND(?outboundLinkValue2 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?outboundLinkValue3)
+        BIND(?outboundLinkValue3 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?outboundLinkValue4)
+        BIND(?outboundLinkValue4 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?outboundLinkValue5)
+        BIND(?outboundLinkValue5 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?outboundLinkValue6)
+        BIND(?outboundLinkValue6 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?outboundLinkValue7)
+        BIND(?outboundLinkValue7 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?outboundLinkValue8)
+        BIND(?outboundLinkValue8 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?outboundLinkValue9)
+        BIND(?outboundLinkValue9 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?outboundLinkValue10)
+        BIND(?outboundLinkValue10 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?inboundLinkValue1)
+        BIND(?inboundLinkValue1 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?inboundLinkValue2)
+        BIND(?inboundLinkValue2 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?inboundLinkValue3)
+        BIND(?inboundLinkValue3 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?inboundLinkValue4)
+        BIND(?inboundLinkValue4 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?inboundLinkValue5)
+        BIND(?inboundLinkValue5 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?inboundLinkValue6)
+        BIND(?inboundLinkValue6 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?inboundLinkValue7)
+        BIND(?inboundLinkValue7 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?inboundLinkValue8)
+        BIND(?inboundLinkValue8 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?inboundLinkValue9)
+        BIND(?inboundLinkValue9 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+    UNION
+    {
+        FILTER BOUND(?inboundLinkValue10)
+        BIND(?inboundLinkValue10 AS ?linkValue)
+
+        ?linkValue rdf:subject ?linkValueSubj ;
+            rdf:predicate ?linkValuePred ;
+            rdf:object ?linkValueObj ;
+            knora-base:attachedToUser ?linkValueOwner ;
+            knora-base:hasPermissions ?linkValuePermissions .
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+}
