@@ -20,12 +20,18 @@
 
 package org.knora.webapi.routing.v1
 
+import java.io.File
 import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.directives.FileInfo
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.FileIO
+import akka.util.Timeout
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
@@ -35,6 +41,8 @@ import org.knora.webapi.util.InputValidation.RichtextComponents
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 import scala.util.Try
 
 /**
@@ -264,7 +272,8 @@ object ValuesRouteV1 extends Authenticator {
     }
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system = _system
+        implicit val system: ActorSystem = _system
+        implicit val materializer = ActorMaterializer()
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
@@ -411,12 +420,11 @@ object ValuesRouteV1 extends Authenticator {
                         log
                     )
                 }
-            }
-            /*
-            ~ put {
-                entity(as[MultipartFormData]) { data => requestContext =>
+            } ~ put {
+                entity(as[Multipart.FormData]) { formdata => requestContext =>
                     val requestMessageTry = Try {
 
+                        /*
                         // get all the body parts from multipart request
                         val fields: Seq[BodyPart] = data.fields
 
@@ -439,14 +447,52 @@ object ValuesRouteV1 extends Authenticator {
                         // TODO: how to check if the user has sent multiple files?
                         val nonEmpty: NonEmpty = bodyPartFile.entity
                             .toOption.getOrElse(throw BadRequestException("no binary data submitted in multipart request"))
+                        */
+
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        type Name = String
+
+                        @volatile var receivedFile: Option[File] = None
+
+                        /* get the file data */
+                        val fileMapFuture = formdata.parts.mapAsync(1) { p: Multipart.FormData.BodyPart =>
+                            if (p.name == "file") {
+                                //println(s"part named ${p.name} has file named ${p.filename}")
+                                val filename = p.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
+                                val tmpFile = InputValidation.createTempFile(settings)
+                                val written = p.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
+                                written.map { written =>
+                                    //println(s"written result: ${written.wasSuccessful}, ${p.filename.get}, ${tmpFile.getAbsolutePath}")
+                                    receivedFile = Some(tmpFile)
+                                    Map(p.name -> FileInfo(p.name, p.filename.get, p.entity.contentType))
+                                }
+                            } else {
+                                Future(Map.empty[Name, FileInfo])
+                            }
+                        }.runFold(Map.empty[Name, FileInfo])((set, value) => set ++ value)
+
+                        val fileMap = Await.result(fileMapFuture, Timeout(10.seconds).duration)
+
 
                         // save file to temporary location
                         // this file will be deleted by Knora once it is not needed anymore
                         // TODO: add a script that cleans files in the tmp location that have a certain age
                         // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
+                        /*
                         val sourcePath = InputValidation.saveFileToTmpLocation(settings, nonEmpty.data.toByteArray)
                         val originalFilename = bodyPartFile.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
                         val originalMimeType = nonEmpty.contentType.toString
+                        */
+
+                        // FIXME: Make it safer
+                        val sourcePath = receivedFile.get
+
+                        val (originalFilename, originalMimeType) = fileMap.headOption match {
+                            case Some((name, fileinfo)) => (name, fileinfo.contentType.toString)
+                            case None => throw BadRequestException("MultiPart Post request was sent but no files")
+                        }
+
 
                         val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
                             originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"The original filename is invalid: '$originalFilename'")),
@@ -467,7 +513,6 @@ object ValuesRouteV1 extends Authenticator {
                     )
                 }
             }
-            */
         }
     }
 }

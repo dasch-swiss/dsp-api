@@ -66,7 +66,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    private val resourcesPath = Route.seal(ResourcesRouteV1.knoraApiPath(system, settings, log))
+    private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
     implicit private val timeout: Timeout = 300.seconds
@@ -101,8 +101,8 @@ class SipiV1E2ESpec extends E2ESpec {
     )
 
     "Load test data" in {
-        //Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        //Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 10.seconds)
+        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 10.seconds)
     }
 
     object RequestParams {
@@ -160,7 +160,7 @@ class SipiV1E2ESpec extends E2ESpec {
             assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
 
             val formData = Multipart.FormData(
-                Multipart.FormData.BodyPart.Strict(
+                Multipart.FormData.BodyPart(
                     "json",
                     HttpEntity(ContentTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint)
                 ),
@@ -177,7 +177,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
                 val tmpFile = SourcePath.getSourcePath()
 
-                println(responseAs[String])
+                //println("response in test: " + responseAs[String])
                 assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
@@ -190,25 +190,21 @@ class SipiV1E2ESpec extends E2ESpec {
             assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
 
             val formData = Multipart.FormData(
-                Source(
-                    List(
-                        Multipart.FormData.BodyPart(
-                            "json",
-                            HttpEntity(MediaTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint)
-                        ),
-                        // set mimetype tiff, but jpeg is expected
-                        Multipart.FormData.BodyPart(
-                            "file",
-                            HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
-                            Map("filename" -> fileToSend.getName)
-                        )
-                    )
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(MediaTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint)
+                ),
+                // set mimetype tiff, but jpeg is expected
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
                 )
             )
 
             RequestParams.createTmpFileDir()
 
-            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password)) ~> Route.seal(resourcesPath) ~> check {
 
                 val tmpFile = SourcePath.getSourcePath()
 
@@ -246,12 +242,10 @@ class SipiV1E2ESpec extends E2ESpec {
             assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
 
             val formData = Multipart.FormData(
-                Source.single(
-                    Multipart.FormData.BodyPart(
-                        "file",
-                        HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
-                        Map("filename" -> fileToSend.getName)
-                    )
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
                 )
             )
 
@@ -276,13 +270,11 @@ class SipiV1E2ESpec extends E2ESpec {
             assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
 
             val formData = Multipart.FormData(
-                Source.single(
-                    // set mimetype tiff, but jpeg is expected
-                    Multipart.FormData.BodyPart(
-                        "file",
-                        HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
-                        Map("filename" -> fileToSend.getName)
-                    )
+                // set mimetype tiff, but jpeg is expected
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
                 )
             )
 

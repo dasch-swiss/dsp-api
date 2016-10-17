@@ -74,7 +74,7 @@ object RouteUtilV1 {
                 // Make sure the responder sent a reply of type KnoraResponseV1.
                     knoraResponse <- (responderManager ? requestMessage).map {
                         case replyMessage: KnoraResponseV1 =>
-                            println(">>>>>>>>> ok")
+                            //println(">>>>>>>>> ok")
                             replyMessage
                         case other =>
                             println(s">>>>>>>>> other: $other")
@@ -101,10 +101,12 @@ object RouteUtilV1 {
                 ex match {
                     case rre: RequestRejectedException =>
                         // Yes, just tell the client.
+                        println(s"requestMessageTry-match: RequestRejectedException")
                         requestContext.complete(exceptionToJsonHttpResponse(rre, settings))
 
                     case other =>
                         // No: log the exception and notify the client.
+                        println(s"requestMessageTry-match: other")
                         log.error(ex, "Unable to run route")
                         requestContext.complete(exceptionToJsonHttpResponse(other, settings))
                 }
@@ -191,7 +193,6 @@ object RouteUtilV1 {
       */
     private def replyMessage2JsonHttpResponse(resultFuture: Future[KnoraResponseV1], settings: SettingsImpl, log: LoggingAdapter): Future[HttpResponse] = for {
         result <- resultFuture
-        _ = println(s"replyMessage2JsonHttpResponse -> result: $result")
         response = result match {
             case jsonResponse: KnoraResponseV1 =>
                 Try {
@@ -214,7 +215,7 @@ object RouteUtilV1 {
                         log.error(ex, "Unable to convert responder's reply to JSON")
                         exceptionToJsonHttpResponse(ex, settings)
                 }
-
+            //FIXME: This is unreachable
             case ex: Exception =>
                 // The responder sent back an exception. Convert it to an HTTP response. We assume that it has already
                 // been logged by the responder, if appropriate.

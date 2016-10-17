@@ -61,19 +61,17 @@ object StoreRouteV1 extends Authenticator {
         path("v1" / "store") {
             get {
                 requestContext =>
-
-                /** Maybe return some statistics about the store, e.g., what triplestore, number of triples in
-                  * each named graph and in total, etc.
-                  */
-                // TODO: Implement some simple return
+                    /** Maybe return some statistics about the store, e.g., what triplestore, number of triples in
+                      * each named graph and in total, etc.
+                      */
+                    // TODO: Implement some simple return
                     requestContext.complete("Hello World")
             }
-        } ~
-            path("v1" / "store" / "ResetTriplestoreContent") {
-                post {
-                    /* ResetTriplestoreContent */
-                    entity(as[Seq[RdfDataObject]]) { apiRequest =>
-                        requestContext =>
+        } ~ path("v1" / "store" / "ResetTriplestoreContent") {
+            post {
+                /* ResetTriplestoreContent */
+                entity(as[Seq[RdfDataObject]]) { apiRequest =>
+                    requestContext =>
                         val requestMessageTry = Try {
                             // create the message
                             ResetTriplestoreContentRequestV1(apiRequest)
@@ -86,8 +84,8 @@ object StoreRouteV1 extends Authenticator {
                             responderManager,
                             log
                         )
-                    }
                 }
             }
+        }
     }
 }
