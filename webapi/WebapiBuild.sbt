@@ -90,7 +90,7 @@ lazy val webApiCommonSettings = Seq(
     name := "webapi",
     version := "0.1.0",
     ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
-    scalaVersion := "2.11.7"
+    scalaVersion := "2.11.8"
 )
 
 lazy val webApiLibs = Seq(
@@ -154,7 +154,8 @@ lazy val webApiLibs = Seq(
     "org.scalatest" %% "scalatest" % "2.2.6" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "io.spray" %% "spray-testkit" % "1.3.3" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.0M3",
-    "org.rogach" %% "scallop" % "2.0.1"
+    "org.rogach" %% "scallop" % "2.0.1",
+    "org.scala-graph" %% "graph-core" % "1.11.2"
 )
 
 lazy val javaRunOptions = Seq(
