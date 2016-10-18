@@ -43,9 +43,9 @@ import scala.concurrent.duration._
 class TriplestoreManagerActor extends Actor with ActorLogging {
     this: ActorMaker =>
 
-    implicit val timeout = Timeout(300.seconds)
-
     private val settings = Settings(context.system)
+
+    implicit val timeout = settings.defaultRestoreTimeout
 
     var httpBased: Boolean = _
     var storeActorRef: ActorRef = _

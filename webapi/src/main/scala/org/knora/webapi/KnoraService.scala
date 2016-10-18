@@ -103,7 +103,7 @@ object KnoraService {
       * Starts the Knora API server.
       */
     def start(): Unit = {
-        implicit val timeout = Timeout(300.seconds)
+        implicit val timeout = settings.defaultRestoreTimeout
         implicit val materializer = ActorMaterializer()
         // needed for the future map/flatmap in the end
         implicit val executionContext = system.dispatcher

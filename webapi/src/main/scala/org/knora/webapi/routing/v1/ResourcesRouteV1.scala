@@ -26,15 +26,13 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.model.{MediaTypes, Multipart}
-import akka.http.scaladsl.model.Multipart.FormData.BodyPart
+import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{FileIO, Sink}
+import akka.stream.scaladsl.FileIO
 import akka.util.{ByteString, Timeout}
-import scala.concurrent.duration._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -47,6 +45,7 @@ import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
 import spray.json._
 
+import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.Try
 
