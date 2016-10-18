@@ -10,5 +10,7 @@ load ../_test_data/ontologies/anything-onto.ttl into http://www.knora.org/ontolo
 load ../_test_data/all_data/anything-data.ttl into http://www.knora.org/data/anything .
 load ../_test_data/ontologies/beol-onto.ttl into http://www.knora.org/ontology/beol .
 load ../_test_data/all_data/beol-data.ttl into http://www.knora.org/data/beol .
+load ../_test_data/ontologies/biblio.ttl into http://www.knora.org/ontology/biblio .
+load ../_test_data/all_data/biblio-data.ttl into http://www.knora.org/data/biblio .
 close .
 exit .
