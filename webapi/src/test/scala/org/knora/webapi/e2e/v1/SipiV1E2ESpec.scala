@@ -69,7 +69,7 @@ class SipiV1E2ESpec extends E2ESpec {
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    implicit private val timeout: Timeout = 300.seconds
+    implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
     private val incunabulaUser = UserProfileV1(
         projects = Vector("http://data.knora.org/projects/77275339"),
@@ -212,6 +212,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
                 // check that the tmp file is also deleted in case the test fails
                 assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
+                //FIXME: Check for correct status code. This would then also test if the negative case is handled correctly inside Knora.
                 assert(status != StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
@@ -290,6 +291,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
                 // check that the tmp file is also deleted in case the test fails
                 assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
+                //FIXME: Check for correct status code. This would then also test if the negative case is handled correctly inside Knora.
                 assert(status != StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
 

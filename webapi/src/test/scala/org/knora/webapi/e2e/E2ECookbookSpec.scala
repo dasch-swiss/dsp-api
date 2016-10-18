@@ -19,7 +19,6 @@ package org.knora.webapi.e2e
 import java.io.{BufferedInputStream, File, FileInputStream, InputStream}
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonByteStringParserInput
 import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.BasicDirectives.{extractRequestContext => _, provide => _}
@@ -28,14 +27,14 @@ import akka.http.scaladsl.server.directives.FutureDirectives.{onSuccess => _}
 import akka.http.scaladsl.server.directives.MarshallingDirectives.{as => _, entity => _}
 import akka.http.scaladsl.server.directives.RouteDirectives.{complete => _, reject => _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.stream.scaladsl.{FileIO, Sink}
+import akka.stream.scaladsl.FileIO
 import akka.util.ByteString
 import org.knora.webapi.BadRequestException
+import org.knora.webapi.messages.v1.responder.resourcemessages.CreateResourceApiRequestV1
+import spray.json.DefaultJsonProtocol._
+import spray.json._
 
 import scala.concurrent.Future
-import spray.json._
-import spray.json.DefaultJsonProtocol._
-
 import scala.concurrent.duration.DurationInt
 
 /**
@@ -203,6 +202,50 @@ class E2ECookbookSpec extends E2ESpec {
 
 
 
+        }
+    }
+
+    "the route receiving JSON " should {
+        "convert it to an object " in {
+
+            val textattrStringified =
+                """
+                  {
+                      "bold": [{
+                          "start": 0,
+                          "end": 4
+                      }]
+                  }
+                """.toJson.compactPrint
+
+            val params =
+                s"""
+                  |{
+                  |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                  |    "label": "A thing",
+                  |    "project_id": "http://data.knora.org/projects/anything",
+                  |    "properties": {
+                  |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr": $textattrStringified ,"resource_reference" :[],"utf8str":"Test text"}}],
+                  |        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                  |        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                  |        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                  |        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                  |        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                  |        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                  |        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+                  |    }
+                  |}
+                """.stripMargin
+
+            import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
+
+            Post("/", HttpEntity(ContentTypes.`application/json`, params)) ~> {
+                entity(as[CreateResourceApiRequestV1]) { apiRequest =>
+                    complete("OK")
+                }
+            } ~> check {
+                    assert(response.status == StatusCodes.OK)
+            }
         }
     }
 

@@ -26,7 +26,9 @@ import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.pattern._
+import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.e2e.E2ESpec
@@ -39,10 +41,10 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.util.{MutableTestIri, ScalaPrettyPrinter}
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri, ScalaPrettyPrinter}
 import spray.json._
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 
@@ -82,9 +84,11 @@ class ResourcesV1E2ESpec extends E2ESpec {
         )
     )
 
-    implicit private val timeout: Timeout = 300.seconds
+    implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
+
+    implicit val ec = system.dispatcher
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
@@ -99,7 +103,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
     )
 
     "Load test data" in {
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
+        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
         Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 10.seconds)
     }
 
@@ -117,6 +121,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
 
     private val notTheMostBoringComment = "This is not the most boring comment I have seen."
 
+
     /**
       * Gets the field `res_id` from a JSON response to resource creation.
       *
@@ -125,11 +130,13 @@ class ResourcesV1E2ESpec extends E2ESpec {
       */
     private def getResIriFromJsonResponse(response: HttpResponse) = {
 
-        JsonParser(response.entity.toString).asJsObject.fields.get("res_id") match {
+        AkkaHttpUtils.httpResponseToJson(response).fields.get("res_id") match {
             case Some(JsString(resourceId)) => resourceId
             case None => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
             case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but ${other}")
         }
+
+
 
     }
 
@@ -141,7 +148,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
       */
     private def getNewValueIriFromJsonResponse(response: HttpResponse) = {
 
-        JsonParser(response.entity.toString).asJsObject.fields.get("id") match {
+        AkkaHttpUtils.httpResponseToJson(response).fields.get("id") match {
             case Some(JsString(resourceId)) => resourceId
             case None => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
             case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but $other")
@@ -158,7 +165,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
       */
     private def getValuesForProp(response: HttpResponse, prop: IRI): JsValue = {
 
-        JsonParser(response.entity.toString).asJsObject.fields("props").asJsObject.fields(prop).asJsObject.fields("values")
+        AkkaHttpUtils.httpResponseToJson(response).fields("props").asJsObject.fields(prop).asJsObject.fields("values")
 
     }
 
@@ -325,7 +332,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
                   |    "label": "A thing",
                   |    "project_id": "http://data.knora.org/projects/anything",
                   |    "properties": {
-                  |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :[],"utf8str":"Test text"}}],
+                  |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr": $textattrStringified ,"resource_reference" :[],"utf8str":"Test text"}}],
                   |        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
                   |        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
                   |        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
@@ -571,7 +578,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 // check if this resource is referred to by the second thing resource
-                val incoming = JsonParser(response.entity.toString).asJsObject.fields.get("incoming") match {
+                val incoming = AkkaHttpUtils.httpResponseToJson(response).fields.get("incoming") match {
                     case Some(incomingRefs: JsArray) => incomingRefs
                     case None => throw InvalidApiJsonException(s"The response does not contain a field called 'incoming'")
                     case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsObject, but $other")

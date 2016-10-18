@@ -32,7 +32,7 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.store._
-import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{IRI, LiveActorMaker}
 import spray.json._
 
@@ -69,7 +69,7 @@ class ValuesV1E2ESpec extends E2ESpec {
         )
     )
 
-    implicit val timeout: Timeout = 300.seconds
+    implicit val timeout: Timeout = settings.defaultRestoreTimeout
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
 
@@ -142,7 +142,7 @@ class ValuesV1E2ESpec extends E2ESpec {
             Get(s"/v1/links/${URLEncoder.encode("http://data.knora.org/contained-thing-1", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#isPartOfOtherThing", "UTF-8")}/${URLEncoder.encode("http://data.knora.org/containing-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
-                val linkValue = JsonParser(response.entity.toString).asJsObject.fields("value").asJsObject.fields
+                val linkValue = AkkaHttpUtils.httpResponseToJson(response).fields("value").asJsObject.fields
 
                 assert(
                     linkValue("subjectIri").asInstanceOf[JsString].value == "http://data.knora.org/contained-thing-1" &&
@@ -211,7 +211,7 @@ class ValuesV1E2ESpec extends E2ESpec {
             Get(s"/v1/values/history/${URLEncoder.encode("http://data.knora.org/a-thing", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#hasText", "UTF-8")}/${URLEncoder.encode(textValueIri.get, "UTF-8")}") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
-                val versionHistory: JsValue = JsonParser(response.entity.toString).asJsObject.fields("valueVersions")
+                val versionHistory: JsValue = AkkaHttpUtils.httpResponseToJson(response).fields("valueVersions")
 
                 val (mostRecentVersion, originalVersion) = versionHistory match {
                     case JsArray(Vector(mostRecent, original)) => (mostRecent.asJsObject.fields, original.asJsObject.fields)
