@@ -558,7 +558,13 @@ WHERE {
             ?resource a ?resClass .
         }
 
-        case None => {}
+        case None => {
+
+            # Make sure we have a knora-base:Resource.
+            ?resClass rdfs:subClassOf+ knora-base:Resource .
+            ?resource a ?resClass .
+
+        }
     }
 
 

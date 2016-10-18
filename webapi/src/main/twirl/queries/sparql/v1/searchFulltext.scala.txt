@@ -135,8 +135,6 @@ WHERE {
     BIND(COALESCE(?containingResource, ?matchingSubject) AS ?resource)
 
     ?resource a ?resourceClass .
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
-
     ?resource rdfs:label ?resourceLabel .
 
     @projectIriOption match {
@@ -158,7 +156,13 @@ WHERE {
             ?resource a ?resClass .
         }
 
-        case None => {}
+        case None => {
+
+            # Make sure we have a knora-base:Resource.
+            ?resClass rdfs:subClassOf+ knora-base:Resource .
+            ?resource a ?resClass .
+
+        }
     }
 
     OPTIONAL {
