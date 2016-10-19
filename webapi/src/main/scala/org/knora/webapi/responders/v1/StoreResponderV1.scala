@@ -55,6 +55,7 @@ class StoreResponderV1 extends ResponderV1 {
         for {
             value <- StartupFlags.allowResetTriplestoreContentOperationOverHTTP.future()
             _ = if (value == false) {
+                //println("resetTriplestoreContent - will throw ForbiddenException")
                 throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
             }
             resetResponse <- storeManager ? ResetTriplestoreContent(rdfDataObjects)
