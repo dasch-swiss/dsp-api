@@ -52,7 +52,7 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 ### For building the documentation
 
-See `docs/Readme.md`.
+See [docs/Readme.md](docs/Readme.md).
 
 ## Try it out
 
