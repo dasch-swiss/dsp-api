@@ -74,15 +74,15 @@ object RouteUtilV1 {
                 // Make sure the responder sent a reply of type KnoraResponseV1.
                     knoraResponse <- (responderManager ? requestMessage).map {
                         case replyMessage: KnoraResponseV1 =>
-                            //println(">>>>>>>>> ok")
+                            // println(">>>>>>>>> ok")
                             replyMessage
                         case other =>
-                            println(s">>>>>>>>> other: $other")
+                            // println(s">>>>>>>>> other: $other")
                             // The responder returned an unexpected message type. This isn't the client's fault, so log
                             // it and return an error message to the client.
                             val logErrorMsg = s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
                             val logEx = UnexpectedMessageException(logErrorMsg)
-                            println("before throwing error message")
+                            // println("before throwing error message")
                             log.error(logEx, logErrorMsg)
                             throw logEx
                     }
@@ -101,12 +101,12 @@ object RouteUtilV1 {
                 ex match {
                     case rre: RequestRejectedException =>
                         // Yes, just tell the client.
-                        println(s"requestMessageTry-match: RequestRejectedException")
+                        // println(s"requestMessageTry-match: RequestRejectedException")
                         requestContext.complete(exceptionToJsonHttpResponse(rre, settings))
 
                     case other =>
                         // No: log the exception and notify the client.
-                        println(s"requestMessageTry-match: other")
+                        // println(s"requestMessageTry-match: other")
                         log.error(ex, "Unable to run route")
                         requestContext.complete(exceptionToJsonHttpResponse(other, settings))
                 }
