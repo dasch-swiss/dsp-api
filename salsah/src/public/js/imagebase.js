@@ -76,9 +76,16 @@ $(function() {
 			propedit.append($('<hr>').addClass('propedit'));
 
 			//*******************************
-			propedit.append($('<div>')
-				.append($('<em>').addClass('propedit label').text('LABEL: '))
-				.append($('<div>').addClass('propedit ' + datafield + ' winid_' + settings.winid).data('propname', '__label__')));
+			if (settings.regnum !== undefined) {
+				propedit.append($('<div>')
+					.append($('<em>').addClass('propedit label').text('LABEL: '))
+					.append($('<div>').addClass('propedit ' + datafield + ' regnum_' + settings.regnum).data('propname', '__label__')));
+			}
+			else {
+				propedit.append($('<div>')
+					.append($('<em>').addClass('propedit label').text('LABEL: '))
+					.append($('<div>').addClass('propedit ' + datafield + ' winid_' + settings.winid).data('propname', '__label__')));
+			}
 			//***************
 
 

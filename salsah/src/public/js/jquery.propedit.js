@@ -136,7 +136,13 @@
 					}
 					
 					$('<img>').attr({src: comment_icon.src})
-					.valcomment({value_id: propinfo[prop].value_ids[value_index], comment: (propinfo[prop].comments === undefined) ? '' : propinfo[prop].comments[value_index]})
+					.valcomment({ // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! HERE WE HAVE TO UPDATE THE VALUE_ID !!!!!!!!!!!!!!! L&B Oct. 19th 2016
+						value_id: propinfo[prop].value_ids[value_index],
+						comment: (propinfo[prop].comments === undefined) ? null : propinfo[prop].comments[value_index],
+						onChange: function() {
+							reset_value(value_container, prop, value_index, readonly);
+						}
+					})
 					.appendTo(value_container);
 				}
 			} // if (propinfo[prop].value_rights[value_index] >= VALUE_ACCESS_VIEW)

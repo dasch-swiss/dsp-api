@@ -48,7 +48,7 @@
                 var localdata = {};
                 localdata.settings = {
                     value_id: -1, // negative means no restype_id known
-					comment: ''
+					comment: null
                 };
                 localdata.ele = {};
 				/*
@@ -60,7 +60,7 @@
                 $.extend(localdata.settings, options);
 				$this.css({'cursor': 'pointer'});
 				localdata.ele = $('<div>').addClass('value_comment tooltip').css({'display': 'none', opacity: '1', 'position': 'fixed', 'z-index': 1000}).text(localdata.settings.comment).appendTo('body');
-				if (localdata.settings.comment != '') {
+				if (localdata.settings.comment != null) {
 					setup_mouseevents($this, localdata);
 				}
 				$this.on('click', function(event){
@@ -126,6 +126,25 @@
 							setup_mouseevents($this, localdata);
 						})
 				);
+                btn_group.append(
+                    $('<button>').addClass('btn btn-default btn-xs')
+                        .attr({title: strings._delete})
+                        .append($('<span>').addClass('glyphicon glyphicon-trash'))
+                        .on('click', function (event) {
+                        SALSAH.ApiDelete('valuecomments/' + encodeURIComponent(localdata.settings.value_id),
+                            {
+                                project_id: SALSAH.userdata.projects[0], // TODO: how to get this information in a correct way? https://github.com/dhlab-basel/Knora/issues/118
+                            },
+                            function(data) {
+                                if (data.status == ApiErrors.OK) {
+                                    localdata.ele.empty().css({'display': 'none'});
+                                }
+                                else {
+                                    alert(data.errormsg);
+                                }
+                            }
+                        );
+                    }));
 
 //				$('<textarea>').append(localdata.settings.comment).appendTo(localdata.ele);
 //				$('<br>').appendTo(localdata.ele);

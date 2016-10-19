@@ -124,7 +124,7 @@ object ResourcesResponderV1Spec {
                     Vector(
                         PropertyGetValueV1(
                             None,
-                            "",
+                            None,
                             "Siehe Seite c5v",
                             TextValueV1("Siehe Seite c5v"),
                             "http://data.knora.org/021ec18f1735/values/8a96c303338201",
@@ -142,7 +142,7 @@ object ResourcesResponderV1Spec {
                     Vector(
                         PropertyGetValueV1(
                             None,
-                            "",
+                            None,
                             "#ff3333",
                             ColorValueV1("#ff3333"),
                             "http://data.knora.org/021ec18f1735/values/10ea6976338201",
@@ -159,7 +159,7 @@ object ResourcesResponderV1Spec {
                     Vector(
                         PropertyGetValueV1(
                             None,
-                            "",
+                            None,
                             "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}",
                             GeomValueV1("{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}"),
                             "http://data.knora.org/021ec18f1735/values/4dc0163d338201",
@@ -176,7 +176,7 @@ object ResourcesResponderV1Spec {
                     Vector(
                         PropertyGetValueV1(
                             None,
-                            "",
+                            None,
                             "http://data.knora.org/9d626dc76c03",
                             LinkV1(
                                 "http://data.knora.org/9d626dc76c03",
@@ -247,7 +247,7 @@ object ResourcesResponderV1Spec {
         value_firstprops = Vector(Some("Another thing that only project members can see")),
         value_iconsrcs = Vector(Some("http://localhost:3335/project-icons/anything/thing.png")),
         value_restype = Vector(Some("Ding")),
-        comments = Vector(""),
+        comments = Vector(None),
         value_ids = Vector("http://data.knora.org/project-thing-1/values/0"),
         values = Vector(LinkV1(
             valueResourceClassIcon = Some("http://localhost:3335/project-icons/anything/thing.png"),
@@ -273,7 +273,7 @@ object ResourcesResponderV1Spec {
         value_firstprops = Vector(Some("Another thing that only project members can see")),
         value_iconsrcs = Vector(Some("http://localhost:3335/project-icons/anything/thing.png")),
         value_restype = Vector(Some("Ding")),
-        comments = Vector(""),
+        comments = Vector(None),
         value_ids = Vector("http://data.knora.org/project-thing-1/values/1"),
         values = Vector(LinkV1(
             valueResourceClassIcon = Some("http://localhost:3335/project-icons/anything/thing.png"),

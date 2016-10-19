@@ -629,7 +629,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     guielement = Some(SalsahGuiConversions.iri2SalsahGuiElement(OntologyConstants.SalsahGui.Fileupload)),
                     values = Vector(IntegerValueV1(0)),
                     value_ids = Vector("0"),
-                    comments = Vector("0"),
+                    comments = Vector(None),
                     locations = resInfo.locations match {
                         case Some(locations: Seq[LocationV1]) => locations
                         case None => Nil
@@ -1936,10 +1936,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 },
                 values = valueObjects.map(_.valueV1),
                 value_ids = valueObjects.map(_.valueObjectIri),
-                comments = valueObjects.map(_.comment match {
-                    case Some(comment: String) => comment
-                    case None => ""
-                })
+                comments = valueObjects.map(_.comment)
             )
         }
 
@@ -2109,7 +2106,7 @@ class ResourcesResponderV1 extends ResponderV1 {
     private def convertPropertyV1toPropertyGetV1(propertyV1: PropertyV1): PropertyGetV1 = {
 
         val valueObjects: Seq[PropertyGetValueV1] = (propertyV1.value_ids, propertyV1.values, propertyV1.comments).zipped.map {
-            case (id: IRI, value: ApiValueV1, comment: String) =>
+            case (id: IRI, value: ApiValueV1, comment: Option[String]) =>
                 PropertyGetValueV1(id = id,
                     value = value,
                     textval = value.toString,

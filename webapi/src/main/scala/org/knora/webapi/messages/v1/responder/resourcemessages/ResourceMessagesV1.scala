@@ -516,7 +516,7 @@ case class PropertyV1(pid: IRI,
                       occurrence: Option[String] = None,
                       values: Seq[ApiValueV1] = Nil,
                       value_ids: Seq[IRI] = Nil,
-                      comments: Seq[String] = Nil,
+                      comments: Seq[Option[String]] = Nil,
                       value_restype: Seq[Option[String]] = Nil,
                       value_iconsrcs: Seq[Option[String]] = Nil,
                       value_firstprops: Seq[Option[String]] = Nil,
@@ -568,7 +568,7 @@ case class PropertyGetV1(pid: IRI,
   *
   */
 case class PropertyGetValueV1(person_id: Option[IRI] = None,
-                              comment: String,
+                              comment: Option[String],
                               textval: String,
                               value: ApiValueV1, // TODO: this is called 'val' in the old Salsah, but val is a keyword in scala
                               id: IRI,

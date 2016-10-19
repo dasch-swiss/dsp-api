@@ -1518,7 +1518,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         "add a comment to a value" in {
             val lastModBeforeUpdate = getLastModificationDate(zeitglöckleinIri)
 
-            val comment = "This is wrong. I am the author!"
+            val comment = Some("This is wrong. I am the author!")
 
             val changeCommentRequest = ChangeCommentRequestV1(
                 valueIri = "http://data.knora.org/c5058f3a/values/8653a672",
