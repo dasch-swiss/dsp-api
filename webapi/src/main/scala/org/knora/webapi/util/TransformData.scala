@@ -294,6 +294,8 @@ object TransformData extends App {
 
             val resourceNames: Map[IRI, IRI] = resourceIris.keysIterator.toVector.sorted.zip(names).toMap
 
+            println(MessageUtil.toSource(resourceNames.toVector.sortBy(_._1).map { case (oldName, newName) => s"$oldName: $newName" }))
+
             val statementsWithoutPropertyDefs = statements.filterNot {
                 case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
                     subjectIri.startsWith("p:")
