@@ -163,12 +163,19 @@ class SipiResponderV1 extends ResponderV1 {
             responseAsMap: Map[String, JsValue] = conversionResultResponse.entity.asString.parseJson.asJsObject.fields.toMap
 
             statusCode: Int = responseAsMap.getOrElse("status", throw SipiException(message = "Sipi did not return a status code")) match {
-                case JsNumber(ftype: BigDecimal) => ftype.toInt
+                case JsNumber(ftype: BigDecimal) => ftype.toInt // TODO: Sipi should respond with a status code of type integer (it is a floating point number, see: https://github.com/dhlab-basel/Sipi/issues/64)
                 case other => throw SipiException(message = s"Sipi did not return a correct status code, but ${other.toString()}")
             }
 
             // check if Sipi returned a status code != 0
-            _ = if (statusCode != 0) throw BadRequestException(s"Sipi returned a HTTP 200 status code, but an unsuccessful status code ${statusCode}")
+            _ = if (statusCode != 0) {
+                // Sipi returned an unsuccessful status code, get the error message
+                val sipiErrorMessage: String = responseAsMap.getOrElse("message", throw SipiException(message = "Sipi did not return an error message with key 'message' although status is != 0")) match {
+                    case JsString(msg) => msg
+                    case other => throw SipiException(message = s"Sipi did not return an error message of type string, but ${other.toString()}")
+                }
+                throw BadRequestException(s"Sipi returned an HTTP 200 status code, but an unsuccessful status code ${statusCode} with error message: '${sipiErrorMessage}'")
+            }
 
             fileType: String = responseAsMap.getOrElse("file_type", throw SipiException(message = "Sipi did not return a file type")) match {
                 case JsString(ftype: String) => ftype
