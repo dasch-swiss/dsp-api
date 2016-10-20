@@ -106,16 +106,6 @@ lazy val webApiLibs = Seq(
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     //CORS support
     "ch.megard" %% "akka-http-cors" % "0.1.7",
-    // spray
-    //"io.spray" %% "spray-http" % "1.3.3",
-    //"io.spray" %% "spray-httpx" % "1.3.3",
-    //"io.spray" %% "spray-util" % "1.3.3",
-    //"io.spray" %% "spray-io" % "1.3.3",
-    //"io.spray" %% "spray-can" % "1.3.3",
-    //"io.spray" %% "spray-caching" % "1.3.3",
-    //"io.spray" %% "spray-routing" % "1.3.3",
-    //"io.spray" %% "spray-json" % "1.3.2",
-    //"io.spray" %% "spray-client" % "1.3.2",
     // jena
     "org.apache.jena" % "apache-jena-libs" % "3.0.0" exclude("org.slf4j", "slf4j-log4j12"),
     "org.apache.jena" % "jena-text" % "3.0.0" exclude("org.slf4j", "slf4j-log4j12"),
@@ -136,7 +126,7 @@ lazy val webApiLibs = Seq(
     "com.github.t3hnar" %% "scala-bcrypt" % "2.4",
     // caching
     "net.sf.ehcache" % "ehcache" % "2.10.0",
-    // monitoring
+    // monitoring - disabled for now
     //"org.aspectj" % "aspectjweaver" % "1.8.7",
     //"org.aspectj" % "aspectjrt" % "1.8.7",
     //"io.kamon" %% "kamon-core" % "0.5.2",
