@@ -21,9 +21,9 @@
 package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.event.LoggingAdapter
 import org.knora.webapi.messages.v1.responder.searchmessages.{ExtendedSearchGetRequestV1, FulltextSearchGetRequestV1, SearchComparisonOperatorV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
@@ -205,24 +205,23 @@ object SearchRouteV1 extends Authenticator {
                     )
                 }
             }
-        } ~
-            path("v1" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
-                get {
-                    requestContext => {
-                        val requestMessageTry = Try {
-                            val userProfile = getUserProfileV1(requestContext)
-                            val params: Map[String, String] = requestContext.request.uri.query().toMap
-                            makeFulltextSearchRequestMessage(userProfile, searchval, params)
-                        }
-                        RouteUtilV1.runJsonRoute(
-                            requestMessageTry,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
+        } ~ path("v1" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+            get {
+                requestContext => {
+                    val requestMessageTry = Try {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val params: Map[String, String] = requestContext.request.uri.query().toMap
+                        makeFulltextSearchRequestMessage(userProfile, searchval, params)
                     }
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
                 }
             }
+        }
     }
 }

@@ -27,7 +27,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern._
 import akka.stream.ActorMaterializer
-import akka.util.Timeout
+import ch.megard.akka.http.cors.CorsDirectives._
+import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
@@ -39,9 +40,7 @@ import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.CacheUtil
 
 import scala.collection.JavaConversions._
-import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-
 /**
   * Provides methods for starting and stopping Knora from within another application. This is where the actor system
   * is started along with the three main supervisor actors is started. All further actors are started and supervised
@@ -58,11 +57,6 @@ object KnoraService {
       * Logging
       */
     private val log = akka.event.Logging(system, this.getClass())
-
-    /**
-      * The supervisor actor that receives HTTP requests.
-      */
-    //private val knoraHttpServiceManager = system.actorOf(Props(new KnoraHttpServiceManager with LiveActorMaker), name = KNORA_HTTP_SERVICE_MANAGER_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
@@ -84,20 +78,30 @@ object KnoraService {
       */
     private val systemUser = UserProfileV1(userData = UserDataV1(lang = "en"), isSystemUser = true)
 
+    /**
+      * Brings the CORS rejection handler into scope
+      */
+    implicit def corsRejection = corsRejectionHandler
 
-    private val apiRoutes =
-                ResourcesRouteV1.knoraApiPath(system, settings, log) ~
+    /**
+      * All routes composed together and CORS activated.
+      */
+    private val apiRoutes = CORS (
+        ResourcesRouteV1.knoraApiPath(system, settings, log) ~
                 ValuesRouteV1.knoraApiPath(system, settings, log) ~
                 SipiRouteV1.knoraApiPath(system, settings, log) ~
                 ListsRouteV1.knoraApiPath(system, settings, log) ~
-                SearchRouteV1.knoraApiPath(system, settings, log) ~
                 ResourceTypesRouteV1.knoraApiPath(system, settings, log) ~
+                SearchRouteV1.knoraApiPath(system, settings, log) ~
                 AuthenticateRouteV1.knoraApiPath(system, settings, log) ~
                 AssetsRouteV1.knoraApiPath(system, settings, log) ~
                 GraphDataRouteV1.knoraApiPath(system, settings, log) ~
                 ProjectsRouteV1.knoraApiPath(system, settings, log) ~
                 CkanRouteV1.knoraApiPath(system, settings, log) ~
                 StoreRouteV1.knoraApiPath(system, settings, log)
+    )
+
+
 
     /**
       * Starts the Knora API server.
