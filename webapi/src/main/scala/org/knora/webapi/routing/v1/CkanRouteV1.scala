@@ -30,7 +30,6 @@ import org.knora.webapi.messages.v1.responder.ckanmessages.CkanRequestV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 
 import scala.concurrent.duration._
-import scala.util.Try
 
 /**
   * A route used to serve data to CKAN. It is used be the Ckan instance running under http://data.humanities.ch.
@@ -47,7 +46,7 @@ object CkanRouteV1 extends Authenticator {
         path("v1" / "ckan") {
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
+                    val requestMessage = {
                         val userProfile = getUserProfileV1(requestContext)
                         val params = requestContext.request.uri.query().toMap
                         val project: Option[Seq[String]] = params.get("project").map(_.split(","))
@@ -56,7 +55,7 @@ object CkanRouteV1 extends Authenticator {
                         CkanRequestV1(project, limit, info, userProfile)
                     }
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,

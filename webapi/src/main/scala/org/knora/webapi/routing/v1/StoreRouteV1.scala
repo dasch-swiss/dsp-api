@@ -30,8 +30,6 @@ import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 
 import scala.concurrent.duration._
-import scala.util.Try
-
 
 /**
   * A route used to send requests which can directly affect the data stored inside the triplestore.
@@ -72,13 +70,13 @@ object StoreRouteV1 extends Authenticator {
                 /* ResetTriplestoreContent */
                 entity(as[Seq[RdfDataObject]]) { apiRequest =>
                     requestContext =>
-                        val requestMessageTry = Try {
+                        val requestMessage = {
                             // create the message
                             ResetTriplestoreContentRequestV1(apiRequest)
                         }
 
                         RouteUtilV1.runJsonRoute(
-                            requestMessageTry,
+                            requestMessage,
                             requestContext,
                             settings,
                             responderManager,

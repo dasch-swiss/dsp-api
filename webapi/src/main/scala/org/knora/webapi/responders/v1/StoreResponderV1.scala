@@ -54,7 +54,7 @@ class StoreResponderV1 extends ResponderV1 {
         //log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
         for {
             value <- StartupFlags.allowResetTriplestoreContentOperationOverHTTP.future()
-            _ = if (value == false) {
+            _ = if (!value) {
                 //println("resetTriplestoreContent - will throw ForbiddenException")
                 throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
             }

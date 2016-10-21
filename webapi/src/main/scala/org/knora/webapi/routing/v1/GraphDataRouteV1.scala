@@ -23,13 +23,10 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.event.LoggingAdapter
 import org.knora.webapi.messages.v1.responder.graphdatamessages.GraphDataGetRequestV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
-
-import scala.util.Try
 
 /**
   * Provides a spray-routing function for API routes that deal with graphdata for frontend visualization.
@@ -49,13 +46,13 @@ object GraphDataRouteV1 extends Authenticator {
         path("v1" / "graphdata" / Segment) { iri =>
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
+                    val requestMessage = {
                         val userProfile = getUserProfileV1(requestContext)
                         val repIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
                         GraphDataGetRequestV1(repIri, userProfile, 4) // default level seems to be 4
                     }
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,

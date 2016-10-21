@@ -94,23 +94,29 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     "During Authentication " when {
         "called, the 'getUserProfile' method " should {
             "succeed with the correct 'username' " in {
-                Authenticator invokePrivate getUserProfileByUsername(usernameCorrect, system, timeout, executionContext) should be(Success(mockUserProfileV1))
+                Authenticator invokePrivate getUserProfileByUsername(usernameCorrect, system, timeout, executionContext) should be(mockUserProfileV1)
             }
 
             "fail with the wrong 'username' " in {
-                Authenticator invokePrivate getUserProfileByUsername(usernameWrong, system, timeout, executionContext) should be(Failure(BadCredentialsException(BAD_CRED_USER_NOT_FOUND)))
+                an [BadCredentialsException] should be thrownBy {
+                    Authenticator invokePrivate getUserProfileByUsername(usernameWrong, system, timeout, executionContext)
+                }
             }
 
             "fail when not providing a username " in {
-                Authenticator invokePrivate getUserProfileByUsername(usernameEmpty, system, timeout, executionContext) should be(Failure(BadCredentialsException(BAD_CRED_USERNAME_NOT_SUPPLIED)))
+                an [BadCredentialsException] should be thrownBy {
+                    Authenticator invokePrivate getUserProfileByUsername(usernameEmpty, system, timeout, executionContext)
+                }
             }
         }
         "called, the 'authenticateCredentials' method " should {
             "succeed with the correct 'username' / correct 'password' " in {
-                Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordCorrect, false, system) should be(Success("0"))
+                Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordCorrect, false, system) should be("0")
             }
             "fail with correct 'username' / wrong 'password' " in {
-                Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordWrong, false, system) should be(Failure(BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)))
+                an [BadCredentialsException] should be thrownBy {
+                    Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordWrong, false, system)
+                }
             }
         }
     }

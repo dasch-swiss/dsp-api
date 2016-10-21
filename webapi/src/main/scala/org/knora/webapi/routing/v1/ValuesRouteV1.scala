@@ -39,11 +39,10 @@ import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtoc
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation.RichtextComponents
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
-import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
+import org.knora.webapi.{BadRequestException, FileUploadException, IRI, SettingsImpl}
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
-import scala.util.Try
 
 /**
   * Provides a spray-routing function for API routes that deal with values.
@@ -282,13 +281,13 @@ object ValuesRouteV1 extends Authenticator {
         path("v1" / "values" / "history" / Segments) { iris =>
             get {
                 requestContext => {
-                    val requestMessageTry = Try {
+                    val requestMessage = {
                         val userProfile = getUserProfileV1(requestContext)
                         makeVersionHistoryRequestMessage(iris = iris, userProfile = userProfile)
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -299,13 +298,13 @@ object ValuesRouteV1 extends Authenticator {
         } ~ path("v1" / "values") {
             post {
                 entity(as[CreateValueApiRequestV1]) { apiRequest => requestContext =>
-                    val requestMessageTry = Try {
+                    val requestMessage = {
                         val userProfile = getUserProfileV1(requestContext)
                         makeCreateValueRequestMessage(apiRequest = apiRequest, userProfile = userProfile)
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -316,13 +315,13 @@ object ValuesRouteV1 extends Authenticator {
         } ~ path("v1" / "values" / Segment) { valueIriStr =>
             get {
                 requestContext => {
-                    val requestMessageTry = Try {
+                    val requestMessage = {
                         val userProfile = getUserProfileV1(requestContext)
                         makeGetValueRequest(valueIriStr = valueIriStr, userProfile = userProfile)
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -331,7 +330,7 @@ object ValuesRouteV1 extends Authenticator {
                 }
             } ~ put {
                 entity(as[ChangeValueApiRequestV1]) { apiRequest => requestContext =>
-                    val requestMessageTry = Try {
+                    val requestMessage = {
                         val userProfile = getUserProfileV1(requestContext)
 
                         // In API v1, you cannot change a value and its comment in a single request. So we know that here,
@@ -343,7 +342,7 @@ object ValuesRouteV1 extends Authenticator {
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -352,7 +351,7 @@ object ValuesRouteV1 extends Authenticator {
                 }
             } ~ delete {
                 requestContext => {
-                    val requestMessageTry = Try {
+                    val requestMessageTry = {
                         val userProfile = getUserProfileV1(requestContext)
                         val params = requestContext.request.uri.query().toMap
                         val deleteComment = params.get("deleteComment")
@@ -389,13 +388,13 @@ object ValuesRouteV1 extends Authenticator {
                 // Link value request requires 3 URL path segments: subject IRI, predicate IRI, and object IRI
                 get {
                     requestContext => {
-                        val requestMessageTry = Try {
+                        val requestMessage = {
                             val userProfile = getUserProfileV1(requestContext)
                             makeLinkValueGetRequestMessage(iris = iris, userProfile = userProfile)
                         }
 
                         RouteUtilV1.runJsonRoute(
-                            requestMessageTry,
+                            requestMessage,
                             requestContext,
                             settings,
                             responderManager,
@@ -406,14 +405,14 @@ object ValuesRouteV1 extends Authenticator {
             } ~ path("v1" / "filevalue" / Segment) { (resIriStr: IRI) =>
             put {
                 entity(as[ChangeFileValueApiRequestV1]) { apiRequest => requestContext =>
-                    val requestMessageTry = Try {
+                    val requestMessage = {
 
                         val userProfile = getUserProfileV1(requestContext)
                         makeChangeFileValueRequest(resIriStr = resIriStr, apiRequest = Some(apiRequest), multipartConversionRequest = None, userProfile = userProfile)
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -422,40 +421,22 @@ object ValuesRouteV1 extends Authenticator {
                 }
             } ~ put {
                 entity(as[Multipart.FormData]) { formdata => requestContext =>
-                    val requestMessageTry = Try {
-
-                        /*
-                        // get all the body parts from multipart request
-                        val fields: Seq[BodyPart] = data.fields
-
-                        //
-                        // turn Sequence of BodyParts into a Map(name -> BodyPart),
-                        // according to the given keys in the HTTP request
-                        // e.g. 'json' -> BodyPart or 'file' -> BodyPart
-                        //
-                        val namedParts: Map[String, BodyPart] = fields.map {
-                            // assumes that only one file is given (this may change for API V2)
-                            case (bodyPart: BodyPart) =>
-                                (bodyPart.dispositionParameterValue("name").getOrElse(throw BadRequestException("part of HTTP multipart request has no name")), bodyPart)
-                        }.toMap
-
-                        val userProfile = getUserProfileV1(requestContext)
-
-                        // get binary data from bodyPart 'file'
-                        val bodyPartFile: BodyPart = namedParts.getOrElse("file", throw BadRequestException("MultiPart Post request was sent but no files"))
-
-                        // TODO: how to check if the user has sent multiple files?
-                        val nonEmpty: NonEmpty = bodyPartFile.entity
-                            .toOption.getOrElse(throw BadRequestException("no binary data submitted in multipart request"))
-                        */
+                    val requestMessage = {
 
                         val userProfile = getUserProfileV1(requestContext)
 
                         type Name = String
 
+                        /* TODO: refactor to remove the need for this var */
+                        /* makes sure that variables updated in another thread return the latest version */
                         @volatile var receivedFile: Option[File] = None
 
-                        /* get the file data */
+                        // this file will be deleted by Knora once it is not needed anymore
+                        // TODO: add a script that cleans files in the tmp location that have a certain age
+                        // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
+                        // TODO: how to check if the user has sent multiple files?
+
+                        /* get the file data and save file to temporary location */
                         val fileMapFuture = formdata.parts.mapAsync(1) { p: Multipart.FormData.BodyPart =>
                             if (p.name == "file") {
                                 //println(s"part named ${p.name} has file named ${p.filename}")
@@ -472,21 +453,11 @@ object ValuesRouteV1 extends Authenticator {
                             }
                         }.runFold(Map.empty[Name, FileInfo])((set, value) => set ++ value)
 
+
+                        // TODO: refactor to remove blocking (issue #291)
                         val fileMap = Await.result(fileMapFuture, Timeout(10.seconds).duration)
 
-
-                        // save file to temporary location
-                        // this file will be deleted by Knora once it is not needed anymore
-                        // TODO: add a script that cleans files in the tmp location that have a certain age
-                        // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
-                        /*
-                        val sourcePath = InputValidation.saveFileToTmpLocation(settings, nonEmpty.data.toByteArray)
-                        val originalFilename = bodyPartFile.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
-                        val originalMimeType = nonEmpty.contentType.toString
-                        */
-
-                        // FIXME: Make it safer
-                        val sourcePath = receivedFile.get
+                        val sourcePath = receivedFile.getOrElse(throw FileUploadException("Error during file upload. Please report this as a possible bug."))
 
                         val (originalFilename, originalMimeType) = fileMap.headOption match {
                             case Some((name, fileinfo)) => (name, fileinfo.contentType.toString)
@@ -505,7 +476,7 @@ object ValuesRouteV1 extends Authenticator {
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,

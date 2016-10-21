@@ -30,8 +30,6 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 
-import scala.util.Try
-
 /**
   * Provides a spray-routing function for API routes that deal with resource types.
   */
@@ -51,7 +49,7 @@ object ResourceTypesRouteV1 extends Authenticator {
         path("v1" / "resourcetypes" / Segment) { iri =>
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
+                    val requestMessage = {
                         val userProfile = getUserProfileV1(requestContext)
                         // TODO: Check that this is the IRI of a resource type and not just any IRI
                         val resourceTypeIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid resource type IRI: $iri"))
@@ -59,7 +57,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -69,7 +67,7 @@ object ResourceTypesRouteV1 extends Authenticator {
         } ~ path("v1" / "resourcetypes") {
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
+                    val requestMessage = {
                         val userProfile = getUserProfileV1(requestContext)
                         val params = requestContext.request.uri.query().toMap
 
@@ -84,7 +82,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -95,7 +93,7 @@ object ResourceTypesRouteV1 extends Authenticator {
         } ~ path("v1" / "propertylists") {
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
+                    val requestMessage = {
                         val userProfile = getUserProfileV1(requestContext)
                         val params = requestContext.request.uri.query().toMap
 
@@ -123,7 +121,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -134,13 +132,13 @@ object ResourceTypesRouteV1 extends Authenticator {
         } ~ path("v1" / "vocabularies") {
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
+                    val requestMessage = {
                         val userProfile = getUserProfileV1(requestContext)
                         NamedGraphsGetRequestV1(userProfile)
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -151,7 +149,7 @@ object ResourceTypesRouteV1 extends Authenticator {
         } ~ path("v1" / "vocabularies" / "reload") {
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
+                    val requestMessageTry = {
                         val userProfile = getUserProfileV1(requestContext)
                         LoadOntologiesRequest(userProfile)
                     }

@@ -154,6 +154,13 @@ object InternalServerException {
 }
 
 /**
+  * An exception indicating that during file upload there was an error.
+  *
+  * @param message a description of the error.
+  */
+case class FileUploadException(message: String = "Error during file upload. Please report this as a possible bug.") extends InternalServerException(message)
+
+/**
   * An exception indicating that a requested update was not performed, although it was expected to succeed.
   * This probably indicates a bug.
   *

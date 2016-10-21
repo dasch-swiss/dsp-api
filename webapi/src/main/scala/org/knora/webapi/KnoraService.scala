@@ -84,6 +84,11 @@ object KnoraService {
     implicit def corsRejection = corsRejectionHandler
 
     /**
+      * Bring the Knora exception handler into scope, which is responsible for converting our exceptions to HttpResponses
+      */
+    implicit def knoraExceptionHandler = KnoraExceptionHandler(settings, log)
+
+    /**
       * All routes composed together and CORS activated.
       */
     private val apiRoutes = CORS (
@@ -100,8 +105,6 @@ object KnoraService {
                 CkanRouteV1.knoraApiPath(system, settings, log) ~
                 StoreRouteV1.knoraApiPath(system, settings, log)
     )
-
-
 
     /**
       * Starts the Knora API server.

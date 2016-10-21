@@ -23,13 +23,13 @@ package org.knora.webapi.routing
 import akka.actor.ActorSelection
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.{RequestContext, RouteResult}
+import akka.http.scaladsl.server.RequestContext
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.{ApiStatusCodesV1, KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.MessageUtil
-import spray.json.{JsNumber, JsObject, JsString, JsValue}
+import spray.json.{JsNumber, JsObject}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,75 +43,55 @@ object RouteUtilV1 {
     // A generic error message that we return to clients when an internal server error occurs.
     private val GENERIC_INTERNAL_SERVER_ERROR_MESSAGE = "The request could not be completed because of an internal server error."
 
+
     /**
       * Runs an API routing function.
       *
-      * @param requestMessageTry a [[Try]] which, if successful, contains a [[KnoraRequestV1]] that should be
-      *                          sent to the responder manager, and if not successful, contains an error that will be
-      *                          reported to the client.
-      * @param requestContext    the spray [[RequestContext]].
+      * @param requestMessage    a [[KnoraRequestV1]] message that should be sent to the responder manager.
+      * @param requestContext    the akka-http [[RequestContext]].
       * @param settings          the application's settings.
       * @param responderManager  a reference to the responder manager.
       * @param log               a logging adapter.
       * @param timeout           a timeout for `ask` messages.
       * @param executionContext  an execution context for futures.
       */
-    def runJsonRoute[RequestMessageT <: KnoraRequestV1](requestMessageTry: Try[RequestMessageT],
+    def runJsonRoute[RequestMessageT <: KnoraRequestV1](requestMessage: RequestMessageT,
                                                         requestContext: RequestContext,
                                                         settings: SettingsImpl,
                                                         responderManager: ActorSelection,
                                                         log: LoggingAdapter)
-                                                       (implicit timeout: Timeout, executionContext: ExecutionContext) = {
-        // Check whether a request message was successfully generated.
-        requestMessageTry match {
-            case Success(requestMessage) =>
-                // Optionally log the request message. TODO: move this to the testing framework.
-                if (settings.dumpMessages) {
-                    log.debug(MessageUtil.toSource(requestMessage))
-                }
+                                                       (implicit timeout: Timeout, executionContext: ExecutionContext): Unit = {
 
-                val resultFuture: Future[KnoraResponseV1] = for {
-                // Make sure the responder sent a reply of type KnoraResponseV1.
-                    knoraResponse <- (responderManager ? requestMessage).map {
-                        case replyMessage: KnoraResponseV1 =>
-                            // println(">>>>>>>>> ok")
-                            replyMessage
-                        case other =>
-                            // println(s">>>>>>>>> other: $other")
-                            // The responder returned an unexpected message type. This isn't the client's fault, so log
-                            // it and return an error message to the client.
-                            val logErrorMsg = s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
-                            val logEx = UnexpectedMessageException(logErrorMsg)
-                            // println("before throwing error message")
-                            log.error(logEx, logErrorMsg)
-                            throw logEx
-                    }
-
-                    // Optionally log the reply message. TODO: move this to the testing framework.
-                    _ = if (settings.dumpMessages) {
-                        log.debug(MessageUtil.toSource(knoraResponse))
-                    }
-
-                } yield knoraResponse
-
-                requestContext.complete(replyMessage2JsonHttpResponse(resultFuture, settings, log))
-
-            case Failure(ex) =>
-                // Was the error in generating the request message the client's fault?
-                ex match {
-                    case rre: RequestRejectedException =>
-                        // Yes, just tell the client.
-                        // println(s"requestMessageTry-match: RequestRejectedException")
-                        requestContext.complete(exceptionToJsonHttpResponse(rre, settings))
-
-                    case other =>
-                        // No: log the exception and notify the client.
-                        // println(s"requestMessageTry-match: other")
-                        log.error(ex, "Unable to run route")
-                        requestContext.complete(exceptionToJsonHttpResponse(other, settings))
-                }
-
+        // Optionally log the request message. TODO: move this to the testing framework.
+        if (settings.dumpMessages) {
+            log.debug(MessageUtil.toSource(requestMessage))
         }
+
+        val resultFuture: Future[KnoraResponseV1] = for {
+        // Make sure the responder sent a reply of type KnoraResponseV1.
+            knoraResponse <- (responderManager ? requestMessage).map {
+                case replyMessage: KnoraResponseV1 =>
+                    // println(">>>>>>>>> ok")
+                    replyMessage
+                case other =>
+                    // println(s">>>>>>>>> other: $other")
+                    // The responder returned an unexpected message type. This isn't the client's fault, so log
+                    // it and return an error message to the client.
+                    val logErrorMsg = s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
+                    val logEx = UnexpectedMessageException(logErrorMsg)
+                    // println("before throwing error message")
+                    log.error(logEx, logErrorMsg)
+                    throw logEx
+            }
+
+            // Optionally log the reply message. TODO: move this to the testing framework.
+            _ = if (settings.dumpMessages) {
+                log.debug(MessageUtil.toSource(knoraResponse))
+            }
+
+        } yield knoraResponse
+
+        requestContext.complete(replyMessage2JsonHttpResponse(resultFuture, settings, log))
     }
 
     /**
@@ -119,8 +99,7 @@ object RouteUtilV1 {
       *
       * @tparam RequestMessageT the type of request message to be sent to the responder.
       * @tparam ReplyMessageT   the type of reply message expected from the responder.
-      * @param requestMessageTry a [[Try]] containing, if successful, the message that should be sent to the responder manager.
-      *                          Any exceptions thrown will be reported to the client.
+      * @param requestMessage   the message that should be sent to the responder manager.
       * @param viewHandler       a function that can generate HTML from the responder's reply message.
       * @param requestContext    the spray [[RequestContext]].
       * @param settings          the application's settings.
@@ -129,57 +108,39 @@ object RouteUtilV1 {
       * @param timeout           a timeout for `ask` messages.
       * @param executionContext  an execution context for futures.
       */
-    def runHtmlRoute[RequestMessageT <: KnoraRequestV1, ReplyMessageT <: KnoraResponseV1 : ClassTag](requestMessageTry: Try[RequestMessageT],
+    def runHtmlRoute[RequestMessageT <: KnoraRequestV1, ReplyMessageT <: KnoraResponseV1 : ClassTag](requestMessage: RequestMessageT,
                                                                                                      viewHandler: (ReplyMessageT, ActorSelection) => String,
                                                                                                      requestContext: RequestContext,
                                                                                                      settings: SettingsImpl,
                                                                                                      responderManager: ActorSelection,
                                                                                                      log: LoggingAdapter)
-                                                                                                    (implicit timeout: Timeout, executionContext: ExecutionContext) = {
-        // Check whether a request message was successfully generated.
-        requestMessageTry match {
-            case Success(requestMessage) =>
-                // Optionally log the request message. TODO: move this to the testing framework.
-                if (settings.dumpMessages) {
-                    log.debug(MessageUtil.toSource(requestMessage))
-                }
+                                                                                                    (implicit timeout: Timeout, executionContext: ExecutionContext): Unit = {
 
-                val resultFuture: Future[ReplyMessageT] = for {
-                // Make sure the responder sent a reply of type ReplyMessageT.
-                    knoraResponse <- (responderManager ? requestMessage).map {
-                        case replyMessage: ReplyMessageT => replyMessage
-
-                        case other =>
-                            // The responder returned an unexpected message type. This isn't the client's fault, so
-                            // log the error and notify the client.
-                            val logErrorMsg = s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
-                            val unexpectedEx = UnexpectedMessageException(logErrorMsg)
-                            log.error(unexpectedEx, logErrorMsg)
-                            throw unexpectedEx
-                    }
-
-                    // Optionally log the reply message. TODO: move this to the testing framework.
-                    _ = if (settings.dumpMessages) {
-                        log.debug(MessageUtil.toSource(knoraResponse))
-                    }
-
-                } yield knoraResponse
-
-                requestContext.complete(replyMessage2JsonHttpResponse(resultFuture, settings, log))
-
-            case Failure(ex) =>
-                // Was the error in generating the request message the client's fault?
-                ex match {
-                    case rre: RequestRejectedException =>
-                        // Yes, just tell the client.
-                        requestContext.complete(exceptionToHtmlHttpResponse(ex, settings))
-
-                    case _ =>
-                        // No: log the exception and notify the client.
-                        log.error(ex, "Unable to run route")
-                        requestContext.complete(exceptionToHtmlHttpResponse(ex, settings))
-                }
+        // Optionally log the request message. TODO: move this to the testing framework.
+        if (settings.dumpMessages) {
+            log.debug(MessageUtil.toSource(requestMessage))
         }
+
+        val resultFuture: Future[ReplyMessageT] = for {
+        // Make sure the responder sent a reply of type ReplyMessageT.
+            knoraResponse <- (responderManager ? requestMessage).map {
+                case replyMessage: ReplyMessageT => replyMessage
+
+                case other =>
+                    // The responder returned an unexpected message type. This isn't the client's fault, so
+                    // log the error and notify the client.
+                    val msg = s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
+                    throw UnexpectedMessageException(msg)
+            }
+
+            // Optionally log the reply message. TODO: move this to the testing framework.
+            _ = if (settings.dumpMessages) {
+                log.debug(MessageUtil.toSource(knoraResponse))
+            }
+
+        } yield knoraResponse
+
+        requestContext.complete(replyMessage2JsonHttpResponse(resultFuture, settings, log))
     }
 
     /**
@@ -192,34 +153,30 @@ object RouteUtilV1 {
       * @return an [[HttpResponse]] containing a JSON representation of the result.
       */
     private def replyMessage2JsonHttpResponse(resultFuture: Future[KnoraResponseV1], settings: SettingsImpl, log: LoggingAdapter): Future[HttpResponse] = for {
-        result <- resultFuture
-        response = result match {
-            case jsonResponse: KnoraResponseV1 =>
-                Try {
-                    // The request was successful, so add a status of ApiStatusCodesV1.OK to the response.
-                    val jsonResponseWithStatus = JsObject(jsonResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
+        jsonResponse: KnoraResponseV1 <- resultFuture
+        response =
+        Try {
+            // The request was successful, so add a status of ApiStatusCodesV1.OK to the response.
+            val jsonResponseWithStatus = JsObject(jsonResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
 
-                    // Convert the response message to an HTTP response in JSON format.
-                    HttpResponse(
-                        status = StatusCodes.OK,
-                        entity = HttpEntity(
-                            ContentTypes.`application/json`,
-                            jsonResponseWithStatus.compactPrint
-                        )
-                    )
-                } match {
-                    case Success(httpResponse) => httpResponse
+            // Convert the response message to an HTTP response in JSON format.
+            HttpResponse(
+                status = StatusCodes.OK,
+                entity = HttpEntity(
+                    ContentTypes.`application/json`,
+                    jsonResponseWithStatus.compactPrint
+                )
+            )
+        } match {
+            case Success(httpResponse) => httpResponse
 
-                    case Failure(ex) =>
-                        // The conversion to JSON failed. Log the error and notify the client.
-                        log.error(ex, "Unable to convert responder's reply to JSON")
-                        exceptionToJsonHttpResponse(ex, settings)
-                }
-            //FIXME: This is unreachable
-            case ex: Exception =>
-                // The responder sent back an exception. Convert it to an HTTP response. We assume that it has already
-                // been logged by the responder, if appropriate.
-                exceptionToJsonHttpResponse(ex, settings)
+            case Failure(ex) =>
+                // The conversion to JSON failed. Log the error and notify the client.
+                log.error(ex, "Unable to convert responder's reply to JSON")
+
+                // FIXME: Remove match and throw exception earlier
+                //exceptionToJsonHttpResponse(ex, settings)
+                throw ex
         }
     } yield response
 
@@ -256,106 +213,19 @@ object RouteUtilV1 {
                     case Failure(ex) =>
                         // The conversion to JSON failed. Log the error and notify the client.
                         log.error(ex, "Unable to convert responder's reply to JSON")
-                        exceptionToHtmlHttpResponse(ex, settings)
+
+                        // FIXME: Remove match and throw exception earlier
+                        //exceptionToHtmlHttpResponse(ex, settings)
+                        throw ex
                 }
 
             case Failure(ex) =>
                 // The responder sent back an exception. Convert it to an HTTP response. We assume that it has already
                 // been logged by the responder, if appropriate.
-                exceptionToHtmlHttpResponse(ex, settings)
-        }
-    }
 
-    /**
-      * Converts an exception to an HTTP response in JSON format.
-      *
-      * @param ex the exception to be converted.
-      * @return an [[HttpResponse]] in JSON format.
-      */
-    private def exceptionToJsonHttpResponse(ex: Throwable, settings: SettingsImpl): HttpResponse = {
-        // Get the API status code that corresponds to the exception.
-        val apiStatus: ApiStatusCodesV1.Value = ApiStatusCodesV1.fromException(ex)
-
-        // Convert the API status code to the corresponding HTTP status code.
-        val httpStatus: StatusCode = ApiStatusCodesV1.toHttpStatus(apiStatus)
-
-        // Generate an HTTP response containing the error message, the API status code, and the HTTP status code.
-
-        val maybeAccess: Option[(String, JsValue)] = if (apiStatus == ApiStatusCodesV1.NO_RIGHTS_FOR_OPERATION) {
-            Some("access" -> JsString("NO_ACCESS"))
-        } else {
-            None
-        }
-
-        val responseFields: Map[String, JsValue] = Map(
-            "status" -> JsNumber(apiStatus.id),
-            "error" -> JsString(makeClientErrorMessage(ex, settings))
-        ) ++ maybeAccess
-
-        HttpResponse(
-            status = httpStatus,
-            entity = HttpEntity(ContentType(MediaTypes.`application/json`), JsObject(responseFields).compactPrint)
-        )
-    }
-
-    /**
-      * Converts an exception to an HTTP response in HTML format.
-      *
-      * @param ex the exception to be converted.
-      * @return an [[HttpResponse]] in HTML format.
-      */
-    private def exceptionToHtmlHttpResponse(ex: Throwable, settings: SettingsImpl): HttpResponse = {
-        // Get the API status code that corresponds to the exception.
-        val apiStatus: ApiStatusCodesV1.Value = ApiStatusCodesV1.fromException(ex)
-
-        // Convert the API status code to the corresponding HTTP status code.
-        val httpStatus: StatusCode = ApiStatusCodesV1.toHttpStatus(apiStatus)
-
-        // Generate an HTTP response containing the error message, the API status code, and the HTTP status code.
-        HttpResponse(
-            status = httpStatus,
-            entity = HttpEntity(
-                ContentTypes.`text/xml(UTF-8)`,
-                <html xmlns="http://www.w3.org/1999/xhtml">
-                    <head>
-                        <title>Error</title>
-                    </head>
-                    <body>
-                        <h2>Error</h2>
-                        <p>
-                            <code>
-                                {makeClientErrorMessage(ex, settings)}
-                            </code>
-                        </p>
-                        <h2>Status code</h2>
-                        <p>
-                            <code>
-                                {apiStatus.id}
-                            </code>
-                        </p>
-                    </body>
-                </html>.toString()
-            )
-        )
-    }
-
-    /**
-      * Given an exception, returns an error message suitable for clients.
-      *
-      * @param ex       the exception.
-      * @param settings the application settings.
-      * @return an error message suitable for clients.
-      */
-    private def makeClientErrorMessage(ex: Throwable, settings: SettingsImpl): String = {
-        ex match {
-            case rre: RequestRejectedException => rre.toString
-
-            case other =>
-                if (settings.showInternalErrors) {
-                    other.toString
-                } else {
-                    GENERIC_INTERNAL_SERVER_ERROR_MESSAGE
-                }
+                // FIXME: Remove match and throw exception earlier
+                // exceptionToHtmlHttpResponse(ex, settings)
+                throw ex
         }
     }
 }

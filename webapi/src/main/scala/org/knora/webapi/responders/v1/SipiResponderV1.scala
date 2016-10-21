@@ -38,6 +38,7 @@ import org.knora.webapi.util.{InputValidation, PermissionUtilV1}
 import spray.json._
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 /**
   * Responds to requests for information about binary representations of resources, and returns responses in Knora API
@@ -57,8 +58,8 @@ class SipiResponderV1 extends ResponderV1 {
       */
     def receive = {
         case SipiFileInfoGetRequestV1(fileValueIri, userProfile) => future2Message(sender(), getFileInfoForSipiV1(fileValueIri, userProfile), log)
-        //case convertPathRequest: SipiResponderConversionPathRequestV1 => future2Message(sender(), convertPathV1(convertPathRequest), log)
-        //case convertFileRequest: SipiResponderConversionFileRequestV1 => future2Message(sender(), convertFileV1(convertFileRequest), log)
+        case convertPathRequest: SipiResponderConversionPathRequestV1 => future2Message(sender(), convertPathV1(convertPathRequest), log)
+        case convertFileRequest: SipiResponderConversionFileRequestV1 => future2Message(sender(), convertFileV1(convertFileRequest), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -108,22 +109,6 @@ class SipiResponderV1 extends ResponderV1 {
       */
     private def callSipiConvertRoute(url: String, conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
 
-        /*
-        // define a pipeline function that gets turned into a generic [[HTTP Response]] (containing JSON)
-        val pipeline: HttpRequest => Future[HttpResponse] = (
-            addHeader("Accept", "application/json")
-                ~> sendReceive
-                ~> unmarshal[HttpResponse]
-            )
-
-        // send a conversion request to SIPI and parse the response as a generic [[HTTPResponse]]
-        val conversionResultFuture: Future[HttpResponse] = for {
-            formData <- Future(conversionRequest.toFormData())
-            postRequest <- Future(Post(url, FormData(formData)))
-            pipelineResult <- pipeline(postRequest)
-        } yield pipelineResult
-        */
-
         val conversionResultFuture: Future[HttpResponse] = for {
             request <- Marshal(conversionRequest.toFormData()).to[RequestEntity]
             response <- Http().singleRequest(
@@ -146,52 +131,47 @@ class SipiResponderV1 extends ResponderV1 {
                 // this problem is hardly the user's fault. Create a SipiException
                 throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
 
-            /*
-            TODO: Need to handle these types of problems differently as akka-http does not throw these exceptions anymore
-            case httpError: spray.httpx.UnsuccessfulResponseException =>
-                val statusCode: StatusCode = httpError.response.status
-
-                val statusInt: Int = statusCode.intValue / 100
-
-                // match status codes
-                statusInt match {
-                    case 4 =>
-                        // Bad Request: it is the user's responsibility
-                        val errMsg = try {
-                            // parse answer as a Sipi error message
-                            httpError.response.entity.asString.parseJson.convertTo[SipiErrorConversionResponse]
-                        } catch {
-                            // the Sipi error message could not be parsed correctly
-                            case e: DeserializationException => throw SipiException(s"Sipi reported an internal server error ${statusCode} without an error message", e = e, log = log)
-                        }
-                        // most probably the user sent invalid data which caused a Sipi error
-                        throw BadRequestException(s"Sipi returned a non successful HTTP status code ${statusCode} with ${errMsg}")
-
-                    case 5 =>
-                        // Internal Server Error: not the user's fault
-                        val errMsg = try {
-                            // parse answer as a Sipi error message
-                            httpError.response.entity.asString.parseJson.convertTo[SipiErrorConversionResponse]
-                        } catch {
-                            // the Sipi error message could not be parsed correctly
-                            case e: DeserializationException => throw SipiException(s"Sipi reported an internal server error ${statusCode} without an error message", e = httpError, log = log)
-                        }
-                        throw SipiException(s"Sipi reported an internal server error ${statusCode} with ${errMsg}", e = httpError, log = log)
-                }
-            */
-
             case err =>
                 // unknown error
                 throw SipiException(message = s"Unknown error: ${err.toString}", e = err, log = log)
-
         }
 
         for {
-
             conversionResultResponse <- recoveredConversionResultFuture
+
+            httpStatusCode: StatusCode = conversionResultResponse.status
+            statusInt: Int = httpStatusCode.intValue / 100
+
+            _ = statusInt match {
+                case 4 =>
+                    // Bad Request: it is the user's responsibility
+                    val errMsg = try {
+                        // parse answer as a Sipi error message
+                        val sef: Future[SipiErrorConversionResponse] = conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8").parseJson.convertTo[SipiErrorConversionResponse])
+                        sef
+                    } catch {
+                        // the Sipi error message could not be parsed correctly
+                        case e: DeserializationException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
+                    }
+                    // most probably the user sent invalid data which caused a Sipi error
+                    throw BadRequestException(s"Sipi returned a non successful HTTP status code $httpStatusCode: $errMsg")
+
+                case 5 =>
+                    // Internal Server Error: not the user's fault
+                    val sf: Future[String] = conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+                    throw SipiException(s"Sipi reported an internal server error $httpStatusCode - $sf")
+            }
 
             // get file type from Sipi response
             responseAsMap: Map[String, JsValue] = conversionResultResponse.entity.toString.parseJson.asJsObject.fields.toMap
+
+            statusCode: Int = responseAsMap.getOrElse("status", throw SipiException(message = "Sipi did not return a status code")) match {
+                case JsNumber(ftype: BigDecimal) => ftype.toInt
+                case other => throw SipiException(message = s"Sipi did not return a correct status code, but ${other.toString()}")
+            }
+
+            // check if Sipi returned a status code != 0
+            _ = if (statusCode != 0) throw BadRequestException(s"Sipi returned a HTTP 200 status code, but an unsuccessful status code ${statusCode}")
 
             fileType: String = responseAsMap.getOrElse("file_type", throw SipiException(message = "Sipi did not return a file type")) match {
                 case JsString(ftype: String) => ftype

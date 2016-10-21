@@ -21,7 +21,7 @@
 package org.knora.webapi.e2e
 
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import org.knora.webapi.Settings
+import org.knora.webapi.{KnoraExceptionHandler, Settings}
 import org.knora.webapi.util.CacheUtil
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 
@@ -36,6 +36,8 @@ class E2ESpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     val settings = Settings(system)
     val logger = akka.event.Logging(system, this.getClass())
     val log = logger
+
+    implicit val knoraExceptionHandler = KnoraExceptionHandler(settings, log)
 
     override def beforeAll {
         CacheUtil.createCaches(settings.caches)

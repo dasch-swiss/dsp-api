@@ -29,8 +29,6 @@ import org.knora.webapi.messages.v1.responder.sipimessages.SipiFileInfoGetReques
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 
-import scala.util.Try
-
 /**
   * Provides a spray-routing function for the API routes that Sipi connects to.
   */
@@ -48,14 +46,14 @@ object SipiRouteV1 extends Authenticator {
         path("v1" / "files" / Segment) { file =>
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
+                    val requestMessage = {
                         val userProfile = getUserProfileV1(requestContext)
                         //val fileValueIRI = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid file value IRI: $iri"))
                         val filename = InputValidation.toSparqlEncodedString(file, () => throw BadRequestException(s"Invalid filename: '$file'"))
                         SipiFileInfoGetRequestV1(filename, userProfile)
                     }
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,

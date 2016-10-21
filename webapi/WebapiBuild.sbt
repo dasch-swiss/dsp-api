@@ -104,6 +104,7 @@ lazy val webApiLibs = Seq(
     "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-xml-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+    "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     //CORS support
     "ch.megard" %% "akka-http-cors" % "0.1.7",
     // jena
@@ -112,12 +113,8 @@ lazy val webApiLibs = Seq(
     // http client
     "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
     // logging
-    "org.slf4j" % "slf4j-api" % "1.7.12",
-    "org.slf4j" % "jcl-over-slf4j" % "1.7.12",
-    "ch.qos.logback" % "logback-core" % "1.1.3",
-    "ch.qos.logback" % "logback-classic" % "1.1.3",
-    "com.typesafe.akka" % "akka-slf4j_2.11" % "2.4.0",
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+    "ch.qos.logback" % "logback-classic" % "1.1.7",
     // input validation
     "commons-validator" % "commons-validator" % "1.4.1",
     // pretty printing
@@ -150,9 +147,8 @@ lazy val webApiLibs = Seq(
     "com.typesafe.akka" %% "akka-http-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
-    //"io.spray" %% "spray-testkit" % "1.3.3" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.0M3",
-    "org.rogach" %% "scallop" % "2.0.1"
+    "org.rogach" %% "scallop" % "2.0.3"
 )
 
 lazy val javaRunOptions = Seq(
@@ -233,8 +229,3 @@ assemblyMergeStrategy in assembly := {
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)
 }
-
-// Custom run task
-//lazy val generateFakeTriplestore = taskKey[Unit]("Generate fake triplestore from a list of requests")
-
-//fullRunTask(generateFakeTriplestore, Test, "org.knora.webapi.GenFakeTripleStore")

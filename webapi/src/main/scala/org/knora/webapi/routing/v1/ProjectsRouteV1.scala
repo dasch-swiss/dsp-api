@@ -30,11 +30,9 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 
-import scala.util.Try
-
 object ProjectsRouteV1 extends Authenticator {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) = {
+    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
@@ -44,12 +42,12 @@ object ProjectsRouteV1 extends Authenticator {
         path("v1" / "projects") {
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
+                    val requestMessage = {
                         val userProfile = getUserProfileV1(requestContext)
                         ProjectsGetRequestV1(Some(userProfile))
                     }
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -62,14 +60,14 @@ object ProjectsRouteV1 extends Authenticator {
                     // TODO: here, we should differentiate between a given project Iri and a project shortname
                     parameters("reqtype".?) { reqtypeParam =>
                         requestContext =>
-                            val requestMessageTry = Try {
+                            val requestMessage = {
                                 val userProfile = getUserProfileV1(requestContext)
                                 val requestType = reqtypeParam.getOrElse(ProjectInfoType.SHORT.toString)
                                 val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
                                 ProjectInfoByIRIGetRequest(resIri, ProjectInfoType.lookup(requestType), Some(userProfile))
                             }
                             RouteUtilV1.runJsonRoute(
-                                requestMessageTry,
+                                requestMessage,
                                 requestContext,
                                 settings,
                                 responderManager,
