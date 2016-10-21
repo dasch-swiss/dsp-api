@@ -22,6 +22,7 @@ package org.knora.webapi.routing
 
 import akka.actor.ActorSelection
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.server.RouteResult
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
 import akka.pattern._
@@ -60,7 +61,7 @@ object RouteUtilV1 {
                                                         settings: SettingsImpl,
                                                         responderManager: ActorSelection,
                                                         log: LoggingAdapter)
-                                                       (implicit timeout: Timeout, executionContext: ExecutionContext): Unit = {
+                                                       (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
 
         // Optionally log the request message. TODO: move this to the testing framework.
         if (settings.dumpMessages) {
@@ -114,7 +115,7 @@ object RouteUtilV1 {
                                                                                                      settings: SettingsImpl,
                                                                                                      responderManager: ActorSelection,
                                                                                                      log: LoggingAdapter)
-                                                                                                    (implicit timeout: Timeout, executionContext: ExecutionContext): Unit = {
+                                                                                                    (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
 
         // Optionally log the request message. TODO: move this to the testing framework.
         if (settings.dumpMessages) {
