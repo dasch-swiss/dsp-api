@@ -139,14 +139,21 @@ class SipiResponderV1 extends ResponderV1 {
                             httpError.response.entity.asString.parseJson.convertTo[SipiErrorConversionResponse]
                         } catch {
                             // the Sipi error message could not be parsed correctly
-                            case e: DeserializationException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
+                            case e: DeserializationException => throw SipiException(s"Sipi reported an internal server error ${statusCode} without an error message", e = e, log = log)
                         }
                         // most probably the user sent invalid data which caused a Sipi error
-                        throw BadRequestException(s"Sipi returned a non successful HTTP status code ${statusCode}: ${errMsg}")
+                        throw BadRequestException(s"Sipi returned a non successful HTTP status code ${statusCode} with ${errMsg}")
 
                     case 5 =>
                         // Internal Server Error: not the user's fault
-                        throw SipiException(s"Sipi reported an internal server error ${statusCode}", e = httpError, log = log)
+                        val errMsg = try {
+                            // parse answer as a Sipi error message
+                            httpError.response.entity.asString.parseJson.convertTo[SipiErrorConversionResponse]
+                        } catch {
+                            // the Sipi error message could not be parsed correctly
+                            case e: DeserializationException => throw SipiException(s"Sipi reported an internal server error ${statusCode} without an error message", e = httpError, log = log)
+                        }
+                        throw SipiException(s"Sipi reported an internal server error ${statusCode} with ${errMsg}", e = httpError, log = log)
                 }
 
             case err =>
@@ -161,21 +168,6 @@ class SipiResponderV1 extends ResponderV1 {
 
             // get file type from Sipi response
             responseAsMap: Map[String, JsValue] = conversionResultResponse.entity.asString.parseJson.asJsObject.fields
-
-            statusCode: Int = responseAsMap.getOrElse("status", throw SipiException(message = "Sipi did not return a status code")) match {
-                case JsNumber(ftype: BigDecimal) => ftype.toInt
-                case other => throw SipiException(message = s"Sipi did not return a correct status code, but ${other.toString()}")
-            }
-
-            // check if Sipi returned a status code != 0
-            _ = if (statusCode != 0) {
-                // Sipi returned an unsuccessful status code, get the error message
-                val sipiErrorMessage: String = responseAsMap.getOrElse("message", throw SipiException(message = "Sipi did not return an error message with key 'message' although status is != 0")) match {
-                    case JsString(msg) => msg
-                    case other => throw SipiException(message = s"Sipi did not return an error message of type string, but ${other.toString()}")
-                }
-                throw BadRequestException(s"Sipi returned an HTTP 200 status code, but an unsuccessful status code ${statusCode} with error message: '${sipiErrorMessage}'")
-            }
 
             fileType: String = responseAsMap.getOrElse("file_type", throw SipiException(message = "Sipi did not return a file type")) match {
                 case JsString(ftype: String) => ftype
