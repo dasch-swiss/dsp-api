@@ -160,10 +160,10 @@ class SipiResponderV1 extends ResponderV1 {
             conversionResultResponse <- recoveredConversionResultFuture
 
             // get file type from Sipi response
-            responseAsMap: Map[String, JsValue] = conversionResultResponse.entity.asString.parseJson.asJsObject.fields.toMap
+            responseAsMap: Map[String, JsValue] = conversionResultResponse.entity.asString.parseJson.asJsObject.fields
 
             statusCode: Int = responseAsMap.getOrElse("status", throw SipiException(message = "Sipi did not return a status code")) match {
-                case JsNumber(ftype: BigDecimal) => ftype.toInt // TODO: Sipi should respond with a status code of type integer (it is a floating point number, see: https://github.com/dhlab-basel/Sipi/issues/64)
+                case JsNumber(ftype: BigDecimal) => ftype.toInt
                 case other => throw SipiException(message = s"Sipi did not return a correct status code, but ${other.toString()}")
             }
 
