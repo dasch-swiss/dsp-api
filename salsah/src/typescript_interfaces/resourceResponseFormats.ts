@@ -48,7 +48,7 @@ export module resourceResponseFormats {
         /**
          * Comment on the value.
          */
-        comment:string;
+        comment?:string;
 
         /**
          * date of last modification of the value as UTC.
