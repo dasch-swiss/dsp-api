@@ -193,7 +193,7 @@ export module resourceResponseFormats {
         /**
          * Comments on the property's values
          */
-        comments?:Array<string>;
+        comments?:Array<string | null>;
 
         /**
          * List of binary representations attached to the requested resource (when doing a full resource request)
