@@ -43,16 +43,15 @@ object ListsRouteV1 extends Authenticator {
         path("v1" / "hlists" / Segment) { iri =>
             get {
                 requestContext =>
-                    val requestMessage = {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+                    val userProfile = getUserProfileV1(requestContext)
+                    val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                        requestContext.request.uri.query().get("reqtype") match {
-                            case Some("node") => NodePathGetRequestV1(listIri, userProfile)
-                            case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
-                            case None => HListGetRequestV1(listIri, userProfile)
-                        }
+                    val requestMessage = requestContext.request.uri.query().get("reqtype") match {
+                        case Some("node") => NodePathGetRequestV1(listIri, userProfile)
+                        case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
+                        case None => HListGetRequestV1(listIri, userProfile)
                     }
+
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,
@@ -65,16 +64,15 @@ object ListsRouteV1 extends Authenticator {
             path("v1" / "selections" / Segment) { iri =>
                 get {
                     requestContext =>
-                        val requestMessage = {
-                            val userProfile = getUserProfileV1(requestContext)
-                            val selIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+                        val userProfile = getUserProfileV1(requestContext)
+                        val selIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                            requestContext.request.uri.query().get("reqtype") match {
-                                case Some("node") => NodePathGetRequestV1(selIri, userProfile)
-                                case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
-                                case None => SelectionGetRequestV1(selIri, userProfile)
-                            }
+                        val requestMessage = requestContext.request.uri.query().get("reqtype") match {
+                            case Some("node") => NodePathGetRequestV1(selIri, userProfile)
+                            case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
+                            case None => SelectionGetRequestV1(selIri, userProfile)
                         }
+
                         RouteUtilV1.runJsonRoute(
                             requestMessage,
                             requestContext,

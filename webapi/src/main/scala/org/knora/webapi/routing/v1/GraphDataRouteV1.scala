@@ -46,11 +46,10 @@ object GraphDataRouteV1 extends Authenticator {
         path("v1" / "graphdata" / Segment) { iri =>
             get {
                 requestContext =>
-                    val requestMessage = {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val repIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
-                        GraphDataGetRequestV1(repIri, userProfile, 4) // default level seems to be 4
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    val repIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                    val requestMessage = GraphDataGetRequestV1(repIri, userProfile, 4) // default level seems to be 4
+
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,

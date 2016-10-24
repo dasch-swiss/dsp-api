@@ -190,11 +190,10 @@ object SearchRouteV1 extends Authenticator {
             // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
             get {
                 requestContext => {
-                    val requestMessage = {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
-                        makeExtendedSearchRequestMessage(userProfile, params)
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
+                    val requestMessage = makeExtendedSearchRequestMessage(userProfile, params)
+
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,
@@ -207,11 +206,10 @@ object SearchRouteV1 extends Authenticator {
         } ~ path("v1" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
                 requestContext => {
-                    val requestMessage = {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val params: Map[String, String] = requestContext.request.uri.query().toMap
-                        makeFulltextSearchRequestMessage(userProfile, searchval, params)
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+                    val requestMessage = makeFulltextSearchRequestMessage(userProfile, searchval, params)
+
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,

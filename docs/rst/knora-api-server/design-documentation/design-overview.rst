@@ -293,7 +293,10 @@ Transformation of Exception to Client Responses
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``org.knora.webapi.KnoraExceptionHandler`` is brought implicitly into scope of ``akka-http``,
-and by doing so registered and used to handle the transformation of all ``KnoraExceptions`` into ``HttpResponses``.
+and by doing so registered and used to handle the transformation of all ``KnoraExceptions`` into ``HttpResponses``. This
+handler handles only exceptions thrown inside the route and not the actors. However, the design of reply message passing
+from actors (by using ``future2Message``), makes sure that any exceptions thrown inside actors, will reach the route,
+where they will be handled.
  
 See also :ref:`futures-with-akka`.
 

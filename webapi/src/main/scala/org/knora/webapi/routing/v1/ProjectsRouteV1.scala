@@ -42,10 +42,9 @@ object ProjectsRouteV1 extends Authenticator {
         path("v1" / "projects") {
             get {
                 requestContext =>
-                    val requestMessage = {
-                        val userProfile = getUserProfileV1(requestContext)
-                        ProjectsGetRequestV1(Some(userProfile))
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    val requestMessage = ProjectsGetRequestV1(Some(userProfile))
+
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,
@@ -60,12 +59,11 @@ object ProjectsRouteV1 extends Authenticator {
                     // TODO: here, we should differentiate between a given project Iri and a project shortname
                     parameters("reqtype".?) { reqtypeParam =>
                         requestContext =>
-                            val requestMessage = {
-                                val userProfile = getUserProfileV1(requestContext)
-                                val requestType = reqtypeParam.getOrElse(ProjectInfoType.SHORT.toString)
-                                val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
-                                ProjectInfoByIRIGetRequest(resIri, ProjectInfoType.lookup(requestType), Some(userProfile))
-                            }
+                            val userProfile = getUserProfileV1(requestContext)
+                            val requestType = reqtypeParam.getOrElse(ProjectInfoType.SHORT.toString)
+                            val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                            val requestMessage = ProjectInfoByIRIGetRequest(resIri, ProjectInfoType.lookup(requestType), Some(userProfile))
+
                             RouteUtilV1.runJsonRoute(
                                 requestMessage,
                                 requestContext,

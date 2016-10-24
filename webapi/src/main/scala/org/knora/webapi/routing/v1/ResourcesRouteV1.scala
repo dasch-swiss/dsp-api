@@ -199,37 +199,35 @@ object ResourcesRouteV1 extends Authenticator {
             get {
                 // search for resources matching the given search string (searchstr) and return their Iris.
                 requestContext =>
-                    val requestMessage = {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query().toMap
-                        val searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
-                        val restype = params.getOrElse("restype_id", "-1") // default -1 means: no restriction at all
-                        val numprops = params.getOrElse("numprops", "1")
-                        val limit = params.getOrElse("limit", "11")
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params = requestContext.request.uri.query().toMap
+                    val searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
+                    val restype = params.getOrElse("restype_id", "-1") // default -1 means: no restriction at all
+                    val numprops = params.getOrElse("numprops", "1")
+                    val limit = params.getOrElse("limit", "11")
 
-                        // input validation
+                    // input validation
 
-                        val searchString = InputValidation.toSparqlEncodedString(searchstr, () => throw BadRequestException(s"Invalid search string: '$searchstr'"))
+                    val searchString = InputValidation.toSparqlEncodedString(searchstr, () => throw BadRequestException(s"Invalid search string: '$searchstr'"))
 
-                        val resourceTypeIri: Option[IRI] = restype match {
-                            case ("-1") => None
-                            case (restype: IRI) => Some(InputValidation.toIri(restype, () => throw BadRequestException(s"Invalid param restype: $restype")))
-                        }
-
-                        val numberOfProps: Int = InputValidation.toInt(numprops, () => throw BadRequestException(s"Invalid param numprops: $numprops")) match {
-                            case (number: Int) => if (number < 1) 1 else number // numberOfProps must not be smaller than 1
-                        }
-
-                        val limitOfResults = InputValidation.toInt(limit, () => throw BadRequestException(s"Invalid param limit: $limit"))
-
-                        makeResourceSearchRequestMessage(
-                            searchString = searchString,
-                            resourceTypeIri = resourceTypeIri,
-                            numberOfProps = numberOfProps,
-                            limitOfResults = limitOfResults,
-                            userProfile = userProfile
-                        )
+                    val resourceTypeIri: Option[IRI] = restype match {
+                        case ("-1") => None
+                        case (restype: IRI) => Some(InputValidation.toIri(restype, () => throw BadRequestException(s"Invalid param restype: $restype")))
                     }
+
+                    val numberOfProps: Int = InputValidation.toInt(numprops, () => throw BadRequestException(s"Invalid param numprops: $numprops")) match {
+                        case (number: Int) => if (number < 1) 1 else number // numberOfProps must not be smaller than 1
+                    }
+
+                    val limitOfResults = InputValidation.toInt(limit, () => throw BadRequestException(s"Invalid param limit: $limit"))
+
+                    val requestMessage = makeResourceSearchRequestMessage(
+                        searchString = searchString,
+                        resourceTypeIri = resourceTypeIri,
+                        numberOfProps = numberOfProps,
+                        limitOfResults = limitOfResults,
+                        userProfile = userProfile
+                    )
 
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
@@ -243,11 +241,8 @@ object ResourcesRouteV1 extends Authenticator {
                 // The binary file is already managed by Sipi.
                 // For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
                 entity(as[CreateResourceApiRequestV1]) { apiRequest => requestContext =>
-                    val requestMessage = {
-                        val userProfile = getUserProfileV1(requestContext)
-
-                        makeCreateResourceRequestMessage(apiRequest = apiRequest, userProfile = userProfile)
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    val requestMessage = makeCreateResourceRequestMessage(apiRequest = apiRequest, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
@@ -264,87 +259,85 @@ object ResourcesRouteV1 extends Authenticator {
                 entity(as[Multipart.FormData]) { formdata: Multipart.FormData => requestContext =>
 
                     //println("/v1/resources - Multipart.FormData")
-                    val requestMessage = {
 
-                        val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
 
-                        type Name = String
+                    type Name = String
 
-                        /* TODO: refactor to remove the need for this var */
-                        /* makes sure that variables updated in another thread return the latest version */
-                        @volatile var receivedFile: Option[File] = None
+                    /* TODO: refactor to remove the need for this var */
+                    /* makes sure that variables updated in another thread return the latest version */
+                    @volatile var receivedFile: Option[File] = None
 
-                        /* get the json data */
-                        val jsonMapFuture = formdata.parts.mapAsync(1) { p: Multipart.FormData.BodyPart =>
-                            if (p.name == "json") {
-                                val read = p.entity.dataBytes.runFold(ByteString.empty)((whole, chunk) => whole ++ chunk)
-                                read.map(read =>
-                                    Map(p.name -> read.utf8String.parseJson)
-                                )
-                            } else if (p.name.isEmpty) {
-                                throw BadRequestException("part of HTTP multipart request has no name")
-                            } else {
-                                Future(Map.empty[Name, JsValue])
-                            }
-                        }.runFold(Map.empty[Name, JsValue])((set, value) => set ++ value)
-
-                        // this file will be deleted by Knora once it is not needed anymore
-                        // TODO: add a script that cleans files in the tmp location that have a certain age
-                        // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
-                        // TODO: how to check if the user has sent multiple files?
-
-                        /* get the file data and save to temporary location */
-                        val fileMapFuture = formdata.parts.mapAsync(1) { p: Multipart.FormData.BodyPart =>
-                            if (p.name == "file") {
-                                //println(s"part named ${p.name} has file named ${p.filename}")
-                                val filename = p.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
-                                val tmpFile = InputValidation.createTempFile(settings)
-                                val written = p.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
-                                written.map { written =>
-                                    //println(s"written result: ${written.wasSuccessful}, ${p.filename.get}, ${tmpFile.getAbsolutePath}")
-                                    receivedFile = Some(tmpFile)
-                                    Map(p.name -> FileInfo(p.name, p.filename.get, p.entity.contentType))
-                                }
-                            } else {
-                                Future(Map.empty[Name, FileInfo])
-                            }
-                        }.runFold(Map.empty[Name, FileInfo])((set, value) => set ++ value)
-
-                        // TODO: refactor to remove blocking (issue #291)
-                        val jsonMap = Await.result(jsonMapFuture, Timeout(10.seconds).duration)
-                        val fileMap = Await.result(fileMapFuture, Timeout(10.seconds).duration)
-
-                        // get the json params (access first member of the tuple) and turn them into a case class
-                        val apiRequest: CreateResourceApiRequestV1 = try {
-                            jsonMap.getOrElse("json", throw BadRequestException("Required param 'json' was not submitted"))
-                                    .convertTo[CreateResourceApiRequestV1]
-                        } catch {
-                            case e: DeserializationException => throw BadRequestException("JSON params structure is invalid: " + e.toString)
+                    /* get the json data */
+                    val jsonMapFuture = formdata.parts.mapAsync(1) { p: Multipart.FormData.BodyPart =>
+                        if (p.name == "json") {
+                            val read = p.entity.dataBytes.runFold(ByteString.empty)((whole, chunk) => whole ++ chunk)
+                            read.map(read =>
+                                Map(p.name -> read.utf8String.parseJson)
+                            )
+                        } else if (p.name.isEmpty) {
+                            throw BadRequestException("part of HTTP multipart request has no name")
+                        } else {
+                            Future(Map.empty[Name, JsValue])
                         }
+                    }.runFold(Map.empty[Name, JsValue])((set, value) => set ++ value)
 
-                        // check if the API request contains file information: this is illegal for this route
-                        if (apiRequest.file.nonEmpty) throw BadRequestException("param 'file' is set for a post multipart request. This is not allowed.")
+                    // this file will be deleted by Knora once it is not needed anymore
+                    // TODO: add a script that cleans files in the tmp location that have a certain age
+                    // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
+                    // TODO: how to check if the user has sent multiple files?
 
-                        val sourcePath = receivedFile.getOrElse(throw FileUploadException("Error during file upload. Please report this as a possible bug."))
-
-                        val (originalFilename, originalMimeType) = fileMap.headOption match {
-                            case Some((name, fileinfo)) => (name, fileinfo.contentType.toString)
-                            case None => throw BadRequestException("MultiPart Post request was sent but no files")
+                    /* get the file data and save to temporary location */
+                    val fileMapFuture = formdata.parts.mapAsync(1) { p: Multipart.FormData.BodyPart =>
+                        if (p.name == "file") {
+                            //println(s"part named ${p.name} has file named ${p.filename}")
+                            val filename = p.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
+                            val tmpFile = InputValidation.createTempFile(settings)
+                            val written = p.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
+                            written.map { written =>
+                                //println(s"written result: ${written.wasSuccessful}, ${p.filename.get}, ${tmpFile.getAbsolutePath}")
+                                receivedFile = Some(tmpFile)
+                                Map(p.name -> FileInfo(p.name, p.filename.get, p.entity.contentType))
+                            }
+                        } else {
+                            Future(Map.empty[Name, FileInfo])
                         }
+                    }.runFold(Map.empty[Name, FileInfo])((set, value) => set ++ value)
 
-                        val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
-                            originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
-                            originalMimeType = InputValidation.toSparqlEncodedString(originalMimeType, () => throw BadRequestException(s"Original MIME type is invalid: '$originalMimeType'")),
-                            source = sourcePath,
-                            userProfile = userProfile
-                        )
+                    // TODO: refactor to remove blocking (issue #291)
+                    val jsonMap = Await.result(jsonMapFuture, Timeout(10.seconds).duration)
+                    val fileMap = Await.result(fileMapFuture, Timeout(10.seconds).duration)
 
-                        makeCreateResourceRequestMessage(
-                            apiRequest = apiRequest,
-                            multipartConversionRequest = Some(sipiConvertPathRequest),
-                            userProfile = userProfile
-                        )
+                    // get the json params (access first member of the tuple) and turn them into a case class
+                    val apiRequest: CreateResourceApiRequestV1 = try {
+                        jsonMap.getOrElse("json", throw BadRequestException("Required param 'json' was not submitted"))
+                                .convertTo[CreateResourceApiRequestV1]
+                    } catch {
+                        case e: DeserializationException => throw BadRequestException("JSON params structure is invalid: " + e.toString)
                     }
+
+                    // check if the API request contains file information: this is illegal for this route
+                    if (apiRequest.file.nonEmpty) throw BadRequestException("param 'file' is set for a post multipart request. This is not allowed.")
+
+                    val sourcePath = receivedFile.getOrElse(throw FileUploadException("Error during file upload. Please report this as a possible bug."))
+
+                    val (originalFilename, originalMimeType) = fileMap.headOption match {
+                        case Some((name, fileinfo)) => (name, fileinfo.contentType.toString)
+                        case None => throw BadRequestException("MultiPart Post request was sent but no files")
+                    }
+
+                    val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
+                        originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
+                        originalMimeType = InputValidation.toSparqlEncodedString(originalMimeType, () => throw BadRequestException(s"Original MIME type is invalid: '$originalMimeType'")),
+                        source = sourcePath,
+                        userProfile = userProfile
+                    )
+
+                    val requestMessage = makeCreateResourceRequestMessage(
+                        apiRequest = apiRequest,
+                        multipartConversionRequest = Some(sipiConvertPathRequest),
+                        userProfile = userProfile
+                    )
 
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
@@ -360,13 +353,11 @@ object ResourcesRouteV1 extends Authenticator {
             get {
                 parameters("reqtype".?, "resinfo".as[Boolean].?) { (reqtypeParam, resinfoParam) =>
                     requestContext =>
-                        val requestMessage = {
-                            val userProfile = getUserProfileV1(requestContext)
-                            val params = parameterMap
-                            val requestType = reqtypeParam.getOrElse("")
-                            val resinfo = resinfoParam.getOrElse(false)
-                            makeResourceRequestMessage(resIri = resIri, resinfo = resinfo, requestType = requestType, userProfile = userProfile)
-                        }
+                        val userProfile = getUserProfileV1(requestContext)
+                        val params = parameterMap
+                        val requestType = reqtypeParam.getOrElse("")
+                        val resinfo = resinfoParam.getOrElse(false)
+                        val requestMessage = makeResourceRequestMessage(resIri = resIri, resinfo = resinfo, requestType = requestType, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRoute(
                             requestMessage,
@@ -379,10 +370,8 @@ object ResourcesRouteV1 extends Authenticator {
             } ~ delete {
                 parameters("deleteComment".?) { deleteCommentParam =>
                     requestContext =>
-                        val requestMessage = {
-                            val userProfile = getUserProfileV1(requestContext)
-                            makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteCommentParam, userProfile = userProfile)
-                        }
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestMessage = makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteCommentParam, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRoute(
                             requestMessage,
@@ -396,16 +385,14 @@ object ResourcesRouteV1 extends Authenticator {
         } ~ path("v1" / "resources.html" / Segment) { iri =>
             get {
                 requestContext =>
-                    val requestMessage = {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query().toMap
-                        val requestType = params.getOrElse("reqtype", "")
-                        val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params = requestContext.request.uri.query().toMap
+                    val requestType = params.getOrElse("reqtype", "")
+                    val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
 
-                        requestType match {
-                            case "properties" => ResourceFullGetRequestV1(resIri, userProfile)
-                            case other => throw BadRequestException(s"Invalid request type: $other")
-                        }
+                    val requestMessage = requestType match {
+                        case "properties" => ResourceFullGetRequestV1(resIri, userProfile)
+                        case other => throw BadRequestException(s"Invalid request type: $other")
                     }
 
                     RouteUtilV1.runHtmlRoute[ResourcesResponderRequestV1, ResourceFullResponseV1](
@@ -420,14 +407,9 @@ object ResourcesRouteV1 extends Authenticator {
         } ~ path("v1" / "properties" / Segment) { iri =>
             get {
                 requestContext =>
-                    val requestMessage = {
-                        val userProfile = getUserProfileV1(requestContext)
-
-                        val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
-
-                        makeGetPropertiesRequestMessage(resIri, userProfile)
-
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                    val requestMessage = makeGetPropertiesRequestMessage(resIri, userProfile)
 
                     RouteUtilV1.runJsonRoute(
                         requestMessage,

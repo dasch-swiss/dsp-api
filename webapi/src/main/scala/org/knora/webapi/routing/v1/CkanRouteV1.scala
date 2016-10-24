@@ -46,14 +46,13 @@ object CkanRouteV1 extends Authenticator {
         path("v1" / "ckan") {
             get {
                 requestContext =>
-                    val requestMessage = {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query().toMap
-                        val project: Option[Seq[String]] = params.get("project").map(_.split(","))
-                        val limit: Option[Int] = params.get("limit").map(_.toInt)
-                        val info: Boolean = params.getOrElse("info", false) == true
-                        CkanRequestV1(project, limit, info, userProfile)
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params = requestContext.request.uri.query().toMap
+                    val project: Option[Seq[String]] = params.get("project").map(_.split(","))
+                    val limit: Option[Int] = params.get("limit").map(_.toInt)
+                    val info: Boolean = params.getOrElse("info", false) == true
+                    val requestMessage = CkanRequestV1(project, limit, info, userProfile)
+
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,

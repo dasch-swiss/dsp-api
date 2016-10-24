@@ -22,9 +22,8 @@ package org.knora.webapi.routing
 
 import akka.actor.ActorSelection
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.server.RouteResult
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.RequestContext
+import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
@@ -41,9 +40,6 @@ import scala.util.{Failure, Success, Try}
   * Convenience methods for Knora routes.
   */
 object RouteUtilV1 {
-    // A generic error message that we return to clients when an internal server error occurs.
-    private val GENERIC_INTERNAL_SERVER_ERROR_MESSAGE = "The request could not be completed because of an internal server error."
-
 
     /**
       * Runs an API routing function.
@@ -72,15 +68,12 @@ object RouteUtilV1 {
         // Make sure the responder sent a reply of type KnoraResponseV1.
             knoraResponse <- (responderManager ? requestMessage).map {
                 case replyMessage: KnoraResponseV1 =>
-                    // println(">>>>>>>>> ok")
                     replyMessage
                 case other =>
-                    // println(s">>>>>>>>> other: $other")
-                    // The responder returned an unexpected message type. This isn't the client's fault, so log
-                    // it and return an error message to the client.
+                    // The responder returned an unexpected message type (not an exception). This isn't the client's
+                    // fault, so log it and return an error message to the client.
                     val logErrorMsg = s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
                     val logEx = UnexpectedMessageException(logErrorMsg)
-                    // println("before throwing error message")
                     log.error(logEx, logErrorMsg)
                     throw logEx
             }
@@ -155,30 +148,19 @@ object RouteUtilV1 {
       */
     private def replyMessage2JsonHttpResponse(resultFuture: Future[KnoraResponseV1], settings: SettingsImpl, log: LoggingAdapter): Future[HttpResponse] = for {
         jsonResponse: KnoraResponseV1 <- resultFuture
-        response =
-        Try {
-            // The request was successful, so add a status of ApiStatusCodesV1.OK to the response.
-            val jsonResponseWithStatus = JsObject(jsonResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
 
-            // Convert the response message to an HTTP response in JSON format.
-            HttpResponse(
-                status = StatusCodes.OK,
-                entity = HttpEntity(
-                    ContentTypes.`application/json`,
-                    jsonResponseWithStatus.compactPrint
-                )
+        // The request was successful, so add a status of ApiStatusCodesV1.OK to the response.
+        jsonResponseWithStatus = JsObject(jsonResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
+
+        // Convert the response message to an HTTP response in JSON format.
+        response = HttpResponse(
+            status = StatusCodes.OK,
+            entity = HttpEntity(
+                ContentTypes.`application/json`,
+                jsonResponseWithStatus.compactPrint
             )
-        } match {
-            case Success(httpResponse) => httpResponse
+        )
 
-            case Failure(ex) =>
-                // The conversion to JSON failed. Log the error and notify the client.
-                log.error(ex, "Unable to convert responder's reply to JSON")
-
-                // FIXME: Remove match and throw exception earlier
-                //exceptionToJsonHttpResponse(ex, settings)
-                throw ex
-        }
     } yield response
 
     /**

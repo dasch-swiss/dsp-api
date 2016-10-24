@@ -46,12 +46,11 @@ object SipiRouteV1 extends Authenticator {
         path("v1" / "files" / Segment) { file =>
             get {
                 requestContext =>
-                    val requestMessage = {
-                        val userProfile = getUserProfileV1(requestContext)
-                        //val fileValueIRI = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid file value IRI: $iri"))
-                        val filename = InputValidation.toSparqlEncodedString(file, () => throw BadRequestException(s"Invalid filename: '$file'"))
-                        SipiFileInfoGetRequestV1(filename, userProfile)
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    //val fileValueIRI = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid file value IRI: $iri"))
+                    val filename = InputValidation.toSparqlEncodedString(file, () => throw BadRequestException(s"Invalid filename: '$file'"))
+                    val requestMessage = SipiFileInfoGetRequestV1(filename, userProfile)
+
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,

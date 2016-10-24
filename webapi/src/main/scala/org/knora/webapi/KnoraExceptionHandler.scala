@@ -13,13 +13,15 @@ import spray.json.{JsNumber, JsObject, JsString, JsValue}
   */
 object KnoraExceptionHandler {
 
+    // A generic error message that we return to clients when an internal server error occurs.
+    private val GENERIC_INTERNAL_SERVER_ERROR_MESSAGE = "The request could not be completed because of an internal server error."
+
     def apply(settingsImpl: SettingsImpl, log: LoggingAdapter): ExceptionHandler = ExceptionHandler {
 
         /* TODO: Find out which response format should be generated, by looking at what the client is requesting / accepting (issue #292) */
 
         case bce: BadCredentialsException =>
             extractUri { uri =>
-                log.error(s"Request to $uri could not be handled normally")
                 complete(
                     HttpResponse(
                         status = StatusCodes.Unauthorized,
@@ -36,9 +38,11 @@ object KnoraExceptionHandler {
 
         case rre: RequestRejectedException =>
             extractUri { uri =>
-                log.error(s"Request to $uri could not be handled normally")
                 complete(exceptionToJsonHttpResponse(rre, settingsImpl))
             }
+
+        case ume: UnexpectedMessageException =>
+            complete(exceptionToJsonHttpResponse(ume, settingsImpl))
 
         case ise: InternalServerException =>
             extractUri { uri =>
@@ -139,7 +143,12 @@ object KnoraExceptionHandler {
         ex match {
             case rre: RequestRejectedException => rre.toString
 
-
+            case other =>
+                if (settings.showInternalErrors) {
+                    other.toString
+                } else {
+                    GENERIC_INTERNAL_SERVER_ERROR_MESSAGE
+                }
         }
     }
 
