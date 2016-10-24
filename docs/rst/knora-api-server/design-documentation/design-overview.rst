@@ -26,9 +26,9 @@ The Knora API server implements Knora's web-based Application Programming Interf
 for receiving HTTP requests from clients (which may be web browsers or other software), performing
 authentication and authorisation, querying and updating the RDF triplestore, transforming the
 results of SPARQL queries into Knora API responses, and returning these responses to the client.
-It is written in Scala_, using the Akka_ framework for message-based concurrency and the spray_ framework
-for web APIs. It is designed to work with any standards-compliant triplestore. It can communicate with
-triplestores either via the `SPARQL 1.1 Protocol`_ or by embedding the triplestore in the API server as a library.
+It is written in Scala_, using the Akka_ framework for message-based concurrency. It is designed to work with any
+standards-compliant triplestore. It can communicate with triplestores either via the `SPARQL 1.1 Protocol`_ or by
+embedding the triplestore in the API server as a library.
 
 Design Diagram
 ---------------
@@ -68,12 +68,10 @@ Shared Between Modules
 Actor Supervision and Creation
 -------------------------------
 
-At system start, the supervisor actors are created in
-``CoreManagerActors.scala``:
+At system start, the supervisor actors are created in ``KnoraService.scala``:
 
 ::
 
-    val httpServiceManager = system.actorOf(Props(new KnoraHttpServiceManager with LiveActorMaker), name = "httpServiceManager")
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = "responderManager")
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = "storeManager")
 
@@ -87,11 +85,6 @@ are configured in ``application.conf``:
 
     actor {
         deployment {
-            user/httpServiceManager/httpServiceRouter {
-                router = round-robin-pool
-                nr-of-instances = 100
-            }
-
             user/storeManager/triplestoreRouter {
                 router = round-robin-pool
                 nr-of-instances = 50
@@ -118,6 +111,22 @@ are configured in ``application.conf``:
             }
         }
     }
+
+
+Additionally, in ``KnoraService`` also the ``akka-http`` layer is started:
+
+::
+
+    val host = settings.httpInterface
+    val port = settings.httpPort
+    val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(Route.handlerFlow(apiRoutes), host, port)
+    println(s"Knora API Server started. You can access it on http://${settings.httpInterface}:${settings.httpPort}.")
+
+    bindingFuture.onFailure {
+        case ex: Exception =>
+        log.error(ex, s"Failed to bind to ${settings.httpInterface}:${settings.httpPort}!")
+    }
+
 
 Concurrency
 ------------
@@ -234,8 +243,7 @@ The error-handling design has these aims:
    (see `Send-And-Receive-Future`_).
 
 5. When a actor encounters an error that isn't the client's fault (e.g.
-   a triplestore failure), log it and report it to the actor's
-   supervisor, but don't do this with errors caused by bad input.
+   a triplestore failure), log it, but don't do this with errors caused by bad input.
 
 6. When logging errors, include the full JVM stack trace.
 
@@ -267,7 +275,7 @@ computation fails, the exception representing the failure is wrapped in
 a ``Status.Failure``, which is sent as a response to the ``ask``. If the
 error is a subclass of ``RequestRejectedException``, only the sender is
 notified of the error; otherwise, the error is also logged and rethrown
-(so that the actor's supervisor will receive it).
+(so that the ``KnoraExceptionHandler`` can handle the exception).
 
 In many cases, we transform data from the triplestore into a ``Map``
 object. To simplify checking for required values in these collections,
@@ -280,8 +288,13 @@ query results are already returned in ``ErrorHandlingMap`` objects.
 If you want to add a new exception class, see the comments in
 ``Exceptions.scala`` for instructions.
 
-We still need to add error-handling strategies in supervisor actors.
 
+Transformation of Exception to Client Responses
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``org.knora.webapi.KnoraExceptionHandler`` is brought implicitly into scope of ``akka-http``,
+and by doing so registered and used to handle the transformation of all ``KnoraExceptions`` into ``HttpResponses``.
+ 
 See also :ref:`futures-with-akka`.
 
 .. _api-routing:
@@ -290,7 +303,7 @@ API Routing
 ---------------
 
 The API routes in the ``routing`` package are defined using the DSL
-provided by the `spray-routing`_ library. A routing function has to do the following:
+provided by the `akka-http`_ library. A routing function has to do the following:
 
 1. Authenticate the client.
 
@@ -302,8 +315,7 @@ provided by the `spray-routing`_ library. A routing function has to do the follo
 4. Return a result to the client.
 
 To simplify the coding of routing functions, they are contained in objects that extend
-``org.knora.webapi.routing.Authenticator``. Each routing function constructs a ``Try`` in which the following
-operations are performed:
+``org.knora.webapi.routing.Authenticator``. Each routing function performs the following operations:
 
 1. ``Authenticator.getUserProfileV1`` is called to authenticate the user.
 
@@ -312,9 +324,9 @@ operations are performed:
    it must include a UUID generated by ``UUID.randomUUID``, so the responder can obtain a write lock on the resource
    being updated.
 
-The routing function then passes the ``Try`` to ``org.knora.webapi.routing.RouteUtils.runJsonRoute()``, which takes
-care of sending the message to ``ResponderManagerV1`` and returning a response to the client,
-as well as handling errors.
+The routing function then passes the message to ``org.knora.webapi.routing.RouteUtils.runJsonRoute()``, which takes
+care of sending the message to ``ResponderManagerV1`` and returning a response to the client. Any exceptions thrown
+befor calling ``org.knora.webapi.routing.RouteUtils.runJsonRoute()`` are handled by the ``KnoraExceptionHandler``.
 
 See :ref:`how-to-add-a-route` for an example.
 
@@ -347,6 +359,6 @@ only at the last moment, by the ``RouteUtils.runJsonRoute()`` function.
 .. _Twirl: https://github.com/playframework/twirl
 .. _spray: http://spray.io/
 .. _spray-json: https://github.com/spray/spray-json
-.. _Akka Logging: http://doc.akka.io/docs/akka/snapshot/scala/logging.html
-.. _Send-And-Receive-Future: http://doc.akka.io/docs/akka/snapshot/scala/actors.html#Ask__Send-And-Receive-Future
-.. _spray-routing: http://spray.io/documentation/1.2.3/spray-routing/
+.. _Akka Logging: http://doc.akka.io/docs/akka/current/scala/logging.html
+.. _Send-And-Receive-Future: http://doc.akka.io/docs/akka/current/scala/actors.html#Ask__Send-And-Receive-Future
+.. _akka-http: http://doc.akka.io/docs/akka/current/scala/http/routing-dsl/index.html

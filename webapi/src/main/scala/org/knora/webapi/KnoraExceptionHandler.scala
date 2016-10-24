@@ -34,28 +34,16 @@ object KnoraExceptionHandler {
                 )
             }
 
-        case bre: BadRequestException =>
-            extractUri { uri =>
-                log.error(s"Request to $uri could not be handled normally")
-                complete(exceptionToJsonHttpResponse(bre, settingsImpl))
-            }
-
         case rre: RequestRejectedException =>
             extractUri { uri =>
                 log.error(s"Request to $uri could not be handled normally")
                 complete(exceptionToJsonHttpResponse(rre, settingsImpl))
             }
 
-        case ume: UnexpectedMessageException =>
+        case ise: InternalServerException =>
             extractUri { uri =>
-                log.error(ume, ume.message)
-                complete(exceptionToJsonHttpResponse(ume, settingsImpl))
-            }
-
-        case fue: FileUploadException =>
-            extractUri { uri =>
-                log.error(fue, fue.message)
-                complete(exceptionToJsonHttpResponse(fue, settingsImpl))
+                log.error(ise, ise.getMessage)
+                complete(exceptionToJsonHttpResponse(ise, settingsImpl))
             }
 
         case other =>
