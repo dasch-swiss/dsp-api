@@ -15,7 +15,7 @@ object KnoraExceptionHandler {
 
     def apply(settingsImpl: SettingsImpl, log: LoggingAdapter): ExceptionHandler = ExceptionHandler {
 
-        /* FIXME: distinguish when json or html response format should be used, by looking at what the client is requesting / accepting */
+        /* TODO: Find out which response format should be generated, by looking at what the client is requesting / accepting (issue #292) */
 
         case bce: BadCredentialsException =>
             extractUri { uri =>
