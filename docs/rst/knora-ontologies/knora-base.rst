@@ -925,7 +925,9 @@ have these limitations (Schmidt2016_). A standoff tag can be attached to
 any substring in the text by giving its start and end positions. [#]_
 For example, suppose we have the following text:
 
-    This sentence has overlapping visual attributes.
+.. raw:: html
+
+    This <i>sentence <strong>has overlapping</strong></i> <strong>visual</strong> attributes.
 
 Now suppose we want the words "sentence has overlapping" to be in italics,
 and the words "has overlapping visual" to be in boldface. This would
