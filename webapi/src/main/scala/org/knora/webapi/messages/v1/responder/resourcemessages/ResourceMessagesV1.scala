@@ -539,7 +539,7 @@ case class PropertyGetV1(pid: IRI,
   *
   */
 case class PropertyGetValueV1(person_id: Option[IRI] = None,
-                              comment: String,
+                              comment: Option[String],
                               textval: String,
                               value: ApiValueV1, // TODO: this is called 'val' in the old Salsah, but val is a keyword in scala
                               id: IRI,
