@@ -96,6 +96,15 @@
 							},
 							function(data) {
 								if (data.status == ApiErrors.OK) {
+
+                                    /*if (localdata.settings.onChange !== undefined && typeof(localdata.settings.onChange) == "function") {
+                                        // comment has been updated, execute onChange callback
+                                        console.log("calling onChange"); 
+                                        localdata.settings.onChange();
+                                    }*/
+
+                                    localdata.settings.value_id = data.id;
+
 									localdata.ele.empty().css({'display': 'none'});
 									localdata.ele.text(localdata.settings.comment);
 									setup_mouseevents($this, localdata);
@@ -116,16 +125,6 @@
 						 }, 'json');
 						 */
 					}));
-				btn_group.append(
-					$('<button>').addClass('btn btn-default btn-xs')
-						.attr({title: strings._cancel})
-						.append($('<span>').addClass('glyphicon glyphicon-remove'))
-						.on('click', function (event) {
-							localdata.ele.empty().css({'display': 'none'});
-							localdata.ele.text(localdata.settings.comment);
-							setup_mouseevents($this, localdata);
-						})
-				);
                 btn_group.append(
                     $('<button>').addClass('btn btn-default btn-xs')
                         .attr({title: strings._delete})
@@ -138,6 +137,8 @@
                             function(data) {
                                 if (data.status == ApiErrors.OK) {
                                     localdata.ele.empty().css({'display': 'none'});
+                                    localdata.settings.comment = null;
+                                    localdata.settings.value_id = data.id;
                                 }
                                 else {
                                     alert(data.errormsg);
@@ -145,6 +146,16 @@
                             }
                         );
                     }));
+                btn_group.append(
+                    $('<button>').addClass('btn btn-default btn-xs')
+                        .attr({title: strings._cancel})
+                        .append($('<span>').addClass('glyphicon glyphicon-remove'))
+                        .on('click', function (event) {
+                            localdata.ele.empty().css({'display': 'none'});
+                            localdata.ele.text(localdata.settings.comment);
+                            setup_mouseevents($this, localdata);
+                        })
+                );
 
 //				$('<textarea>').append(localdata.settings.comment).appendTo(localdata.ele);
 //				$('<br>').appendTo(localdata.ele);

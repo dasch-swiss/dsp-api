@@ -1532,7 +1532,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: ChangeValueResponseV1 =>
                     msg.value should ===(TextValueV1(utf8str = "Berthold, der Bruder"))
-                    msg.comment should ===(Some(comment))
+                    msg.comment should ===(comment)
             }
 
             // Check that the resource's last modification date got updated.

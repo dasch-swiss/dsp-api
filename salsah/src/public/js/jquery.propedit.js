@@ -138,10 +138,7 @@
 					$('<img>').attr({src: comment_icon.src})
 					.valcomment({ // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! HERE WE HAVE TO UPDATE THE VALUE_ID !!!!!!!!!!!!!!! L&B Oct. 19th 2016
 						value_id: propinfo[prop].value_ids[value_index],
-						comment: (propinfo[prop].comments === undefined) ? null : propinfo[prop].comments[value_index],
-						onChange: function() {
-							reset_value(value_container, prop, value_index, readonly);
-						}
+						comment: (propinfo[prop].comments === undefined) ? null : propinfo[prop].comments[value_index]
 					})
 					.appendTo(value_container);
 				}
