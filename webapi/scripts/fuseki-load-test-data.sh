@@ -12,4 +12,4 @@ curl -F filedata=@../_test_data/ontologies/anything-onto.ttl http://localhost:30
 curl -F filedata=@../_test_data/all_data/anything-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/anything > /dev/null
 curl -F filedata=@../_test_data/ontologies/beol-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/beol > /dev/null
 curl -F filedata=@../_test_data/all_data/beol-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/beol > /dev/null
-curl -F filedata=@../_test_data/ontologies/biblio.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/biblio > /dev/null
+curl -F filedata=@../_test_data/ontologies/biblio-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/biblio > /dev/null
