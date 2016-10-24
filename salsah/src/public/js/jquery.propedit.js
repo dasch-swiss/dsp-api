@@ -135,12 +135,14 @@
 						}
 					}
 					
-					$('<img>').attr({src: comment_icon.src})
-					.valcomment({ // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! HERE WE HAVE TO UPDATE THE VALUE_ID !!!!!!!!!!!!!!! L&B Oct. 19th 2016
-						value_id: propinfo[prop].value_ids[value_index],
-						comment: (propinfo[prop].comments === undefined) ? null : propinfo[prop].comments[value_index]
-					})
-					.appendTo(value_container);
+					if (prop != '__label__') {
+						$('<img>').attr({src: comment_icon.src})
+						.valcomment({
+							value_id: propinfo[prop].value_ids[value_index],
+							comment: (propinfo[prop].comments === undefined) ? null : propinfo[prop].comments[value_index]
+						})
+						.appendTo(value_container);						
+					}
 				}
 			} // if (propinfo[prop].value_rights[value_index] >= VALUE_ACCESS_VIEW)
 
