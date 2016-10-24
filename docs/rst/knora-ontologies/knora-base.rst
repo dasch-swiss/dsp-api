@@ -927,11 +927,9 @@ For example, suppose we have the following text:
 
 .. raw:: html
 
-    This <i>sentence <strong>has overlapping</strong></i> <strong>visual</strong> attributes.
+    <blockquote>This <i>sentence <strong>has overlapping</strong></i> <strong>visual</strong> attributes.</blockquote>
 
-Now suppose we want the words "sentence has overlapping" to be in italics,
-and the words "has overlapping visual" to be in boldface. This would
-require just two standoff tags: ``(italic, start=5, end=29)``
+This would require just two standoff tags: ``(italic, start=5, end=29)``
 and ``(bold, start=14, end=36)``.
 
 Moreover, standoff makes it possible to mark up the same text in
