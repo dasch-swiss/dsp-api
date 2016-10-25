@@ -113,6 +113,7 @@
 			// here we test if we are wallowed to view the value. If not, we just return!
 			//
 			if (propinfo[prop].value_rights[value_index] >= VALUE_ACCESS_VIEW) {
+
 				SALSAH.showval(value_container, propinfo[prop], value_index, options);
 				
 				if (readonly !== undefined) return; // no add/edit buttons etc.
@@ -134,9 +135,14 @@
 						}
 					}
 					
-					$('<img>').attr({src: comment_icon.src})
-					.valcomment({value_id: propinfo[prop].value_ids[value_index], comment: (propinfo[prop].comments === undefined) ? '' : propinfo[prop].comments[value_index]})
-					.appendTo(value_container);
+					if (prop != '__label__') {
+						$('<img>').attr({src: comment_icon.src})
+						.valcomment({
+							value_id: propinfo[prop].value_ids[value_index],
+							comment: (propinfo[prop].comments === undefined) ? null : propinfo[prop].comments[value_index]
+						})
+						.appendTo(value_container);						
+					}
 				}
 			} // if (propinfo[prop].value_rights[value_index] >= VALUE_ACCESS_VIEW)
 
@@ -212,7 +218,7 @@
 		};
 
 		var make_add_button = function (prop_container, prop) {
-			if ((parseInt(propinfo[prop].valuetype_id) == VALTYPE_GEOMETRY) && (options.canvas === undefined)) {
+			if ((parseInt(propinfo[prop].valuetype_id) == VALTYPE_GEOMETRY) && (options.canvas === undefined) || prop == PROP_HAS_STANDOFF_LINK_TO) {
 				return; // no add button
 			}
 			var add_button = false;
@@ -271,6 +277,7 @@
 			*/
 			prop_container.empty();
 			if (readonly !== undefined) alert(prop);
+
 			if ((propinfo[prop].values !== undefined) && (propinfo[prop].values.length > 0)) {
 				for (var i = 0; i < propinfo[prop].values.length; i++) {
 					var tmp_value_container = $('<div>').addClass('propedit value_container').data('valid', propinfo[prop].value_ids[i]).appendTo(prop_container);
@@ -483,6 +490,128 @@
 					});
 				} else {
 					data.decimal_value = parseFloat(value); // it is an float
+					data.project_id = project_id;
+					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
+						if (data.status == ApiErrors.OK) {
+							propinfo[active.prop].values[active.value_index] = data.value;
+							// set new value Iri
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+
+
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				}
+			};
+
+			postdata[VALTYPE_URI] = function(value_container, prop, value_index, value, is_new_value) {
+				var data = {};
+				if (is_new_value) {
+					data.uri_value = value;
+					data.res_id = res_id;
+					data.prop = prop;
+					data.project_id = project_id;
+					SALSAH.ApiPost('values', data, function(data) {
+						if (data.status == ApiErrors.OK) {
+
+							init_value_structure();
+
+							propinfo[active.prop].values[active.value_index] = data.value;
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+							propinfo[active.prop].value_rights[active.value_index] = data.rights;
+							propinfo[active.prop].value_iconsrcs[active.value_index] = null;
+							propinfo[active.prop].value_firstprops[active.value_index] = null;
+							propinfo[active.prop].value_restype[active.value_index] = null;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				} else {
+					data.uri_value = value;
+					data.project_id = project_id;
+					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
+						if (data.status == ApiErrors.OK) {
+							propinfo[active.prop].values[active.value_index] = data.value;
+							// set new value Iri
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+
+
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				}
+			};
+
+			postdata[VALTYPE_BOOLEAN] = function(value_container, prop, value_index, value, is_new_value) {
+				var data = {};
+				if (is_new_value) {
+					data.boolean_value = value;
+					data.res_id = res_id;
+					data.prop = prop;
+					data.project_id = project_id;
+					SALSAH.ApiPost('values', data, function(data) {
+						if (data.status == ApiErrors.OK) {
+
+							init_value_structure();
+
+							propinfo[active.prop].values[active.value_index] = data.value;
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+							propinfo[active.prop].value_rights[active.value_index] = data.rights;
+							propinfo[active.prop].value_iconsrcs[active.value_index] = null;
+							propinfo[active.prop].value_firstprops[active.value_index] = null;
+							propinfo[active.prop].value_restype[active.value_index] = null;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				} else {
+					data.boolean_value = value;
 					data.project_id = project_id;
 					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
 						if (data.status == ApiErrors.OK) {
@@ -1256,6 +1385,22 @@
 				}
 			};
 
+			postdata['LABEL'] = function(value_container, prop, value_index, value, is_new_value) {
+				data = {
+					label: value.utf8str
+				};
+				SALSAH.ApiPut('resources/label/' + encodeURIComponent(res_id), data, function(data) {
+					if (data.status == ApiErrors.OK) {
+						propinfo[active.prop].values[active.value_index] = data.label;
+
+						active.value_container.empty();
+						reset_value(active.value_container, active.prop, active.value_index);
+					} else {
+						alert(status.errormsg);
+					}
+					active = undefined;
+				});
+			};
 			
 			if (active !== undefined) {
 				if (!confirm(strings._canceditquest)) return;
@@ -1293,8 +1438,9 @@
 					attributes.type = 'text';
 					if (!is_new_value) {
 
-						if (propinfo[prop].valuetype_id == VALTYPE_FLOAT) {
-							// it is a float value
+						if (propinfo[prop].valuetype_id == VALTYPE_FLOAT || propinfo[prop].valuetype_id == VALTYPE_URI) {
+							attributes.value = propinfo[prop].values[value_index];
+						} else if (propinfo[prop].valuetype_id == 'LABEL') {
 							attributes.value = propinfo[prop].values[value_index];
 						} else {
 							attributes.value = propinfo[prop].values[value_index].utf8str;
@@ -1311,8 +1457,7 @@
 					tmpele.focus();
 					value_container.append($('<img>', {src: save_icon.src, title: strings._save, 'class': 'propedit'}).click(function(event) {
 
-						if (propinfo[prop].valuetype_id == VALTYPE_FLOAT) {
-							// it is a float value
+						if (propinfo[prop].valuetype_id == VALTYPE_FLOAT || propinfo[prop].valuetype_id == VALTYPE_URI) {
 							postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, value_container.find('input').val(), is_new_value);
 						} else {
 
@@ -1567,10 +1712,23 @@
 					}).css({cursor: 'pointer'}));
 					break;
 				}
+				case 'checkbox': {
+					var checkbox = $('<input>', {
+					    type: "checkbox"
+					});
+
+					if (propinfo[prop].values[value_index]) {
+						checkbox.attr('checked', true);
+					}
+
+					checkbox.attr(attributes);
+					value_container.append(checkbox);
+					value_container.append($('<img>', {src: save_icon.src, title: strings._save, 'class': 'propedit'}).click(function(event) {
+						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, checkbox.is(":checked"), is_new_value);
+					}).css({cursor: 'pointer'}));
+					break;
+				}
 				case 'hlist': {
-
-					
-
 					var hlist_id;
 					var attrs = propinfo[prop].attributes.split(';');
 					$.each(attrs, function() {
@@ -1887,9 +2045,11 @@
 			active = undefined;
 		};
 
+		// console.log("propedit iterating over props:")
 		var prop_index = 0;
 		return this.each(function() {
 			var prop = $(this).data('propname');
+			// console.log(prop);
 			reset_field(prop, prop_index, options.readonly);
 			prop_index++;
 		});

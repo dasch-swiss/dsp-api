@@ -22,4 +22,11 @@
 The Knora Ontologies
 ####################
 
-Please read :download:`The Knora Base Ontology </latex/knora-base/knora-base.pdf>`.
+The Knora ontologies provide a generic framework for describing humanities
+research data, allowing data from different projects to be combined, augmented,
+and reused.
+
+.. toctree::
+   :maxdepth: 2
+
+   knora-base

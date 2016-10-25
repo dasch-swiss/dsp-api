@@ -556,6 +556,8 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                               "a standoff lien vers"@fr ,
                               "ha standoff link verso"@it ;
                    
+                   rdfs:comment "Represents a link in standoff markup from one resource to another."@en ;
+
                    :objectClassConstraint :Resource ;
 
                    :subjectClassConstraint :Resource ;

@@ -269,6 +269,7 @@ object OntologyConstants {
         val Colorpicker = "http://www.knora.org/ontology/salsah-gui#Colorpicker"
         val List = "http://www.knora.org/ontology/salsah-gui#List"
         val Radio = "http://www.knora.org/ontology/salsah-gui#Radio"
+        val Checkbox = "http://www.knora.org/ontology/salsah-gui#Checkbox"
         val Richtext = "http://www.knora.org/ontology/salsah-gui#Richtext"
         val Interval = "http://www.knora.org/ontology/salsah-gui#Interval"
         val Geonames = "http://www.knora.org/ontology/salsah-gui#Geonames"

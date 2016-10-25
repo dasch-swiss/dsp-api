@@ -203,10 +203,7 @@
 
        salsah-gui:guiOrder "6"^^xsd:integer ;
 
-       salsah-gui:guiElement salsah-gui:SimpleText ;
-
-       salsah-gui:guiAttribute "size=80" ,
-                               "maxlength=255" ;
+       salsah-gui:guiElement salsah-gui:Checkbox ;
 
        knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
 
@@ -474,11 +471,11 @@
                          owl:onProperty :hasInteger ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
-                      #[
-                      #   rdf:type owl:Restriction ;
-                      #   owl:onProperty :hasBoolean ;
-                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      #] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasBoolean ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ] ,
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasUri ;
