@@ -304,9 +304,9 @@
 
                       rdfs:comment """Repräsentiert eine Vater-Sohn Beziehung"""@de ;
 
-                      knora-base:subjectClassConstraint :person ;
+                      knora-base:subjectClassConstraint :Person ;
 
-                      knora-base:objectClassConstraint :person ;
+                      knora-base:objectClassConstraint knora-base:Person ;
 
                       salsah-gui:guiOrder "5"^^xsd:integer ;
 
@@ -326,7 +326,7 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-                    knora-base:subjectClassConstraint :person ;
+                    knora-base:subjectClassConstraint :Person ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -439,9 +439,9 @@
                                                 knora-base:Owner .
 
     ### ###########################################
-    ### beol:person
+    ### beol:Person
 
-    :person rdf:type owl:Class ;
+    :Person rdf:type owl:Class ;
 
     rdfs:subClassOf knora-base:Person ,
                     [

@@ -738,6 +738,15 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 "http://data.knora.org/projects/anything",
                 "http://www.knora.org/ontology/anything",
                 active = false
+            ),
+            NamedGraphV1(
+                "http://www.knora.org/ontology/biblio",
+                "Bibliography",
+                "Bibliography",
+                "Bibliography",
+                "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ",
+                "http://www.knora.org/ontology/biblio",
+                active = false
             )
         ),
         userdata = UserDataV1(
