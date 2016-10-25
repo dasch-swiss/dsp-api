@@ -72,10 +72,7 @@ object RouteUtilV1 {
                 case other =>
                     // The responder returned an unexpected message type (not an exception). This isn't the client's
                     // fault, so log it and return an error message to the client.
-                    val logErrorMsg = s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
-                    val logEx = UnexpectedMessageException(logErrorMsg)
-                    log.error(logEx, logErrorMsg)
-                    throw logEx
+                    throw UnexpectedMessageException(s"Responder sent a reply of type ${other.getClass.getCanonicalName}")
             }
 
             // Optionally log the reply message. TODO: move this to the testing framework.

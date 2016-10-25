@@ -20,39 +20,20 @@ object KnoraExceptionHandler {
 
         /* TODO: Find out which response format should be generated, by looking at what the client is requesting / accepting (issue #292) */
 
-        case bce: BadCredentialsException =>
-            extractUri { uri =>
-                complete(
-                    HttpResponse(
-                        status = StatusCodes.Unauthorized,
-                        entity = HttpEntity(
-                            ContentTypes.`application/json`,
-                            JsObject(
-                                "status" -> JsNumber(2),
-                                "message" -> JsString(bce.getMessage)
-                            ).compactPrint
-                        )
-                    )
-                )
-            }
-
         case rre: RequestRejectedException =>
             extractUri { uri =>
                 complete(exceptionToJsonHttpResponse(rre, settingsImpl))
             }
 
-        case ume: UnexpectedMessageException =>
-            complete(exceptionToJsonHttpResponse(ume, settingsImpl))
-
         case ise: InternalServerException =>
             extractUri { uri =>
-                log.error(ise, ise.getMessage)
+                log.error(ise, s"Unable to run route $uri")
                 complete(exceptionToJsonHttpResponse(ise, settingsImpl))
             }
 
         case other =>
             extractUri { uri =>
-                log.error(other, s"Unable to run route: $uri")
+                log.error(other, s"Unable to run route $uri")
                 complete(exceptionToJsonHttpResponse(other, settingsImpl))
             }
 
