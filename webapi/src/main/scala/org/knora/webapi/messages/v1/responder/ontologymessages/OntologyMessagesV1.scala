@@ -329,9 +329,10 @@ sealed trait EntityInfoV1 {
 }
 
 /**
-  * Represents the assertions about a given resource entity.
+  * Represents the assertions about a given resource class.
   *
   * @param resourceClassIri    the IRI of the resource class.
+  * @param ontologyIri         the IRI of the ontology in which the resource class.
   * @param predicates          a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
   * @param cardinalities       a [[Map]] of properties to [[Cardinality.Value]] objects representing the resource class's
   *                            cardinalities on those properties.
@@ -342,6 +343,7 @@ sealed trait EntityInfoV1 {
   *                            that point to `FileValue` objects.
   */
 case class ResourceEntityInfoV1(resourceClassIri: IRI,
+                                ontologyIri: IRI,
                                 predicates: Map[IRI, PredicateInfoV1],
                                 cardinalities: Map[IRI, Cardinality.Value],
                                 linkProperties: Set[IRI],
@@ -349,15 +351,17 @@ case class ResourceEntityInfoV1(resourceClassIri: IRI,
                                 fileValueProperties: Set[IRI]) extends EntityInfoV1
 
 /**
-  * Represents the assertions about a given property entity.
+  * Represents the assertions about a given property.
   *
-  * @param propertyIri     the Iri of the queried property entity.
+  * @param propertyIri     the IRI of the queried property.
+  * @param ontologyIri     the IRI of the ontology in which the property is defined.
   * @param isLinkProp      `true` if the property is a subproperty of `knora-base:hasLinkTo`.
   * @param isLinkValueProp `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
   * @param isFileValueProp `true` if the property is a subproperty of `knora-base:hasFileValue`.
   * @param predicates      a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
   */
 case class PropertyEntityInfoV1(propertyIri: IRI,
+                                ontologyIri: IRI,
                                 isLinkProp: Boolean,
                                 isLinkValueProp: Boolean,
                                 isFileValueProp: Boolean,
@@ -387,7 +391,7 @@ case class ResTypeInfoV1(name: IRI,
                          label: Option[String],
                          description: Option[String],
                          iconsrc: Option[String],
-                         properties: Set[PropertyDefinitionV1])
+                         properties: Seq[PropertyDefinitionV1])
 
 /**
   * Represents information about a property type. It is extended by [[PropertyDefinitionV1]]
@@ -426,7 +430,8 @@ case class PropertyDefinitionV1(id: IRI,
                                 occurrence: String,
                                 valuetype_id: IRI,
                                 attributes: Option[String],
-                                gui_name: Option[String]) extends PropertyDefinitionBaseV1
+                                gui_name: Option[String],
+                                guiorder: Option[Int] = None) extends PropertyDefinitionBaseV1
 
 /**
   * Describes a property type that a named graph contains.
@@ -503,7 +508,7 @@ object ResourceTypeV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
     import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
-    implicit val propertyDefinitionV1Format: JsonFormat[PropertyDefinitionV1] = jsonFormat9(PropertyDefinitionV1)
+    implicit val propertyDefinitionV1Format: JsonFormat[PropertyDefinitionV1] = jsonFormat10(PropertyDefinitionV1)
     implicit val propertyDefinitionInNamedGraphV1Format: JsonFormat[PropertyDefinitionInNamedGraphV1] = jsonFormat8(PropertyDefinitionInNamedGraphV1)
     implicit val resTypeInfoV1Format: JsonFormat[ResTypeInfoV1] = jsonFormat5(ResTypeInfoV1)
     implicit val resourceTypeResponseV1Format: RootJsonFormat[ResourceTypeResponseV1] = jsonFormat2(ResourceTypeResponseV1)

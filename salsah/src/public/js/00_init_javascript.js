@@ -62,6 +62,12 @@ var VALTYPE_SELECTION = "http://www.knora.org/ontology/knora-base#ListValue"; //
 var VALTYPE_ICONCLASS = 13;
 var VALTYPE_RICHTEXT = "http://www.knora.org/ontology/knora-base#TextValue";
 var VALTYPE_GEONAME = 15;
+var VALTYPE_URI = "http://www.knora.org/ontology/knora-base#UriValue";
+var VALTYPE_BOOLEAN = "http://www.knora.org/ontology/knora-base#BooleanValue";
+
+var RESOURCE_TYPE_REGION = "http://www.knora.org/ontology/knora-base#Region";
+
+var PROP_HAS_STANDOFF_LINK_TO = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo";
 
 var RESOURCE_CONTEXT_NONE = 0;
 var RESOURCE_CONTEXT_IS_PARTOF = 1;

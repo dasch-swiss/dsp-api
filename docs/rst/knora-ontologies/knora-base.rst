@@ -226,23 +226,27 @@ of the ``kb:isInProject`` property, as described in :ref:`knora-base-users-and-g
 Resources
 ---------
 
-All the content produced by a project (e.g. digitised primary source
-materials or research data) must be stored in objects that belong to
-subclasses of ``kb:Resource``, so that the Knora API server can query
-and update that content. Each project using the Knora base ontology must
-define its own OWL classes, derived from ``kb:Resource``, to represent
-the types of data it deals with.
+All the content produced by a project (e.g. digitised primary source materials
+or research data) must be stored in objects that belong to subclasses of
+``kb:Resource``, so that the Knora API server can query and update that
+content. Each project using the Knora base ontology must define its own OWL
+classes, derived from ``kb:Resource``, to represent the types of data it deals
+with. A subclass of ``kb:Resource`` may additionally be a subclass of any
+other class, e.g. an industry-standard class such as ``foaf:Person``;
+this can facilitate searches across projects.
 
-Resources have properties that point to different parts of the content
-they contain. For example, a resource representing a book could have a
-property called ``hasAuthor``, pointing to the author of the book. There
-are two possible kinds of content in a Knora resource: Knora values (see
-Section :ref:`knora-base-values`) or links to other resources (see
-Section :ref:`knora-base-links`). Properties that point to Knora values must be
-subproperties of ``kb:hasValue``, and properties that point to other
-resources must be subproperties of ``kb:hasLinkTo``. Each property
-definition must specify the types that its subjects and objects must
-belong to (see :ref:`knora-base-property-restrictions` for details).
+Resources have properties that point to different parts of the content they
+contain. For example, a resource representing a book could have a property
+called ``hasAuthor``, pointing to the author of the book. There are two
+possible kinds of content in a Knora resource: Knora values
+(see :ref:`knora-base-values`) or links to other resources (see :ref:`knora-base-links`).
+Properties that point to Knora values must be subproperties of
+``kb:hasValue``, and properties that point to other resources must be
+subproperties of ``kb:hasLinkTo``. Either of these two types of properties may
+also be a subproperty of any other property, e.g. an industry-standard
+property such as ``foaf:name``; this can facilitate searches across projects.
+Each property definition must specify the types that its subjects and objects
+must belong to (see :ref:`knora-base-property-restrictions` for details).
 
 Each project-specific resource class definition must use OWL cardinality
 restrictions to specify the properties that resources of that class can
@@ -251,10 +255,16 @@ have (see :ref:`knora-base-cardinalities` for details).
 Resources are not versioned; only their values are versioned (see
 :ref:`knora-base-values`).
 
-A resource can be marked as deleted. An optional ``kb:deleteComment``
-may be added to explain why the resource has been marked as deleted.
-Deleted resources are normally hidden. They cannot be undeleted, because
-even though resources are not versioned, it is necessary to be able to
+Every resource is required to have an ``rdfs:label``. The object of this
+property is an ``xsd:string``, rather than a Knora value; hence it is not
+versioned. A user who has modify permission on a resource
+:ref:`knora-base-authorization` can change its label.
+
+A resource can be marked as deleted; the Knora API server does this by adding
+the predicate ``kb:isDeleted true`` to the resource. An optional
+``kb:deleteComment`` may be added to explain why the resource has been marked
+as deleted. Deleted resources are normally hidden. They cannot be undeleted,
+because even though resources are not versioned, it is necessary to be able to
 find out when a resource was deleted. If desired, a new resource can be
 created by copying data from a deleted resource.
 

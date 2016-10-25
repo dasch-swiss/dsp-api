@@ -208,10 +208,10 @@ object ValuesRouteV1 extends Authenticator {
         )
     }
 
-    private def makeChangeCommentRequestMessage(valueIriStr: IRI, comment: String, userProfile: UserProfileV1): ChangeCommentRequestV1 = {
+    private def makeChangeCommentRequestMessage(valueIriStr: IRI, comment: Option[String], userProfile: UserProfileV1): ChangeCommentRequestV1 = {
         ChangeCommentRequestV1(
             valueIri = InputValidation.toIri(valueIriStr, () => throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
-            comment = InputValidation.toSparqlEncodedString(comment, () => throw BadRequestException(s"Invalid comment: '$comment'")),
+            comment = comment.map(str => InputValidation.toSparqlEncodedString(str, () => throw BadRequestException(s"Invalid comment: '$str'"))),
             userProfile = userProfile,
             apiRequestID = UUID.randomUUID
         )
@@ -328,8 +328,10 @@ object ValuesRouteV1 extends Authenticator {
                     val requestMessageTry = Try {
                         val userProfile = getUserProfileV1(requestContext)
 
+                        // In API v1, you cannot change a value and its comment in a single request. So we know that here,
+                        // we are getting a request to change either the value or the comment, but not both.
                         apiRequest match {
-                            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) => makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = comment, userProfile = userProfile)
+                            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) => makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = Some(comment), userProfile = userProfile)
                             case _ => makeAddValueVersionRequestMessage(valueIriStr = valueIriStr, apiRequest = apiRequest, userProfile = userProfile)
                         }
                     }
@@ -360,9 +362,25 @@ object ValuesRouteV1 extends Authenticator {
                     )
                 }
             }
-        } ~
-            // Link value request requires 3 URL path segments: subject IRI, predicate IRI, and object IRI
-            path("v1" / "links" / Segments) { iris =>
+        } ~ path("v1" / "valuecomments" / Segment) { valueIriStr =>
+            delete {
+                requestContext => {
+                    val requestMessageTry = Try {
+                        val userProfile = getUserProfileV1(requestContext)
+                        makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = None, userProfile = userProfile)
+                    }
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessageTry,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            }
+        } ~ path("v1" / "links" / Segments) { iris =>
+                // Link value request requires 3 URL path segments: subject IRI, predicate IRI, and object IRI
                 get {
                     requestContext => {
                         val requestMessageTry = Try {

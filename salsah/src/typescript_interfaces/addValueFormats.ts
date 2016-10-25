@@ -42,10 +42,6 @@ export module addValueFormats {
          */
         res_id: basicMessageComponents.KnoraIRI;
 
-        /**
-         * Comment on the value to be created.
-         */
-        comment?:string;
     }
 
     /**
@@ -163,7 +159,7 @@ export module addValueFormats {
         /**
          * The value's comment (if given)
          */
-        comment:string;
+        comment:string | null;
 
         /**
          * The user's permissions on the new value
