@@ -76,6 +76,8 @@ class ValuesV1E2ESpec extends E2ESpec {
     private val textValueIri = new MutableTestIri
     private val linkValueIri = new MutableTestIri
 
+    private val boringComment = "This is a boring comment."
+
     private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
@@ -250,5 +252,42 @@ class ValuesV1E2ESpec extends E2ESpec {
             }
         }
 
+        "add a link value with a comment to a resource" in {
+            val params =
+                s"""
+                  |{
+                  |    "project_id": "http://data.knora.org/projects/anything",
+                  |    "res_id": "http://data.knora.org/a-thing",
+                  |    "prop": "http://www.knora.org/ontology/anything#hasOtherThing",
+                  |    "link_value": "http://data.knora.org/another-thing",
+                  |    "comment":"$boringComment"
+                  |}
+                """.stripMargin
+
+            Post("/v1/values", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+                val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+                linkValueIri.set(valueIri)
+            }
+        }
+
+        "get a link value with a comment" in {
+            Get(s"/v1/links/${URLEncoder.encode("http://data.knora.org/a-thing", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#hasOtherThing", "UTF-8")}/${URLEncoder.encode("http://data.knora.org/another-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val responseObj = JsonParser(response.entity.asString).asJsObject.fields
+                val comment = responseObj("comment").asInstanceOf[JsString].value
+                val linkValue = responseObj("value").asJsObject.fields
+
+                assert(
+                    linkValue("subjectIri").asInstanceOf[JsString].value == "http://data.knora.org/a-thing" &&
+                        linkValue("predicateIri").asInstanceOf[JsString].value == "http://www.knora.org/ontology/anything#hasOtherThing" &&
+                        linkValue("objectIri").asInstanceOf[JsString].value == "http://data.knora.org/another-thing" &&
+                        linkValue("referenceCount").asInstanceOf[JsNumber].value.toInt == 1 &&
+                        comment == boringComment
+                )
+            }
+        }
     }
 }

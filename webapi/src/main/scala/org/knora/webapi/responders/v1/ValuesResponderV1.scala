@@ -87,6 +87,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
+                        comment = valueQueryResult.comment,
                         userdata = userProfile.userData
                     )
 
@@ -1241,6 +1242,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
+                        comment = valueQueryResult.comment,
                         userdata = userProfile.userData
                     )
 
