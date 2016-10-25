@@ -172,7 +172,7 @@ export module changeValueFormats {
         /**
          * The value's comment (if given)
          */
-        comment?:string;
+        comment:string | null;
 
         /**
          * The user's permissions on the new value

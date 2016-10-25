@@ -33,12 +33,12 @@ export module resourceResponseFormats {
         /**
          * Owner of the value.
          */
-        person_id?:string;
+        person_id:string | null;
 
         /**
          * Date of last modification of the value.
          */
-        lastmod?:string;
+        lastmod:string | null;
 
         /**
          * IRI of the value.
@@ -48,12 +48,12 @@ export module resourceResponseFormats {
         /**
          * Comment on the value.
          */
-        comment?:string;
+        comment:string | null;
 
         /**
          * date of last modification of the value as UTC.
          */
-        lastmod_utc?:string;
+        lastmod_utc:string | null;
 
         /**
          * typed representation of the value.
@@ -88,12 +88,12 @@ export module resourceResponseFormats {
         /**
          * GUI element of the property
          */
-        guielement:string;
+        guielement:string | null;
 
         /**
          * HTML attributes for the GUI element used to render this property
          */
-        attributes:string;
+        attributes:string | null;
 
         /**
          * IRI of the property type
@@ -121,18 +121,18 @@ export module resourceResponseFormats {
          * If the property's value is another resource, contains the `rdfs:label` of the OWL class
          * of each resource referred to.
          */
-        value_restype?:Array<string>;
+        value_restype?:Array<string | null>;
 
         /**
          * Order of property type in GUI
          */
-        guiorder:number;
+        guiorder:number | null;
 
         /**
          * If the property's value is another resource, contains the `rdfs:label` of each resource
          * referred to.
          */
-        value_firstprops?:Array<string>;
+        value_firstprops?:Array<string | null>;
 
         /**
          * Obsolete
@@ -145,34 +145,34 @@ export module resourceResponseFormats {
         valuetype_id:string;
 
         /**
-         * The label of thi property type
+         * The label of this property type (null if the property is __locations__)
          */
-        label:string;
+        label:string | null;
+
         /**
          * if the property's value is another resource, contains the icon representing the OWL
          * class of each resource referred to.
          */
+        value_iconsrcs?:Array<string | null>;
 
-        value_iconsrcs?:Array<string>;
         /**
          * the type of GUI element used to render this property.
          */
+        guielement:string | null;
 
-        guielement:string;
         /**
          * HTML attributes for the GUI element used to render this property
          */
+        attributes:string | null;
 
-        attributes:string;
         /**
-         * The cardinality of this property type for the given resource class
+         * The cardinality of this property type for the given resource class (null if the property is __locations__)
          */
+        occurrence:string | null;
 
-        occurrence:string;
         /**
          * The IRIs of the value objects representing the property's values for this resource
          */
-
         value_ids?:Array<basicMessageComponents.KnoraIRI>;
 
         /**
@@ -233,7 +233,7 @@ export module resourceResponseFormats {
         /**
          * Digital representations of the resource
          */
-        locations:Array<basicMessageComponents.locationItem>;
+        locations:Array<basicMessageComponents.locationItem> | null;
 
         /**
          * Label of the resource's class
@@ -248,7 +248,7 @@ export module resourceResponseFormats {
         /**
          * Preview representation of the resource: Thumbnail or Icon
          */
-        preview:basicMessageComponents.locationItem;
+        preview:basicMessageComponents.locationItem | null;
 
         /**
          * The owner of the resource
@@ -273,7 +273,7 @@ export module resourceResponseFormats {
         /**
          * Regions if there are any
          */
-        regions?:Array<region>
+        regions:Array<region> | null;
 
         /**
          * Description of the resource type
@@ -288,7 +288,7 @@ export module resourceResponseFormats {
         /**
          * Full quality representation of the resource
          */
-        locdata:basicMessageComponents.locationItem;
+        locdata:basicMessageComponents.locationItem | null;
 
         /**
          * The Knora IRI identifying the resource's class
@@ -418,7 +418,7 @@ export module resourceResponseFormats {
         /**
          * obsolete
          */
-        region?:Array<string>;
+        region?:Array<string | null>;
 
         /**
          * obsolete
@@ -463,7 +463,7 @@ export module resourceResponseFormats {
         /**
          * GUI attributes (HTML) of the property type
          */
-        attributes:string;
+        attributes:string | null;
 
         /**
          * Cardinality of the property type for the requested resource class (not given if property type is requested for a vocabulary)
@@ -478,7 +478,7 @@ export module resourceResponseFormats {
         /**
          * Name of the GUI element used for the property type
          */
-        gui_name:string;
+        gui_name:string | null;
 
     }
 
