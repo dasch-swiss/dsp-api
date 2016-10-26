@@ -1,6 +1,7 @@
 package org.knora.webapi.util
 
 import akka.actor.ActorSystem
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
@@ -20,10 +21,10 @@ object AkkaHttpUtils {
       * @param response the [[HttpResponse]] containing json
       * @return an [[JsObject]]
       */
-    def httpResponseToJson(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem): JsObject = {
+    def httpResponseToJson(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem, log: LoggingAdapter): JsObject = {
 
-        import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
         import DefaultJsonProtocol._
+        import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 
         implicit val materializer = ActorMaterializer()
 

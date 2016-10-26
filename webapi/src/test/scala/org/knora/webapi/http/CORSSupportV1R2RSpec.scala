@@ -14,37 +14,40 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.e2e.v1
+package org.knora.webapi.http
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.model.HttpMethods._
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Methods`, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.http.CORSSupport
-import org.knora.webapi.routing.v1.{ResourcesRouteV1, StoreRouteV1}
+import akka.util.Timeout
+import ch.megard.akka.http.cors.CorsRejection
+import org.knora.webapi.R2RSpec
+import org.knora.webapi.http.CORSSupport.CORS
+import org.knora.webapi.routing.v1.ResourcesRouteV1
 
 import scala.concurrent.duration._
 
 /**
-  * End-to-end test specification for testing [[StoreRouteV1]]. This specification uses the
-  * Spray Testkit as documented here: http://spray.io/documentation/1.2.2/spray-testkit/
+  * End-to-end test specification for testing [[CORSSupport]].
   */
-class CORSSupportV1E2ESpec extends E2ESpec {
+class CORSSupportV1R2RSpec extends R2RSpec {
 
     /* get the path of the route we want to test */
     private val resourcesRoute = ResourcesRouteV1.knoraApiPath(system, settings, log)
 
     /* set the timeout for the route test */
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(180).second)
+    implicit val timeout: Timeout = 5.seconds
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
     val exampleOrigin = HttpOrigin("http://example.com")
     val corsSettings = CORSSupport.corsSettings
 
     "A Route with enabled CORS support " should {
 
-        "accept valid pre-flight requests" ignore {
+        "accept valid pre-flight requests" in {
 
-            /*
             Options() ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(GET) ~> {
                 CORS(resourcesRoute)
             } ~> check {
@@ -58,19 +61,16 @@ class CORSSupportV1E2ESpec extends E2ESpec {
                     `Access-Control-Allow-Credentials`(true)
                 )
             }
-            */
         }
 
-        "reject pre-flight requests with invalid method" ignore {
+        "reject pre-flight requests with invalid method" in {
 
-            /*
             val invalidMethod = PATCH
             Options() ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(invalidMethod) ~> {
                 CORS(resourcesRoute)
             } ~> check {
                 rejection shouldBe CorsRejection(None, Some(invalidMethod), None)
             }
-            */
         }
 
     }

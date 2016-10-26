@@ -27,6 +27,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern._
 import akka.stream.ActorMaterializer
+import akka.util.Timeout
 import ch.megard.akka.http.cors.CorsDirectives._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
@@ -41,18 +42,17 @@ import org.knora.webapi.util.CacheUtil
 
 import scala.collection.JavaConversions._
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
 
 trait Core {
     implicit val system: ActorSystem
 }
 
+/**
+  * The applications actor system.
+  */
 trait LiveCore extends Core {
-
-    /**
-      * The applications actor system.
-      */
     implicit lazy val system = ActorSystem("webapi")
 }
 
@@ -63,11 +63,6 @@ trait LiveCore extends Core {
   */
 trait KnoraService {
     this: Core =>
-
-    /**
-      * Logging
-      */
-    private val log = akka.event.Logging(system, this.getClass())
 
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
@@ -82,7 +77,7 @@ trait KnoraService {
     /**
       * The application's configuration.
       */
-    val settings = Settings(system)
+    val settings: SettingsImpl = Settings(system)
 
     /**
       * Provide logging
@@ -92,29 +87,7 @@ trait KnoraService {
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
       */
-    implicit val timeout = Timeout(300 seconds)
-
-    /**
-      * Execution Context (needed for StartupFlags)
-      */
-    implicit val ec: ExecutionContext = system.dispatcher
-
-    /**
-      * Sends messages to all supervisor actors in a blocking manner, checking if they are all ready.
-      */
-    def checkActorSystem() {
-
-        // TODO: Check if HttpServiceManager is ready
-        log.info(s"HttpServiceManager ready: - ")
-
-        // TODO: Check if ResponderManager is ready
-        log.info(s"ResponderManager ready: - ")
-
-        // TODO: Check if Sipi is also ready/accessible
-        val storeManagerResult = Await.result(storeManager ? Initialized(), timeout.duration).asInstanceOf[InitializedResponse]
-        log.info(s"StoreManager ready: $storeManagerResult")
-        log.info(s"ActorSystem ${system.name} started")
-    }
+    implicit val timeout = settings.defaultRestoreTimeout
 
     /**
       * A user representing the Knora API server, used for initialisation on startup.
@@ -150,12 +123,26 @@ trait KnoraService {
     )
 
     /**
+      * Sends messages to all supervisor actors in a blocking manner, checking if they are all ready.
+      */
+    def checkActorSystem() {
+
+        // TODO: Check if ResponderManager is ready
+        log.info(s"ResponderManager ready: - ")
+
+        // TODO: Check if Sipi is also ready/accessible
+        val storeManagerResult = Await.result(storeManager ? Initialized(), timeout.duration).asInstanceOf[InitializedResponse]
+        log.info(s"StoreManager ready: $storeManagerResult")
+        log.info(s"ActorSystem ${system.name} started")
+    }
+
+    /**
       * Starts the Knora API server.
       */
-    def start(): Unit = {
-        implicit val timeout = settings.defaultRestoreTimeout
+    def startService(): Unit = {
         implicit val materializer = ActorMaterializer()
-        // needed for the future map/flatmap in the end
+
+        // needed for startup flags and the future map/flatmap in the end
         implicit val executionContext = system.dispatcher
 
         CacheUtil.createCaches(settings.caches)

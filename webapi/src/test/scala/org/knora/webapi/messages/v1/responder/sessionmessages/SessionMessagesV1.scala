@@ -31,6 +31,6 @@ case class SessionResponse(status: Int, message: String, sid: String)
   * A spray-json protocol used for turning the JSON responses from the 'login' operation during communication with the
   * 'v1/session' route into a case classes for easier testing.
   */
-object JsonSessionResponseProtocol extends DefaultJsonProtocol {
-    implicit val SessionResponseFormat = jsonFormat3(SessionResponse)
+trait SessionJsonProtocol extends DefaultJsonProtocol {
+    implicit val SessionResponseFormat = jsonFormat3(SessionResponse.apply)
 }

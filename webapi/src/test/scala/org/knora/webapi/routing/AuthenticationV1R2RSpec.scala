@@ -17,10 +17,15 @@
 package org.knora.webapi.routing
 
 import akka.actor.{ActorSystem, Props}
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.scaladsl.model.headers.{BasicHttpCredentials, Cookie, HttpCookie, `Set-Cookie`}
+import akka.http.scaladsl.model.{DateTime, StatusCodes}
+import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.messages.v1.responder.sessionmessages.SessionResponse
+import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
@@ -28,9 +33,6 @@ import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.routing.v1.{AuthenticateRouteV1, ResourcesRouteV1}
 import org.knora.webapi.store._
 import org.knora.webapi.{LiveActorMaker, R2RSpec, SharedTestData}
-import spray.http.HttpHeaders.{Cookie, `Set-Cookie`}
-import spray.http._
-import spray.httpx.RequestBuilding
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -42,16 +44,13 @@ import scala.concurrent.duration._
   *
   * This spec tests the 'v1/authentication' and 'v1/session' route.
   */
-class AuthenticationV1R2RSpec extends R2RSpec with RequestBuilding {
+class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
     override def testConfigSource =
         """
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin
-
-    import org.knora.webapi.messages.v1.responder.sessionmessages.JsonSessionResponseProtocol._
-    import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
 
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
@@ -61,7 +60,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with RequestBuilding {
 
     implicit val timeout: Timeout = 300.seconds
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(5).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
     val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
@@ -117,34 +116,34 @@ class AuthenticationV1R2RSpec extends R2RSpec with RequestBuilding {
         }
     }
     "The Session Route ('v1/session') when accessed with credentials supplied via URL parameters " should {
-        var sid = ""
+        var sid: String = ""
         "succeed with 'login' and correct username / correct password " in {
             /* Correct username and correct password */
             Get("/v1/session?login&username=root&password=test") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
                 /* store session */
-                sid = responseAs[SessionResponse].sid
-                assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, content = sid))))
+                sid = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds).sid
+                assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid))))
             }
         }
         "succeed with authentication when using correct session id in cookie" in {
             // authenticate by calling '/v2/session' without parameters but by providing session id in cookie from earlier login
-            Get("/v1/session") ~> Cookie(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
+            Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
             }
         }
         "succeed with 'logout' when providing the session cookie " in {
             // do logout with stored session id
-            Get("/v1/session?logout") ~> Cookie(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
+            Get("/v1/session?logout") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
                 assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
             }
         }
         "fail with authentication when providing the session cookie after logout" in {
-            Get("/v1/session") ~> Cookie(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
+            Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.Unauthorized)
             }
@@ -164,7 +163,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with RequestBuilding {
             }
         }
         "fail with authentication when using wrong session id in cookie " in {
-            Get("/v1/session") ~> Cookie(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "123456")) ~> authenticatePath ~> check {
+            Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, "123456") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.Unauthorized)
             }

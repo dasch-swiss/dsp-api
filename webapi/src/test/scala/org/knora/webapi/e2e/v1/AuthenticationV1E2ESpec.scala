@@ -17,36 +17,33 @@
 package org.knora.webapi.e2e.v1
 
 import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.model.headers.{`Set-Cookie`, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.pattern._
-import akka.util.Timeout
-import org.knora.webapi.LiveActorMaker
-import org.knora.webapi.e2e.E2ESpec
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import com.typesafe.config.ConfigFactory
+import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.routing.v1.{AuthenticateRouteV1, ResourcesRouteV1}
 import org.knora.webapi.store._
-import spray.json.DefaultJsonProtocol
+import org.knora.webapi.{E2ESpec, LiveActorMaker}
+import spray.json._
 
-
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 
-/**
-  * A spray-json protocol used for turning the JSON responses from the 'login' operation during communication with the
-  * 'v1/session' route into a case classes for easier testing.
-  */
-object SessionResponseJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
-    implicit val SessionResponseFormat = jsonFormat3(SessionResponse)
+object AuthenticationV1E2ESpec {
+    val config = ConfigFactory.parseString(
+        """
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
 }
 
 /**
@@ -54,11 +51,7 @@ object SessionResponseJsonSupport extends SprayJsonSupport with DefaultJsonProto
   *
   * This spec tests the 'v1/authentication' and 'v1/session' route.
   */
-class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
-
-    import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
-
-    import SessionResponseJsonSupport._
+class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
     private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
@@ -80,8 +73,6 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
         )
     )
 
-    implicit private val timeout: Timeout = 300.seconds
-
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(5).second)
 
     private val rdfDataObjects = List(
@@ -96,27 +87,28 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
-        Await.result(pipe(Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", rdfDataObjects)), 300 seconds)
+        val request = Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        singleAwaitingRequest(request, 300.seconds)
     }
 
     "The Authentication Route ('v1/authenticate') with credentials supplied via URL parameters" should {
 
         "succeed with authentication and correct username / correct password" in {
             /* Correct username and password */
-            val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/authenticate?username=root&password=test")), 3 seconds)
+            val response: HttpResponse = singleAwaitingRequest(Get(s"${baseApiUrl}v1/authenticate?username=root&password=test"))
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.OK)
         }
 
         "fail with authentication and correct username / wrong password" in {
             /* Correct username / wrong password */
-            val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/authenticate?username=root&password=wrong")), 3 seconds)
+            val response: HttpResponse = singleAwaitingRequest(Get(s"${baseApiUrl}v1/authenticate?username=root&password=wrong"))
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.Unauthorized)
         }
         "fail with authentication if the user is set as 'not active' " in {
             /* User not active */
-            val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/authenticate?username=inactiveuser&password=test")), 3 seconds)
+            val response: HttpResponse = singleAwaitingRequest(Get(s"${baseApiUrl}v1/authenticate?username=inactiveuser&password=test"))
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.Unauthorized)
         }
@@ -127,14 +119,14 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
         "succeed with authentication and correct username / correct password" in {
             /* Correct username / correct password */
             val request = Get(s"${baseApiUrl}v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "test"))
-            val response = Await.result(pipe(request), 3 seconds)
+            val response = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK)
         }
 
         "fail with authentication and correct username / wrong password" in {
             /* Correct username / wrong password */
             val request = Get(s"${baseApiUrl}v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "wrong"))
-            val response = Await.result(pipe(request), 3 seconds)
+            val response = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.Unauthorized)
         }
     }
@@ -144,148 +136,134 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
         "succeed with 'login' and correct username / correct password" in {
             /* Correct username and correct password */
             val request = Get(s"${baseApiUrl}v1/session?login&username=root&password=test")
-            val response = Await.result(pipe(request), 3 seconds)
+            val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK)
 
-            println(response.toString)
+            log.debug(response.toString)
 
-            import spray.httpx.unmarshalling._
-            import org.knora.webapi.messages.v1.responder.sessionmessages.JsonSessionResponseProtocol._
-            import org.knora.webapi.messages.v1.responder.sessionmessages.SessionResponse
+            val sr: SessionResponse = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds)
+            sid = sr.sid
 
-            val body = response.entity
-            println(body.as[SessionResponse])
-
-
-
-            /*
-            sid = response.responseAs[SessionResponse].sid
-            assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, content = sid))))
-
-            Get("/v1/session?login&username=root&password=test") ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
-                /* store session */
-                sid = responseAs[SessionResponse].sid
-                assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(name = KNORA_AUTHENTICATION_COOKIE_NAME, value = sid))))
-            }
-            */
+            assert(response.headers.contains(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid))))
         }
 
         "succeed with authentication when using correct session id in cookie" in {
             // authenticate by calling '/v2/session' without parameters but by providing session id in cookie from earlier login
-            Get("/v1/session") ~> Cookie(HttpCookiePair(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
-            }
+            val request = Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.OK)
+
         }
 
         "succeed with 'logout' when providing the session cookie" in {
             // do logout with stored session id
-            Get("/v1/session?logout") ~> Cookie(HttpCookiePair(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
-                assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
-            }
+            val request = Get("/v1/session?logout") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.OK)
+            assert(response.headers.contains(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
         }
 
         "fail with authentication when providing the session cookie after logout" in {
-            Get("/v1/session") ~> Cookie(HttpCookiePair(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
-            }
+            val request = Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.Unauthorized)
         }
 
         "fail with 'login' and correct username / wrong password" in {
             /* Correct username and wrong password */
-            Get("/v1/session?login&username=root&password=wrong") ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
-            }
+            val request = Get("/v1/session?login&username=root&password=wrong")
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.Unauthorized)
         }
 
         "fail with 'login' and wrong username" ignore {
             /* wrong username */
-            Get("/v1/session?login&username=root&password=test") ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
-            }
+            val request = Get("/v1/session?login&username=root&password=test")
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.Unauthorized)
         }
 
         "fail with authentication when using wrong session id in cookie" in {
-            Get("/v1/session") ~> Cookie(HttpCookiePair(KNORA_AUTHENTICATION_COOKIE_NAME, "123456")) ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
-            }
+            val request = Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, "123456")
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.Unauthorized)
         }
     }
 
     "The Session Route ('v1/session') with credentials supplied via Basic Auth" should {
         "succeed with 'login' and correct username / correct password" in {
             /* Correct username and correct password */
-            Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
-            }
+            val request = Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "test"))
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.OK)
         }
 
        "fail with 'login' and correct username / wrong password " in {
            /* Correct username and wrong password */
-           Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "wrong")) ~> authenticatePath ~> check {
-               //log.debug("==>> " + responseAs[String])
-               assert(status === StatusCodes.Unauthorized)
-           }
+           val request = Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "wrong"))
+           val response = singleAwaitingRequest(request)
+           //log.debug("==>> " + responseAs[String])
+           assert(response.status === StatusCodes.Unauthorized)
        }
 
         "fail with 'login' and wrong username " ignore {
             /* wrong username */
-            Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("wrong", "test")) ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
-            }
+            val request = Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("wrong", "test"))
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.Unauthorized)
         }
     }
 
    "The Resources Route using the Authenticator trait " should {
        "succeed with authentication using URL parameters and correct username / correct password " in {
            /* Correct username / correct password */
-           Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test") ~> resourcesPath ~> check {
+           val request = Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test")
+               val response = singleAwaitingRequest(request)
                //log.debug("==>> " + responseAs[String])
-               assert(status === StatusCodes.OK)
-           }
+               assert(response.status === StatusCodes.OK)
        }
 
        "fail with authentication using URL parameters and correct username / wrong password " in {
            /* Correct username / wrong password */
-           Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=wrong") ~> resourcesPath ~> check {
+           val request = Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=wrong")
+
+               val response = singleAwaitingRequest(request)
                //log.debug("==>> " + responseAs[String])
-               assert(status === StatusCodes.Unauthorized)
-           }
+               assert(response.status === StatusCodes.Unauthorized)
        }
 
        "succeed with authentication using HTTP Basic Auth headers and correct username / correct password " in {
            /* Correct username / correct password */
-           Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> resourcesPath ~> check {
+           val request = Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "test"))
+               val response = singleAwaitingRequest(request)
                //log.debug("==>> " + responseAs[String])
-               assert(status === StatusCodes.OK)
-           }
+               assert(response.status === StatusCodes.OK)
        }
 
        "fail with authentication using HTTP Basic Auth headers and correct username / wrong password " in {
            /* Correct username / wrong password */
-           Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "wrong")) ~> resourcesPath ~> check {
+           val request = Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "wrong"))
+               val response = singleAwaitingRequest(request)
                //log.debug("==>> " + responseAs[String])
-               assert(status === StatusCodes.Unauthorized)
-           }
+               assert(response.status === StatusCodes.Unauthorized)
        }
 
        "not return sensitive information (token, password) in the response " in {
-           Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test") ~> resourcesPath ~> check {
+           val request = Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test")
+               val response = singleAwaitingRequest(request)
                //log.debug("==>> " + responseAs[String])
                // assert(status === StatusCodes.OK)
-               assert(responseAs[String] contains "\"password\":null")
-               assert(responseAs[String] contains "\"token\":null")
-           }
+               val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
+               assert(body contains "\"password\":null")
+               assert(body contains "\"token\":null")
        }
     }
 }

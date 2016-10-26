@@ -17,12 +17,17 @@
 package org.knora.webapi
 
 import akka.actor.ActorSystem
+import akka.event.LoggingAdapter
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
+import akka.stream.ActorMaterializer
+import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
-import spray.client.pipelining._
-import spray.http.{HttpRequest, HttpResponse}
 
-import scala.concurrent.Future
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 object E2ESpec {
     val defaultConfig: Config = ConfigFactory.load()
@@ -32,7 +37,7 @@ object E2ESpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll {
+class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
     def this(config: Config) = this(ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig)))
@@ -42,13 +47,20 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
     /* needed by the core trait */
     implicit lazy val system = _system
 
-    override val log = akka.event.Logging(system, this.getClass())
-
-    val pipe: HttpRequest => Future[HttpResponse] = sendReceive
+    override val log: LoggingAdapter = akka.event.Logging(system, this.getClass())
 
     val baseApiUrl = settings.baseApiUrl
 
     implicit val postfix = scala.language.postfixOps
+
+    implicit val ec = system.dispatcher
+    implicit val materializer = ActorMaterializer()
+
+    def singleAwaitingRequest(request: HttpRequest, duration: Duration = 3.seconds): HttpResponse = {
+        val responseFuture = Http().singleRequest(request)
+        Await.result(responseFuture, duration)
+    }
+
 
     override def beforeAll: Unit = {
         /* Set the startup flags and start the Knora Server */

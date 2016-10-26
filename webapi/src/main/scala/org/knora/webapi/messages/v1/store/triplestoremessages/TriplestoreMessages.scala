@@ -239,8 +239,8 @@ case class FakeTriplestoreUse(userProfileV1: UserProfileV1) extends TriplestoreA
   *
   * @param message
   */
-case class TriplestoreAdminResponse(message: String) extends KnoraResponseV1 {
-    def toJsValue = TriplestoreJsonProtocol.triplestoreAdminResponseFormat.write(this)
+case class TriplestoreAdminResponse(message: String) extends KnoraResponseV1 with TriplestoreJsonProtocol {
+    def toJsValue = triplestoreAdminResponseFormat.write(this)
 }
 
 
@@ -261,10 +261,10 @@ case class RdfDataObject(path: String, name: String)
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
   */
-object TriplestoreJsonProtocol extends DefaultJsonProtocol with NullOptions {
+trait TriplestoreJsonProtocol extends DefaultJsonProtocol with NullOptions {
 
     implicit val triplestoreAdminResponseFormat: RootJsonFormat[TriplestoreAdminResponse] = jsonFormat1(TriplestoreAdminResponse)
-    implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject)
+    implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject.apply)
     implicit val resetTriplestoreContentFormat: RootJsonFormat[ResetTriplestoreContent] = jsonFormat1(ResetTriplestoreContent)
 
 }
