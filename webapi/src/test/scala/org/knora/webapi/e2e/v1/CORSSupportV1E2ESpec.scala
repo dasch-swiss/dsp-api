@@ -18,26 +18,29 @@ package org.knora.webapi.e2e.v1
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import akka.http.scaladsl.model.HttpMethods._
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.util.Timeout
+import ch.megard.akka.http.cors.CorsRejection
+import org.knora.webapi.LiveActorMaker
 import org.knora.webapi.e2e.E2ESpec
+import org.knora.webapi.http.CORSSupport
+import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
-import org.knora.webapi.routing.v1.StoreRouteV1
+import org.knora.webapi.routing.v1.{ResourcesRouteV1, StoreRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.{LiveActorMaker, StartupFlags}
 
 import scala.concurrent.duration._
-
-
 
 /**
   * End-to-end test specification for testing [[StoreRouteV1]]. This specification uses the
   * Spray Testkit as documented here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
+class CORSSupportV1E2ESpec extends E2ESpec with RequestBuilding {
 
     override def testConfigSource =
         """
@@ -70,42 +73,43 @@ class StoreRouteV1E2ESpec extends E2ESpec with RequestBuilding {
         """
 
     /* get the path of the route we want to test */
-    private val storePath = StoreRouteV1.knoraApiPath(system, settings, log)
+    private val resourcesRoute = ResourcesRouteV1.knoraApiPath(system, settings, log)
 
     /* set the timeout for the route test */
     implicit private val timeout: Timeout = 180.seconds
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(180).second)
 
+    val exampleOrigin = HttpOrigin("http://example.com")
+    val corsSettings = CORSSupport.corsSettings
 
-    "The ResetTriplestoreContent Route ('v1/store/ResetTriplestoreContent')" should {
-        "succeed with resetting if startup flag is set" in {
-            /**
-              * This test corresponds to the following curl call:
-              * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/v1/store/ResetTriplestoreContent
-              */
-            //println("=>>")
+    "A Route with enabled CORS support " should {
 
-            StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
+        "accept valid pre-flight requests" in {
 
-            //println("=>>" + Await.result(StartupFlags.allowResetTriplestoreContentOperationOverHTTP.future(), 5.seconds))
-            log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
-            //println("=>>" + Await.result(StartupFlags.allowResetTriplestoreContentOperationOverHTTP.future(), 5.seconds))
-
-            Post("/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjectsJsonList)) ~> storePath ~> check {
-                log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
+            Options() ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(GET) ~> {
+                CORS(resourcesRoute)
+            } ~> check {
+                responseAs[String] shouldBe empty
+                status shouldBe StatusCodes.OK
+                response.headers should contain theSameElementsAs Seq(
+                    `Access-Control-Allow-Origin`(exampleOrigin),
+                    `Access-Control-Allow-Methods`(corsSettings.allowedMethods),
+                    //`Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Authorization"),
+                    `Access-Control-Max-Age`(1800),
+                    `Access-Control-Allow-Credentials`(true)
+                )
             }
         }
-        "fail with resetting if startup flag is not set" in {
-            StartupFlags.allowResetTriplestoreContentOperationOverHTTP send false
 
-            log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
+        "reject pre-flight requests with invalid method" in {
 
-            Post("/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjectsJsonList)) ~> storePath ~> check {
-                log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Forbidden)
-
+            val invalidMethod = PATCH
+            Options() ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(invalidMethod) ~> {
+                CORS(resourcesRoute)
+            } ~> check {
+                rejection shouldBe CorsRejection(None, Some(invalidMethod), None)
             }
         }
+
     }
 }

@@ -22,14 +22,12 @@ package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import org.knora.webapi.messages.v1.responder.listmessages.{HListGetRequestV1, NodePathGetRequestV1, SelectionGetRequestV1}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
-import spray.routing.Directives._
-import spray.routing._
-
-import scala.util.Try
 
 /**
   * Provides a spray-routing function for API routes that deal with lists.
@@ -45,18 +43,17 @@ object ListsRouteV1 extends Authenticator {
         path("v1" / "hlists" / Segment) { iri =>
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+                    val userProfile = getUserProfileV1(requestContext)
+                    val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                        requestContext.request.uri.query.get("reqtype") match {
-                            case Some("node") => NodePathGetRequestV1(listIri, userProfile)
-                            case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
-                            case None => HListGetRequestV1(listIri, userProfile)
-                        }
+                    val requestMessage = requestContext.request.uri.query().get("reqtype") match {
+                        case Some("node") => NodePathGetRequestV1(listIri, userProfile)
+                        case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
+                        case None => HListGetRequestV1(listIri, userProfile)
                     }
+
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -67,18 +64,17 @@ object ListsRouteV1 extends Authenticator {
             path("v1" / "selections" / Segment) { iri =>
                 get {
                     requestContext =>
-                        val requestMessageTry = Try {
-                            val userProfile = getUserProfileV1(requestContext)
-                            val selIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+                        val userProfile = getUserProfileV1(requestContext)
+                        val selIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                            requestContext.request.uri.query.get("reqtype") match {
-                                case Some("node") => NodePathGetRequestV1(selIri, userProfile)
-                                case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
-                                case None => SelectionGetRequestV1(selIri, userProfile)
-                            }
+                        val requestMessage = requestContext.request.uri.query().get("reqtype") match {
+                            case Some("node") => NodePathGetRequestV1(selIri, userProfile)
+                            case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
+                            case None => SelectionGetRequestV1(selIri, userProfile)
                         }
+
                         RouteUtilV1.runJsonRoute(
-                            requestMessageTry,
+                            requestMessage,
                             requestContext,
                             settings,
                             responderManager,

@@ -65,6 +65,7 @@ class SettingsImpl(config: Config) extends Extension {
                 cacheConfigMap("time-to-idle-seconds").asInstanceOf[Int])
     }.toVector
     val defaultTimeout = Timeout(config.getInt("app.default-timeout").seconds)
+    val defaultRestoreTimeout = Timeout(config.getInt("app.default-restore-timeout").seconds)
     val dumpMessages = config.getBoolean("app.dump-messages")
     val showInternalErrors = config.getBoolean("app.show-internal-errors")
     val maxResultsPerSearchResultPage = config.getInt("app.max-results-per-search-result-page")

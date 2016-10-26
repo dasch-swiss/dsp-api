@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProf
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, KnoraIdUtil}
 import org.knora.webapi.{BadRequestException, _}
-import spray.httpx.SprayJsonSupport
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
 

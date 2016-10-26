@@ -22,26 +22,31 @@ package org.knora.webapi.e2e.v1
 
 import java.io.File
 import java.net.URLEncoder
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 
 import akka.actor._
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.server.Route
 import akka.pattern._
+import akka.stream.scaladsl.{Source, _}
 import akka.util.Timeout
 import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
 import org.knora.webapi.{FileWriteException, LiveActorMaker}
-import spray.http._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
 
 /**
   * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
@@ -51,8 +56,8 @@ class SipiV1E2ESpec extends E2ESpec {
 
     override def testConfigSource =
         """
-         # akka.loglevel = "DEBUG"
-         # akka.stdout-loglevel = "DEBUG"
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
 
@@ -64,7 +69,7 @@ class SipiV1E2ESpec extends E2ESpec {
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    implicit private val timeout: Timeout = 300.seconds
+    implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
     private val incunabulaUser = UserProfileV1(
         projects = Vector("http://data.knora.org/projects/77275339"),
@@ -154,10 +159,17 @@ class SipiV1E2ESpec extends E2ESpec {
             // check if the file exists
             assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
 
-            val formData = MultipartFormData(Seq(
-                BodyPart(entity = HttpEntity(MediaTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint), fieldName = "json"),
-                BodyPart(file = fileToSend, fieldName = "file", ContentType(mediaType = MediaTypes.`image/jpeg`))
-            ))
+            val formData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint)
+                ),
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
 
             RequestParams.createTmpFileDir()
 
@@ -165,6 +177,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
                 val tmpFile = SourcePath.getSourcePath()
 
+                //println("response in test: " + responseAs[String])
                 assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
@@ -176,15 +189,22 @@ class SipiV1E2ESpec extends E2ESpec {
             // check if the file exists
             assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
 
-            val formData = MultipartFormData(Seq(
-                BodyPart(entity = HttpEntity(MediaTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint), fieldName = "json"),
+            val formData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(MediaTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint)
+                ),
                 // set mimetype tiff, but jpeg is expected
-                BodyPart(file = fileToSend, fieldName = "file", ContentType(mediaType = MediaTypes.`image/tiff`))
-            ))
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
 
             RequestParams.createTmpFileDir()
 
-            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password)) ~> Route.seal(resourcesPath) ~> check {
 
                 val tmpFile = SourcePath.getSourcePath()
 
@@ -192,6 +212,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
                 // check that the tmp file is also deleted in case the test fails
                 assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
+                //FIXME: Check for correct status code. This would then also test if the negative case is handled correctly inside Knora.
                 assert(status != StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
@@ -221,9 +242,13 @@ class SipiV1E2ESpec extends E2ESpec {
             // check if the file exists
             assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
 
-            val formData = MultipartFormData(Seq(
-                BodyPart(file = fileToSend, fieldName = "file", ContentType(mediaType = MediaTypes.`image/jpeg`))
-            ))
+            val formData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
 
             RequestParams.createTmpFileDir()
 
@@ -245,10 +270,14 @@ class SipiV1E2ESpec extends E2ESpec {
             // check if the file exists
             assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
 
-            val formData = MultipartFormData(Seq(
+            val formData = Multipart.FormData(
                 // set mimetype tiff, but jpeg is expected
-                BodyPart(file = fileToSend, fieldName = "file", ContentType(mediaType = MediaTypes.`image/tiff`))
-            ))
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
 
             RequestParams.createTmpFileDir()
 
@@ -262,6 +291,7 @@ class SipiV1E2ESpec extends E2ESpec {
 
                 // check that the tmp file is also deleted in case the test fails
                 assert(!tmpFile.exists(), s"Tmp file $tmpFile was not deleted.")
+                //FIXME: Check for correct status code. This would then also test if the negative case is handled correctly inside Knora.
                 assert(status != StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
 

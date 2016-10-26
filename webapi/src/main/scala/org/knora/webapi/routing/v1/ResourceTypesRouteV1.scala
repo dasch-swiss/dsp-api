@@ -21,16 +21,14 @@
 package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.event.LoggingAdapter
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
-import spray.routing.Directives._
-import spray.routing._
-
-import scala.util.Try
 
 /**
   * Provides a spray-routing function for API routes that deal with resource types.
@@ -51,15 +49,13 @@ object ResourceTypesRouteV1 extends Authenticator {
         path("v1" / "resourcetypes" / Segment) { iri =>
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        // TODO: Check that this is the IRI of a resource type and not just any IRI
-                        val resourceTypeIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid resource type IRI: $iri"))
-                        makeResourceTypeRequestMessage(iri, userProfile)
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    // TODO: Check that this is the IRI of a resource type and not just any IRI
+                    val resourceTypeIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid resource type IRI: $iri"))
+                    val requestMessage = makeResourceTypeRequestMessage(iri, userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -69,22 +65,20 @@ object ResourceTypesRouteV1 extends Authenticator {
         } ~ path("v1" / "resourcetypes") {
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query.toMap
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params = requestContext.request.uri.query().toMap
 
-                        val vocabularyId = params.getOrElse("vocabulary", throw BadRequestException("Required param vocabulary is missing"))
+                    val vocabularyId = params.getOrElse("vocabulary", throw BadRequestException("Required param vocabulary is missing"))
 
-                        val namedGraphIri = vocabularyId match {
-                            case "0" => None // if param vocabulary is set to 0, query all named graphs
-                            case other => Some(InputValidation.toIri(vocabularyId, () => throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")))
-                        }
-
-                        ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile)
+                    val namedGraphIri = vocabularyId match {
+                        case "0" => None // if param vocabulary is set to 0, query all named graphs
+                        case other => Some(InputValidation.toIri(vocabularyId, () => throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")))
                     }
 
+                    val requestMessage = ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile)
+
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -95,35 +89,33 @@ object ResourceTypesRouteV1 extends Authenticator {
         } ~ path("v1" / "propertylists") {
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query.toMap
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params = requestContext.request.uri.query().toMap
 
-                        val vocabularyId: Option[String] = params.get("vocabulary")
-                        val resourcetypeId: Option[String] = params.get("restype")
+                    val vocabularyId: Option[String] = params.get("vocabulary")
+                    val resourcetypeId: Option[String] = params.get("restype")
 
-                        // either the vocabulary or the restype param is set, but not both
-                        if (vocabularyId.nonEmpty && resourcetypeId.nonEmpty) throw BadRequestException("Both vocabulary and restype params are set, only one is allowed")
+                    // either the vocabulary or the restype param is set, but not both
+                    if (vocabularyId.nonEmpty && resourcetypeId.nonEmpty) throw BadRequestException("Both vocabulary and restype params are set, only one is allowed")
 
-                        vocabularyId match {
-                            case Some("0") => // 0 means that all named graphs should be queried
-                                PropertyTypesForNamedGraphGetRequestV1(namedGraph = None, userProfile = userProfile)
-                            case Some(vocId) =>
-                                val namedGraphIri = InputValidation.toIri(vocId, () => throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId"))
-                                PropertyTypesForNamedGraphGetRequestV1(namedGraph = Some(namedGraphIri), userProfile = userProfile)
-                            case None => // no vocabulary id given, check for restype
-                                resourcetypeId match {
-                                    case Some(restypeId) => // get property types for given resource type
-                                        val resourceClassIri = InputValidation.toIri(restypeId, () => throw BadRequestException(s"Invalid vocabulary IRI: $restypeId"))
-                                        PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile)
-                                    case None => // no params given, get all property types (behaves like vocbulary=0)
-                                        PropertyTypesForNamedGraphGetRequestV1(namedGraph = None, userProfile = userProfile)
-                                }
-                        }
+                    val requestMessage = vocabularyId match {
+                        case Some("0") => // 0 means that all named graphs should be queried
+                            PropertyTypesForNamedGraphGetRequestV1(namedGraph = None, userProfile = userProfile)
+                        case Some(vocId) =>
+                            val namedGraphIri = InputValidation.toIri(vocId, () => throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId"))
+                            PropertyTypesForNamedGraphGetRequestV1(namedGraph = Some(namedGraphIri), userProfile = userProfile)
+                        case None => // no vocabulary id given, check for restype
+                            resourcetypeId match {
+                                case Some(restypeId) => // get property types for given resource type
+                                    val resourceClassIri = InputValidation.toIri(restypeId, () => throw BadRequestException(s"Invalid vocabulary IRI: $restypeId"))
+                                    PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile)
+                                case None => // no params given, get all property types (behaves like vocbulary=0)
+                                    PropertyTypesForNamedGraphGetRequestV1(namedGraph = None, userProfile = userProfile)
+                            }
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -134,13 +126,11 @@ object ResourceTypesRouteV1 extends Authenticator {
         } ~ path("v1" / "vocabularies") {
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        NamedGraphsGetRequestV1(userProfile)
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    val requestMessage = NamedGraphsGetRequestV1(userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -151,10 +141,8 @@ object ResourceTypesRouteV1 extends Authenticator {
         } ~ path("v1" / "vocabularies" / "reload") {
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        LoadOntologiesRequest(userProfile)
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    val requestMessageTry = LoadOntologiesRequest(userProfile)
 
                     RouteUtilV1.runJsonRoute(
                         requestMessageTry,
