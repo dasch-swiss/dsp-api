@@ -26,9 +26,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.pattern._
-import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.e2e.E2ESpec
@@ -41,10 +39,10 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri, ScalaPrettyPrinter}
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import spray.json._
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
@@ -179,7 +177,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
       */
     private def getCommentsForProp(response: HttpResponse, prop: IRI): JsValue = {
 
-        JsonParser(response.entity.asString).asJsObject.fields("props").asJsObject.fields(prop).asJsObject.fields("comments")
+        AkkaHttpUtils.httpResponseToJson(response).fields("props").asJsObject.fields(prop).asJsObject.fields("comments")
 
     }
 
@@ -1325,10 +1323,10 @@ class ResourcesV1E2ESpec extends E2ESpec {
                   }
                 """.stripMargin
 
-            Put("/v1/resources/label/" + URLEncoder.encode("http://data.knora.org/c5058f3a", "UTF-8"),HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Put("/v1/resources/label/" + URLEncoder.encode("http://data.knora.org/c5058f3a", "UTF-8"),HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
-                val label = JsonParser(response.entity.asString).asJsObject.fields.get("label") match {
+                val label = AkkaHttpUtils.httpResponseToJson(response).fields.get("label") match {
                     case Some(JsString(str)) => str
                     case None => throw InvalidApiJsonException(s"The response does not contain a field called 'label'")
                     case other => throw InvalidApiJsonException(s"The response does not contain a label of type JsString, but $other")
@@ -1354,7 +1352,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
                    |}
                 """.stripMargin
 
-            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val resId = getResIriFromJsonResponse(response)

@@ -423,23 +423,21 @@ object ResourcesRouteV1 extends Authenticator {
         } ~ path("v1" / "resources" / "label" / Segment) { iri =>
             put {
                 entity(as[ChangeResourceLabelApiRequestV1]) { apiRequest => requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
 
-                        val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                    val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
 
-                        val label = InputValidation.toSparqlEncodedString(apiRequest.label, () => throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
+                    val label = InputValidation.toSparqlEncodedString(apiRequest.label, () => throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
 
-                        ChangeResourceLabelRequestV1(
-                            resourceIri = resIri,
-                            label = label,
-                            apiRequestID = UUID.randomUUID,
-                            userProfile = userProfile)
+                    val requestMessage = ChangeResourceLabelRequestV1(
+                        resourceIri = resIri,
+                        label = label,
+                        apiRequestID = UUID.randomUUID,
+                        userProfile = userProfile)
 
-                    }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,

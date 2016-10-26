@@ -361,13 +361,11 @@ object ValuesRouteV1 extends Authenticator {
         } ~ path("v1" / "valuecomments" / Segment) { valueIriStr =>
             delete {
                 requestContext => {
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = None, userProfile = userProfile)
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    val requestMessage = makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = None, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,

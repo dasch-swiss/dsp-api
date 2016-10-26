@@ -265,7 +265,7 @@ class ValuesV1E2ESpec extends E2ESpec {
                   |}
                 """.stripMargin
 
-            Post("/v1/values", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
                 val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
@@ -277,7 +277,7 @@ class ValuesV1E2ESpec extends E2ESpec {
             Get(s"/v1/links/${URLEncoder.encode("http://data.knora.org/a-thing", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#hasOtherThing", "UTF-8")}/${URLEncoder.encode("http://data.knora.org/another-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
-                val responseObj = JsonParser(response.entity.asString).asJsObject.fields
+                val responseObj = AkkaHttpUtils.httpResponseToJson(response).fields
                 val comment = responseObj("comment").asInstanceOf[JsString].value
                 val linkValue = responseObj("value").asJsObject.fields
 
