@@ -130,9 +130,9 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#otherEdition
+###  http://www.knora.org/ontology/biblio#bookOtherEdition
 
-:otherEdition rdf:type owl:ObjectProperty ;
+:bookOtherEdition rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Andere Ausgabe"@de ,
                             "other Edition"@en ,
@@ -152,9 +152,9 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#otherEditionValue
+###  http://www.knora.org/ontology/biblio#bookOtherEditionValue
 
-:otherEditionValue rdf:type owl:ObjectProperty ;
+:bookOtherEditionValue rdf:type owl:ObjectProperty ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -178,15 +178,13 @@
 
                     salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                    knora-base:subjectClassConstraint :Publisher ;
-
                     rdfs:subPropertyOf knora-base:hasValue, foaf:name .
 
 
 
-###  http://www.knora.org/ontology/biblio#hasLocation
+###  http://www.knora.org/ontology/biblio#publisherHasLocation
 
-:hasLocation rdf:type owl:ObjectProperty ;
+:publisherHasLocation rdf:type owl:ObjectProperty ;
 
                      rdfs:label "Ort"@de ,
                                 "Location"@en ,
@@ -199,7 +197,7 @@
 
                      salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                     knora-base:subjectClassConstraint knora-base:Person, :Publisher ;
+                     knora-base:subjectClassConstraint :Publisher ;
 
                      rdfs:subPropertyOf knora-base:hasValue, event:place .
 
@@ -220,8 +218,6 @@
 
                     salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                    knora-base:subjectClassConstraint :JournalArticle, :Book ;
-
                     rdfs:subPropertyOf knora-base:hasValue, bibo:pageStart .
 
 
@@ -241,14 +237,12 @@
 
                     salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                    knora-base:subjectClassConstraint :JournalArticle, :Book ;
-
                     rdfs:subPropertyOf knora-base:hasValue, bibo:pageEnd .
 
 
 
-###  http://www.knora.org/ontology/biblio#isReprinted
-:isReprinted rdf:type owl:ObjectProperty ;
+###  http://www.knora.org/ontology/biblio#articleIsReprinted
+:articleIsReprinted rdf:type owl:ObjectProperty ;
 
                     rdfs:label "wieder abgedruckt"@de ,
                             "reprinted"@en,
@@ -257,32 +251,32 @@
 
                     rdfs:comment """Represents the reprinted publication."""@en ;
 
-                    knora-base:objectClassConstraint :JournalArticle ;
+                    knora-base:objectClassConstraint :Article ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                    knora-base:subjectClassConstraint :JournalArticle ;
+                    knora-base:subjectClassConstraint :Article ;
 
                     rdfs:subPropertyOf knora-base:hasLinkTo .
 
 
 
-###  http://www.knora.org/ontology/biblio#isReprintedValue
+###  http://www.knora.org/ontology/biblio#articleIsReprintedValue
 
-:isReprintedValue rdf:type owl:ObjectProperty ;
+:articleIsReprintedValue rdf:type owl:ObjectProperty ;
 
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
-                    knora-base:subjectClassConstraint :JournalArticle ;
+                    knora-base:subjectClassConstraint :Article ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
 
 
-###  http://www.knora.org/ontology/biblio#ispartOfJournal
-:isPartOfJournal rdf:type owl:ObjectProperty ;
+###  http://www.knora.org/ontology/biblio#ispartOf
+:isPartOf rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist Teil von"@de ,
                                "is part of"@en ,
@@ -295,65 +289,43 @@
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                    knora-base:subjectClassConstraint :JournalArticle ;
 
                     rdfs:subPropertyOf knora-base:hasLinkTo, dcterms:isPartOf .
 
 
-###  http://www.knora.org/ontology/biblio#isPartOfJournalValue
+###  http://www.knora.org/ontology/biblio#isPartOfValue
 
-:isPartOfJournalValue rdf:type owl:ObjectProperty ;
+:isPartOfValue rdf:type owl:ObjectProperty ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
-
-                    knora-base:subjectClassConstraint :JournalArticle ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#volume
 
-:volume rdf:type owl:ObjectProperty ;
+###  http://www.knora.org/ontology/biblio#journalVolume
 
-                    rdfs:label "Band "@de ,
-                            "Volume"@en ,
-                            "Volume"@fr ,
-                            "Volume"@it ;
-
-                    rdfs:comment """Represents the journal volume."""@en ;
-
-                    knora-base:objectClassConstraint knora-base:TextValue ;
-
-                    salsah-gui:guiElement salsah-gui:SimpleText ;
-
-                    knora-base:subjectClassConstraint :JournalArticle ;
-
-                    rdfs:subPropertyOf knora-base:hasValue, bibo:volume .
-
-
-###  http://www.knora.org/ontology/biblio#issue
-
-:issue rdf:type owl:ObjectProperty ;
+:journalVolume rdf:type owl:ObjectProperty ;
 
                      rdfs:label "Ausgabe"@de ,
                                 "Issue"@en ,
                                 "édition "@fr ,
                                 "edizione"@it ;
 
-                     rdfs:comment """Represents the journal issue."""@en ;
+                     rdfs:comment """Represents the journal volume."""@en ;
 
                      knora-base:objectClassConstraint knora-base:TextValue ;
 
                      salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                     knora-base:subjectClassConstraint :JournalArticle ;
+                     knora-base:subjectClassConstraint :Article ;
 
                      rdfs:subPropertyOf knora-base:hasValue, bibo:issue .
 
 
-###  http://www.knora.org/ontology/biblio#hasISBN
+###  http://www.knora.org/ontology/biblio#bookHasISBN
 
-:hasISBN rdf:type owl:ObjectProperty ;
+:bookHasISBN rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ISBN"@de ,
                             "ISBN"@en ;
@@ -385,8 +357,6 @@
 
                     salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                    knora-base:subjectClassConstraint :Book ;
-
                     rdfs:subPropertyOf knora-base:hasValue , bibo:numPages .
 
 
@@ -405,9 +375,8 @@
 
                     salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                    knora-base:subjectClassConstraint :Book ;
-
                     rdfs:subPropertyOf knora-base:hasValue , bibo:numVolumes .
+
 
 
 
@@ -466,7 +435,7 @@
                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
-                                      owl:onProperty :hasLocation ;
+                                      owl:onProperty :publisherHasLocation ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ];
                     rdfs:label "Verlag"@de ,
@@ -483,7 +452,7 @@
 
 :Article rdf:type owl:Class ;
 
-                    rdfs:subClassOf knora-base:Resource, bibo:Article,
+                    rdfs:subClassOf :Publication, bibo:Article,
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :pageStart ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
@@ -491,6 +460,26 @@
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :pageEnd ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :journalVolume ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :articleIsReprinted ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :articleIsReprintedValue ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :isPartOf ;
+                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :isPartOfValue ;
+                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
                                     ];
 
 
@@ -504,52 +493,25 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#JournalArticle
-
-:JournalArticle rdf:type owl:Class ;
-
-                    rdfs:subClassOf :Article, bibo:AcademicArticle,
-
-                                     [ rdf:type owl:Restriction ;
-                                       owl:onProperty :isReprinted ;
-                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                     ],
-                                     [ rdf:type owl:Restriction ;
-                                       owl:onProperty :isReprintedValue ;
-                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                     ],
-                                     [ rdf:type owl:Restriction ;
-                                       owl:onProperty :isPartOfJournal ;
-                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
-                                     ],
-                                     [ rdf:type owl:Restriction ;
-                                       owl:onProperty :isPartOfJournalValue ;
-                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
-                                     ];
-
-
-                    rdfs:label "Zeitschriftenartikel"@de ,
-                                "Journal Article"@en ,
-                                "article revue"@fr ,
-                                "articolo di giornale"@it ;
-
-                    rdfs:comment "A resource representing a journal article"@en .
-
 
 
 ###  http://www.knora.org/ontology/biblio#Journal
 
 :Journal rdf:type owl:Class ;
 
-                    rdfs:subClassOf :Publication, bibo:Journal,
+                    rdfs:subClassOf knora-base:Resource, bibo:Journal,
 
                                      [ rdf:type owl:Restriction ;
-                                       owl:onProperty :volume;
+                                       owl:onProperty :hasName;
+                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                     ],
+                                     [ rdf:type owl:Restriction ;
+                                       owl:onProperty :numPages;
                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
                                      ],
                                      [ rdf:type owl:Restriction ;
-                                       owl:onProperty :issue;
-                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                         owl:onProperty :numVolumes ;
+                                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                                      ];
 
 
@@ -567,15 +529,15 @@
 
                     rdfs:subClassOf :Publication, bibo:book,
                                     [ rdf:type owl:Restriction ;
-                                      owl:onProperty :hasISBN ;
+                                      owl:onProperty :bookHasISBN ;
                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
-                                      owl:onProperty :otherEdition;
+                                      owl:onProperty :bookOtherEdition;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
-                                      owl:onProperty :otherEditionValue;
+                                      owl:onProperty :bookOtherEditionValue;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
