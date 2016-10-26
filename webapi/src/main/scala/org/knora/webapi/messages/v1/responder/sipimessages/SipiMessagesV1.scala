@@ -125,28 +125,19 @@ case class SipiResponderConversionFileRequestV1(originalFilename: String,
 }
 
 /**
-  * Abstract trait that represents any response returned by SIPI.
-  */
-sealed trait SipiConversionResponse {
-    val status: Int
-}
-
-/**
   * Represents an error message returned by SIPI
   *
-  * @param status  status code rerurned by SIPI.
   * @param message description of the error.
   */
-case class SipiErrorConversionResponse(status: Int, message: String) extends SipiConversionResponse {
+case class SipiErrorConversionResponse(message: String) {
     override def toString() = {
-        s"Sipi status code is ${status}, Sipi error message: ${message}"
+        s"Sipi error message: ${message}"
     }
 }
 
 /**
   * Represents the response received from SIPI after an image conversion request.
   *
-  * @param status            status code returned by SIPI.
   * @param nx_full           x dim of the full quality representation.
   * @param ny_full           y dim of the full quality representation.
   * @param mimetype_full     mime type of the full quality representation.
@@ -159,8 +150,7 @@ case class SipiErrorConversionResponse(status: Int, message: String) extends Sip
   * @param original_filename name of the original file.
   * @param file_type         type of file that has been converted (image, audio, video etc.)
   */
-case class SipiImageConversionResponse(status: Int,
-                                       nx_full: Int,
+case class SipiImageConversionResponse(nx_full: Int,
                                        ny_full: Int,
                                        mimetype_full: String,
                                        filename_full: String,
@@ -170,7 +160,7 @@ case class SipiImageConversionResponse(status: Int,
                                        filename_thumb: String,
                                        original_mimetype: String,
                                        original_filename: String,
-                                       file_type: String) extends SipiConversionResponse
+                                       file_type: String)
 
 
 object SipiConstants {
@@ -261,8 +251,8 @@ object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions
     import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat3(SipiFileInfoGetResponseV1)
-    implicit val sipiErrorConversionResponseFormat = jsonFormat2(SipiErrorConversionResponse)
-    implicit val sipiImageConversionResponseFormat = jsonFormat12(SipiImageConversionResponse)
+    implicit val sipiErrorConversionResponseFormat = jsonFormat1(SipiErrorConversionResponse)
+    implicit val sipiImageConversionResponseFormat = jsonFormat11(SipiImageConversionResponse)
 }
 
 
