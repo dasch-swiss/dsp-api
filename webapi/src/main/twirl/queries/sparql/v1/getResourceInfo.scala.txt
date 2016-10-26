@@ -50,7 +50,7 @@ WHERE {
     {
         @* Query statements about the resource's file values. *@
 
-        ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
+        ?prop rdfs:subPropertyOf+ knora-base:hasFileValue .
         BIND(true AS ?isFileValue)
 
         @* Get the file value's project if it has one, otherwise use the resource's project. *@
@@ -81,8 +81,14 @@ WHERE {
 
         ?resource ?prop ?obj .
 
-        MINUS {
-            ?prop rdfs:subPropertyOf+ knora-base:hasValue .
+        @* Here FILTER NOT EXISTS is more efficient than MINUS on Fuseki, but it returns different results on GraphDB. *@
+        @if(triplestore == "fuseki") {
+            FILTER NOT EXISTS
+        } else {
+            MINUS
         }
+            {
+                ?prop rdfs:subPropertyOf+ knora-base:hasValue .
+            }
     }
 }

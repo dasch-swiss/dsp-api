@@ -21,20 +21,18 @@
 package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.event.LoggingAdapter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiFileInfoGetRequestV1
-import org.knora.webapi.routing.{Authenticator, Proxy, RouteUtilV1}
+import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
-import spray.routing.Directives._
-import spray.routing._
-
-import scala.util.Try
 
 /**
   * Provides a spray-routing function for the API routes that Sipi connects to.
   */
-object SipiRouteV1 extends Authenticator with Proxy {
+object SipiRouteV1 extends Authenticator {
 
     /**
       * A spray-routing function for the API routes that Sipi connects to.
@@ -48,26 +46,20 @@ object SipiRouteV1 extends Authenticator with Proxy {
         path("v1" / "files" / Segment) { file =>
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        //val fileValueIRI = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid file value IRI: $iri"))
-                        val filename = InputValidation.toSparqlEncodedString(file, () => throw BadRequestException(s"Invalid filename: '$file'"))
-                        SipiFileInfoGetRequestV1(filename, userProfile)
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    //val fileValueIRI = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid file value IRI: $iri"))
+                    val filename = InputValidation.toSparqlEncodedString(file, () => throw BadRequestException(s"Invalid filename: '$file'"))
+                    val requestMessage = SipiFileInfoGetRequestV1(filename, userProfile)
+
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
                         log
                     )
             }
-        } /*~ path("v1" / "sipi" / Rest) { iiif =>
-                println(iiif)
-                proxyToUnmatchedPath(Uri("http://localhost:3333/v1/assets/"), Uri.Path(iiif))
-        }*/
-        // this proxy is meant to be used in case we decide that IIIF-URLs should not refer directly to Sipi,
-        // but be processed and fowarded to Sipi
+        }
 
     }
 }

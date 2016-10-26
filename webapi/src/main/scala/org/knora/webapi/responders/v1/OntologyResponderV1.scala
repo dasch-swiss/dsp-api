@@ -149,18 +149,20 @@ class OntologyResponderV1 extends ResponderV1 {
           * a base class.
           *
           * @param resourceClassIri                 the IRI of the resource class whose properties are to be computed.
-          * @param directSubClassRelations          a map of the cardinalities defined directly on each resource class.
+          * @param directSubClassRelations          a map of the direct `rdfs:subClassOf` relations defined on each resource class.
           * @param allSubPropertyRelations          a map in which each property IRI points to the full set of its base properties.
           * @param directResourceClassCardinalities a map of the cardinalities defined directly on each resource class.
-          * @return the IRIs of the properties that have cardinalities on the resource class, or that it inherits
-          *         from its base classes.
+          * @return a map in which each key is the IRI of a property that has a cardinality in the resource class (or that it inherits
+          *         from its base classes), and each value is the cardinality on the property.
           */
         def inheritCardinalities(resourceClassIri: IRI,
                                  directSubClassRelations: Map[IRI, Set[IRI]],
                                  allSubPropertyRelations: Map[IRI, Set[IRI]],
                                  directResourceClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]]): Map[IRI, OwlCardinality] = {
-            // Recursively get properties that are available to inherit from base classes.
-            val cardinalitiesAvailableToInherit: Map[IRI, OwlCardinality] = directSubClassRelations(resourceClassIri).foldLeft(Map.empty[IRI, OwlCardinality]) {
+            // Recursively get properties that are available to inherit from base classes. If we have no information about
+            // a class, that could mean that it isn't a subclass of knora-base:Resource (e.g. it's something like
+            // foaf:Person), in which case we assume that it has no base classes.
+            val cardinalitiesAvailableToInherit: Map[IRI, OwlCardinality] = directSubClassRelations.getOrElse(resourceClassIri, Set.empty[IRI]).foldLeft(Map.empty[IRI, OwlCardinality]) {
                 case (acc, baseClass) =>
                     acc ++ inheritCardinalities(
                         resourceClassIri = baseClass,
@@ -170,19 +172,77 @@ class OntologyResponderV1 extends ResponderV1 {
                     )
             }
 
-            // Get the properties that have cardinalities defined directly on this class.
-            val thisClassCardinalities: Map[IRI, OwlCardinality] = directResourceClassCardinalities(resourceClassIri)
+            // Get the properties that have cardinalities defined directly on this class. Again, if we have no information
+            // about a class, we assume that it has no cardinalities.
+            val thisClassCardinalities: Map[IRI, OwlCardinality] = directResourceClassCardinalities.getOrElse(resourceClassIri, Map.empty[IRI, OwlCardinality])
 
             // From the properties that are available to inherit, filter out the ones that are overridden by properties
             // with cardinalities defined directly on this class.
             val inheritedCardinalities: Map[IRI, OwlCardinality] = cardinalitiesAvailableToInherit.filterNot {
                 case (baseClassProp, baseClassCardinality) => thisClassCardinalities.exists {
-                    case (thisClassProp, cardinality) => allSubPropertyRelations(thisClassProp).contains(baseClassProp)
+                    case (thisClassProp, cardinality) =>
+                        allSubPropertyRelations(thisClassProp).contains(baseClassProp)
                 }
             }
 
             // Add the inherited properties to the ones with directly defined cardinalities.
             thisClassCardinalities ++ inheritedCardinalities
+        }
+
+        /**
+          * Given a property, recursively adds its inherited predicates to the predicates it defines directly.
+          * A predicate on a subproperty that is a subproperty of a predicate defined in a base property overrides the
+          * base property's predicate.
+          *
+          * @param propertyEntityInfo                    the definition of the property whose predicates are to be computed.
+          * @param directSubPropertyRelations            a map of the direct `rdfs:subPropertyOf` relations defined on each resource class.
+          * @param allSubPropertyRelations               a map in which each property IRI points to the full set of its base properties.
+          * @param propertyEntityInfosWithoutInheritance a map of property IRIs to property definitions.
+          * @return a map in which each key is the IRI of a predicate defined on the property (or that it inherits
+          *         from its base properties), and each value contains the objects of the predicate.
+          */
+        def inheritPropertyPredicates(propertyEntityInfo: PropertyEntityInfoV1,
+                                      directSubPropertyRelations: Map[IRI, Set[IRI]],
+                                      allSubPropertyRelations: Map[IRI, Set[IRI]],
+                                      propertyEntityInfosWithoutInheritance: Map[IRI, PropertyEntityInfoV1]): Map[IRI, PredicateInfoV1] = {
+            // Recursively get predicates that are available to inherit from base properties.
+            val predicatesAvailableToInherit: Map[IRI, PredicateInfoV1] = directSubPropertyRelations(propertyEntityInfo.propertyIri).foldLeft(Map.empty[IRI, PredicateInfoV1]) {
+                case (acc, basePropIri) =>
+                    propertyEntityInfosWithoutInheritance.get(basePropIri) match {
+                        case Some(basePropertyEntityInfo) =>
+                            acc ++ inheritPropertyPredicates(
+                                propertyEntityInfo = basePropertyEntityInfo,
+                                directSubPropertyRelations = directSubPropertyRelations,
+                                allSubPropertyRelations = allSubPropertyRelations,
+                                propertyEntityInfosWithoutInheritance = propertyEntityInfosWithoutInheritance
+                            )
+
+                        case None =>
+                            // If we have no information about a base property, that could mean that it isn't a
+                            // subproperty of knora-base:resourceProperty (e.g. it's knora-base:resourceProperty itself,
+                            // or it's something like foaf:givenName), in which case we assume that it has no base properties.
+                            acc
+                    }
+
+            }
+
+            // Get the predicates that are defined directly on this property.
+            val thisPropertyPredicates: Map[IRI, PredicateInfoV1] = propertyEntityInfo.predicates
+
+            // From the predicates that are available to inherit, filter out the ones that are overridden by predicates
+            // defined directly on this property.
+            val inheritedPredicates: Map[IRI, PredicateInfoV1] = predicatesAvailableToInherit.filterNot {
+                case (basePropPredIri, basePropPredInfo) => thisPropertyPredicates.exists {
+                    case (thisPropPredIri, thisPropPredInfo) =>
+                        // Since we don't have information about subproperty relations between predicates of properties,
+                        // the most we can do here is let a directly defined predicate override the same predicate
+                        // defined on a base property.
+                        thisPropPredIri == basePropPredIri
+                }
+            }
+
+            // Add the inherited predicates to the directly defined predicates.
+            thisPropertyPredicates ++ inheritedPredicates
         }
 
         for {
@@ -353,6 +413,7 @@ class OntologyResponderV1 extends ResponderV1 {
 
                     val resourceEntityInfo = ResourceEntityInfoV1(
                         resourceClassIri = resourceClassIri,
+                        ontologyIri = getOntologyIri(resourceClassIri),
                         predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for resource class $resourceClassIri" }),
                         cardinalities = owlCardinalities.map {
                             owlCardinality =>
@@ -371,10 +432,12 @@ class OntologyResponderV1 extends ResponderV1 {
                     resourceClassIri -> resourceEntityInfo
             }
 
-            // Construct a PropertyEntityInfoV1 for each property definition.
-            propertyEntityInfos: Map[String, PropertyEntityInfoV1] = propertyDefsGrouped.map {
+            // Construct a PropertyEntityInfoV1 for each property definition, not taking inheritance into account.
+            propertyEntityInfosWithoutInheritance: Map[IRI, PropertyEntityInfoV1] = propertyDefsGrouped.map {
                 case (propertyIri, propertyRows) =>
-                    // Group the rows for each resource class by predicate IRI.
+                    val ontologyIri = getOntologyIri(propertyIri)
+
+                    // Group the rows for each property by predicate IRI.
                     val groupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = propertyRows.groupBy(_.rowMap("propPred")) - OntologyConstants.Rdfs.SubPropertyOf
 
                     val predicates: Map[IRI, PredicateInfoV1] = groupedByPredicate.map {
@@ -387,7 +450,7 @@ class OntologyResponderV1 extends ResponderV1 {
 
                             predicateIri -> PredicateInfoV1(
                                 predicateIri = predicateIri,
-                                ontologyIri = getOntologyIri(propertyIri),
+                                ontologyIri = ontologyIri,
                                 objects = objects,
                                 objectsWithLang = objectsWithLang
                             )
@@ -395,6 +458,7 @@ class OntologyResponderV1 extends ResponderV1 {
 
                     val propertyEntityInfo = PropertyEntityInfoV1(
                         propertyIri = propertyIri,
+                        ontologyIri = ontologyIri,
                         isLinkProp = linkProps.contains(propertyIri),
                         isLinkValueProp = linkValueProps.contains(propertyIri),
                         isFileValueProp = fileValueProps.contains(propertyIri),
@@ -402,6 +466,21 @@ class OntologyResponderV1 extends ResponderV1 {
                     )
 
                     propertyIri -> propertyEntityInfo
+            }
+
+            // Allow each property to inherit predicates from its base properties.
+            propertyEntityInfos = propertyEntityInfosWithoutInheritance.map {
+                case (propertyIri, propertyEntityInfo) =>
+                    val propertyEntityInfoWithInheritance = propertyEntityInfo.copy(
+                        predicates = inheritPropertyPredicates(
+                            propertyEntityInfo = propertyEntityInfo,
+                            directSubPropertyRelations = directSubPropertyRelations,
+                            allSubPropertyRelations = allSubPropertyRelations,
+                            propertyEntityInfosWithoutInheritance = propertyEntityInfosWithoutInheritance
+                        )
+                    )
+
+                    propertyIri -> propertyEntityInfoWithInheritance
             }
 
             // Cache all the data.
@@ -470,10 +549,10 @@ class OntologyResponderV1 extends ResponderV1 {
             propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceClassInfo.cardinalities.keySet, userProfile = userProfile)
 
             // Build the property definitions.
-            propertyDefinitions: Set[PropertyDefinitionV1] = resourceClassInfo.cardinalities.filterNot {
+            propertyDefinitions: Vector[PropertyDefinitionV1] = resourceClassInfo.cardinalities.filterNot {
                 // filter out the properties that point to LinkValue objects
                 case (propertyIri, cardinality) =>
-                    resourceClassInfo.linkValueProperties(propertyIri)
+                    resourceClassInfo.linkValueProperties(propertyIri) || propertyIri == OntologyConstants.KnoraBase.HasStandoffLinkTo
             }.map {
                 case (propertyIri: IRI, cardinality: Cardinality.Value) =>
                     propertyInfo.propertyEntityInfoMap.get(propertyIri) match {
@@ -489,11 +568,12 @@ class OntologyResponderV1 extends ResponderV1 {
                                     name = propertyIri,
                                     label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                                     description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                    vocabulary = entityInfo.predicates.values.head.ontologyIri,
+                                    vocabulary = entityInfo.ontologyIri,
                                     occurrence = cardinality.toString,
                                     valuetype_id = OntologyConstants.KnoraBase.LinkValue,
                                     attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
-                                    gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                                    gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
+                                    guiorder = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)
                                 )
 
                             } else {
@@ -503,17 +583,18 @@ class OntologyResponderV1 extends ResponderV1 {
                                     name = propertyIri,
                                     label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                                     description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                    vocabulary = entityInfo.predicates.values.head.ontologyIri,
+                                    vocabulary = entityInfo.ontologyIri,
                                     occurrence = cardinality.toString,
                                     valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
                                     attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute)),
-                                    gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                                    gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
+                                    guiorder = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)
                                 )
                             }
                         case None =>
                             throw new InconsistentTriplestoreDataException(s"Resource type $resourceTypeIri is defined as having property $propertyIri, which doesn't exist")
                     }
-            }(breakOut)
+            }.toVector.sortBy(_.guiorder)
 
             // Build the API response.
             resourceTypeResponse = ResourceTypeResponseV1(
@@ -686,7 +767,7 @@ class OntologyResponderV1 extends ResponderV1 {
                                 name = propertyIri,
                                 label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                                 description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                vocabulary = entityInfo.predicates.values.head.ontologyIri,
+                                vocabulary = entityInfo.ontologyIri,
                                 valuetype_id = OntologyConstants.KnoraBase.LinkValue,
                                 attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
                                 gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
@@ -698,7 +779,7 @@ class OntologyResponderV1 extends ResponderV1 {
                                 name = propertyIri,
                                 label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                                 description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                vocabulary = entityInfo.predicates.values.head.ontologyIri,
+                                vocabulary = entityInfo.ontologyIri,
                                 valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
                                 attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute)),
                                 gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))

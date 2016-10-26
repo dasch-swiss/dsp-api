@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.salsah.SettingsImpl
-import org.openqa.selenium.By
+import org.openqa.selenium.{By, WebElement}
 import org.scalatest._
 import org.scalatest.concurrent.Eventually._
 import spray.client.pipelining._
@@ -112,28 +112,25 @@ class ResourceCreationSpec extends SalsahSpec {
 
             val restypes = page.selectRestype("http://www.knora.org/ontology/images#person")
 
-            val rows = page.getInputRowsForResourceCreationForm()
+            val label: WebElement = page.getFormFieldByName("__LABEL__")
 
-            val address = page.getInputForResourceCreationForm(rows(0))
+            label.sendKeys("Robin Hood")
 
-            address.sendKeys("Musterstrasse 32")
+            val firstname = page.getFormFieldByName("http://www.knora.org/ontology/images#firstname")
 
-            val place = page.getInputForResourceCreationForm(rows(1))
+            firstname.sendKeys("Robin")
 
-            place.sendKeys("Basel")
+            val familyname: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/images#lastname")
 
-            val firstName = page.getInputForResourceCreationForm(rows(5))
+            familyname.sendKeys("Hood")
 
-            firstName.sendKeys("Testvorname")
+            val address: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/images#address")
 
-            val familyName = page.getInputForResourceCreationForm(rows(8))
-
-            familyName.sendKeys("Testperson")
+            address.sendKeys("Sherwood Forest")
 
             page.clickSaveButtonForResourceCreationForm()
 
             val window = page.getWindow(1)
-
 
 
         }
@@ -146,13 +143,15 @@ class ResourceCreationSpec extends SalsahSpec {
 
             val restypes = page.selectRestype("http://www.knora.org/ontology/anything#Thing")
 
-            val rows = page.getInputRowsForResourceCreationForm()
+            val label: WebElement = page.getFormFieldByName("__LABEL__")
 
-            val floatVal =  page.getInputForResourceCreationForm(rows(1))
+            label.sendKeys("Testding")
+
+            val floatVal =  page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
 
             floatVal.sendKeys("5.3")
 
-            val textVal =  page.getInputForResourceCreationForm(rows(10))
+            val textVal =  page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
 
             textVal.sendKeys("Dies ist ein Test")
 
@@ -163,6 +162,32 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
+        "create another resource of type anything:thing" in {
+
+            page.load()
+
+            page.clickAddResourceButton()
+
+            val restypes = page.selectRestype("http://www.knora.org/ontology/anything#Thing")
+
+            val label: WebElement = page.getFormFieldByName("__LABEL__")
+
+            label.sendKeys("ein zweites Testding")
+
+            val floatVal =  page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
+
+            floatVal.sendKeys("5.7")
+
+            val textVal =  page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
+
+            textVal.sendKeys("Dies ist auch ein Test")
+
+            page.clickSaveButtonForResourceCreationForm()
+
+            val window = page.getWindow(1)
+
+
+        }
 
         // Uncomment this if you want the browser to close after the test completes.
 

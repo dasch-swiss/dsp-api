@@ -16,24 +16,37 @@
 
 package org.knora.webapi.e2e.v1
 
-import com.typesafe.config.ConfigFactory
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
-import spray.client.pipelining._
-import spray.http._
-import spray.httpx.SprayJsonSupport._
+import akka.actor.{ActorSystem, Props}
+import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.pattern._
+import akka.util.Timeout
+import org.knora.webapi.LiveActorMaker
+import org.knora.webapi.e2e.E2ESpec
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.responders._
+import org.knora.webapi.responders.v1.ResponderManagerV1
+import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
+import org.knora.webapi.routing.v1.{AuthenticateRouteV1, ResourcesRouteV1}
+import org.knora.webapi.store._
+import spray.json.DefaultJsonProtocol
 
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
-object AuthenticationV1E2ESpec {
-    val config = ConfigFactory.parseString(
-        """
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
+/**
+  * A spray-json protocol used for turning the JSON responses from the 'login' operation during communication with the
+  * 'v1/session' route into a case classes for easier testing.
+  */
+object SessionResponseJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+    implicit val SessionResponseFormat = jsonFormat3(SessionResponse)
 }
 
 /**
@@ -45,7 +58,33 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
 
     import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
 
-    val rdfDataObjects = List(
+    import SessionResponseJsonSupport._
+
+    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+
+    private val authenticatePath = AuthenticateRouteV1.knoraApiPath(system, settings, log)
+    private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
+
+    private val incunabulaUser = UserProfileV1(
+        projects = Vector("http://data.knora.org/projects/77275339"),
+        groups = Nil,
+        userData = UserDataV1(
+            email = Some("test@test.ch"),
+            lastname = Some("Test"),
+            firstname = Some("User"),
+            username = Some("testuser"),
+            token = None,
+            user_id = Some("http://data.knora.org/users/b83acc5f05"),
+            lang = "de"
+        )
+    )
+
+    implicit private val timeout: Timeout = 300.seconds
+
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(5).second)
+
+    private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
@@ -60,14 +99,16 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
         Await.result(pipe(Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", rdfDataObjects)), 300 seconds)
     }
 
-    "The Authentication Route ('v1/authenticate') with credentials supplied via URL parameters " should {
-        "succeed with authentication and correct username / correct password " in {
+    "The Authentication Route ('v1/authenticate') with credentials supplied via URL parameters" should {
+
+        "succeed with authentication and correct username / correct password" in {
             /* Correct username and password */
             val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/authenticate?username=root&password=test")), 3 seconds)
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.OK)
         }
-        "fail with authentication and correct username / wrong password " in {
+
+        "fail with authentication and correct username / wrong password" in {
             /* Correct username / wrong password */
             val response: HttpResponse = Await.result(pipe(Get(s"${baseApiUrl}v1/authenticate?username=root&password=wrong")), 3 seconds)
             log.debug(s"response: ${response.toString}")
@@ -81,14 +122,16 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
         }
     }
 
-    "The Authentication Route ('v1/authenticate') with credentials supplied via Basic Auth " should {
-        "succeed with authentication and correct username / correct password " in {
+    "The Authentication Route ('v1/authenticate') with credentials supplied via Basic Auth" should {
+
+        "succeed with authentication and correct username / correct password" in {
             /* Correct username / correct password */
             val request = Get(s"${baseApiUrl}v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "test"))
             val response = Await.result(pipe(request), 3 seconds)
             assert(response.status == StatusCodes.OK)
         }
-        "fail with authentication and correct username / wrong password " in {
+
+        "fail with authentication and correct username / wrong password" in {
             /* Correct username / wrong password */
             val request = Get(s"${baseApiUrl}v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "wrong"))
             val response = Await.result(pipe(request), 3 seconds)
@@ -96,11 +139,9 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
         }
     }
 
-    // TODO: Rewrite to only use HTTP requests
-
-    "The Session Route ('v1/session') with credentials supplied via URL parameters " should {
+    "The Session Route ('v1/session') with credentials supplied via URL parameters" should {
         var sid = ""
-        "succeed with 'login' and correct username / correct password " in {
+        "succeed with 'login' and correct username / correct password" in {
             /* Correct username and correct password */
             val request = Get(s"${baseApiUrl}v1/session?login&username=root&password=test")
             val response = Await.result(pipe(request), 3 seconds)
@@ -126,68 +167,67 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
                 assert(status === StatusCodes.OK)
                 /* store session */
                 sid = responseAs[SessionResponse].sid
-                assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, content = sid))))
+                assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(name = KNORA_AUTHENTICATION_COOKIE_NAME, value = sid))))
             }
             */
         }
 
-        /*
-       "succeed with authentication when using correct session id in cookie" in {
-           // authenticate by calling '/v2/session' without parameters but by providing session id in cookie from earlier login
-           Get("/v1/session") ~> Cookie(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
-               //log.debug("==>> " + responseAs[String])
-               assert(status === StatusCodes.OK)
-           }
-       }
+        "succeed with authentication when using correct session id in cookie" in {
+            // authenticate by calling '/v2/session' without parameters but by providing session id in cookie from earlier login
+            Get("/v1/session") ~> Cookie(HttpCookiePair(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.OK)
+            }
+        }
 
-       "succeed with 'logout' when providing the session cookie " in {
-           // do logout with stored session id
-           Get("/v1/session?logout") ~> Cookie(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
-               //log.debug("==>> " + responseAs[String])
-               assert(status === StatusCodes.OK)
-               assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
-           }
-       }
+        "succeed with 'logout' when providing the session cookie" in {
+            // do logout with stored session id
+            Get("/v1/session?logout") ~> Cookie(HttpCookiePair(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.OK)
+                assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
+            }
+        }
 
-       "fail with authentication when providing the session cookie after logout" in {
-           Get("/v1/session") ~> Cookie(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
-               //log.debug("==>> " + responseAs[String])
-               assert(status === StatusCodes.Unauthorized)
-           }
-       }
+        "fail with authentication when providing the session cookie after logout" in {
+            Get("/v1/session") ~> Cookie(HttpCookiePair(KNORA_AUTHENTICATION_COOKIE_NAME, sid)) ~> authenticatePath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.Unauthorized)
+            }
+        }
 
-       "fail with 'login' and correct username / wrong password " in {
-           /* Correct username and wrong password */
-           Get("/v1/session?login&username=root&password=wrong") ~> authenticatePath ~> check {
-               //log.debug("==>> " + responseAs[String])
-               assert(status === StatusCodes.Unauthorized)
-           }
-       }
+        "fail with 'login' and correct username / wrong password" in {
+            /* Correct username and wrong password */
+            Get("/v1/session?login&username=root&password=wrong") ~> authenticatePath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.Unauthorized)
+            }
+        }
 
-       "fail with 'login' and wrong username " in {
-           /* wrong username */
-           Get("/v1/session?login&username=wrong&password=test") ~> authenticatePath ~> check {
-               //log.debug("==>> " + responseAs[String])
-               assert(status === StatusCodes.Unauthorized)
-           }
-       }
+        "fail with 'login' and wrong username" ignore {
+            /* wrong username */
+            Get("/v1/session?login&username=root&password=test") ~> authenticatePath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.Unauthorized)
+            }
+        }
 
-       "fail with authentication when using wrong session id in cookie " in {
-           Get("/v1/session") ~> Cookie(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "123456")) ~> authenticatePath ~> check {
-               //log.debug("==>> " + responseAs[String])
-               assert(status === StatusCodes.Unauthorized)
-           }
-       }
-   }
+        "fail with authentication when using wrong session id in cookie" in {
+            Get("/v1/session") ~> Cookie(HttpCookiePair(KNORA_AUTHENTICATION_COOKIE_NAME, "123456")) ~> authenticatePath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.Unauthorized)
+            }
+        }
+    }
 
-   "The Session Route ('v1/session') with credentials supplied via Basic Auth " should {
-       "succeed with 'login' and correct username / correct password " in {
-           /* Correct username and correct password */
-           Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
-               //log.debug("==>> " + responseAs[String])
-               assert(status === StatusCodes.OK)
-           }
-       }
+    "The Session Route ('v1/session') with credentials supplied via Basic Auth" should {
+        "succeed with 'login' and correct username / correct password" in {
+            /* Correct username and correct password */
+            Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.OK)
+            }
+        }
 
        "fail with 'login' and correct username / wrong password " in {
            /* Correct username and wrong password */
@@ -197,14 +237,14 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
            }
        }
 
-       "fail with 'login' and wrong username " in {
-           /* wrong username */
-           Get("/v1/session?logint") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
-               //log.debug("==>> " + responseAs[String])
-               assert(status === StatusCodes.Unauthorized)
-           }
-       }
-   }
+        "fail with 'login' and wrong username " ignore {
+            /* wrong username */
+            Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("wrong", "test")) ~> authenticatePath ~> check {
+                //log.debug("==>> " + responseAs[String])
+                assert(status === StatusCodes.Unauthorized)
+            }
+        }
+    }
 
    "The Resources Route using the Authenticator trait " should {
        "succeed with authentication using URL parameters and correct username / correct password " in {
@@ -247,6 +287,5 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) {
                assert(responseAs[String] contains "\"token\":null")
            }
        }
-       */
     }
 }

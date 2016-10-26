@@ -102,7 +102,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/8653a672"),
                 values = Vector(TextValueV1(
                     utf8str = "Berthold, der Bruder"
@@ -123,7 +123,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/c3295339"),
                 values = Vector(TextValueV1(
                     utf8str = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
@@ -161,9 +161,9 @@ object ResourcesResponderV1SpecFullData {
                     None
                 ),
                 comments = Vector(
-                    "",
-                    "",
-                    ""
+                    None,
+                    None,
+                    None
                 ),
                 value_ids = Vector(
                     "http://data.knora.org/c5058f3a/values/184e99ca01",
@@ -197,7 +197,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/92faf25701"),
                 values = Vector(TextValueV1(
                     utf8str = "Universit\u00E4ts- und Stadtbibliothek K\u00F6ln, Sign: AD+S167"
@@ -218,7 +218,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/10e00c7acc2704"),
                 values = Vector(TextValueV1(
                     utf8str = "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1"
@@ -239,7 +239,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/5524469101"),
                 values = Vector(TextValueV1(
                     utf8str = "Dimension: 8\u00B0"
@@ -260,7 +260,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/0ca74ce5"),
                 values = Vector(TextValueV1(
                     utf8str = "Basel"
@@ -281,7 +281,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/cfd09f1e01"),
                 values = Vector(DateValueV1(
                     calendar = KnoraCalendarV1.JULIAN,
@@ -304,7 +304,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/497df9ab"),
                 values = Vector(TextValueV1(
                     utf8str = "Johann Amerbach"
@@ -518,7 +518,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Nil,
                 value_iconsrcs = Nil,
                 value_restype = Nil,
-                comments = Vector("0"),
+                comments = Vector(None),
                 value_ids = Vector("0"),
                 values = Vector(IntegerValueV1(ival = 0)),
                 occurrence = None,
@@ -537,7 +537,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/61cb927602"),
                 values = Vector(TextValueV1(
                     utf8str = "a1r, Titelblatt"
@@ -558,7 +558,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/3e3d4dc0e922"),
                 values = Vector(TextValueV1(
                     utf8str = "Titel: \"Das andechtig zitglo(e)gglyn | des lebens vnd lide(n)s christi nach | den xxiiij stunden v\u00DFgeteilt.\"\nHolzschnitt: Schlaguhr mit Zifferblatt f\u00FCr 24 Stunden, auf deren oberem Rand zu beiden Seiten einer Glocke die Verk\u00FCndigungsszene mit Maria (links) und dem Engel (rechts) zu sehen ist.\nBord\u00FCre: Ranken mit Fabelwesen, Holzschnitt.\nKolorierung: Rot, Blau, Gr\u00FCn, Gelb, Braun.\nBeschriftung oben Mitte (Graphitstift) \"B 1\"."
@@ -579,7 +579,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/e80b2d895f23"),
                 values = Vector(TextValueV1(
                     utf8str = "Schramm, Bd. 21, Abb. 601."
@@ -600,7 +600,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/aa488c2203"),
                 values = Vector(TextValueV1(
                     utf8str = "ad+s167_druck1=0001.tif"
@@ -621,7 +621,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/e71e39e902"),
                 values = Vector(IntegerValueV1(ival = 1)),
                 occurrence = Some("0-1"),
@@ -640,7 +640,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi")),
                 value_iconsrcs = Vector(Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif")),
                 value_restype = Vector(Some("Buch")),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/ac9ddbf4-62a7-4cdc-b530-16cbbaa265bf"),
                 values = Vector(LinkV1(
                     valueResourceClassIcon = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
@@ -987,7 +987,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/047db418ae06/values/7331b94196a104"),
                 values = Vector(TextValueV1(
                     resource_reference = Set("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"), // TODO: Why is this a Value onject IRI?
@@ -1023,7 +1023,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/047db418ae06/values/cca179c00527"),
                 values = Vector(ColorValueV1(color = "#ff3333")),
                 occurrence = Some("1"),
@@ -1042,7 +1042,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/047db418ae06/values/097826870527"),
                 values = Vector(GeomValueV1(geom = "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.24285714285714285,\"y\":0.1712962962962963},{\"x\":0.8678571428571429,\"y\":0.16666666666666666},{\"x\":0.8892857142857142,\"y\":0.7222222222222222},{\"x\":0.25,\"y\":0.7361111111111112},{\"x\":0.2392857142857143,\"y\":0.16898148148148148}],\"type\":\"polygon\"}")),
                 occurrence = Some("1-n"),
@@ -1061,7 +1061,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(Some("Derselbe Holzschnitt wird auch auf Seite b8v der deutschen Ausgabe des Narrenschiffs verwendet.")),
                 value_iconsrcs = Vector(Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "knora-base/region.gif")),
                 value_restype = Vector(Some("Region")),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"),
                 values = Vector(LinkV1(
                     valueResourceClassIcon = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "knora-base/region.gif"),
@@ -1086,7 +1086,7 @@ object ResourcesResponderV1SpecFullData {
                 value_firstprops = Vector(Some("b8v")),
                 value_iconsrcs = Vector(Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/page.gif")),
                 value_restype = Vector(Some("Seite")),
-                comments = Vector(""),
+                comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/047db418ae06/values/2335c869-b649-4dd8-b4b5-e82c88449d62"),
                 values = Vector(LinkV1(
                     valueResourceClassIcon = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/page.gif"),

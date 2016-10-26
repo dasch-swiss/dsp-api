@@ -242,15 +242,17 @@ The following table indicates the possible combinations of value types and compa
 +------------------+-----------------------------------------------------+
 
 Explanation of the comparison operators:
-  - ``EQ``: checks if the searched resource's value *equals* the search value. In case of a text value type, it checks for identity of the strings compared. In case of a date value type, it checks if the dates are equal or if the specified date encompasses it (internally, dates are always treated as periods).
-  - ``!EQ``: checks if the searched resource's value *does not equal* the search value. In case of a text value type, it checks if the compared strings are different. In case of a date value type, it checks if the dates are not equal or if the specified date does not encompass it (internally, dates are always treated as periods).
-  - ``GT``: checks if the searched resource's value is *greater than* the search value. In case of a date value type, it checks if the resource's period begins after the indicated date.
-  - ``GT_EQ``: checks if the searched resource's value *equals or is greater than* the search value. In case of a date value type, it checks if the resource's period equals the end of the indicated period or begins after the indicated period.
-  - ``LT``: checks if the searched resource's value is *lower than* the search value. In case of a date value type, it checks if the resource's period begins before the indicated date.
-  - ``LT_EQ``: checks if the searched resource's value *equals or is lower than* the search value. In case of a date value type, it checks if the resource's period equals the begin of the indicated period or begins before the indicated period.
-  - ``EXISTS``: checks if an instance of the indicated property type *exists* for the search resource. **Please always provide an empty search value when using EXISTS: "searchval="**. Otherwise, the query syntax rules would be violated.
-  - ``MATCH``: checks if the searched resource's text value *matches* the search value. The behaviour depends on the used triplestore's full text index.
-  - ``MATCH_BOOLEAN``: check if the searched resource's text value *matches* the provided list of positive (exist) and negative (do not exist) terms. The list takes this form: ``([+-]term\s)+``.
+  - ``EQ``: checks if a resource's value *equals* the search value. In case of a text value type, it checks for identity of the strings compared. In case of a date value type, it checks if the dates are equal or if the specified date encompasses it (internally, dates are always treated as periods).
+  - ``!EQ``: checks if a resource's value *does not equal* the search value. In case of a text value type, it checks if the compared strings are different. In case of a date value type, it checks if the dates are not equal or if the specified date does not encompass it (internally, dates are always treated as periods).
+  - ``GT``: checks if a resource's value is *greater than* the search value. In case of a date value type, it checks if the resource's period begins after the indicated date.
+  - ``GT_EQ``: checks if a resource's value *equals or is greater than* the search value. In case of a date value type, it checks if the resource's period equals the end of the indicated period or begins after the indicated period.
+  - ``LT``: checks if a resource's value is *lower than* the search value. In case of a date value type, it checks if the resource's period begins before the indicated date.
+  - ``LT_EQ``: checks if a resource's value *equals or is lower than* the search value. In case of a date value type, it checks if the resource's period equals the begin of the indicated period or begins before the indicated period.
+  - ``EXISTS``: checks if an instance of the indicated property type *exists* for a resource. **Please always provide an empty search value when using EXISTS: "searchval="**. Otherwise, the query syntax rules would be violated.
+  - ``MATCH``: checks if a resource's text value *matches* the search value. The behaviour depends on the used triplestore's full text index.
+  - ``LIKE``: checks if the search value is contained in a resource's text value.
+  - ``!LIKE``: checks if the search value is not contained in a resource's text value. 
+  - ``MATCH_BOOLEAN``: checks if a resource's text value *matches* the provided list of positive (exist) and negative (do not exist) terms. The list takes this form: ``([+-]term\s)+``.
 
 Additionally, these parameters can be set:
   - ``filter_by_restype=resourceClassIRI``: restricts the search to resources of the specified resource class.

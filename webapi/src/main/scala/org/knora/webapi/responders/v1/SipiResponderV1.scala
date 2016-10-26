@@ -21,7 +21,11 @@
 package org.knora.webapi.responders.v1
 
 import akka.actor.Status
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.marshalling.Marshal
+import akka.http.scaladsl.model._
 import akka.pattern._
+import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.sipimessages.RepresentationV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiConstants.FileType
@@ -31,17 +35,18 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{ApiValueV1, FileVal
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{InputValidation, PermissionUtilV1}
-import spray.client.pipelining._
-import spray.http._
 import spray.json._
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 /**
   * Responds to requests for information about binary representations of resources, and returns responses in Knora API
   * v1 format.
   */
 class SipiResponderV1 extends ResponderV1 {
+
+    implicit val materializer = ActorMaterializer()
 
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
@@ -93,6 +98,7 @@ class SipiResponderV1 extends ResponderV1 {
         )
     }
 
+
     /**
       * Makes a conversion request to Sipi and creates a [[SipiResponderConversionResponseV1]]
       * containing the file values to be added to the triplestore.
@@ -103,64 +109,61 @@ class SipiResponderV1 extends ResponderV1 {
       */
     private def callSipiConvertRoute(url: String, conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
 
-        // define a pipeline function that gets turned into a generic [[HTTP Response]] (containing JSON)
-        val pipeline: HttpRequest => Future[HttpResponse] = (
-            addHeader("Accept", "application/json")
-                ~> sendReceive
-                ~> unmarshal[HttpResponse]
-            )
-
-        // send a conversion request to SIPI and parse the response as a generic [[HTTPResponse]]
         val conversionResultFuture: Future[HttpResponse] = for {
-            formData <- Future(conversionRequest.toFormData())
-            postRequest <- Future(Post(url, FormData(formData)))
-            pipelineResult <- pipeline(postRequest)
-        } yield pipelineResult
+            request <- Marshal(conversionRequest.toFormData()).to[RequestEntity]
+            response <- Http().singleRequest(
+                HttpRequest(
+                    method = HttpMethods.POST,
+                    uri = url,
+                    entity = HttpEntity(
+                        MediaTypes.`application/json`,
+                        conversionRequest.toJsValue.compactPrint
+                    )
+                )
+            )
+        } yield response
 
         //
         // handle unsuccessful requests to Sipi
         //
         val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
-            case noResponse: spray.can.Http.ConnectionAttemptFailedException =>
+            case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
                 // this problem is hardly the user's fault. Create a SipiException
                 throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
-
-            case httpError: spray.httpx.UnsuccessfulResponseException =>
-                val statusCode: StatusCode = httpError.response.status
-
-                val statusInt: Int = statusCode.intValue / 100
-
-                // match status codes
-                statusInt match {
-                    case 4 =>
-                        // Bad Request: it is the user's responsibility
-                        val errMsg = try {
-                            // parse answer as a Sipi error message
-                            httpError.response.entity.asString.parseJson.convertTo[SipiErrorConversionResponse]
-                        } catch {
-                            // the Sipi error message could not be parsed correctly
-                            case e: DeserializationException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
-                        }
-                        // most probably the user sent invalid data which caused a Sipi error
-                        throw BadRequestException(s"Sipi returned a non successful HTTP status code ${statusCode}: ${errMsg}")
-
-                    case 5 =>
-                        // Internal Server Error: not the user's fault
-                        throw SipiException(s"Sipi reported an internal server error ${statusCode}", e = httpError, log = log)
-                }
 
             case err =>
                 // unknown error
                 throw SipiException(message = s"Unknown error: ${err.toString}", e = err, log = log)
-
         }
 
         for {
-
             conversionResultResponse <- recoveredConversionResultFuture
 
+            httpStatusCode: StatusCode = conversionResultResponse.status
+            statusInt: Int = httpStatusCode.intValue / 100
+
+            _ = statusInt match {
+                case 4 =>
+                    // Bad Request: it is the user's responsibility
+                    val errMsg = try {
+                        // parse answer as a Sipi error message
+                        val sef: Future[SipiErrorConversionResponse] = conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8").parseJson.convertTo[SipiErrorConversionResponse])
+                        sef
+                    } catch {
+                        // the Sipi error message could not be parsed correctly
+                        case e: DeserializationException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
+                    }
+                    // most probably the user sent invalid data which caused a Sipi error
+                    throw BadRequestException(s"Sipi returned a non successful HTTP status code $httpStatusCode: $errMsg")
+
+                case 5 =>
+                    // Internal Server Error: not the user's fault
+                    val sf: Future[String] = conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+                    throw SipiException(s"Sipi reported an internal server error $httpStatusCode - $sf")
+            }
+
             // get file type from Sipi response
-            responseAsMap: Map[String, JsValue] = conversionResultResponse.entity.asString.parseJson.asJsObject.fields.toMap
+            responseAsMap: Map[String, JsValue] = conversionResultResponse.entity.toString.parseJson.asJsObject.fields.toMap
 
             statusCode: Int = responseAsMap.getOrElse("status", throw SipiException(message = "Sipi did not return a status code")) match {
                 case JsNumber(ftype: BigDecimal) => ftype.toInt
@@ -183,7 +186,7 @@ class SipiResponderV1 extends ResponderV1 {
                 case SipiConstants.FileType.IMAGE =>
                     // parse response as a [[SipiImageConversionResponse]]
                     val imageConversionResult = try {
-                        conversionResultResponse.entity.asString.parseJson.convertTo[SipiImageConversionResponse]
+                        conversionResultResponse.entity.toString.parseJson.convertTo[SipiImageConversionResponse]
                     } catch {
                         case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiImageConversionResponse", e = e, log = log)
                     }
@@ -218,6 +221,7 @@ class SipiResponderV1 extends ResponderV1 {
 
         } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = fileTypeEnum)
     }
+
 
     /**
       * Convert a file that has been sent to Knora (non GUI-case).

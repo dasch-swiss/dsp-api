@@ -758,16 +758,16 @@ input.disp_csv {
   cursor: pointer;
 }
 input.disp_list {
-  background: url('../icons/sets/view/list_bullets_icon&16.png') no-repeat top left;
+  background: url('icons/sets/view/list_bullets_icon&16.png') no-repeat top left;
 }
 input.disp_lightbox {
-  background: url('../icons/sets/view/2x2_grid_icon&16.png') no-repeat top left;
+  background: url('icons/sets/view/2x2_grid_icon&16.png') no-repeat top left;
 }
 input.disp_tableedit {
-  background: url('../icons/sets/view/3x3_grid_icon&16.png') no-repeat top left;
+  background: url('icons/sets/view/3x3_grid_icon&16.png') no-repeat top left;
 }
 input.disp_csv {
-  background: url('../icons/sets/view/csv_icon&16.png') no-repeat top left;
+  background: url('icons/sets/view/csv_icon&16.png') no-repeat top left;
 }
 .dock {
   position: absolute;

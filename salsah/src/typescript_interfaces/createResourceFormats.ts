@@ -41,72 +41,72 @@ export module createResourceFormats {
             /**
              * Set if value is of type integer value
              */
-            ival?: {
+            ival: {
                 integer: number;
-            }
+            } | null;
 
             /**
              * Set if value is of type decimal value (floating point number)
              */
-            dval?: {
+            dval: {
                 decimal: number;
-            }
+            } | null;
 
             /**
              * Set if value is of type date value.
              * Represents the start date.
              */
-            dateval1?: {
+            dateval1: {
                 string: string;
-            }
+            } | null;
 
             /**
              * Set if value is of type date value.
              * Represents the end date.
              */
-            dateval2?: {
+            dateval2: {
                 string: string;
-            }
+            } | null;
 
             /**
              * Set if value is of type date value.
              * Represents the precision of the start date.
              */
-            dateprecision1?: {
+            dateprecision1: {
                 string: string;
-            }
+            } | null;
 
             /**
              * Set if value is of type date value.
              * Represents the precision of the end date.
              */
-            dateprecision2?: {
+            dateprecision2: {
                 string: string;
-            }
+            } | null;
 
             /**
              * Set if value is of type date value.
              * Represents the date's calendar.
              */
-            calendar?: {
+            calendar: {
                 string: string;
-            }
+            } | null;
 
             /**
              * Set if value is of type interval value.
              * Represents the start of the interval.
              */
-            timeval1?:{
+            timeval1:{
                 decimal: number;
-            }
+            } | null;
 
             /**
              * Set if value is of type interval value.
              * Represents the end of the interval.
              */
-            timeval2?:{
+            timeval2:{
                 decimal: number;
-            }
+            } | null;
 
             /**
              * The IRI of the property type the value belongs to
@@ -208,5 +208,30 @@ export module createResourceFormats {
 
     }
 
+    /**
+     * Represents a request to change a resource's label.
+     *
+     * This definition describes the JSON to be sent as the HTTP body in a PUT request to http://host/v1/resources/label/resourceIri
+     */
+    export interface changeResourceLabelRequest {
 
+        /**
+         * The new label of the resource.
+         */
+        label: string;
+    }
+
+    export interface changeResourceLabelResponse extends basicMessageComponents.basicResponse {
+
+        /**
+         * The IRI of the resource whose label has been changed.
+         */
+        res_id: basicMessageComponents.KnoraIRI;
+
+        /**
+         * The new label of the resource.
+         */
+        label: string;
+
+    }
 }

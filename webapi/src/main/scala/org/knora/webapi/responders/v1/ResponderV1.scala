@@ -33,7 +33,7 @@ trait ResponderV1 extends Actor with ActorLogging {
     /**
       * The responder's Akka actor system.
       */
-    protected val system = context.system
+    protected implicit val system = context.system
 
     /**
       * The application settings.

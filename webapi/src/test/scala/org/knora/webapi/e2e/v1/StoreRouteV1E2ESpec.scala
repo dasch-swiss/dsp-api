@@ -16,14 +16,19 @@
 
 package org.knora.webapi.e2e.v1
 
-import com.typesafe.config.ConfigFactory
+import akka.actor.{ActorSystem, Props}
+import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.util.Timeout
+import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.{E2ESpec, StartupFlags}
-import spray.client.pipelining._
-import spray.http.{HttpResponse, StatusCodes}
-import spray.httpx.SprayJsonSupport._
+import org.knora.webapi.responders._
+import org.knora.webapi.responders.v1.ResponderManagerV1
+import org.knora.webapi.routing.v1.StoreRouteV1
+import org.knora.webapi.store._
+import org.knora.webapi.{LiveActorMaker, StartupFlags}
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object StoreRouteV1E2ESpec {
@@ -43,7 +48,12 @@ class StoreRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) {
 
     import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
 
-    /**
+    /* Start a live ResponderManager */
+    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+
+	/**
       * The marshaling to Json is done automatically by spray, hence the import of the 'TriplestoreJsonProtocol'.
       * The Json which spray generates looks like this:
       *
@@ -57,7 +67,7 @@ class StoreRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) {
       *
       * and could have been supplied to the post request instead of the scala object.
       */
-    val rdfDataObjects = List(
+    private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
@@ -74,6 +84,10 @@ class StoreRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) {
               * This test corresponds to the following curl call:
               * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/v1/store/ResetTriplestoreContent
               */
+
+			StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
+			log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
+
             val response: HttpResponse = Await.result(pipe(Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", rdfDataObjects)), 300 seconds)
             log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)

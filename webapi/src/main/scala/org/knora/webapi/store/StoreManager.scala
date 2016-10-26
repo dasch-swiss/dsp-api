@@ -40,7 +40,7 @@ class StoreManager extends Actor with ActorLogging {
     this: ActorMaker =>
 
     private val settings = Settings(context.system)
-    implicit val timeout = Timeout(300.seconds)
+    implicit val timeout = settings.defaultRestoreTimeout
 
     /**
       * Start the TriplestoreManagerActor

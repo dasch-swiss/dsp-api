@@ -26,10 +26,11 @@ import java.nio.file.{Files, Paths}
 import akka.event.LoggingAdapter
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.valuemessages.{CreateRichtextV1, StandoffTagV1, StandoffPositionV1, TextValueV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{CreateRichtextV1, StandoffPositionV1, StandoffTagV1, TextValueV1}
 import spray.json.JsonParser
 
 
@@ -331,6 +332,21 @@ object InputValidation {
       */
     def saveFileToTmpLocation(settings: SettingsImpl, binaryData: Array[Byte]): File = {
 
+        val fileName = createTempFile(settings)
+        // write given file to disk
+        Files.write(fileName.toPath, binaryData)
+
+        fileName
+    }
+
+    /**
+      * Creates an empty file in the default temporary-file directory specified in the 'settings'.
+      *
+      * @param settings
+      * @return the location where the file has been written to.
+      */
+    def createTempFile(settings: SettingsImpl): File = {
+
         // check if the location for writing temporary files exists
         if (!Files.exists(Paths.get(settings.tmpDataDir))) {
             throw FileWriteException(s"Data directory ${
@@ -338,16 +354,11 @@ object InputValidation {
             } does not exist on server")
         }
 
-        val fileName: File = File.createTempFile("tmp_", ".bin", new File(settings.tmpDataDir))
+        val file: File = File.createTempFile("tmp_", ".bin", new File(settings.tmpDataDir))
 
-        if (!fileName.canWrite) throw FileWriteException(s"File ${
-            fileName
-        } cannot be written.")
-
-        // write given file to disk
-        Files.write(fileName.toPath, binaryData)
-
-        fileName
+        if (!file.canWrite)
+            throw FileWriteException(s"File ${file} cannot be written.")
+        file
     }
 
     def deleteFileFromTmpLocation(fileName: File, log: LoggingAdapter): Boolean = {

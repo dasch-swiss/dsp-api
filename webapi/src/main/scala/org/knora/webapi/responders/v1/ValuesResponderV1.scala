@@ -87,6 +87,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
+                        comment = valueQueryResult.comment,
                         userdata = userProfile.userData
                     )
 
@@ -907,9 +908,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 }
 
                 // currentValueQueryResult.comment is an Option[String]
-                _ = currentValueQueryResult.comment.foreach {
-                    commentStr => if (commentStr == changeCommentRequest.comment) throw DuplicateValueException("The submitted comment is the same as the current comment")
-                }
+                _ = if (currentValueQueryResult.comment == changeCommentRequest.comment) throw DuplicateValueException("The submitted comment is the same as the current comment")
 
                 // Everything looks OK, so update the comment.
 
@@ -924,7 +923,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     propertyIri = findResourceWithValueResult.propertyIri,
                     currentValueIri = changeCommentRequest.valueIri,
                     newValueIri = newValueIri,
-                    comment = changeCommentRequest.comment
+                    maybeComment = changeCommentRequest.comment
                 ).toString()
 
                 // Do the update.
@@ -1243,6 +1242,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
+                        comment = valueQueryResult.comment,
                         userdata = userProfile.userData
                     )
 

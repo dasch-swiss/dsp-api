@@ -33,6 +33,7 @@
  */
 (function($) {
 
+	'use strict';
 
 	var add_icon = new Image();
 	add_icon.src = SITE_URL + '/app/icons/16x16/add.png';
@@ -92,8 +93,26 @@
 						SALSAH.ApiGet(
 							'resourcetypes', param,
 							function(data) {
+								var i;
+
 								if (data.status == ApiErrors.OK) {
 									var restypes_sel = $this.find('select[name=selrestype]').empty(); //.append($('<option>', {value: 0}).text('-'));
+
+									// Remove knora-base:Region from the list of resource types that can be created here, because a region
+									// can only be created as a dependency of an image representation.
+
+									var region_index = -1;
+
+									for (i in data.resourcetypes) {
+										if (data.resourcetypes[i].id == RESOURCE_TYPE_REGION) {
+											region_index = i;
+										}
+									}
+
+									if (region_index > -1) {
+									    data.resourcetypes.splice(region_index, 1);
+									}
+
 									for (i in data.resourcetypes) {
 										restypes_sel.append($('<option>', {
 											value: data.resourcetypes[i].id
@@ -247,6 +266,17 @@
 						}
 
 						formcontainer.append(form);
+
+						var labelprop = {
+							name: "__LABEL__",
+							gui_name: "text",
+							label: 'Label',
+							description: "** label **",
+							vocabulary: "http://www.knora.org/ontology/knora-base",
+							valuetype_id: "http://www.knora.org/ontology/knora-base#TextValue",
+							occurrence: "1"
+						}
+						rtinfo.properties.unshift(labelprop);
 
 						for (var pinfo in rtinfo.properties) {
 							//
@@ -414,6 +444,20 @@
 										prop_status[propname].attributes = attributes; // save attributes for later use
 										break;
 									}
+								case 'checkbox':
+									{
+										create_entry(propname, function(ele, attr) {
+											var checkbox = $('<input>', {
+											    type: "checkbox"
+											});
+
+											checkbox.attr(attr);
+
+											checkbox.insertBefore(ele.find('.entrySep'));
+										});
+										prop_status[propname].attributes = attributes; // save attributes for later use
+										break;
+									}
 								case 'spinbox':
 									{
 										create_entry(propname, function(ele, attr) {
@@ -552,7 +596,7 @@
 														}
 													},
 												});
-												if (localdata.settings.viewer.topCanvas !== undefined) {
+												if (!(localdata.settings.viewer == undefined || localdata.settings.viewer.topCanvas == undefined)) {
 													localdata.settings.viewer.topCanvas().regions('setDefaultLineColor', colbox.colorpicker('value')); // init
 												}
 											} else {
@@ -616,7 +660,7 @@
 							var ele;
 							var vv;
 
-							create_richtext_value_params = function() {
+							var create_richtext_value_params = function() {
 								return {
 									textattr: JSON.stringify({}),
 									resource_reference: []
@@ -626,6 +670,7 @@
 							for (var pinfo in rtinfo.properties) {
 								//propname = rtinfo.properties[pinfo].vocabulary + ':' + rtinfo.properties[pinfo].name;
 								propname = rtinfo.properties[pinfo].name;
+								//if (propname == '__LABEL__') continue;
 								if (!propvals[propname]) propvals[propname] = {};
 								//console.log(rtinfo.properties[pinfo].gui_name);
 								switch (rtinfo.properties[pinfo].gui_name) {
@@ -645,6 +690,8 @@
 												if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_FLOAT) {
 													// it is a float
 													propvals[propname] = [{decimal_value: parseFloat(ele.val())}];
+												} else if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_URI) {
+													propvals[propname] = [{uri_value: ele.val()}];
 												} else {
 													// it is a text
 													var richtext_value = create_richtext_value_params();
@@ -664,6 +711,10 @@
 														// it is a float
 														vv = {
 															decimal_value: parseFloat($(this).val())
+														};
+													} else if (rtinfo.properties[pinfo].valuetype_id == VALTYPE_URI) {
+														vv = {
+															uri_value: $(this).val()
 														};
 													} else {
 														// it is a text
@@ -730,6 +781,22 @@
 											}
 											break;
 										}
+									case 'checkbox': {
+										ele = form.find('[name="' + propname + '"]');
+											if (ele.length == 1) {
+												propvals[propname] = [{boolean_value: ele.is(":checked")}];
+											} else if (ele.length > 1) {
+												propvals[propname] = [];
+												ele.each(function() {
+													vv = {
+														boolean_value: $(this).is(":checked")
+													};
+													propvals[propname].push(vv);
+												});
+											}
+											break;
+
+									}	
 									case 'spinbox':
 										{
 											ele = form.find('[name="' + propname + '"]');
@@ -1021,25 +1088,30 @@
 								}
 							}
 
-							/**
-							  Ignore knora-base:Resource properties for the moment
-                             */
-							// propvals["http://www.knora.org/ontology/knora-base#hasRepresentation"] = undefined;
-							// propvals["http://www.knora.org/ontology/knora-base#seqnum"] = undefined;
-							propvals["http://www.knora.org/ontology/knora-base#hasStillImageFileValue"] = undefined;
+							// Ignore knora-base:hasStandoffLinkTo, because it is not user-modifiable.
 							propvals["http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"] = undefined;
 
+							// Remove properties that have empty values because the user removed them from the form.
+							for (var prop in propvals) {
+								if (jQuery.isEmptyObject(propvals[prop])) {
+									delete propvals[prop];
+								}
+							}
 
 							// TODO: handle GUI  element problem
 							//propvals["http://www.knora.org/ontology/knora-base#hasComment"] = undefined;
-
+							var tmplabel = propvals['__LABEL__'];
+							var tmplabelFirstElem = tmplabel[0];
+							var labelStr = tmplabelFirstElem.richtext_value.utf8str;
+							propvals['__LABEL__'] = undefined;
 
 							SALSAH.ApiPost('resources', {
 								restype_id: rtinfo.name,
 								properties: propvals,
 								project_id: SALSAH.userdata.projects[0], // TODO: take the user's active project here: https://github.com/dhlab-basel/Knora/issues/118
 								file: file,
-								label: "test" // TODO: add the first property's value here
+								label: labelStr
+
 							}, function(data) {
 								if (data.status == ApiErrors.OK) {
 									if (typeof localdata.settings.on_submit_cb === "function") {
@@ -1086,6 +1158,7 @@
 						'class': 'resadd'
 					});
 					if (localdata.settings.rtinfo === undefined) { // we don't know which resource type we want to add – present the selectors...
+						var vocsel;
 						//
 						// get vocabularies
 						//
@@ -1102,7 +1175,7 @@
 						SALSAH.ApiGet('vocabularies', function(data) {
 							if (data.status == ApiErrors.OK) {
 								var tmpele;
-								for (i in data.vocabularies) {
+								for (var i in data.vocabularies) {
 									vocsel.append(tmpele = $('<option>', {
 										value: data.vocabularies[i].id
 									}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));

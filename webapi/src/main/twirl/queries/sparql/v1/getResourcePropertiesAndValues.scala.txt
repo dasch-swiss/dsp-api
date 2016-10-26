@@ -50,10 +50,20 @@ WHERE {
 
         ?prop rdfs:subPropertyOf+ knora-base:hasValue .
 
-        @* Exclude FileValue objects, because if the resource is a representation, we get its file values with its resource info. *@
-        MINUS {
-            ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
+        @*
+
+          Exclude FileValue objects, because if the resource is a representation, we get its file values with its resource info.
+          Here FILTER NOT EXISTS is more efficient than MINUS on Fuseki, but it returns different results on GraphDB.
+
+        *@
+        @if(triplestore == "fuseki") {
+            FILTER NOT EXISTS
+        } else {
+            MINUS
         }
+            {
+                ?prop rdfs:subPropertyOf+ knora-base:hasFileValue .
+            }
 
         @* Identify properties that point to LinkValue objects. *@
         OPTIONAL {
