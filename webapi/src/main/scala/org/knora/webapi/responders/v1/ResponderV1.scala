@@ -21,9 +21,8 @@
 package org.knora.webapi.responders.v1
 
 import akka.actor.{Actor, ActorLogging}
-import akka.util.Timeout
 import org.knora.webapi.Settings
-import scala.concurrent.duration._
+
 import scala.language.postfixOps
 
 /**
@@ -43,7 +42,7 @@ trait ResponderV1 extends Actor with ActorLogging {
     /**
       * The application's default timeout for `ask` messages.
       */
-    protected implicit val timeout = Timeout(300 seconds)
+    protected implicit val timeout = settings.defaultRestoreTimeout
 
     /**
       * The Akka actor system's execution context for futures.

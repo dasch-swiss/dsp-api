@@ -107,6 +107,7 @@ class UsersResponderV1 extends ResponderV1 {
       * @return a [[Option[UserProfileV1]] describing the user.
       */
     private def getUserProfileByUsernameV1(username: String): Future[Option[UserProfileV1]] = {
+        //TODO: Need to fix UsersResponderV1 to return None and not an exception when user not found (issue #297)
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(
                 triplestore = settings.triplestoreType,

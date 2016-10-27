@@ -51,7 +51,7 @@ import scala.concurrent.duration._
   * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-class SipiV1E2ESpec extends R2RSpec {
+class SipiV1R2RSpec extends R2RSpec {
 
     override def testConfigSource =
         """

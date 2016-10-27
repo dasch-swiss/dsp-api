@@ -31,9 +31,6 @@ import scala.concurrent.duration._
   */
 class CORSSupportV1E2ESpec extends E2ESpec {
 
-    /* get the path of the route we want to test */
-    private val resourcesRoute = ResourcesRouteV1.knoraApiPath(system, settings, log)
-
     /* set the timeout for the route test */
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(180).second)
 

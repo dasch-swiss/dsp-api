@@ -16,25 +16,19 @@
 
 package org.knora.webapi.e2e.v1
 
-import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{`Set-Cookie`, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.responders._
-import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
-import org.knora.webapi.routing.v1.{AuthenticateRouteV1, ResourcesRouteV1}
-import org.knora.webapi.store._
-import org.knora.webapi.{E2ESpec, LiveActorMaker}
 import spray.json._
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
@@ -52,26 +46,6 @@ object AuthenticationV1E2ESpec {
   * This spec tests the 'v1/authentication' and 'v1/session' route.
   */
 class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
-
-    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
-    private val authenticatePath = AuthenticateRouteV1.knoraApiPath(system, settings, log)
-    private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
-
-    private val incunabulaUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(5).second)
 
@@ -95,22 +69,25 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
         "succeed with authentication and correct username / correct password" in {
             /* Correct username and password */
-            val response: HttpResponse = singleAwaitingRequest(Get(s"${baseApiUrl}v1/authenticate?username=root&password=test"))
+            val request = Get(s"${baseApiUrl}v1/authenticate?username=root&password=test")
+            val response: HttpResponse = singleAwaitingRequest(request)
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.OK)
         }
 
         "fail with authentication and correct username / wrong password" in {
             /* Correct username / wrong password */
-            val response: HttpResponse = singleAwaitingRequest(Get(s"${baseApiUrl}v1/authenticate?username=root&password=wrong"))
+            val request = Get(s"${baseApiUrl}v1/authenticate?username=root&password=wrong")
+            val response: HttpResponse = singleAwaitingRequest(request)
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.Unauthorized)
         }
-        "fail with authentication if the user is set as 'not active' " in {
+        "fail with authentication if the user is set as 'not active' " ignore {
             /* User not active */
-            val response: HttpResponse = singleAwaitingRequest(Get(s"${baseApiUrl}v1/authenticate?username=inactiveuser&password=test"))
+            val request = Get(s"${baseApiUrl}v1/authenticate?username=inactiveuser&password=test")
+            val response: HttpResponse = singleAwaitingRequest(request)
             log.debug(s"response: ${response.toString}")
-            assert(response.status === StatusCodes.Unauthorized)
+            assert(response.status === StatusCodes.NotFound)
         }
     }
 
@@ -180,12 +157,12 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
             assert(response.status === StatusCodes.Unauthorized)
         }
 
-        "fail with 'login' and wrong username" ignore {
+        "fail with 'login' and wrong username" in {
             /* wrong username */
             val request = Get("/v1/session?login&username=root&password=test")
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
-            assert(response.status === StatusCodes.Unauthorized)
+            assert(response.status === StatusCodes.NotFound)
         }
 
         "fail with authentication when using wrong session id in cookie" in {
@@ -213,12 +190,12 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
            assert(response.status === StatusCodes.Unauthorized)
        }
 
-        "fail with 'login' and wrong username " ignore {
+        "fail with 'login' and wrong username " in {
             /* wrong username */
             val request = Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("wrong", "test"))
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
-            assert(response.status === StatusCodes.Unauthorized)
+            assert(response.status === StatusCodes.NotFound)
         }
     }
 

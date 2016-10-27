@@ -18,16 +18,14 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
-import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, ResetTriplestoreContentResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
 /**
   * This responder is used by [[org.knora.webapi.routing.v1.StoreRouteV1]], for piping through HTTP requests to the
@@ -35,10 +33,8 @@ import scala.concurrent.duration._
   */
 class StoreResponderV1 extends ResponderV1 {
 
-    override implicit val timeout: Timeout = 180.seconds
-
     def receive = {
-        case ResetTriplestoreContentRequestV1(rdfDataObjects) => future2Message(sender(), resetTriplestoreContent(rdfDataObjects), log)
+        case ResetTriplestoreContentRequestV1(rdfDataObjects: Seq[RdfDataObject]) => future2Message(sender(), resetTriplestoreContent(rdfDataObjects), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -60,7 +56,8 @@ class StoreResponderV1 extends ResponderV1 {
             }
             resetResponse <- storeManager ? ResetTriplestoreContent(rdfDataObjects)
             loadOntologiesResponse <- responderManager ? LoadOntologiesRequest(UserProfileV1())
-        } yield ResetTriplestoreContentResponseV1("success")
+            result = ResetTriplestoreContentResponseV1(message = "success")
+        } yield result
     }
 
 }
