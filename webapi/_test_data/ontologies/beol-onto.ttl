@@ -290,6 +290,57 @@
 
                   knora-base:hasDefaultDeletePermission knora-base:Owner .
 
+    ### ###########################################
+    ### beol:hasSon
+
+    :hasSon rdf:type owl:ObjectProperty ;
+
+                      rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                      rdfs:label "hat Sohn"@de ,
+                                 "a fils"@fr ,
+                                 "ha figlio"@it ,
+                                 "has son"@en ;
+
+                      rdfs:comment """Repräsentiert eine Vater-Sohn Beziehung"""@de ;
+
+                      knora-base:subjectClassConstraint :Person ;
+
+                      knora-base:objectClassConstraint knora-base:Person ;
+
+                      salsah-gui:guiOrder "5"^^xsd:integer ;
+
+                      salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                      knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
+                                                          knora-base:KnownUser ;
+
+                      knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                      knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+    ### ###########################################
+    ### beol:hasSonValue
+
+    :hasSonValue rdf:type owl:ObjectProperty ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                    knora-base:subjectClassConstraint :Person ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:label "hat Sohn"@de ,
+                                                     "a fils"@fr ,
+                                                     "ha figlio"@it ,
+                                                     "has son"@en ;
+
+                    rdfs:comment """Repräsentiert eine Vater-Sohn Beziehung"""@de ;
+
+                    salsah-gui:guiOrder "5"^^xsd:integer ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox .
+
 
     ##########################################################
     #
@@ -386,3 +437,33 @@
 
           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
                                                 knora-base:Owner .
+
+    ### ###########################################
+    ### beol:Person
+
+    :Person rdf:type owl:Class ;
+
+    rdfs:subClassOf knora-base:Person ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasSonValue ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ],
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasSon ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ] ;
+
+    rdfs:label "Person"@de ,
+               "Personne"@fr ,
+               "Person"@en ;
+
+    rdfs:comment "A resource representing a person"@en ;
+
+    knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
+
+    knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+    knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
+                                          knora-base:Owner .

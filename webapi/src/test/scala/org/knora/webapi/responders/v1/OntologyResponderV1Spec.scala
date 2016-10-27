@@ -696,58 +696,75 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val vocabulariesResponseV1 = NamedGraphsResponseV1(
-        vocabularies = Vector(
-            NamedGraphV1(
-                "http://www.knora.org/ontology/knora-base",
-                "Knora-Base",
-                "Knora-Base",
-                "Knora-Base",
-                "http://data.knora.org/projects/knora-base",
-                "http://www.knora.org/ontology/knora-base",
-                active = false),
-            NamedGraphV1(
-                "http://www.knora.org/ontology/incunabula",
-                "Incunabula",
-                "Incunabula",
-                "Incunabula",
-                "http://data.knora.org/projects/77275339",
-                "http://www.knora.org/ontology/incunabula",
-                active = false),
-            NamedGraphV1(
-                "http://www.knora.org/ontology/beol",
-                "Bernoulli-Euler Online",
-                "Bernoulli-Euler Online",
-                "Bernoulli-Euler Online",
-                "http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF",
-                "http://www.knora.org/ontology/beol",
-                active = false),
-            NamedGraphV1(
-                "http://www.knora.org/ontology/images",
-                "Images Test Project",
-                "Images Test Project",
-                "Images Test Project",
-                "http://data.knora.org/projects/images",
-                "http://www.knora.org/ontology/images",
-                active = false),
-            NamedGraphV1(
-                "http://www.knora.org/ontology/anything",
-                "Anything Test Project",
-                "Anything Test Project",
-                "Anything Test Project",
-                "http://data.knora.org/projects/anything",
-                "http://www.knora.org/ontology/anything",
-                active = false
-            )
-        ),
         userdata = UserDataV1(
+            projects_info = Nil,
+            projects = None,
+            active_project = None,
             password = None,
             email = Some("test@test.ch"),
-            lastname = Some("test"),
+            lastname = Some("Test"),
             firstname = Some("User"),
             username = Some("testuser"),
             token = None,
             user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "en")
+            lang = "en"
+        ),
+        vocabularies = Vector(
+            NamedGraphV1(
+                active = false,
+                uri = "http://www.knora.org/ontology/knora-base",
+                project_id = "http://data.knora.org/projects/knora-base",
+                description = "Knora-Base",
+                longname = "Knora-Base",
+                shortname = "Knora-Base",
+                id = "http://www.knora.org/ontology/knora-base"
+            ),
+            NamedGraphV1(
+                active = false,
+                uri = "http://www.knora.org/ontology/incunabula",
+                project_id = "http://data.knora.org/projects/77275339",
+                description = "Incunabula",
+                longname = "Incunabula",
+                shortname = "Incunabula",
+                id = "http://www.knora.org/ontology/incunabula"
+            ),
+            NamedGraphV1(
+                active = false,
+                uri = "http://www.knora.org/ontology/beol",
+                project_id = "http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF",
+                description = "Bernoulli-Euler Online",
+                longname = "Bernoulli-Euler Online",
+                shortname = "Bernoulli-Euler Online",
+                id = "http://www.knora.org/ontology/beol"
+            ),
+            NamedGraphV1(
+                active = false,
+                uri = "http://www.knora.org/ontology/biblio",
+                project_id = "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ",
+                description = "Bibliography",
+                longname = "Bibliography",
+                shortname = "Bibliography",
+                id = "http://www.knora.org/ontology/biblio"
+            ),
+            NamedGraphV1(
+                active = false,
+                uri = "http://www.knora.org/ontology/images",
+                project_id = "http://data.knora.org/projects/images",
+                description = "Images Test Project",
+                longname = "Images Test Project",
+                shortname = "Images Test Project",
+                id = "http://www.knora.org/ontology/images"
+            ),
+            NamedGraphV1(
+                active = false,
+                uri = "http://www.knora.org/ontology/anything",
+                project_id = "http://data.knora.org/projects/anything",
+                description = "Anything Test Project",
+                longname = "Anything Test Project",
+                shortname = "Anything Test Project",
+                id = "http://www.knora.org/ontology/anything"
+            )
+        )
     )
 
     private val propertyTypesForNamedGraphIncunabula = PropertyTypesForNamedGraphResponseV1(

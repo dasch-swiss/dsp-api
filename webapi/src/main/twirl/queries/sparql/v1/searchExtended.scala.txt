@@ -92,7 +92,8 @@ WHERE {
         *@
 
         @if(searchCriterion.valueType != "http://www.knora.org/ontology/knora-base#Resource") {
-            ?resource <@{searchCriterion.propertyIri}> ?valueObject@index .
+            ?p@index rdfs:subPropertyOf* <@{searchCriterion.propertyIri}> .
+            ?resource ?p@index ?valueObject@index .
         }
 
         @*
@@ -553,10 +554,17 @@ WHERE {
         case Some(restypeIri) => {
 
             # filter by restypeIri
-            ?resource a <@restypeIri> .
+            ?resClass rdfs:subClassOf* <@restypeIri> .
+            ?resource a ?resClass .
         }
 
-        case None => {}
+        case None => {
+
+            # Make sure we have a knora-base:Resource.
+            ?resClass rdfs:subClassOf+ knora-base:Resource .
+            ?resource a ?resClass .
+
+        }
     }
 
 
