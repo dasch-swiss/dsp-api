@@ -21,22 +21,23 @@
 package org.knora.webapi.routing
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
+import akka.http.scaladsl.server.RequestContext
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
+import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
-import org.knora.webapi.{BadCredentialsException, IRI, Settings}
 import org.slf4j.LoggerFactory
-import spray.http._
 import spray.json.{JsNumber, JsObject, JsString}
-import spray.routing._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
-import scala.util.{Failure, Success, Try}
+import scala.util.{Success, Try}
 
 
 // needs Java 1.8 !!!
@@ -69,36 +70,23 @@ trait Authenticator {
       */
     def doLogin(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
 
-        extractCredentialsAndAuthenticate(requestContext, true) match {
-            case Success(sId) =>
+        val sId = extractCredentialsAndAuthenticate(requestContext, true)
 
-                val userProfile = getUserProfileV1(requestContext)
+        val userProfile = getUserProfileV1(requestContext)
 
-                HttpResponse(
-                    headers = List(HttpHeaders.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sId))),
-                    status = StatusCodes.OK,
-                    entity = HttpEntity(
-                        ContentTypes.`application/json`,
-                        JsObject(
-                            "status" -> JsNumber(0),
-                            "message" -> JsString("credentials are OK"),
-                            "sid" -> JsString(sId),
-                            "userdata" -> userProfile.userData.toJsValue
-                        ).compactPrint
-                    )
-                )
-            case Failure(ex) =>
-                HttpResponse(
-                    status = StatusCodes.Unauthorized,
-                    entity = HttpEntity(
-                        ContentTypes.`application/json`,
-                        JsObject(
-                            "status" -> JsNumber(2),
-                            "message" -> JsString(ex.getMessage)
-                        ).compactPrint
-                    )
-                )
-        }
+        HttpResponse(
+            headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sId))),
+            status = StatusCodes.OK,
+            entity = HttpEntity(
+                ContentTypes.`application/json`,
+                JsObject(
+                    "status" -> JsNumber(0),
+                    "message" -> JsString("credentials are OK"),
+                    "sid" -> JsString(sId),
+                    "userdata" -> userProfile.userData.toJsValue
+                ).compactPrint
+            )
+        )
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -154,36 +142,21 @@ trait Authenticator {
       */
     def doAuthenticate(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
 
-        extractCredentialsAndAuthenticate(requestContext, false) match {
-            case Success(_) => {
+        val sId = extractCredentialsAndAuthenticate(requestContext, false)
 
-                val userProfile = getUserProfileV1(requestContext)
+        val userProfile = getUserProfileV1(requestContext)
 
-                HttpResponse(
-                    status = StatusCodes.OK,
-                    entity = HttpEntity(
-                        ContentTypes.`application/json`,
-                        JsObject(
-                            "status" -> JsNumber(0),
-                            "message" -> JsString("credentials are OK"),
-                            "userdata" -> userProfile.userData.toJsValue
-                        ).compactPrint
-                    )
-                )
-            }
-            case Failure(ex) => {
-                HttpResponse(
-                    status = StatusCodes.Unauthorized,
-                    entity = HttpEntity(
-                        ContentTypes.`application/json`,
-                        JsObject(
-                            "status" -> JsNumber(2),
-                            "message" -> JsString(ex.getMessage)
-                        ).compactPrint
-                    )
-                )
-            }
-        }
+        HttpResponse(
+            status = StatusCodes.OK,
+            entity = HttpEntity(
+                ContentTypes.`application/json`,
+                JsObject(
+                    "status" -> JsNumber(0),
+                    "message" -> JsString("credentials are OK"),
+                    "userdata" -> userProfile.userData.toJsValue
+                ).compactPrint
+            )
+        )
     }
 
 
@@ -201,15 +174,15 @@ trait Authenticator {
       */
     def doLogout(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
 
-        val cookies: Seq[HttpCookie] = requestContext.request.cookies
+        val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
         cookies.find(_.name == "KnoraAuthentication") match {
             case Some(authCookie) =>
                 // maybe the value is in the cache or maybe it expired in the meantime.
-                CacheUtil.remove(cacheName, authCookie.content)
+                CacheUtil.remove(cacheName, authCookie.value)
             case None => // no cookie, so I can't do anything really
         }
         HttpResponse(
-            headers = List(HttpHeaders.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
+            headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
             status = StatusCodes.OK,
             entity = HttpEntity(
                 ContentTypes.`application/json`,
@@ -254,22 +227,15 @@ trait Authenticator {
                     extractCredentials(requestContext) match {
                         case Some((u, p)) =>
                             log.debug(s"found some credentials '$u', '$p', lets try to authenticate them first")
-                            authenticateCredentials(u, p, session = false) match {
-                                case Success(_) =>
-                                    log.debug("Supplied credentials pass authentication, get the UserProfileV1")
-                                    getUserProfileByUsername(u) match {
-                                        case Success(userProfileV1: UserProfileV1) =>
-                                            log.debug(s"I got a UserProfileV1 '${userProfileV1.toString}', which means that the password is a match")
-                                            /* we return the userProfileV1 without sensitive information */
-                                            userProfileV1.getCleanUserProfileV1
-                                        case Failure(ex) =>
-                                            log.debug(s"Something went wrong. Just throwing this exception: $ex")
-                                            throw ex
-                                    }
-                                case Failure(ex) =>
-                                    log.debug(s"Supplied credentials didn't pass authentication. Rethrowing this exception: $ex")
-                                    throw ex
-                            }
+
+                            authenticateCredentials(u, p, session = false)
+                            log.debug("Supplied credentials pass authentication, get the UserProfileV1")
+
+                            val userProfileV1 = getUserProfileByUsername(u)
+                            log.debug (s"I got a UserProfileV1 '${userProfileV1.toString}', which means that the password is a match")
+                            /* we return the userProfileV1 without sensitive information */
+                            userProfileV1.getCleanUserProfileV1
+
                         case None =>
                             log.debug("No credentials found, returning default UserProfileV1!")
                             UserProfileV1(UserDataV1(settings.fallbackLanguage))
@@ -312,15 +278,10 @@ object Authenticator {
       *         extracted and authenticated. In the case where the credentials could not be extracted or could be
       *         extracted but not authenticated, a corresponding exception is thrown.
       */
-    private def extractCredentialsAndAuthenticate(requestContext: RequestContext, session: Boolean)(implicit system: ActorSystem): Try[String] = {
-        Try {
-            extractCredentials(requestContext) match {
-                case Some((u, p)) => authenticateCredentials(u, p, session) match {
-                    case Success(sId) => sId
-                    case Failure(ex) => throw ex
-                }
-                case None => throw BadCredentialsException(BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE)
-            }
+    private def extractCredentialsAndAuthenticate(requestContext: RequestContext, session: Boolean)(implicit system: ActorSystem): String = {
+        extractCredentials(requestContext) match {
+            case Some((u, p)) => authenticateCredentials(u, p, session)
+            case None => throw BadCredentialsException(BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE)
         }
     }
 
@@ -335,29 +296,22 @@ object Authenticator {
       * @param system   the current [[ActorSystem]]
       * @return a [[Try[String]] which is the session id under which the profile is stored if authentication was successful.
       */
-    private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem): Try[String] = {
-        Try {
-            getUserProfileByUsername(username) match {
-                case Success(userProfileV1: UserProfileV1) => {
-                    if (userProfileV1.passwordMatch(password)) {
-                        // create session id and cache user profile under this id
-                        log.debug("password matched")
-                        if (session) {
-                            val sId = System.currentTimeMillis().toString
-                            CacheUtil.put(cacheName, sId, userProfileV1)
-                            sId
-                        } else {
-                            "0"
-                        }
-                    } else {
-                        log.debug("password did not match")
-                        throw BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)
-                    }
-                }
-                case Failure(ex) => {
-                    throw ex
-                }
+    private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem): String = {
+        val userProfileV1 = getUserProfileByUsername(username)
+
+        if (userProfileV1.passwordMatch(password)) {
+            // create session id and cache user profile under this id
+            log.debug("password matched")
+            if (session) {
+                val sId = System.currentTimeMillis().toString
+                CacheUtil.put(cacheName, sId, userProfileV1)
+                sId
+            } else {
+                "0"
             }
+        } else {
+            log.debug("password did not match")
+            throw BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)
         }
     }
 
@@ -368,11 +322,11 @@ object Authenticator {
       * @return a [[ Option[UserProfileV1] ]]
       */
     private def getUserProfileV1FromSessionId(requestContext: RequestContext): Option[UserProfileV1] = {
-        val cookies: Seq[HttpCookie] = requestContext.request.cookies
+        val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
         cookies.find(_.name == "KnoraAuthentication") match {
             case Some(authCookie) =>
-                val value = CacheUtil.get[UserProfileV1](cacheName, authCookie.content)
-                log.debug(s"Found this session id: ${authCookie.content} leading to this content in the cache: $value")
+                val value = CacheUtil.get[UserProfileV1](cacheName, authCookie.value)
+                log.debug(s"Found this session id: ${authCookie.value} leading to this content in the cache: $value")
                 value
             case None =>
                 log.debug(s"No session id found")
@@ -393,7 +347,7 @@ object Authenticator {
       */
     private def extractCredentials(requestContext: RequestContext): Option[(String, String)] = {
         log.debug("extractCredentials start ...")
-        val params: Map[String, Seq[String]] = requestContext.request.uri.query.toMultiMap
+        val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
         val headers: Seq[HttpHeader] = requestContext.request.headers
 
 
@@ -493,35 +447,34 @@ object Authenticator {
       * @param executionContext the current execution context
       * @return a [[Success(UserProfileV1)]]
       */
-    private def getUserProfileByUsername(username: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Try[UserProfileV1] = {
-        Try {
-            val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+    private def getUserProfileByUsername(username: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
 
-            if (username.nonEmpty) {
-                // try to get it from the cache
-                CacheUtil.get[UserProfileV1](cacheName, username) match {
-                    case Some(userProfileV1) =>
-                        // found a user profile in the cache
-                        userProfileV1
-                    case None =>
-                        // didn't found one, so I will try to get it from the triple store
-                        val userProfileV1Future = responderManager ? UserProfileByUsernameGetRequestV1(username)
-                        Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
-                            case Some(userProfileV1) => {
-                                log.debug("This user was found: " + userProfileV1.toString)
-                                // before I return the found user profile, let's put it into the cache
-                                CacheUtil.put(cacheName, username, userProfileV1)
-                                userProfileV1
-                            }
-                            case None => {
-                                log.debug("No user found by this username")
-                                throw BadCredentialsException(BAD_CRED_USER_NOT_FOUND)
-                            }
+        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+
+        if (username.nonEmpty) {
+            // try to get it from the cache
+            CacheUtil.get[UserProfileV1](cacheName, username) match {
+                case Some(userProfileV1) =>
+                    // found a user profile in the cache
+                    userProfileV1
+                case None =>
+                    // didn't found one, so I will try to get it from the triple store
+                    val userProfileV1Future = responderManager ? UserProfileByUsernameGetRequestV1(username)
+                    Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
+                        case Some(userProfileV1) => {
+                            log.debug("This user was found: " + userProfileV1.toString)
+                            // before I return the found user profile, let's put it into the cache
+                            CacheUtil.put(cacheName, username, userProfileV1)
+                            userProfileV1
                         }
-                }
-            } else {
-                throw BadCredentialsException(BAD_CRED_USERNAME_NOT_SUPPLIED)
+                        case None => {
+                            log.debug("No user found by this username")
+                            throw BadCredentialsException(BAD_CRED_USER_NOT_FOUND)
+                        }
+                    }
             }
+        } else {
+            throw BadCredentialsException(BAD_CRED_USERNAME_NOT_SUPPLIED)
         }
     }
 }

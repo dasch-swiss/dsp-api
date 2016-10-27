@@ -90,38 +90,31 @@ lazy val webApiCommonSettings = Seq(
     name := "webapi",
     version := "0.1.0",
     ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
-    scalaVersion := "2.11.7"
+    scalaVersion := "2.11.8"
 )
+
+lazy val akkaVersion = "2.4.11"
 
 lazy val webApiLibs = Seq(
     // akka
-    "com.typesafe.akka" % "akka-actor_2.11" % "2.4.0",
-    "com.typesafe.akka" %% "akka-agent" % "2.4.0",
-    // "com.typesafe.akka" % "akka-stream-experimental_2.11" % "1.0-M3",
-    // "com.typesafe.akka" % "akka-http-experimental_2.11" % "1.0-M3",
-    // "com.typesafe.akka" % "akka-http-core-experimental_2.11" % "1.0-M3",
-    // spray
-    "io.spray" %% "spray-http" % "1.3.3",
-    "io.spray" %% "spray-httpx" % "1.3.3",
-    "io.spray" %% "spray-util" % "1.3.3",
-    "io.spray" %% "spray-io" % "1.3.3",
-    "io.spray" %% "spray-can" % "1.3.3",
-    "io.spray" %% "spray-caching" % "1.3.3",
-    "io.spray" %% "spray-routing" % "1.3.3",
-    "io.spray" %% "spray-json" % "1.3.2",
-    "io.spray" %% "spray-client" % "1.3.2",
+    "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+    "com.typesafe.akka" %% "akka-agent" % akkaVersion,
+    "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
+    "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
+    "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
+    "com.typesafe.akka" %% "akka-http-xml-experimental" % akkaVersion,
+    "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+    "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
+    //CORS support
+    "ch.megard" %% "akka-http-cors" % "0.1.7",
     // jena
     "org.apache.jena" % "apache-jena-libs" % "3.0.0" exclude("org.slf4j", "slf4j-log4j12"),
     "org.apache.jena" % "jena-text" % "3.0.0" exclude("org.slf4j", "slf4j-log4j12"),
     // http client
     "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
     // logging
-    "org.slf4j" % "slf4j-api" % "1.7.12",
-    "org.slf4j" % "jcl-over-slf4j" % "1.7.12",
-    "ch.qos.logback" % "logback-core" % "1.1.3",
-    "ch.qos.logback" % "logback-classic" % "1.1.3",
-    "com.typesafe.akka" % "akka-slf4j_2.11" % "2.4.0",
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+    "ch.qos.logback" % "logback-classic" % "1.1.7",
     // input validation
     "commons-validator" % "commons-validator" % "1.4.1",
     // pretty printing
@@ -130,7 +123,7 @@ lazy val webApiLibs = Seq(
     "com.github.t3hnar" %% "scala-bcrypt" % "2.4",
     // caching
     "net.sf.ehcache" % "ehcache" % "2.10.0",
-    // monitoring
+    // monitoring - disabled for now
     //"org.aspectj" % "aspectjweaver" % "1.8.7",
     //"org.aspectj" % "aspectjrt" % "1.8.7",
     //"io.kamon" %% "kamon-core" % "0.5.2",
@@ -150,11 +143,12 @@ lazy val webApiLibs = Seq(
     "com.sksamuel.diff" % "diff" % "1.1.11",
     "org.xmlunit" % "xmlunit-core" % "2.1.1",
     // testing
-    "com.typesafe.akka" %% "akka-testkit" % "2.4.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
-    "org.scalatest" %% "scalatest" % "2.2.6" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
-    "io.spray" %% "spray-testkit" % "1.3.3" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
+    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
+    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
+    "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.0M3",
-    "org.rogach" %% "scallop" % "2.0.1"
+    "org.rogach" %% "scallop" % "2.0.3"
 )
 
 lazy val javaRunOptions = Seq(
@@ -235,8 +229,3 @@ assemblyMergeStrategy in assembly := {
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)
 }
-
-// Custom run task
-//lazy val generateFakeTriplestore = taskKey[Unit]("Generate fake triplestore from a list of requests")
-
-//fullRunTask(generateFakeTriplestore, Test, "org.knora.webapi.GenFakeTripleStore")

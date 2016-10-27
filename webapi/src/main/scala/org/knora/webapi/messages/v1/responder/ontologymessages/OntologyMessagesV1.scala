@@ -391,7 +391,7 @@ case class ResTypeInfoV1(name: IRI,
                          label: Option[String],
                          description: Option[String],
                          iconsrc: Option[String],
-                         properties: Set[PropertyDefinitionV1])
+                         properties: Seq[PropertyDefinitionV1])
 
 /**
   * Represents information about a property type. It is extended by [[PropertyDefinitionV1]]
@@ -430,7 +430,8 @@ case class PropertyDefinitionV1(id: IRI,
                                 occurrence: String,
                                 valuetype_id: IRI,
                                 attributes: Option[String],
-                                gui_name: Option[String]) extends PropertyDefinitionBaseV1
+                                gui_name: Option[String],
+                                guiorder: Option[Int] = None) extends PropertyDefinitionBaseV1
 
 /**
   * Describes a property type that a named graph contains.
@@ -507,7 +508,7 @@ object ResourceTypeV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
 
     import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
-    implicit val propertyDefinitionV1Format: JsonFormat[PropertyDefinitionV1] = jsonFormat9(PropertyDefinitionV1)
+    implicit val propertyDefinitionV1Format: JsonFormat[PropertyDefinitionV1] = jsonFormat10(PropertyDefinitionV1)
     implicit val propertyDefinitionInNamedGraphV1Format: JsonFormat[PropertyDefinitionInNamedGraphV1] = jsonFormat8(PropertyDefinitionInNamedGraphV1)
     implicit val resTypeInfoV1Format: JsonFormat[ResTypeInfoV1] = jsonFormat5(ResTypeInfoV1)
     implicit val resourceTypeResponseV1Format: RootJsonFormat[ResourceTypeResponseV1] = jsonFormat2(ResourceTypeResponseV1)

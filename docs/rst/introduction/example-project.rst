@@ -23,8 +23,7 @@ An Example Project: Incunabula
 This section introduces some of the basic concepts involved in creating
 ontologies for Knora projects, by means of a relatively simple example
 project. Before reading this document, it will be helpful to have some
-familiarity with the basic concepts explained in
-:download:`The Knora Base Ontology </latex/knora-base/knora-base.pdf>`.
+familiarity with the basic concepts explained in :ref:`knora-base`.
 
 Knora comes with two example projects, called ``incunabula`` and
 ``images-demo``. Here we will consider the ``incunabula`` example, which is
@@ -63,8 +62,7 @@ ontologies that are very commonly used in RDF:
 The ``rdf``, ``rdfs``, and ``owl`` ontologies contain basic properties that
 are used to define ontology entities. The ``xsd`` ontology contains
 definitions of literal data types such as ``string`` and ``integer``. (For
-more information about these ontologies, see the references in
-:download:`The Knora Base Ontology </latex/knora-base/knora-base.pdf>`.)
+more information about these ontologies, see the references in :ref:`knora-base`.)
 The ``foaf`` ontology contains classes and properties for representing people.
 
 Then we define prefixes for Knora ontologies:
@@ -76,10 +74,8 @@ Then we define prefixes for Knora ontologies:
     @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 
 The ``knora-base`` ontology contains Knora's core abstractions, and is
-described in the document
-:download:`The Knora Base Ontology </latex/knora-base/knora-base.pdf>`.
-The ``dc`` ontology is Knora's version of `Dublin
-Core`_. It is intended to make it possible to define properties in a Knora
+described in :ref:`knora-base`. The ``dc`` ontology is Knora's version of
+`Dublin Core`_. It is intended to make it possible to define properties in a Knora
 project in terms of Dublin Core abstractions, to facilitate queries that
 search for data across multiple projects. The ``salsah-gui`` ontology includes
 properties that Knora projects must use to enable SALSAH, Knora's generic
@@ -245,8 +241,7 @@ add the word ``Value`` to the name of the link property. Hence, the
 As a link value property, ``incunabula:partOfValue`` must point to a
 ``knora-base:LinkValue``. The ``LinkValue`` class is an RDF *reification* of a triple
 (in this case, the triple that links a page to a book). For more details about
-this, see
-:download:`The Knora Base Ontology </latex/knora-base/knora-base.pdf>`.
+this, see :ref:`knora-base-linkvalue`.
 
 Note that the property ``incunabula:hasAuthor`` points to a
 ``knora-base:TextValue``, because the ``incunabula`` project repåresents
@@ -338,8 +333,7 @@ cardinalities saying that a book must have at least one title and at most one
 publication date. In the Knora API version 1, the word 'occurrence' is used
 instead of 'cardinality'.
 
-As explained in
-:download:`The Knora Base Ontology </latex/knora-base/knora-base.pdf>`, these
+As explained in :ref:`knora-base-cardinalities`, these
 are the cardinalities supported by Knora:
 
 * ``owl:cardinality 1`` A resource of this class must have exactly one

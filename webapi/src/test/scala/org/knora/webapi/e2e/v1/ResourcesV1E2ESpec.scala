@@ -23,11 +23,14 @@ package org.knora.webapi.e2e.v1
 import java.net.URLEncoder
 
 import akka.actor.{ActorSystem, Props}
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.e2e.E2ESpec
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -36,9 +39,7 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.util.{MutableTestIri, ScalaPrettyPrinter}
-import spray.http.MediaTypes._
-import spray.http.{HttpEntity, _}
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import spray.json._
 
 import scala.concurrent.Await
@@ -81,9 +82,11 @@ class ResourcesV1E2ESpec extends E2ESpec {
         )
     )
 
-    implicit private val timeout: Timeout = 300.seconds
+    implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
+
+    implicit val ec = system.dispatcher
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
@@ -98,7 +101,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
     )
 
     "Load test data" in {
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
+        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
         Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 10.seconds)
     }
 
@@ -109,9 +112,12 @@ class ResourcesV1E2ESpec extends E2ESpec {
     private val fourthThingIri = new MutableTestIri
     private val fifthThingIri = new MutableTestIri
     private val sixthThingIri = new MutableTestIri
+    private val seventhThingIri = new MutableTestIri
 
-    val incunabulaBookBiechlin = "http://data.knora.org/9935159f67" // incunabula book with title "Eyn biechlin ..."
-    val incunabulaBookQuadra = "http://data.knora.org/861b5644b302" // incunabula book with title Quadragesimale
+    private val incunabulaBookBiechlin = "http://data.knora.org/9935159f67" // incunabula book with title "Eyn biechlin ..."
+    private val incunabulaBookQuadra = "http://data.knora.org/861b5644b302" // incunabula book with title Quadragesimale
+
+    private val notTheMostBoringComment = "This is not the most boring comment I have seen."
 
 
     /**
@@ -122,11 +128,13 @@ class ResourcesV1E2ESpec extends E2ESpec {
       */
     private def getResIriFromJsonResponse(response: HttpResponse) = {
 
-        JsonParser(response.entity.asString).asJsObject.fields.get("res_id") match {
+        AkkaHttpUtils.httpResponseToJson(response).fields.get("res_id") match {
             case Some(JsString(resourceId)) => resourceId
             case None => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
             case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but ${other}")
         }
+
+
 
     }
 
@@ -138,24 +146,38 @@ class ResourcesV1E2ESpec extends E2ESpec {
       */
     private def getNewValueIriFromJsonResponse(response: HttpResponse) = {
 
-        JsonParser(response.entity.asString).asJsObject.fields.get("id") match {
+        AkkaHttpUtils.httpResponseToJson(response).fields.get("id") match {
             case Some(JsString(resourceId)) => resourceId
             case None => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
-            case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but ${other}")
+            case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but $other")
         }
 
     }
 
     /**
-      * Gets the given property's values from a reource full response.
+      * Gets the given property's values from a resource full response.
       *
       * @param response the response to a resource full request.
       * @param prop the given property IRI.
-      * @return the property0s values.
+      * @return the property's values.
       */
     private def getValuesForProp(response: HttpResponse, prop: IRI): JsValue = {
 
-        JsonParser(response.entity.asString).asJsObject.fields("props").asJsObject.fields(prop).asJsObject.fields("values")
+        AkkaHttpUtils.httpResponseToJson(response).fields("props").asJsObject.fields(prop).asJsObject.fields("values")
+
+    }
+
+
+    /**
+      * Gets the given property's comments from a resource full response.
+      *
+      * @param response the response to a resource full request.
+      * @param prop the given property IRI.
+      * @return the property's comments.
+      */
+    private def getCommentsForProp(response: HttpResponse, prop: IRI): JsValue = {
+
+        AkkaHttpUtils.httpResponseToJson(response).fields("props").asJsObject.fields(prop).asJsObject.fields("comments")
 
     }
 
@@ -283,7 +305,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
                   |}
                 """.stripMargin
 
-            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
             }
 
@@ -308,7 +330,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
                   |    "label": "A thing",
                   |    "project_id": "http://data.knora.org/projects/anything",
                   |    "properties": {
-                  |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :[],"utf8str":"Test text"}}],
+                  |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr": $textattrStringified ,"resource_reference" :[],"utf8str":"Test text"}}],
                   |        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
                   |        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
                   |        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
@@ -325,7 +347,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
             //  "http://www.knora.org/ontology/anything#hasBoolean": [{"boolean_value":true}],
             // "http://www.knora.org/ontology/anything#hasGeometry": [{"geom_value":"{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"}],
 
-            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val resId = getResIriFromJsonResponse(response)
@@ -384,7 +406,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
                 }
                 """
 
-            Post("/v1/values", HttpEntity(`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -421,13 +443,13 @@ class ResourcesV1E2ESpec extends E2ESpec {
                   "project_id": "http://data.knora.org/projects/anything",
                   "richtext_value": {
                         "utf8str": "a new value",
-                        "textattr": ${textattr},
+                        "textattr": $textattr,
                         "resource_reference": ["$incunabulaBookBiechlin"]
                   }
                 }
                 """
 
-            Put("/v1/values/" + URLEncoder.encode(firstTextValueIRI.get, "UTF-8"), HttpEntity(`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
+            Put("/v1/values/" + URLEncoder.encode(firstTextValueIRI.get, "UTF-8"), HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -516,7 +538,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -554,10 +576,10 @@ class ResourcesV1E2ESpec extends E2ESpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 // check if this resource is referred to by the second thing resource
-                val incoming = JsonParser(response.entity.asString).asJsObject.fields.get("incoming") match {
+                val incoming = AkkaHttpUtils.httpResponseToJson(response).fields.get("incoming") match {
                     case Some(incomingRefs: JsArray) => incomingRefs
                     case None => throw InvalidApiJsonException(s"The response does not contain a field called 'incoming'")
-                    case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsObject, but ${other}")
+                    case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsObject, but $other")
                 }
 
                 val firstElement = incoming.elements.headOption match {
@@ -627,7 +649,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
 
                 // the route should reject the request because `old` is not a valid standoff tag name
                 assert(status == StatusCodes.BadRequest, response.toString)
@@ -691,7 +713,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -755,7 +777,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
 
                 // the route should reject the request because an IRI is missing in resource_reference
                 assert(status == StatusCodes.BadRequest, response.toString)
@@ -819,7 +841,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
 
                 // the route should reject the request because an IRI is missing in standoff link tags
                 assert(status == StatusCodes.BadRequest, response.toString)
@@ -920,7 +942,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1029,7 +1051,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1108,7 +1130,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1259,7 +1281,7 @@ class ResourcesV1E2ESpec extends E2ESpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1290,5 +1312,79 @@ class ResourcesV1E2ESpec extends E2ESpec {
             }
         }
 
+        "change a resource's label" in {
+
+            val newLabel = "my new label"
+
+            val params =
+                s"""
+                  {
+                    "label": "$newLabel"
+                  }
+                """.stripMargin
+
+            Put("/v1/resources/label/" + URLEncoder.encode("http://data.knora.org/c5058f3a", "UTF-8"),HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val label = AkkaHttpUtils.httpResponseToJson(response).fields.get("label") match {
+                    case Some(JsString(str)) => str
+                    case None => throw InvalidApiJsonException(s"The response does not contain a field called 'label'")
+                    case other => throw InvalidApiJsonException(s"The response does not contain a label of type JsString, but $other")
+                }
+
+                assert(label == newLabel, "label has not been updated correctly")
+
+
+            }
+        }
+
+        "create a resource of type anything:Thing with a link (containing a comment) to another resource" in {
+
+            val params =
+                s"""
+                   |{
+                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "label": "A thing with a link value that has a comment",
+                   |    "project_id": "http://data.knora.org/projects/anything",
+                   |    "properties": {
+                   |        "http://www.knora.org/ontology/anything#hasOtherThing": [{"link_value":"${sixthThingIri.get}", "comment":"$notTheMostBoringComment"}]
+                   |    }
+                   |}
+                """.stripMargin
+
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val resId = getResIriFromJsonResponse(response)
+
+                seventhThingIri.set(resId)
+            }
+        }
+
+        "get the created resource and check the comment on the link value" in {
+
+            Get("/v1/resources/" + URLEncoder.encode(seventhThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val targetResourceIri: String = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasOtherThing") match {
+                    case vals: JsArray =>
+                        vals.elements.head.asInstanceOf[JsString].value
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
+
+                assert(targetResourceIri == sixthThingIri.get)
+
+                val linkValueComment: String = getCommentsForProp(response, "http://www.knora.org/ontology/anything#hasOtherThing") match {
+                    case vals: JsArray =>
+                        vals.elements.head.asInstanceOf[JsString].value
+                    case _ =>
+                        throw new InvalidApiJsonException("comments is not an array")
+                }
+
+                assert(linkValueComment == notTheMostBoringComment)
+            }
+        }
     }
 }

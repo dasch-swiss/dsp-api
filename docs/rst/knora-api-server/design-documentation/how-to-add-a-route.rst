@@ -89,13 +89,11 @@ route. Your object should look something like this:
 
             path("sample" / Segment) { iri =>
                 get { requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        makeRequestMessage(iri, userProfile)
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    val requestMessage = makeRequestMessage(iri, userProfile)
 
                     RouteUtils.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -111,12 +109,8 @@ route. Your object should look something like this:
         }
     }
 
-It's important that inside the ``get`` (or ``post`` or whatever),
-everything before the call to ``RouteUtils.runJsonRoute`` is wrapped in a
-``Try`` constructor. This allows ``RouteUtils.runJsonRoute`` to handle input
-validation errors.
-
-Finally, add your ``rapierPath()`` function to the ``routes`` member
-variable in ``KnoraHttpService``.
+Finally, add your ``knoraApiPath()`` function to the ``apiRoutes`` member variable in ``KnoraService``. Any exception
+thrown inside the route (e.g., input validation, getUserProfile, etc.) will be handled by the ``KnoraExceptionHandler``,
+so that the correct client response (status code, format) will be returned.
 
 .. _Twirl: https://github.com/playframework/twirl

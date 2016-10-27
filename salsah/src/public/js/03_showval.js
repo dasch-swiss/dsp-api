@@ -26,11 +26,33 @@ SALSAH.showval = function(value_container, prop, value_index, options)
 			value_container.append(prop.values[value_index]);
 			break;
 		}*/
+		case 'LABEL': {
+			value_container.append(prop.values[value_index]);
+			break;
+		}
 		case VALTYPE_INTEGER: {
 			value_container.append(prop.values[value_index]);
 			break;
 		}
 		case VALTYPE_FLOAT: {
+			value_container.append(prop.values[value_index]);
+			break;
+		}
+		case VALTYPE_BOOLEAN: {
+			var checkbox = $('<input>', {
+			    type: "checkbox"
+			});
+
+			checkbox.attr('disabled', true);
+
+			if (prop.values[value_index]) {
+				checkbox.attr('checked', true);
+			}
+
+			value_container.append(checkbox);
+			break;
+		}
+		case VALTYPE_URI: {
 			value_container.append(prop.values[value_index]);
 			break;
 		}

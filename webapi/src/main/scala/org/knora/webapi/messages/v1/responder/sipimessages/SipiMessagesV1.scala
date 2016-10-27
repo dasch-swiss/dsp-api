@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v1.responder.sipimessages
 
 import java.io.File
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.FileValueV1
@@ -50,6 +51,8 @@ sealed trait SipiResponderConversionRequestV1 extends SipiResponderRequestV1 {
       * @return a Map of key-value pairs that can be turned into form data by Sipi responder.
       */
     def toFormData(): Map[String, String]
+
+    def toJsValue(): JsValue
 }
 
 
@@ -85,6 +88,8 @@ case class SipiResponderConversionPathRequestV1(originalFilename: String,
             "source" -> source.toString
         )
     }
+
+    def toJsValue = RepresentationV1JsonProtocol.SipiResponderConversionPathRequestV1Format.write(this)
 }
 
 /**
@@ -122,31 +127,24 @@ case class SipiResponderConversionFileRequestV1(originalFilename: String,
         )
     }
 
-}
+    def toJsValue = RepresentationV1JsonProtocol.SipiResponderConversionFileRequestV1Format.write(this)
 
-/**
-  * Abstract trait that represents any response returned by SIPI.
-  */
-sealed trait SipiConversionResponse {
-    val status: Int
 }
 
 /**
   * Represents an error message returned by SIPI
   *
-  * @param status  status code rerurned by SIPI.
   * @param message description of the error.
   */
-case class SipiErrorConversionResponse(status: Int, message: String) extends SipiConversionResponse {
+case class SipiErrorConversionResponse(message: String) {
     override def toString() = {
-        s"Sipi status code is ${status}, Sipi error message: ${message}"
+        s"Sipi error message: ${message}"
     }
 }
 
 /**
   * Represents the response received from SIPI after an image conversion request.
   *
-  * @param status            status code returned by SIPI.
   * @param nx_full           x dim of the full quality representation.
   * @param ny_full           y dim of the full quality representation.
   * @param mimetype_full     mime type of the full quality representation.
@@ -159,8 +157,7 @@ case class SipiErrorConversionResponse(status: Int, message: String) extends Sip
   * @param original_filename name of the original file.
   * @param file_type         type of file that has been converted (image, audio, video etc.)
   */
-case class SipiImageConversionResponse(status: Int,
-                                       nx_full: Int,
+case class SipiImageConversionResponse(nx_full: Int,
                                        ny_full: Int,
                                        mimetype_full: String,
                                        filename_full: String,
@@ -170,7 +167,7 @@ case class SipiImageConversionResponse(status: Int,
                                        filename_thumb: String,
                                        original_mimetype: String,
                                        original_filename: String,
-                                       file_type: String) extends SipiConversionResponse
+                                       file_type: String)
 
 
 object SipiConstants {
@@ -256,13 +253,70 @@ case class SipiFileInfoGetResponseV1(permissionCode: Option[Int],
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
-object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
+object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
     import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
+    /**
+      * Converts between [[SipiResponderConversionPathRequestV1]] objects and [[JsValue]] objects.
+      */
+    implicit object SipiResponderConversionPathRequestV1Format extends RootJsonFormat[SipiResponderConversionPathRequestV1] {
+        /**
+          * Not implemented.
+          */
+        def read(jsonVal: JsValue) = ???
+
+        /**
+          * Converts a [[SipiResponderConversionPathRequestV1]] into [[JsValue]] for formatting as JSON.
+          *
+          * @param request the [[SipiResponderConversionPathRequestV1]] to be converted.
+          * @return a [[JsValue]].
+          */
+        def write(request: SipiResponderConversionPathRequestV1): JsValue = {
+
+            val fields = Map(
+                "originalFilename" -> request.originalFilename.toJson,
+                "originalMimeType" -> request.originalMimeType.toJson,
+                "source" -> request.toString.toJson
+            )
+
+            JsObject(fields)
+        }
+    }
+
+    /**
+      * Converts between [[SipiResponderConversionFileRequestV1]] objects and [[JsValue]] objects.
+      */
+    implicit object SipiResponderConversionFileRequestV1Format extends RootJsonFormat[SipiResponderConversionFileRequestV1] {
+        /**
+          * Not implemented.
+          */
+        def read(jsonVal: JsValue) = ???
+
+        /**
+          * Converts a [[SipiResponderConversionFileRequestV1]] into [[JsValue]] for formatting as JSON.
+          *
+          * @param request the [[SipiResponderConversionFileRequestV1]] to be converted.
+          * @return a [[JsValue]].
+          */
+        def write(request: SipiResponderConversionFileRequestV1): JsValue = {
+
+            val fields = Map(
+                "originalFilename" -> request.originalFilename.toJson,
+                "originalMimeType" -> request.originalMimeType.toJson,
+                "filename" -> request.filename.toJson
+            )
+
+            JsObject(fields)
+        }
+    }
+
+
+
+
     implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat3(SipiFileInfoGetResponseV1)
-    implicit val sipiErrorConversionResponseFormat = jsonFormat2(SipiErrorConversionResponse)
-    implicit val sipiImageConversionResponseFormat = jsonFormat12(SipiImageConversionResponse)
+    implicit val sipiErrorConversionResponseFormat = jsonFormat1(SipiErrorConversionResponse)
+    implicit val sipiImageConversionResponseFormat = jsonFormat11(SipiImageConversionResponse)
 }
 
 

@@ -29,7 +29,7 @@
  * @param propertyIri the IRI of the property that points from the resource to the value.
  * @param currentValueIri the IRI of the current version of the value.
  * @param newValueIri the IRI of the new version of the value.
- * @param comment the new comment on the value.
+ * @param maybeComment the new comment on the value.
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
@@ -37,7 +37,7 @@
   propertyIri: IRI,
   currentValueIri: IRI,
   newValueIri: IRI,
-  comment: String)
+  maybeComment: Option[String])
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -45,37 +45,58 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-WITH <@dataNamedGraph>
 DELETE {
-    @* Detach the current version of the value from the resource. *@
-    ?resource ?property ?currentValue .
+    GRAPH ?dataNamedGraph {
+        @* Detach the current version of the value from the resource. *@
+        ?resource ?property ?currentValue .
 
-    @* Delete the resource's last modification date so we can update it. *@
-    ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+        @* Delete the resource's last modification date so we can update it. *@
+        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+    }
 } INSERT {
-    @* Copy the contents of the current version of the value into the new version, along with the new comment. *@
-    ?newValue ?valuePred ?valueObj .
-    ?newValue knora-base:valueHasComment """@comment""" ;
-        knora-base:previousValue ?currentValue ;
-        knora-base:isDeleted false ;
-        knora-base:valueCreationDate ?currentTime .
-    ?resource ?property ?newValue .
+    GRAPH ?dataNamedGraph {
+        @* Copy the contents of the current version of the value into the new version, along with the new comment. *@
+        ?newValue ?valuePred ?valueObj .
+        ?newValue knora-base:previousValue ?currentValue ;
 
-    @* Update the resource's last modification date. *@
-    ?resource knora-base:lastModificationDate ?currentTime .
+            @maybeComment match {
+
+                case Some(comment) => {
+
+                    knora-base:valueHasComment """@comment""" ;
+
+                }
+
+                case None => {}
+
+            }
+
+            knora-base:isDeleted false ;
+            knora-base:valueCreationDate ?currentTime .
+        ?resource ?property ?newValue .
+
+        @* Update the resource's last modification date. *@
+        ?resource knora-base:lastModificationDate ?currentTime .
+    }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
 @if(triplestore.startsWith("graphdb")) {
     USING <http://www.ontotext.com/explicit>
 }
 WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
     BIND(IRI("@resourceIri") AS ?resource)
     BIND(IRI("@propertyIri") AS ?property)
     BIND(IRI("@currentValueIri") AS ?currentValue)
     BIND(IRI("@newValueIri") AS ?newValue)
     BIND(NOW() AS ?currentTime)
 
+    ?resource rdf:type ?resourceClass ;
+        knora-base:isDeleted false .
+    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+
     ?resource ?property ?currentValue .
+
     ?currentValue ?valuePred ?valueObj ;
         knora-base:isDeleted false .
 

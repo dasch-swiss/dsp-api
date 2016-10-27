@@ -112,10 +112,12 @@
 
 									localdata.sipi_response = data;
 								},
-								error: function(data) {
-
-									console.log("error");
-									console.log(data)
+								error: function(jqXHR, textStatus, errorThrown) {
+									if (errorThrown !== undefined && jqXHR !== undefined && jqXHR.responseJSON !== undefined) {
+										alert("Sipi returned error " + errorThrown + " with message: " + jqXHR.responseJSON['message']);
+									} else {
+										alert("Call to Sipi failed")
+									}
 								}
 							});
 

@@ -24,7 +24,6 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.LoggingReceive
 import akka.pattern._
 import akka.routing.FromConfig
-import akka.util.Timeout
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{CheckConnection, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK, _}
 import org.knora.webapi.store._
@@ -35,7 +34,6 @@ import org.knora.webapi.{ActorMaker, Settings, UnsuportedTriplestoreException}
 
 import scala.collection.JavaConversions._
 import scala.concurrent.Await
-import scala.concurrent.duration._
 
 /**
   * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured triple stores (embedded or remote).
@@ -43,9 +41,9 @@ import scala.concurrent.duration._
 class TriplestoreManagerActor extends Actor with ActorLogging {
     this: ActorMaker =>
 
-    implicit val timeout = Timeout(300.seconds)
-
     private val settings = Settings(context.system)
+
+    implicit val timeout = settings.defaultRestoreTimeout
 
     var httpBased: Boolean = _
     var storeActorRef: ActorRef = _

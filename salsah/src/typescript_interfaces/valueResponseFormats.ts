@@ -64,7 +64,7 @@ export module valueResponseFormats {
          * The value's previous version (its value IRI).
          * This member is not set for the first version of the value since it has no predecessor.
          */
-        previousValue?: basicMessageComponents.KnoraIRI;
+        previousValue: basicMessageComponents.KnoraIRI | null;
 
     }
 

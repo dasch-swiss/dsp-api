@@ -115,3 +115,18 @@ When a resource has been successfully created, Knora sends back a JSON containin
 The resource IRI identifies the resource and can be used to perform future Knora API V1 operations.
 
 The JSON format of the response is described in the TypeScript interface ``createResourceResponse`` in module ``createResourceFormats``.
+
+***************************
+Changing a resource's label
+***************************
+
+A resource's label can be changed by making a PUT request to the path segments ``resources/label``.
+The resource's Iri has to be provided in the URL (as its last segment). The new label has to submitted as JSON in the HTTP request's body.
+
+::
+
+     HTTP PUT to http://host/v1/resources/label/resourceIRI
+
+The JSON format of the request is described in the TypeScript interface ``changeResourceLabelRequest`` in module ``createResourceFormats``.
+The response is described in the TypeScript interface ``changeResourceLabelResponse`` in module ``createResourceFormats``.
+

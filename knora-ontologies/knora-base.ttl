@@ -560,6 +560,8 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
                    rdfs:comment "Represents a link in standoff markup from one resource to another."@en ;
                    
+                   rdfs:comment "Represents a link in standoff markup from one resource to another."@en ;
+
                    :objectClassConstraint :Resource ;
 
                    :subjectClassConstraint :Resource ;
@@ -901,7 +903,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
              :subjectClassConstraint :Person ;
 
-             rdfs:subPropertyOf :hasValue, foaf:GivenName .
+             rdfs:subPropertyOf :hasValue, foaf:givenName .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasFamilyName
