@@ -39,7 +39,7 @@ class StoreResponderV1 extends ResponderV1 {
     }
 
     /**
-      * This method send a [[ResetTriplestoreContent]] message to the [[org.knora.webapi.store.triplestore.TriplestoreManagerActor]].
+      * This method send a [[ResetTriplestoreContent]] message to the [[org.knora.webapi.store.triplestore.TriplestoreManager]].
       *
       * @param rdfDataObjects the payload consisting of a list of [[RdfDataObject]] send inside the message.
       * @return a future containing a [[ResetTriplestoreContentResponseV1]].

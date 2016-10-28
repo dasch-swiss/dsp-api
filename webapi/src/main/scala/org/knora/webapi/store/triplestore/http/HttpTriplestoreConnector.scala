@@ -43,7 +43,7 @@ import scala.util.{Failure, Success, Try}
   * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
   * `application.conf`.
   */
-class HttpTriplestoreActor extends Actor with ActorLogging {
+class HttpTriplestoreConnector extends Actor with ActorLogging {
     // HTTP header constants.
     private val headerAccept = "Accept"
 
@@ -238,10 +238,10 @@ class HttpTriplestoreActor extends Actor with ActorLogging {
 
     private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentACK] = {
 
-        log.debug("should not see this")
+        log.debug("resetTripleStoreContent")
         val resetTriplestoreResult = for {
 
-        // drop old content
+            // drop old content
             dropResult <- dropAllTriplestoreContent()
 
             // insert new content

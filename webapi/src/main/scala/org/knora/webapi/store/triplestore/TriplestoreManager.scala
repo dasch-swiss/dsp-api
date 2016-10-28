@@ -28,7 +28,7 @@ import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{CheckConnection, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK, _}
 import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.embedded.JenaTDBActor
-import org.knora.webapi.store.triplestore.http.HttpTriplestoreActor
+import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.util.FakeTriplestore
 import org.knora.webapi.{ActorMaker, Settings, UnsuportedTriplestoreException}
 
@@ -38,7 +38,7 @@ import scala.concurrent.Await
 /**
   * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured triple stores (embedded or remote).
   */
-class TriplestoreManagerActor extends Actor with ActorLogging {
+class TriplestoreManager extends Actor with ActorLogging {
     this: ActorMaker =>
 
     private val settings = Settings(context.system)
@@ -70,9 +70,9 @@ class TriplestoreManagerActor extends Actor with ActorLogging {
         log.debug("TriplestoreManagerActor: start with preStart")
 
         storeActorRef = settings.triplestoreType match {
-            case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => httpBased = true; makeActor(FromConfig.props(Props[HttpTriplestoreActor]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
-            case HTTP_FUSEKI_TS_TYPE => httpBased = true; makeActor(FromConfig.props(Props[HttpTriplestoreActor]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
-            case HTTP_SESAME_TS_TYPE => httpBased = true; makeActor(FromConfig.props(Props[HttpTriplestoreActor]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
+            case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => httpBased = true; makeActor(FromConfig.props(Props[HttpTriplestoreConnector]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
+            case HTTP_FUSEKI_TS_TYPE => httpBased = true; makeActor(FromConfig.props(Props[HttpTriplestoreConnector]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
+            case HTTP_SESAME_TS_TYPE => httpBased = true; makeActor(FromConfig.props(Props[HttpTriplestoreConnector]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
             case EMBEDDED_JENA_TDB_TS_TYPE => httpBased = false; makeActor(Props[JenaTDBActor], name = EMBEDDED_JENA_ACTOR_NAME)
             case unknownType => throw UnsuportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
         }
