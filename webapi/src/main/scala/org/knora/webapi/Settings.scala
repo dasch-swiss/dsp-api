@@ -53,7 +53,7 @@ class SettingsImpl(config: Config) extends Extension {
     val sipiPathConversionRoute = config.getString("app.sipi.path-conversion-route")
     val sipiFileConversionRoute = config.getString("app.sipi.file-conversion-route")
     val httpPort = config.getInt("app.http.port")
-    val baseApiUrl = s"http://$httpInterface:$httpPort/"
+    val baseApiUrl = s"http://$httpInterface:$httpPort"
     val caches = config.getList("app.caches").iterator.map {
         (cacheConfigItem: ConfigValue) =>
             val cacheConfigMap = cacheConfigItem.unwrapped.asInstanceOf[java.util.HashMap[String, Any]]

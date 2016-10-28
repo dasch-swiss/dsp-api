@@ -32,7 +32,6 @@ import akka.http.scaladsl.server.Route
 import akka.pattern._
 import akka.stream.scaladsl.{Source, _}
 import akka.util.Timeout
-import org.knora.webapi.e2e.E2ESpec
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -42,7 +41,7 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.{FileWriteException, LiveActorMaker}
+import org.knora.webapi.{FileWriteException, LiveActorMaker, R2RSpec}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -52,7 +51,7 @@ import scala.concurrent.duration._
   * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-class SipiV1E2ESpec extends E2ESpec {
+class SipiV1R2RSpec extends R2RSpec {
 
     override def testConfigSource =
         """
@@ -90,7 +89,7 @@ class SipiV1E2ESpec extends E2ESpec {
     private val username = "root"
     private val password = "test"
 
-    private val rdfDataObjects = List(
+    val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),

@@ -103,7 +103,7 @@ object TriplestoreManagerActorSpec {
 class TriplestoreManagerActorSpec01 extends CoreSpec("TriplestoreManagerActorTestSystem", TriplestoreManagerActorSpec.configGraphDB) with ImplicitSender {
 
     // here we start the actor under test with the TestProbeMaker trait
-    val actorUnderTest = TestActorRef(Props(new TriplestoreManagerActor with TestProbeMaker), name = TRIPLESTORE_MANAGER_ACTOR_NAME)
+    val actorUnderTest = TestActorRef(Props(new TriplestoreManager with TestProbeMaker), name = TRIPLESTORE_MANAGER_ACTOR_NAME)
 
     // here we get the ActorRef to a subactor with the name 'triplestoreRouter' (ability provided by TestProbeMaker trait)
     val mockEmbeddedStoreActorCorrect = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(HTTP_TRIPLESTORE_ACTOR_NAME, null)
@@ -133,7 +133,7 @@ class TriplestoreManagerActorSpec01 extends CoreSpec("TriplestoreManagerActorTes
 class TriplestoreManagerActorSpec02 extends CoreSpec("TriplestoreManagerActorTestSystem", TriplestoreManagerActorSpec.configFuseki) with ImplicitSender {
 
     // here we start the actor under test with the TestProbeMaker trait
-    val actorUnderTest = TestActorRef(Props(new TriplestoreManagerActor with TestProbeMaker), name = TRIPLESTORE_MANAGER_ACTOR_NAME)
+    val actorUnderTest = TestActorRef(Props(new TriplestoreManager with TestProbeMaker), name = TRIPLESTORE_MANAGER_ACTOR_NAME)
 
     // here we get the ActorRef to a subactor with the name 'triplestoreRouter' (ability provided by TestProbeMaker trait)
     val mockEmbeddedStoreActorCorrect = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(HTTP_TRIPLESTORE_ACTOR_NAME, null)
@@ -163,7 +163,7 @@ class TriplestoreManagerActorSpec02 extends CoreSpec("TriplestoreManagerActorTes
 class TriplestoreManagerActorSpec03 extends CoreSpec("TriplestoreManagerActorTestSystem", TriplestoreManagerActorSpec.configSesame) with ImplicitSender {
 
     // here we start the actor under test with the TestProbeMaker trait
-    val actorUnderTest = TestActorRef(Props(new TriplestoreManagerActor with TestProbeMaker), name = TRIPLESTORE_MANAGER_ACTOR_NAME)
+    val actorUnderTest = TestActorRef(Props(new TriplestoreManager with TestProbeMaker), name = TRIPLESTORE_MANAGER_ACTOR_NAME)
 
     // here we get the ActorRef to a subactor with the name 'triplestoreRouter' (ability provided by TestProbeMaker trait)
     val mockEmbeddedStoreActorCorrect = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(HTTP_TRIPLESTORE_ACTOR_NAME, null)

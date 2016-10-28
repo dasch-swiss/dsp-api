@@ -16,23 +16,31 @@
 
 package org.knora.webapi
 
-import akka.agent.Agent
+import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.knora.webapi.util.CacheUtil
+import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 
-//TODO: Use the Knora Execution Context
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
-  * Holds flags that are passed to the 'webapi' server at startup.
+  * Created by subotic on 08.12.15.
   */
-object StartupFlags {
+class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
-    /**
-      * Startup Flag Value: Reset Triplestore Content Operation Over HTTP
-      */
-    val allowResetTriplestoreContentOperationOverHTTP = Agent(false)
+    def actorRefFactory = system
 
-    /**
-      * Startup Flag Value: Load Demo Data
-      */
-    val loadDemoData = Agent(false)
+    val settings = Settings(system)
+    val logger = akka.event.Logging(system, this.getClass())
+    implicit val log = logger
+
+    implicit val knoraExceptionHandler = KnoraExceptionHandler(settings, log)
+
+    override def beforeAll {
+        CacheUtil.createCaches(settings.caches)
+    }
+
+    override def afterAll {
+        CacheUtil.removeAllCaches()
+    }
+
 }

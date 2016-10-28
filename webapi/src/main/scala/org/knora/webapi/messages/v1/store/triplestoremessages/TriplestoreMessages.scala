@@ -1,7 +1,6 @@
 package org.knora.webapi.messages.v1.store.triplestoremessages
 
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{InconsistentTriplestoreDataException, TriplestoreResponseException}
 import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
@@ -210,38 +209,6 @@ case class Initialized() extends TriplestoreRequest
   */
 case class InitializedResponse(initFinished: Boolean)
 
-/**
-  * TODO: document this.
-  */
-sealed trait AdminRequest extends KnoraRequestV1
-
-/**
-  * TODO: document this.
-  */
-sealed trait TriplestoreAdminRequest extends AdminRequest
-
-/**
-  * TODO: document this.
-  *
-  * @param userProfile
-  */
-case class FakeTriplestorePrepare(userProfile: UserProfileV1) extends TriplestoreAdminRequest
-
-/**
-  * TODO: document this.
-  *
-  * @param userProfileV1
-  */
-case class FakeTriplestoreUse(userProfileV1: UserProfileV1) extends TriplestoreAdminRequest
-
-/**
-  * TODO: document this.
-  *
-  * @param message
-  */
-case class TriplestoreAdminResponse(message: String) extends KnoraResponseV1 {
-    def toJsValue = TriplestoreJsonProtocol.triplestoreAdminResponseFormat.write(this)
-}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -261,9 +228,8 @@ case class RdfDataObject(path: String, name: String)
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
   */
-object TriplestoreJsonProtocol extends DefaultJsonProtocol with NullOptions {
+trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    implicit val triplestoreAdminResponseFormat: RootJsonFormat[TriplestoreAdminResponse] = jsonFormat1(TriplestoreAdminResponse)
     implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject)
     implicit val resetTriplestoreContentFormat: RootJsonFormat[ResetTriplestoreContent] = jsonFormat1(ResetTriplestoreContent)
 

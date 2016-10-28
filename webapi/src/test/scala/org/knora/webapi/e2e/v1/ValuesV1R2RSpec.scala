@@ -24,7 +24,7 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.e2e.E2ESpec
+import org.knora.webapi.R2RSpec
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
@@ -42,7 +42,7 @@ import scala.concurrent.duration._
 /**
   * Tests the values route.
   */
-class ValuesV1E2ESpec extends E2ESpec {
+class ValuesV1R2RSpec extends R2RSpec {
 
     override def testConfigSource =
         """

@@ -23,6 +23,8 @@ package org.knora.webapi.responders.v1
 import akka.actor.{Actor, ActorLogging}
 import org.knora.webapi.Settings
 
+import scala.language.postfixOps
+
 /**
   * A trait providing values that are commonly used in Knora API v1 responders.
   */
@@ -40,7 +42,7 @@ trait ResponderV1 extends Actor with ActorLogging {
     /**
       * The application's default timeout for `ask` messages.
       */
-    protected implicit val timeout = settings.defaultTimeout
+    protected implicit val timeout = settings.defaultRestoreTimeout
 
     /**
       * The Akka actor system's execution context for futures.

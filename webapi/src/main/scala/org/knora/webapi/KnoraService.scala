@@ -31,7 +31,7 @@ import ch.megard.akka.http.cors.CorsDirectives._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1._
@@ -40,23 +40,27 @@ import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.CacheUtil
 
 import scala.collection.JavaConversions._
+import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+
+trait Core {
+    implicit val system: ActorSystem
+}
+
+/**
+  * The applications actor system.
+  */
+trait LiveCore extends Core {
+    implicit lazy val system = ActorSystem("webapi")
+}
+
 /**
   * Provides methods for starting and stopping Knora from within another application. This is where the actor system
-  * is started along with the three main supervisor actors is started. All further actors are started and supervised
-  * by those three actors.
+  * along with the three main supervisor actors is started. All further actors are started and supervised by those
+  * three actors.
   */
-object KnoraService {
-
-    /**
-      * The applications actor system.
-      */
-    implicit lazy private val system = ActorSystem("webapi")
-
-    /**
-      * Logging
-      */
-    private val log = akka.event.Logging(system, this.getClass())
+trait KnoraService {
+    this: Core =>
 
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
@@ -71,7 +75,17 @@ object KnoraService {
     /**
       * The application's configuration.
       */
-    private val settings = Settings(system)
+    val settings: SettingsImpl = Settings(system)
+
+    /**
+      * Provide logging
+      */
+    val log = akka.event.Logging(system, this.getClass)
+
+    /**
+      * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
+      */
+    implicit val timeout = settings.defaultRestoreTimeout
 
     /**
       * A user representing the Knora API server, used for initialisation on startup.
@@ -107,12 +121,26 @@ object KnoraService {
     )
 
     /**
+      * Sends messages to all supervisor actors in a blocking manner, checking if they are all ready.
+      */
+    def checkActorSystem() {
+
+        // TODO: Check if ResponderManager is ready
+        log.info(s"ResponderManager ready: - ")
+
+        // TODO: Check if Sipi is also ready/accessible
+        val storeManagerResult = Await.result(storeManager ? Initialized(), 5.seconds).asInstanceOf[InitializedResponse]
+        log.info(s"StoreManager ready: $storeManagerResult")
+        log.info(s"ActorSystem ${system.name} started")
+    }
+
+    /**
       * Starts the Knora API server.
       */
-    def start(): Unit = {
-        implicit val timeout = settings.defaultRestoreTimeout
+    def startService(): Unit = {
         implicit val materializer = ActorMaterializer()
-        // needed for the future map/flatmap in the end
+
+        // needed for startup flags and the future map/flatmap in the end
         implicit val executionContext = system.dispatcher
 
         CacheUtil.createCaches(settings.caches)
@@ -149,7 +177,7 @@ object KnoraService {
     /**
       * Stops Knora.
       */
-    def stop(): Unit = {
+    def stopService = {
         system.terminate()
         CacheUtil.removeAllCaches()
         //Kamon.shutdown()

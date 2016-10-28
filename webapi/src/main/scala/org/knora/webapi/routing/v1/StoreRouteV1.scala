@@ -19,13 +19,11 @@ package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{ExceptionHandler, Route}
+import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi.{ForbiddenException, SettingsImpl}
-import org.knora.webapi.messages.v1.responder.storemessages.ResetTriplestoreContentRequestV1
+import org.knora.webapi.SettingsImpl
+import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, StoreV1JsonProtocol}
 import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 
@@ -34,22 +32,9 @@ import scala.concurrent.duration._
 /**
   * A route used to send requests which can directly affect the data stored inside the triplestore.
   */
-object StoreRouteV1 extends Authenticator {
-
-
-    implicit def myExceptionHandler: ExceptionHandler =
-        ExceptionHandler {
-            case _: ForbiddenException =>
-                extractUri { uri =>
-                    println(s"Request to $uri could not be handled normally")
-                    complete(HttpResponse(InternalServerError, entity = "Bad numbers, bad result!!!"))
-                }
-        }
+object StoreRouteV1 extends Authenticator with StoreV1JsonProtocol {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) = Route {
-
-        import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport.sprayJsonUnmarshaller
-        import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
 
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
