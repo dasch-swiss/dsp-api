@@ -65,7 +65,7 @@ class StoreRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) with Tripl
 
     "The ResetTriplestoreContent Route ('v1/store/ResetTriplestoreContent')" should {
 
-        "succeed with resetting if startup flag is set" ignore {
+        "succeed with resetting if startup flag is set" in {
             /**
               * This test corresponds to the following curl call:
               * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/v1/store/ResetTriplestoreContent
@@ -74,17 +74,17 @@ class StoreRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) with Tripl
 			StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
 			log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
 
-            val request = Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+            val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
             val response = singleAwaitingRequest(request, 300.seconds)
             log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)
         }
 
 
-        "fail with resetting if startup flag is not set" ignore {
+        "fail with resetting if startup flag is not set" in {
             StartupFlags.allowResetTriplestoreContentOperationOverHTTP send false
             //log.debug("==>> before")
-            val request = Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+            val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
             val response = singleAwaitingRequest(request, 300.seconds)
             //log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.Forbidden)

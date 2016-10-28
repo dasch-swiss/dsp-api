@@ -17,19 +17,30 @@
 package org.knora.webapi.e2e.v1
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.model.HttpMethods._
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Methods`, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.http.CORSSupport
-import org.knora.webapi.routing.v1.{ResourcesRouteV1, StoreRouteV1}
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
+object CORSSupportV1E2ESpec {
+    val config = ConfigFactory.parseString(
+        """
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
+
 /**
-  * End-to-end test specification for testing [[StoreRouteV1]]. This specification uses the
-  * Spray Testkit as documented here: http://spray.io/documentation/1.2.2/spray-testkit/
+  * End-to-end test specification for testing [[CORSSupport]].
   */
-class CORSSupportV1E2ESpec extends E2ESpec {
+class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) {
 
     /* set the timeout for the route test */
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(180).second)
@@ -39,35 +50,33 @@ class CORSSupportV1E2ESpec extends E2ESpec {
 
     "A Route with enabled CORS support " should {
 
-        "accept valid pre-flight requests" ignore {
+        "accept valid pre-flight requests" in {
 
-            /*
-            Options() ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(GET) ~> {
-                CORS(resourcesRoute)
-            } ~> check {
-                responseAs[String] shouldBe empty
-                status shouldBe StatusCodes.OK
-                response.headers should contain theSameElementsAs Seq(
-                    `Access-Control-Allow-Origin`(exampleOrigin),
-                    `Access-Control-Allow-Methods`(corsSettings.allowedMethods),
-                    //`Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Authorization"),
-                    `Access-Control-Max-Age`(1800),
-                    `Access-Control-Allow-Credentials`(true)
-                )
-            }
-            */
+            val request = Options(baseApiUrl + "/v1/authenticate") ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(GET)
+            val response = singleAwaitingRequest(request)
+
+            response.status should equal(StatusCodes.OK)
+
+            val headersMinusDate = response.headers.filter(Date => false)
+            response.headers should contain allElementsOf Seq(
+                `Access-Control-Allow-Origin`(exampleOrigin),
+                `Access-Control-Allow-Methods`(corsSettings.allowedMethods),
+                //`Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Authorization"),
+                `Access-Control-Max-Age`(1800),
+                `Access-Control-Allow-Credentials`(true),
+                Server("akka-http/2.4.11")
+            )
         }
 
-        "reject pre-flight requests with invalid method" ignore {
-
-            /*
+        "reject pre-flight requests with invalid method" in {
             val invalidMethod = PATCH
-            Options() ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(invalidMethod) ~> {
-                CORS(resourcesRoute)
-            } ~> check {
-                rejection shouldBe CorsRejection(None, Some(invalidMethod), None)
-            }
-            */
+            val request = Options(baseApiUrl + "/v1/authenticate") ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(invalidMethod)
+            val response = singleAwaitingRequest(request)
+
+            val entity = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
+
+            response.status should equal(StatusCodes.BadRequest)
+            entity should equal("CORS: invalid method 'PATCH'")
         }
 
     }

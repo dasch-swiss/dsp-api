@@ -27,7 +27,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern._
 import akka.stream.ActorMaterializer
-import akka.util.Timeout
 import ch.megard.akka.http.cors.CorsDirectives._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
@@ -42,8 +41,7 @@ import org.knora.webapi.util.CacheUtil
 
 import scala.collection.JavaConversions._
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.language.postfixOps
+import scala.concurrent.{Await, Future}
 
 trait Core {
     implicit val system: ActorSystem
@@ -82,7 +80,7 @@ trait KnoraService {
     /**
       * Provide logging
       */
-    val log = akka.event.Logging(system, this.getClass())
+    val log = akka.event.Logging(system, this.getClass)
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
@@ -131,7 +129,7 @@ trait KnoraService {
         log.info(s"ResponderManager ready: - ")
 
         // TODO: Check if Sipi is also ready/accessible
-        val storeManagerResult = Await.result(storeManager ? Initialized(), timeout.duration).asInstanceOf[InitializedResponse]
+        val storeManagerResult = Await.result(storeManager ? Initialized(), 5.seconds).asInstanceOf[InitializedResponse]
         log.info(s"StoreManager ready: $storeManagerResult")
         log.info(s"ActorSystem ${system.name} started")
     }

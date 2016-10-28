@@ -264,7 +264,7 @@ object Authenticator {
 
     val sessionStore: scala.collection.mutable.Map[String, UserProfileV1] = scala.collection.mutable.Map()
     implicit val timeout: Timeout = Duration(5, SECONDS)
-    val log = Logger(LoggerFactory.getLogger("org.knora.webapi.util.authentication"))
+    val log = Logger(LoggerFactory.getLogger(this.getClass))
 
     private val cacheName = "authenticationCache"
 
@@ -377,7 +377,7 @@ object Authenticator {
             ""
         }
 
-        log.debug(s"autheaderEnocoded.nonEmpty: " + authHeaderEncoded.nonEmpty)
+        log.debug(s"authHeaderEncoded.nonEmpty: " + authHeaderEncoded.nonEmpty)
 
         val (usernameFromHeader: String, passwordFromHeader: String) = if (authHeaderEncoded.nonEmpty) {
             val authHeaderDecoded = ByteString.fromArray(Base64.getDecoder.decode(authHeaderEncoded)).decodeString("UTF8")

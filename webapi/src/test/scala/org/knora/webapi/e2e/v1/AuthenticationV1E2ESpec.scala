@@ -47,7 +47,7 @@ object AuthenticationV1E2ESpec {
   */
 class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(5).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
@@ -61,7 +61,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(s"${baseApiUrl}v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 300.seconds)
     }
 
@@ -69,7 +69,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
         "succeed with authentication and correct username / correct password" in {
             /* Correct username and password */
-            val request = Get(s"${baseApiUrl}v1/authenticate?username=root&password=test")
+            val request = Get(baseApiUrl + "/v1/authenticate?username=root&password=test")
             val response: HttpResponse = singleAwaitingRequest(request)
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.OK)
@@ -77,14 +77,14 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
         "fail with authentication and correct username / wrong password" in {
             /* Correct username / wrong password */
-            val request = Get(s"${baseApiUrl}v1/authenticate?username=root&password=wrong")
+            val request = Get(baseApiUrl + "/v1/authenticate?username=root&password=wrong")
             val response: HttpResponse = singleAwaitingRequest(request)
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.Unauthorized)
         }
         "fail with authentication if the user is set as 'not active' " ignore {
             /* User not active */
-            val request = Get(s"${baseApiUrl}v1/authenticate?username=inactiveuser&password=test")
+            val request = Get(baseApiUrl + "/v1/authenticate?username=inactiveuser&password=test")
             val response: HttpResponse = singleAwaitingRequest(request)
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.NotFound)
@@ -95,14 +95,14 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
         "succeed with authentication and correct username / correct password" in {
             /* Correct username / correct password */
-            val request = Get(s"${baseApiUrl}v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "test"))
+            val request = Get(baseApiUrl + "/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "test"))
             val response = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK)
         }
 
         "fail with authentication and correct username / wrong password" in {
             /* Correct username / wrong password */
-            val request = Get(s"${baseApiUrl}v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "wrong"))
+            val request = Get(baseApiUrl + "/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "wrong"))
             val response = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.Unauthorized)
         }
@@ -112,7 +112,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
         var sid = ""
         "succeed with 'login' and correct username / correct password" in {
             /* Correct username and correct password */
-            val request = Get(s"${baseApiUrl}v1/session?login&username=root&password=test")
+            val request = Get(baseApiUrl + "/v1/session?login&username=root&password=test")
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK)
 
@@ -125,8 +125,8 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
         }
 
         "succeed with authentication when using correct session id in cookie" in {
-            // authenticate by calling '/v2/session' without parameters but by providing session id in cookie from earlier login
-            val request = Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
+            // authenticate by calling '/v1/session' without parameters but by providing session id in cookie from earlier login
+            val request = Get(baseApiUrl + "/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
@@ -135,7 +135,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
         "succeed with 'logout' when providing the session cookie" in {
             // do logout with stored session id
-            val request = Get("/v1/session?logout") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
+            val request = Get(baseApiUrl + "/v1/session?logout") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
@@ -143,7 +143,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
         }
 
         "fail with authentication when providing the session cookie after logout" in {
-            val request = Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
+            val request = Get(baseApiUrl + "/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
@@ -151,7 +151,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
         "fail with 'login' and correct username / wrong password" in {
             /* Correct username and wrong password */
-            val request = Get("/v1/session?login&username=root&password=wrong")
+            val request = Get(baseApiUrl + "/v1/session?login&username=root&password=wrong")
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
@@ -159,14 +159,14 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
         "fail with 'login' and wrong username" in {
             /* wrong username */
-            val request = Get("/v1/session?login&username=root&password=test")
+            val request = Get(baseApiUrl + "/v1/session?login&username=userwrong&password=test")
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.NotFound)
         }
 
         "fail with authentication when using wrong session id in cookie" in {
-            val request = Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, "123456")
+            val request = Get(baseApiUrl + "/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, "123456")
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
@@ -176,7 +176,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
     "The Session Route ('v1/session') with credentials supplied via Basic Auth" should {
         "succeed with 'login' and correct username / correct password" in {
             /* Correct username and correct password */
-            val request = Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "test"))
+            val request = Get(baseApiUrl + "/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "test"))
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
@@ -184,7 +184,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
        "fail with 'login' and correct username / wrong password " in {
            /* Correct username and wrong password */
-           val request = Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "wrong"))
+           val request = Get(baseApiUrl + "/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "wrong"))
            val response = singleAwaitingRequest(request)
            //log.debug("==>> " + responseAs[String])
            assert(response.status === StatusCodes.Unauthorized)
@@ -192,7 +192,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
         "fail with 'login' and wrong username " in {
             /* wrong username */
-            val request = Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("wrong", "test"))
+            val request = Get(baseApiUrl + "/v1/session?login") ~> addCredentials(BasicHttpCredentials("wrong", "test"))
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.NotFound)
@@ -202,7 +202,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
    "The Resources Route using the Authenticator trait " should {
        "succeed with authentication using URL parameters and correct username / correct password " in {
            /* Correct username / correct password */
-           val request = Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test")
+           val request = Get(baseApiUrl + "/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test")
                val response = singleAwaitingRequest(request)
                //log.debug("==>> " + responseAs[String])
                assert(response.status === StatusCodes.OK)
@@ -210,7 +210,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
        "fail with authentication using URL parameters and correct username / wrong password " in {
            /* Correct username / wrong password */
-           val request = Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=wrong")
+           val request = Get(baseApiUrl + "/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=wrong")
 
                val response = singleAwaitingRequest(request)
                //log.debug("==>> " + responseAs[String])
@@ -219,7 +219,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
        "succeed with authentication using HTTP Basic Auth headers and correct username / correct password " in {
            /* Correct username / correct password */
-           val request = Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "test"))
+           val request = Get(baseApiUrl + "/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "test"))
                val response = singleAwaitingRequest(request)
                //log.debug("==>> " + responseAs[String])
                assert(response.status === StatusCodes.OK)
@@ -227,14 +227,14 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
        "fail with authentication using HTTP Basic Auth headers and correct username / wrong password " in {
            /* Correct username / wrong password */
-           val request = Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "wrong"))
+           val request = Get(baseApiUrl + "/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "wrong"))
                val response = singleAwaitingRequest(request)
                //log.debug("==>> " + responseAs[String])
                assert(response.status === StatusCodes.Unauthorized)
        }
 
        "not return sensitive information (token, password) in the response " in {
-           val request = Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test")
+           val request = Get(baseApiUrl + "/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test")
                val response = singleAwaitingRequest(request)
                //log.debug("==>> " + responseAs[String])
                // assert(status === StatusCodes.OK)

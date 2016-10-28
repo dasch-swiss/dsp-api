@@ -19,10 +19,10 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, ResetTriplestoreContentResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.Future
@@ -46,17 +46,24 @@ class StoreResponderV1 extends ResponderV1 {
       */
     private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentResponseV1] = {
 
-        //log.debug(s"resetTriplestoreContent called with: ${rdfDataObjects.toString}")
-        //log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
+        log.debug(s"resetTriplestoreContent called with: ${rdfDataObjects.toString}")
+        log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
+
         for {
             value <- StartupFlags.allowResetTriplestoreContentOperationOverHTTP.future()
             _ = if (!value) {
                 //println("resetTriplestoreContent - will throw ForbiddenException")
                 throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
             }
-            resetResponse <- storeManager ? ResetTriplestoreContent(rdfDataObjects)
-            loadOntologiesResponse <- responderManager ? LoadOntologiesRequest(UserProfileV1())
+
+            resetResponse <- (storeManager ? ResetTriplestoreContent(rdfDataObjects)).mapTo[ResetTriplestoreContentACK]
+            _ = log.debug(s"resetTriplestoreContent - triplestore reset done ${resetResponse.toString}")
+
+            loadOntologiesResponse <- (responderManager ? LoadOntologiesRequest(UserProfileV1())).mapTo[LoadOntologiesResponse]
+            _ = log.debug(s"resetTriplestoreContent - load ontology done ${loadOntologiesResponse.toString}")
+
             result = ResetTriplestoreContentResponseV1(message = "success")
+
         } yield result
     }
 
