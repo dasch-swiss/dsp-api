@@ -1055,7 +1055,7 @@ indirect links. Therefore, when a text value contains a resource
 reference in its standoff nodes, the Knora API server automatically
 creates a direct link between the containing resource and the target
 resource, along with an RDF reification (a ``kb:LinkValue``) describing
-the link, as discussed in Section [sec:links]. In this case, the link
+the link, as discussed in :ref:`knora-base-links`. In this case, the link
 property is always ``kb:hasStandoffLinkTo``, and the link value property
 (which points to the ``LinkValue``) is always
 ``kb:hasStandoffLinkToValue``.

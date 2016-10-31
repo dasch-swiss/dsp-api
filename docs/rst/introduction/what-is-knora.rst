@@ -43,7 +43,7 @@ possible to preserve the semantics of data imported from relational databases,
 XML-based markup systems, and other types of storage, as well as to query,
 annotate, and link together heterogeneous data in a unified way. By offering
 a shared, standards-based, extensible infrastructure for diverse humanities
-projects, Knora also addresses deals with the issue of conversion and
+projects, Knora also deals with the issue of conversion and
 migration caused by the obsolescence of file and data formats in an efficient
 and feasible manner.
 
