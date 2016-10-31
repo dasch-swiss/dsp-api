@@ -187,7 +187,9 @@ case class IncunabulaCkanProjectDatasetFileV1(resid: String,
 /**
   * A spray-json protocol for generating Knora API v1 JSON for Ckan.
   */
-object CkanV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with UserV1JsonProtocol {
+object CkanV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+
+    import UserV1JsonProtocol.userDataV1Format
 
     implicit val ckanProjectDatasetFileV1Format: JsonFormat[CkanProjectDatasetFileV1] = jsonFormat7(CkanProjectDatasetFileV1)
     implicit val ckanProjectDatasetV1Format: JsonFormat[CkanProjectDatasetV1] = jsonFormat4(CkanProjectDatasetV1)

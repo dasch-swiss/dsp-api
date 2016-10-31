@@ -1409,8 +1409,9 @@ case class ValueVersionV1(valueObjectIri: IRI,
 /**
   * A spray-json protocol for generating Knora API v1 JSON for property values.
   */
-object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with UserV1JsonProtocol {
+object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
+    import UserV1JsonProtocol.userDataV1Format
     import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 
     /**

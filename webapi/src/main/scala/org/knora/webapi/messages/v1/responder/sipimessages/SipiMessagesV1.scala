@@ -253,7 +253,9 @@ case class SipiFileInfoGetResponseV1(permissionCode: Option[Int],
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
-object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with UserV1JsonProtocol {
+object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+
+    import UserV1JsonProtocol.userDataV1Format
 
     /**
       * Converts between [[SipiResponderConversionPathRequestV1]] objects and [[JsValue]] objects.

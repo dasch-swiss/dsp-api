@@ -46,8 +46,8 @@ case class CreateProjectApiRequestV1(shortName: String,
                                      isActiveProject: Boolean,
                                      hasSelfJoinEnabled: Boolean,
                                      permissionsTemplate: String
-                                    ) {
-    def toJsValue = ProjectV1JsonProtocol.createProjectApiRequestV1Format.write(this)
+                                    ) extends ProjectV1JsonProtocol {
+    def toJsValue = createProjectApiRequestV1Format.write(this)
 }
 
 /**
@@ -57,8 +57,8 @@ case class CreateProjectApiRequestV1(shortName: String,
   * @param newValue     the new value for the property of the project to be updated.
   */
 case class UpdateProjectApiRequestV1(propertyIri: String,
-                                     newValue: String) {
-    def toJsValue = ProjectV1JsonProtocol.updateProjectApiRequestV1Format.write(this)
+                                     newValue: String) extends ProjectV1JsonProtocol {
+    def toJsValue = updateProjectApiRequestV1Format.write(this)
 }
 
 
@@ -128,8 +128,8 @@ case class ProjectUpdateRequestV1(projectIri: IRI,
   * @param projects information about all existing projects.
   * @param userdata information about the user that made the request.
   */
-case class ProjectsResponseV1(projects: Seq[ProjectInfoV1], userdata: Option[UserDataV1]) extends KnoraResponseV1 {
-    def toJsValue = ProjectV1JsonProtocol.projectsResponseV1Format.write(this)
+case class ProjectsResponseV1(projects: Seq[ProjectInfoV1], userdata: Option[UserDataV1]) extends KnoraResponseV1 with ProjectV1JsonProtocol {
+    def toJsValue = projectsResponseV1Format.write(this)
 }
 
 /**
@@ -138,8 +138,8 @@ case class ProjectsResponseV1(projects: Seq[ProjectInfoV1], userdata: Option[Use
   * @param project_info all information about the project.
   * @param userdata     information about the user that made the request.
   */
-case class ProjectInfoResponseV1(project_info: ProjectInfoV1, userdata: Option[UserDataV1]) extends KnoraResponseV1 {
-    def toJsValue = ProjectV1JsonProtocol.projectInfoResponseV1Format.write(this)
+case class ProjectInfoResponseV1(project_info: ProjectInfoV1, userdata: Option[UserDataV1]) extends KnoraResponseV1 with ProjectV1JsonProtocol {
+    def toJsValue = projectInfoResponseV1Format.write(this)
 }
 
 /**
@@ -147,8 +147,8 @@ case class ProjectInfoResponseV1(project_info: ProjectInfoV1, userdata: Option[U
   * @param project_info the new project info of the created/modified project.
   * @param userData     information about the user that made the request.
   */
-case class ProjectOperationResponseV1(project_info: ProjectInfoV1, userData: UserDataV1) extends KnoraResponseV1 {
-    def toJsValue = ProjectV1JsonProtocol.projectOperationResponseV1Format.write(this)
+case class ProjectOperationResponseV1(project_info: ProjectInfoV1, userData: UserDataV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
+    def toJsValue = projectOperationResponseV1Format.write(this)
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -207,7 +207,9 @@ case class NewProjectDataV1(shortname: String,
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about projects.
   */
-object ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with UserV1JsonProtocol {
+trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+
+    import UserV1JsonProtocol.userDataV1Format
 
     implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat12(ProjectInfoV1)
     // we have to use lazyFormat here because `UserV1JsonProtocol` contains an import statement for this object.

@@ -505,7 +505,9 @@ case class PropertyTypeV1(id: IRI, label: String) {
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
   */
-object ResourceTypeV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with UserV1JsonProtocol {
+object ResourceTypeV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+
+    import UserV1JsonProtocol.userDataV1Format
 
     implicit val propertyDefinitionV1Format: JsonFormat[PropertyDefinitionV1] = jsonFormat10(PropertyDefinitionV1)
     implicit val propertyDefinitionInNamedGraphV1Format: JsonFormat[PropertyDefinitionInNamedGraphV1] = jsonFormat8(PropertyDefinitionInNamedGraphV1)

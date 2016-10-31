@@ -251,7 +251,9 @@ object GroupInfoType extends Enumeration {
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about groups.
   */
-object GroupV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with UserV1JsonProtocol {
+object GroupV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+
+    import UserV1JsonProtocol.userDataV1Format
 
     implicit val groupPermissionV1Format: JsonFormat[GroupPermissionV1] = jsonFormat2(GroupPermissionV1)
     implicit val groupInfoV1Format: JsonFormat[GroupInfoV1] = jsonFormat7(GroupInfoV1)

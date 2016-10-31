@@ -31,11 +31,14 @@ import org.knora.webapi.util.InputValidation
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
-object UsersRouteV1 extends Authenticator with UserV1JsonProtocol {
+object UsersRouteV1 extends Authenticator {
+
+    /* bring json protocol into scope */
+    import UserV1JsonProtocol._
 
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
-
+    
     def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
 

@@ -743,8 +743,9 @@ case class ResourceCreateValueObjectResponseV1(textval: Map[LiteralValueType.Val
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
   */
-object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with UserV1JsonProtocol {
+object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
+    import UserV1JsonProtocol.userDataV1Format
     import LiteralValueType.LiteralValueTypeV1Protocol._
     import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 
@@ -1008,8 +1009,9 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 /**
   * A spray-json protocol for generating resource context information in Knora API v1 JSON format.
   */
-object ResourceContextV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with UserV1JsonProtocol {
+object ResourceContextV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol{
 
+    import UserV1JsonProtocol.userDataV1Format
     import ResourceContextCodeV1.ResourceContextCodeV1Protocol._
     import ResourceV1JsonProtocol._
 

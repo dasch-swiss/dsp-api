@@ -25,7 +25,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -50,9 +50,9 @@ case class CreateUserApiRequestV1(username: String,
                                   email: String,
                                   password: String,
                                   isActive: Boolean,
-                                  lang: String) extends UserV1JsonProtocol {
+                                  lang: String) {
 
-    def toJsValue = createUserApiRequestV1Format.write(this)
+    def toJsValue = UserV1JsonProtocol.createUserApiRequestV1Format.write(this)
 
 }
 
@@ -63,9 +63,9 @@ case class CreateUserApiRequestV1(username: String,
   * @param newValue     the new value for the property of the user to be updated.
   */
 case class UpdateUserApiRequestV1(propertyIri: String,
-                                  newValue: String) extends UserV1JsonProtocol {
+                                  newValue: String) {
 
-    def toJsValue = updateUserApiRequestV1Format.write(this)
+    def toJsValue = UserV1JsonProtocol.updateUserApiRequestV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,8 +130,8 @@ case class UserUpdateRequestV1(userIri: webapi.IRI,
   * @param userProfile the new user profile of the created/modified user.
   * @param userData    information about the user that made the request.
   */
-case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDataV1) extends KnoraResponseV1 with UserV1JsonProtocol {
-    def toJsValue = userOperationResponseV1Format.write(this)
+case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = UserV1JsonProtocol.userOperationResponseV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -299,9 +299,9 @@ case class UserDataV1(lang: String,
                       isActiveUser: Option[Boolean] = None,
                       active_project: Option[IRI] = None,
                       projects: Seq[IRI] = Vector.empty[IRI],
-                      projects_info: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1]) extends UserV1JsonProtocol {
+                      projects_info: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1]) {
 
-    def toJsValue = userDataV1Format.write(this)
+    def toJsValue = UserV1JsonProtocol.userDataV1Format.write(this)
 
 }
 
@@ -329,11 +329,9 @@ case class NewUserDataV1(username: String,
 /**
   * A spray-json protocol for formatting objects as JSON.
   */
-trait UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol {
 
-    import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol._
-
-    implicit val userDataV1Format: JsonFormat[UserDataV1] = jsonFormat12(UserDataV1)
+    implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat12(UserDataV1))
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat10(UserProfileV1)
     implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat6(NewUserDataV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)

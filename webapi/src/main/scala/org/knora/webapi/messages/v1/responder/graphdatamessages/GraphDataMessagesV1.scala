@@ -109,8 +109,10 @@ case class GraphDataEdgeV1(label: Option[String], from: IRI, to: IRI)
   * A spray-json protocol for generating Knora API v1 JSON providing data about lists.
   */
 
-object GraphDataV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with UserV1JsonProtocol {
+object GraphDataV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
+
+    import UserV1JsonProtocol.userDataV1Format
     import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 
     implicit object GraphDataV1JsonFormat extends JsonFormat[GraphV1] {

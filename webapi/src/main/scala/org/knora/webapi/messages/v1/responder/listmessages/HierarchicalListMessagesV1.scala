@@ -135,7 +135,9 @@ case class NodePathElementV1(id: IRI, name: Option[String], label: Option[String
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about lists.
   */
-object HierarchicalListV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with UserV1JsonProtocol {
+object HierarchicalListV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+
+    import UserV1JsonProtocol.userDataV1Format
 
     implicit object HierarchicalListV1JsonFormat extends JsonFormat[HierarchicalListV1] {
         /**

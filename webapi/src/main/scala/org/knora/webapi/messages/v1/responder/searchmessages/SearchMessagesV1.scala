@@ -170,7 +170,9 @@ case class SearchResultPage(current: Boolean, start_at: Int, show_nrows: Int)
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
-object SearchV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with UserV1JsonProtocol {
+object SearchV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+
+    import UserV1JsonProtocol.userDataV1Format
 
     implicit val searchResultPageV1Format: JsonFormat[SearchResultPage] = jsonFormat3(SearchResultPage)
     implicit val searchPreviewDimensionsV1Format: JsonFormat[SearchPreviewDimensionsV1] = jsonFormat2(SearchPreviewDimensionsV1)
