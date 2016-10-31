@@ -35,8 +35,6 @@ work out of the box with the following triplestores:
 * `Apache Jena`_, which is `free software`_. Knora comes bundled with Jena and with
   its standalone SPARQL server, Fuseki.
 
-TODO: explain how to get started with these.
-
 See the chapters on :ref:`starting-fuseki-2` and :ref:`starting-graphdb-se-7` for more details.
 
 
