@@ -16,6 +16,7 @@ set -e
 # Build the HTML docs.
 
 make html
+make jsonformat
 
 # Copy the built HTML docs to a temporary directory.
 
