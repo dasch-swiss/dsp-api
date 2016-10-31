@@ -20,7 +20,8 @@
 
 package org.knora.webapi.messages.v1.responder.ckanmessages
 
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -186,9 +187,7 @@ case class IncunabulaCkanProjectDatasetFileV1(resid: String,
 /**
   * A spray-json protocol for generating Knora API v1 JSON for Ckan.
   */
-object CkanV1JsonProtocol extends DefaultJsonProtocol {
-
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
+object CkanV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with UserV1JsonProtocol {
 
     implicit val ckanProjectDatasetFileV1Format: JsonFormat[CkanProjectDatasetFileV1] = jsonFormat7(CkanProjectDatasetFileV1)
     implicit val ckanProjectDatasetV1Format: JsonFormat[CkanProjectDatasetV1] = jsonFormat4(CkanProjectDatasetV1)

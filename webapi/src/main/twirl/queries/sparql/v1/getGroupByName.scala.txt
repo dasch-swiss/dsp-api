@@ -18,16 +18,22 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
-@import org.knora.webapi._
+@import org.knora.webapi.IRI
 
 @**
- * Gets information about all projects.
+ * Gets all information about a single group, given the group's name and project association.
  *
  * @param triplestore the name of the triplestore being used.
+ * @param name the group's `<http://www.knora.org/ontology/knora-base#groupName>`.
+ * @param projectIri the group's `<http://www.knora.org/ontology/knora-base#belongsToProject>` project association.
  *@
-@(triplestore: String)
+@(triplestore: String,
+  name: String,
+  projectIri: IRI)
 
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?s ?p ?o
@@ -36,9 +42,12 @@ SELECT ?s ?p ?o
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
+    ?s rdf:type knora-base:UserGroup .
+    ?s knora-base:groupName @name .
 
-    ?s rdf:type knora-base:knoraProject .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#AllProjects>) .
+    @if(projectIri.nonEmpty) {
+        ?s knora-base:belongsToProject <@projectIri> .
+    }
+
     ?s ?p ?o .
-
 }

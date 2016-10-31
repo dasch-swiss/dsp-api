@@ -6,7 +6,7 @@
  *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
+ * by the Free Software Foundation, either version 3 of the License, orr
  * (at your option) any later version.
  *
  * Knora is distributed in the hope that it will be useful,
@@ -28,7 +28,7 @@ import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
 import org.slf4j.LoggerFactory
@@ -266,7 +266,7 @@ object Authenticator {
     implicit val timeout: Timeout = Duration(5, SECONDS)
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
-    private val cacheName = "authenticationCache"
+    val cacheName = "authenticationCache"
 
     /**
       * Tries to extract and then authenticate the credentials.
@@ -426,7 +426,7 @@ object Authenticator {
     private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Option[UserProfileV1] = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
-        val userProfileV1Future = responderManager ? UserProfileGetRequestV1(iri)
+        val userProfileV1Future = responderManager ? UserProfileByIRIGetRequestV1(iri)
         Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
             case Some(userProfileV1) => {
                 log.debug("This user was found: " + userProfileV1.toString)

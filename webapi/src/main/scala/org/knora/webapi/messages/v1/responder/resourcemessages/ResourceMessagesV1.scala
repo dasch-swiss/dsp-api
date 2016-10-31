@@ -24,7 +24,7 @@ import java.util.UUID
 
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -743,10 +743,9 @@ case class ResourceCreateValueObjectResponseV1(textval: Map[LiteralValueType.Val
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
   */
-object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
+object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with UserV1JsonProtocol {
 
     import LiteralValueType.LiteralValueTypeV1Protocol._
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
     import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 
     implicit val locationFormat: JsonFormat[LocationV1] = jsonFormat8(LocationV1)
@@ -1009,11 +1008,10 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
 /**
   * A spray-json protocol for generating resource context information in Knora API v1 JSON format.
   */
-object ResourceContextV1JsonProtocol extends DefaultJsonProtocol {
+object ResourceContextV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with UserV1JsonProtocol {
 
     import ResourceContextCodeV1.ResourceContextCodeV1Protocol._
     import ResourceV1JsonProtocol._
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val resourceContextV1Format: JsonFormat[ResourceContextV1] = jsonFormat11(ResourceContextV1)
     implicit val resourceContextResponseV1Format: RootJsonFormat[ResourceContextResponseV1] = jsonFormat2(ResourceContextResponseV1)

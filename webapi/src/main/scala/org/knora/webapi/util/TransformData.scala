@@ -76,7 +76,7 @@ object TransformData extends App {
 
     private val StandardClassesWithoutIsDeleted = Set(
         OntologyConstants.KnoraBase.User,
-        OntologyConstants.KnoraBase.UserGroup,
+        OntologyConstants.KnoraBase.Group,
         OntologyConstants.KnoraBase.KnoraProject,
         OntologyConstants.KnoraBase.Institution,
         OntologyConstants.KnoraBase.ListNode

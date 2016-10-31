@@ -20,9 +20,10 @@
 
 package org.knora.webapi.messages.v1.responder.graphdatamessages
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{PropsV1, ResourceInfoV1}
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -108,10 +109,9 @@ case class GraphDataEdgeV1(label: Option[String], from: IRI, to: IRI)
   * A spray-json protocol for generating Knora API v1 JSON providing data about lists.
   */
 
-object GraphDataV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
+object GraphDataV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with UserV1JsonProtocol {
 
     import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit object GraphDataV1JsonFormat extends JsonFormat[GraphV1] {
         /**

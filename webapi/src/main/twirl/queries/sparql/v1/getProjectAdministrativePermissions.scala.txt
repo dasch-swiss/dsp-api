@@ -18,27 +18,30 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
-@import org.knora.webapi._
+@import org.knora.webapi.IRI
 
 @**
- * Gets information about all projects.
+ * Gets the IRIs of administrative permissions defined inside a project.
  *
  * @param triplestore the name of the triplestore being used.
+ * @param projectIri the project's IRI.
  *@
-@(triplestore: String)
+@(triplestore: String,
+  projectIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?s ?p ?o
+SELECT ?s
+
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
+
 WHERE {
+    BIND(IRI("@projectIri") as ?pIri)
 
-    ?s rdf:type knora-base:knoraProject .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#AllProjects>) .
-    ?s ?p ?o .
-
+    ?s rdf:type knora-base:AdministrativePermission .
+    ?s knora-base:forProject ?pIri .
 }

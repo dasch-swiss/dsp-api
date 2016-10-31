@@ -1,0 +1,166 @@
+# Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+# Tobias Schweizer, André Kilchenmann, and André Fatton.
+#
+# This file is part of Knora.
+#
+# Knora is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Knora is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public
+# License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+
+@prefix : <http://www.knora.org/ontology/knora-base#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@base <http://www.knora.org/ontology/knora-base> .
+
+<http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology .
+
+#
+## "Forward imports" as 'knora-base.ttl' and 'knora-base-admin.ttl' are loaded after this file.
+#
+
+:systemProperty rdf:type rdf:Property .
+:knoraProject rdf:type owl:Class .
+:UserGroup rdf:type owl:Class .
+:projectBasepath rdf:type owl:DatatypeProperty .
+
+
+
+#
+##
+### Permissions Property
+##
+#
+###  http://www.knora.org/ontology/knora-base#hasPermissions
+
+:hasPermissions rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf :systemProperty ;
+
+                :objectDatatypeConstraint xsd:string .
+
+
+
+#
+##
+### Permission Class Properties
+##
+#
+### http://www.knora.org/ontology/knora-base#forProject
+
+:forProject rdf:type rdf:Property ;
+
+            rdfs:comment "Permission property pointing to a knoraProject."@en ;
+
+            rdfs:subPropertyOf :systemProperty .
+
+
+
+### http://www.knora.org/ontology/knora-base#forGroup
+
+:forGroup rdf:type rdf:Property ;
+
+          rdfs:comment "Permission property pointing to a UserGroup."@en ;
+
+          rdfs:subPropertyOf :systemProperty .
+
+
+
+### http://www.knora.org/ontology/knora-base#forResourceClass
+
+:forResourceClass rdf:type rdf:Property ;
+
+                  rdfs:comment "Permission property pointing to a resource class."@en ;
+
+                  rdfs:subPropertyOf :systemProperty .
+
+
+
+### http://www.knora.org/ontology/knora-base#forProperty
+
+:forProperty rdf:type rdf:property ;
+
+             rdfs:comment "Permission property pointing to a resource property."@en ;
+
+             rdfs:subPropertyOf :systemProperty .
+
+
+
+#
+##
+### Permission Class and Sub-Classes
+##
+#
+### http://www.knora.org/ontology/knora-base#Permission
+
+:Permission rdf:type owl:Class ;
+
+            rdfs:comment "Base Permission class."@en.
+
+
+
+### http://www.knora.org/ontology/knora-base#AdministrativePermission
+
+:AdministrativePermission rdf:type owl:Class ;
+
+                          rdfs:comment "Administrative Permission class used to create instances for storing administrative permissions on groups."@en ;
+
+                          rdfs:subClassOf :Permission .
+
+
+
+### http://www.knora.org/ontology/knora-base#DefaultObjectAccessPermission
+
+:DefaultObjectAccessPermission rdf:type owl:Class ;
+
+                               rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission on groups."@en ;
+
+                               rdfs:subClassOf :Permission .
+
+
+
+### http://www.knora.org/ontology/knora-base#AllProjects
+
+:AllProjects rdf:type :knoraProject ;
+
+             rdfs:comment "A built-in project representing all projects."@en ;
+
+             :projectBasepath "-"^^xsd:string .
+
+
+
+
+### http://www.knora.org/ontology/knora-base#AllGroups
+
+:AllGroups rdfs:type :UserGroup ;
+
+           rdfs:comment "A built-in group representing all groups."@en .
+
+
+
+### http://www.knora.org/ontology/knora-base#AllResourceClasses
+
+:AllResourceClasses rdf:type owl:Class ;
+
+                    rdfs:comment "A built-in resource class used in permission instances to denote that the defined default object access permission should be applied to all resource classes defined for the project."@en .
+
+
+
+### http://www.knora.org/ontology/knora-base#AllProperties
+
+:PropertyNotApplicable rdf:type owl:ObjectProperty ;
+
+                       rdfs:comment "A built-in resource property used in permission instances to denote that the defined default object access permissions should be applied to all properties defined for the specified resource class."@en .
+
+

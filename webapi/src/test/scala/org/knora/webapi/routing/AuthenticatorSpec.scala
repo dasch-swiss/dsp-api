@@ -77,7 +77,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
 
     val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
         become {
-            case UserProfileByUsernameGetRequestV1(submittedUsername) => {
+            case UserProfileByUsernameGetRequestV1(submittedUsername, clean) => {
                 if (submittedUsername == usernameCorrect) {
                     sender !  Some(mockUserProfileV1)
                 } else {

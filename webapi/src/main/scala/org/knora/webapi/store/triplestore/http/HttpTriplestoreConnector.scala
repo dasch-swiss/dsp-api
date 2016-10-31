@@ -29,11 +29,13 @@ import org.apache.commons.lang3.StringUtils
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FakeTriplestore
 import org.knora.webapi.util.SparqlResultProtocol._
 import spray.json._
 
+import scala.collection.JavaConversions._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.io.Source
@@ -276,7 +278,14 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         try {
             log.debug("==>> Loading Data Start")
 
-            for (elem <- rdfDataObjects) {
+            val defaultRdfDataList = settings.tripleStoreConfig.getConfigList("default-rdf-data")
+            val defaultRdfDataObjectList = defaultRdfDataList.map {
+                config => RdfDataObjectFactory(config)
+            }
+
+            val completeRdfDataObjectList = defaultRdfDataObjectList ++ rdfDataObjects
+
+            for (elem <- completeRdfDataObjectList) {
 
                 GraphProtocolAccessor.put(elem.name, elem.path)
 

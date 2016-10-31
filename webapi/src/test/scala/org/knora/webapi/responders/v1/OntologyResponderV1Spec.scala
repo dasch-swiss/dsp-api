@@ -84,8 +84,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val page = ResourceTypeResponseV1(
         userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
             active_project = None,
             password = None,
             email = Some("test@test.ch"),
@@ -240,8 +238,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val book = ResourceTypeResponseV1(
         userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
             active_project = None,
             password = None,
             email = Some("test@test.ch"),
@@ -408,8 +404,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val region = ResourceTypeResponseV1(
         userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
             active_project = None,
             password = None,
             email = Some("test@test.ch"),
@@ -480,8 +474,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val linkObject = ResourceTypeResponseV1(
         userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
             active_project = None,
             password = None,
             email = Some("test@test.ch"),
@@ -541,8 +533,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val resourceTypesForNamedGraphIncunabula = ResourceTypesForNamedGraphResponseV1(
         userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
             active_project = None,
             password = None,
             email = Some("test@test.ch"),
@@ -697,8 +687,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val vocabulariesResponseV1 = NamedGraphsResponseV1(
         userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
             active_project = None,
             password = None,
             email = Some("test@test.ch"),
@@ -769,8 +757,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val propertyTypesForNamedGraphIncunabula = PropertyTypesForNamedGraphResponseV1(
         userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
             active_project = None,
             password = None,
             email = Some("test@test.ch"),

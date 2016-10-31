@@ -247,6 +247,16 @@ class KnoraIdUtil {
     }
 
     /**
+      * Creates a new group IRI based on a UUID.
+      *
+      * @return a new group IRI.
+      */
+    def makeRandomGroupIri: String = {
+        val knoraGroupID = makeRandomBase64EncodedUuid
+        s"http:://data.knora.org/groups/$knoraGroupID"
+    }
+
+    /**
       * Converts a SALSAH person ID into a Knora person IRI.
       *
       * @param salsahPersonID the SALSAH person ID.

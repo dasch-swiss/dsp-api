@@ -1,19 +1,15 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
  * Tobias Schweizer, André Kilchenmann, and André Fatton.
- *
  * This file is part of Knora.
- *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -39,6 +35,9 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
     val password = SharedTestData.rootUserProfileV1.userData.password
     val groups = SharedTestData.rootUserProfileV1.groups
     val projects = SharedTestData.rootUserProfileV1.projects
+    val isInSystemAdminGroup = SharedTestData.rootUserProfileV1.isInSystemAdminGroup
+    val isInProjectAdminGroup = SharedTestData.rootUserProfileV1.isInProjectAdminGroup
+    val sessionId = SharedTestData.rootUserProfileV1.sessionId
 
 
     "The UserProfileV1 case class " should {
@@ -55,7 +54,10 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                     lang = lang
                 ),
                 groups = groups,
-                projects = projects
+                projects = projects,
+                isInSystemAdminGroup = isInSystemAdminGroup,
+                isInProjectAdminGroup = isInProjectAdminGroup,
+                sessionId = sessionId
             )
             val rootUserProfileV1Clean = UserProfileV1(
                 UserDataV1(
@@ -69,7 +71,10 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                     lang = lang
                     ),
                 groups = groups,
-                projects = projects
+                projects = projects,
+                isInSystemAdminGroup = false,
+                isInProjectAdminGroup = Vector.empty[IRI],
+                sessionId = sessionId
             )
 
             assert(rootUserProfileV1.getCleanUserProfileV1 === rootUserProfileV1Clean)
@@ -86,7 +91,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
             assert(BCrypt.checkpw("123456", BCrypt.hashpw("123456", BCrypt.gensalt())))
 
             // test UserProfileV1 BCrypt usage
-            assert(up.passwordMatchBCrypt("123456"))
+            assert(up.passwordMatch("123456"))
         }
     }
 }

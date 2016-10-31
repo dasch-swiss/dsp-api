@@ -374,7 +374,7 @@ object PermissionUtilV1 {
       *
       * @param maybePermissionListStr the literal to parse.
       * @return a [[Map]] in which the keys are permission abbreviations in
-      *         [[OntologyConstants.KnoraBase.PermissionAbbreviations]], and the values are sets of
+      *         [[OntologyConstants.KnoraBase.ObjectAccessPermissionAbbreviations]], and the values are sets of
       *         user group IRIs.
       */
     def parsePermissions(maybePermissionListStr: Option[String]): Map[String, Set[IRI]] = {
@@ -387,7 +387,7 @@ object PermissionUtilV1 {
                         val splitPermission = permission.split(' ')
                         val abbreviation = splitPermission(0)
 
-                        if (!OntologyConstants.KnoraBase.PermissionAbbreviations.contains(abbreviation)) {
+                        if (!OntologyConstants.KnoraBase.ObjectAccessPermissionAbbreviations.contains(abbreviation)) {
                             throw InconsistentTriplestoreDataException(s"Unrecognized permission abbreviation '$abbreviation'")
                         }
 
@@ -405,7 +405,7 @@ object PermissionUtilV1 {
       * Formats the literal object of the predicate `knora-base:hasPermissions`.
       *
       * @param permissions a [[Map]] in which the keys are permission abbreviations in
-      *                    [[OntologyConstants.KnoraBase.PermissionAbbreviations]], and the values are sets of
+      *                    [[OntologyConstants.KnoraBase.ObjectAccessPermissionAbbreviations]], and the values are sets of
       *                    user group IRIs.
       * @return a formatted string literal that can be used as the object of the predicate `knora-base:hasPermissions`.
       */
@@ -418,7 +418,7 @@ object PermissionUtilV1 {
             }
 
             for ((abbreviation, groups) <- currentPermissionsSorted) {
-                if (!OntologyConstants.KnoraBase.PermissionAbbreviations.contains(abbreviation)) {
+                if (!OntologyConstants.KnoraBase.ObjectAccessPermissionAbbreviations.contains(abbreviation)) {
                     throw InconsistentTriplestoreDataException(s"Unrecognized permission abbreviation '$abbreviation'")
                 }
 

@@ -29,6 +29,7 @@
 @(triplestore: String,
   username: String)
 
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?s ?p ?o
@@ -37,8 +38,6 @@ SELECT ?s ?p ?o
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND("@username" as ?username)
-
-    ?s knora-base:userid ?username .
+    ?s knora-base:userid @username .
     ?s ?p ?o .
 }
