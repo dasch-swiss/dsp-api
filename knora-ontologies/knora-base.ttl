@@ -560,8 +560,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
                    rdfs:comment "Represents a link in standoff markup from one resource to another."@en ;
                    
-                   rdfs:comment "Represents a link in standoff markup from one resource to another."@en ;
-
                    :objectClassConstraint :Resource ;
 
                    :subjectClassConstraint :Resource ;

@@ -410,7 +410,7 @@
                                     ],
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasDate ;
-                                      owl:minCardinality "1"^^xsd:date
+                                      owl:minCardinality "1"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasTitle ;
