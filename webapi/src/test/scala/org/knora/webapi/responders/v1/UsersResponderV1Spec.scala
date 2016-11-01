@@ -88,6 +88,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
             }
         }
+        /*
         "asked to create a new user " should {
             "create the user and return it's profile if the supplied username is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
@@ -212,6 +213,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
             }
         }
+        */
     }
 
 }

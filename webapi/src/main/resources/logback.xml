@@ -42,6 +42,7 @@
     <logger name="org.knora.webapi.store.triplestore" level="INFO"/>
     <logger name="org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.CkanResponderV1" level="INFO"/>
+    <logger name="org.knora.webapi.responders.v1.UsersResponderV1" level="DEBUG"/>
     <logger name="org.knora.webapi.responders.v1.StoreResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
 

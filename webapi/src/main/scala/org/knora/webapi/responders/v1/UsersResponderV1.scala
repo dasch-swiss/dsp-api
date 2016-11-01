@@ -33,7 +33,7 @@ import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, SparqlUtil}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, MessageUtil, SparqlUtil}
 import org.mindrot.jbcrypt.BCrypt
 
 import scala.concurrent.duration._
@@ -63,23 +63,26 @@ class UsersResponderV1 extends ResponderV1 {
     /**
       * Gets information about a Knora user, and returns it in a [[Option[UserProfileV1]].
       *
-      * @param userIri the IRI of the user.
+      * @param userIRI the IRI of the user.
       * @return a [[Option[UserProfileV1]] describing the user.
       */
-    private def getUserProfileByIRIV1(userIri: IRI, clean: Boolean): Future[UserProfileV1] = {
+    private def getUserProfileByIRIV1(userIRI: IRI, clean: Boolean): Future[UserProfileV1] = {
         // TODO: add caching of user profiles that was removed from [[Authenticator]]
-        log.debug(s"getUserProfileByIRIV1: userIri = $userIri', clean = '$clean'")
+        log.debug(s"getUserProfileByIRIV1: userIri = $userIRI', clean = '$clean'")
         for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUser(
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
-                userIri = userIri
+                userIri = userIRI
             ).toString())
+
+            _ = log.debug(s"getUserProfileByIRIV1 - sparqlQueryString: $sparqlQueryString")
+
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
-            //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
+            // _ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
             _ = if (userDataQueryResponse.results.bindings.isEmpty) {
-                throw NotFoundException(s"User '$userIri' not found")
+                throw NotFoundException(s"User '$userIRI' not found")
             }
 
             userProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, clean)
@@ -338,7 +341,7 @@ class UsersResponderV1 extends ResponderV1 {
       * @return a [[UserProfileV1]] containing the user's data.
       */
     private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, clean: Boolean): Future[UserProfileV1] = {
-        //log.debug(MessageUtil.toSource(userDataQueryResponse))
+        log.debug(MessageUtil.toSource(userDataQueryResponse))
         for {
             a <- Future("")
 
