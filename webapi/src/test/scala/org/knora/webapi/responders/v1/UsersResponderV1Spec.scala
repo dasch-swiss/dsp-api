@@ -59,7 +59,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     val actorUnderTest = TestActorRef[UsersResponderV1]
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val rdfDataObjects = List()
+    val rdfDataObjects = List() /* sending an empty list, will only load the default ontologies and data */
 
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
