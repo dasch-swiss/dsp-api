@@ -707,13 +707,11 @@
 
 
                     rdfs:label "Übersetzung"@de ,
-                               "Translation"@en ;
+                               "Translation"@en ,
+                               "Traduction"@fr ,
+                               "Traduzione"@it ;
 
                     rdfs:comment "A resource representing a translation "@en .
-
-
-
-
 
 
 
