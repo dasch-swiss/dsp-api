@@ -182,6 +182,19 @@ case class PropertyTypesForResourceTypeResponseV1(properties: Vector[PropertyDef
     def toJsValue = ResourceTypeV1JsonProtocol.propertyTypesForResourceTypeResponseV1Format.write(this)
 }
 
+/**
+  * Requests the IRIs of the subclasses of a Knora resource class. A successful response
+  *
+  * @param resourceClassIri the IRI of the Knora resource class.
+  * @param userProfile      the profile of the user making the request.
+  */
+case class SubClassesGetRequestV1(resourceClassIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
+case class SubClassesGetResponseV1(subClassIris: Seq[IRI], userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = ResourceTypeV1JsonProtocol.subClassesGetResponseV1Format.write(this)
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -519,4 +532,5 @@ object ResourceTypeV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
     implicit val resourceTypesForNamedGraphResponseV1Format: RootJsonFormat[ResourceTypesForNamedGraphResponseV1] = jsonFormat2(ResourceTypesForNamedGraphResponseV1)
     implicit val propertyTypesForNamedGraphResponseV1Format: RootJsonFormat[PropertyTypesForNamedGraphResponseV1] = jsonFormat2(PropertyTypesForNamedGraphResponseV1)
     implicit val propertyTypesForResourceTypeResponseV1Format: RootJsonFormat[PropertyTypesForResourceTypeResponseV1] = jsonFormat2(PropertyTypesForResourceTypeResponseV1)
+    implicit val subClassesGetResponseV1Format: RootJsonFormat[SubClassesGetResponseV1] = jsonFormat2(SubClassesGetResponseV1)
 }

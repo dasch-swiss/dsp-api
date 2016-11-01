@@ -31,7 +31,6 @@ import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectReque
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
-import scala.collection.breakOut
 import scala.concurrent.Future
 
 /**
@@ -59,16 +58,18 @@ class OntologyResponderV1 extends ResponderV1 {
     /**
       * A container for all the cached ontology data.
       *
-      * @param namedGraphResourceClasses a map of named graph IRIs to sets of resource IRIs defined in each named graph.
-      * @param namedGraphProperties      a map of property IRIs to sets of property IRIs defined in each named graph.
-      * @param resourceClassDefs         a map of resource class IRIs to resource class definitions.
-      * @param subClassRelations         a map of IRIs of resource and value classes to sets of the IRIs of their base classes.
-      * @param propertyDefs              a map of property IRIs to property definitions.
+      * @param namedGraphResourceClasses           a map of named graph IRIs to sets of resource IRIs defined in each named graph.
+      * @param namedGraphProperties                a map of property IRIs to sets of property IRIs defined in each named graph.
+      * @param resourceClassDefs                   a map of resource class IRIs to resource class definitions.
+      * @param resourceAndValueSubClassOfRelations a map of IRIs of resource and value classes to sets of the IRIs of their base classes.
+      * @param resourceSuperClassOfRelations       a map of IRIs of resource classes to sets of the IRIs of their subclasses.
+      * @param propertyDefs                        a map of property IRIs to property definitions.
       */
     case class OntologyCacheData(namedGraphResourceClasses: Map[IRI, Set[IRI]],
                                  namedGraphProperties: Map[IRI, Set[IRI]],
                                  resourceClassDefs: Map[IRI, ResourceEntityInfoV1],
-                                 subClassRelations: Map[IRI, Set[IRI]],
+                                 resourceAndValueSubClassOfRelations: Map[IRI, Set[IRI]],
+                                 resourceSuperClassOfRelations: Map[IRI, Set[IRI]],
                                  propertyDefs: Map[IRI, PropertyEntityInfoV1])
 
 
@@ -82,6 +83,7 @@ class OntologyResponderV1 extends ResponderV1 {
         case EntityInfoGetRequestV1(resourceIris, propertyIris, userProfile) => future2Message(sender(), getEntityInfoResponseV1(resourceIris, propertyIris, userProfile), log)
         case ResourceTypeGetRequestV1(resourceTypeIri, userProfile) => future2Message(sender(), getResourceTypeResponseV1(resourceTypeIri, userProfile), log)
         case checkSubClassRequest: CheckSubClassRequestV1 => future2Message(sender(), checkSubClass(checkSubClassRequest), log)
+        case subClassesGetRequest: SubClassesGetRequestV1 => future2Message(sender(), getSubClasses(subClassesGetRequest), log)
         case NamedGraphsGetRequestV1(userProfile) => future2Message(sender(), getNamedGraphs(userProfile), log)
         case ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getResourceTypesForNamedGraph(namedGraphIri, userProfile), log)
         case PropertyTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getPropertyTypesForNamedGraph(namedGraphIri, userProfile), log)
@@ -286,14 +288,14 @@ class OntologyResponderV1 extends ResponderV1 {
             valueClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = valueClassesRows.groupBy(_.rowMap("valueClass"))
 
             // Make a map of resource class IRIs to their immediate base classes.
-            directResourceSubClassRelations: Map[IRI, Set[IRI]] = resourceDefsGrouped.map {
+            directResourceSubClassOfRelations: Map[IRI, Set[IRI]] = resourceDefsGrouped.map {
                 case (resourceClassIri, rows) =>
                     val baseClasses = rows.filter(_.rowMap.get("resourceClassPred").contains(OntologyConstants.Rdfs.SubClassOf)).map(_.rowMap("resourceClassObj")).toSet
                     (resourceClassIri, baseClasses)
             }
 
             // Make a map of property IRIs to their immediate base properties.
-            directSubPropertyRelations: Map[IRI, Set[IRI]] = propertyDefsGrouped.map {
+            directSubPropertyOfRelations: Map[IRI, Set[IRI]] = propertyDefsGrouped.map {
                 case (propertyIri, rows) =>
                     val baseProperties = rows.filter(_.rowMap.get("propPred").contains(OntologyConstants.Rdfs.SubPropertyOf)).map(_.rowMap("propObj")).toSet
                     (propertyIri, baseProperties)
@@ -301,32 +303,44 @@ class OntologyResponderV1 extends ResponderV1 {
 
             // Make a map in which each resource class IRI points to the full set of its base classes. A class is also
             // a subclass of itself.
-            allResourceSubClassRelations: Map[IRI, Set[IRI]] = resourceClassIris.map {
-                resourceClassIri => (resourceClassIri, getAllBaseDefs(resourceClassIri, directResourceSubClassRelations) + resourceClassIri)
+            allResourceSubClassOfRelations: Map[IRI, Set[IRI]] = resourceClassIris.map {
+                resourceClassIri => (resourceClassIri, getAllBaseDefs(resourceClassIri, directResourceSubClassOfRelations) + resourceClassIri)
             }.toMap
+
+            // Make a map in which each resource class IRI points to the full set of its subclasses. A class is also
+            // a subclass of itself.
+            allResourceSuperClassOfRelations: Map[IRI, Set[IRI]] = allResourceSubClassOfRelations.toVector.flatMap {
+                case (subClass: IRI, baseClasses: Set[IRI]) =>
+                    baseClasses.toVector.map {
+                        baseClass => baseClass -> subClass
+                    }
+            }.groupBy(_._1).map {
+                case (baseClass: IRI, baseClassAndSubClasses: Vector[(IRI, IRI)]) =>
+                    baseClass -> baseClassAndSubClasses.map(_._2).toSet
+            }
 
             // Make a map in which each property IRI points to the full set of its base properties. A property is also
             // a subproperty of itself.
-            allSubPropertyRelations: Map[IRI, Set[IRI]] = propertyIris.map {
-                propertyIri => (propertyIri, getAllBaseDefs(propertyIri, directSubPropertyRelations) + propertyIri)
+            allSubPropertyOfRelations: Map[IRI, Set[IRI]] = propertyIris.map {
+                propertyIri => (propertyIri, getAllBaseDefs(propertyIri, directSubPropertyOfRelations) + propertyIri)
             }.toMap
 
             // Make a map in which each value class IRI points to the full set of its base classes (excluding the ones
             // whose names end in "Base", since they aren't used directly). A class is also a subclass of itself (this
             // is handled by the SPARQL query).
-            allValueSubClassRelations: Map[IRI, Set[IRI]] = valueClassesGrouped.map {
+            allValueSubClassOfRelations: Map[IRI, Set[IRI]] = valueClassesGrouped.map {
                 case (valueClassIri, baseClassRows) =>
                     valueClassIri -> baseClassRows.map(_.rowMap("baseClass")).filterNot(_.endsWith("Base")).toSet
             }
 
             // Make a set of all subproperties of knora-base:hasLinkTo.
-            linkProps: Set[IRI] = propertyIris.filter(prop => allSubPropertyRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkTo))
+            linkProps: Set[IRI] = propertyIris.filter(prop => allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkTo))
 
             // Make a set of all subproperties of knora-base:hasLinkToValue.
-            linkValueProps: Set[IRI] = propertyIris.filter(prop => allSubPropertyRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkToValue))
+            linkValueProps: Set[IRI] = propertyIris.filter(prop => allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkToValue))
 
             // Make a set of all subproperties of knora-base:hasFileValue.
-            fileValueProps: Set[IRI] = propertyIris.filter(prop => allSubPropertyRelations(prop).contains(OntologyConstants.KnoraBase.HasFileValue))
+            fileValueProps: Set[IRI] = propertyIris.filter(prop => allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasFileValue))
 
             // Make a map of the cardinalities defined directly on each resource class. Each resource class IRI points to a map of
             // property IRIs to OwlCardinality objects.
@@ -357,8 +371,8 @@ class OntologyResponderV1 extends ResponderV1 {
                 resourceClassIri =>
                     val resourceClassCardinalities: Set[OwlCardinality] = inheritCardinalities(
                         resourceClassIri = resourceClassIri,
-                        directSubClassRelations = directResourceSubClassRelations,
-                        allSubPropertyRelations = allSubPropertyRelations,
+                        directSubClassRelations = directResourceSubClassOfRelations,
+                        allSubPropertyRelations = allSubPropertyOfRelations,
                         directResourceClassCardinalities = directResourceClassCardinalities
                     ).values.toSet
 
@@ -474,8 +488,8 @@ class OntologyResponderV1 extends ResponderV1 {
                     val propertyEntityInfoWithInheritance = propertyEntityInfo.copy(
                         predicates = inheritPropertyPredicates(
                             propertyEntityInfo = propertyEntityInfo,
-                            directSubPropertyRelations = directSubPropertyRelations,
-                            allSubPropertyRelations = allSubPropertyRelations,
+                            directSubPropertyRelations = directSubPropertyOfRelations,
+                            allSubPropertyRelations = allSubPropertyOfRelations,
                             propertyEntityInfosWithoutInheritance = propertyEntityInfosWithoutInheritance
                         )
                     )
@@ -489,7 +503,8 @@ class OntologyResponderV1 extends ResponderV1 {
                 namedGraphResourceClasses = new ErrorHandlingMap[IRI, Set[IRI]](graphClassMap, { key => s"Named graph not found: $key" }),
                 namedGraphProperties = new ErrorHandlingMap[IRI, Set[IRI]](graphPropMap, { key => s"Named graph not found: $key" }),
                 resourceClassDefs = new ErrorHandlingMap[IRI, ResourceEntityInfoV1](resourceEntityInfos, { key => s"Resource class not found: $key" }),
-                subClassRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSubClassRelations ++ allValueSubClassRelations, { key => s"Class not found: $key" }),
+                resourceAndValueSubClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSubClassOfRelations ++ allValueSubClassOfRelations, { key => s"Class not found: $key" }),
+                resourceSuperClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSuperClassOfRelations, { key => s"Class not found: $key" }),
                 propertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV1](propertyEntityInfos, { key => s"Property not found: $key" })
             )
 
@@ -620,7 +635,23 @@ class OntologyResponderV1 extends ResponderV1 {
         for {
             cacheData <- getCacheData
             response = CheckSubClassResponseV1(
-                isSubClass = cacheData.subClassRelations(checkSubClassRequest.subClassIri).contains(checkSubClassRequest.superClassIri)
+                isSubClass = cacheData.resourceAndValueSubClassOfRelations(checkSubClassRequest.subClassIri).contains(checkSubClassRequest.superClassIri)
+            )
+        } yield response
+    }
+
+    /**
+      * Gets the IRIs of the subclasses of a resource class.
+      *
+      * @param getSubClassesRequest a [[SubClassesGetRequestV1]].
+      * @return a [[SubClassesGetResponseV1]].
+      */
+    private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Future[SubClassesGetResponseV1] = {
+        for {
+            cacheData <- getCacheData
+            response = SubClassesGetResponseV1(
+                subClassIris = cacheData.resourceSuperClassOfRelations(getSubClassesRequest.resourceClassIri).toVector.sorted,
+                userdata = getSubClassesRequest.userProfile.userData
             )
         } yield response
     }
