@@ -581,7 +581,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "return 79 pages when we search for all pages that have a sequence number greater than 450 in the Incunabula test data" in {
+        "return 79 pages when we search for all pages that have an incunabula:seqnum greater than 450 in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=GT&searchval=450
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
@@ -589,6 +589,23 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 compareProps = Vector(SearchComparisonOperatorV1.GT),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#seqnum"),
                 filterByRestype = Some("http://www.knora.org/ontology/incunabula#page"),
+                startAt = 0,
+                showNRows = 100
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(79)
+            }
+        }
+
+        "return 79 pages when we search for all representations that have an incunabula:seqnum greater than 450 in the Incunabula test data" in {
+            // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=GT&searchval=450
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = incunabulaUser,
+                searchValue = Vector("450"),
+                compareProps = Vector(SearchComparisonOperatorV1.GT),
+                propertyIri = Vector("http://www.knora.org/ontology/incunabula#seqnum"),
+                filterByRestype = Some("http://www.knora.org/ontology/knora-base#Representation"),
                 startAt = 0,
                 showNRows = 100
             )

@@ -11,21 +11,22 @@ import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
 sealed trait TriplestoreRequest
 
 /**
-  * Simple message for initial actor functionality
+  * Simple message for initial actor functionality.
   */
 case class HelloTriplestore(txt: String) extends TriplestoreRequest
 
 /**
-  * Simple message for checking the connection to the Triplestore
+  * Simple message for checking the connection to the triplestore.
   */
 case object CheckConnection extends TriplestoreRequest
 
 /**
   * Represents a SPARQL SELECT query to be sent to the triplestore.
   *
-  * @param sparql the SPARQL string.
+  * @param sparql       the SPARQL string.
+  * @param useInference if `true`, ask the triplestore to use inference in the query, if possible.
   */
-case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
+case class SparqlSelectRequest(sparql: String, useInference: Boolean = false) extends TriplestoreRequest
 
 /**
   * Represents a response to a SPARQL SELECT query, containing a parsed representation of the response (JSON, etc.)
@@ -208,7 +209,6 @@ case class Initialized() extends TriplestoreRequest
   * @param initFinished indicates if actor initialization has finished
   */
 case class InitializedResponse(initFinished: Boolean)
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

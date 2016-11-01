@@ -27,14 +27,16 @@
  * Performs an extended search. The number of rows returned per matching resource is the product of the number of
  * values that each search criterion matched in the resource.
  *
+ * If the triplestore type is GraphDB, the generated SPARQL is optimised by taking advantage of forward-chaining
+ * RDFS inference.
+ *
  * @param triplestore the name of the triplestore being used.
  * @param searchCriteria a list of maps containing search criteria, each of which contains:
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
- * @param projectIri if filtering by project is desired, the IRI of the project to search.
- * @param restypeIri if filtering by resource type is desired, the IRI of the resource type to search for.
- * @param ownerIri if filtering by owner is desired, the IRI of the resource owner to search for.
- * @param limit the maximum number of results to re
+ * @param projectIriOption if filtering by project is desired, the IRI of the project to search.
+ * @param restypeIriOption if filtering by resource type is desired, the IRI of the resource type to search for.
+ * @param ownerIriOption if filtering by owner is desired, the IRI of the resource owner to search for.
  *@
 @(triplestore: String,
   searchCriteria: Seq[SearchCriterion],
@@ -70,10 +72,6 @@ SELECT DISTINCT
         ?targetResourcePermissions@index
         ?literal@index
     }
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
 WHERE {
     BIND(STR("@preferredLanguage") AS ?preferredLanguage)
     BIND(STR("@fallbackLanguage") AS ?fallbackLanguage)
@@ -92,8 +90,18 @@ WHERE {
         *@
 
         @if(searchCriterion.valueType != "http://www.knora.org/ontology/knora-base#Resource") {
-            ?p@index rdfs:subPropertyOf* <@{searchCriterion.propertyIri}> .
-            ?resource ?p@index ?valueObject@index .
+
+            @if(triplestore.startsWith("graphdb")) {
+
+                ?resource <@{searchCriterion.propertyIri}> ?valueObject@index .
+
+            } else {
+
+                ?p@index rdfs:subPropertyOf* <@{searchCriterion.propertyIri}> .
+                ?resource ?p@index ?valueObject@index .
+
+            }
+
         }
 
         @*
@@ -536,8 +544,6 @@ WHERE {
     }
 
     ?resource knora-base:isDeleted false .
-    ?resource rdfs:label ?resourceLabel .
-    ?resource a ?resourceClass .
 
     @projectIriOption match {
         case Some(projectIri) => {
@@ -550,23 +556,57 @@ WHERE {
         case None => {}
     }
 
-    @restypeIriOption match {
-        case Some(restypeIri) => {
+    @if(triplestore.startsWith("graphdb")) {
 
-            # filter by restypeIri
-            ?resClass rdfs:subClassOf* <@restypeIri> .
-            ?resource a ?resClass .
+        GRAPH <http://www.ontotext.com/explicit> {
+
+            ?resource a ?resourceClass .
+
         }
 
-        case None => {
+        @restypeIriOption match {
 
-            # Make sure we have a knora-base:Resource.
-            ?resClass rdfs:subClassOf+ knora-base:Resource .
-            ?resource a ?resClass .
+            case Some(restypeIri) => {
 
+                # Filter by resource class.
+
+                ?resource a <@restypeIri> .
+
+            }
+
+            case None => {
+
+                @* Ensure that each matching resource is a knora-base:Resource. *@
+
+                ?resource a knora-base:Resource .
+            }
+        }
+
+    } else {
+
+        ?resource a ?resourceClass .
+
+        @restypeIriOption match {
+
+            case Some(restypeIri) => {
+
+                # Filter by resource class.
+
+                ?resClass rdfs:subClassOf* <@restypeIri> .
+                ?resource a ?resClass .
+
+            }
+
+            case None => {
+
+                @* Ensure that each matching resource is a knora-base:Resource. *@
+
+                ?resClass rdfs:subClassOf+ knora-base:Resource .
+                ?resource a ?resClass .
+
+            }
         }
     }
-
 
     @ownerIriOption match {
         case Some(ownerIri) => {
@@ -577,6 +617,8 @@ WHERE {
 
         case None => {}
     }
+
+    ?resource rdfs:label ?resourceLabel .
 
     OPTIONAL {
         ?resource knora-base:hasStillImageFileValue ?fileValue .
