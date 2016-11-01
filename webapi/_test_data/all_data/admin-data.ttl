@@ -336,3 +336,41 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                                                          <http://data.knora.org/projects/666> ;
 
                                         knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> .
+
+
+
+
+###################################
+# ANYTHING PROJECT                #
+###################################
+
+<http://data.knora.org/projects/anything> a knora-base:knoraProject ;
+	knora-base:projectShortname "anything" ;
+	knora-base:projectLongname "Anything Project" ;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/anything"^^xsd:string ;
+    knora-base:projectDataGraph "http://www.knora.org/data/anything"^^xsd:string ;
+    knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
+    knora-base:isActiveProject "true"^^xsd:boolean ;
+    knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+<http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> a knora-base:User ;
+	knora-base:userid "anything-user" ;
+	foaf:givenName "Anything" ;
+	foaf:familyName "User01" ;
+	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+	knora-base:email "anything.user01@example.org" ;
+	knora-base:preferredLanguage "de" ;
+	knora-base:isActiveUser "true"^^xsd:boolean ;
+	knora-base:isInProject <http://data.knora.org/projects/anything> ;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ> a knora-base:User ;
+	knora-base:userid "anything-user-2" ;
+	foaf:givenName "Anything" ;
+	foaf:familyName "User02" ;
+	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+	knora-base:email "anything.user02@example.org" ;
+	knora-base:preferredLanguage "de" ;
+	knora-base:isActiveUser "true"^^xsd:boolean ;
+	knora-base:isInProject <http://data.knora.org/projects/anything> ;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
