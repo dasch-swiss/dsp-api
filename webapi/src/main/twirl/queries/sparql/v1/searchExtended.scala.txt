@@ -93,11 +93,11 @@ WHERE {
 
             @if(triplestore.startsWith("graphdb")) {
 
-                ?resource <@{searchCriterion.propertyIri}> ?valueObject@index .
+                ?resource <@searchCriterion.propertyIri> ?valueObject@index .
 
             } else {
 
-                ?p@index rdfs:subPropertyOf* <@{searchCriterion.propertyIri}> .
+                ?p@index rdfs:subPropertyOf* <@searchCriterion.propertyIri> .
                 ?resource ?p@index ?valueObject@index .
 
             }
@@ -171,7 +171,25 @@ WHERE {
                 @searchCriterion.valueType match {
                     case "http://www.knora.org/ontology/knora-base#Resource" => {
 
-                        ?resource <@searchCriterion.propertyIri> ?targetResource@index .
+                        @if(triplestore.startsWith("graphdb")) {
+
+                            ?resource <@searchCriterion.propertyIri> ?targetResource@index .
+                            ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
+
+                            GRAPH <http://www.ontotext.com/explicit> {
+
+                                ?resource ?linkProperty@index ?targetResource@index .
+
+                            }
+
+                        } else {
+
+                            ?linkProperty@index rdfs:subPropertyOf* <@searchCriterion.propertyIri> .
+                            ?resource ?linkProperty@index ?targetResource@index .
+                            ?linkValueProperty@index rdfs:subPropertyOf* <@{searchCriterion.propertyIri}Value> .
+                            ?resource ?linkValueProperty@index ?valueObject@index .
+
+                        }
 
                         ?targetResource@index rdfs:label ?literal@index ;
                             knora-base:isDeleted false ;
@@ -182,11 +200,9 @@ WHERE {
                             ?targetResource@index knora-base:hasPermissions ?targetResourcePermissions@index .
                         }
 
-                        ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
-
                         ?valueObject@index rdf:type knora-base:LinkValue ;
                             rdf:subject ?resource ;
-                            rdf:predicate <@searchCriterion.propertyIri> ;
+                            rdf:predicate ?linkProperty@index ;
                             rdf:object ?targetResource@index .
                     }
 
@@ -240,8 +256,27 @@ WHERE {
                     case "http://www.knora.org/ontology/knora-base#Resource" => {
 
                         BIND(IRI("@searchCriterion.searchValue") AS ?targetResource@index)
-                        
-                        ?resource <@searchCriterion.propertyIri> <@searchCriterion.searchValue> .
+
+
+                        @if(triplestore.startsWith("graphdb")) {
+
+                            ?resource <@searchCriterion.propertyIri> <@searchCriterion.searchValue> .
+                            ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
+
+                            GRAPH <http://www.ontotext.com/explicit> {
+
+                                ?resource ?linkProperty@index <@searchCriterion.searchValue> .
+
+                            }
+
+                        } else {
+
+                            ?linkProperty@index rdfs:subPropertyOf* <@searchCriterion.propertyIri> .
+                            ?resource ?linkProperty@index <@searchCriterion.searchValue> .
+                            ?linkValueProperty@index rdfs:subPropertyOf* <@{searchCriterion.propertyIri}Value> .
+                            ?resource ?linkValueProperty@index ?valueObject@index .
+
+                        }
 
                         <@searchCriterion.searchValue> rdfs:label ?literal@index ;
                             knora-base:isDeleted false ;
@@ -252,11 +287,9 @@ WHERE {
                             <@searchCriterion.searchValue> knora-base:hasPermissions ?targetResourcePermissions@index .
                         }
 
-                        ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
-
                         ?valueObject@index rdf:type knora-base:LinkValue ;
                             rdf:subject ?resource ;
-                            rdf:predicate <@searchCriterion.propertyIri> ;
+                            rdf:predicate ?linkProperty@index ;
                             rdf:object <@searchCriterion.searchValue> .
                     }
 
