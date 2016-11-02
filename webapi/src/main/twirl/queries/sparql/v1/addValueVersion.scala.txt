@@ -326,25 +326,6 @@ WHERE {
 
     @*
 
-    Do nothing if the submitted value has the wrong type. Inherit the property's objectClassConstraint from a base
-    property if necessary, letting the subproperty's objectClassConstraint override the base property's
-    objectClassConstraint.
-
-    *@
-
-    ?property rdfs:subPropertyOf* ?baseProperty .
-    ?baseProperty knora-base:objectClassConstraint ?propObjConstraint .
-
-    FILTER NOT EXISTS {
-        ?property rdfs:subPropertyOf* ?otherBaseProperty .
-        ?otherBaseProperty rdfs:subPropertyOf+ ?baseProperty .
-        ?otherBaseProperty knora-base:objectClassConstraint ?otherPropObjConstraint .
-    }
-
-    ?valueType rdfs:subClassOf* ?propObjConstraint .
-
-    @*
-
     Consider order if given (not given for file values).
 
     *@
@@ -381,16 +362,13 @@ WHERE {
             @*
 
             Do nothing if we were asked to insert a direct link to a target that doesn't exist, is marked as deleted,
-            isn't a knora-base:Resource, or belongs to the wrong OWL class for the link property.
+            or isn't a knora-base:Resource.
 
             *@
 
-            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex .
-            <@linkUpdate.linkTargetIri> knora-base:isDeleted false .
-
+            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex ;
+                knora-base:isDeleted false .
             ?linkTargetClass@linkValueIndex rdfs:subClassOf+ knora-base:Resource .
-            <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
-            ?linkTargetClass@linkValueIndex rdfs:subClassOf* ?expectedTargetClass@linkValueIndex .
         }
 
         @if(linkUpdate.directLinkExists) {

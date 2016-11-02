@@ -251,35 +251,19 @@ WHERE {
             knora-base:isDeleted false .
     }
 
-    @*
-
-    Do nothing if we were asked to insert a direct link to a target that doesn't exist, is marked as deleted,
-    isn't a knora-base:Resource, or belongs to the wrong OWL class for the link property.
-
-    *@
-
     @if(linkUpdateForNewLink.insertDirectLink) {
+
+        @*
+
+        Do nothing if we were asked to insert a direct link to a target that doesn't exist, is marked as deleted,
+        or isn't a knora-base:Resource.
+
+        *@
+
         ?linkTargetForNewLink rdf:type ?linkTargetClass ;
             knora-base:isDeleted false .
         ?linkTargetClass rdfs:subClassOf+ knora-base:Resource .
 
-        @*
-
-        Inherit the link property's objectClassConstraint from a base property if necessary, letting the subproperty's
-        objectClassConstraint override the base property's objectClassConstraint.
-
-        *@
-
-        ?linkProperty rdfs:subPropertyOf* ?baseLinkProperty .
-        ?baseLinkProperty knora-base:objectClassConstraint ?linkPropObjConstraint .
-
-        FILTER NOT EXISTS {
-            ?linkProperty rdfs:subPropertyOf* ?otherBaseLinkProperty .
-            ?otherBaseLinkProperty rdfs:subPropertyOf+ ?baseLinkProperty .
-            ?otherBaseLinkProperty knora-base:objectClassConstraint ?otherLinkPropObjConstraint .
-        }
-
-        ?linkTargetClass rdfs:subClassOf* ?linkPropObjConstraint .
     } else {
         @{throw SparqlGenerationException(s"linkUpdateForNewLink.insertDirectLink must be true in this SPARQL template"); ()}
     }

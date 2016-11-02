@@ -24,6 +24,8 @@
 
 @**
  * Generates statements to be added to the WHERE clause of a SPARQL update when creating a new link between resources.
+ * This template is used in two contexts: when creating a single value in an existing resource, and when creating a new
+ * resource with its initial values.
  *
  * @param valueIndex the index of the link value in the sequence of values that are being created in the transaction (can
  *                   be 0 if only one value is being created). This index will be used to make SPARQL variable names
@@ -46,33 +48,11 @@
     BIND(IRI("@linkUpdate.newLinkValueIri") AS ?newLinkValue@valueIndex)
     BIND(IRI("@linkUpdate.linkTargetIri") AS ?linkTarget@valueIndex)
 
-    @* Make sure the link target is a knora-base:Resource. *@
+    @* Do nothing if the target resource doesn't exist, is marked as deleted, or isn't a knora-base:Resource. *@
 
-    ?linkTarget@valueIndex rdf:type ?linkTargetClass@valueIndex .
+    ?linkTarget@valueIndex rdf:type ?linkTargetClass@valueIndex ;
+        knora-base:isDeleted false .
     ?linkTargetClass@valueIndex rdfs:subClassOf+ knora-base:Resource .
-
-    @*
-
-    Do nothing if the target resource belongs to the wrong OWL class. Inherit the link property's objectClassConstraint
-    from a base property if necessary, letting the subproperty's objectClassConstraint override the base property's
-    objectClassConstraint.
-
-    *@
-
-    ?linkProperty@valueIndex rdfs:subPropertyOf* ?baseLinkProperty@valueIndex .
-    ?baseLinkProperty@valueIndex knora-base:objectClassConstraint ?linkPropObjConstraint@valueIndex .
-
-    FILTER NOT EXISTS {
-        ?linkProperty@valueIndex rdfs:subPropertyOf* ?otherBaseLinkProperty@valueIndex .
-        ?otherBaseLinkProperty@valueIndex rdfs:subPropertyOf+ ?baseLinkProperty@valueIndex .
-        ?otherBaseLinkProperty@valueIndex knora-base:objectClassConstraint ?otherLinkPropObjConstraint@valueIndex .
-    }
-
-    ?linkTargetClass@valueIndex rdfs:subClassOf* ?linkPropObjConstraint@valueIndex .
-
-    @* Do nothing if the target resource doesn't exist or is marked as deleted. *@
-
-    ?linkTarget@valueIndex knora-base:isDeleted false .
 
     @* Do nothing if the source resource's OWL class has no cardinality for the link property. *@
 

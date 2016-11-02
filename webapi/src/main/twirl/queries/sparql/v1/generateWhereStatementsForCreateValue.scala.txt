@@ -57,25 +57,6 @@
     BIND(IRI("@newValueIri") AS ?newValue@valueIndex)
     BIND(IRI("@valueTypeIri") AS ?valueType@valueIndex)
 
-    @*
-
-    Do nothing if the submitted value has the wrong type. Inherit the property's objectClassConstraint from a base
-    property if necessary, letting the subproperty's objectClassConstraint override the base property's
-    objectClassConstraint.
-
-    *@
-
-    ?property@valueIndex rdfs:subPropertyOf* ?baseProperty@valueIndex .
-    ?baseProperty@valueIndex knora-base:objectClassConstraint ?propObjConstraint@valueIndex .
-
-    FILTER NOT EXISTS {
-        ?property@valueIndex rdfs:subPropertyOf* ?otherBaseProperty@valueIndex .
-        ?otherBaseProperty@valueIndex rdfs:subPropertyOf+ ?baseProperty@valueIndex .
-        ?otherBaseProperty@valueIndex knora-base:objectClassConstraint ?otherPropObjConstraint@valueIndex .
-    }
-
-    ?valueType@valueIndex rdfs:subClassOf* ?propObjConstraint@valueIndex .
-
     @* Do nothing if neither the resource class nor any of its superclasses has a cardinality for this property. *@
 
     ?resourceClass rdfs:subClassOf* ?restriction@valueIndex .
@@ -99,16 +80,13 @@
             @*
 
             Do nothing if we were asked to insert a direct link to a target that doesn't exist, is marked as deleted,
-            isn't a knora-base:Resource, or belongs to the wrong OWL class for the link property.
+            or isn't a knora-base:Resource.
 
             *@
 
             <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex ;
                 knora-base:isDeleted false .
-
             ?linkTargetClass@linkValueIndex rdfs:subClassOf+ knora-base:Resource .
-            <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
-            ?linkTargetClass@linkValueIndex rdfs:subClassOf* ?expectedTargetClass@linkValueIndex .
         }
 
         @if(linkUpdate.directLinkExists) {

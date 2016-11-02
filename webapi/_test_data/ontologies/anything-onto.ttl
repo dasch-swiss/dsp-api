@@ -584,6 +584,8 @@
 
       rdfs:subClassOf :Thing ;
 
+      rdfs:comment """Diese Resource-Klasse beschreibt ein blaues Ding"""@de ;
+
       rdfs:label "Blaues Ding"@de ,
                  "Chose bleue"@fr ,
                  "Cosa azzurra"@it ,
@@ -635,3 +637,4 @@
     knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
 
     knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+    
