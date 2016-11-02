@@ -622,7 +622,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return 27 resources containing 'Narrenschiff' in their label" in {
-            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=4&limit=100&restype_id=-1
+            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=4&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
 
             // This query is going to return also resources of knora-baseLinkObj with a knora-base:hasComment.
             // Because this resource is directly defined in knora-base, its property knora-base:hasComment
@@ -644,7 +644,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return 3 resources containing 'Narrenschiff' in their label of type incunabula:book" in {
-            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=3&limit=100&restype_id=-1
+            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
 
             actorUnderTest ! ResourceSearchGetRequestV1(
                 searchString = "Narrenschiff",
@@ -657,6 +657,40 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case response: ResourceSearchResponseV1 =>
                     assert(response.resources.size == 3, s"expected 3 resources")
+            }
+        }
+
+        "return 19 resources containing 'a1r' in their label of type incunabula:page" in {
+            //http://localhost:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page
+
+            actorUnderTest ! ResourceSearchGetRequestV1(
+                searchString = "a1r",
+                numberOfProps = 3,
+                limitOfResults = 100,
+                userProfile = incunabulaUser,
+                resourceTypeIri = Some("http://www.knora.org/ontology/incunabula#page")
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceSearchResponseV1 =>
+                    assert(response.resources.size == 19, s"expected 19 resources")
+            }
+        }
+
+        "return 19 resources containing 'a1r' in their label of type knora-base:Representation" in {
+            //http://localhost:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fknora-base%23Representation
+
+            actorUnderTest ! ResourceSearchGetRequestV1(
+                searchString = "a1r",
+                numberOfProps = 3,
+                limitOfResults = 100,
+                userProfile = incunabulaUser,
+                resourceTypeIri = Some("http://www.knora.org/ontology/knora-base#Representation")
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceSearchResponseV1 =>
+                    assert(response.resources.size == 19, s"expected 19 resources")
             }
         }
 

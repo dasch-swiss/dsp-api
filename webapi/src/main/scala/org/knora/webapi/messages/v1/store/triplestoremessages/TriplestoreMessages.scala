@@ -11,21 +11,27 @@ import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
 sealed trait TriplestoreRequest
 
 /**
-  * Simple message for initial actor functionality
+  * Simple message for initial actor functionality.
   */
 case class HelloTriplestore(txt: String) extends TriplestoreRequest
 
 /**
-  * Simple message for checking the connection to the Triplestore
+  * Simple message for checking the connection to the triplestore.
   */
 case object CheckConnection extends TriplestoreRequest
 
 /**
   * Represents a SPARQL SELECT query to be sent to the triplestore.
   *
-  * @param sparql the SPARQL string.
+  * @param sparql       the SPARQL string.
+  * @param useInference if `true`, ask the triplestore to use inference in the query, if possible. If the triplestore
+  *                     is being accessed over HTTP, this is likely to mean setting a parameter in the HTTP request.
+  *                     Note that with GraphDB, setting this to `false` is not sufficient to completely disable inference,
+  *                     because it does not disable the `owl:sameAs` optimisation. To completely disable inference
+  *                     for a query in GraphDB, you must include `FROM <http://www.ontotext.com/explicit>`
+  *                     in the SPARQL.
   */
-case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
+case class SparqlSelectRequest(sparql: String, useInference: Boolean = false) extends TriplestoreRequest
 
 /**
   * Represents a response to a SPARQL SELECT query, containing a parsed representation of the response (JSON, etc.)
@@ -208,7 +214,6 @@ case class Initialized() extends TriplestoreRequest
   * @param initFinished indicates if actor initialization has finished
   */
 case class InitializedResponse(initFinished: Boolean)
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

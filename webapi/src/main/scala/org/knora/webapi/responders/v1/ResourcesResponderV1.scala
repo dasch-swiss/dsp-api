@@ -1092,13 +1092,18 @@ class ResourcesResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 phrase = phrase,
                 lastTerm = lastTerm,
-                resourceTypeIri = resourceTypeIri,
+                restypeIriOption = resourceTypeIri,
                 numberOfProps = numberOfProps,
                 limitOfResults = limitOfResults,
                 separator = FormatConstants.INFORMATION_SEPARATOR_ONE
             ).toString())
-            //_ = println(searchResourcesSparql)
-            searchResponse <- (storeManager ? SparqlSelectRequest(searchResourcesSparql)).mapTo[SparqlSelectResponse]
+
+            // _ = println(searchResourcesSparql)
+
+            // If we're using GraphDB, optimise this query by using inference.
+            useInference = settings.triplestoreType.startsWith("graphdb")
+
+            searchResponse <- (storeManager ? SparqlSelectRequest(sparql = searchResourcesSparql, useInference = useInference)).mapTo[SparqlSelectResponse]
 
             resources: Seq[ResourceSearchResultRowV1] = searchResponse.results.bindings.map {
                 case (row: VariableResultsRow) =>
