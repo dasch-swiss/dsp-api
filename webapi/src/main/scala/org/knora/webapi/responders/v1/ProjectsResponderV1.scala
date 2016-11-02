@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilV1, SparqlUtil}
+import org.knora.webapi.util.{KnoraIdUtil, MessageUtil, PermissionUtilV1, SparqlUtil}
 
 import scala.concurrent.Future
 
@@ -142,6 +142,9 @@ class ProjectsResponderV1 extends ResponderV1 {
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */
     private def getProjectInfoByIRIGetRequest(projectIRI: IRI, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
+
+        log.debug(s"getProjectInfoByIRIGetRequest - projectIRI: $projectIRI, infoType: $infoType")
+
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(
                 triplestore = settings.triplestoreType,
@@ -297,12 +300,16 @@ class ProjectsResponderV1 extends ResponderV1 {
       */
     private def createProjectInfoV1FromProjectResponse(projectResponse: Seq[VariableResultsRow], projectIri: IRI, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): ProjectInfoV1 = {
 
+        log.debug(s"createProjectInfoV1FromProjectResponse - projectResponse: ${MessageUtil.toSource(projectResponse)}")
+
         if (projectResponse.nonEmpty) {
 
             val projectProperties = projectResponse.foldLeft(Map.empty[IRI, String]) {
                 case (acc, row: VariableResultsRow) =>
                     acc + (row.rowMap("p") -> row.rowMap("o"))
             }
+            log.debug(s"createProjectInfoV1FromProjectResponse - projectProperties: ${MessageUtil.toSource(projectProperties)}")
+
 
             val rightsInProject = userProfile match {
                 case Some(profile) => getUserPermissionV1ForProject(projectIri = projectIri, propertiesForProject = projectProperties, profile)

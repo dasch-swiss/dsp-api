@@ -45,6 +45,7 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images"),
+        projectInfos = Vector.empty[ProjectInfoV1],
         projectGroups = Map(
             "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}"),
             "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")

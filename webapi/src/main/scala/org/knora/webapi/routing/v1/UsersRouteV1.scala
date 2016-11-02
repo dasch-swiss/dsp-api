@@ -52,10 +52,10 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val requestMessage = if (urlValidator.isValid(value)) {
                         /* valid URL */
-                        UserProfileByIRIGetRequestV1(value, true)
+                        UserProfileByIRIGetRequestV1(value, UserProfileType.SAFE)
                     } else {
                         /* not valid URL so I assume it is an username */
-                        UserProfileByUsernameGetRequestV1(value, true)
+                        UserProfileByUsernameGetRequestV1(value, UserProfileType.SAFE)
                     }
                     RouteUtilV1.runJsonRoute(
                         requestMessage,

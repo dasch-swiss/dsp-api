@@ -20,6 +20,7 @@
   */
 package org.knora.webapi.responders.v1
 
+
 import java.util.UUID
 
 import akka.actor.Props
@@ -29,6 +30,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 
 import scala.concurrent.duration._
@@ -57,6 +59,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     val rootUserProfileV1 = SharedTestData.rootUserProfileV1
 
     val actorUnderTest = TestActorRef[UsersResponderV1]
+    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List() /* sending an empty list, will only load the default ontologies and data */
@@ -69,26 +72,25 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     "The UsersResponder " when {
         "asked about an user identified by 'iri' " should {
             "return a profile if the user is known " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/root", true)
-                expectMsg(rootUserProfileV1.getCleanUserProfileV1)
+                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/root", UserProfileType.SHORT)
+                expectMsg(rootUserProfileV1.ofType(UserProfileType.SHORT))
             }
             "return 'NotFoundException' when the user is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", true)
+                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", UserProfileType.SHORT)
                 expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
             }
         }
         "asked about an user identified by 'username' " should {
             "return a profile if the user is known " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1("root", true)
-                expectMsg(rootUserProfileV1.getCleanUserProfileV1)
+                actorUnderTest ! UserProfileByUsernameGetRequestV1("root", UserProfileType.SHORT)
+                expectMsg(rootUserProfileV1.ofType(UserProfileType.SHORT))
             }
 
             "return 'NotFoundException' when the user is unknown " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1("userwrong", true)
+                actorUnderTest ! UserProfileByUsernameGetRequestV1("userwrong", UserProfileType.SHORT)
                 expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
             }
         }
-        /*
         "asked to create a new user " should {
             "create the user and return it's profile if the supplied username is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
@@ -213,7 +215,6 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
             }
         }
-        */
     }
 
 }

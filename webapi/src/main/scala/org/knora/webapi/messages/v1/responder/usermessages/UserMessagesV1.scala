@@ -80,19 +80,19 @@ sealed trait UsersResponderRequestV1 extends KnoraRequestV1
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
   *
   * @param userIri the IRI of the user to be queried.
-  * @param clean   a flag denoting if sensitive information (token, password) should be stripped
+  * @param userProfileType the extent of the information returned.
   */
 case class UserProfileByIRIGetRequestV1(userIri: IRI,
-                                        clean: Boolean = false) extends UsersResponderRequestV1
+                                        userProfileType: UserProfileType.Value = UserProfileType.SHORT) extends UsersResponderRequestV1
 
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
   *
   * @param username the username of the user to be queried.
-  * @param clean    a flag denoting if sensitive information (token, password) should be stripped.
+  * @param userProfileType the extent of the information returned.
   */
 case class UserProfileByUsernameGetRequestV1(username: String,
-                                             clean: Boolean = false) extends UsersResponderRequestV1
+                                             userProfileType: UserProfileType.Value = UserProfileType.SHORT) extends UsersResponderRequestV1
 
 
 /**
@@ -143,6 +143,7 @@ case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDat
   * @param userData basic information about the user.
   * @param groups   the groups that the user belongs to.
   * @param projects the projects that the user belongs to.
+  * @param projectInfos the project info of the projects that the user belongs to.
   * @param projectGroups the projects and all groups inside a project the user belongs to.
   * @param isInSystemAdminGroup the user's knora-base:SystemAdmin group membership status.
   * @param isInProjectAdminGroup shows for which projects the user is member in the knora-base:ProjectAdmin group.
@@ -153,6 +154,7 @@ case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDat
 case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                          groups: Seq[IRI] = Vector.empty[IRI],
                          projects: Seq[IRI] = Vector.empty[IRI],
+                         projectInfos: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1],
                          projectGroups: Map[IRI, List[IRI]] = Map.empty[IRI, List[IRI]],
                          isInSystemAdminGroup: Boolean = false,
                          isInProjectAdminGroup: Seq[IRI] = Vector.empty[IRI],
@@ -214,35 +216,81 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
       *
       * @return a [[UserProfileV1]]
       */
-    def getCleanUserProfileV1: UserProfileV1 = {
+    def ofType(userProfileType: UserProfileType.Value): UserProfileV1 = {
 
-        val olduserdata = userData
-        val newuserdata = UserDataV1(
-            lang = olduserdata.lang,
-            user_id = olduserdata.user_id,
-            token = None, // remove token
-            username = olduserdata.username,
-            firstname = olduserdata.firstname,
-            lastname = olduserdata.lastname,
-            email = olduserdata.email,
-            password = None, // remove password
-            isActiveUser = olduserdata.isActiveUser,
-            active_project = olduserdata.active_project,
-            projects = olduserdata.projects,
-            projects_info = olduserdata.projects_info
-        )
+        userProfileType match {
+            case UserProfileType.SHORT => {
+                val olduserdata = userData
+                val newuserdata = UserDataV1(
+                    lang = olduserdata.lang,
+                    user_id = olduserdata.user_id,
+                    token = None, // remove token
+                    username = olduserdata.username,
+                    firstname = olduserdata.firstname,
+                    lastname = olduserdata.lastname,
+                    email = olduserdata.email,
+                    password = None, // remove password
+                    isActiveUser = olduserdata.isActiveUser,
+                    active_project = olduserdata.active_project
+                )
 
-        UserProfileV1(
-            userData = newuserdata,
-            groups = groups,
-            projects = projects,
-            projectGroups = projectGroups,
-            isInSystemAdminGroup = false, // remove system admin status
-            isInProjectAdminGroup = Vector.empty[IRI], // remove privileged group membership
-            projectAdministrativePermissions = Map.empty[IRI, List[String]], // remove administrative permission information
-            projectDefaultObjectAccessPermissions = Map.empty[IRI, List[String]], // remove default object access permission information
-            sessionId = None // remove session id
-        )
+                UserProfileV1(
+                    userData = newuserdata,
+                    groups = groups,
+                    projects = projects,
+                    projectInfos = Vector.empty[ProjectInfoV1], // remove
+                    projectGroups = projectGroups,
+                    isInSystemAdminGroup = false, // remove system admin status
+                    isInProjectAdminGroup = Vector.empty[IRI], // remove privileged group membership
+                    projectAdministrativePermissions = Map.empty[IRI, List[String]], // remove administrative permission information
+                    projectDefaultObjectAccessPermissions = Map.empty[IRI, List[String]], // remove default object access permission information
+                    sessionId = None // remove session id
+                )
+            }
+            case UserProfileType.SAFE => {
+                val olduserdata = userData
+                val newuserdata = UserDataV1(
+                    lang = olduserdata.lang,
+                    user_id = olduserdata.user_id,
+                    token = None, // remove token
+                    username = olduserdata.username,
+                    firstname = olduserdata.firstname,
+                    lastname = olduserdata.lastname,
+                    email = olduserdata.email,
+                    password = None, // remove password
+                    isActiveUser = olduserdata.isActiveUser,
+                    active_project = olduserdata.active_project
+                )
+
+                UserProfileV1(
+                    userData = newuserdata,
+                    groups = groups,
+                    projects = projects,
+                    projectInfos = projectInfos,
+                    projectGroups = projectGroups,
+                    isInSystemAdminGroup = false, // remove system admin status
+                    isInProjectAdminGroup = Vector.empty[IRI], // remove privileged group membership
+                    projectAdministrativePermissions = Map.empty[IRI, List[String]], // remove administrative permission information
+                    projectDefaultObjectAccessPermissions = Map.empty[IRI, List[String]], // remove default object access permission information
+                    sessionId = None // remove session id
+                )
+            }
+            case UserProfileType.FULL => {
+                UserProfileV1(
+                    userData = userData,
+                    groups = groups,
+                    projects = projects,
+                    projectInfos = projectInfos,
+                    projectGroups = projectGroups,
+                    isInSystemAdminGroup = isInSystemAdminGroup,
+                    isInProjectAdminGroup = isInProjectAdminGroup,
+                    projectAdministrativePermissions =projectAdministrativePermissions,
+                    projectDefaultObjectAccessPermissions =projectDefaultObjectAccessPermissions,
+                    sessionId = sessionId
+                )
+            }
+            case _ => throw BadRequestException(s"The requested userProfileTyle: $userProfileType is invalid.")
+        }
     }
 
     def getDigest: String = {
@@ -285,8 +333,6 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
   * @param password     The user's hashed password.
   * @param isActiveUser The user's status.
   * @param active_project
-  * @param projects
-  * @param projects_info
   */
 case class UserDataV1(lang: String,
                       user_id: Option[IRI] = None,
@@ -297,9 +343,7 @@ case class UserDataV1(lang: String,
                       email: Option[String] = None,
                       password: Option[String] = None,
                       isActiveUser: Option[Boolean] = None,
-                      active_project: Option[IRI] = None,
-                      projects: Seq[IRI] = Vector.empty[IRI],
-                      projects_info: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1]) {
+                      active_project: Option[IRI] = None ) {
 
     def toJsValue = UserV1JsonProtocol.userDataV1Format.write(this)
 
@@ -323,6 +367,35 @@ case class NewUserDataV1(username: String,
                          password: String,
                          lang: String)
 
+/**
+  * UserProfile types:
+  * short: short without sensitive information
+  * safe: everything without sensitive information
+  * full: everything
+  */
+object UserProfileType extends Enumeration {
+    /* TODO: Extend to incorporate user privacy wishes */
+    val SHORT = Value(0, "short") // short without sensitive information
+    val SAFE = Value(1, "safe") // everything without sensitive information (password, etc.)
+    val FULL = Value(2, "full") // everything
+
+    val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+
+    /**
+      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
+      * [[InconsistentTriplestoreDataException]].
+      *
+      * @param name the name of the value.
+      * @return the requested value.
+      */
+    def lookup(name: String): Value = {
+        valueMap.get(name) match {
+            case Some(value) => value
+            case None => throw InconsistentTriplestoreDataException(s"Project info type not supported: $name")
+        }
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
@@ -331,8 +404,8 @@ case class NewUserDataV1(username: String,
   */
 object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol {
 
-    implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat12(UserDataV1))
-    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat10(UserProfileV1)
+    implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat10(UserDataV1))
+    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat11(UserProfileV1)
     implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat6(NewUserDataV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
     implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat2(UpdateUserApiRequestV1)

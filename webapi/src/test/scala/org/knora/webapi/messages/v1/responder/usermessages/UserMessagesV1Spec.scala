@@ -59,7 +59,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                 isInProjectAdminGroup = isInProjectAdminGroup,
                 sessionId = sessionId
             )
-            val rootUserProfileV1Clean = UserProfileV1(
+            val rootUserProfileV1Safe = UserProfileV1(
                 UserDataV1(
                     user_id = user_id,
                     username = username,
@@ -77,7 +77,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                 sessionId = sessionId
             )
 
-            assert(rootUserProfileV1.getCleanUserProfileV1 === rootUserProfileV1Clean)
+            assert(rootUserProfileV1.ofType(UserProfileType.SAFE) === rootUserProfileV1Safe)
         }
         "allow checking the password " in {
             val hp = BCrypt.hashpw("123456", BCrypt.gensalt())

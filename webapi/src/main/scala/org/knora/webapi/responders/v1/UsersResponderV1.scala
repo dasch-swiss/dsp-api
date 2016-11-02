@@ -53,8 +53,8 @@ class UsersResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case UserProfileByIRIGetRequestV1(userIri, clean) => future2Message(sender(), getUserProfileByIRIV1(userIri, clean), log)
-        case UserProfileByUsernameGetRequestV1(username, clean) => future2Message(sender(), getUserProfileByUsernameV1(username, clean), log)
+        case UserProfileByIRIGetRequestV1(userIri, profileType) => future2Message(sender(), getUserProfileByIRIV1(userIri, profileType), log)
+        case UserProfileByUsernameGetRequestV1(username, profileType) => future2Message(sender(), getUserProfileByUsernameV1(username, profileType), log)
         case UserCreateRequestV1(newUserData, userProfile, apiRequestID) => future2Message(sender(), createNewUserV1(newUserData, userProfile, apiRequestID), log)
         case UserUpdateRequestV1(userIri, propertyIri, newValue, userProfile, apiRequestID) => future2Message(sender(), updateUserV1(userIri, propertyIri, newValue, userProfile, apiRequestID), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
@@ -66,26 +66,24 @@ class UsersResponderV1 extends ResponderV1 {
       * @param userIRI the IRI of the user.
       * @return a [[Option[UserProfileV1]] describing the user.
       */
-    private def getUserProfileByIRIV1(userIRI: IRI, clean: Boolean): Future[UserProfileV1] = {
+    private def getUserProfileByIRIV1(userIRI: IRI, profileType: UserProfileType.Value): Future[UserProfileV1] = {
         // TODO: add caching of user profiles that was removed from [[Authenticator]]
-        log.debug(s"getUserProfileByIRIV1: userIri = $userIRI', clean = '$clean'")
+        //log.debug(s"getUserProfileByIRIV1: userIri = $userIRI', clean = '$clean'")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
                 userIri = userIRI
             ).toString())
 
-            _ = log.debug(s"getUserProfileByIRIV1 - sparqlQueryString: $sparqlQueryString")
+            //_ = log.debug(s"getUserProfileByIRIV1 - sparqlQueryString: $sparqlQueryString")
 
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-
-            // _ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
             _ = if (userDataQueryResponse.results.bindings.isEmpty) {
                 throw NotFoundException(s"User '$userIRI' not found")
             }
 
-            userProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, clean)
+            userProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, profileType)
 
         } yield userProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
     }
@@ -96,9 +94,9 @@ class UsersResponderV1 extends ResponderV1 {
       * @param username the username of the user.
       * @return a [[Option[UserProfileV1]] describing the user.
       */
-    private def getUserProfileByUsernameV1(username: String, clean: Boolean): Future[UserProfileV1] = {
+    private def getUserProfileByUsernameV1(username: String, profileType: UserProfileType.Value): Future[UserProfileV1] = {
         // TODO: add caching of user profiles that was removed from [[Authenticator]]
-        log.debug(s"getUserProfileByUsernameV1: username = '$username', clean = '$clean'")
+        log.debug(s"getUserProfileByUsernameV1: username = '$username', clean = '$profileType'")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByUsername(
                 triplestore = settings.triplestoreType,
@@ -112,7 +110,7 @@ class UsersResponderV1 extends ResponderV1 {
                 throw NotFoundException(s"User '$username' not found")
             }
 
-            userProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, clean)
+            userProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, profileType)
 
         } yield userProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
     }
@@ -173,7 +171,7 @@ class UsersResponderV1 extends ResponderV1 {
 
 
             // Verify that the user was created.
-            sparqlQuery = queries.sparql.v1.txt.getUser(
+            sparqlQuery = queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
             ).toString()
@@ -184,7 +182,7 @@ class UsersResponderV1 extends ResponderV1 {
             }
 
             // create the user profile
-            newUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, true)
+            newUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, UserProfileType.SAFE)
 
             // create the user operation response
             userOperationResponseV1 = UserOperationResponseV1(newUserProfile, userProfile.userData)
@@ -215,14 +213,14 @@ class UsersResponderV1 extends ResponderV1 {
         */
 
         // get current value.
-        sparqlQueryString = queries.sparql.v1.txt.getUser(
+        sparqlQueryString = queries.sparql.v1.txt.getUserByIri(
             triplestore = settings.triplestoreType,
             userIri = userIri
         ).toString()
         userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
         // create the user profile including sensitive information
-        currentUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, false)
+        currentUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, UserProfileType.FULL)
 
         // get the current value
         currentValue = propertyIri match {
@@ -262,7 +260,7 @@ class UsersResponderV1 extends ResponderV1 {
         createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
         // Verify that the user was updated.
-        sparqlQueryString = queries.sparql.v1.txt.getUser(
+        sparqlQueryString = queries.sparql.v1.txt.getUserByIri(
             triplestore = settings.triplestoreType,
             userIri = userIri
         ).toString()
@@ -270,7 +268,7 @@ class UsersResponderV1 extends ResponderV1 {
 
 
         // create the user profile including sensitive information
-        updatedUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, false)
+        updatedUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, UserProfileType.FULL)
 
         // check if what we wanted to update actually got updated
         //_ = log.debug(s"currentValue: ${currentValue.toString}, newValue: ${newValue.toString}")
@@ -322,9 +320,9 @@ class UsersResponderV1 extends ResponderV1 {
                 case None => // user has not session id, so no cache to update
             }
 
-            UserOperationResponseV1(updatedUserProfile.getCleanUserProfileV1, updatedUserProfile.getCleanUserProfileV1.userData)
+            UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.SAFE), updatedUserProfile.ofType(UserProfileType.SAFE).userData)
         } else {
-            UserOperationResponseV1(updatedUserProfile.getCleanUserProfileV1, userProfile.userData)
+            UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.SAFE), userProfile.userData)
         }
     } yield userOperationResponseV1
 
@@ -337,11 +335,13 @@ class UsersResponderV1 extends ResponderV1 {
       * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResponse]] containing user data.
       *
       * @param userDataQueryResponse a [[SparqlSelectResponse]] containing user data.
-      * @param clean a flag denoting if sensitive information should be stripped from the returned [[UserProfileV1]]
+      * @param userProfileType a flag denoting if sensitive information should be stripped from the returned [[UserProfileV1]]
       * @return a [[UserProfileV1]] containing the user's data.
       */
-    private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, clean: Boolean): Future[UserProfileV1] = {
-        log.debug(MessageUtil.toSource(userDataQueryResponse))
+    private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, userProfileType: UserProfileType.Value): Future[UserProfileV1] = {
+
+        //log.debug("userDataQueryResponse2UserProfile - " + MessageUtil.toSource(userDataQueryResponse))
+
         for {
             a <- Future("")
 
@@ -351,23 +351,7 @@ class UsersResponderV1 extends ResponderV1 {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
             }
 
-            //log.debug(s"RAW: ${groupedUserData.toString}")
-
-            groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
-                case Some(groups) => groups
-                case None => Vector.empty[IRI]
-            }
-
-            projectIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
-                case Some(projects) => projects
-                case None => Vector.empty[IRI]
-            }
-
-            projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
-                projectIri => (responderManager ? ProjectInfoByIRIGetRequest(projectIri, ProjectInfoType.SHORT, None)).mapTo[ProjectInfoResponseV1] map (_.project_info)
-            }
-
-            projectInfos <- Future.sequence(projectInfoFutures)
+            //_ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
 
             userDataV1 = UserDataV1(
                 lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
@@ -381,15 +365,35 @@ class UsersResponderV1 extends ResponderV1 {
                 email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
                 isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.IsActiveUser).map(_.head.toBoolean),
-                active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head),
-                projects = if (projectIris.nonEmpty) projectIris else Vector.empty[IRI],
-                projects_info = projectInfos
+                active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head)
             )
 
-            isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).map(_.head.toBoolean).getOrElse(false)
+            //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
+
+            isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
             isInProjectAdminGroup = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInProjectAdminGroup, Vector.empty[IRI])
 
+            groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
+                case Some(groups) => groups
+                case None => Vector.empty[IRI]
+            }
+            //_ = log.debug(s"userDataQueryResponse2UserProfile - groupIris: ${MessageUtil.toSource(groupIris)}")
+
+            projectIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
+                case Some(projects) => projects
+                case None => Vector.empty[IRI]
+            }
+            //_ = log.debug(s"userDataQueryResponse2UserProfile - projectIris: ${MessageUtil.toSource(projectIris)}")
+
+            projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
+                projectIri => (responderManager ? ProjectInfoByIRIGetRequest(projectIri, ProjectInfoType.SHORT, None)).mapTo[ProjectInfoResponseV1] map (_.project_info)
+            }
+
+            projectInfos <- Future.sequence(projectInfoFutures)
+            //_ = log.debug(s"userDataQueryResponse2UserProfile - projectInfos: ${MessageUtil.toSource(projectInfos)}")
+
             // find out to which project each group belongs to
+            //_ = log.debug("userDataQueryResponse2UserProfile - find out to which project each group belongs to")
             groups: List[(IRI, IRI)] = if (groupIris.nonEmpty) {
                 groupIris.map {
                     groupIri => {
@@ -403,6 +407,8 @@ class UsersResponderV1 extends ResponderV1 {
             } else {
                 List.empty[(IRI, IRI)]
             }
+            //_ = log.debug(s"userDataQueryResponse2UserProfile - found: $groups")
+
 
             // project member 'groups'
             projectMembers: List[(IRI, IRI)] = if (projectIris.nonEmpty) {
@@ -451,7 +457,8 @@ class UsersResponderV1 extends ResponderV1 {
             up = UserProfileV1(
                 userData = userDataV1,
                 groups = groupIris,
-                projects = projectIris,
+                projects = if (projectIris.nonEmpty) projectIris else Vector.empty[IRI],
+                projectInfos = if (projectInfos.nonEmpty) projectInfos else Vector.empty[ProjectInfoV1],
                 projectGroups = projectGroups,
                 isInSystemAdminGroup = isInSystemAdminGroup,
                 isInProjectAdminGroup = isInProjectAdminGroup,
@@ -459,13 +466,9 @@ class UsersResponderV1 extends ResponderV1 {
                 projectDefaultObjectAccessPermissions = projectDefaultObjectAccessPermissions,
                 sessionId = None
             )
-            _ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
+            //_ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
 
-            result = if (clean) {
-                up.getCleanUserProfileV1
-            } else {
-                up
-            }
+            result = up.ofType(userProfileType)
         } yield result
 
     }
