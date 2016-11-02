@@ -75,47 +75,58 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => triplestore / settings.fusekiTomcatContext / settings.triplestoreDatabaseName / "update"
     }
 
-    // Send POST requests as application/x-www-form-urlencoded (as per SPARQL 1.1. Protocol §2.1.2,
+    // We send POST requests as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2,
     // "query via POST with URL-encoded parameters"), because Sesame doesn't support SPARQL 1.1 Protocol
     // §2.1.3 ("query via POST directly").
 
     // Supposedly it's not meaningful to specify UTF-8 encoding with MIME type application/x-www-form-urlencoded, but Unicode
     // characters aren't handled correctly unless we do.
 
-    private val queryRequest = settings.triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE => queryRequestPath.
-            POST.
-            setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-            addParameter("infer", "false") // Turn off reasoning.
-        case HTTP_GRAPH_DB_FREE_TS_TYPE => queryRequestPath.
-            POST.
-            setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-            addParameter("infer", "false") // Turn off reasoning.
-        case HTTP_FUSEKI_TS_TYPE => queryRequestPath.
-            POST.
-            setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name)
-        case HTTP_SESAME_TS_TYPE => queryRequestPath.
-            POST.
-            setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name)
-        case ts_type => throw TriplestoreUnsupportedFeatureException(s"HttpTriplestoreActor does not support: $ts_type")
+    /**
+      * Constructs an HTTP request for a SPARQL query.
+      *
+      * @param useInference if `true`, ask the triplestore to use inference in the query, if possible.
+      * @return an HTTP request.
+      */
+    private def queryRequest(useInference: Boolean): Req = {
+        settings.triplestoreType match {
+            case HTTP_GRAPH_DB_TS_TYPE => queryRequestPath.
+                POST.
+                setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
+                addParameter("infer", useInference.toString)
+            case HTTP_GRAPH_DB_FREE_TS_TYPE => queryRequestPath.
+                POST.
+                setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
+                addParameter("infer", useInference.toString)
+            case HTTP_FUSEKI_TS_TYPE => queryRequestPath.
+                POST.
+                setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name)
+            case HTTP_SESAME_TS_TYPE => queryRequestPath.
+                POST.
+                setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name)
+            case otherTriplestore => throw TriplestoreUnsupportedFeatureException(s"Triplestore type not supported: $otherTriplestore")
+        }
     }
 
+    /**
+      * Constructs an HTTP request for a SPARQL update.
+      */
     private val updateRequest = settings.triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => updateRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-            addParameter("infer", "true") // Turn on reasoning, which is needed for consistency checking.
+            addParameter("infer", "true") // Use inference, which is needed for consistency checking.
         case HTTP_GRAPH_DB_FREE_TS_TYPE => updateRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-            addParameter("infer", "true") // Turn on reasoning, which is needed for consistency checking.
+            addParameter("infer", "true") // Use inference, which is needed for consistency checking.
         case HTTP_FUSEKI_TS_TYPE => updateRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name)
         case HTTP_SESAME_TS_TYPE => updateRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name)
-        case ts_type => throw TriplestoreUnsupportedFeatureException(s"HttpTriplestoreActor does not support: $ts_type")
+        case otherTriplestore => throw TriplestoreUnsupportedFeatureException(s"Triplestore type not supported: $otherTriplestore")
     }
 
 
@@ -127,7 +138,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case SparqlSelectRequest(sparql) => future2Message(sender(), sparqlHttpSelect(sparql), log)
+        case SparqlSelectRequest(sparql, useInference) => future2Message(sender(), sparqlHttpSelect(sparql, useInference), log)
         case SparqlUpdateRequest(sparql) => future2Message(sender(), sparqlHttpUpdate(sparql), log)
         case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
         case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
@@ -140,10 +151,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     /**
       * Given the SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResponse]].
       *
-      * @param sparql the SPARQL SELECT query string
+      * @param sparql the SPARQL SELECT query string.
+      * @param useInference if `true`, ask the triplestore to use inference in the query, if possible.
       * @return a [[SparqlSelectResponse]].
       */
-    private def sparqlHttpSelect(sparql: String): Future[SparqlSelectResponse] = {
+    private def sparqlHttpSelect(sparql: String, useInference: Boolean): Future[SparqlSelectResponse] = {
         for {
         // Are we using the fake triplestore?
             resultStr <- if (settings.useFakeTriplestore) {
@@ -151,7 +163,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 Future(FakeTriplestore.data(sparql))
             } else {
                 // No: get the response from the real triplestore over HTTP.
-                getTriplestoreHttpResponse(sparql, update = false)
+                getTriplestoreHttpResponse(sparql, update = false, useInference = useInference)
             }
 
             // Are we preparing a fake triplestore?
@@ -198,13 +210,15 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       *
       * @param sparql the SPARQL request to be submitted.
       * @param update `true` if this is an update request.
+      * @param useInference if `true`, ask the triplestore to use inference in the request, if possible. This is
+      *                     meaningful only for query requests, not for updates.
       * @return the triplestore's response.
       */
-    private def getTriplestoreHttpResponse(sparql: String, update: Boolean): Future[String] = {
+    private def getTriplestoreHttpResponse(sparql: String, update: Boolean, useInference: Boolean = false): Future[String] = {
         val request = if (update) {
             updateRequest.addParameter("update", sparql)
         } else {
-            queryRequest.addParameter("query", sparql).addHeader(headerAccept, mimeTypeApplicationSparqlResultsJson)
+            queryRequest(useInference).addParameter("query", sparql).addHeader(headerAccept, mimeTypeApplicationSparqlResultsJson)
         }
 
         //println(s"request url: ${request.url}")
@@ -306,7 +320,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
         val sparql = "SELECT ?s ?p ?o WHERE { ?s ?p ?o  } LIMIT 10"
 
-        val request = queryRequest.addParameter("query", sparql).addHeader(headerAccept, mimeTypeApplicationSparqlResultsJson)
+        val request = queryRequest(useInference = false).addParameter("query", sparql).addHeader(headerAccept, mimeTypeApplicationSparqlResultsJson)
 
         val resppnseStrFuture = for {
             response <- Http(request)

@@ -171,9 +171,9 @@ This is a simplified way for searching for resources just by their label. It is 
     HTTP GET to http://host/v1/resources?searchstr=searchValue
 
 Additionally, the following parameters can be appended to the URL (search value is ``Zeitglöcklein``):
- - ``restype_id=resourceClassIRI``: This restricts the search to resources of the specified class. ``-1`` is the default value and means no restriction to a specific class. If a resource class IRI is specified, it has to be URL encoded (e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitgl%C3%B6cklein&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book``).
+ - ``restype_id=resourceClassIRI``: This restricts the search to resources of the specified class (subclasses of that class will also match). ``-1`` is the default value and means no restriction to a specific class. If a resource class IRI is specified, it has to be URL encoded (e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitgl%C3%B6cklein&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book``).
  - ``numprops=Integer``: Specifies the number of properties returned for each resource that was found (sorted by GUI order), e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitgl%C3%B6cklein&numprops=4``.
- - ``limit=Integer``: Lmits the amount of results returned (e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitgl%C3%B6cklein&limit=1``).
+ - ``limit=Integer``: Limits the amount of results returned (e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitgl%C3%B6cklein&limit=1``).
 
 
 The response lists the resources that matched the search criteria (see TypeScript interface ``resourceLabelSearchResponse`` in module ``resourceResponseFormats``).
@@ -191,7 +191,7 @@ Please note that the search terms have to be URL encoded.
     [&filter_by_project=projectIRI][&show_nrows=Integer]{[&start_at=Integer]
 
 The parameter ``searchtype`` is required and has to be set to ``fulltext``. Additionally, these parameters can be set:
-  - ``filter_by_restype=resourceClassIRI``: restricts the search to resources of the specified resource class.
+  - ``filter_by_restype=resourceClassIRI``: restricts the search to resources of the specified resource class (subclasses of that class will also match).
   - ``filter_by_project=projectIRI``: restricts the search to resources of the specified project.
   - ``show_nrows=Integer``: Indicates how many reults should be presented on one page. If omitted, the default value ``25`` is used.
   - ``start_at=Integer``: Used to enable paging and go through all the results request by request.
@@ -213,7 +213,7 @@ Extended Search for Resources
     [&show_nrows=Integer][&start_at=Integer]
 
 The parameter ``searchtype`` is required and has to be set to ``extended``. An extended search requires at least one set of parameters consisting of:
-  - ``property_id=propertyTypeIRI``: the type of property the resource has to have
+  - ``property_id=propertyTypeIRI``: the property the resource has to have (subproperties of that property will also match).
   - ``compop=comparisonOperator``: the comparison operator to be used to match between the resource's property value and the search term.
   - ``searchval=searchTerm``: the search value to look for.
 
@@ -255,7 +255,7 @@ Explanation of the comparison operators:
   - ``MATCH_BOOLEAN``: checks if a resource's text value *matches* the provided list of positive (exist) and negative (do not exist) terms. The list takes this form: ``([+-]term\s)+``.
 
 Additionally, these parameters can be set:
-  - ``filter_by_restype=resourceClassIRI``: restricts the search to resources of the specified resource class.
+  - ``filter_by_restype=resourceClassIRI``: restricts the search to resources of the specified resource class (subclasses of that class will also match).
   - ``filter_by_project=projectIRI``: restricts the search to resources of the specified project.
   - ``filter_by_owner``: restricts the search to resources owned by the specified user.
   - ``show_nrows=Integer``: Indicates how many reults should be presented on one page. If omitted, the default value ``25`` is used.
