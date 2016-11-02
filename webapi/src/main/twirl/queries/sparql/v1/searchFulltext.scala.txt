@@ -25,15 +25,18 @@
  * Performs a simple full-text search. The number of rows returned per matching resource is equal to the number of
  * values that matched in the resource, plus one if the resource's label matched.
  *
- * If the triplestore type is GraphDB, the generated SPARQL is optimised by taking advantage of forward-chaining
- * RDFS inference.
+ * If the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
+ * SPARQL. Specifically, we use inference to return search results matching subclasses of the resource class
+ * specified by the user. Without inference, we have to do this using SPARQL property path syntax
+ * (rdfs:subClassOf*). Using inference requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit> whenever
+ * we need to get explicit (non-inferred) statements.
  *
  * @param triplestore the name of the triplestore being used.
  * @param searchTerms search terms to be combined with AND in Lucene full-text search syntax.
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
  * @param projectIriOption if filtering by project is desired, the IRI of the project to search.
- * @param restypeIriOption if filtering by resource type is desired, the IRI of the resource type to search for.
+ * @param restypeIriOption if given, searches only for resources of this class and its subclasses.
  *@
 @(triplestore: String,
   searchTerms: Seq[String],
