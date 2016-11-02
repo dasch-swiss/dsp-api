@@ -649,8 +649,24 @@ class OntologyResponderV1 extends ResponderV1 {
     private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Future[SubClassesGetResponseV1] = {
         for {
             cacheData <- getCacheData
+
+            subClassIris = cacheData.resourceSuperClassOfRelations(getSubClassesRequest.resourceClassIri).toVector.sorted
+
+            subClasses = subClassIris.map {
+                resourceClassIri =>
+                    val resourceClassInfo: ResourceEntityInfoV1 = cacheData.resourceClassDefs(resourceClassIri)
+
+                    SubClassInfoV1(
+                        id = resourceClassIri,
+                        label = resourceClassInfo.getPredicateObject(
+                            predicateIri = OntologyConstants.Rdfs.Label,
+                            preferredLangs = Some(getSubClassesRequest.userProfile.userData.lang, settings.fallbackLanguage)
+                        ).getOrElse(throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has no rdfs:label"))
+                    )
+            }
+
             response = SubClassesGetResponseV1(
-                subClassIris = cacheData.resourceSuperClassOfRelations(getSubClassesRequest.resourceClassIri).toVector.sorted,
+                subClasses = subClasses,
                 userdata = getSubClassesRequest.userProfile.userData
             )
         } yield response
