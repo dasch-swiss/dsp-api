@@ -262,8 +262,24 @@ WHERE {
         ?linkTargetForNewLink rdf:type ?linkTargetClass ;
             knora-base:isDeleted false .
         ?linkTargetClass rdfs:subClassOf+ knora-base:Resource .
-        ?linkProperty knora-base:objectClassConstraint ?expectedTargetClass .
-        ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
+
+        @*
+
+        Inherit the link property's objectClassConstraint from a base property if necessary, letting the subproperty's
+        objectClassConstraint override the base property's objectClassConstraint.
+
+        *@
+
+        ?linkProperty rdfs:subPropertyOf* ?baseLinkProperty .
+        ?baseLinkProperty knora-base:objectClassConstraint ?linkPropObjConstraint .
+
+        FILTER NOT EXISTS {
+            ?linkProperty rdfs:subPropertyOf* ?otherBaseLinkProperty .
+            ?otherBaseLinkProperty rdfs:subPropertyOf+ ?baseLinkProperty .
+            ?otherBaseLinkProperty knora-base:objectClassConstraint ?otherLinkPropObjConstraint .
+        }
+
+        ?linkTargetClass rdfs:subClassOf* ?linkPropObjConstraint .
     } else {
         @{throw SparqlGenerationException(s"linkUpdateForNewLink.insertDirectLink must be true in this SPARQL template"); ()}
     }

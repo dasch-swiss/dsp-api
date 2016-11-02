@@ -61,7 +61,6 @@
                knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
 
 
-
 :hasOtherThingValue rdf:type owl:ObjectProperty ;
 
                rdfs:subPropertyOf knora-base:hasLinkToValue ;
@@ -419,6 +418,46 @@
 
 
 
+:hasBlueThing rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :hasOtherThing ;
+
+               rdfs:label "Ein blaues Ding"@de ,
+                          "Une chose bleue"@fr ,
+                          "Una cosa azzurra"@it ,
+                          "A blue thing"@en ;
+
+               knora-base:subjectClassConstraint :Thing ;
+
+               knora-base:objectClassConstraint :BlueThing ;
+
+               salsah-gui:guiOrder "16"^^xsd:integer .
+
+
+
+:hasBlueThingValue rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :hasOtherThingValue ;
+
+               salsah-gui:guiOrder "16"^^xsd:integer .
+
+
+
+:hasUnspecifiedThing rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :hasOtherThing ;
+
+               salsah-gui:guiOrder "17"^^xsd:integer .
+
+
+
+:hasUnspecifiedThingValue rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :hasOtherThingValue ;
+
+               salsah-gui:guiOrder "17"^^xsd:integer .
+
+
 :Thing rdf:type owl:Class ;
 
       rdfs:subClassOf knora-base:Resource ,
@@ -495,6 +534,26 @@
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasColor ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasBlueThing ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasBlueThingValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasUnspecifiedThing ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasUnspecifiedThingValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ;
                       #[
                       #   rdf:type owl:Restriction ;
@@ -520,6 +579,15 @@
 
       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
 
+
+:BlueThing rdf:type owl:Class ;
+
+      rdfs:subClassOf :Thing ;
+
+      rdfs:label "Blaues Ding"@de ,
+                 "Chose bleue"@fr ,
+                 "Cosa azzurra"@it ,
+                 "Blue thing"@en .
 
 
 :hasPictureTitle rdf:type owl:ObjectProperty ;

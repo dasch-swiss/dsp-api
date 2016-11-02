@@ -51,10 +51,24 @@
     ?linkTarget@valueIndex rdf:type ?linkTargetClass@valueIndex .
     ?linkTargetClass@valueIndex rdfs:subClassOf+ knora-base:Resource .
 
-    @* Do nothing if the target resource belongs to the wrong OWL class. *@
+    @*
 
-    ?linkProperty@valueIndex knora-base:objectClassConstraint ?expectedTargetClass@valueIndex .
-    ?linkTargetClass@valueIndex rdfs:subClassOf* ?expectedTargetClass@valueIndex .
+    Do nothing if the target resource belongs to the wrong OWL class. Inherit the link property's objectClassConstraint
+    from a base property if necessary, letting the subproperty's objectClassConstraint override the base property's
+    objectClassConstraint.
+
+    *@
+
+    ?linkProperty@valueIndex rdfs:subPropertyOf* ?baseLinkProperty@valueIndex .
+    ?baseLinkProperty@valueIndex knora-base:objectClassConstraint ?linkPropObjConstraint@valueIndex .
+
+    FILTER NOT EXISTS {
+        ?linkProperty@valueIndex rdfs:subPropertyOf* ?otherBaseLinkProperty@valueIndex .
+        ?otherBaseLinkProperty@valueIndex rdfs:subPropertyOf+ ?baseLinkProperty@valueIndex .
+        ?otherBaseLinkProperty@valueIndex knora-base:objectClassConstraint ?otherLinkPropObjConstraint@valueIndex .
+    }
+
+    ?linkTargetClass@valueIndex rdfs:subClassOf* ?linkPropObjConstraint@valueIndex .
 
     @* Do nothing if the target resource doesn't exist or is marked as deleted. *@
 

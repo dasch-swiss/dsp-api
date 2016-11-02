@@ -105,9 +105,10 @@ WHERE {
 
     @if(numberOfProps > 1) {
         ?resourceIri ?property ?valueObjectIri .
-        ?property knora-base:objectClassConstraint knora-base:TextValue .
-        ?valueObjectIri knora-base:valueHasString ?valueString ;
+
+        ?valueObjectIri a knora-base:TextValue ;
             knora-base:isDeleted false ;
+            knora-base:valueHasString ?valueString ;
             knora-base:valueHasOrder ?valueOrder .
 
         OPTIONAL {

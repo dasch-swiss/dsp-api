@@ -57,10 +57,24 @@
     BIND(IRI("@newValueIri") AS ?newValue@valueIndex)
     BIND(IRI("@valueTypeIri") AS ?valueType@valueIndex)
 
-    @* Do nothing if the submitted value has the wrong type. *@
+    @*
 
-    ?property@valueIndex knora-base:objectClassConstraint ?propertyRange@valueIndex .
-    ?valueType@valueIndex rdfs:subClassOf* ?propertyRange@valueIndex .
+    Do nothing if the submitted value has the wrong type. Inherit the property's objectClassConstraint from a base
+    property if necessary, letting the subproperty's objectClassConstraint override the base property's
+    objectClassConstraint.
+
+    *@
+
+    ?property@valueIndex rdfs:subPropertyOf* ?baseProperty@valueIndex .
+    ?baseProperty@valueIndex knora-base:objectClassConstraint ?propObjConstraint@valueIndex .
+
+    FILTER NOT EXISTS {
+        ?property@valueIndex rdfs:subPropertyOf* ?otherBaseProperty@valueIndex .
+        ?otherBaseProperty@valueIndex rdfs:subPropertyOf+ ?baseProperty@valueIndex .
+        ?otherBaseProperty@valueIndex knora-base:objectClassConstraint ?otherPropObjConstraint@valueIndex .
+    }
+
+    ?valueType@valueIndex rdfs:subClassOf* ?propObjConstraint@valueIndex .
 
     @* Do nothing if neither the resource class nor any of its superclasses has a cardinality for this property. *@
 

@@ -323,11 +323,29 @@ WHERE {
 
     ?resource ?property ?currentValue .
     ?currentValue rdf:type ?valueType .
-    ?property knora-base:objectClassConstraint ?valueType .
 
     @*
 
-        Consider order if given (not given for file values)
+    Do nothing if the submitted value has the wrong type. Inherit the property's objectClassConstraint from a base
+    property if necessary, letting the subproperty's objectClassConstraint override the base property's
+    objectClassConstraint.
+
+    *@
+
+    ?property rdfs:subPropertyOf* ?baseProperty .
+    ?baseProperty knora-base:objectClassConstraint ?propObjConstraint .
+
+    FILTER NOT EXISTS {
+        ?property rdfs:subPropertyOf* ?otherBaseProperty .
+        ?otherBaseProperty rdfs:subPropertyOf+ ?baseProperty .
+        ?otherBaseProperty knora-base:objectClassConstraint ?otherPropObjConstraint .
+    }
+
+    ?valueType rdfs:subClassOf* ?propObjConstraint .
+
+    @*
+
+    Consider order if given (not given for file values).
 
     *@
 
