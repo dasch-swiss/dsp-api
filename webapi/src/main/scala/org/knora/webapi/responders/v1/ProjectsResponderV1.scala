@@ -111,12 +111,12 @@ class ProjectsResponderV1 extends ResponderV1 {
 
                     ProjectInfoV1(
                         id = projIri,
-                        shortname = propsMap.get(OntologyConstants.KnoraBase.ProjectShortname).get,
+                        shortname = propsMap(OntologyConstants.KnoraBase.ProjectShortname),
                         longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname),
                         description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription),
                         keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords),
-                        projectOntologyGraph = propsMap.get(OntologyConstants.KnoraBase.ProjectOntologyGraph).get,
-                        projectDataGraph = propsMap.get(OntologyConstants.KnoraBase.ProjectDataGraph).get,
+                        projectOntologyGraph = propsMap(OntologyConstants.KnoraBase.ProjectOntologyGraph),
+                        projectDataGraph = propsMap(OntologyConstants.KnoraBase.ProjectDataGraph),
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo),
                         basepath = propsMap.get(OntologyConstants.KnoraBase.ProjectBasepath),
                         isActiveProject = propsMap.get(OntologyConstants.KnoraBase.IsActiveProject).map(_.toBoolean),
@@ -171,7 +171,7 @@ class ProjectsResponderV1 extends ResponderV1 {
       * Gets the project with the given shortname and returns the information as a [[ProjectInfoResponseV1]].
       *
       * @param shortName   the shortname of the project requested.
-      * @param requestType type request: either short or full.
+      * @param infoType type request: either short or full.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */

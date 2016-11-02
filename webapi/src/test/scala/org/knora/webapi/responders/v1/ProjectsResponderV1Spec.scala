@@ -27,8 +27,8 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsTemplate
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{NewUserDataV1, UserCreateRequestV1, UserOperationResponseV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 
 import scala.concurrent.duration._
@@ -58,6 +58,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
     val rootUserProfileV1 = SharedTestData.rootUserProfileV1
 
     val actorUnderTest = TestActorRef[ProjectsResponderV1]
+    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List()
@@ -112,7 +113,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         description = "project description",
                         keywords = "keywords",
                         logo = "",
-                        basepath = "",
+                        basepath = "/fu/bar",
                         isActiveProject = true,
                         hasSelfJoinEnabled = false,
                         permissionsTemplate = PermissionsTemplate.OPEN

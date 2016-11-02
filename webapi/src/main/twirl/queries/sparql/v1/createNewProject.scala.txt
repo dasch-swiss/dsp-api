@@ -78,9 +78,7 @@ INSERT {
                 knora-base:logo @logo ;
             }
 
-            @if(basepath.nonEmpty) {
-                knora-base:basepath @basepath ;
-            }
+            knora-base:projectBasepath @basepath ;
 
             @if(isActiveProject.nonEmpty) {
                 knora-base:isActiveProject @isActiveProject ;

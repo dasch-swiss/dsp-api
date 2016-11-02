@@ -28,8 +28,8 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages._
-import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 
 import scala.concurrent.duration._
@@ -52,6 +52,9 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
+    val imageReviewerFullGroupInfo = SharedTestData.imageReviewerGroupInfoV1
+    val imageReviewerShortGroupInfo = SharedTestData.imageReviewerGroupInfoV1.convertToShortGroupInfoV1
+
     val imagesProjectAdminFullGroupInfo = SharedTestData.imagesProjectAdminGroupInfoV1
     val imagesProjectAdminShortGroupInfo = SharedTestData.imagesProjectAdminGroupInfoV1.convertToShortGroupInfoV1
 
@@ -61,6 +64,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     val rootUserProfileV1 = SharedTestData.rootUserProfileV1
 
     val actorUnderTest = TestActorRef[GroupsResponderV1]
+    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List()
@@ -73,12 +77,12 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     "The GroupsResponder " when {
         "asked about a group identified by 'iri' " should {
             "return full group info if the group is known " in {
-                actorUnderTest ! GroupInfoByIRIGetRequest(imagesProjectAdminFullGroupInfo.id, GroupInfoType.FULL, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imagesProjectAdminFullGroupInfo, Some(rootUserProfileV1.userData)))
+                actorUnderTest ! GroupInfoByIRIGetRequest(imageReviewerFullGroupInfo.id, GroupInfoType.FULL, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imageReviewerFullGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return short group info if the group is known " in {
-                actorUnderTest ! GroupInfoByIRIGetRequest(imagesProjectAdminShortGroupInfo.id, GroupInfoType.SHORT, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imagesProjectAdminShortGroupInfo, Some(rootUserProfileV1.userData)))
+                actorUnderTest ! GroupInfoByIRIGetRequest(imageReviewerShortGroupInfo.id, GroupInfoType.SHORT, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imageReviewerShortGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return 'NotFoundException' when the group is unknown " in {
                 actorUnderTest ! GroupInfoByIRIGetRequest("http://data.knora.org/groups/notexisting", GroupInfoType.FULL, Some(rootUserProfileV1))
@@ -91,7 +95,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 expectMsg(GroupInfoResponseV1(imagesProjectAdminFullGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return short group info if the group is known " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberFullGroupInfo.belongsToProject, imagesProjectMemberShortGroupInfo.name, GroupInfoType.SHORT, Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberShortGroupInfo.belongsToProject, imagesProjectMemberShortGroupInfo.name, GroupInfoType.SHORT, Some(rootUserProfileV1))
                 expectMsg(GroupInfoResponseV1(imagesProjectMemberShortGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return 'NotFoundException' when the group is unknown " in {

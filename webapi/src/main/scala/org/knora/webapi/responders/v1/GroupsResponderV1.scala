@@ -23,7 +23,7 @@ import akka.pattern._
 import org.knora.webapi
 import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
-import org.knora.webapi.messages.v1.responder.usermessages.{UserOperationResponseV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{KnoraIdUtil, SparqlUtil}
@@ -62,7 +62,7 @@ class GroupsResponderV1 extends ResponderV1 {
     private def getGroupsResponseV1(infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): Future[GroupsResponseV1] = {
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjects(
+            sparqlQuery <- Future(queries.sparql.v1.txt.getGroups(
                 triplestore = settings.triplestoreType
             ).toString())
             groupsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
@@ -136,6 +136,9 @@ class GroupsResponderV1 extends ResponderV1 {
       * @return information about the group as a [[GroupInfoResponseV1]].
       */
     private def getGroupInfoByNameGetRequest(projectIRI: IRI, groupName: String, infoType: GroupInfoType.Value, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
+
+        /* FIXME: Check to see if it is a built-in implicit group and skip sparql query */
+        
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByName(
                 triplestore = settings.triplestoreType,

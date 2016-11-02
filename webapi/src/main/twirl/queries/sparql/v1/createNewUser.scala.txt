@@ -74,7 +74,9 @@ INSERT {
                 knora-base:email @email ;
             }
 
-            knora-base:preferredLanguage @preferredLanguage .
+            knora-base:preferredLanguage @preferredLanguage ;
+
+            knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
     }
 }
 @*

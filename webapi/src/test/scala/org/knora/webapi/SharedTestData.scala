@@ -271,7 +271,7 @@ object SharedTestData {
 
     /* represents the full GroupInfoV1 of the images ProjectAdmin group */
     val imagesProjectAdminGroupInfoV1 = GroupInfoV1(
-        id = "http://data.knora.org/groups/images/ProjectAdmin",
+        id = "-",
         name = "ProjectAdmin",
         description = Some("Default Project Admin Group"),
         belongsToProject = "http://data.knora.org/projects/images",
@@ -282,7 +282,7 @@ object SharedTestData {
 
     /* represents the full GroupInfoV1 of the images ProjectMember group */
     val imagesProjectMemberGroupInfoV1 = GroupInfoV1(
-        id = "http://data.knora.org/groups/images/ProjectMember",
+        id = "-",
         name = "ProjectMember",
         description = Some("Default Project Member Group"),
         belongsToProject = "http://data.knora.org/projects/images",
