@@ -323,11 +323,10 @@ WHERE {
 
     ?resource ?property ?currentValue .
     ?currentValue rdf:type ?valueType .
-    ?property knora-base:objectClassConstraint ?valueType .
 
     @*
 
-        Consider order if given (not given for file values)
+    Consider order if given (not given for file values).
 
     *@
 
@@ -363,16 +362,13 @@ WHERE {
             @*
 
             Do nothing if we were asked to insert a direct link to a target that doesn't exist, is marked as deleted,
-            isn't a knora-base:Resource, or belongs to the wrong OWL class for the link property.
+            or isn't a knora-base:Resource.
 
             *@
 
-            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex .
-            <@linkUpdate.linkTargetIri> knora-base:isDeleted false .
-
+            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex ;
+                knora-base:isDeleted false .
             ?linkTargetClass@linkValueIndex rdfs:subClassOf+ knora-base:Resource .
-            <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
-            ?linkTargetClass@linkValueIndex rdfs:subClassOf* ?expectedTargetClass@linkValueIndex .
         }
 
         @if(linkUpdate.directLinkExists) {

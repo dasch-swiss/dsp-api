@@ -1452,7 +1452,8 @@ is done using the following Knora-specific properties:
 ``subjectClassConstraint``
     Specifies the class that subjects of the property must belong to.
     This constraint is recommended but not required. Knora will attempt
-    to enforce this constraint.
+    to enforce this constraint. This constraint can be inherited or
+    overridden by subproperties.
 
 ``objectClassConstraint``
     If the property is an object property, specifies the class that
@@ -1461,7 +1462,8 @@ is done using the following Knora-specific properties:
     resource that points to a ``kb:Value`` or to another resource) is
     required have this constraint, because the Knora API server relies
     on it to know what type of object to expect for the property. Knora
-    will attempt to enforce this constraint.
+    will attempt to enforce this constraint. This constraint can be
+    inherited or overridden by subproperties.
 
 ``objectDatatypeConstraint``
     If the property is a datatype property, specifies the type of

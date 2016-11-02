@@ -304,11 +304,11 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[ResourcesResponderV1]
 
-    val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val rdfDataObjects = List(
+    private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
@@ -323,6 +323,10 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     private val newBookResourceIri = new MutableTestIri
     private val newPageResourceIri = new MutableTestIri
+    private val blueThingIri = new MutableTestIri
+    private val thingIri = new MutableTestIri
+
+    private val knoraIdUtil = new KnoraIdUtil
 
     private def compareResourceFullResponses(received: ResourceFullResponseV1, expected: ResourceFullResponseV1): Unit = {
         // println(MessageUtil.toSource(received))
@@ -1084,6 +1088,113 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     response.label should ===(myNewLabel)
             }
 
+        }
+
+        "create an anything:BlueThing" in {
+            val valuesToBeCreated = Map(
+                "http://www.knora.org/ontology/anything#hasText" -> Vector(CreateValueV1WithComment(TextValueV1("Blue")))
+            )
+
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/anything#BlueThing",
+                label = "Blue Thing",
+                projectIri = "http://data.knora.org/projects/anything",
+                values = valuesToBeCreated,
+                file = None,
+                userProfile = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceCreateResponseV1 =>
+                    response.results("http://www.knora.org/ontology/anything#hasText").head.value.textval(LiteralValueType.StringValue) should ===("Blue")
+                    blueThingIri.set(response.res_id)
+            }
+        }
+
+        "create an anything:Thing with property anything:hasBlueThing pointing to an anything:BlueThing" in {
+            val valuesToBeCreated = Map(
+                "http://www.knora.org/ontology/anything#hasBlueThing" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = blueThingIri.get)))
+            )
+
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/anything#Thing",
+                label = "Test Thing",
+                projectIri = "http://data.knora.org/projects/anything",
+                values = valuesToBeCreated,
+                file = None,
+                userProfile = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceCreateResponseV1 =>
+                    response.results("http://www.knora.org/ontology/anything#hasBlueThing").head.value.textval(LiteralValueType.StringValue) should ===(blueThingIri.get)
+                    thingIri.set(response.res_id)
+            }
+        }
+
+        "create an anything:Thing with property anything:hasOtherThing pointing to an anything:BlueThing" in {
+            val valuesToBeCreated = Map(
+                "http://www.knora.org/ontology/anything#hasOtherThing" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = blueThingIri.get)))
+            )
+
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/anything#Thing",
+                label = "Test Thing",
+                projectIri = "http://data.knora.org/projects/anything",
+                values = valuesToBeCreated,
+                file = None,
+                userProfile = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceCreateResponseV1 =>
+                    response.results("http://www.knora.org/ontology/anything#hasOtherThing").head.value.textval(LiteralValueType.StringValue) should ===(blueThingIri.get)
+            }
+        }
+
+        "create an anything:Thing with property anything:hasUnspecifiedThing pointing to an anything:BlueThing" in {
+            val valuesToBeCreated = Map(
+                "http://www.knora.org/ontology/anything#hasUnspecifiedThing" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = blueThingIri.get)))
+            )
+
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/anything#Thing",
+                label = "Test Thing",
+                projectIri = "http://data.knora.org/projects/anything",
+                values = valuesToBeCreated,
+                file = None,
+                userProfile = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceCreateResponseV1 =>
+                    response.results("http://www.knora.org/ontology/anything#hasUnspecifiedThing").head.value.textval(LiteralValueType.StringValue) should ===(blueThingIri.get)
+            }
+        }
+
+        "not create an anything:Thing with property anything:hasBlueThing pointing to an anything:Thing" in {
+            val valuesToBeCreated = Map(
+                "http://www.knora.org/ontology/anything#hasBlueThing" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = thingIri.get)))
+            )
+
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/anything#Thing",
+                label = "Test Thing",
+                projectIri = "http://data.knora.org/projects/anything",
+                values = valuesToBeCreated,
+                file = None,
+                userProfile = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+            }
         }
     }
 }
