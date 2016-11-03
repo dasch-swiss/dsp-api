@@ -275,8 +275,8 @@ object SharedTestData {
         name = "ProjectAdmin",
         description = Some("Default Project Admin Group"),
         belongsToProject = "http://data.knora.org/projects/images",
-        isActiveGroup = Some(true),
-        hasSelfJoinEnabled = Some(false),
+        isActiveGroup = true,
+        hasSelfJoinEnabled = false,
         hasPermissions = Vector.empty[GroupPermissionV1]
     )
 
@@ -286,8 +286,8 @@ object SharedTestData {
         name = "ProjectMember",
         description = Some("Default Project Member Group"),
         belongsToProject = "http://data.knora.org/projects/images",
-        isActiveGroup = Some(true),
-        hasSelfJoinEnabled = Some(false),
+        isActiveGroup = true,
+        hasSelfJoinEnabled = false,
         hasPermissions = Vector.empty[GroupPermissionV1]
     )
 
@@ -297,8 +297,8 @@ object SharedTestData {
         name = "Image reviewer",
         description = Some("A group for image reviewers."),
         belongsToProject = "http://data.knora.org/projects/images",
-        isActiveGroup = Some(true),
-        hasSelfJoinEnabled = Some(false),
+        isActiveGroup = true,
+        hasSelfJoinEnabled = false,
         hasPermissions = Vector.empty[GroupPermissionV1]
     )
 }

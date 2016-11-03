@@ -398,7 +398,7 @@ class UsersResponderV1 extends ResponderV1 {
                 groupIris.map {
                     groupIri => {
                         val resFuture = for {
-                            groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, GroupInfoType.SHORT, None)).mapTo[GroupInfoResponseV1]
+                            groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, GroupInfoType.SAFE, None)).mapTo[GroupInfoResponseV1]
                             res = (groupInfo.group_info.belongsToProject, groupIri)
                         } yield res
                         Await.result(resFuture, 1.seconds)

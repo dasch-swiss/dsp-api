@@ -22,9 +22,9 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi
 import org.knora.webapi.messages.v1.responder._
 import org.knora.webapi.messages.v1.responder.groupmessages.GroupInfoType.GroupInfoType
-import org.knora.webapi.messages.v1.responder.usermessages.{NewUserDataV1, UserDataV1, UserProfileV1, UserV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.responders.v1.GroupsResponderV1
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException}
+import org.knora.webapi.{BadRequestException, IRI, InconsistentTriplestoreDataException}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,20 +183,37 @@ case class GroupInfoV1(id: IRI,
                        name: String,
                        description: Option[String] = None,
                        belongsToProject: IRI,
-                       isActiveGroup: Option[Boolean] = None,
-                       hasSelfJoinEnabled: Option[Boolean] = None,
-                       hasPermissions: Seq[GroupPermissionV1] = Nil) {
+                       isActiveGroup: Boolean = false,
+                       hasSelfJoinEnabled: Boolean = false,
+                       hasPermissions: Seq[GroupPermissionV1] = Vector.empty[GroupPermissionV1]) {
 
-    def convertToShortGroupInfoV1: GroupInfoV1 = {
-        GroupInfoV1(
-            id = id,
-            name = name,
-            description = description,
-            belongsToProject = belongsToProject,
-            isActiveGroup = None, // removed
-            hasSelfJoinEnabled = None, // removed
-            hasPermissions = Nil // removed
-        )
+    def ofType(groupInfoType: GroupInfoType): GroupInfoV1 = {
+
+        groupInfoType match {
+            case GroupInfoType.FULL => {
+                GroupInfoV1(
+                    id = id,
+                    name = name,
+                    description = description,
+                    belongsToProject = belongsToProject,
+                    isActiveGroup = isActiveGroup,
+                    hasSelfJoinEnabled = hasSelfJoinEnabled,
+                    hasPermissions = hasPermissions
+                )
+            }
+            case GroupInfoType.SAFE => {
+                GroupInfoV1(
+                    id = id,
+                    name = name,
+                    description = description,
+                    belongsToProject = belongsToProject,
+                    isActiveGroup = isActiveGroup,
+                    hasSelfJoinEnabled = hasSelfJoinEnabled,
+                    hasPermissions = Vector.empty[GroupPermissionV1]
+                )
+            }
+            case _ => throw BadRequestException(s"The requested groupInfoType: $groupInfoType is invalid.")
+        }
     }
 }
 
@@ -224,9 +241,11 @@ case class NewGroupInfoV1(name: String,
 case class GroupPermissionV1(name: IRI, value: Either[Boolean, List[IRI]])
 
 object GroupInfoType extends Enumeration {
+
     type GroupInfoType = Value
-    val SHORT = Value(0, "short")
-    val FULL = Value(1, "full")
+
+    val SAFE = Value(0, "safe") // everything without sensitive information (permissions)
+    val FULL = Value(1, "full") // everything, including permissions
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 

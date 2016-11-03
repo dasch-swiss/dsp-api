@@ -53,13 +53,13 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     private val timeout = 5.seconds
 
     val imageReviewerFullGroupInfo = SharedTestData.imageReviewerGroupInfoV1
-    val imageReviewerShortGroupInfo = SharedTestData.imageReviewerGroupInfoV1.convertToShortGroupInfoV1
+    val imageReviewerSafeGroupInfo = SharedTestData.imageReviewerGroupInfoV1.ofType(GroupInfoType.SAFE)
 
     val imagesProjectAdminFullGroupInfo = SharedTestData.imagesProjectAdminGroupInfoV1
-    val imagesProjectAdminShortGroupInfo = SharedTestData.imagesProjectAdminGroupInfoV1.convertToShortGroupInfoV1
+    val imagesProjectAdminSafeGroupInfo = SharedTestData.imagesProjectAdminGroupInfoV1.ofType(GroupInfoType.SAFE)
 
     val imagesProjectMemberFullGroupInfo = SharedTestData.imagesProjectMemberGroupInfoV1
-    val imagesProjectMemberShortGroupInfo = SharedTestData.imagesProjectMemberGroupInfoV1.convertToShortGroupInfoV1
+    val imagesProjectMemberSafeGroupInfo = SharedTestData.imagesProjectMemberGroupInfoV1.ofType(GroupInfoType.SAFE)
 
     val rootUserProfileV1 = SharedTestData.rootUserProfileV1
 
@@ -81,8 +81,8 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 expectMsg(GroupInfoResponseV1(imageReviewerFullGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return short group info if the group is known " in {
-                actorUnderTest ! GroupInfoByIRIGetRequest(imageReviewerShortGroupInfo.id, GroupInfoType.SHORT, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imageReviewerShortGroupInfo, Some(rootUserProfileV1.userData)))
+                actorUnderTest ! GroupInfoByIRIGetRequest(imageReviewerSafeGroupInfo.id, GroupInfoType.SAFE, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imageReviewerSafeGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return 'NotFoundException' when the group is unknown " in {
                 actorUnderTest ! GroupInfoByIRIGetRequest("http://data.knora.org/groups/notexisting", GroupInfoType.FULL, Some(rootUserProfileV1))
@@ -95,8 +95,8 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 expectMsg(GroupInfoResponseV1(imagesProjectAdminFullGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return short group info if the group is known " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberShortGroupInfo.belongsToProject, imagesProjectMemberShortGroupInfo.name, GroupInfoType.SHORT, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imagesProjectMemberShortGroupInfo, Some(rootUserProfileV1.userData)))
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberSafeGroupInfo.belongsToProject, imagesProjectMemberSafeGroupInfo.name, GroupInfoType.SAFE, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imagesProjectMemberSafeGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return 'NotFoundException' when the group is unknown " in {
                 actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberFullGroupInfo.belongsToProject,"groupwrong", GroupInfoType.FULL, Some(rootUserProfileV1))
@@ -112,11 +112,11 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 )
                 expectMsgPF(timeout) {
                     case GroupOperationResponseV1(newGroupInfo, requestingUserData) => {
-                        assert(newGroupInfo.name.equals("NewGroup"))
-                        assert(newGroupInfo.description.contains("NewGroupDescription"))
-                        assert(newGroupInfo.belongsToProject.contains("http://data.knora.org/projects/images"))
-                        assert(newGroupInfo.isActiveGroup.contains(true))
-                        assert(newGroupInfo.hasSelfJoinEnabled.contains(false))
+                        newGroupInfo.name should equal ("NewGroup")
+                        newGroupInfo.description should equal (Some("NewGroupDescription"))
+                        newGroupInfo.belongsToProject should equal ("http://data.knora.org/projects/images")
+                        newGroupInfo.isActiveGroup should equal (true)
+                        newGroupInfo.hasSelfJoinEnabled should equal (false)
                     }
                 }
             }

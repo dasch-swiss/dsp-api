@@ -26,6 +26,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -83,7 +84,7 @@ sealed trait UsersResponderRequestV1 extends KnoraRequestV1
   * @param userProfileType the extent of the information returned.
   */
 case class UserProfileByIRIGetRequestV1(userIri: IRI,
-                                        userProfileType: UserProfileType.Value = UserProfileType.SHORT) extends UsersResponderRequestV1
+                                        userProfileType: UserProfileType = UserProfileType.SHORT) extends UsersResponderRequestV1
 
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
@@ -92,7 +93,7 @@ case class UserProfileByIRIGetRequestV1(userIri: IRI,
   * @param userProfileType the extent of the information returned.
   */
 case class UserProfileByUsernameGetRequestV1(username: String,
-                                             userProfileType: UserProfileType.Value = UserProfileType.SHORT) extends UsersResponderRequestV1
+                                             userProfileType: UserProfileType = UserProfileType.SHORT) extends UsersResponderRequestV1
 
 
 /**
@@ -289,7 +290,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     sessionId = sessionId
                 )
             }
-            case _ => throw BadRequestException(s"The requested userProfileTyle: $userProfileType is invalid.")
+            case _ => throw BadRequestException(s"The requested userProfileType: $userProfileType is invalid.")
         }
     }
 
@@ -375,6 +376,9 @@ case class NewUserDataV1(username: String,
   */
 object UserProfileType extends Enumeration {
     /* TODO: Extend to incorporate user privacy wishes */
+
+    type UserProfileType = Value
+
     val SHORT = Value(0, "short") // short without sensitive information
     val SAFE = Value(1, "safe") // everything without sensitive information (password, etc.)
     val FULL = Value(2, "full") // everything

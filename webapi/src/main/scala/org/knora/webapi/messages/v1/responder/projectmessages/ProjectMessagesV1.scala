@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v1.responder.projectmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsTemplate
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoType.ProjectInfoType
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException}
@@ -77,7 +78,7 @@ sealed trait ProjectsResponderRequestV1 extends KnoraRequestV1
   * @param infoType is the type of the project information: full or short.
   * @param userProfile the profile of the user making the request.
   */
-case class ProjectsGetRequestV1(infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class ProjectsGetRequestV1(infoType: ProjectInfoType, userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 
 /**
@@ -87,7 +88,7 @@ case class ProjectsGetRequestV1(infoType: ProjectInfoType.Value, userProfile: Op
   * @param infoType is the type of the project information: full or short.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class ProjectInfoByIRIGetRequest(iri: IRI, infoType: ProjectInfoType.Value, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class ProjectInfoByIRIGetRequest(iri: IRI, infoType: ProjectInfoType, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 
 /**
@@ -97,7 +98,7 @@ case class ProjectInfoByIRIGetRequest(iri: IRI, infoType: ProjectInfoType.Value,
   * @param infoType is the type of the project information.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class ProjectInfoByShortnameGetRequest(shortname: String, infoType: ProjectInfoType.Value, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class ProjectInfoByShortnameGetRequest(shortname: String, infoType: ProjectInfoType, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
   * Requests the cration of a new project.
@@ -167,6 +168,9 @@ case class ProjectInfoV1(id: IRI,
                          rights: Option[Int] = None)
 
 object ProjectInfoType extends Enumeration {
+
+    type ProjectInfoType = Value
+
     val SHORT = Value(0, "short")
     val FULL = Value(1, "full")
 

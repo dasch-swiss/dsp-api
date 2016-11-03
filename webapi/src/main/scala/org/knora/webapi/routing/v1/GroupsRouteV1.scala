@@ -26,8 +26,6 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 
-import scala.util.Try
-
 object GroupsRouteV1 extends Authenticator {
 
     private val schemes = Array("http", "https")
@@ -45,7 +43,7 @@ object GroupsRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val params = requestContext.request.uri.query().toMap
-                    val infoType = params.getOrElse("infoType", GroupInfoType.SHORT.toString)
+                    val infoType = params.getOrElse("infoType", GroupInfoType.SAFE.toString)
                     val requestMessage = GroupsGetRequestV1(GroupInfoType.lookup(infoType), Some(userProfile))
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
@@ -60,7 +58,7 @@ object GroupsRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val params = requestContext.request.uri.query().toMap
-                    val infoType = params.getOrElse("infoType", GroupInfoType.SHORT.toString)
+                    val infoType = params.getOrElse("infoType", GroupInfoType.SAFE.toString)
                     val projectIriValue = params.getOrElse("projectIri", "")
                     val projectIri = InputValidation.toIri(projectIriValue, () => throw BadRequestException(s"Invalid project IRI supplied: $projectIriValue"))
                     val requestMessage = if (urlValidator.isValid(value)) {

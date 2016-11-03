@@ -60,11 +60,11 @@ A user becomes implicitly a member of such a group by satisfying certain conditi
 
 **knora-base:ProjectMember**:
   When checking a user’s permissions, the user is automatically assigned to this group by being a member of a
-  project designated by the ```knora-base:isInProject``` property.
+  project designated by the ``knora-base:isInProject`` property.
 
 **knora-base:ProjectAdmin**:
   When checking a user's permission, the user is automatically assigned to this group through the
-  ```knora-base:isInProjectAdminGroup``` property, which points to the project in question.
+  ``knora-base:isInProjectAdminGroup`` property, which points to the project in question.
 
 **knora-base:SystemAdmin**:
   The ``root`` user is by default member of this group. Membership is received by setting the property
