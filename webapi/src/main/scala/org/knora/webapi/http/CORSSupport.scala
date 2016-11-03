@@ -33,7 +33,7 @@ object CORSSupport {
         allowCredentials = true,
         allowedOrigins = HttpOriginRange.*,
         allowedHeaders = HttpHeaderRange.*,
-        allowedMethods = List(GET, PUT, POST, HEAD, OPTIONS),
+        allowedMethods = List(GET, PUT, POST, DELETE, HEAD, OPTIONS),
         maxAge = Some(30 * 60)
     )
 
