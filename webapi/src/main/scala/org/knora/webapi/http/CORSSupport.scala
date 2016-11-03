@@ -22,11 +22,11 @@ package org.knora.webapi.http
 
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.headers.HttpOriginRange
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{Directives, RejectionHandler, Route}
 import ch.megard.akka.http.cors.CorsDirectives._
-import ch.megard.akka.http.cors.{CorsSettings, HttpHeaderRange}
+import ch.megard.akka.http.cors.{CorsDirectives, CorsSettings, HttpHeaderRange}
 
-object CORSSupport {
+object CORSSupport extends Directives {
 
     val corsSettings = CorsSettings.defaultSettings.copy(
         allowGenericHttpRequests = true,
@@ -42,7 +42,11 @@ object CORSSupport {
       * @param route the route for which CORS support is enabled
       * @return the enabled route.
       */
-    def CORS(route: Route): Route = cors(corsSettings) {
-        route
+    def CORS(route: Route): Route = handleRejections(CorsDirectives.corsRejectionHandler) {
+        cors(corsSettings) {
+            handleRejections(RejectionHandler.default) {
+                route
+            }
+        }
     }
 }

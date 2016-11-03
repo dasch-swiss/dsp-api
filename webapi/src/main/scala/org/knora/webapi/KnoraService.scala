@@ -27,7 +27,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern._
 import akka.stream.ActorMaterializer
-import ch.megard.akka.http.cors.CorsDirectives._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -91,11 +90,6 @@ trait KnoraService {
       * A user representing the Knora API server, used for initialisation on startup.
       */
     private val systemUser = UserProfileV1(userData = UserDataV1(lang = "en"), isSystemUser = true)
-
-    /**
-      * Brings the CORS rejection handler into scope
-      */
-    implicit def corsRejection = corsRejectionHandler
 
     /**
       * Bring the Knora exception handler into scope, which is responsible for converting our exceptions to HttpResponses
