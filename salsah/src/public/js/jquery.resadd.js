@@ -1137,6 +1137,12 @@
 							// TODO: handle GUI  element problem
 							//propvals["http://www.knora.org/ontology/knora-base#hasComment"] = undefined;
 							var tmplabel = propvals['__LABEL__'];
+
+							if (tmplabel === undefined || tmplabel.length == 0) {
+								alert(strings._label_required);
+								return;
+							}
+
 							var tmplabelFirstElem = tmplabel[0];
 							var labelStr = tmplabelFirstElem.richtext_value.utf8str;
 							propvals['__LABEL__'] = undefined;
