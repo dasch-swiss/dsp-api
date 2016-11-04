@@ -15,7 +15,11 @@
 <http://data.knora.org/projects/b83b99ca01> a knora-base:knoraProject ;
 	knora-base:projectBasepath "/path/dokubib" ;
 	knora-base:projectLongname "Bilddatenbank Bibliothek St. Moritz" ;
-	knora-base:projectShortname "dokubib" .
+	knora-base:projectShortname "dokubib" ;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/incunabula"^^xsd:string ;
+    knora-base:projectDataGraph "http://www.knora.org/data/incunabula"^^xsd:string ;
+	knora-base:isActiveProject "true"^^xsd:boolean .
+
 # #########################################################
 # 
 #  FLAT LISTS
