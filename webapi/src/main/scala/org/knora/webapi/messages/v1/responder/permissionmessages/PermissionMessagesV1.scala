@@ -83,8 +83,9 @@ case class AdministrativePermissionsForProjectsGetRequestV1(projectIris: List[IR
   * A successful response will contain an [[AdministrativePermissionV1]] object.
   *
   * @param administrativePermissionIri the iri of the administrative permission object.
+  * @param userProfileV1 the user initiation the request.
   */
-case class AdministrativePermissionGetRequestV1(administrativePermissionIri: IRI) extends PermissionsResponderRequestV1
+case class AdministrativePermissionGetRequestV1(administrativePermissionIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
 /**
   * Create a single [[AdministrativePermissionV1]].
@@ -130,8 +131,9 @@ case class DefaultObjectAccessPermissionsForProjectsGetRequestV1(projectIris: Li
   * A successful response will contain an [[DefaultObjectAccessPermissionV1]] object.
   *
   * @param defaultObjectAccessPermissionIri the iri of the default object access permission object.
+  * @param userProfileV1 the user initiation the request.
   */
-case class DefaultObjectAccessPermissionGetRequestV1(defaultObjectAccessPermissionIri: IRI) extends PermissionsResponderRequestV1
+case class DefaultObjectAccessPermissionGetRequestV1(defaultObjectAccessPermissionIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
 /**
   * Create a singel [[DefaultObjectAccessPermissionV1]].
@@ -239,21 +241,13 @@ case class NewAdministrativePermissionV1(iri: IRI,
   * @param forGroup
   * @param forResourceClass
   * @param forProperty
-  * @param hasDefaultChangeRightsPermission
-  * @param hasDefaultDeletePermission
-  * @param hasDefaultModifyPermission
-  * @param hasDefaultViewPermission
-  * @param hasDefaultRestrictedViewPermission
+  * @param hasPermissions
   */
 case class DefaultObjectAccessPermissionV1(forProject: IRI = OntologyConstants.KnoraBase.AllProjects,
                                            forGroup: IRI = OntologyConstants.KnoraBase.AllGroups,
                                            forResourceClass: IRI = OntologyConstants.KnoraBase.AllResourceClasses,
                                            forProperty: IRI = OntologyConstants.KnoraBase.AllProperties,
-                                           hasDefaultChangeRightsPermission: Seq[IRI] = Vector.empty[IRI],
-                                           hasDefaultDeletePermission: Seq[IRI] = Vector.empty[IRI],
-                                           hasDefaultModifyPermission: Seq[IRI] = Vector.empty[IRI],
-                                           hasDefaultViewPermission: Seq[IRI] = Vector.empty[IRI],
-                                           hasDefaultRestrictedViewPermission: Seq[IRI] = Vector.empty[IRI]
+                                           hasPermissions: Map[String, Set[IRI]] = Map.empty[String, Set[IRI]]
                                           )
 
 /**
@@ -355,7 +349,7 @@ object PermissionV1JsonProtocol extends DefaultJsonProtocol with NullOptions wit
         }
     }
     implicit val administrativePermissionV1Format: JsonFormat[AdministrativePermissionV1] = jsonFormat3(AdministrativePermissionV1)
-    implicit val defaultObjectAccessPermissionV1Format: JsonFormat[DefaultObjectAccessPermissionV1] = jsonFormat9(DefaultObjectAccessPermissionV1)
+    implicit val defaultObjectAccessPermissionV1Format: JsonFormat[DefaultObjectAccessPermissionV1] = jsonFormat5(DefaultObjectAccessPermissionV1)
     implicit val templatePermissionsCreateResponseV1Format: RootJsonFormat[TemplatePermissionsCreateResponseV1] = jsonFormat4(TemplatePermissionsCreateResponseV1)
     implicit val administrativePermissionOperationResponseV1Format: RootJsonFormat[AdministrativePermissionOperationResponseV1] = jsonFormat4(AdministrativePermissionOperationResponseV1)
     implicit val defaultObjectAccessPermissionOperationResponseV1Format: RootJsonFormat[DefaultObjectAccessPermissionOperationResponseV1] = jsonFormat4(DefaultObjectAccessPermissionOperationResponseV1)

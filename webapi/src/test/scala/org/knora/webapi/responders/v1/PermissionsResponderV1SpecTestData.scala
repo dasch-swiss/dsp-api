@@ -36,7 +36,7 @@ object PermissionsResponderV1SpecTestData {
             p = AdministrativePermissionV1(
                 forProject = IMAGES_PROJECT_IRI,
                 forGroup = OntologyConstants.KnoraBase.ProjectMember,
-                hasPermissions = Map.empty[String, Set[IRI]]
+                hasPermissions = Map("ProjectResourceCreateAllPermission" -> Set[IRI]())
             )
         )
 
@@ -49,9 +49,11 @@ object PermissionsResponderV1SpecTestData {
                 forGroup = OntologyConstants.KnoraBase.ProjectMember,
                 forResourceClass = OntologyConstants.KnoraBase.AllResourceClasses,
                 forProperty = OntologyConstants.KnoraBase.AllProperties,
-                hasDefaultChangeRightsPermission = List(OntologyConstants.KnoraBase.Creator),
-                hasDefaultModifyPermission = List(OntologyConstants.KnoraBase.ProjectMember),
-                hasDefaultViewPermission = List(OntologyConstants.KnoraBase.KnownUser)
+                hasPermissions = Map(
+                    "DCR" -> Set(OntologyConstants.KnoraBase.Creator),
+                    "DM" -> Set(OntologyConstants.KnoraBase.ProjectMember),
+                    "DV" -> Set(OntologyConstants.KnoraBase.KnownUser)
+                )
             )
         )
 
