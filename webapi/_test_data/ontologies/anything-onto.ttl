@@ -439,23 +439,12 @@
 
                rdfs:subPropertyOf :hasOtherThingValue ;
 
+               knora-base:subjectClassConstraint :Thing ;
+
+               knora-base:objectClassConstraint knora-base:LinkValue ;
+
                salsah-gui:guiOrder "16"^^xsd:integer .
 
-
-
-:hasUnspecifiedThing rdf:type owl:ObjectProperty ;
-
-               rdfs:subPropertyOf :hasOtherThing ;
-
-               salsah-gui:guiOrder "17"^^xsd:integer .
-
-
-
-:hasUnspecifiedThingValue rdf:type owl:ObjectProperty ;
-
-               rdfs:subPropertyOf :hasOtherThingValue ;
-
-               salsah-gui:guiOrder "17"^^xsd:integer .
 
 
 :Thing rdf:type owl:Class ;
@@ -543,16 +532,6 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasBlueThingValue ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasUnspecifiedThing ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger
-                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasUnspecifiedThingValue ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ;
                       #[

@@ -1051,5 +1051,26 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
         }
+
+        "not create an anything:Thing with property anything:hasBlueThing pointing to an anything:Thing" in {
+            val valuesToBeCreated = Map(
+                "http://www.knora.org/ontology/anything#hasBlueThing" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://data.knora.org/a-thing")))
+            )
+
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/anything#Thing",
+                label = "Test Thing",
+                projectIri = "http://data.knora.org/projects/anything",
+                values = valuesToBeCreated,
+                file = None,
+                userProfile = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+            }
+        }
     }
 }
