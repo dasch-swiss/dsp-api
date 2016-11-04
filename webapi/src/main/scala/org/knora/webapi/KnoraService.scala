@@ -92,11 +92,6 @@ trait KnoraService {
     private val systemUser = UserProfileV1(userData = UserDataV1(lang = "en"), isSystemUser = true)
 
     /**
-      * Bring the Knora exception handler into scope, which is responsible for converting our exceptions to HttpResponses
-      */
-    implicit def knoraExceptionHandler = KnoraExceptionHandler(settings, log)
-
-    /**
       * All routes composed together and CORS activated.
       */
     private val apiRoutes = CORS (
@@ -111,7 +106,9 @@ trait KnoraService {
                 GraphDataRouteV1.knoraApiPath(system, settings, log) ~
                 ProjectsRouteV1.knoraApiPath(system, settings, log) ~
                 CkanRouteV1.knoraApiPath(system, settings, log) ~
-                StoreRouteV1.knoraApiPath(system, settings, log)
+                StoreRouteV1.knoraApiPath(system, settings, log),
+        settings,
+        log
     )
 
     /**
