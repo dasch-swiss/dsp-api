@@ -79,7 +79,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username and password */
             Get("/v1/authenticate?username=root&password=test") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
+                status should equal(StatusCodes.OK)
             }
         }
 
@@ -87,16 +87,16 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username / wrong password */
             Get("/v1/authenticate?username=root&password=wrong") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
 
         /* not supported in this branch */
-        "fail with authentication if the user is set as 'not active' " ignore {
+        "fail with authentication if the user is set as 'not active' " in {
             /* User not active */
             Get("/v1/authenticate?username=inactiveuser&password=test") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
     }
@@ -106,7 +106,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username / correct password */
             Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
+                status should equal (StatusCodes.OK)
             }
         }
 
@@ -114,7 +114,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username / wrong password */
             Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "wrong")) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
 
@@ -126,10 +126,10 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username and correct password */
             Get("/v1/session?login&username=root&password=test") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
+                status should equal(StatusCodes.OK)
                 /* store session */
                 sid = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds).sid
-                assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid))))
+                header[`Set-Cookie`] should equal(Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid))))
             }
         }
 
@@ -137,7 +137,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             // authenticate by calling '/v2/session' without parameters but by providing session id in cookie from earlier login
             Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
+                status should equal(StatusCodes.OK)
             }
         }
 
@@ -145,15 +145,15 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             // do logout with stored session id
             Get("/v1/session?logout") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
-                assert(header[`Set-Cookie`] === Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
+                status should equal(StatusCodes.OK)
+                header[`Set-Cookie`] should equal(Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
             }
         }
 
         "fail with authentication when providing the session cookie after logout" in {
             Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
 
@@ -161,7 +161,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username and wrong password */
             Get("/v1/session?login&username=root&password=wrong") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
 
@@ -170,14 +170,14 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             Get("/v1/session?login&username=wrong&password=test") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 //TODO: Need to fix UsersResponderV1 to return None and not an exception when user not found (issue #297)
-                assert(status === StatusCodes.NotFound)
+                status should equal(StatusCodes.NotFound)
             }
         }
 
         "fail with authentication when using wrong session id in cookie " in {
             Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, "123456") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
 
@@ -189,7 +189,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username and correct password */
             Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
+                status should equal(StatusCodes.OK)
             }
         }
 
@@ -197,7 +197,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username and wrong password */
             Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "wrong")) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
 
@@ -205,7 +205,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* wrong username */
             Get("/v1/session?logint") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
 
@@ -217,7 +217,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username / correct password */
             Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test") ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
+                status should equal(StatusCodes.OK)
             }
         }
 
@@ -225,7 +225,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username / wrong password */
             Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=wrong") ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
 
@@ -233,7 +233,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username / correct password */
             Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
+                status should equal(StatusCodes.OK)
             }
         }
 
@@ -241,7 +241,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username / wrong password */
             Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "wrong")) ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.Unauthorized)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
 

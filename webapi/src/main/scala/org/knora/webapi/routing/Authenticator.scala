@@ -27,6 +27,7 @@ import akka.http.scaladsl.server.RequestContext
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
+import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
@@ -259,6 +260,7 @@ object Authenticator {
     val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
     val BAD_CRED_USERNAME_NOT_SUPPLIED = "bad credentials: no username supplied"
     val BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE = "bad credentials: none found"
+    val BAD_CRED_USER_INACTIVE = "bad credentials: user inactive"
 
     val KNORA_AUTHENTICATION_COOKIE_NAME = "KnoraAuthentication"
 
@@ -299,9 +301,9 @@ object Authenticator {
     private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem): String = {
         val userProfileV1 = getUserProfileByUsername(username)
 
-        if (userProfileV1.passwordMatch(password)) {
+        if (userProfileV1.passwordMatch(password) && userProfileV1.userData.isActiveUser.get) {
             // create session id and cache user profile under this id
-            log.debug("password matched")
+            log.debug("authenticateCredentials - password matched")
             if (session) {
                 val sId = System.currentTimeMillis().toString
                 CacheUtil.put(cacheName, sId, userProfileV1)
@@ -309,8 +311,11 @@ object Authenticator {
             } else {
                 "0"
             }
+        } else if (!userProfileV1.userData.isActiveUser.get) {
+            log.debug("authenticateCredentials - user is not active")
+            throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
         } else {
-            log.debug("password did not match")
+            log.debug("authenticateCredentials - password did not match")
             throw BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)
         }
     }
@@ -459,15 +464,15 @@ object Authenticator {
                     userProfileV1
                 case None =>
                     // didn't found one, so I will try to get it from the triple store
-                    val userProfileV1Future = responderManager ? UserProfileByUsernameGetRequestV1(username)
-                    Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
-                        case Some(userProfileV1) => {
+                    val userProfileV1Future = responderManager ? UserProfileByUsernameGetRequestV1(username, UserProfileType.FULL)
+                    Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[UserProfileV1] match {
+                        case userProfileV1: UserProfileV1 => {
                             log.debug("This user was found: " + userProfileV1.toString)
                             // before I return the found user profile, let's put it into the cache
                             CacheUtil.put(cacheName, username, userProfileV1)
                             userProfileV1
                         }
-                        case None => {
+                        case _ => {
                             log.debug("No user found by this username")
                             throw BadCredentialsException(BAD_CRED_USER_NOT_FOUND)
                         }

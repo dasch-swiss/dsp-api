@@ -79,12 +79,12 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.Unauthorized)
         }
-        "fail with authentication if the user is set as 'not active' " ignore {
+        "fail with authentication if the user is set as 'not active' " in {
             /* User not active */
             val request = Get(baseApiUrl + "/v1/authenticate?username=inactiveuser&password=test")
             val response: HttpResponse = singleAwaitingRequest(request)
             log.debug(s"response: ${response.toString}")
-            assert(response.status === StatusCodes.NotFound)
+            assert(response.status === StatusCodes.Unauthorized)
         }
     }
 
