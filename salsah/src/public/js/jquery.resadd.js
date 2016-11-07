@@ -126,6 +126,42 @@
 						);
 					};
 
+					var get_subclasses = function(preselected) {
+
+						$('body').ajaxError(function(e, xhr, settings, exception) {
+							if (exception != 'abort') // we don't catch abort-errors here! jquery.searchbox.js uses the abort function to kill ajax calls
+							{
+								alert('AJAX-Error: ' + exception + '\ntarget=' + settings.url + '\ndata=' + settings.data);
+							}
+						});
+
+						SALSAH.ApiGet(
+							'subclasses/' + encodeURIComponent(localdata.settings.rtinfo.name), function(data) {
+								var i;
+
+								var subclass_sel = $this.find('select[name=selsubclass]').empty();
+
+								if (data.status == ApiErrors.OK) {
+									for (i in data.subClasses) {
+										if ((preselected !== undefined) && (preselected == data.subClasses[i].id)) {
+											subclass_sel.append($('<option>', {
+												value: data.subClasses[i].id, selected: "selected"
+											}).text(data.subClasses[i].label));
+										}
+										else {
+											subclass_sel.append($('<option>', {
+												value: data.subClasses[i].id
+											}).text(data.subClasses[i].label));
+										}
+									}
+									//get_rtinfo_and_build_form(restypes_sel.val());
+								} else {
+									alert(data.errormsg)
+								}
+							}, 'json'
+						);
+					};
+
 					var vocabulary_changed = function(id) {
 						if (vocabulary_selected != id) {
 							vocabulary_selected = id;
@@ -1101,6 +1137,12 @@
 							// TODO: handle GUI  element problem
 							//propvals["http://www.knora.org/ontology/knora-base#hasComment"] = undefined;
 							var tmplabel = propvals['__LABEL__'];
+
+							if (tmplabel === undefined || tmplabel.length == 0) {
+								alert(strings._label_required);
+								return;
+							}
+
 							var tmplabelFirstElem = tmplabel[0];
 							var labelStr = tmplabelFirstElem.richtext_value.utf8str;
 							propvals['__LABEL__'] = undefined;
@@ -1207,8 +1249,23 @@
 						}, 'json');
 
 					} else {
+						var selele;
+						$this.append(strings._resource_type + ' : ');
+						var selele = $('<select>', {
+							'class': 'extsearch',
+							name: 'selsubclass'
+						}).change(function(event) {
+							get_rtinfo_and_build_form($(event.target).val());
+						});
+						$this.append(selele);
+						get_subclasses(localdata.settings.rtinfo.name);
+						$this.append($('<hr>').css({
+							'height': '2px',
+							'background-color': '#888'
+						}));
 						$this.append(formcontainer);
-						create_form(localdata.settings.rtinfo, localdata.settings.options);
+						get_rtinfo_and_build_form(localdata.settings.rtinfo.name);
+						//create_form(localdata.settings.rtinfo, localdata.settings.options);
 					}
 				});
 			},

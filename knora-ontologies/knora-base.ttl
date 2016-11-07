@@ -24,6 +24,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix foaf:<http://xmlns.com/foaf/0.1/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @base <http://www.knora.org/ontology/knora-base> .
 
 <http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology .
@@ -126,24 +127,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
-###  http://www.knora.org/ontology/salsah-gui#guiAttribute
-
-<http://www.knora.org/ontology/salsah-gui#guiAttribute> rdf:type owl:AnnotationProperty .
-
-
-
-###  http://www.knora.org/ontology/salsah-gui#guiElement
-
-<http://www.knora.org/ontology/salsah-gui#guiElement> rdf:type owl:AnnotationProperty .
-
-
-
-###  http://www.knora.org/vocabularies/dc#dctermsDescription
-
-<http://www.knora.org/vocabularies/dc#dctermsDescription> rdf:type owl:AnnotationProperty .
-
-
-
 
 #################################################################
 #
@@ -242,7 +225,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 		  rdfs:comment """Represents a color."""@en ;
 
-          <http://www.knora.org/ontology/salsah-gui#guiAttribute> "ncolors=8"^^xsd:string ;
+          salsah-gui:guiAttribute "ncolors=8"^^xsd:string ;
 
           :objectClassConstraint :ColorValue ;
 
@@ -250,7 +233,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
           rdfs:subPropertyOf :hasValue ;
 
-          <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Colorpicker> .
+          salsah-gui:guiElement salsah-gui:Colorpicker .
 
 
 
@@ -267,7 +250,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
             :objectClassConstraint :TextValue ;
 
-			<http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Richtext> ;
+			      salsah-gui:guiElement salsah-gui:Richtext ;
 
             rdfs:subPropertyOf :hasValue .
 
@@ -300,9 +283,9 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a fichier"@fr ,
                          "ha file"@it ;
               
-			  rdfs:comment "Connects a Representation to a file"@en ;	
+              rdfs:comment "Connects a Representation to a file"@en ;	
 
-			  <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Fileupload> ;
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
               :subjectClassConstraint :Representation ;
 
@@ -319,11 +302,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a fichier d'image"@fr ,
                          "ha file imagine"@it ;
 
-			  rdfs:comment "Connects a Representation to an image file"@en ;              
+              rdfs:comment "Connects a Representation to an image file"@en ;              
 
               :objectClassConstraint :StillImageFileValue ;
 
               :subjectClassConstraint :StillImageRepresentation ;
+
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
 			        :hasDefaultRestrictedViewPermission :UnknownUser ;
 
@@ -344,11 +329,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a fichier de film"@fr ,
                          "ha file film"@it ;
               
-			  rdfs:comment "Connects a Representation to a movie file"@en ;
+              rdfs:comment "Connects a Representation to a movie file"@en ;
 
               :objectClassConstraint :MovingImageFileValue ;
 
               :subjectClassConstraint :MovingImageRepresentation ;
+
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -363,11 +350,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a fichier d'audio"@fr ,
                          "ha file audio"@it ;
 
-			  rdfs:comment "Connects a Representation to an audio file"@en ;
+              rdfs:comment "Connects a Representation to an audio file"@en ;
 
               :objectClassConstraint :AudioFileValue ;
 
               :subjectClassConstraint :AudioRepresentation ;
+
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -382,11 +371,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a ficher de 3D"@fr ,
                          "ha file 3D"@it ;
 
-			  rdfs:comment "Connects a Representation to a 3D-file"@en ;
+              rdfs:comment "Connects a Representation to a 3D-file"@en ;
               
               :objectClassConstraint :DDDFileValue ;
 
               :subjectClassConstraint :DDDRepresentation ;
+
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -401,11 +392,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a fichier de texte"@fr ,
                          "ha file testo"@it ;
               
-			  rdfs:comment "Connects a Representation to a text file"@en ;
+              rdfs:comment "Connects a Representation to a text file"@en ;
 
               :objectClassConstraint :TextFileValue ;
 
               :subjectClassConstraint :TextRepresentation ;
+
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -420,11 +413,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a document"@fr ,
                          "ha documento"@it ;
 
-			  rdfs:comment "Connects a Representation to a document"@en ;
+              rdfs:comment "Connects a Representation to a document"@en ;
               
               :objectClassConstraint :DocumentFileValue ;
 
               :subjectClassConstraint :DocumentRepresentation ;
+
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -439,17 +434,17 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                         "Géometrie"@fr ,
                         "Geometria"@it ;
 
-			 rdfs:comment """Represents a geometrical shape."""@en ;	
-
-             <http://www.knora.org/ontology/salsah-gui#guiAttribute> "width=95%;rows=4;wrap=soft"^^xsd:string ;
-
-             :objectClassConstraint :GeomValue ;
-
-             :subjectClassConstraint :Region ;
+             rdfs:comment """Represents a geometrical shape."""@en ;	
 
              rdfs:subPropertyOf :hasValue ;
 
-             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Geometry> .
+             salsah-gui:guiElement salsah-gui:Geometry ;
+
+             salsah-gui:guiAttribute "width=95%;rows=4;wrap=soft"^^xsd:string ;
+
+             :objectClassConstraint :GeomValue ;
+
+             :subjectClassConstraint :Region .
 
 
 
@@ -888,97 +883,97 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 :hasGivenName rdf:type owl:ObjectProperty ;
 
-             rdfs:label "Vorname"@de ,
+              rdfs:label "Vorname"@de ,
                         "given name"@en ,
                         "prénom"@fr ,
                         "nome di battesimo"@it ;
 
-			 rdfs:comment """Represents a Given name."""@en ;
+			        rdfs:comment """Represents a Given name."""@en ;
 
-             :objectClassConstraint :TextValue ;
+              :objectClassConstraint :TextValue ;
 
-             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#SimpleText> ;
+              salsah-gui:guiElement salsah-gui:SimpleText ;
 
-             :subjectClassConstraint :Person ;
+              :subjectClassConstraint :Person ;
 
-             rdfs:subPropertyOf :hasValue, foaf:givenName .
+              rdfs:subPropertyOf :hasValue, foaf:givenName .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasFamilyName
 
 :hasFamilyName rdf:type owl:ObjectProperty ;
 
-             rdfs:label "Nachname"@de ,
+               rdfs:label "Nachname"@de ,
                         "family name"@en ,
                         "nom de famille"@fr ,
                         "nome di famiglia"@it ;
 
-			 rdfs:comment """Represents a family name."""@en ;
+			         rdfs:comment """Represents a family name."""@en ;
 
-             :objectClassConstraint :TextValue ;
+               :objectClassConstraint :TextValue ;
 
-             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#SimpleText> ;
+               salsah-gui:guiElement salsah-gui:SimpleText ;
 
-             :subjectClassConstraint :Person ;
+               :subjectClassConstraint :Person ;
 
-             rdfs:subPropertyOf :hasValue, foaf:familyName .
+               rdfs:subPropertyOf :hasValue, foaf:familyName .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasIAFIdentifier
 
 :hasIAFIdentifier rdf:type owl:ObjectProperty ;
 
-                               rdfs:label "Gemeinsame Normdatei (GND)"@de ,
-                                          "Integrated Authority File"@en ;
+                  rdfs:label "Gemeinsame Normdatei (GND)"@de ,
+                             "Integrated Authority File"@en ;
 
-                  			   rdfs:comment """Repräsentiert eine GND-Nummer."""@de,
-                  			                """Represents a IAF identifier."""@en ;
+                  rdfs:comment """Repräsentiert eine GND-Nummer."""@de,
+                  			       """Represents a IAF identifier."""@en ;
 
-                               :objectClassConstraint :TextValue ;
+                  :objectClassConstraint :TextValue ;
 
-                               <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#SimpleText> ;
+                  salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                               :subjectClassConstraint :Person ;
+                  :subjectClassConstraint :Person ;
 
-                               rdfs:subPropertyOf :hasValue .
+                  rdfs:subPropertyOf :hasValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasBirthDate
 
 :hasBirthDate rdf:type owl:ObjectProperty ;
 
-                               rdfs:label "Geburtsdatum"@de ,
-                                          "date of birth"@en ;
+              rdfs:label "Geburtsdatum"@de ,
+                         "date of birth"@en ;
 
-                  			   rdfs:comment """Repräsentiert ein Geburtsdatum."""@de,
-                  			                """Represents a date of birth."""@en ;
+              rdfs:comment """Repräsentiert ein Geburtsdatum."""@de,
+                           """Represents a date of birth."""@en ;
 
-                               :objectClassConstraint :DateValue ;
+              :objectClassConstraint :DateValue ;
 
-                               <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Date> ;
+              salsah-gui:guiElement salsah-gui:Date ;
 
-                               :subjectClassConstraint :Person ;
+              :subjectClassConstraint :Person ;
 
-                               rdfs:subPropertyOf :hasValue, foaf:birthday .
+              rdfs:subPropertyOf :hasValue, foaf:birthday .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasDeathDate
 
 :hasDeathDate rdf:type owl:ObjectProperty ;
 
-                               rdfs:label "Sterbedatum"@de ,
-                                          "date of death"@en ;
+              rdfs:label "Sterbedatum"@de ,
+                         "date of death"@en ;
 
-                  			   rdfs:comment """Repräsentiert ein Sterbedatum."""@de,
-                  			                """Represents a date of death."""@en ;
+              rdfs:comment """Repräsentiert ein Sterbedatum."""@de,
+                  			   """Represents a date of death."""@en ;
 
-                               :objectClassConstraint :DateValue ;
+              :objectClassConstraint :DateValue ;
 
-                               <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Date> ;
+              salsah-gui:guiElement salsah-gui:Date ;
 
-                               :subjectClassConstraint :Person ;
+              :subjectClassConstraint :Person ;
 
-                               rdfs:subPropertyOf :hasValue .
+              rdfs:subPropertyOf :hasValue .
 
 
 

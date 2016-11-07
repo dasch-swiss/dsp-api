@@ -268,6 +268,7 @@ because even though resources are not versioned, it is necessary to be able to
 find out when a resource was deleted. If desired, a new resource can be
 created by copying data from a deleted resource.
 
+
 Properties of Resource
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1428,15 +1429,23 @@ following example from ``knora-base``:
               owl:onProperty :hasStillImageFileValue ;
               owl:minCardinality "1"^^xsd:nonNegativeInteger ] .
 
-A resource class inherits cardinalities from its superclasses. Also,
-cardinalities in the subclass can override cardinalities that would
-otherwise be inherited from the superclass. Specifically, if a
-superclass has a cardinality on a property P, and a subclass has a
-cardinality on a subproperty of P, the subclass’s cardinality overrides
-the superclass’s cardinality. In the example above,
-``hasStillImageFileValue`` is a subproperty of ``hasFileValue``.
-Therefore, the cardinality on ``hasStillImageFileValue`` overrides (i.e.
-replaces) the one on ``hasFileValue``.
+A resource class inherits cardinalities from its superclasses. This follows
+from the rules of RDFS_ inference. Also, in Knora, cardinalities in the
+subclass can override cardinalities that would otherwise be inherited from the
+superclass. Specifically, if a superclass has a cardinality on a property P,
+and a subclass has a cardinality on a subproperty of P, the subclass’s
+cardinality overrides the superclass’s cardinality. In the example above,
+``hasStillImageFileValue`` is a subproperty of ``hasFileValue``. Therefore,
+the cardinality on ``hasStillImageFileValue`` overrides (i.e. replaces) the
+one on ``hasFileValue``.
+
+Note that, unlike cardinalities, predicates of properties are not inherited.
+If ``:foo rdfs:subPropertyOf :bar``, this does not mean that ``:foo`` inherits
+anything from ``:bar``. Any predicates of ``:foo`` that are also needed by
+``:bar`` must be defined explicitly on ``:bar``. This design decision was made
+because property predicate inheritance is not provided by RDFS inference,
+and would make it more difficult to check the correctness of ontologies, while
+providing little practical benefit.
 
 For more information about OWL cardinalities, see the `OWL 2 Primer`_.
 
