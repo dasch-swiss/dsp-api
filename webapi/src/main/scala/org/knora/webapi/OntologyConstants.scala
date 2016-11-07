@@ -73,6 +73,7 @@ object OntologyConstants {
         val MovingImageRepresentation = "http://www.knora.org/ontology/knora-base#MovingImageRepresentation"
         val StillImageRepresentation = "http://www.knora.org/ontology/knora-base#StillImageRepresentation"
         val TextRepresentation = "http://www.knora.org/ontology/knora-base#TextRepresentation"
+        val Region = "http://www.knora.org/ontology/knora-base#Region"
 
         val AbstractResourceClasses = Set(
             Resource,
@@ -124,6 +125,7 @@ object OntologyConstants {
         val HasDDDFileValue = "http://www.knora.org/ontology/knora-base#hasDDDFileValue"
         val HasTextFileValue = "http://www.knora.org/ontology/knora-base#hasTextFileValue"
         val HasDocumentFileValue = "http://www.knora.org/ontology/knora-base#hasDocumentFileValue"
+        val HasComment = "http://www.knora.org/ontology/knora-base#hasComment"
 
         val IsPreview = "http://www.knora.org/ontology/knora-base#isPreview"
         val ResourceIcon = "http://www.knora.org/ontology/knora-base#resourceIcon"
