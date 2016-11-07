@@ -431,8 +431,13 @@
 
                knora-base:objectClassConstraint :BlueThing ;
 
-               salsah-gui:guiOrder "16"^^xsd:integer .
+               salsah-gui:guiElement salsah-gui:Searchbox ;
 
+               salsah-gui:guiOrder "16"^^xsd:integer ;
+               
+               knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+               knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
 
 
 :hasBlueThingValue rdf:type owl:ObjectProperty ;
@@ -443,7 +448,11 @@
 
                knora-base:objectClassConstraint knora-base:LinkValue ;
 
-               salsah-gui:guiOrder "16"^^xsd:integer .
+               salsah-gui:guiOrder "16"^^xsd:integer ;
+               
+               knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
+
+               knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
 
 
 
