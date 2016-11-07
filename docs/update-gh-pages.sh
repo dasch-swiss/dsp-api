@@ -9,9 +9,16 @@
 # If you don't want git to ask you for your username and password, use SSH instad of HTTPS
 # to clone the Knora repository.
 
-TMP_HTML="/tmp/knora-html"
-
 set -e
+
+TMP_HTML="/tmp/knora-html" # The temporary directory where we store built HTML.
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD) # The current git branch.
+
+if [ "$CURRENT_BRANCH" != "develop" ]
+then
+    echo "Current branch is $CURRENT_BRANCH, not develop"
+    exit 1
+fi
 
 # Build the HTML docs.
 
