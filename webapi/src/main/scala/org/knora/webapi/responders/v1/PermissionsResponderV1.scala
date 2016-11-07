@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectReque
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{KnoraIdUtil, MessageUtil}
 
+import scala.collection.immutable.Iterable
 import scala.concurrent.Future
 
 
@@ -135,6 +136,42 @@ class PermissionsResponderV1 extends ResponderV1 {
         } yield administrativePermission
     }
 
+    private def getAdministrativePermissionForProjectGroupV1(projectIRI: IRI, groupIRI: IRI): Future[Option[AdministrativePermissionV1]] = {
+        for {
+            a <- Future("")
+
+            // check if necessary field are not empty.
+            _ = if (projectIRI.isEmpty) throw BadRequestException("Project cannot be empty")
+            _ = if (groupIRI.isEmpty) throw BadRequestException("Group cannot be empty")
+
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getAPForProjectAndGroup(
+                triplestore = settings.triplestoreType,
+                projectIri = projectIRI,
+                groupIri = groupIRI
+            ).toString())
+            //_ = log.debug(s"getAdministrativePermissionForProjectGroupV1 - query: $sparqlQueryString")
+
+            permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            //_ = log.debug(s"getAdministrativePermissionForProjectGroupV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
+
+            permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
+
+            administrativePermission: Option[AdministrativePermissionV1] = if (permissionQueryResponseRows.nonEmpty) {
+                val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
+                    case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+                }
+                val hasPermissions = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.AP)
+                Some(AdministrativePermissionV1(
+                    forProject = projectIRI,
+                    forGroup = groupIRI,
+                    hasPermissions = hasPermissions
+                ))
+            } else {
+                None
+            }
+        } yield administrativePermission
+    }
+
     /**
       *
       * @param newAdministrativePermissionV1
@@ -151,20 +188,11 @@ class PermissionsResponderV1 extends ResponderV1 {
             _ = if (newAdministrativePermissionV1.forGroup.isEmpty) throw BadRequestException("Group cannot be empty")
             _ = if (newAdministrativePermissionV1.hasPermissions.isEmpty) throw BadRequestException("Permissions cannot be empty")
 
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getAPForProjectAndGroup(
-                triplestore = settings.triplestoreType,
-                projectIri = newAdministrativePermissionV1.forProject,
-                groupIri = newAdministrativePermissionV1.forGroup
-            ).toString())
-            //_ = log.debug(s"getAdministrativePermissionV1 - query: $sparqlQueryString")
+            checkResult <- getAdministrativePermissionForProjectGroupV1(newAdministrativePermissionV1.forProject, newAdministrativePermissionV1.forGroup)
 
-            permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            //_ = log.debug(s"getAdministrativePermissionV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
-
-            _ = if (permissionQueryResponse.results.bindings.nonEmpty) {
-                log.debug("createAdministrativePermissionV1 - check for existing permission is positive!")
-                val returnedPermissionIri = permissionQueryResponse.getFirstRow.rowMap("s")
-                throw DuplicateValueException(s"Permission for project: '${newAdministrativePermissionV1.forProject}' and group: '${newAdministrativePermissionV1.forGroup}' already exists. Possible duplicate for: $returnedPermissionIri.")
+            _ = checkResult match {
+                case Some(ap) => throw DuplicateValueException(s"Permission for project: '${newAdministrativePermissionV1.forProject}' and group: '${newAdministrativePermissionV1.forGroup}' combination already exists.")
+                case None =>
             }
 
             response = AdministrativePermissionOperationResponseV1(success = true, operationType = PermissionOperation.CREATE, administrativePermissionV1 = Some(AdministrativePermissionV1()), msg = "permission created")
@@ -173,6 +201,8 @@ class PermissionsResponderV1 extends ResponderV1 {
 
 
     }
+
+
 
     private def deleteAdministrativePermissionV1(administrativePermissionIri: IRI, userProfileV1: UserProfileV1): Future[AdministrativePermissionOperationResponseV1] = ???
 
@@ -288,30 +318,48 @@ class PermissionsResponderV1 extends ResponderV1 {
 
     }
 
-    private def getUserAdministrativePermissionsRequestV1(projectGroups: Map[IRI, List[IRI]]): Future[Map[IRI, List[String]]] = {
+    /**
+      * By providing the all the projects and groups in which the user is a member of, calculate the user's max
+      * administrative permissions of each project.
+      *
+      * @param projectsWithGroups the projects and groups the user is part of.
+      * @return a the user's max permissions for each project.
+      */
+    private def getUserAdministrativePermissionsRequestV1(projectsWithGroups: Map[IRI, List[IRI]]): Future[Map[IRI, Map[String, Set[IRI]]]] = {
 
         //FixMe: loop through each project the user is part of and retrieve the administrative permissions attached to each group he is in, calculate max permissions, package everything in a neat little object, and return it back
 
-        for {
-            projectGroup <- projectGroups
+        val pp: Iterable[Future[(IRI, Map[String, Set[IRI]])]] = for {
+            (projectIri, groups) <- projectsWithGroups
+            groupIri <- groups
+            projectPermissions: Future[(IRI, Map[String, Set[IRI]])] = getAdministrativePermissionForProjectGroupV1(projectIri, groupIri).map {
+                case Some(ap: AdministrativePermissionV1) => (projectIri, ap.hasPermissions)
+                case None => (projectIri, Map.empty[String, Set[IRI]])
+            }
 
-            
-        }
+        } yield projectPermissions
 
-        Future(Map(
-            "http://data.knora.org/projects/77275339" -> List(
-                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
-                OntologyConstants.KnoraBase.ProjectAdminAllPermission
-            ),
-            "http://data.knora.org/projects/images" -> List(
-                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
-                OntologyConstants.KnoraBase.ProjectAdminAllPermission
-            ),
-            "http://data.knora.org/projects/666" -> List(
-                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
-                OntologyConstants.KnoraBase.ProjectAdminAllPermission
+        val result: Future[Map[IRI, Map[String, Set[IRI]]]] = Future.sequence(pp).map(_.toMap)
+        result
+
+        /*
+        Future(
+            Map(
+                "http://data.knora.org/projects/77275339" -> Map(
+                    OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission -> Set(),
+                    OntologyConstants.KnoraBase.ProjectAdminAllPermission -> Set()
+                ),
+                "http://data.knora.org/projects/images" -> Map(
+                    OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission -> Set(),
+                    OntologyConstants.KnoraBase.ProjectAdminAllPermission -> Set()
+                ),
+                "http://data.knora.org/projects/666" -> Map(
+                    OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission -> Set(),
+                    OntologyConstants.KnoraBase.ProjectAdminAllPermission -> Set()
+                )
             )
-        ))
+        )
+        */
     }
 
     private def getUserDefaultObjectAccessPermissionsRequestV1(projectGroups: Map[IRI, List[IRI]]): Future[Map[IRI, List[String]]] = {

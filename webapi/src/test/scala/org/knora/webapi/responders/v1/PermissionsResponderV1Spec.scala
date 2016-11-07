@@ -115,7 +115,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     ),
                     userProfileV1 = rootUserProfileV1
                 )
-                expectMsg(Failure(DuplicateValueException(s"Permission for project: '$IMAGES_PROJECT_IRI' and group: '${OntologyConstants.KnoraBase.ProjectMember}' already exists. Possible duplicate for: http://data.knora.org/permissions/001.")))
+                expectMsg(Failure(DuplicateValueException(s"Permission for project: '$IMAGES_PROJECT_IRI' and group: '${OntologyConstants.KnoraBase.ProjectMember}' combination already exists.")))
             }
             "create and return a default object access permission " ignore {
 

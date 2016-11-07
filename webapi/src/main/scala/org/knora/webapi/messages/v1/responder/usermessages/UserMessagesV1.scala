@@ -159,7 +159,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                          projectGroups: Map[IRI, List[IRI]] = Map.empty[IRI, List[IRI]],
                          isInSystemAdminGroup: Boolean = false,
                          isInProjectAdminGroup: Seq[IRI] = Vector.empty[IRI],
-                         projectAdministrativePermissions: Map[IRI, List[String]] = Map.empty[IRI, List[String]],
+                         projectAdministrativePermissions: Map[IRI, Map[IRI, Set[IRI]]] = Map.empty[IRI, Map[IRI, Set[IRI]]],
                          projectDefaultObjectAccessPermissions: Map[IRI, List[String]] = Map.empty[IRI, List[String]],
                          sessionId: Option[String] = None,
                          isSystemUser: Boolean = false) {
@@ -243,7 +243,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     projectGroups = projectGroups,
                     isInSystemAdminGroup = false, // remove system admin status
                     isInProjectAdminGroup = Vector.empty[IRI], // remove privileged group membership
-                    projectAdministrativePermissions = Map.empty[IRI, List[String]], // remove administrative permission information
+                    projectAdministrativePermissions = Map.empty[IRI, Map[IRI, Set[IRI]]], // remove administrative permission information
                     projectDefaultObjectAccessPermissions = Map.empty[IRI, List[String]], // remove default object access permission information
                     sessionId = None // remove session id
                 )
@@ -271,7 +271,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     projectGroups = projectGroups,
                     isInSystemAdminGroup = false, // remove system admin status
                     isInProjectAdminGroup = Vector.empty[IRI], // remove privileged group membership
-                    projectAdministrativePermissions = Map.empty[IRI, List[String]], // remove administrative permission information
+                    projectAdministrativePermissions = Map.empty[IRI, Map[IRI, Set[IRI]]], // remove administrative permission information
                     projectDefaultObjectAccessPermissions = Map.empty[IRI, List[String]], // remove default object access permission information
                     sessionId = None // remove session id
                 )

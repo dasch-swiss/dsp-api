@@ -50,7 +50,7 @@
 
                       knora-base:forGroup knora-base:ProjectAdmin ;
 
-                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAllAdminPermission"^^xsd:string .
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
 
 
 ##########################################################
@@ -98,7 +98,7 @@
 
                       knora-base:forGroup knora-base:ProjectAdmin ;
 
-                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAllAdminPermission"^^xsd:string .
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
 
 
 
@@ -147,4 +147,4 @@
 
                       knora-base:forGroup knora-base:ProjectAdmin ;
 
-                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAllAdminPermission"^^xsd:string .
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .

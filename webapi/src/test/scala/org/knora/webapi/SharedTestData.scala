@@ -203,17 +203,17 @@ object SharedTestData {
         isInSystemAdminGroup = false,
         isInProjectAdminGroup = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
         projectAdministrativePermissions = Map(
-            "http://data.knora.org/projects/77275339" -> List(
-                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
-                OntologyConstants.KnoraBase.ProjectAdminAllPermission
+            "http://data.knora.org/projects/77275339" -> Map(
+                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission -> Set(),
+                OntologyConstants.KnoraBase.ProjectAdminAllPermission -> Set()
             ),
-            "http://data.knora.org/projects/images" -> List(
-                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
-                OntologyConstants.KnoraBase.ProjectAdminAllPermission
+            "http://data.knora.org/projects/images" -> Map(
+                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission -> Set(),
+                OntologyConstants.KnoraBase.ProjectAdminAllPermission -> Set()
             ),
-            "http://data.knora.org/projects/666" -> List(
-                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
-                OntologyConstants.KnoraBase.ProjectAdminAllPermission
+            "http://data.knora.org/projects/666" -> Map(
+                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission -> Set(),
+                OntologyConstants.KnoraBase.ProjectAdminAllPermission -> Set()
             )
         ),
         projectDefaultObjectAccessPermissions = Map.empty[IRI, List[IRI]]

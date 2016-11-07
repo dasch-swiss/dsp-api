@@ -435,19 +435,19 @@ class UsersResponderV1 extends ResponderV1 {
             projectGroups = allGroups.groupBy(_._1).map { case (k,v) => (k,v.map(_._2))}
 
             // retrieve the projects administrative permissions
-            projectAdministrativePermissions: Map[IRI, List[String]] = if (projectIris.nonEmpty) {
+            projectAdministrativePermissions: Map[IRI, Map[IRI, Set[IRI]]] = if (projectIris.nonEmpty) {
                 val resFuture = for {
-                    administrativePermissions <- (responderManager ? GetUserAdministrativePermissionsRequestV1(projectGroups)).mapTo[Map[IRI, List[String]]]
+                    administrativePermissions <- (responderManager ? GetUserAdministrativePermissionsRequestV1(projectGroups)).mapTo[Map[IRI, Map[IRI, Set[IRI]]]]
                 } yield administrativePermissions
                 Await.result(resFuture, 1.seconds)
             } else {
-                Map.empty[IRI, List[String]]
+                Map.empty[IRI, Map[IRI, Set[IRI]]]
             }
 
             // retrieve the projects default object access permissions
             projectDefaultObjectAccessPermissions:Map[IRI, List[String]] = if (projectIris.nonEmpty) {
                 val resFuture = for {
-                    defaultObjectAccessPermissions <- (responderManager ? GetUserDefaultObjectAccessPermissionsRequestV1(projectGroups)).mapTo[Map[IRI, List[String]]]
+                    defaultObjectAccessPermissions <- (responderManager ? GetUserDefaultObjectAccessPermissionsRequestV1(projectGroups)).mapTo[Map[IRI, List[IRI]]]
                 } yield defaultObjectAccessPermissions
                 Await.result(resFuture, 1.seconds)
             } else {
