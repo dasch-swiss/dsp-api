@@ -20,6 +20,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Methods`, _}
+import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.util.Timeout
 import ch.megard.akka.http.cors.CorsRejection
@@ -35,7 +36,7 @@ import scala.concurrent.duration._
 class CORSSupportV1R2RSpec extends R2RSpec {
 
     /* get the path of the route we want to test */
-    private val resourcesRoute = ResourcesRouteV1.knoraApiPath(system, settings, log)
+    private val sealedResourcesRoute = Route.seal(ResourcesRouteV1.knoraApiPath(system, settings, log))
 
     /* set the timeout for the route test */
     implicit val timeout: Timeout = 5.seconds
@@ -49,7 +50,7 @@ class CORSSupportV1R2RSpec extends R2RSpec {
         "accept valid pre-flight requests" in {
 
             Options() ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(GET) ~> {
-                CORS(resourcesRoute)
+                CORS(sealedResourcesRoute, settings, log)
             } ~> check {
                 responseAs[String] shouldBe empty
                 status shouldBe StatusCodes.OK
@@ -67,9 +68,10 @@ class CORSSupportV1R2RSpec extends R2RSpec {
 
             val invalidMethod = PATCH
             Options() ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(invalidMethod) ~> {
-                CORS(resourcesRoute)
+                CORS(sealedResourcesRoute, settings, log)
             } ~> check {
-                rejection shouldBe CorsRejection(None, Some(invalidMethod), None)
+                status shouldBe StatusCodes.BadRequest
+                entityAs[String] should equal("CORS: invalid method 'PATCH'")
             }
         }
 

@@ -200,10 +200,10 @@ class ValuesResponderV1 extends ResponderV1 {
         } yield apiResponse
 
         for {
-        // Don't allow anonymous users to update values.
+        // Don't allow anonymous users to create values.
             userIri <- createValueRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
-                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to update values"))
+                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to create values"))
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
