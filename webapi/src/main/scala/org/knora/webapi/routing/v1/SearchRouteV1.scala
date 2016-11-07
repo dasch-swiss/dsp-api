@@ -22,16 +22,15 @@ package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import org.knora.webapi.messages.v1.responder.searchmessages.{ExtendedSearchGetRequestV1, FulltextSearchGetRequestV1, SearchComparisonOperatorV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
-import spray.routing.Directives._
-import spray.routing._
 
 import scala.language.postfixOps
-import scala.util.Try
 
 // slash after path without following segment
 
@@ -191,13 +190,12 @@ object SearchRouteV1 extends Authenticator {
             // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
             get {
                 requestContext => {
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val params: Map[String, Seq[String]] = requestContext.request.uri.query.toMultiMap
-                        makeExtendedSearchRequestMessage(userProfile, params)
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
+                    val requestMessage = makeExtendedSearchRequestMessage(userProfile, params)
+
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -205,24 +203,22 @@ object SearchRouteV1 extends Authenticator {
                     )
                 }
             }
-        } ~
-            path("v1" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
-                get {
-                    requestContext => {
-                        val requestMessageTry = Try {
-                            val userProfile = getUserProfileV1(requestContext)
-                            val params: Map[String, String] = requestContext.request.uri.query.toMap
-                            makeFulltextSearchRequestMessage(userProfile, searchval, params)
-                        }
-                        RouteUtilV1.runJsonRoute(
-                            requestMessageTry,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
-                    }
+        } ~ path("v1" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+            get {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+                    val requestMessage = makeFulltextSearchRequestMessage(userProfile, searchval, params)
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
                 }
             }
+        }
     }
 }

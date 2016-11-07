@@ -20,121 +20,40 @@
 
 package org.knora.webapi.http
 
-/**
-  * This is taken from: http://jkinkead.blogspot.ch/2014/11/handling-cors-headers-with-spray-routing.html
-  *
-  * It is the unsecured version. There is also a secured version, but we don't use it, since we want to allow access
-  * to the API from everywhere.
-  */
+import akka.event.LoggingAdapter
+import akka.http.scaladsl.model.HttpMethods._
+import akka.http.scaladsl.model.headers.HttpOriginRange
+import akka.http.scaladsl.server.{Directives, RejectionHandler, Route}
+import ch.megard.akka.http.cors.CorsDirectives._
+import ch.megard.akka.http.cors.{CorsDirectives, CorsSettings, HttpHeaderRange}
+import org.knora.webapi.{KnoraExceptionHandler, SettingsImpl}
 
-import spray.http.{HttpHeaders, HttpOrigin, SomeOrigins}
-import spray.routing.{Directive0, HttpService}
+object CORSSupport extends Directives {
 
-
-/**
-  * Trait containing methods that provide CORS support.
-  */
-trait CORSSupport {
-    this: HttpService =>
-
-    val AccessControlAllowAll = HttpHeaders.RawHeader(
-        "Access-Control-Allow-Origin", "*"
-    )
-    val AccessControlAllowNull = HttpHeaders.RawHeader(
-        "Access-Control-Allow-Origin", "null"
-    )
-    val AccessControlAllowMethodsAll = HttpHeaders.RawHeader(
-        "Access-Control-Allow-Methods", "GET, PUT, POST, DELETE, OPTIONS"
-    )
-    val AccessControlMaxAge = HttpHeaders.RawHeader(
-        "Access-Control-Max-Age", "1000"
-    )
-    val AccessControlAllowHeadersAll = HttpHeaders.RawHeader(
-        "Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-    )
-    val AccessControlAllowCredentials = HttpHeaders.RawHeader(
-        "Access-Control-Allow-Credentials", "true"
-    )
-    val Vary = HttpHeaders.RawHeader(
-        "Vary", "Origin"
+    val corsSettings = CorsSettings.defaultSettings.copy(
+        allowGenericHttpRequests = true,
+        allowCredentials = true,
+        allowedOrigins = HttpOriginRange.*,
+        allowedHeaders = HttpHeaderRange.*,
+        allowedMethods = List(GET, PUT, POST, DELETE, HEAD, OPTIONS),
+        maxAge = Some(30 * 60)
     )
 
     /**
-      * Directive providing CORS header support. This should be included in any application serving
-      * a REST API that's queried cross-origin (from a different host than the one serving the API).
-      * See http://www.w3.org/TR/cors/ for full specification.
-      *
-      * This directive allows CORS from any host!
+      * Adds CORS support to a route. Also, any exceptions thrown inside the route are handled by
+      * the [[KnoraExceptionHandler]]. Finally, all rejections are handled by the [[CorsDirectives.corsRejectionHandler]]
+      * so that all responses (correct and failures) have the correct CORS headers attached.
+      * @param route the route for which CORS support is enabled
+      * @return the enabled route.
       */
-    def allowAllHosts: Directive0 = mapInnerRoute {
-        innerRoute =>
-            optionalHeaderValueByType[HttpHeaders.Origin]() { originOption =>
-                // If Origin is set add custom CORS headers and pass through.
-                originOption flatMap {
-                    case HttpHeaders.Origin(list) => list.find { case HttpOrigin(_, HttpHeaders.Host(hostname, _)) => true }
-                } map {
-                    goodOrigin =>
-                        respondWithHeaders(
-                            HttpHeaders.`Access-Control-Allow-Origin`(SomeOrigins(Seq(goodOrigin))),
-                            //Vary,
-                            AccessControlAllowMethodsAll,
-                            AccessControlMaxAge,
-                            AccessControlAllowHeadersAll,
-                            AccessControlAllowCredentials) {
-                            options {
-                                complete {
-                                    ""
-                                }
-                            } ~ innerRoute
-                        }
-                } getOrElse {
-                    // Else, add standard CORS headers and pass though.
-                    respondWithHeaders(
-                        AccessControlAllowNull,
-                        AccessControlAllowMethodsAll,
-                        AccessControlMaxAge,
-                        AccessControlAllowHeadersAll,
-                        AccessControlAllowCredentials) {
-                        options {
-                            complete {
-                                ""
-                            }
-                        } ~ innerRoute
+    def CORS(route: Route, settings: SettingsImpl, log: LoggingAdapter): Route = {
+        handleRejections(CorsDirectives.corsRejectionHandler) {
+            cors(corsSettings) {
+                handleRejections(RejectionHandler.default) {
+                    handleExceptions(KnoraExceptionHandler(settings, log)) {
+                        route
                     }
                 }
-            }
-    }
-
-    /** Directive providing CORS header support. This should be included in any application serving
-      * a REST API that's queried cross-origin (from a different host than the one serving the API).
-      * See http://www.w3.org/TR/cors/ for full specification.
-      *
-      * @param allowedHostnames the set of hosts that are allowed to query the API. These should
-      *                         not include the scheme or port; they're matched only against the hostname of the Origin
-      *                         header.
-      */
-    def allowHosts(allowedHostnames: Set[String]): Directive0 = mapInnerRoute { innerRoute =>
-        // Conditionally responds with "allowed" CORS headers, if the request origin's host is in the
-        // allowed set, or if the request doesn't have an origin.
-        optionalHeaderValueByType[HttpHeaders.Origin]() { originOption =>
-            // If Origin is set and the host is in our allowed set, add CORS headers and pass through.
-            originOption flatMap {
-                case HttpHeaders.Origin(list) => list.find { case HttpOrigin(_, HttpHeaders.Host(hostname, _)) => allowedHostnames.contains(hostname) }
-            } map {
-                goodOrigin =>
-                    respondWithHeaders(
-                        HttpHeaders.`Access-Control-Allow-Headers`(Seq("Origin", "X-Requested-With", "Content-Type", "Accept")),
-                        HttpHeaders.`Access-Control-Allow-Origin`(SomeOrigins(Seq(goodOrigin)))
-                    ) {
-                        options {
-                            complete {
-                                ""
-                            }
-                        } ~ innerRoute
-                    }
-            } getOrElse {
-                // Else, pass through without headers.
-                innerRoute
             }
         }
     }

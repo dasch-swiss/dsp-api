@@ -124,7 +124,7 @@ object ResourcesResponderV1Spec {
                     Vector(
                         PropertyGetValueV1(
                             None,
-                            "",
+                            None,
                             "Siehe Seite c5v",
                             TextValueV1("Siehe Seite c5v"),
                             "http://data.knora.org/021ec18f1735/values/8a96c303338201",
@@ -142,7 +142,7 @@ object ResourcesResponderV1Spec {
                     Vector(
                         PropertyGetValueV1(
                             None,
-                            "",
+                            None,
                             "#ff3333",
                             ColorValueV1("#ff3333"),
                             "http://data.knora.org/021ec18f1735/values/10ea6976338201",
@@ -159,7 +159,7 @@ object ResourcesResponderV1Spec {
                     Vector(
                         PropertyGetValueV1(
                             None,
-                            "",
+                            None,
                             "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}",
                             GeomValueV1("{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}"),
                             "http://data.knora.org/021ec18f1735/values/4dc0163d338201",
@@ -176,7 +176,7 @@ object ResourcesResponderV1Spec {
                     Vector(
                         PropertyGetValueV1(
                             None,
-                            "",
+                            None,
                             "http://data.knora.org/9d626dc76c03",
                             LinkV1(
                                 "http://data.knora.org/9d626dc76c03",
@@ -247,7 +247,7 @@ object ResourcesResponderV1Spec {
         value_firstprops = Vector(Some("Another thing that only project members can see")),
         value_iconsrcs = Vector(Some("http://localhost:3335/project-icons/anything/thing.png")),
         value_restype = Vector(Some("Ding")),
-        comments = Vector(""),
+        comments = Vector(None),
         value_ids = Vector("http://data.knora.org/project-thing-1/values/0"),
         values = Vector(LinkV1(
             valueResourceClassIcon = Some("http://localhost:3335/project-icons/anything/thing.png"),
@@ -273,7 +273,7 @@ object ResourcesResponderV1Spec {
         value_firstprops = Vector(Some("Another thing that only project members can see")),
         value_iconsrcs = Vector(Some("http://localhost:3335/project-icons/anything/thing.png")),
         value_restype = Vector(Some("Ding")),
-        comments = Vector(""),
+        comments = Vector(None),
         value_ids = Vector("http://data.knora.org/project-thing-1/values/1"),
         values = Vector(LinkV1(
             valueResourceClassIcon = Some("http://localhost:3335/project-icons/anything/thing.png"),
@@ -618,7 +618,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return 27 resources containing 'Narrenschiff' in their label" in {
-            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=4&limit=100&restype_id=-1
+            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=4&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
 
             // This query is going to return also resources of knora-baseLinkObj with a knora-base:hasComment.
             // Because this resource is directly defined in knora-base, its property knora-base:hasComment
@@ -640,7 +640,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return 3 resources containing 'Narrenschiff' in their label of type incunabula:book" in {
-            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=3&limit=100&restype_id=-1
+            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
 
             actorUnderTest ! ResourceSearchGetRequestV1(
                 searchString = "Narrenschiff",
@@ -653,6 +653,40 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case response: ResourceSearchResponseV1 =>
                     assert(response.resources.size == 3, s"expected 3 resources")
+            }
+        }
+
+        "return 19 resources containing 'a1r' in their label of type incunabula:page" in {
+            //http://localhost:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page
+
+            actorUnderTest ! ResourceSearchGetRequestV1(
+                searchString = "a1r",
+                numberOfProps = 3,
+                limitOfResults = 100,
+                userProfile = incunabulaUser,
+                resourceTypeIri = Some("http://www.knora.org/ontology/incunabula#page")
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceSearchResponseV1 =>
+                    assert(response.resources.size == 19, s"expected 19 resources")
+            }
+        }
+
+        "return 19 resources containing 'a1r' in their label of type knora-base:Representation" in {
+            //http://localhost:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fknora-base%23Representation
+
+            actorUnderTest ! ResourceSearchGetRequestV1(
+                searchString = "a1r",
+                numberOfProps = 3,
+                limitOfResults = 100,
+                userProfile = incunabulaUser,
+                resourceTypeIri = Some("http://www.knora.org/ontology/knora-base#Representation")
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceSearchResponseV1 =>
+                    assert(response.resources.size == 19, s"expected 19 resources")
             }
         }
 
@@ -1032,6 +1066,44 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "change a resource's label" in {
+            val myNewLabel = "my new beautiful label"
+
+            actorUnderTest ! ChangeResourceLabelRequestV1(
+                resourceIri = "http://data.knora.org/c5058f3a",
+                label = myNewLabel,
+                userProfile = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case response: ChangeResourceLabelResponseV1 =>
+                    response.label should ===(myNewLabel)
+            }
+
+        }
+
+        "not create an anything:Thing with property anything:hasBlueThing pointing to an anything:Thing" in {
+            val valuesToBeCreated = Map(
+                "http://www.knora.org/ontology/anything#hasBlueThing" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://data.knora.org/a-thing")))
+            )
+
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/anything#Thing",
+                label = "Test Thing",
+                projectIri = "http://data.knora.org/projects/anything",
+                values = valuesToBeCreated,
+                file = None,
+                userProfile = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
             }
         }
     }

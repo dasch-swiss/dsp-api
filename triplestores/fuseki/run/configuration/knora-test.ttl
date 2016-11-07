@@ -27,7 +27,10 @@
 # A TDB datset used for RDF storage
 :tdb_dataset_readwrite  a                                   tdb:DatasetTDB ;
                         tdb:unionDefaultGraph               true ;
-                        tdb:location                        "./run/databases/knora-test" .
+                        tdb:location                        "./run/databases/knora-test" ;
+                        # Fuseki 2.4.0 only - remove for later versions.
+                        ja:context [ ja:cxtName "arq:optFilterPlacementBGP" ;
+                                     ja:cxtValue "true" ] .
 
 # Text index description
 :indexLucene            a                                   text:TextIndexLucene ;

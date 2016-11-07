@@ -22,23 +22,23 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 ## Status
 
-### Early alpha stage
+### Alpha stage
 
 * The OWL ontologies
 * API operations for querying and updating data
 * The unit testing framework, which includes many tests
+* API operations dealing with binary files and Sipi
+* Documentation
 
 ### Currently being implemented
 
-* API operations dealing with binary files and Sipi
-* A simple GUI for creating ontologies (for now you can use an application such as [Protégé](http://protege.stanford.edu/) or [TopBraid Composer](http://www.topquadrant.com/tools/modeling-topbraid-composer-standard-edition/))
 * Integration of the SALSAH GUI
-* Documentation
+* API operations for administering Knora
 
 ### Planned
 
-* API operations for administering Knora
 * Distribution packaging using [Docker](https://www.docker.com/)
+* A simple GUI for creating ontologies (for now you can use an application such as [Protégé](http://protege.stanford.edu/) or [TopBraid Composer](http://www.topquadrant.com/tools/modeling-topbraid-composer-standard-edition/))
 
 ## Requirements
 
@@ -52,7 +52,7 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 ### For building the documentation
 
-See `docs/Readme.md`.
+See [docs/Readme.md](docs/Readme.md).
 
 ## Try it out
 

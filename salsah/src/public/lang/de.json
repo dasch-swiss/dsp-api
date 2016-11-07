@@ -45,6 +45,7 @@
 	"_new_entry" : "Neuer Eintrag...",
 	"_remove" : "Entfernen",
 	"_label" : "Label",
+	"_label_required" : "Das Label ist erforderlich",
 	"_descr" : "Beschreibung",
 	"_name" : "Name",
 	"_value" : "Wert",

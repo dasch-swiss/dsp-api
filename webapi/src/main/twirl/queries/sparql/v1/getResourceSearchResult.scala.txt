@@ -24,19 +24,25 @@
 @*
  * Performs a search for resources matching the given criteria.
  *
+ * If the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
+ * SPARQL. Specifically, we use inference to return search results matching subclasses of the resource class
+ * specified by the user. Without inference, we have to do this using SPARQL property path syntax
+ * (rdfs:subClassOf*). Using inference requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit>
+ * whenever we need to get explicit (non-inferred) statements.
+ *
  * @param triplestore the name of the triplestore being used.
  * @param phrase the search phrase (e.g. "Reise ins").
  * @param lastTerm the last search term (e.g. "Heili").
- * @param resourceTypeIri if set, restrict search to this resource type.
- * @param numberOfProps the amount of describing properties to be returned for each found resource (e.g if set to two, for an incunabula book its title and creator would be returned).
+ * @param resourceTypeIri if set, restricts search to this resource class and its subclasses.
+ * @param numberOfProps the amount of describing properties to be returned for each found resource (e.g if set to two,
+ *                      for an incunabula book its title and creator would be returned).
  * @param limitOfResults limits number of resources to be returned.
- * @param separator The separater to be used when concatenating the value strings.
- *
+ * @param separator the separator to be used when concatenating the value strings.
  *@
 @(triplestore: String,
   phrase: Option[String],
   lastTerm: String,
-  resourceTypeIri: Option[IRI],
+  restypeIriOption: Option[IRI],
   numberOfProps: Int,
   limitOfResults: Int,
   separator: Char)
@@ -49,10 +55,6 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT DISTINCT ?resourceIri ?firstProp ?attachedToUser ?attachedToProject ?resourcePermissions
 @if(numberOfProps > 1) {
     (GROUP_CONCAT(?valueString; separator="@separator") AS ?values) (GROUP_CONCAT(?guiOrder; separator=";") AS ?guiOrders) (GROUP_CONCAT(?valueOrder; separator=";") AS ?valueOrders)
-}
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
 
@@ -94,16 +96,68 @@ WHERE {
         }
     }
 
+    ?resourceIri knora-base:isDeleted false .
 
-    ?resourceIri a ?resourceClass ;
-        knora-base:isDeleted false .
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
-    @if(resourceTypeIri.nonEmpty) {
-        FILTER(?resourceClass = <@resourceTypeIri>)
+    @if(triplestore.startsWith("graphdb")) {
+
+        @restypeIriOption match {
+
+            case Some(restypeIri) => {
+
+                # Filter by resource class.
+
+                ?resourceIri a <@restypeIri> .
+
+            }
+
+            case None => {
+
+                @* Ensure that each matching resource is a knora-base:Resource. *@
+
+                ?resourceIri a knora-base:Resource .
+            }
+        }
+
+    } else {
+
+        @restypeIriOption match {
+
+            case Some(restypeIri) => {
+
+                # Filter by resource class.
+
+                ?resClass rdfs:subClassOf* <@restypeIri> .
+                ?resourceIri a ?resClass .
+
+            }
+
+            case None => {
+
+                @* Ensure that each matching resource is a knora-base:Resource. *@
+
+                ?resClass rdfs:subClassOf+ knora-base:Resource .
+                ?resourceIri a ?resClass .
+
+            }
+        }
     }
 
     @if(numberOfProps > 1) {
-        ?resourceIri ?property ?valueObjectIri .
+
+        @if(triplestore.startsWith("graphdb")) {
+
+            GRAPH <http://www.ontotext.com/explicit> {
+
+                ?resourceIri ?property ?valueObjectIri .
+
+             }
+
+        } else {
+
+            ?resourceIri ?property ?valueObjectIri .
+
+        }
+
         ?property knora-base:objectClassConstraint knora-base:TextValue .
         ?valueObjectIri knora-base:valueHasString ?valueString ;
             knora-base:isDeleted false ;

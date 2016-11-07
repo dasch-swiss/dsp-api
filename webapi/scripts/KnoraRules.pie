@@ -308,6 +308,13 @@ Id: maxCardinality_1_table
  * Consistency rules for subject and object class constraints.
  */
 
+// Every subproperty of knora-base:resourceProperty must have a knora-base:objectClassConstraint.
+Consistency: object_class_constraint_required
+    p <rdfs:subPropertyOf> <knora-base:resourceProperty> [Constraint p != <knora-base:resourceProperty>]
+    ------------------------------------
+    p <knora-base:objectClassConstraint> c
+
+
 // The subject of a property must belong to the class specified in the property's knora-base:subjectClassConstraint.
 Consistency: subject_class_constraint
     p <knora-base:subjectClassConstraint> t

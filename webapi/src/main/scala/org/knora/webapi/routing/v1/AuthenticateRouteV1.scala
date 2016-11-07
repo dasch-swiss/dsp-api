@@ -21,11 +21,11 @@
 package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.event.LoggingAdapter
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.routing.Authenticator
-import spray.routing.Directives._
-import spray.routing._
 
 /**
   * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
@@ -45,36 +45,33 @@ object AuthenticateRouteV1 extends Authenticator {
                     }
                 }
             }
-        } ~
-            path("v1" / "session") {
-                get {
-                    requestContext => {
-                        requestContext.complete {
-                            val params = requestContext.request.uri.query.toMap
-                            if (params.contains("logout")) {
-                                doLogout(requestContext)
-                            } else if (params.contains("login")) {
-                                doLogin(requestContext)
-                            } else {
-                                doSessionAuthentication(requestContext)
-                            }
+        } ~ path("v1" / "session") {
+            get {
+                requestContext => {
+                    requestContext.complete {
+                        val params = requestContext.request.uri.query().toMap
+                        if (params.contains("logout")) {
+                            doLogout(requestContext)
+                        } else if (params.contains("login")) {
+                            doLogin(requestContext)
+                        } else {
+                            doSessionAuthentication(requestContext)
                         }
                     }
-                } ~
-                    post {
-                        requestContext => {
-                            requestContext.complete {
-                                doLogin(requestContext)
-                            }
-                        }
-                    } ~
-                    delete {
-                        requestContext => {
-                            requestContext.complete {
-                                doLogout(requestContext)
-                            }
-                        }
+                }
+            } ~ post {
+                requestContext => {
+                    requestContext.complete {
+                        doLogin(requestContext)
                     }
+                }
+            } ~ delete {
+                requestContext => {
+                    requestContext.complete {
+                        doLogout(requestContext)
+                    }
+                }
             }
+        }
     }
 }

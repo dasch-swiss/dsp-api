@@ -581,7 +581,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "return 79 pages when we search for all pages that have a sequence number greater than 450 in the Incunabula test data" in {
+        "return 79 pages when we search for all pages that have an incunabula:seqnum greater than 450 in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=GT&searchval=450
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
@@ -589,6 +589,22 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 compareProps = Vector(SearchComparisonOperatorV1.GT),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#seqnum"),
                 filterByRestype = Some("http://www.knora.org/ontology/incunabula#page"),
+                startAt = 0,
+                showNRows = 100
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(79)
+            }
+        }
+
+        "return 79 pages when we search for all representations that have an incunabula:seqnum greater than 450 in the Incunabula test data" in {
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = incunabulaUser,
+                searchValue = Vector("450"),
+                compareProps = Vector(SearchComparisonOperatorV1.GT),
+                propertyIri = Vector("http://www.knora.org/ontology/incunabula#seqnum"),
+                filterByRestype = Some("http://www.knora.org/ontology/knora-base#Representation"),
                 startAt = 0,
                 showNRows = 100
             )
@@ -683,6 +699,22 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "return all the representations that have a sequence number of 1 and are part of some book (using knora-base:isPartOf)" in {
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = incunabulaUser,
+                searchValue = Vector("1", ""),
+                compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
+                propertyIri = Vector("http://www.knora.org/ontology/incunabula#seqnum", "http://www.knora.org/ontology/knora-base#isPartOf"),
+                filterByRestype = Some("http://www.knora.org/ontology/knora-base#Representation"),
+                startAt = 0,
+                showNRows = 25
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(19)
+            }
+        }
+
         "return all the pages that are part of Zeitglöcklein des Lebens and have a seqnum" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Fdata.knora.org%2Fc5058f3a&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=EXISTS&searchval=
             actorUnderTest ! ExtendedSearchGetRequestV1(
@@ -691,6 +723,23 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
                 propertyIri = Vector("http://www.knora.org/ontology/incunabula#partOf", "http://www.knora.org/ontology/incunabula#seqnum"),
                 filterByRestype = Some("http://www.knora.org/ontology/incunabula#page"),
+                startAt = 0,
+                showNRows = 500
+            )
+
+            expectMsgPF(timeout) {
+                case response: SearchGetResponseV1 => response.subjects.size should ===(402)
+            }
+
+        }
+
+        "return all the representations that are part of Zeitglöcklein des Lebens and have a seqnum (using base properties from knora-base)" in {
+            actorUnderTest ! ExtendedSearchGetRequestV1(
+                userProfile = incunabulaUser,
+                searchValue = Vector("http://data.knora.org/c5058f3a", ""),
+                compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
+                propertyIri = Vector("http://www.knora.org/ontology/knora-base#isPartOf", "http://www.knora.org/ontology/knora-base#seqnum"),
+                filterByRestype = Some("http://www.knora.org/ontology/knora-base#Representation"),
                 startAt = 0,
                 showNRows = 500
             )

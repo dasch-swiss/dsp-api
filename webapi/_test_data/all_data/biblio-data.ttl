@@ -1,0 +1,34 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix dc: <http://www.knora.org/ontology/dc#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix beol: <http://www.knora.org/ontology/beol#> .
+@prefix biblio: <http://www.knora.org/ontology/biblio#> .
+
+# ## ###########################################
+# ## <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ>
+
+<http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> a knora-base:knoraProject ;
+	knora-base:projectBasepath "/imldata/SALSAH-TEST-01/BIBLIO" ;
+	knora-base:projectLongname "BIBLIOGRAPHY" ;
+	knora-base:projectShortname "biblio" ;
+	knora-base:projectDescription "bibliography" ;
+	knora-base:projectKeyword "biblio" .
+
+# ## ###########################################
+# ## <http://data.knora.org/users/Q-6Sssu8TBWrcCGuVJ0lVw>
+
+<http://data.knora.org/users/Q-6Sssu8TBWrcCGuVJ0lVw> a knora-base:User ;
+    knora-base:userid "biblio" ;
+    foaf:familyName "biblio" ;
+    foaf:givenName "biblio" ;
+    knora-base:password "biblio" ;
+    knora-base:email "sepideh.alassi@unibas.ch" ;
+    knora-base:preferredLanguage "de" ;
+    knora-base:isInProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> .

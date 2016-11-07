@@ -598,22 +598,12 @@ class SalsahPage {
         driver.findElement(By.xpath("//div[@id='addresctrl']/img")).click()
     }
 
-    def getInputRowsForResourceCreationForm(): List[WebElement] = {
+    def getFormFieldByName(name: String): WebElement = {
         eventually {
-            val rows = driver.findElement(By.xpath("//table[@class='propedit']")).findElements(By.xpath("tbody/tr[@class='propedit']")).toList
+            driver.findElement(By.xpath(s"//table[@class='propedit']//*[@name='$name']"))
 
-            if (rows.length < 1) throw new Exception
-
-            rows
         }
 
-    }
-
-    def getInputForResourceCreationForm(row: WebElement): WebElement = {
-
-        eventually {
-            row.findElement(By.xpath("td/input[@class='propedit']"))
-        }
     }
 
     def clickSaveButtonForResourceCreationForm() = {

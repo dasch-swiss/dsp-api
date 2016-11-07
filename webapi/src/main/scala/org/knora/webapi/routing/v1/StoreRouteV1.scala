@@ -16,31 +16,25 @@
 
 package org.knora.webapi.routing.v1
 
+
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.SettingsImpl
-import org.knora.webapi.messages.v1.responder.storemessages.ResetTriplestoreContentRequestV1
+import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, StoreV1JsonProtocol}
 import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import spray.routing.Directives._
-import spray.routing._
 
 import scala.concurrent.duration._
-import scala.util.Try
-
-
-case class Test(path: String, name: String)
 
 /**
-  * A route used to serve data to CKAN. It is used be the Ckan instance running under http://data.humanities.ch.
+  * A route used to send requests which can directly affect the data stored inside the triplestore.
   */
-object StoreRouteV1 extends Authenticator {
+object StoreRouteV1 extends Authenticator with StoreV1JsonProtocol {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-
-        import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol._
-        import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
+    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) = Route {
 
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
@@ -50,32 +44,28 @@ object StoreRouteV1 extends Authenticator {
         path("v1" / "store") {
             get {
                 requestContext =>
-
-                /** Maybe return some statistics about the store, e.g., what triplestore, number of triples in
-                  * each named graph and in total, etc.
-                  */
-                // TODO: Implement some simple return
+                    /** Maybe return some statistics about the store, e.g., what triplestore, number of triples in
+                      * each named graph and in total, etc.
+                      */
+                    // TODO: Implement some simple return
+                    requestContext.complete("Hello World")
             }
-        } ~
-            path("v1" / "store" / "ResetTriplestoreContent") {
-                post {
-                    /* ResetTriplestoreContent */
-                    entity(as[Seq[RdfDataObject]]) { apiRequest => requestContext =>
-
-                        val requestMessageTry = Try {
-                            // create the message
-                            ResetTriplestoreContentRequestV1(apiRequest)
-                        }
+        } ~ path("v1" / "store" / "ResetTriplestoreContent") {
+            post {
+                /* ResetTriplestoreContent */
+                entity(as[Seq[RdfDataObject]]) { apiRequest =>
+                    requestContext =>
+                        val requestMessage = ResetTriplestoreContentRequestV1(apiRequest)
 
                         RouteUtilV1.runJsonRoute(
-                            requestMessageTry,
+                            requestMessage,
                             requestContext,
                             settings,
                             responderManager,
                             log
                         )
-                    }
                 }
             }
+        }
     }
 }

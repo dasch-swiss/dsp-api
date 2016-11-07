@@ -21,7 +21,7 @@
 package org.knora.webapi.messages.v1.responder
 
 import org.knora.webapi._
-import spray.http.{StatusCode, StatusCodes}
+import akka.http.scaladsl.model._
 
 /**
   * The possible values for the status code that is returned as part of each Knora API v1 response.

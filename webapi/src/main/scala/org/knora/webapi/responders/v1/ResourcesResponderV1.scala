@@ -68,6 +68,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1) => future2Message(sender(), checkResourceClass(resourceIri, owlClass, userProfile), log)
         case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile), log)
         case resourceDeleteRequest: ResourceDeleteRequestV1 => future2Message(sender(), deleteResourceV1(resourceDeleteRequest), log)
+        case ChangeResourceLabelRequestV1(resourceIri, label, userProfile, apiRequestID) => future2Message(sender(), changeResourceLabelV1(resourceIri, label, apiRequestID, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -628,7 +629,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     guielement = Some(SalsahGuiConversions.iri2SalsahGuiElement(OntologyConstants.SalsahGui.Fileupload)),
                     values = Vector(IntegerValueV1(0)),
                     value_ids = Vector("0"),
-                    comments = Vector("0"),
+                    comments = Vector(None),
                     locations = resInfo.locations match {
                         case Some(locations: Seq[LocationV1]) => locations
                         case None => Nil
@@ -1091,13 +1092,18 @@ class ResourcesResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 phrase = phrase,
                 lastTerm = lastTerm,
-                resourceTypeIri = resourceTypeIri,
+                restypeIriOption = resourceTypeIri,
                 numberOfProps = numberOfProps,
                 limitOfResults = limitOfResults,
                 separator = FormatConstants.INFORMATION_SEPARATOR_ONE
             ).toString())
-            //_ = println(searchResourcesSparql)
-            searchResponse <- (storeManager ? SparqlSelectRequest(searchResourcesSparql)).mapTo[SparqlSelectResponse]
+
+            // _ = println(searchResourcesSparql)
+
+            // If we're using GraphDB, optimise this query by using inference.
+            useInference = settings.triplestoreType.startsWith("graphdb")
+
+            searchResponse <- (storeManager ? SparqlSelectRequest(sparql = searchResourcesSparql, useInference = useInference)).mapTo[SparqlSelectResponse]
 
             resources: Seq[ResourceSearchResultRowV1] = searchResponse.results.bindings.map {
                 case (row: VariableResultsRow) =>
@@ -1549,6 +1555,79 @@ class ResourcesResponderV1 extends ResponderV1 {
         } yield ResourceCheckClassResponseV1(isInClass = subClassResponse.isSubClass)
     }
 
+    /**
+      * Changes a resource's label.
+      *
+      * @param resourceIri the IRI of the resource.
+      * @param label the new label.
+      * @param apiRequestID the the ID of the API request.
+      * @param userProfile the profile of the user making the request.
+      * @return a [[ChangeResourceLabelResponseV1]].
+      */
+    private def changeResourceLabelV1(resourceIri: IRI, label: String, apiRequestID: UUID, userProfile: UserProfileV1): Future[ChangeResourceLabelResponseV1] = {
+
+        def makeTaskFuture(userIri: IRI): Future[ChangeResourceLabelResponseV1] = {
+
+            for {
+            // get the resource's permissions
+                (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceIri, userProfile = userProfile, queryOntology = false)
+
+                // check if the given user may change its label
+                _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
+                    throw ForbiddenException(s"User $userIri does not have permission to change the label of resource $resourceIri")
+                }
+
+                // get the named graph the resource is contained in by the resource's project
+                namedGraph = settings.projectNamedGraphs(resourceInfo.project_id).data
+
+                // the user has sufficient permissions to change the resource's label
+                sparqlUpdate = queries.sparql.v1.txt.changeResourceLabel(
+                    dataNamedGraph = namedGraph,
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceIri,
+                    label = label
+                ).toString()
+
+            //_ = print(sparqlUpdate)
+
+            // Do the update.
+            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+
+            // Check whether the update succeeded.
+            sparqlQuery = queries.sparql.v1.txt.checkResourceLabelChange(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri,
+                label = label
+            ).toString()
+
+            sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            rows = sparqlSelectResponse.results.bindings
+
+            // we expect exactly one row to be returned if the label was updated correctly in the data.
+            _ = if (rows.length != 1) {
+                throw UpdateNotPerformedException(s"The label of the resource ${resourceIri} was not updated correctly. Please report this as a possible bug.")
+            }
+
+            } yield ChangeResourceLabelResponseV1(res_id = resourceIri, label = label, userProfile.userData)
+        }
+
+        for {
+        // Don't allow anonymous users to change a resource's label.
+            userIri <- userProfile.userData.user_id match {
+                case Some(iri) => Future(iri)
+                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to change a resource's label"))
+            }
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the resource.
+            taskResult <- ResourceLocker.runWithResourceLock(
+                apiRequestID,
+                resourceIri,
+                () => makeTaskFuture(userIri)
+            )
+        } yield taskResult
+
+    }
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Helper methods.
 
@@ -1862,10 +1941,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 },
                 values = valueObjects.map(_.valueV1),
                 value_ids = valueObjects.map(_.valueObjectIri),
-                comments = valueObjects.map(_.comment match {
-                    case Some(comment: String) => comment
-                    case None => ""
-                })
+                comments = valueObjects.map(_.comment)
             )
         }
 
@@ -2005,7 +2081,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                             valueObjectIri = linkValueIri,
                             valueV1 = valueV1,
                             valuePermission = linkPermission,
-                            order = linkValueOrder
+                            order = linkValueOrder,
+                            comment = linkValueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasComment).map(_.literals.head) // get comment from LinkValue
                         )
                 }.toVector
 
@@ -2035,7 +2112,7 @@ class ResourcesResponderV1 extends ResponderV1 {
     private def convertPropertyV1toPropertyGetV1(propertyV1: PropertyV1): PropertyGetV1 = {
 
         val valueObjects: Seq[PropertyGetValueV1] = (propertyV1.value_ids, propertyV1.values, propertyV1.comments).zipped.map {
-            case (id: IRI, value: ApiValueV1, comment: String) =>
+            case (id: IRI, value: ApiValueV1, comment: Option[String]) =>
                 PropertyGetValueV1(id = id,
                     value = value,
                     textval = value.toString,

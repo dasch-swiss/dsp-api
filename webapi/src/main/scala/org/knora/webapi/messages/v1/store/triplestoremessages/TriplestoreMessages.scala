@@ -1,7 +1,6 @@
 package org.knora.webapi.messages.v1.store.triplestoremessages
 
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{InconsistentTriplestoreDataException, TriplestoreResponseException}
 import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
@@ -12,21 +11,27 @@ import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
 sealed trait TriplestoreRequest
 
 /**
-  * Simple message for initial actor functionality
+  * Simple message for initial actor functionality.
   */
 case class HelloTriplestore(txt: String) extends TriplestoreRequest
 
 /**
-  * Simple message for checking the connection to the Triplestore
+  * Simple message for checking the connection to the triplestore.
   */
 case object CheckConnection extends TriplestoreRequest
 
 /**
   * Represents a SPARQL SELECT query to be sent to the triplestore.
   *
-  * @param sparql the SPARQL string.
+  * @param sparql       the SPARQL string.
+  * @param useInference if `true`, ask the triplestore to use inference in the query, if possible. If the triplestore
+  *                     is being accessed over HTTP, this is likely to mean setting a parameter in the HTTP request.
+  *                     Note that with GraphDB, setting this to `false` is not sufficient to completely disable inference,
+  *                     because it does not disable the `owl:sameAs` optimisation. To completely disable inference
+  *                     for a query in GraphDB, you must include `FROM <http://www.ontotext.com/explicit>`
+  *                     in the SPARQL.
   */
-case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
+case class SparqlSelectRequest(sparql: String, useInference: Boolean = false) extends TriplestoreRequest
 
 /**
   * Represents a response to a SPARQL SELECT query, containing a parsed representation of the response (JSON, etc.)
@@ -210,39 +215,6 @@ case class Initialized() extends TriplestoreRequest
   */
 case class InitializedResponse(initFinished: Boolean)
 
-/**
-  * TODO: document this.
-  */
-sealed trait AdminRequest extends KnoraRequestV1
-
-/**
-  * TODO: document this.
-  */
-sealed trait TriplestoreAdminRequest extends AdminRequest
-
-/**
-  * TODO: document this.
-  *
-  * @param userProfile
-  */
-case class FakeTriplestorePrepare(userProfile: UserProfileV1) extends TriplestoreAdminRequest
-
-/**
-  * TODO: document this.
-  *
-  * @param userProfileV1
-  */
-case class FakeTriplestoreUse(userProfileV1: UserProfileV1) extends TriplestoreAdminRequest
-
-/**
-  * TODO: document this.
-  *
-  * @param message
-  */
-case class TriplestoreAdminResponse(message: String) extends KnoraResponseV1 {
-    def toJsValue = TriplestoreJsonProtocol.triplestoreAdminResponseFormat.write(this)
-}
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -261,9 +233,8 @@ case class RdfDataObject(path: String, name: String)
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
   */
-object TriplestoreJsonProtocol extends DefaultJsonProtocol with NullOptions {
+trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    implicit val triplestoreAdminResponseFormat: RootJsonFormat[TriplestoreAdminResponse] = jsonFormat1(TriplestoreAdminResponse)
     implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject)
     implicit val resetTriplestoreContentFormat: RootJsonFormat[ResetTriplestoreContent] = jsonFormat1(ResetTriplestoreContent)
 

@@ -53,7 +53,7 @@ class SettingsImpl(config: Config) extends Extension {
     val sipiPathConversionRoute = config.getString("app.sipi.path-conversion-route")
     val sipiFileConversionRoute = config.getString("app.sipi.file-conversion-route")
     val httpPort = config.getInt("app.http.port")
-    val baseApiUrl = s"http://$httpInterface:$httpPort/"
+    val baseApiUrl = s"http://$httpInterface:$httpPort"
     val caches = config.getList("app.caches").iterator.map {
         (cacheConfigItem: ConfigValue) =>
             val cacheConfigMap = cacheConfigItem.unwrapped.asInstanceOf[java.util.HashMap[String, Any]]
@@ -65,6 +65,7 @@ class SettingsImpl(config: Config) extends Extension {
                 cacheConfigMap("time-to-idle-seconds").asInstanceOf[Int])
     }.toVector
     val defaultTimeout = Timeout(config.getInt("app.default-timeout").seconds)
+    val defaultRestoreTimeout = Timeout(config.getInt("app.default-restore-timeout").seconds)
     val dumpMessages = config.getBoolean("app.dump-messages")
     val showInternalErrors = config.getBoolean("app.show-internal-errors")
     val maxResultsPerSearchResultPage = config.getInt("app.max-results-per-search-result-page")

@@ -20,7 +20,7 @@
 
 package org.knora.webapi.messages.v1.responder.authenticatemessages
 
-import spray.httpx.SprayJsonSupport
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

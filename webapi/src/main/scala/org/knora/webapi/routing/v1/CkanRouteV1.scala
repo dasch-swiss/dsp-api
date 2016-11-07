@@ -22,15 +22,14 @@ package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanRequestV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import spray.routing.Directives._
-import spray.routing._
 
 import scala.concurrent.duration._
-import scala.util.Try
 
 /**
   * A route used to serve data to CKAN. It is used be the Ckan instance running under http://data.humanities.ch.
@@ -47,16 +46,15 @@ object CkanRouteV1 extends Authenticator {
         path("v1" / "ckan") {
             get {
                 requestContext =>
-                    val requestMessageTry = Try {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val params = requestContext.request.uri.query.toMap
-                        val project: Option[Seq[String]] = params.get("project").map(_.split(","))
-                        val limit: Option[Int] = params.get("limit").map(_.toInt)
-                        val info: Boolean = params.getOrElse("info", false) == true
-                        CkanRequestV1(project, limit, info, userProfile)
-                    }
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params = requestContext.request.uri.query().toMap
+                    val project: Option[Seq[String]] = params.get("project").map(_.split(","))
+                    val limit: Option[Int] = params.get("limit").map(_.toInt)
+                    val info: Boolean = params.getOrElse("info", false) == true
+                    val requestMessage = CkanRequestV1(project, limit, info, userProfile)
+
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,

@@ -20,29 +20,31 @@
 
 package org.knora.webapi.messages.v1.responder.storemessages
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
-import spray.httpx.SprayJsonSupport
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import spray.json._
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// API requests
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Messages
 
 sealed trait StoreResponderRequestV1 extends KnoraRequestV1
 
 /**
-  * Represents an API request that asks the Knora API server to load the triplestore with data referenced inside
-  * [[RdfDataObject]]. Any data contained inside the triplestore will be deleted first.
+  * Requests to load the triplestore with data referenced inside [[RdfDataObject]]. Any data contained inside the
+  * triplestore will be deleted first.
   *
-  * @param rdfDataObjects an object containing the path to the data and the name of the named graph into which the data
-  *                       should be loaded.
+  * @param rdfDataObjects a sequence of [[RdfDataObject]] objects containing the path to the data and the name of
+  *                       the named graph into which the data should be loaded.
   */
 case class ResetTriplestoreContentRequestV1(rdfDataObjects: Seq[RdfDataObject]) extends StoreResponderRequestV1
 
-case class ResetTriplestoreContentResponseV1(message: String) extends KnoraResponseV1 {
-    def toJsValue = StoreV1JsonProtocol.resetTriplestoreContentResponseV1Format.write(this)
+case class ResetTriplestoreContentResponseV1(message: String) extends KnoraResponseV1 with StoreV1JsonProtocol {
+    def toJsValue = resetTriplestoreContentResponseV1Format.write(this)
 }
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -50,7 +52,8 @@ case class ResetTriplestoreContentResponseV1(message: String) extends KnoraRespo
 /**
   * A spray-json protocol for generating Knora API v1 JSON for property values.
   */
-object StoreV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
+trait StoreV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with TriplestoreJsonProtocol {
 
-    implicit val resetTriplestoreContentResponseV1Format: RootJsonFormat[ResetTriplestoreContentResponseV1] = jsonFormat1(ResetTriplestoreContentResponseV1)
+    /* Very strange construct at the end is needed, but I don't really understand why and what it means */
+    implicit val resetTriplestoreContentResponseV1Format: RootJsonFormat[ResetTriplestoreContentResponseV1] = jsonFormat(ResetTriplestoreContentResponseV1.apply _, "message")
 }

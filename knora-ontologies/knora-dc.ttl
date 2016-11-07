@@ -22,6 +22,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @base <http://www.knora.org/ontology/dc> .
 
@@ -62,6 +63,8 @@
              
              knora-base:subjectClassConstraint knora-base:Resource ;
              
+             knora-base:objectClassConstraint knora-base:TextValue ;
+
              rdfs:subPropertyOf knora-base:hasValue .
 
 
@@ -77,6 +80,8 @@
           rdfs:comment "The spatial or temporal topic of the resource, the spatial applicability of the resource, or the jurisdiction under which the resource is relevant."@en ;
           
           knora-base:subjectClassConstraint knora-base:Resource ;
+
+          knora-base:objectClassConstraint knora-base:TextValue ;
           
           rdfs:subPropertyOf knora-base:hasValue .
 
@@ -93,6 +98,8 @@
          :dctermsDescription "Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity."@en ;
          
          knora-base:subjectClassConstraint knora-base:Resource ;
+
+         knora-base:objectClassConstraint knora-base:TextValue ;
          
          rdfs:subPropertyOf knora-base:hasValue .
 
@@ -145,6 +152,8 @@
         rdfs:comment "The file format, physical medium, or dimensions of the resource."@en ;
         
         knora-base:subjectClassConstraint knora-base:Resource ;
+
+        knora-base:objectClassConstraint knora-base:TextValue ;
         
         rdfs:subPropertyOf knora-base:hasValue .
 
@@ -179,7 +188,9 @@
           :dctermsDescription "Recommended best practice is to use a controlled vocabulary such as RFC 4646 [RFC4646]."@en ;
           
           knora-base:subjectClassConstraint knora-base:Resource ;
-          
+ 
+          knora-base:objectClassConstraint knora-base:TextValue ;
+ 
           rdfs:subPropertyOf knora-base:hasValue .
 
 
@@ -195,6 +206,8 @@
            :dctermsDescription "Examples of a Publisher include a person, an organization, or a service. Typically, the name of a Publisher should be used to indicate the entity."@en ;
            
            knora-base:subjectClassConstraint knora-base:Resource ;
+
+          knora-base:objectClassConstraint knora-base:TextValue ;
            
            rdfs:subPropertyOf knora-base:hasValue .
 
@@ -227,6 +240,8 @@
         :dctermsDescription "Typically, rights information includes a statement about various property rights associated with the resource, including intellectual property rights."@en ;
         
         knora-base:subjectClassConstraint knora-base:Resource ;
+
+        knora-base:objectClassConstraint knora-base:TextValue ;
         
         rdfs:subPropertyOf knora-base:hasValue .
 
@@ -243,6 +258,8 @@
         :dctermsDescription "The described resource may be derived from the related resource in whole or in part. Recommended best practice is to identify the related resource by means of a string conforming to a formal identification system."@en ;
         
         knora-base:subjectClassConstraint knora-base:Resource ;
+
+        knora-base:objectClassConstraint knora-base:TextValue ;
         
         rdfs:subPropertyOf knora-base:hasValue .
 

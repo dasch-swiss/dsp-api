@@ -23,8 +23,12 @@ Developing the Knora API Server
 .. toctree::
    :maxdepth: 2
 
+   overview
+   fuseki
+   graphdb
    build-process
    intellij-config
    documentation
    test-tags
    testing-with-fuseki
+   docker-cheat-sheet
