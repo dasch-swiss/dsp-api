@@ -218,20 +218,12 @@ case class AdministrativePermissionV1(forProject: IRI = OntologyConstants.KnoraB
   * @param iri
   * @param forProject
   * @param forGroup
-  * @param resourceCreationPermissionValues
-  * @param hasRestrictedProjectResourceCreatePermission
-  * @param projectAdministrationPermissionValues
-  * @param hasRestrictedProjectGroupAdminPermission
-  * @param ontologyAdministrationPermissionValues
+  * @param hasPermissions
   */
 case class NewAdministrativePermissionV1(iri: IRI,
                                          forProject: IRI = OntologyConstants.KnoraBase.AllProjects,
                                          forGroup: IRI = OntologyConstants.KnoraBase.AllGroups,
-                                         resourceCreationPermissionValues: Seq[IRI] = Vector.empty[IRI],
-                                         hasRestrictedProjectResourceCreatePermission: Seq[IRI] = Vector.empty[IRI],
-                                         projectAdministrationPermissionValues: Seq[IRI] = Vector.empty[IRI],
-                                         hasRestrictedProjectGroupAdminPermission: Seq[IRI] = Vector.empty[IRI],
-                                         ontologyAdministrationPermissionValues: Seq[IRI] = Vector.empty[IRI]
+                                         hasPermissions: Map[String, Set[IRI]]
                                         )
 
 /**

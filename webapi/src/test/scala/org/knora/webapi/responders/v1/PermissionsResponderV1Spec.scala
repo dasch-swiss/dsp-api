@@ -22,8 +22,10 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.{CoreSpec, LiveActorMaker, OntologyConstants, SharedTestData}
+import org.knora.webapi._
 import PermissionsResponderV1SpecTestData._
+import akka.actor.Status.Failure
+import org.knora.webapi.util.KnoraIdUtil
 
 import scala.concurrent.duration._
 
@@ -45,6 +47,8 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
     implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
+
+    val knoraIdUtil = new KnoraIdUtil
 
     val rootUserProfileV1 = SharedTestData.rootUserProfileV1
     val multiuserUserProfileV1 = SharedTestData.multiuserUserProfileV1
@@ -96,18 +100,22 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             }
             "return user's default object access permissions " in {
                 actorUnderTest ! GetUserDefaultObjectAccessPermissionsRequestV1(multiuserUserProfileV1.projectGroups)
+                expectMsg(Map("IRI" -> List("ProjectResourceCreateAllPermission")))
             }
         }
-        "asked to create a permission object " should {
-            "create and return an administrative permission " ignore {
+        "asked to create an administrative permission object " should {
+            "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
+                val iri = knoraIdUtil.makeRandomPermissionIri
                 actorUnderTest ! AdministrativePermissionCreateRequestV1(
                     newAdministrativePermissionV1 = NewAdministrativePermissionV1(
-                        iri = "http://data.knora.org/permissions/998",
+                        iri = iri,
                         forProject = IMAGES_PROJECT_IRI,
-                        forGroup = OntologyConstants.KnoraBase.ProjectMember
+                        forGroup = OntologyConstants.KnoraBase.ProjectMember,
+                        hasPermissions = Map("ProjectResourceCreateAllPermission" -> Set[IRI]())
                     ),
                     userProfileV1 = rootUserProfileV1
                 )
+                expectMsg(Failure(DuplicateValueException(s"Permission for project: '$IMAGES_PROJECT_IRI' and group: '${OntologyConstants.KnoraBase.ProjectMember}' already exists. Possible duplicate for: http://data.knora.org/permissions/001.")))
             }
             "create and return a default object access permission " ignore {
 

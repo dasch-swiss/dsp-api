@@ -343,6 +343,18 @@ class KnoraIdUtil {
     }
 
     /**
+      * Creates a ned permission IRI based on a UUID
+      * @return the IRI of the permission object
+      */
+    def makeRandomPermissionIri: IRI = {
+        val knoraPermissionID = makeRandomBase64EncodedUuid
+        s"http://data.knora.org/permissions/$knoraPermissionID"
+    }
+
+    ////////////////////////////////////////////////
+    // Helper methods
+    ////////////////////////////////////////////////
+    /**
       * Implements an algorithm for generating Knora IDs from SALSAH IDs. Based on the PHP implementation in SALSAH, in
       * `scripts/RDF-Export/rdf-uuid-from.php`.
       *
