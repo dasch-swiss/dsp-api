@@ -28,8 +28,8 @@ cp -R _format_docu $TMP_HTML/api
 # Switch to the gh-pages branch and remove the existing HTML docs from it.
 
 git checkout gh-pages
-rm -rf ../documentation/manual
-rm -rf ../documentation/api
+git rm -rf ../documentation/manual
+git rm -rf ../documentation/api
 
 # Move the new docs from the temporary directory into the git repository tree.
 
