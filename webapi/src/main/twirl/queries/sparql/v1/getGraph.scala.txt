@@ -18,104 +18,211 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
-@import org.knora.webapi.IRI
+@import org.knora.webapi._
+@import org.knora.webapi.twirl.GraphQueryConstants._
 
 @**
- * Given the IRI of a resource, gets the graph from which a graph visualization can be generated.
- * This is hardcoded for 2 nested levels at the moment.
+ * Given the IRI of an initial resource, gets the graph of links to and from that resource, up to a specified
+ * depth, not including deleted links, links to or from deleted resources, or links that are subproperties of
+ * knora-base:isPartOf. The query returns results using CONSTRUCT, describing each node and each edge in the graph.
+ * Each subject is either a resource or a LinkValue.
  *
  * @param triplestore the name of the triplestore being used.
- * @param resourceIri the IRI of the resource.
+ * @param initialIri the IRI of the initial resource.
+ * @param depth the maximum depth of the search.
  *@
 @(triplestore: String,
-  resourceIri: IRI)
+  initialIri: IRI,
+  depth: Int)
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+@if(depth < 1) {
+    @{throw SparqlGenerationException(s"depth must be greater than 1 in this SPARQL template"); ()}
+}
 
-SELECT ?resource ?outgoingProp1 ?incomingProp1 ?resource1 ?outgoingProp2 ?incomingProp2 ?resource2
-@* Ensure that inference is not used in this query. *@
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+CONSTRUCT
+{
+    ?node a ?nodeClass ;
+        rdfs:label ?nodeLabel ;
+        knora-base:attachedToUser ?nodeOwner ;
+        knora-base:attachedToProject ?nodeProject ;
+        knora-base:hasPermissions ?nodePermissions .
+
+    ?linkValue a knora-base:LinkValue ;
+        rdf:subject ?linkValueSubj ;
+        rdf:predicate ?linkValuePred ;
+        rdf:object ?linkValueObj ;
+        knora-base:attachedToUser ?linkValueOwner ;
+        knora-base:attachedToProject ?linkValueProject ;
+        knora-base:hasPermissions ?linkValuePermissions .
+}
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
-WHERE {
-    BIND(IRI("@resourceIri") as ?resource)
+WHERE
+{
+    {
+        SELECT *  WHERE
+        {
+            {
+                BIND(IRI("@initialIri") AS ?@Initial) .
+                ?@Initial knora-base:isDeleted false .
 
-    ?resource knora-base:isDeleted false .
+                @* A list of variable names for the sources of outbound links. *@
+                @defining(Initial +: (1 to (depth - 1)).map(i => s"$OutboundNode$i")) { outboundSources =>
+
+                    @* A list of variable names for the targets of outbound links. *@
+                    @defining((1 to depth).map(i => s"$OutboundNode$i")) { outboundTargets =>
+
+                        @* A list of 3-tuples (source, target, index) for making variable names to find outbound links. *@
+                        @defining(outboundSources.zip(outboundTargets).zip(1 to depth).map { case ((source, target), index) => (source, target, index) }) { outboundVars =>
+
+                            @for((source, target, index) <- outboundVars) {
+
+                                @if(index > 1) {
+
+                                    OPTIONAL
+
+                                }
+
+                                @LeftBrace
+                                    ?outboundProp@index rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                    MINUS
+                                    {
+                                        ?outboundProp@index rdfs:subPropertyOf* knora-base:isPartOf .
+                                    }
+
+                                    ?@source ?outboundProp@index ?@target .
+                                    ?@target knora-base:isDeleted false .
+
+                                    ?outboundLinkValue@index a knora-base:LinkValue ;
+                                        rdf:subject ?@source ;
+                                        rdf:predicate ?outboundProp@index ;
+                                        rdf:object ?@target ;
+                                        knora-base:isDeleted false .
+
+                            }
+                        }
+                    }
+                }
+
+                @for(i <- 1 to depth) { @RightBrace }
+
+                UNION
+
+                @* A list of variable names for the sources of inbound links. *@
+                @defining((1 to depth).map(i => s"$InboundNode$i")) { inboundSources =>
+
+                    @* A list of variable names for the targets of inbound links. *@
+                    @defining(Initial +: (1 to (depth - 1)).map(i => s"$InboundNode$i")) { inboundTargets =>
+
+                        @* A list of 3-tuples (source, target, index) for making variable names to find inbound links. *@
+                        @defining(inboundSources.zip(inboundTargets).zip(1 to depth).map { case ((source, target), index) => (source, target, index) }) { inboundVars =>
+
+                            @for((source, target, index) <- inboundVars) {
+
+                                @if(index > 1) {
+
+                                    OPTIONAL
+
+                                }
+
+                                @LeftBrace
+                                    ?inboundProp@index rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+                                    MINUS
+                                    {
+                                        ?inboundProp@index rdfs:subPropertyOf* knora-base:isPartOf .
+                                    }
+
+                                    ?@source ?inboundProp@index ?@target .
+                                    ?@source knora-base:isDeleted false .
+
+                                    ?inboundLinkValue@index a knora-base:LinkValue ;
+                                        rdf:subject ?@source ;
+                                        rdf:predicate ?inboundProp@index ;
+                                        rdf:object ?@target ;
+                                        knora-base:isDeleted false .
+
+                            }
+                        }
+                    }
+                }
+
+                @for(i <- 1 to depth) { @RightBrace }
+            }
+        }
+    }
 
     {
-        ?outgoingProp1 rdfs:subPropertyOf* knora-base:hasLinkTo .
+        FILTER BOUND(?@Initial)
+        BIND(?@Initial AS ?node)
 
-        MINUS {
-            ?outgoingProp1 rdfs:subPropertyOf+ knora-base:isPartOf .
-        }
-
-        ?resource ?outgoingProp1 ?resource1 .
-
-        OPTIONAL {
-            {
-                ?outgoingProp2 rdfs:subPropertyOf* knora-base:hasLinkTo .
-
-                MINUS {
-                    ?outgoingProp2 rdfs:subPropertyOf+ knora-base:isPartOf .
-                }
-
-                ?resource1 ?outgoingProp2 ?resource2 .
-            }
-            UNION
-            {
-                ?incomingProp2 rdfs:subPropertyOf* knora-base:hasLinkTo .
-
-                MINUS {
-                    ?incomingProp2 rdfs:subPropertyOf+ knora-base:isPartOf .
-                }
-
-                ?resource2 ?incomingProp2 ?resource1 .
-                FILTER(!(?resource2 = ?resource))
-            }
-        }
-    }
-    UNION
-    {
-        ?incomingProp1 rdfs:subPropertyOf* knora-base:hasLinkTo .
-
-        MINUS {
-            ?incomingProp1 rdfs:subPropertyOf+ knora-base:isPartOf .
-        }
-
-        ?resource1 ?incomingProp1 ?resource .
-
-        OPTIONAL {
-            {
-                ?outgoingProp2 rdfs:subPropertyOf* knora-base:hasLinkTo .
-
-                MINUS {
-                    ?outgoingProp2 rdfs:subPropertyOf+ knora-base:isPartOf .
-                }
-
-                ?resource1 ?outgoingProp2 ?resource2 .
-            }
-            UNION
-            {
-                ?incomingProp2 rdfs:subPropertyOf* knora-base:hasLinkTo .
-
-                MINUS {
-                    ?incomingProp2 rdfs:subPropertyOf+ knora-base:isPartOf .
-                }
-
-                ?resource2 ?incomingProp2 ?resource1 .
-            }
-
-            FILTER(!(?resource2 = ?resource))
-        }
+        ?node a ?nodeClass .
+        ?node rdfs:label ?nodeLabel .
+        ?node knora-base:attachedToUser ?nodeOwner .
+        ?node knora-base:attachedToProject ?nodeProject .
+        ?node knora-base:hasPermissions ?nodePermissions .
     }
 
-    MINUS {
-        ?resource1 knora-base:isDeleted true .
-    }
+    @for(index <- 1 to depth) {
 
-    MINUS {
-        ?resource2 knora-base:isDeleted true .
+        UNION
+        {
+            FILTER BOUND(?@OutboundNode@index)
+            BIND(?@OutboundNode@index AS ?node)
+
+            ?node a ?nodeClass .
+            ?node rdfs:label ?nodeLabel .
+            ?node knora-base:attachedToUser ?nodeOwner .
+            ?node knora-base:attachedToProject ?nodeProject .
+            ?node knora-base:hasPermissions ?nodePermissions .
+        }
+        UNION
+        {
+            FILTER BOUND(?@InboundNode@index)
+            BIND(?@InboundNode@index AS ?node)
+
+            ?node a ?nodeClass .
+            ?node rdfs:label ?nodeLabel .
+            ?node knora-base:attachedToUser ?nodeOwner .
+            ?node knora-base:attachedToProject ?nodeProject .
+            ?node knora-base:hasPermissions ?nodePermissions .
+        }
+        UNION
+        {
+            FILTER BOUND(?@OutboundLinkValue@index)
+            BIND(?@OutboundLinkValue@index AS ?linkValue)
+
+            ?linkValue rdf:subject ?linkValueSubj ;
+                rdf:predicate ?linkValuePred ;
+                rdf:object ?linkValueObj ;
+                knora-base:attachedToUser ?linkValueOwner ;
+                knora-base:hasPermissions ?linkValuePermissions .
+
+            OPTIONAL {
+                ?linkValue knora-base:attachedToProject ?linkValueProject .
+            }
+        }
+        UNION
+        {
+            FILTER BOUND(?@InboundLinkValue@index)
+            BIND(?@InboundLinkValue@index AS ?linkValue)
+
+            ?linkValue rdf:subject ?linkValueSubj ;
+                rdf:predicate ?linkValuePred ;
+                rdf:object ?linkValueObj ;
+                knora-base:attachedToUser ?linkValueOwner ;
+                knora-base:hasPermissions ?linkValuePermissions .
+
+            OPTIONAL {
+                ?linkValue knora-base:attachedToProject ?linkValueProject .
+            }
+        }
     }
 }

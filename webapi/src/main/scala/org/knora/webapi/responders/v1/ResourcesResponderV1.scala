@@ -25,12 +25,11 @@ import java.util.UUID
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.graphdatamessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.ResourceLocker
@@ -39,7 +38,7 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
 import scala.collection.immutable.Iterable
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.Future
 
 /**
   * Responds to requests for information about resources, and returns responses in Knora API v1 format.
@@ -62,7 +61,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         case ResourceFullGetRequestV1(resourceIri, userProfile, getIncoming) => future2Message(sender(), getFullResponseV1(resourceIri, userProfile, getIncoming), log)
         case ResourceContextGetRequestV1(resourceIri, userProfile, resinfo) => future2Message(sender(), getContextResponseV1(resourceIri, userProfile, resinfo), log)
         case ResourceRightsGetRequestV1(resourceIri, userProfile) => future2Message(sender(), getRightsResponseV1(resourceIri, userProfile), log)
-        case GraphDataGetRequestV1(iri: IRI, userProfile: UserProfileV1, level: Int) => future2Message(sender(), getGraphDataResponseV1(iri, userProfile, level), log)
+        case graphDataGetRequest: GraphDataGetRequestV1 => future2Message(sender(), getGraphDataResponseV1(graphDataGetRequest), log)
         case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserProfileV1) => future2Message(sender(), getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile), log)
         case ResourceCreateRequestV1(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID) => future2Message(sender(), createNewResource(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID), log)
         case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1) => future2Message(sender(), checkResourceClass(resourceIri, owlClass, userProfile), log)
@@ -74,246 +73,38 @@ class ResourcesResponderV1 extends ResponderV1 {
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Methods for generating complete API responses.
-    /**
-      * Returns an instance of [[GraphDataGetResponseV1]] describing a graph representation, in Knora API v1 format.
-      *
-      * param resourceIri the IRI of the resource to be queried.
-      * param userProfile the profile of the user making the request.
-      * param level the degree of nested levels the request is asking for
-      *
-      * @return a [[GraphDataGetResponseV1]] containing a representation of the graph.
-      */
-    /**
-      * TODO: implement build_graph recursion
-      * this is just a stub
-      * private def getGraphDataResponseV1(resourceIri: IRI, userProfile: UserProfileV1, level: Int): Future[GraphDataGetResponseV1] = {
-      * for {
-      * (nodes, edges) <- build_graph(resourceIri, level, List[GraphNodeV1](),
-      * List[GraphDataEdgeV1](), userProfile)
-      * } yield nodes match {
-      * case nodes: Seq[GraphNodeV1] =>
-      * GraphDataGetResponseV1(
-      * status = ApiStatusCodesV1.OK,
-      * graph = GraphV1(
-      * id = resourceIri,
-      * nodes = nodes,
-      * edges = edges),
-      * userdata = userProfile.userData)
-      * case _ =>
-      * GraphDataGetResponseV1(
-      * status = ApiStatusCodesV1.UNSPECIFIED_ERROR,
-      * graph = GraphV1(
-      * id = resourceIri,
-      * nodes = List[GraphNodeV1](),
-      * edges = List[GraphDataEdgeV1]()),
-      * userdata = userProfile.userData)
-      * }
-      * }
-      */
-
 
     /**
-      * Returns an instance of [[GraphDataGetResponseV1]] describing a graph representation, in Knora API v1 format.
+      * Gets a graph of resources that are reachable via links to or from a given resource.
       *
-      * param resourceIri the IRI of the resource to be queried.
-      * param userProfile the profile of the user making the request.
-      * param level the degree of nested levels the request is asking for
-      *
-      * @return a [[GraphDataGetResponseV1]] containing a representation of the graph.
+      * @param graphDataGetRequest a [[GraphDataGetRequestV1]] specifying the characteristics of the graph.
+      * @return a [[GraphDataGetResponseV1]] representing the requested graph.
       */
-
-
-    private def getGraphDataResponseV1(resourceIri: IRI, userProfile: UserProfileV1, depth: Int = 5): Future[GraphDataGetResponseV1] = {
-
-        /**
-          *
-          * Example: asking for the graph for resource http://data.knora.org/c9824353ae06 will get the following 2 levels of links:
-          *
-          * To create a GraphV1 for the GraphDataGetResponseV1, we need a Seq of GraphNodesV1 and a Seq of GraphDataEdgeV1
-          *
-          * {{{
-          * outgoingProp1                incomingProp1         resource1      outgoingProp2         incomingProp2      resource2
-          * -------------------------------------------------------------------------------------------------------------------------
-          * knora-base#isRegionOf                              e1c441dfc103
-          * knora-base#isStandoffLinkTo                        047db418ae06   knora-base#isRegionOf                    883be8542e03
-          *                              knora-base#hasLinkTo  8e88d28dae06   knora-base#hasLinkTo                     047db418ae06
-          *                              knora-base#hasLinkTo  faa4d435a9f7   knora-base#hasLinkTo                     047db418ae06
-          * }}}
-          */
-
-        def makeGraphNodeV1(resIri: IRI, userProfile: UserProfileV1): Future[GraphNodeV1] = {
-            log.debug(s"...Making GraphNode for Iri: $resIri")
-
-            val resPropsFuture: Future[Seq[PropertyV1]] = getResourceProperties(resIri, None, userProfile)
-
-            for {
-                (userPermissions, resInfo) <- getResourceInfoV1(resIri, userProfile, queryOntology = true)
-                properties <- resPropsFuture
-            } yield userPermissions match {
-                case Some(permissions) =>
-                    GraphNodeV1(id = resIri,
-                        resinfo = Some(resInfo),
-                        properties = Some(PropsV1(properties = properties)))
-                case None =>
-                    GraphNodeV1(id = resIri,
-                        resinfo = None,
-                        properties = None)
-            }
-        }
-
-        // TODO: filter resinfo and properties for literal V1 frontend compatibility (100% necessary?)
-        // TODO: switch to twirl template
-
-        def makeGraphNodeAndEdge(resIri: IRI, from: IRI, userProfile: UserProfileV1, incoming: Boolean): Future[(GraphNodeV1, Option[GraphDataEdgeV1])] = {
-            // log.debug(s"...Making GraphNode for Iri: $resIri")
-
-            val resPropsFuture: Future[Seq[PropertyV1]] = getResourceProperties(resIri, None, userProfile)
-
-            for {
-                (userPermissions, resInfo) <- getResourceInfoV1(resIri, userProfile, queryOntology = true)
-                properties <- resPropsFuture
-            } yield userPermissions match {
-                case Some(permissions) =>
-                    val graphnode = GraphNodeV1(id = resIri,
-                        resinfo = Some(resInfo),
-                        properties = Some(PropsV1(properties = properties)))
-                    val edge =
-                        if (incoming) {
-                            Some(GraphDataEdgeV1(
-                                label = graphnode.resinfo.get.restype_label,
-                                from = resIri,
-                                to = from))
-                        } else {
-                            Some(GraphDataEdgeV1(
-                                label = graphnode.resinfo.get.restype_label,
-                                from = from,
-                                to = resIri))
-                        }
-                    (graphnode, edge)
-                case None =>
-                    (GraphNodeV1(id = resIri,
-                        resinfo = None,
-                        properties = None), None)
-            }
-        }
-
-        def makeGraphEdgeV1(label: Option[String], from: IRI, to: IRI): GraphDataEdgeV1 = {
-            GraphDataEdgeV1(
-                label = label,
-                from = from,
-                to = to)
-        }
-
-        /*  def createEdges(resourceIri: IRI, rows: Seq[VariableResultsRow]): Seq[GraphDataEdgeV1] = {
-              // this is just the most brute force approach, to see what the edges are
-              val groupByInc1: Map[IRI, Seq[VariableResultsRow]] = rows.filter(a => a.rowMap.contains("incomingProp1")).groupBy(_.rowMap("incomingProp1"))
-              val groupByOut1: Map[IRI, Seq[VariableResultsRow]] = rows.filter(a => a.rowMap.contains("outgoingProp1")).groupBy(_.rowMap("outgoingProp1"))
-              val groupByInc2: Map[IRI, Seq[VariableResultsRow]] = rows.filter(a => a.rowMap.contains("incomingProp2")).groupBy(_.rowMap("incomingProp2"))
-              val groupByOut2: Map[IRI, Seq[VariableResultsRow]] = rows.filter(a => a.rowMap.contains("outgoingProp2")).groupBy(_.rowMap("outgoingProp2"))
-
-
-              groupByInc1.map{case (x, lis) => (x, lis.map{ case m => makeGraphEdgeV1(Some("test"),
-                  m.rowMap("resource1"), resourceIri)})}.values.toList.flatten ++
-                groupByOut1.map{case (x, lis) => (x, lis.map{ case m => makeGraphEdgeV1(Some("test"), resourceIri, m.rowMap("resource1"))})}.values.toList.flatten ++
-                groupByInc2.map{case (x, lis) => (x, lis.map{ case m => makeGraphEdgeV1(Some("test"),
-                    m.rowMap("resource2"), m.rowMap("resource1"))})}.values.toList.flatten ++
-                groupByOut2.map{case (x, lis) => (x, lis.map{ case m => makeGraphEdgeV1(Some("test"), m.rowMap("resource1"), m.rowMap("resource2"))})}.values.toList.flatten
-          }*/
-
-        def createGraph(resourceIri: IRI, rrows: Seq[VariableResultsRow], level: Int, userProfile: UserProfileV1):
-        Seq[Future[(Seq[GraphNodeV1], Seq[GraphDataEdgeV1])]] = {
-            rrows map { row =>
-                processRow(resourceIri, row, level, userProfile)
-            }
-        }
-
-        def processRow(resourceIri: IRI, row: VariableResultsRow, level: Int, userProfile: UserProfileV1):
-        Future[(Seq[GraphNodeV1], Seq[GraphDataEdgeV1])] = {
-            // example: if level is 4, then we have to look for res1, res2, res3, res4
-            // on the same value of the counter, we also look at incomingProp1, outgoingProp1 etc
-            var nodes: Seq[GraphNodeV1] = Vector.empty
-            var edges: Seq[GraphDataEdgeV1] = Vector.empty
-            val rowPromise = Promise[(Seq[GraphNodeV1], Seq[GraphDataEdgeV1])]()
-            val counter: Int = 1
-            def loop(row: VariableResultsRow, counter: Int, lastIri: IRI) {
-                if (counter > level) {
-                    // add the resourceIri (rootNode) to the graph as a last step
-                    val rootNode: Future[GraphNodeV1] = makeGraphNodeV1(resourceIri, userProfile)
-                    rootNode map {
-                        node =>
-                            nodes = node +: nodes
-                            rowPromise.success((nodes, edges))
-                    }
-                } else {
-                    if (row.rowMap.isDefinedAt("resource" ++ counter.toString)) {
-                        val resIri = row.rowMap("resource" ++ counter.toString)
-                        val incoming = row.rowMap.isDefinedAt("incomingProp" ++ counter.toString)
-                        makeGraphNodeAndEdge(resIri, lastIri, userProfile, incoming) map { case (node, edge) =>
-                            nodes = node +: nodes
-                            edges = edge.get +: edges
-                            loop(row, counter + 1, resIri)
-                        }
-                    } else {
-                        // graph is interrupted
-                        // add the resourceIri (rootNode) to the graph as a last step
-                        // TODO: Don't do this for every row, just once
-                        // println("graph is interrupted at level: " + counter)
-                        val rootNode: Future[GraphNodeV1] = makeGraphNodeV1(resourceIri, userProfile)
-                        rootNode map {
-                            node =>
-                                nodes = node +: nodes
-                                rowPromise.success((nodes, edges))
-                        }
-                    }
-                }
-            }
-            loop(row, counter, resourceIri)
-            rowPromise.future
-        }
-
-        // execute the graph query template
-        // the template can be of depth n, currently it's hardcoded at level 2
-
+    private def getGraphDataResponseV1(graphDataGetRequest: GraphDataGetRequestV1): Future[GraphDataGetResponseV1] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getGraph(
+            sparql <- Future(queries.sparql.v1.txt.getGraph(
                 triplestore = settings.triplestoreType,
-                resourceIri = resourceIri
+                initialIri = graphDataGetRequest.resourceIri,
+                depth = graphDataGetRequest.depth
             ).toString())
-            graphResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-            graphResponseRows: Seq[VariableResultsRow] = graphResponse.results.bindings
 
-            // _ = println (graphResponseRows.map{x => println(x + " Row ")})
+            _ = println(sparql)
 
-            // groupedByResource1: Map[IRI, Seq[VariableResultsRow]] = graphResponseRows.groupBy(_.rowMap("resource1"))
-            // groupedByResource2: Map[IRI, Seq[VariableResultsRow]] = graphResponseRows.filter(x => x.rowMap.contains("resource2")).groupBy(_.rowMap("resource2"))
+            response <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResponse]
 
-            graph = createGraph(resourceIri, graphResponseRows, depth, userProfile)
+            // A map of subject IRIs to maps of predicate IRIs to objects.
+            groupedBySubject: Map[IRI, Map[IRI, String]] = response.results.bindings.groupBy(_.rowMap("subject")).map {
+                case (subject, rows) =>
+                    val predicatesAndObjects: Map[IRI, String] = rows.map {
+                        row => row.rowMap("predicate") -> row.rowMap("object")
+                    }.toMap
 
-            /* graphNodesFutures: Seq[(Future[(GraphNodeV1, Option[GraphDataEdgeV1])],
-               scala.collection.immutable.Iterable[Future[(GraphNodeV1, Option[GraphDataEdgeV1])]])] = groupedByResource1.map {
-                 case (resIri1: IRI, rest: Seq[VariableResultsRow]) =>
-                     (makeGraphNodeAndEdge(resIri1, resourceIri, userProfile, true), groupedByResource2.map {
-                         case (resIri2: IRI, rest1: Seq[VariableResultsRow]) =>
-                             for {
-                                 graphNode2 <- makeGraphNodeAndEdge(resIri2, resIri1, userProfile, true)
-                             } yield graphNode2
-                     })
-             }.toList*/
-            //  rootNode = makeGraphNodeV1(resourceIri, userProfile)
-            // graphWithRootNode = graph.++:(Vector(rootNode, Vector.empty))
-            graphNodes <- Future.sequence(graph)
+                    subject -> predicatesAndObjects
+            }
 
-            nodes = graphNodes.flatMap(x => x._1)
-            edges = graphNodes.flatMap(x => x._2)
-            // TODO: error handling / handling of other ApiStatusCodes
-            graphDataGetResponse = GraphDataGetResponseV1(
-                graph = GraphV1(id = resourceIri, nodes = nodes, edges = edges),
-                //  createEdges(resourceIri, graphResponseRows )),
-                userdata = UserDataV1(lang = userProfile.userData.lang)
-            )
-        } yield graphDataGetResponse
+
+        } yield GraphDataGetResponseV1(nodes = Seq.empty[GraphNodeV1], edges = Seq.empty[GraphEdgeV1], userdata = graphDataGetRequest.userProfile.userData)
     }
-
 
     /**
       * Returns an instance of [[ResourceInfoResponseV1]] describing a resource, in Knora API v1 format.
