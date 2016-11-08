@@ -315,7 +315,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
       */
     def xml2TextWithStandoff(xmlStr: String): TextWithStandoff = {
         val saxParser = saxParserFactory.newSAXParser()
-        val nodes = XML.withSAXParser(saxParser).loadString(xmlStr)
+        val nodes: Elem = XML.withSAXParser(saxParser).loadString(xmlStr)
 
         val finishedConversionState = xmlNodes2Standoff(
             nodes = nodes,

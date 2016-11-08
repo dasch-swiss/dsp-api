@@ -585,7 +585,15 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                  :subjectClassConstraint :StandoffLinkTag .
 
 
+###  http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType
 
+:standoffRootTagHasDocumentType rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                  :subjectClassConstraint :StandoffRootTag ;
+
+                  :objectDatatypeConstraint xsd:string .
 
 ###  http://www.knora.org/ontology/knora-base#standoffTagHasStart
 
@@ -2498,6 +2506,18 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 # Intermediate Classes for different Types of Standoff Tags
 #
 #################################################################
+
+###  http://www.knora.org/ontology/knora-base#StandoffRootTag
+
+:StandoffRootTag rdf:type owl:Class ;
+
+            rdfs:subClassOf :StandoffTag ,
+                            [ rdf:type owl:Restriction ;
+                              owl:onProperty :standoffRootTagHasDocumentType ;
+                              owl:cardinality "1"^^xsd:nonNegativeInteger
+                            ] ;
+
+            rdfs:comment "Represents the root node if the TextValue has been created from XML"@en .
 
 ###  http://www.knora.org/ontology/knora-base#StandoffVisualTag
 
