@@ -79,9 +79,9 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         become {
             case UserProfileByUsernameGetRequestV1(submittedUsername) => {
                 if (submittedUsername == usernameCorrect) {
-                    sender !  Some(mockUserProfileV1)
+                    sender ! mockUserProfileV1
                 } else {
-                    sender ! None
+                    sender ! akka.actor.Status.Failure(BadCredentialsException("Bad credentials"))
                 }
             }
         }

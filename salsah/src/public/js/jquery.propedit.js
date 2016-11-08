@@ -57,6 +57,10 @@
     var comment_icon = new Image();
     comment_icon.src = SITE_URL + '/app/icons/16x16/comment.png';
 
+    var valueinfo_icon = new Image();
+    valueinfo_icon.src = SITE_URL + '/app/icons/16x16/info.png';
+
+
 	$.fn.propedit = function(resdata, propinfo, project_id, optpar) {
 		var $that = this;
 
@@ -215,6 +219,16 @@
 					}
 				}
 			}
+			$('<img>', {src: valueinfo_icon.src, 'class': 'propedit'}).click(function(event) {
+				SALSAH.ApiGet('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), function(data) {
+					if (data.status == ApiErrors.OK) {
+						alert("Name: " + data.valuecreatorname + "\nDate: " + data.valuecreationdate);
+					}
+					else {
+						alert(data.errormsg);
+					}
+				});
+			}).css({cursor: 'pointer'}).appendTo(value_container);
 		};
 
 		var make_add_button = function (prop_container, prop) {
@@ -1759,7 +1773,7 @@
 						tmpele.spinbox('edit');
 					}
 					else {
-						tmpele.spinbox('edit', propinfo[prop].values[value_index]);
+						tmpele.spinbox('edit', {value: propinfo[prop].values[value_index]});
 					}
 					value_container.append($('<img>', {src: save_icon.src, title: strings._save, 'class': 'propedit'}).click(function(event) {
 						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, tmpele.spinbox('value'), is_new_value);

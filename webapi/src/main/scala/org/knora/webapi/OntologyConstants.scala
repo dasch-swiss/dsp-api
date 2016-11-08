@@ -157,6 +157,8 @@ object OntologyConstants {
         val LinkValue = "http://www.knora.org/ontology/knora-base#LinkValue"
         val GeonameValue = "http://www.knora.org/ontology/knora-base#GeonameValue"
 
+        val ValueCreationDate = "http://www.knora.org/ontology/knora-base#valueCreationDate"
+
         val ListNode = "http://www.knora.org/ontology/knora-base#ListNode"
 
         val IsInGroup = "http://www.knora.org/ontology/knora-base#isInGroup"
