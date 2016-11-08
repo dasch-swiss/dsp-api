@@ -37,13 +37,15 @@ object TransformData extends App {
     private val PermissionsTransformationOption = "permissions"
     private val MissingValueHasStringTransformationOption = "strings"
     private val StandoffTransformationOption = "standoff"
+    private val RegionLabelTransformation = "regionlabels"
     private val AllTransformationsOption = "all"
 
     private val allTransformations = Vector(
         IsDeletedTransformationOption,
         PermissionsTransformationOption,
         MissingValueHasStringTransformationOption,
-        StandoffTransformationOption
+        StandoffTransformationOption,
+        RegionLabelTransformation
     )
 
     private val TempFilePrefix = "TransformData"
@@ -168,6 +170,7 @@ object TransformData extends App {
             case PermissionsTransformationOption => new PermissionsHandler(turtleWriter)
             case MissingValueHasStringTransformationOption => new ValueHasStringHandler(turtleWriter)
             case StandoffTransformationOption => new StandoffHandler(turtleWriter)
+            case RegionLabelTransformation => new RegionLabelHandler(turtleWriter)
             case _ => throw new Exception(s"Unsupported transformation $transformation")
         }
 
@@ -246,6 +249,46 @@ object TransformData extends App {
           */
         override def startRDF(): Unit = {
             turtleWriter.startRDF()
+        }
+    }
+
+    /**
+      * Looks for regions that have the label "test" and changes their label to the value of their `knora-base:hasComment`.
+      *
+      * @param turtleWriter an [[RDFWriter]] that writes to the output file.
+      */
+    private class RegionLabelHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
+        override def endRDF(): Unit = {
+            statements.foreach {
+                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+                    val subjectType = subjectStatements.find(_.getPredicate.stringValue == OntologyConstants.Rdf.Type).get.getObject.stringValue
+                    val label = subjectStatements.find(_.getPredicate.stringValue == OntologyConstants.Rdfs.Label).map(_.getObject.stringValue)
+
+                    val newLabel = if (subjectType == OntologyConstants.KnoraBase.Region && (label.isEmpty || label.contains("test"))) {
+                        val commentIri = subjectStatements.find(_.getPredicate.stringValue == OntologyConstants.KnoraBase.HasComment).get.getObject.stringValue
+                        Some(statements(commentIri).find(_.getPredicate.stringValue == OntologyConstants.KnoraBase.ValueHasString).get.getObject.stringValue)
+                    } else {
+                        label
+                    }
+
+                    subjectStatements.foreach {
+                        statement =>
+                            val newStatement = if (statement.getPredicate.stringValue == OntologyConstants.Rdfs.Label) {
+                                valueFactory.createStatement(
+                                    statement.getSubject,
+                                    statement.getPredicate,
+                                    valueFactory.createLiteral(newLabel.get)
+                                )
+                            } else {
+                                statement
+                            }
+
+                            turtleWriter.handleStatement(newStatement)
+                    }
+
+            }
+
+            turtleWriter.endRDF()
         }
     }
 
@@ -704,13 +747,13 @@ object TransformData extends App {
             s"""
                |Updates the structure of Knora repository data to accommodate changes in Knora.
                |
-               |Usage: org.knora.webapi.util.TransformData -t [$IsDeletedTransformationOption|$PermissionsTransformationOption|$MissingValueHasStringTransformationOption|$StandoffTransformationOption|$AllTransformationsOption] input output
+               |Usage: org.knora.webapi.util.TransformData -t [$IsDeletedTransformationOption|$PermissionsTransformationOption|$MissingValueHasStringTransformationOption|$StandoffTransformationOption|$RegionLabelTransformation|$AllTransformationsOption] input output
             """.stripMargin)
 
         val transform = opt[String](
             required = true,
-            validate = t => Set(IsDeletedTransformationOption, PermissionsTransformationOption, MissingValueHasStringTransformationOption, StandoffTransformationOption, AllTransformationsOption).contains(t),
-            descr = s"Selects a transformation. Available transformations: '$IsDeletedTransformationOption' (adds missing 'knora-base:isDeleted' statements), '$PermissionsTransformationOption' (combines old-style multiple permission statements into single permission statements), '$MissingValueHasStringTransformationOption' (adds missing valueHasString), '$StandoffTransformationOption' (transforms old-style standoff into new-style standoff), '$AllTransformationsOption' (all of the above)"
+            validate = t => Set(IsDeletedTransformationOption, PermissionsTransformationOption, MissingValueHasStringTransformationOption, StandoffTransformationOption, RegionLabelTransformation, AllTransformationsOption).contains(t),
+            descr = s"Selects a transformation. Available transformations: '$IsDeletedTransformationOption' (adds missing 'knora-base:isDeleted' statements), '$PermissionsTransformationOption' (combines old-style multiple permission statements into single permission statements), '$MissingValueHasStringTransformationOption' (adds missing valueHasString), '$StandoffTransformationOption' (transforms old-style standoff into new-style standoff), '$RegionLabelTransformation' (fixes the labels of regions whose label is 'test'), '$AllTransformationsOption' (all of the above)"
         )
 
         val input = trailArg[String](required = true, descr = "Input Turtle file")
