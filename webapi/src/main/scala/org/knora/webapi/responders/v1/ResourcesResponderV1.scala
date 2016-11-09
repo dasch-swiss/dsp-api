@@ -34,11 +34,13 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.ResourceLocker
 import org.knora.webapi.responders.v1.GroupedProps._
+import org.knora.webapi.twirl.GraphQueryConstants
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
-import scala.collection.immutable.Iterable
 import scala.concurrent.Future
+import scalax.collection.Graph
+import scalax.collection.edge._
 
 /**
   * Responds to requests for information about resources, and returns responses in Knora API v1 format.
@@ -88,22 +90,118 @@ class ResourcesResponderV1 extends ResponderV1 {
                 depth = graphDataGetRequest.depth
             ).toString())
 
-            _ = println(sparql)
+            response: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(sparql)).mapTo[SparqlConstructResponse]
 
-            response <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResponse]
-
-            // A map of subject IRIs to maps of predicate IRIs to objects.
-            groupedBySubject: Map[IRI, Map[IRI, String]] = response.results.bindings.groupBy(_.rowMap("subject")).map {
-                case (subject, rows) =>
-                    val predicatesAndObjects: Map[IRI, String] = rows.map {
-                        row => row.rowMap("predicate") -> row.rowMap("object")
-                    }.toMap
-
-                    subject -> predicatesAndObjects
+            // Since we know we have only one object per predicate, convert the list of statements about each subject to a map.
+            responseData: Map[IRI, Map[IRI, String]] = response.statements.map {
+                case (subject, statements) => subject -> new ErrorHandlingMap(statements.toMap, { key: IRI => s"Predicate $key not found for subject $subject" })
             }
 
+            // A map of resource IRIs to statements about those resources.
+            resources: Map[IRI, Map[IRI, String]] = responseData.filter {
+                case (subject, statements) => statements(OntologyConstants.Rdf.Type) != OntologyConstants.KnoraBase.LinkValue
+            }
 
-        } yield GraphDataGetResponseV1(nodes = Seq.empty[GraphNodeV1], edges = Seq.empty[GraphEdgeV1], userdata = graphDataGetRequest.userProfile.userData)
+            resourceIris = resources.keySet
+
+            // A map of LinkValue IRIs to statements about those values.
+            linkValues: Map[IRI, Map[IRI, String]] = responseData.filter {
+                case (subject, statements) => statements(OntologyConstants.Rdf.Type) == OntologyConstants.KnoraBase.LinkValue
+            }
+
+            // TODO: filter out anything that the user doesn't have permission to see.
+
+            resourceClassIris = resources.map {
+                case (subject, statements) => statements(OntologyConstants.Rdf.Type)
+            }.toSet
+
+            propertyIris = linkValues.map {
+                case (subject, statements) => statements(OntologyConstants.Rdf.Predicate)
+            }.toSet
+
+            // Get resource class and property labels.
+            entityInfoRequest = EntityInfoGetRequestV1(resourceClassIris = resourceClassIris, propertyIris = propertyIris, userProfile = graphDataGetRequest.userProfile)
+            entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? entityInfoRequest).mapTo[EntityInfoGetResponseV1]
+
+            // Build a graph data structure using Graph for Scala.
+
+            // Convert the link values into edges. Since we are about to look for the nodes that are reachable from the
+            // initial node, all edges must be outbound. So we are going to make a multimap with keyed edges, in which
+            // all edges are outbound, but the key of each edge says whether it was originally outbound or inbound.
+            edges = linkValues.map {
+                case (linkValueIri, statements) =>
+                    // The rdfs:label of each link value indicates whether it represents an outbound or inbound link.
+                    statements(OntologyConstants.Rdfs.Label) match {
+                        case GraphQueryConstants.OutboundLinkValue => LkDiEdge(
+                            statements(OntologyConstants.Rdf.Subject),
+                            statements(OntologyConstants.Rdf.Object)
+                        )(GraphQueryConstants.OutboundLinkValue + " " + statements(OntologyConstants.Rdf.Predicate))
+
+                        case GraphQueryConstants.InboundLinkValue => LkDiEdge(
+                            statements(OntologyConstants.Rdf.Object),
+                            statements(OntologyConstants.Rdf.Subject)
+                        )(GraphQueryConstants.InboundLinkValue + " " + statements(OntologyConstants.Rdf.Predicate))
+
+                        case other => throw InconsistentTriplestoreDataException(s"Graph query returned unrecognized direction $other for link value $linkValueIri")
+                    }
+            }
+
+            graph = Graph.from(resourceIris, edges)
+
+            // Find the graph that is reachable from the initial node.
+
+            initialNode = graph.get(graphDataGetRequest.resourceIri)
+            filteredGraph = initialNode.outerEdgeTraverser.toGraph
+
+            resultNodes = filteredGraph.nodes.map {
+                node =>
+                    val resourceIri = node.toString
+                    val resourceClassIri = resources(resourceIri)(OntologyConstants.Rdf.Type)
+                    val resourceClassLabel = entityInfoResponse.resourceEntityInfoMap(resourceClassIri).getPredicateObject(
+                        predicateIri = OntologyConstants.Rdfs.Label,
+                        preferredLangs = Some(graphDataGetRequest.userProfile.userData.lang, settings.fallbackLanguage)
+                    ).getOrElse(throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has no rdfs:label"))
+
+                    GraphNodeV1(
+                        resourceIri = resourceIri,
+                        resourceLabel = resources(resourceIri)(OntologyConstants.Rdfs.Label),
+                        resourceClassIri = resourceClassIri,
+                        resourceClassLabel =resourceClassLabel
+                    )
+            }.toVector
+
+            resultEdges = filteredGraph.edges.map {
+                edge =>
+                    val edgeInfo = edge.label.toString.split(" ")
+                    val edgeDirection = edgeInfo.head
+                    val propertyIri = edgeInfo.last
+                    val propertyLabel = entityInfoResponse.propertyEntityInfoMap(propertyIri).getPredicateObject(
+                        predicateIri = OntologyConstants.Rdfs.Label,
+                        preferredLangs = Some(graphDataGetRequest.userProfile.userData.lang, settings.fallbackLanguage)
+                    ).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label"))
+
+                    edgeDirection match {
+                        case GraphQueryConstants.OutboundLinkValue =>
+                            GraphEdgeV1(
+                                source = edge.head.toString,
+                                target = edge.last.toString,
+                                propertyIri = propertyIri,
+                                propertyLabel = propertyLabel
+                            )
+
+                        case GraphQueryConstants.InboundLinkValue =>
+                            GraphEdgeV1(
+                                source = edge.last.toString,
+                                target = edge.head.toString,
+                                propertyIri = propertyIri,
+                                propertyLabel = propertyLabel
+                            )
+
+                        case other => throw AssertionException(s"Graph edge has unrecognized direction $other")
+                    }
+            }.toVector
+
+        } yield GraphDataGetResponseV1(nodes = resultNodes, edges = resultEdges, userdata = graphDataGetRequest.userProfile.userData)
     }
 
     /**

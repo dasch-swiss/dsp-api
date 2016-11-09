@@ -53,6 +53,7 @@ CONSTRUCT
         knora-base:hasPermissions ?nodePermissions .
 
     ?linkValue a knora-base:LinkValue ;
+        rdfs:label ?linkValueLabel ;
         rdf:subject ?linkValueSubj ;
         rdf:predicate ?linkValuePred ;
         rdf:object ?linkValueObj ;
@@ -198,6 +199,7 @@ WHERE
         {
             FILTER BOUND(?@OutboundLinkValue@index)
             BIND(?@OutboundLinkValue@index AS ?linkValue)
+            BIND(STR("@OutboundLinkValue") AS ?linkValueLabel)
 
             ?linkValue rdf:subject ?linkValueSubj ;
                 rdf:predicate ?linkValuePred ;
@@ -213,6 +215,7 @@ WHERE
         {
             FILTER BOUND(?@InboundLinkValue@index)
             BIND(?@InboundLinkValue@index AS ?linkValue)
+            BIND(STR("@InboundLinkValue") AS ?linkValueLabel)
 
             ?linkValue rdf:subject ?linkValueSubj ;
                 rdf:predicate ?linkValuePred ;

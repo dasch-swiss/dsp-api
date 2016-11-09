@@ -20,7 +20,7 @@
 
 package org.knora.webapi.store.triplestore.http
 
-import java.io.InputStream
+import java.io.{InputStream, StringReader}
 import java.nio.charset.StandardCharsets
 
 import akka.actor.{Actor, ActorLogging, Status}
@@ -33,6 +33,9 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FakeTriplestore
 import org.knora.webapi.util.SparqlResultProtocol._
 import spray.json._
+import org.eclipse.rdf4j.model.Statement
+import org.eclipse.rdf4j.rio.turtle._
+import org.eclipse.rdf4j.rio.RDFHandler
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -50,6 +53,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     // MIME type constants.
     private val mimeTypeFormUrlEncoded = "application/x-www-form-urlencoded"
     private val mimeTypeApplicationSparqlResultsJson = "application/sparql-results+json"
+    private val mimeTypeTextTurtle = "text/turtle"
 
     implicit val system = context.system
     private implicit val executionContext = system.dispatcher
@@ -139,6 +143,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       */
     def receive = {
         case SparqlSelectRequest(sparql, useInference) => future2Message(sender(), sparqlHttpSelect(sparql, useInference), log)
+        case SparqlConstructRequest(sparql, useInference) => future2Message(sender(), sparqlHttpConstruct(sparql, useInference), log)
         case SparqlUpdateRequest(sparql) => future2Message(sender(), sparqlHttpUpdate(sparql), log)
         case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
         case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
@@ -149,7 +154,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     }
 
     /**
-      * Given the SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResponse]].
+      * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResponse]].
       *
       * @param sparql the SPARQL SELECT query string.
       * @param useInference if `true`, ask the triplestore to use inference in the query, if possible.
@@ -178,6 +183,19 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             // Parse the response as a JSON object and generate a response message.
             responseMessage <- parseJsonResponse(sparql, resultStr)
         } yield responseMessage
+    }
+
+    /**
+      * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
+      * @param sparql the SPARQL SELECT query string.
+      * @param useInference if `true`, ask the triplestore to use inference in the query, if possible.
+      * @return a [[SparqlConstructResponse]]
+      */
+    private def sparqlHttpConstruct(sparql: String, useInference: Boolean): Future[SparqlConstructResponse] = {
+        for {
+            turtleStr <- getTriplestoreHttpResponse(sparql, update = false, useInference = useInference, isConstruct = true)
+            response <- parseTurtleResponse(sparql, turtleStr)
+        } yield response
     }
 
     /**
@@ -214,9 +232,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       *                     meaningful only for query requests, not for updates.
       * @return the triplestore's response.
       */
-    private def getTriplestoreHttpResponse(sparql: String, update: Boolean, useInference: Boolean = false): Future[String] = {
+    private def getTriplestoreHttpResponse(sparql: String, update: Boolean, useInference: Boolean = false, isConstruct: Boolean = false): Future[String] = {
         val request = if (update) {
             updateRequest.addParameter("update", sparql)
+        } else if (isConstruct) {
+            queryRequest(useInference).addParameter("query", sparql).addHeader(headerAccept, mimeTypeTextTurtle)
         } else {
             queryRequest(useInference).addParameter("query", sparql).addHeader(headerAccept, mimeTypeApplicationSparqlResultsJson)
         }
@@ -351,6 +371,58 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             case Failure(e) =>
                 log.error(e, s"Couldn't parse response from triplestore:$logDelimiter$resultStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql")
                 Future.failed(TriplestoreResponseException("Couldn't parse JSON from triplestore", e, log))
+        }
+    }
+
+    /**
+      * Converts a graph in parsed Turtle to a [[SparqlConstructResponse]].
+      */
+    private class ConstructResponseTurtleHandler extends RDFHandler {
+        /**
+          * A collection of all the statements in the input file, grouped and sorted by subject IRI.
+          */
+        private var statements = Map.empty[IRI, Seq[(IRI, String)]]
+
+        override def handleComment(comment: IRI): Unit = {}
+
+        /**
+          * Adds a statement to the collection `statements`.
+          *
+          * @param st the statement to be added.
+          */
+        override def handleStatement(st: Statement): Unit = {
+            val subjectIri = st.getSubject.stringValue
+            val predicateIri = st.getPredicate.stringValue
+            val objectIri = st.getObject.stringValue
+            val currentStatementsForSubject = statements.getOrElse(subjectIri, Vector.empty[(IRI, String)])
+            statements += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
+        }
+
+        override def endRDF(): Unit = {}
+
+        override def handleNamespace(prefix: IRI, uri: IRI): Unit = {}
+
+        override def startRDF(): Unit = {}
+
+        def getConstructResponse: SparqlConstructResponse = {
+            SparqlConstructResponse(statements)
+        }
+    }
+
+    private def parseTurtleResponse(sparql: String, turtleStr: String): Future[SparqlConstructResponse] = {
+        val parseTry = Try {
+            val turtleParser = new TurtleParser()
+            val handler = new ConstructResponseTurtleHandler
+            turtleParser.setRDFHandler(handler)
+            turtleParser.parse(new StringReader(turtleStr), "query-result.ttl")
+            handler.getConstructResponse
+        }
+
+        parseTry match {
+            case Success(parsed) => Future.successful(parsed)
+            case Failure(e) =>
+                log.error(e, s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql")
+                Future.failed(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
         }
     }
 }
