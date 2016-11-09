@@ -497,10 +497,27 @@ trait PermissionV1JsonProtocol extends DefaultJsonProtocol with NullOptions with
         def write(permissionV1: PermissionV1): JsValue = JsObject(
             Map(
                 "name" -> JsString(permissionV1.name),
-                "restrictions" -> JsArray(permissionV1.restrictions.toVector.map(x => JsString(x.toString))),
-                "permissionType" -> JsString(permissionV1.permissionType.toString)
+                "restrictions" -> JsArray(permissionV1.restrictions.toVector.map(_.toString.toJson)),
+                "permission_type" -> permissionV1.permissionType.toString.toJson
             )
         )
+    }
+
+    implicit object PermissionTypeV1Format extends JsonFormat[PermissionType] {
+        /**
+          * Not implemented.
+          */
+        def read(jsonVal: JsValue) = ???
+
+        /**
+          * Converts an [[PermissionType]] to a [[JsValue]].
+          *
+          * @param permissionType a [[PermissionType]]
+          * @return a [[JsValue]].
+          */
+        def write(permissionType: PermissionType): JsValue = {
+            JsObject(Map("permission_type" -> permissionType.toString.toJson))
+        }
     }
 
     implicit val administrativePermissionV1Format: JsonFormat[AdministrativePermissionV1] = jsonFormat3(AdministrativePermissionV1)

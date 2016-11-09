@@ -93,18 +93,20 @@ lazy val webApiCommonSettings = Seq(
     scalaVersion := "2.11.8"
 )
 
-lazy val akkaVersion = "2.4.11"
+lazy val akkaVersion = "2.4.12"
+lazy val akkaHttpVersion = "2.4.11"
 
 lazy val webApiLibs = Seq(
     // akka
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-agent" % akkaVersion,
-    "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
-    "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
-    "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
-    "com.typesafe.akka" %% "akka-http-xml-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
+    // akka http
+    "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion,
+    "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpVersion,
+    "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaHttpVersion,
+    "com.typesafe.akka" %% "akka-http-xml-experimental" % akkaHttpVersion,
     //CORS support
     "ch.megard" %% "akka-http-cors" % "0.1.7",
     // jena
@@ -144,8 +146,8 @@ lazy val webApiLibs = Seq(
     "org.xmlunit" % "xmlunit-core" % "2.1.1",
     // testing
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
-    "com.typesafe.akka" %% "akka-http-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.0M3",
     "org.rogach" %% "scallop" % "2.0.3"

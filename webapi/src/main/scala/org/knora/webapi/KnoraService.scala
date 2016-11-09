@@ -117,7 +117,8 @@ trait KnoraService {
                 GraphDataRouteV1.knoraApiPath(system, settings, log) ~
                 ProjectsRouteV1.knoraApiPath(system, settings, log) ~
                 CkanRouteV1.knoraApiPath(system, settings, log) ~
-                StoreRouteV1.knoraApiPath(system, settings, log)
+                StoreRouteV1.knoraApiPath(system, settings, log) ~
+                PermissionsRouteV1.knoraApiPath(system, settings, log)
     )
 
     /**

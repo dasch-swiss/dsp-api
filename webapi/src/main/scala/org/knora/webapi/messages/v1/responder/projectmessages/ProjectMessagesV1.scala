@@ -21,7 +21,6 @@
 package org.knora.webapi.messages.v1.responder.projectmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsTemplate
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoType.ProjectInfoType
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
@@ -39,14 +38,12 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
   * @param basePath            the basepath of the project to be created.
   * @param isActiveProject     the status of the project to be created.
   * @param hasSelfJoinEnabled  the status of self-join of the project to be created.
-  * @param permissionsTemplate the permissions template used for creating the initial permissions.
   */
 case class CreateProjectApiRequestV1(shortName: String,
                                      longName: String,
                                      basePath: String,
                                      isActiveProject: Boolean,
-                                     hasSelfJoinEnabled: Boolean,
-                                     permissionsTemplate: String
+                                     hasSelfJoinEnabled: Boolean
                                     ) extends ProjectV1JsonProtocol {
     def toJsValue = createProjectApiRequestV1Format.write(this)
 }
@@ -199,8 +196,7 @@ case class NewProjectDataV1(shortname: String,
                             logo: String,
                             basepath: String,
                             isActiveProject: Boolean,
-                            hasSelfJoinEnabled: Boolean,
-                            permissionsTemplate: PermissionsTemplate.Value
+                            hasSelfJoinEnabled: Boolean
                            )
 
 
@@ -222,7 +218,7 @@ trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectsResponseV1)))
     implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectInfoResponseV1)))
-    implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat6(CreateProjectApiRequestV1)))
+    implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat5(CreateProjectApiRequestV1)))
     implicit val updateProjectApiRequestV1Format: RootJsonFormat[UpdateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat2(UpdateProjectApiRequestV1)))
     implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectOperationResponseV1)))
 }
