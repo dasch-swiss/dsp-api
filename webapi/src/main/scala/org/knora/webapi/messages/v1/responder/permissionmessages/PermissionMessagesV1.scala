@@ -18,11 +18,12 @@ package org.knora.webapi.messages.v1.responder.permissionmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionOperation.PermissionOperation
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType.PermissionType
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsTemplate.PermissionsTemplate
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
-import spray.json._
+import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, Jsonable, OntologyConstants}
+import spray.json.{JsArray, JsString, _}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +86,18 @@ case class AdministrativePermissionsForProjectsGetRequestV1(projectIris: List[IR
   * @param administrativePermissionIri the iri of the administrative permission object.
   * @param userProfileV1 the user initiation the request.
   */
-case class AdministrativePermissionGetRequestV1(administrativePermissionIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+case class AdministrativePermissionForIriGetRequestV1(administrativePermissionIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+
+/**
+  * A message that requests an administrative permission object identified by project and group.
+  * A successful response will contain an [[AdministrativePermissionV1]] object.
+  *
+  * @param projectIri       the project.
+  * @param groupIri         the group.
+  * @param userProfileV1    the user initiation the request.
+  */
+case class AdministrativePermissionForProjectGroupGetRequestV1(projectIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+
 
 /**
   * Create a single [[AdministrativePermissionV1]].
@@ -167,11 +179,11 @@ case class DefaultObjectAccessPermissionUpdateRequestV1(userProfileV1: UserProfi
   * @param defaultObjectAccessPermissions
   */
 case class TemplatePermissionsCreateResponseV1(success: Boolean,
-                                             msg: String,
-                                             administrativePermissions: Seq[AdministrativePermissionV1],
-                                             defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionV1]
-                                            ) extends KnoraResponseV1 {
-    def toJsValue = PermissionV1JsonProtocol.templatePermissionsCreateResponseV1Format.write(this)
+                                               msg: String,
+                                               administrativePermissions: Seq[AdministrativePermissionV1],
+                                               defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionV1]
+                                              ) extends KnoraResponseV1 with PermissionV1JsonProtocol {
+    def toJsValue = templatePermissionsCreateResponseV1Format.write(this)
 }
 
 /**
@@ -181,8 +193,12 @@ case class TemplatePermissionsCreateResponseV1(success: Boolean,
   * @param administrativePermissionV1
   * @param msg
   */
-case class AdministrativePermissionOperationResponseV1(success: Boolean, operationType: PermissionOperation, administrativePermissionV1: Option[AdministrativePermissionV1], msg: String) extends KnoraResponseV1 {
-    def toJsValue = PermissionV1JsonProtocol.administrativePermissionOperationResponseV1Format.write(this)
+case class AdministrativePermissionOperationResponseV1(success: Boolean,
+                                                       operationType: PermissionOperation,
+                                                       administrativePermissionV1:
+                                                       Option[AdministrativePermissionV1],
+                                                       msg: String) extends KnoraResponseV1 with PermissionV1JsonProtocol {
+    def toJsValue = administrativePermissionOperationResponseV1Format.write(this)
 }
 
 /**
@@ -192,8 +208,11 @@ case class AdministrativePermissionOperationResponseV1(success: Boolean, operati
   * @param defaultObjectAccessPermissionV1
   * @param msg
   */
-case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean, operationType: PermissionOperation, defaultObjectAccessPermissionV1: Option[DefaultObjectAccessPermissionV1], msg: String) extends KnoraResponseV1 {
-    def toJsValue = PermissionV1JsonProtocol.defaultObjectAccessPermissionOperationResponseV1Format.write(this)
+case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
+                                                            operationType: PermissionOperation,
+                                                            defaultObjectAccessPermissionV1: Option[DefaultObjectAccessPermissionV1],
+                                                            msg: String) extends KnoraResponseV1 with PermissionV1JsonProtocol {
+    def toJsValue = defaultObjectAccessPermissionOperationResponseV1Format.write(this)
 }
 
 
@@ -209,7 +228,7 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean, op
   */
 case class AdministrativePermissionV1(forProject: IRI = OntologyConstants.KnoraBase.AllProjects,
                                       forGroup: IRI = OntologyConstants.KnoraBase.AllGroups,
-                                      hasPermissions: Map[String, Set[IRI]] = Map.empty[String, Set[IRI]]
+                                      hasPermissions: Seq[PermissionV1] = Seq.empty[PermissionV1]
                                      )
 
 /**
@@ -223,7 +242,7 @@ case class AdministrativePermissionV1(forProject: IRI = OntologyConstants.KnoraB
 case class NewAdministrativePermissionV1(iri: IRI,
                                          forProject: IRI = OntologyConstants.KnoraBase.AllProjects,
                                          forGroup: IRI = OntologyConstants.KnoraBase.AllGroups,
-                                         hasPermissions: Map[String, Set[IRI]]
+                                         hasPermissions: Seq[PermissionV1] = Seq.empty[PermissionV1]
                                         )
 
 /**
@@ -239,7 +258,7 @@ case class DefaultObjectAccessPermissionV1(forProject: IRI = OntologyConstants.K
                                            forGroup: IRI = OntologyConstants.KnoraBase.AllGroups,
                                            forResourceClass: IRI = OntologyConstants.KnoraBase.AllResourceClasses,
                                            forProperty: IRI = OntologyConstants.KnoraBase.AllProperties,
-                                           hasPermissions: Map[String, Set[IRI]] = Map.empty[String, Set[IRI]]
+                                           hasPermissions: Seq[PermissionV1] = Seq.empty[PermissionV1]
                                           )
 
 /**
@@ -316,13 +335,132 @@ object PermissionType extends Enumeration {
 
 }
 
+/**
+  * Case class representing a permission.
+  * @param name the name of the permission.
+  * @param restrictions the optional set of IRIs providing additional information.
+  * @param permissionType the type of the permission.
+  */
+case class PermissionV1(name: String, restrictions: Set[IRI], permissionType: PermissionType)
+
+/**
+  * The permission companion object, used to create specific permissions.
+  */
+object PermissionV1 {
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Administrative Permissions
+    ///////////////////////////////////////////////////////////////////////////
+
+    def ProjectResourceCreateAllPermission = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
+            restrictions = Set.empty[IRI],
+            permissionType = PermissionType.AP
+        )
+    }
+
+    def ProjectResourceCreateRestrictedPermission(restrictions: Set[IRI]) = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission,
+            restrictions = restrictions,
+            permissionType = PermissionType.AP
+        )
+    }
+
+    def ProjectAdminAllPermission = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.ProjectAdminAllPermission,
+            restrictions = Set.empty[IRI],
+            permissionType = PermissionType.AP
+        )
+    }
+
+    def ProjectAdminGroupAllPermission = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.ProjectAdminGroupAllPermission,
+            restrictions = Set.empty[IRI],
+            permissionType = PermissionType.AP
+        )
+    }
+
+    def ProjectAdminGroupRestrictedPermission(restrictions: Set[IRI]) = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.ProjectAdminGroupRestrictedPermission,
+            restrictions = restrictions,
+            permissionType = PermissionType.AP
+        )
+    }
+
+    def ProjectAdminRightsAllPermission = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.ProjectAdminRightsAllPermission,
+            restrictions = Set.empty[IRI],
+            permissionType = PermissionType.AP
+        )
+    }
+
+    def ProjectAdminOntologyAllPermission = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.ProjectAdminOntologyAllPermission,
+            restrictions = Set.empty[IRI],
+            permissionType = PermissionType.AP
+        )
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Default Object Access Permissions
+    ///////////////////////////////////////////////////////////////////////////
+
+    def DefaultChangeRightsPermission(restriction: Set[IRI] = Set.empty[IRI]) = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.DefaultChangeRightsPermission,
+            restrictions = restriction,
+            permissionType = PermissionType.DOAP
+        )
+    }
+
+    def DefaultDeletePermission(restriction: Set[IRI] = Set.empty[IRI]) = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.DefaultDeletePermission,
+            restrictions = restriction,
+            permissionType = PermissionType.DOAP
+        )
+    }
+
+    def DefaultModifyPermission(restriction: Set[IRI] = Set.empty[IRI]) = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.DefaultModifyPermission,
+            restrictions = restriction,
+            permissionType = PermissionType.DOAP
+        )
+    }
+
+    def DefaultViewPermission(restriction: Set[IRI] = Set.empty[IRI]) = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.DefaultViewPermission,
+            restrictions = restriction,
+            permissionType = PermissionType.DOAP
+        )
+    }
+
+    def DefaultRestrictedViewPermission(restriction: Set[IRI] = Set.empty[IRI]) = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.DefaultRestrictedViewPermission,
+            restrictions = restriction,
+            permissionType = PermissionType.DOAP
+        )
+    }
+
+}
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
 
-object PermissionV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
+trait PermissionV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
     implicit object PermissionOperation extends JsonFormat[PermissionOperation] {
         /**
@@ -340,6 +478,31 @@ object PermissionV1JsonProtocol extends DefaultJsonProtocol with NullOptions wit
             JsObject(Map("permission_operation" -> permissionOperation.toString.toJson))
         }
     }
+
+    /**
+      * Converts between [[PermissionV1]] objects and [[JsValue]] objects.
+      */
+    implicit object PermissionV1JsonFormat extends JsonFormat[PermissionV1] {
+        /**
+          * Not implemented.
+          */
+        def read(jsonVal: JsValue) = ???
+
+        /**
+          * Converts an [[PermissionV1]] to a [[JsValue]].
+          *
+          * @param permissionV1 a [[PermissionV1]]
+          * @return a [[JsValue]].
+          */
+        def write(permissionV1: PermissionV1): JsValue = JsObject(
+            Map(
+                "name" -> JsString(permissionV1.name),
+                "restrictions" -> JsArray(permissionV1.restrictions.toVector.map(x => JsString(x.toString))),
+                "permissionType" -> JsString(permissionV1.permissionType.toString)
+            )
+        )
+    }
+
     implicit val administrativePermissionV1Format: JsonFormat[AdministrativePermissionV1] = jsonFormat3(AdministrativePermissionV1)
     implicit val defaultObjectAccessPermissionV1Format: JsonFormat[DefaultObjectAccessPermissionV1] = jsonFormat5(DefaultObjectAccessPermissionV1)
     implicit val templatePermissionsCreateResponseV1Format: RootJsonFormat[TemplatePermissionsCreateResponseV1] = jsonFormat4(TemplatePermissionsCreateResponseV1)

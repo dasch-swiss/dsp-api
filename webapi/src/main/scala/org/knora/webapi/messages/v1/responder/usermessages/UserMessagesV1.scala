@@ -25,6 +25,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionV1, PermissionV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
@@ -159,8 +160,8 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                          projectGroups: Map[IRI, List[IRI]] = Map.empty[IRI, List[IRI]],
                          isInSystemAdminGroup: Boolean = false,
                          isInProjectAdminGroup: Seq[IRI] = Vector.empty[IRI],
-                         projectAdministrativePermissions: Map[IRI, Map[IRI, Set[IRI]]] = Map.empty[IRI, Map[IRI, Set[IRI]]],
-                         projectDefaultObjectAccessPermissions: Map[IRI, List[String]] = Map.empty[IRI, List[String]],
+                         projectAdministrativePermissions: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],
+                         projectDefaultObjectAccessPermissions: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],
                          sessionId: Option[String] = None,
                          isSystemUser: Boolean = false) {
 
@@ -243,8 +244,8 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     projectGroups = projectGroups,
                     isInSystemAdminGroup = false, // remove system admin status
                     isInProjectAdminGroup = Vector.empty[IRI], // remove privileged group membership
-                    projectAdministrativePermissions = Map.empty[IRI, Map[IRI, Set[IRI]]], // remove administrative permission information
-                    projectDefaultObjectAccessPermissions = Map.empty[IRI, List[String]], // remove default object access permission information
+                    projectAdministrativePermissions = Map.empty[IRI, Set[PermissionV1]], // remove administrative permission information
+                    projectDefaultObjectAccessPermissions = Map.empty[IRI, Set[PermissionV1]], // remove default object access permission information
                     sessionId = None // remove session id
                 )
             }
@@ -271,8 +272,8 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     projectGroups = projectGroups,
                     isInSystemAdminGroup = false, // remove system admin status
                     isInProjectAdminGroup = Vector.empty[IRI], // remove privileged group membership
-                    projectAdministrativePermissions = Map.empty[IRI, Map[IRI, Set[IRI]]], // remove administrative permission information
-                    projectDefaultObjectAccessPermissions = Map.empty[IRI, List[String]], // remove default object access permission information
+                    projectAdministrativePermissions = Map.empty[IRI, Set[PermissionV1]], // remove administrative permission information
+                    projectDefaultObjectAccessPermissions = Map.empty[IRI, Set[PermissionV1]], // remove default object access permission information
                     sessionId = None // remove session id
                 )
             }
@@ -406,7 +407,7 @@ object UserProfileType extends Enumeration {
 /**
   * A spray-json protocol for formatting objects as JSON.
   */
-object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol {
+object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol with PermissionV1JsonProtocol {
 
     implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat10(UserDataV1))
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat11(UserProfileV1)

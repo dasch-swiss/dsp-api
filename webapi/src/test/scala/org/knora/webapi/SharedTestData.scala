@@ -21,6 +21,7 @@
 package org.knora.webapi
 
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1, GroupPermissionV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 
@@ -203,20 +204,20 @@ object SharedTestData {
         isInSystemAdminGroup = false,
         isInProjectAdminGroup = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
         projectAdministrativePermissions = Map(
-            "http://data.knora.org/projects/77275339" -> Map(
-                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission -> Set(),
-                OntologyConstants.KnoraBase.ProjectAdminAllPermission -> Set()
+            "http://data.knora.org/projects/77275339" -> Set(
+                PermissionV1.ProjectResourceCreateAllPermission,
+                PermissionV1.ProjectAdminAllPermission
             ),
-            "http://data.knora.org/projects/images" -> Map(
-                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission -> Set(),
-                OntologyConstants.KnoraBase.ProjectAdminAllPermission -> Set()
+            "http://data.knora.org/projects/images" -> Set(
+                PermissionV1.ProjectResourceCreateAllPermission,
+                PermissionV1.ProjectAdminAllPermission
             ),
-            "http://data.knora.org/projects/666" -> Map(
-                OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission -> Set(),
-                OntologyConstants.KnoraBase.ProjectAdminAllPermission -> Set()
+            "http://data.knora.org/projects/666" -> Set(
+                PermissionV1.ProjectResourceCreateAllPermission,
+                PermissionV1.ProjectAdminAllPermission
             )
         ),
-        projectDefaultObjectAccessPermissions = Map.empty[IRI, List[IRI]]
+        projectDefaultObjectAccessPermissions = Map.empty[IRI, Set[PermissionV1]]
 
 
     )

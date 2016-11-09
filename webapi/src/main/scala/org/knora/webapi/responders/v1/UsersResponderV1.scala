@@ -27,13 +27,13 @@ import akka.pattern._
 import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1, GroupInfoType}
-import org.knora.webapi.messages.v1.responder.permissionmessages.{GetUserAdministrativePermissionsRequestV1, GetUserDefaultObjectAccessPermissionsRequestV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, MessageUtil, SparqlUtil}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, SparqlUtil}
 import org.mindrot.jbcrypt.BCrypt
 
 import scala.concurrent.duration._
@@ -435,23 +435,23 @@ class UsersResponderV1 extends ResponderV1 {
             projectGroups = allGroups.groupBy(_._1).map { case (k,v) => (k,v.map(_._2))}
 
             // retrieve the projects administrative permissions
-            projectAdministrativePermissions: Map[IRI, Map[IRI, Set[IRI]]] = if (projectIris.nonEmpty) {
+            projectAdministrativePermissions: Map[IRI, Set[PermissionV1]] = if (projectIris.nonEmpty) {
                 val resFuture = for {
-                    administrativePermissions <- (responderManager ? GetUserAdministrativePermissionsRequestV1(projectGroups)).mapTo[Map[IRI, Map[IRI, Set[IRI]]]]
+                    administrativePermissions <- (responderManager ? GetUserAdministrativePermissionsRequestV1(projectGroups)).mapTo[Map[IRI, Set[PermissionV1]]]
                 } yield administrativePermissions
                 Await.result(resFuture, 1.seconds)
             } else {
-                Map.empty[IRI, Map[IRI, Set[IRI]]]
+                Map.empty[IRI, Set[PermissionV1]]
             }
 
             // retrieve the projects default object access permissions
-            projectDefaultObjectAccessPermissions:Map[IRI, List[String]] = if (projectIris.nonEmpty) {
+            projectDefaultObjectAccessPermissions:Map[IRI, Set[PermissionV1]] = if (projectIris.nonEmpty) {
                 val resFuture = for {
-                    defaultObjectAccessPermissions <- (responderManager ? GetUserDefaultObjectAccessPermissionsRequestV1(projectGroups)).mapTo[Map[IRI, List[IRI]]]
+                    defaultObjectAccessPermissions <- (responderManager ? GetUserDefaultObjectAccessPermissionsRequestV1(projectGroups)).mapTo[Map[IRI, Set[PermissionV1]]]
                 } yield defaultObjectAccessPermissions
                 Await.result(resFuture, 1.seconds)
             } else {
-                Map.empty[IRI, List[String]]
+                Map.empty[IRI, Set[PermissionV1]]
             }
 
             up = UserProfileV1(

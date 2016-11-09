@@ -17,7 +17,7 @@
 package org.knora.webapi.responders.v1
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionV1, DefaultObjectAccessPermissionV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages._
 
 /* Helper case classes */
 case class ap (iri: String, p: AdministrativePermissionV1)
@@ -36,7 +36,7 @@ object PermissionsResponderV1SpecTestData {
             p = AdministrativePermissionV1(
                 forProject = IMAGES_PROJECT_IRI,
                 forGroup = OntologyConstants.KnoraBase.ProjectMember,
-                hasPermissions = Map("ProjectResourceCreateAllPermission" -> Set[IRI]())
+                hasPermissions = Seq(PermissionV1.ProjectResourceCreateAllPermission)
             )
         )
 
@@ -49,10 +49,10 @@ object PermissionsResponderV1SpecTestData {
                 forGroup = OntologyConstants.KnoraBase.ProjectMember,
                 forResourceClass = OntologyConstants.KnoraBase.AllResourceClasses,
                 forProperty = OntologyConstants.KnoraBase.AllProperties,
-                hasPermissions = Map(
-                    "DCR" -> Set(OntologyConstants.KnoraBase.Creator),
-                    "DM" -> Set(OntologyConstants.KnoraBase.ProjectMember),
-                    "DV" -> Set(OntologyConstants.KnoraBase.KnownUser)
+                hasPermissions = Seq(
+                    PermissionV1.DefaultChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
+                    PermissionV1.DefaultModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
+                    PermissionV1.DefaultViewPermission(Set(OntologyConstants.KnoraBase.KnownUser))
                 )
             )
         )

@@ -17,14 +17,14 @@
 package org.knora.webapi.responders.v1
 
 import akka.actor.Props
+import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.responders.v1.PermissionsResponderV1SpecTestData._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi._
-import PermissionsResponderV1SpecTestData._
-import akka.actor.Status.Failure
 import org.knora.webapi.util.KnoraIdUtil
 
 import scala.concurrent.duration._
@@ -54,6 +54,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
     val multiuserUserProfileV1 = SharedTestData.multiuserUserProfileV1
 
     val actorUnderTest = TestActorRef[PermissionsResponderV1]
+    val underlyingActorUnderTest = actorUnderTest.underlyingActor
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List()
@@ -74,11 +75,23 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 expectMsg(List(perm001.iri, perm003.iri))
             }
             "return AdministrativePermission object for IRI " in {
-                actorUnderTest ! AdministrativePermissionGetRequestV1(
+                actorUnderTest ! AdministrativePermissionForIriGetRequestV1(
                     administrativePermissionIri = perm001.iri,
                     SharedTestData.rootUserProfileV1
                 )
                 expectMsg(Some(perm001.p))
+            }
+            "return AdministrativePermission object for project and group" in {
+                actorUnderTest ! AdministrativePermissionForProjectGroupGetRequestV1(
+                    projectIri = IMAGES_PROJECT_IRI,
+                    groupIri = OntologyConstants.KnoraBase.ProjectMember,
+                    SharedTestData.rootUserProfileV1
+                )
+                expectMsg(Some(AdministrativePermissionV1(
+                    forProject = IMAGES_PROJECT_IRI,
+                    forGroup = OntologyConstants.KnoraBase.ProjectMember,
+                    hasPermissions = Seq(PermissionV1.ProjectResourceCreateAllPermission)
+                )))
             }
             "return DefaultObjectAccessPermission IRIs for project " in {
                 actorUnderTest ! DefaultObjectAccessPermissionIrisForProjectGetRequestV1(
@@ -100,7 +113,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             }
             "return user's default object access permissions " in {
                 actorUnderTest ! GetUserDefaultObjectAccessPermissionsRequestV1(multiuserUserProfileV1.projectGroups)
-                expectMsg(Map("IRI" -> List("ProjectResourceCreateAllPermission")))
+                expectMsg(multiuserUserProfileV1.projectDefaultObjectAccessPermissions)
             }
         }
         "asked to create an administrative permission object " should {
@@ -111,7 +124,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                         iri = iri,
                         forProject = IMAGES_PROJECT_IRI,
                         forGroup = OntologyConstants.KnoraBase.ProjectMember,
-                        hasPermissions = Map("ProjectResourceCreateAllPermission" -> Set[IRI]())
+                        hasPermissions = Seq(PermissionV1.ProjectResourceCreateAllPermission)
                     ),
                     userProfileV1 = rootUserProfileV1
                 )
@@ -143,6 +156,19 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     administrativePermissions = List(perm001.p, perm003.p),
                     defaultObjectAccessPermissions = List(perm002.p)
                 ))
+            }
+        }
+    }
+
+    "The PermissensResponderV1 helper method" when {
+        "called" should {
+            "build a permission object" in {
+                underlyingActorUnderTest.buildPermissionObject(
+                    name = OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission,
+                    iris = Some(Set("1", "2", "3"))
+                ) should equal(
+                    PermissionV1.ProjectResourceCreateRestrictedPermission(Set("1", "2", "3"))
+                )
             }
         }
     }
