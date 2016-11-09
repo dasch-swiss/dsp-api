@@ -219,16 +219,12 @@
 					}
 				}
 			}
-			$('<img>', {src: valueinfo_icon.src, 'class': 'propedit'}).click(function(event) {
-				SALSAH.ApiGet('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), function(data) {
-					if (data.status == ApiErrors.OK) {
-						alert("Name: " + data.valuecreatorname + "\nDate: " + data.valuecreationdate);
-					}
-					else {
-						alert(data.errormsg);
-					}
-				});
-			}).css({cursor: 'pointer'}).appendTo(value_container);
+
+			if (prop != '__label__') {
+				$('<img>', {src: valueinfo_icon.src, 'class': 'propedit'}).on('mouseover', function(event) {
+					load_value_infowin(event, propinfo[prop].value_ids[value_index], this);
+				}).css({cursor: 'pointer'}).appendTo(value_container);
+			}
 		};
 
 		var make_add_button = function (prop_container, prop) {

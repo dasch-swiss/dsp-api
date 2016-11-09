@@ -235,5 +235,6 @@
 	"_alert_missing_resprop" : "You have to choose at least one property!",
 	"_export" : "Export",
 	"_export_csv" : "Export the data as comma-separated values (csv)",
-	"_valinfo" : "Information about the value"
+	"_valinfo" : "Information about the value",
+	"_creation_date": "Creation date"
 }

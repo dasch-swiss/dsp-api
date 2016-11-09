@@ -173,5 +173,6 @@
 	"_salsah_help" : "SALSAH Aiuto",
 	"_limitsearch" : "Restringere la ricerca a",
 	"_langchangeq" : "Cambiare la lingua dell'interfaccia utente ?",
-    "_valinfo" : "Informazione sul valore"
+    "_valinfo" : "Informazione sul valore",
+	"_creation_date": "Data di creazione"
 }
