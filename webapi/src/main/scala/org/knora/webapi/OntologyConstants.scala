@@ -211,6 +211,7 @@ object OntologyConstants {
         val HasStandoffLinkTo = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
         val HasStandoffLinkToValue = "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue"
 
+        val StandoffRootTag = "http://www.knora.org/ontology/knora-base#StandoffRootTag"
         val StandoffParagraphTag = "http://www.knora.org/ontology/knora-base#StandoffParagraphTag"
         val StandoffItalicTag = "http://www.knora.org/ontology/knora-base#StandoffItalicTag"
         val StandoffBoldTag = "http://www.knora.org/ontology/knora-base#StandoffBoldTag"

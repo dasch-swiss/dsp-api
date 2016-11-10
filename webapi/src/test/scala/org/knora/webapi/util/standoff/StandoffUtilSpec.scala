@@ -487,16 +487,10 @@ class StandoffUtilSpec extends WordSpec with Matchers {
                   |
                 """.stripMargin
 
-            val mapping =
-                """
-
-                """.stripMargin
 
             val standoffUtil = new StandoffUtil()
 
             val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(BEBBXML)
-
-
 
             val root = textWithStandoff.standoff.filter((standoffTag: StandoffTag) => standoffTag match {
                 case tag: HierarchicalStandoffTag => tag.parentIndex.isEmpty

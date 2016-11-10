@@ -200,6 +200,61 @@ case class StandoffDiffDelete(baseStartPosition: Int,
                               baseEndPosition: Int,
                               derivedStartPosition: Int) extends StandoffDiff
 
+
+/**
+  * Represents an attribute for a [[StandoffTagV2]].
+  *
+  * @param key
+  * @param value
+  * @param datatype
+  */
+case class StandoffTagAttributeV2(key: String, value: String, datatype: String)
+
+trait StandoffTagV2 {
+
+    def name: IRI
+
+    def uuid: UUID
+
+    def startPosition: Int
+
+    def endPosition: Int
+
+    def startIndex: Int
+
+    def endIndex: Option[Int]
+
+    def parentStartIndex: Int
+
+    def parentEndIndex: Option[Int]
+
+    def attributes: Seq[StandoffTagAttributeV2]
+
+}
+
+case class StandoffBaseTagV2(name: IRI,
+                             uuid: UUID,
+                             startPosition: Int,
+                             endPosition: Int,
+                             startIndex: Int,
+                             endIndex: Option[Int],
+                             parentStartIndex: Int,
+                             parentEndIndex: Option[Int],
+                             attributes: Seq[StandoffTagAttributeV2],
+                             hasLink: IRI) extends StandoffTagV2
+
+case class StandoffLinkTagV2(name: IRI,
+                             uuid: UUID,
+                             startPosition: Int,
+                             endPosition: Int,
+                             startIndex: Int,
+                             endIndex: Option[Int],
+                             parentStartIndex: Int,
+                             parentEndIndex: Option[Int],
+                             attributes: Seq[StandoffTagAttributeV2],
+                             hasLink: IRI) extends StandoffTagV2
+
+
 /**
   * Standoff-related constants.
   */
