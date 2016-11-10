@@ -142,6 +142,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             }
         }
+        /*
         "asked to create permissions from a template " should {
             "create and return all permissions defined inside the template " ignore {
                 /* the default behaviour is to delete all permissions inside a project prior to applying a template */
@@ -158,6 +159,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 ))
             }
         }
+        */
     }
 
     "The PermissensResponderV1 helper method" when {

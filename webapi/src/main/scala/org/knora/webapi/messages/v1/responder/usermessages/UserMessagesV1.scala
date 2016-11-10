@@ -25,8 +25,8 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionV1, PermissionV1JsonProtocol}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionProfileType, PermissionProfileV1, PermissionV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
@@ -145,25 +145,16 @@ case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDat
   * @param userData basic information about the user.
   * @param groups   the groups that the user belongs to.
   * @param projects the projects that the user belongs to.
-  * @param projectInfos the project info of the projects that the user belongs to.
-  * @param projectGroups the projects and all groups inside a project the user belongs to.
-  * @param isInSystemAdminGroup the user's knora-base:SystemAdmin group membership status.
-  * @param isInProjectAdminGroup shows for which projects the user is member in the knora-base:ProjectAdmin group.
-  * @param projectAdministrativePermissions the user's administrative permissions for each project.
-  * @param projectDefaultObjectAccessPermissions the user's default object access permissions for each project.
   * @param sessionId the sessionId,.
+  * @param permissionProfile the user's permission profile.
   */
 case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                          groups: Seq[IRI] = Vector.empty[IRI],
                          projects: Seq[IRI] = Vector.empty[IRI],
-                         projectInfos: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1],
-                         projectGroups: Map[IRI, List[IRI]] = Map.empty[IRI, List[IRI]],
-                         isInSystemAdminGroup: Boolean = false,
-                         isInProjectAdminGroup: Seq[IRI] = Vector.empty[IRI],
-                         projectAdministrativePermissions: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],
-                         projectDefaultObjectAccessPermissions: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],
                          sessionId: Option[String] = None,
-                         isSystemUser: Boolean = false) {
+                         isSystemUser: Boolean = false,
+                         permissionProfile: PermissionProfileV1 = PermissionProfileV1()
+                        ) {
 
     /**
       * Check password using either SHA-1 or BCrypt. The BCrypt password always starts with '$2a$'
@@ -218,7 +209,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
       *
       * @return a [[UserProfileV1]]
       */
-    def ofType(userProfileType: UserProfileType.Value): UserProfileV1 = {
+    def ofType(userProfileType: UserProfileType): UserProfileV1 = {
 
         userProfileType match {
             case UserProfileType.SHORT => {
@@ -240,12 +231,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     userData = newuserdata,
                     groups = groups,
                     projects = projects,
-                    projectInfos = Vector.empty[ProjectInfoV1], // remove
-                    projectGroups = projectGroups,
-                    isInSystemAdminGroup = false, // remove system admin status
-                    isInProjectAdminGroup = Vector.empty[IRI], // remove privileged group membership
-                    projectAdministrativePermissions = Map.empty[IRI, Set[PermissionV1]], // remove administrative permission information
-                    projectDefaultObjectAccessPermissions = Map.empty[IRI, Set[PermissionV1]], // remove default object access permission information
+                    permissionProfile = permissionProfile.ofType(PermissionProfileType.SHORT),
                     sessionId = None // remove session id
                 )
             }
@@ -268,12 +254,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     userData = newuserdata,
                     groups = groups,
                     projects = projects,
-                    projectInfos = projectInfos,
-                    projectGroups = projectGroups,
-                    isInSystemAdminGroup = false, // remove system admin status
-                    isInProjectAdminGroup = Vector.empty[IRI], // remove privileged group membership
-                    projectAdministrativePermissions = Map.empty[IRI, Set[PermissionV1]], // remove administrative permission information
-                    projectDefaultObjectAccessPermissions = Map.empty[IRI, Set[PermissionV1]], // remove default object access permission information
+                    permissionProfile = permissionProfile.ofType(PermissionProfileType.SAFE),
                     sessionId = None // remove session id
                 )
             }
@@ -282,12 +263,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     userData = userData,
                     groups = groups,
                     projects = projects,
-                    projectInfos = projectInfos,
-                    projectGroups = projectGroups,
-                    isInSystemAdminGroup = isInSystemAdminGroup,
-                    isInProjectAdminGroup = isInProjectAdminGroup,
-                    projectAdministrativePermissions =projectAdministrativePermissions,
-                    projectDefaultObjectAccessPermissions =projectDefaultObjectAccessPermissions,
+                    permissionProfile = permissionProfile,
                     sessionId = sessionId
                 )
             }
@@ -307,15 +283,12 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
             userData = userData,
             groups = groups,
             projects = projects,
-            isInSystemAdminGroup = isInSystemAdminGroup,
-            isInProjectAdminGroup = isInProjectAdminGroup,
+            permissionProfile = permissionProfile,
             sessionId = Some(sessionId)
         )
     }
 
-    def isSystemAdmin: Boolean = {
-        isInSystemAdminGroup
-    }
+
 }
 
 
@@ -396,7 +369,7 @@ object UserProfileType extends Enumeration {
     def lookup(name: String): Value = {
         valueMap.get(name) match {
             case Some(value) => value
-            case None => throw InconsistentTriplestoreDataException(s"Project info type not supported: $name")
+            case None => throw InconsistentTriplestoreDataException(s"User profile type not supported: $name")
         }
     }
 }
@@ -410,7 +383,7 @@ object UserProfileType extends Enumeration {
 object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol with PermissionV1JsonProtocol {
 
     implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat10(UserDataV1))
-    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat11(UserProfileV1)
+    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
     implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat6(NewUserDataV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
     implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat2(UpdateUserApiRequestV1)

@@ -26,9 +26,8 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1, GroupInfoType}
 import org.knora.webapi.messages.v1.responder.permissionmessages._
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.routing.Authenticator
@@ -36,8 +35,7 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, SparqlUtil}
 import org.mindrot.jbcrypt.BCrypt
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 /**
   * Provides information about Knora users to other responders.
@@ -199,7 +197,7 @@ class UsersResponderV1 extends ResponderV1 {
         _ = if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
         // check if the requesting user is allowed to perform updates
-        _ = if (!userProfile.userData.user_id.contains(userIri) && !userProfile.isSystemAdmin) {
+        _ = if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionProfile.isSystemAdmin) {
             // not the user and not a system admin
             throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
         }
@@ -367,104 +365,41 @@ class UsersResponderV1 extends ResponderV1 {
                 isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.IsActiveUser).map(_.head.toBoolean),
                 active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head)
             )
-
             //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
 
-            isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
-            isInProjectAdminGroup = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInProjectAdminGroup, Vector.empty[IRI])
 
-            groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
-                case Some(groups) => groups
-                case None => Vector.empty[IRI]
-            }
-            //_ = log.debug(s"userDataQueryResponse2UserProfile - groupIris: ${MessageUtil.toSource(groupIris)}")
-
+            /* the projects the user is member of */
             projectIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
                 case Some(projects) => projects
                 case None => Vector.empty[IRI]
             }
             //_ = log.debug(s"userDataQueryResponse2UserProfile - projectIris: ${MessageUtil.toSource(projectIris)}")
 
-            projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
-                projectIri => (responderManager ? ProjectInfoByIRIGetRequest(projectIri, ProjectInfoType.SHORT, None)).mapTo[ProjectInfoResponseV1] map (_.project_info)
+            /* the groups the user is member of (only explicit groups) */
+            groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
+                case Some(groups) => groups
+                case None => Vector.empty[IRI]
             }
-
-            projectInfos <- Future.sequence(projectInfoFutures)
-            //_ = log.debug(s"userDataQueryResponse2UserProfile - projectInfos: ${MessageUtil.toSource(projectInfos)}")
-
-            // find out to which project each group belongs to
-            //_ = log.debug("userDataQueryResponse2UserProfile - find out to which project each group belongs to")
-            groups: List[(IRI, IRI)] = if (groupIris.nonEmpty) {
-                groupIris.map {
-                    groupIri => {
-                        val resFuture = for {
-                            groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, GroupInfoType.SAFE, None)).mapTo[GroupInfoResponseV1]
-                            res = (groupInfo.group_info.belongsToProject, groupIri)
-                        } yield res
-                        Await.result(resFuture, 1.seconds)
-                    }
-                }.toList
-            } else {
-                List.empty[(IRI, IRI)]
-            }
-            //_ = log.debug(s"userDataQueryResponse2UserProfile - found: $groups")
+            //_ = log.debug(s"userDataQueryResponse2UserProfile - groupIris: ${MessageUtil.toSource(groupIris)}")
 
 
-            // project member 'groups'
-            projectMembers: List[(IRI, IRI)] = if (projectIris.nonEmpty) {
-                for {
-                    projectIri <- projectIris.toList
-                    res = (projectIri, OntologyConstants.KnoraBase.ProjectMember)
-                } yield res
-            } else {
-                List.empty[(IRI, IRI)]
-            }
+            /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
+            isInProjectAdminGroups = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInProjectAdminGroup, Vector.empty[IRI])
 
-            // project admin 'groups'
-            projectAdmins: List[(IRI, IRI)] = if (projectIris.nonEmpty) {
-                for {
-                    pAdmin <- isInProjectAdminGroup.toList
-                    res = (pAdmin, OntologyConstants.KnoraBase.ProjectAdmin)
-                } yield res
-            } else {
-                List.empty[(IRI, IRI)]
-            }
+            /* is the user implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
+            isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
 
-            //ToDo: Maybe we need to add KnownUser group for all other projects
-            allGroups = groups ::: projectMembers ::: projectAdmins
-            projectGroups = allGroups.groupBy(_._1).map { case (k,v) => (k,v.map(_._2))}
+            /* get the user's permission profile from the permissions responder */
+            permissionProfileFuture = (responderManager ? PermissionProfileGetRequestV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionProfileV1]
+            permissionProfile <- permissionProfileFuture
 
-            // retrieve the projects administrative permissions
-            projectAdministrativePermissions: Map[IRI, Set[PermissionV1]] = if (projectIris.nonEmpty) {
-                val resFuture = for {
-                    administrativePermissions <- (responderManager ? GetUserAdministrativePermissionsRequestV1(projectGroups)).mapTo[Map[IRI, Set[PermissionV1]]]
-                } yield administrativePermissions
-                Await.result(resFuture, 1.seconds)
-            } else {
-                Map.empty[IRI, Set[PermissionV1]]
-            }
-
-            // retrieve the projects default object access permissions
-            projectDefaultObjectAccessPermissions:Map[IRI, Set[PermissionV1]] = if (projectIris.nonEmpty) {
-                val resFuture = for {
-                    defaultObjectAccessPermissions <- (responderManager ? GetUserDefaultObjectAccessPermissionsRequestV1(projectGroups)).mapTo[Map[IRI, Set[PermissionV1]]]
-                } yield defaultObjectAccessPermissions
-                Await.result(resFuture, 1.seconds)
-            } else {
-                Map.empty[IRI, Set[PermissionV1]]
-            }
-
+            /* construct the user profile from the different parts */
             up = UserProfileV1(
                 userData = userDataV1,
                 groups = groupIris,
-                projects = if (projectIris.nonEmpty) projectIris else Vector.empty[IRI],
-                projectInfos = if (projectInfos.nonEmpty) projectInfos else Vector.empty[ProjectInfoV1],
-                projectGroups = projectGroups,
-                isInSystemAdminGroup = isInSystemAdminGroup,
-                isInProjectAdminGroup = isInProjectAdminGroup,
-                projectAdministrativePermissions = projectAdministrativePermissions,
-                projectDefaultObjectAccessPermissions = projectDefaultObjectAccessPermissions,
-                sessionId = None
+                projects = projectIris,
+                sessionId = None,
+                permissionProfile = permissionProfile
             )
             //_ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
 

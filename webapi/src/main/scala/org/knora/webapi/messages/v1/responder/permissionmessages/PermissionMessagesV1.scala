@@ -18,11 +18,13 @@ package org.knora.webapi.messages.v1.responder.permissionmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionOperation.PermissionOperation
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionProfileType.PermissionProfileType
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType.PermissionType
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsTemplate.PermissionsTemplate
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, Jsonable, OntologyConstants}
+import org.knora.webapi.{BadRequestException, IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import spray.json.{JsArray, JsString, _}
 
 
@@ -35,19 +37,17 @@ import spray.json.{JsArray, JsString, _}
 sealed trait PermissionsResponderRequestV1 extends KnoraRequestV1
 
 /**
-  * A message that requests the permissions for the supplied user.
-  *
-  * @param projectGroups a map of projects pointing to a list of groups the user is a member of.
+  * A message that requests the user's [[PermissionProfileV1]].
+  * @param projectIris the projects the user is part of.
+  * @param groupIris the groups the user is member of.
+  * @param isInProjectAdminGroups the projects for which the user is member of the ProjectAdmin group.
+  * @param isInSystemAdminGroup the flag denoting users membership in the SystemAdmin group.
   */
-case class GetUserAdministrativePermissionsRequestV1(projectGroups: Map[IRI, List[IRI]]) extends PermissionsResponderRequestV1
-
-/**
-  * A message that requests the permissions for the supplied user.
-  *
-  * @param projectGroups a map of projects pointing to a list of groups the user is a member of.
-  */
-case class GetUserDefaultObjectAccessPermissionsRequestV1(projectGroups: Map[IRI, List[IRI]]) extends PermissionsResponderRequestV1
-
+case class PermissionProfileGetRequestV1(projectIris: Seq[IRI],
+                                         groupIris: Seq[IRI],
+                                         isInProjectAdminGroups: Seq[IRI],
+                                         isInSystemAdminGroup: Boolean
+                                        ) extends PermissionsResponderRequestV1
 
 /**
   * A message that requests the creation of permissions (administrative and default) for a certain project
@@ -58,7 +58,7 @@ case class GetUserDefaultObjectAccessPermissionsRequestV1(projectGroups: Map[IRI
   * @param projectIri the IRI of the project.
   * @param permissionsTemplate the permissions template.
   */
-case class TemplatePermissionsCreateRequestV1(projectIri: IRI, permissionsTemplate: PermissionsTemplate, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+//case class TemplatePermissionsCreateRequestV1(projectIri: IRI, permissionsTemplate: PermissionsTemplate, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
 
 /**
@@ -178,6 +178,7 @@ case class DefaultObjectAccessPermissionUpdateRequestV1(userProfileV1: UserProfi
   * @param administrativePermissions
   * @param defaultObjectAccessPermissions
   */
+/*
 case class TemplatePermissionsCreateResponseV1(success: Boolean,
                                                msg: String,
                                                administrativePermissions: Seq[AdministrativePermissionV1],
@@ -185,6 +186,7 @@ case class TemplatePermissionsCreateResponseV1(success: Boolean,
                                               ) extends KnoraResponseV1 with PermissionV1JsonProtocol {
     def toJsValue = templatePermissionsCreateResponseV1Format.write(this)
 }
+*/
 
 /**
   * Represents an answer to an administrative permission creating/modifying/deletion operation.
@@ -218,6 +220,76 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
+
+
+/**
+  * Represents a user's permission profile.
+  *
+  * @param projectInfos the project info of the projects that the user belongs to.
+  * @param groupsPerProjects the groups the user belongs to for each project.
+  * @param isInSystemAdminGroup the user's knora-base:SystemAdmin group membership status.
+  * @param isInProjectAdminGroups shows for which projects the user is member in the knora-base:ProjectAdmin group.
+  * @param administrativePermissionsPerProject the user's administrative permissions for each project.
+  * @param defaultObjectAccessPermissionsPerProject the user's default object access permissions for each project.
+  */
+case class PermissionProfileV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1],
+                               groupsPerProjects: Map[IRI, List[IRI]] = Map.empty[IRI, List[IRI]],
+                               isInSystemAdminGroup: Boolean = false,
+                               isInProjectAdminGroups: Seq[IRI] = Vector.empty[IRI],
+                               administrativePermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],
+                               defaultObjectAccessPermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]]
+                              ) {
+
+    /**
+      * Creating a [[UserProfileV1]] with sensitive information stripped.
+      *
+      * @return a [[UserProfileV1]]
+      */
+    def ofType(permissionProfileType: PermissionProfileType): PermissionProfileV1 = {
+        permissionProfileType match {
+            case PermissionProfileType.SHORT => {
+
+                PermissionProfileV1(
+                    projectInfos = Vector.empty[ProjectInfoV1], // remove
+                    groupsPerProjects = groupsPerProjects,
+                    isInSystemAdminGroup = false, // remove system admin status
+                    isInProjectAdminGroups = Vector.empty[IRI], // remove privileged group membership
+                    administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]], // remove administrative permission information
+                    defaultObjectAccessPermissionsPerProject = Map.empty[IRI, Set[PermissionV1]] // remove default object access permission information
+                )
+            }
+            case PermissionProfileType.SAFE => {
+
+                PermissionProfileV1(
+                    projectInfos = projectInfos,
+                    groupsPerProjects = groupsPerProjects,
+                    isInSystemAdminGroup = false, // remove system admin status
+                    isInProjectAdminGroups = Vector.empty[IRI], // remove privileged group membership
+                    administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]], // remove administrative permission information
+                    defaultObjectAccessPermissionsPerProject = Map.empty[IRI, Set[PermissionV1]] // remove default object access permission information
+                )
+            }
+            case PermissionProfileType.FULL => {
+
+                PermissionProfileV1(
+                    projectInfos = projectInfos,
+                    groupsPerProjects = groupsPerProjects,
+                    isInSystemAdminGroup = isInSystemAdminGroup,
+                    isInProjectAdminGroups = isInProjectAdminGroups,
+                    administrativePermissionsPerProject = administrativePermissionsPerProject,
+                    defaultObjectAccessPermissionsPerProject = defaultObjectAccessPermissionsPerProject
+                )
+            }
+            case _ => throw BadRequestException(s"The requested userProfileType: $permissionProfileType is invalid.")
+        }
+    }
+
+    def isSystemAdmin: Boolean = {
+        isInSystemAdminGroup
+    }
+}
+
+
 
 /**
   * Represents 'knora-base:AdministrativePermission'
@@ -287,6 +359,38 @@ case class NewDefaultObjectAccessPermissionV1(iri: IRI,
                                               hasDefaultRestrictedViewPermission: Seq[IRI] = Vector.empty[IRI]
                                              )
 
+
+/**
+  * UserProfile types:
+  * short: short without sensitive information
+  * safe: everything without sensitive information
+  * full: everything
+  */
+object PermissionProfileType extends Enumeration {
+    /* TODO: Extend to incorporate user privacy wishes */
+
+    type PermissionProfileType = Value
+
+    val SHORT = Value(0, "short") // short without sensitive information
+    val SAFE = Value(1, "safe") // everything without sensitive information
+    val FULL = Value(2, "full") // everything
+
+    val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+
+    /**
+      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
+      * [[InconsistentTriplestoreDataException]].
+      *
+      * @param name the name of the value.
+      * @return the requested value.
+      */
+    def lookup(name: String): Value = {
+        valueMap.get(name) match {
+            case Some(value) => value
+            case None => throw InconsistentTriplestoreDataException(s"Permission profile type not supported: $name")
+        }
+    }
+}
 
 /**
   * Permissions template values
@@ -460,9 +564,45 @@ object PermissionV1 {
 // JSON formatting
 
 
-trait PermissionV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
+trait PermissionV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol {
 
-    implicit object PermissionOperation extends JsonFormat[PermissionOperation] {
+    implicit object PermissionProfileTypeFormat extends JsonFormat[PermissionProfileType] {
+        /**
+          * Not implemented.
+          */
+        def read(jsonVal: JsValue) = ???
+
+        /**
+          * Converts a [[PermissionProfileType]] into [[JsValue]] for formatting as JSON.
+          *
+          * @param permissionProfileType the [[PermissionProfileType]] to be converted.
+          * @return a [[JsValue]].
+          */
+        def write(permissionProfileType: PermissionProfileType): JsValue = {
+            JsObject(Map("permission_profile_type" -> permissionProfileType.toString.toJson))
+        }
+    }
+
+    implicit object PermissionsTemplateFormat extends JsonFormat[PermissionsTemplate] {
+        /**
+          * Not implemented.
+          */
+        def read(jsonVal: JsValue) = ???
+
+        /**
+          * Converts a [[PermissionsTemplate]] into [[JsValue]] for formatting as JSON.
+          *
+          * @param permissionTemplate the [[PermissionsTemplate]] to be converted.
+          * @return a [[JsValue]].
+          */
+        def write(permissionTemplate: PermissionsTemplate): JsValue = {
+            JsObject(Map("permission_operation" -> permissionTemplate.toString.toJson))
+        }
+    }
+
+
+
+    implicit object PermissionOperationFormat extends JsonFormat[PermissionOperation] {
         /**
           * Not implemented.
           */
@@ -482,7 +622,7 @@ trait PermissionV1JsonProtocol extends DefaultJsonProtocol with NullOptions with
     /**
       * Converts between [[PermissionV1]] objects and [[JsValue]] objects.
       */
-    implicit object PermissionV1JsonFormat extends JsonFormat[PermissionV1] {
+    implicit object PermissionV1Format extends JsonFormat[PermissionV1] {
         /**
           * Not implemented.
           */
@@ -522,7 +662,8 @@ trait PermissionV1JsonProtocol extends DefaultJsonProtocol with NullOptions with
 
     implicit val administrativePermissionV1Format: JsonFormat[AdministrativePermissionV1] = jsonFormat3(AdministrativePermissionV1)
     implicit val defaultObjectAccessPermissionV1Format: JsonFormat[DefaultObjectAccessPermissionV1] = jsonFormat5(DefaultObjectAccessPermissionV1)
-    implicit val templatePermissionsCreateResponseV1Format: RootJsonFormat[TemplatePermissionsCreateResponseV1] = jsonFormat4(TemplatePermissionsCreateResponseV1)
+    implicit val permissionProfileV1Format: JsonFormat[PermissionProfileV1] = jsonFormat6(PermissionProfileV1)
+    //implicit val templatePermissionsCreateResponseV1Format: RootJsonFormat[TemplatePermissionsCreateResponseV1] = jsonFormat4(TemplatePermissionsCreateResponseV1)
     implicit val administrativePermissionOperationResponseV1Format: RootJsonFormat[AdministrativePermissionOperationResponseV1] = jsonFormat4(AdministrativePermissionOperationResponseV1)
     implicit val defaultObjectAccessPermissionOperationResponseV1Format: RootJsonFormat[DefaultObjectAccessPermissionOperationResponseV1] = jsonFormat4(DefaultObjectAccessPermissionOperationResponseV1)
 }

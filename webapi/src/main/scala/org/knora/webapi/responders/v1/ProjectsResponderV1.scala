@@ -23,7 +23,6 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{TemplatePermissionsCreateRequestV1, TemplatePermissionsCreateResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages._
@@ -264,14 +263,6 @@ class ProjectsResponderV1 extends ResponderV1 {
 
             _ = if (projectResponse.isEmpty) {
                 throw UpdateNotPerformedException(s"Project $projectIRI was not created. Please report this as a possible bug.")
-            }
-
-            // create template permissions
-            templatePermissionsCreateResponse <- (responderManager ? TemplatePermissionsCreateRequestV1(projectIRI, newProjectDataV1.permissionsTemplate, userProfileV1)).mapTo[TemplatePermissionsCreateResponseV1]
-
-            _ = if (!templatePermissionsCreateResponse.success) {
-                //Todo: Handle permission creation problem
-                log.error(templatePermissionsCreateResponse.msg)
             }
 
             // create the project info
