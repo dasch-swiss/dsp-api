@@ -28,7 +28,6 @@ import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionForProjectGroupGetRequestV1, PermissionType}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoByShortnameGetRequest, ProjectInfoType, ProjectsGetRequestV1}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 
 object PermissionsRouteV1 extends Authenticator {

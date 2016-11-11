@@ -21,7 +21,7 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1, GroupInfoType}
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType.PermissionType
-import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionV1, PermissionType, _}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionForProjectGroupGetResponseV1, AdministrativePermissionV1, PermissionType, _}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
@@ -47,22 +47,23 @@ class PermissionsResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case PermissionProfileGetRequestV1(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup) => future2Message(sender(), getPermissionsProfileV1(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup), log)
+        case PermissionProfileGetV1(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup) => future2Message(sender(), permissionsProfileGetV1(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup), log)
         case AdministrativePermissionIrisForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), getAdministrativePermissionIrisForProjectV1(projectIri, userProfileV1), log)
         case AdministrativePermissionForIriGetRequestV1(administrativePermissionIri, userProfileV1) => future2Message(sender(), getAdministrativePermissionForIriV1(administrativePermissionIri, userProfileV1), log)
-        case AdministrativePermissionForProjectGroupGetRequestV1(projectIri, groupIri, userProfileV1) => future2Message(sender(), getAdministrativePermissionForProjectGroupV1(projectIri, groupIri), log)
+        case AdministrativePermissionForProjectGroupGetV1(projectIri, groupIri, userProfileV1) => future2Message(sender(), administrativePermissionForProjectGroupGetV1(projectIri, groupIri), log)
+        case AdministrativePermissionForProjectGroupGetRequestV1(projectIri, groupIri, userProfileV1) => future2Message(sender(), administrativePermissionForProjectGroupGetRequestV1(projectIri, groupIri), log)
         case AdministrativePermissionCreateRequestV1(newAdministrativePermissionV1, userProfileV1) => future2Message(sender(), createAdministrativePermissionV1(newAdministrativePermissionV1, userProfileV1), log)
-        case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, userProfileV1) => future2Message(sender(), deleteAdministrativePermissionV1(administrativePermissionIri, userProfileV1), log)
+        //case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, userProfileV1) => future2Message(sender(), deleteAdministrativePermissionV1(administrativePermissionIri, userProfileV1), log)
         case DefaultObjectAccessPermissionIrisForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), getDefaultObjectAccessPermissionIrisForProjectV1(projectIri, userProfileV1), log)
         case DefaultObjectAccessPermissionGetRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), getDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, userProfileV1), log)
-        case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, userProfileV1), log)
-        case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, userProfileV1), log)
+        //case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, userProfileV1), log)
+        //case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         //case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1) => future2Message(sender(), templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
 
-    def getPermissionsProfileV1(projectIris: Seq[IRI], groupIris: Seq[IRI], isInProjectAdminGroups: Seq[IRI], isInSystemAdminGroup: Boolean): Future[PermissionProfileV1] = {
+    def permissionsProfileGetV1(projectIris: Seq[IRI], groupIris: Seq[IRI], isInProjectAdminGroups: Seq[IRI], isInSystemAdminGroup: Boolean): Future[PermissionProfileV1] = {
 
         for {
             a <- Future("")
@@ -115,11 +116,11 @@ class PermissionsResponderV1 extends ResponderV1 {
             //ToDo: Maybe we need to add KnownUser group for all other projects
             /* combine explicit groups with materialized implicit groups */
             allGroups = groups ::: projectMembers ::: projectAdmins
-            groupsPerProjects = allGroups.groupBy(_._1).map { case (k,v) => (k,v.map(_._2))}
+            groupsPerProject = allGroups.groupBy(_._1).map { case (k,v) => (k,v.map(_._2))}
 
             /* retrieve the administrative permissions for each group per project the user is member of */
             administrativePermissionsPerProjectFuture: Future[Map[IRI, Set[PermissionV1]]] = if (projectIris.nonEmpty) {
-                getUserAdministrativePermissionsRequestV1(groupsPerProjects)
+                getUserAdministrativePermissionsRequestV1(groupsPerProject)
             } else {
                 Future(Map.empty[IRI, Set[PermissionV1]])
             }
@@ -127,7 +128,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             /* retrieve the default object access permissions for each group per project the user is member of */
             defaultObjectAccessPermissionsPerProjectFuture: Future[Map[IRI, Set[PermissionV1]]] = if (projectIris.nonEmpty) {
-                getUserDefaultObjectAccessPermissionsRequestV1(groupsPerProjects)
+                getUserDefaultObjectAccessPermissionsRequestV1(groupsPerProject)
             } else {
                 Future(Map.empty[IRI, Set[PermissionV1]])
             }
@@ -136,9 +137,8 @@ class PermissionsResponderV1 extends ResponderV1 {
             /* construct the permission profile from the different parts */
             result = PermissionProfileV1(
                 projectInfos = projectInfos,
-                groupsPerProjects = groupsPerProjects,
+                groupsPerProject = groupsPerProject,
                 isInSystemAdminGroup = isInSystemAdminGroup,
-                isInProjectAdminGroups = isInProjectAdminGroups,
                 administrativePermissionsPerProject = administrativePermissionsPerProject,
                 defaultObjectAccessPermissionsPerProject = defaultObjectAccessPermissionsPerProject
             )
@@ -232,7 +232,7 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @param groupIRI   the group.
       * @return an option containing an [[AdministrativePermissionV1]]
       */
-    private def getAdministrativePermissionForProjectGroupV1(projectIRI: IRI, groupIRI: IRI): Future[Option[AdministrativePermissionV1]] = {
+    private def administrativePermissionForProjectGroupGetV1(projectIRI: IRI, groupIRI: IRI): Future[Option[AdministrativePermissionV1]] = {
         for {
             a <- Future("")
 
@@ -272,12 +272,29 @@ class PermissionsResponderV1 extends ResponderV1 {
     }
 
     /**
+      * Gets a single administrative permission identified by project and group.
+      *
+      * @param projectIRI the project.
+      * @param groupIRI   the group.
+      * @return an [[AdministrativePermissionForProjectGroupGetResponseV1]]
+      */
+    private def administrativePermissionForProjectGroupGetRequestV1(projectIRI: IRI, groupIRI: IRI): Future[AdministrativePermissionForProjectGroupGetResponseV1] = {
+        for {
+            ap <- administrativePermissionForProjectGroupGetV1(projectIRI, groupIRI)
+            result = ap match {
+                case Some(ap) => AdministrativePermissionForProjectGroupGetResponseV1(ap)
+                case None => throw NotFoundException(s"No Administrative Permission found for project: $projectIRI, group: $groupIRI combination")
+            }
+        } yield result
+    }
+
+    /**
       *
       * @param newAdministrativePermissionV1
       * @param userProfileV1
       * @return
       */
-    private def createAdministrativePermissionV1(newAdministrativePermissionV1: NewAdministrativePermissionV1, userProfileV1: UserProfileV1): Future[AdministrativePermissionOperationResponseV1] = {
+    private def createAdministrativePermissionV1(newAdministrativePermissionV1: NewAdministrativePermissionV1, userProfileV1: UserProfileV1): Future[AdministrativePermissionCreateResponseV1] = {
         log.debug("createAdministrativePermissionV1")
         for {
             a <- Future("")
@@ -287,23 +304,23 @@ class PermissionsResponderV1 extends ResponderV1 {
             _ = if (newAdministrativePermissionV1.forGroup.isEmpty) throw BadRequestException("Group cannot be empty")
             _ = if (newAdministrativePermissionV1.hasPermissions.isEmpty) throw BadRequestException("Permissions cannot be empty")
 
-            checkResult <- getAdministrativePermissionForProjectGroupV1(newAdministrativePermissionV1.forProject, newAdministrativePermissionV1.forGroup)
+            checkResult <- administrativePermissionForProjectGroupGetV1(newAdministrativePermissionV1.forProject, newAdministrativePermissionV1.forGroup)
 
             _ = checkResult match {
                 case Some(ap) => throw DuplicateValueException(s"Permission for project: '${newAdministrativePermissionV1.forProject}' and group: '${newAdministrativePermissionV1.forGroup}' combination already exists.")
                 case None =>
             }
 
-            response = AdministrativePermissionOperationResponseV1(success = true, operationType = PermissionOperation.CREATE, administrativePermissionV1 = Some(AdministrativePermissionV1()), msg = "permission created")
+            response = AdministrativePermissionCreateResponseV1(administrativePermission = AdministrativePermissionV1(forProject = "mock-project", forGroup = "mock-group", hasPermissions = Seq.empty[PermissionV1]))
 
         } yield response
 
 
     }
 
-
+/*
     private def deleteAdministrativePermissionV1(administrativePermissionIri: IRI, userProfileV1: UserProfileV1): Future[AdministrativePermissionOperationResponseV1] = ???
-
+*/
     /**
       * Gets all IRI's of all default object access permissions defined inside a project.
       *
@@ -376,10 +393,12 @@ class PermissionsResponderV1 extends ResponderV1 {
 
         } yield defaultObjectAccessPermission
     }
+/*
 
     private def createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1: NewDefaultObjectAccessPermissionV1, userProfileV1: UserProfileV1): Future[DefaultObjectAccessPermissionOperationResponseV1] = ???
 
     private def deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri: IRI, userProfileV1: UserProfileV1): Future[DefaultObjectAccessPermissionOperationResponseV1] = ???
+*/
 
     /*
     private def templatePermissionsCreateRequestV1(projectIri: IRI, permissionsTemplate: PermissionsTemplate, userProfileV1: UserProfileV1): Future[TemplatePermissionsCreateResponseV1] = {
@@ -422,19 +441,19 @@ class PermissionsResponderV1 extends ResponderV1 {
       * By providing the all the projects and groups in which the user is a member of, calculate the user's max
       * administrative permissions of each project.
       *
-      * @param projectsWithGroups the projects and groups the user is part of.
+      * @param groupsPerProject the groups in each project the user is member of.
       * @return a the user's max permissions for each project.
       */
-    private def getUserAdministrativePermissionsRequestV1(projectsWithGroups: Map[IRI, List[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
+    def getUserAdministrativePermissionsRequestV1(groupsPerProject: Map[IRI, List[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
 
         //FixMe: loop through each project the user is part of and retrieve the administrative permissions attached to each group he is in, calculate max permissions, package everything in a neat little object, and return it back
 
 
         val pp: Iterable[Future[(IRI, Seq[PermissionV1])]] = for {
-            (projectIri, groups) <- projectsWithGroups
+            (projectIri, groups) <- groupsPerProject
             groupIri <- groups
-            _ = log.debug(s"getUserAdministrativePermissionsRequestV1 - projectIri: $projectIri, groupIri: $groupIri")
-            projectPermission: Future[(IRI, Seq[PermissionV1])] = getAdministrativePermissionForProjectGroupV1(projectIri, groupIri).map {
+            //_ = log.debug(s"getUserAdministrativePermissionsRequestV1 - projectIri: $projectIri, groupIri: $groupIri")
+            projectPermission: Future[(IRI, Seq[PermissionV1])] = administrativePermissionForProjectGroupGetV1(projectIri, groupIri).map {
                 case Some(ap: AdministrativePermissionV1) => (projectIri, ap.hasPermissions)
                 case None => (projectIri, Seq.empty[PermissionV1])
             }
@@ -460,10 +479,12 @@ class PermissionsResponderV1 extends ResponderV1 {
         result
     }
 
-    def getUserDefaultObjectAccessPermissionsRequestV1(projectsWithGroups: Map[IRI, List[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
+    def getUserDefaultObjectAccessPermissionsRequestV1(groupsPerProject: Map[IRI, List[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
 
         //FixMe: loop through each project the user is part of and retrieve the default object access permissions attached to each group he is in, calculate max permissions, package everything in a neat little object, and return it back
-        Future(Map.empty[IRI, Set[PermissionV1]])
+        val result = Map.empty[IRI, Set[PermissionV1]]
+        log.debug(s"getUserDefaultObjectAccessPermissionsRequestV1 - result: $result")
+        Future(result)
     }
 
 
@@ -485,7 +506,7 @@ class PermissionsResponderV1 extends ResponderV1 {
         maybePermissionListStr match {
             case Some(permissionListStr) => {
                 val permissions: Seq[String] = permissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
-                log.debug(s"parsePermissions - split permissions: $permissions")
+                //log.debug(s"parsePermissions - split permissions: $permissions")
                 permissions.map {
                     permission =>
                         val splitPermission = permission.split(' ')
@@ -570,7 +591,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 case rest => v.head
             }
         }.toSet
-        log.debug(s"squashPermissions - result: $result")
+        //log.debug(s"squashPermissions - result: $result")
         result
     }
 }

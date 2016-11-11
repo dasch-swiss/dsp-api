@@ -17,6 +17,7 @@
 package org.knora.webapi.messages.v1.responder.usermessages
 
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionProfileType, PermissionProfileV1}
 import org.mindrot.jbcrypt.BCrypt
 import org.scalatest.{Matchers, WordSpecLike}
 
@@ -35,13 +36,12 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
     val password = SharedTestData.rootUserProfileV1.userData.password
     val groups = SharedTestData.rootUserProfileV1.groups
     val projects = SharedTestData.rootUserProfileV1.projects
-    val isInSystemAdminGroup = SharedTestData.rootUserProfileV1.isInSystemAdminGroup
-    val isInProjectAdminGroup = SharedTestData.rootUserProfileV1.isInProjectAdminGroup
+    val permissionProfile = SharedTestData.rootUserProfileV1.permissionProfile
     val sessionId = SharedTestData.rootUserProfileV1.sessionId
 
 
     "The UserProfileV1 case class " should {
-        "return a clean UserProfileV1 when requested " in {
+        "return a safe UserProfileV1 when requested " in {
             val rootUserProfileV1 = UserProfileV1(
                 UserDataV1(
                     user_id = user_id,
@@ -55,9 +55,9 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                 ),
                 groups = groups,
                 projects = projects,
-                isInSystemAdminGroup = isInSystemAdminGroup,
-                isInProjectAdminGroup = isInProjectAdminGroup,
+                permissionProfile = permissionProfile,
                 sessionId = sessionId
+
             )
             val rootUserProfileV1Safe = UserProfileV1(
                 UserDataV1(
@@ -72,8 +72,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                     ),
                 groups = groups,
                 projects = projects,
-                isInSystemAdminGroup = false,
-                isInProjectAdminGroup = Vector.empty[IRI],
+                permissionProfile = permissionProfile.ofType(PermissionProfileType.SAFE),
                 sessionId = sessionId
             )
 

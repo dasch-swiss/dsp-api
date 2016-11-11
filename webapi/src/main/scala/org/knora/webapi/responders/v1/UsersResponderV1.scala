@@ -27,7 +27,6 @@ import akka.pattern._
 import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages._
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.routing.Authenticator
@@ -390,7 +389,7 @@ class UsersResponderV1 extends ResponderV1 {
             isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
 
             /* get the user's permission profile from the permissions responder */
-            permissionProfileFuture = (responderManager ? PermissionProfileGetRequestV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionProfileV1]
+            permissionProfileFuture = (responderManager ? PermissionProfileGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionProfileV1]
             permissionProfile <- permissionProfileFuture
 
             /* construct the user profile from the different parts */

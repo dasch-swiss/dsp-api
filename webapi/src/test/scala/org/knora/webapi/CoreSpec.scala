@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.util.CacheUtil
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.{AsyncWordSpecLike, BeforeAndAfterAll, Matchers, WordSpecLike}
 
 object CoreSpec {
 

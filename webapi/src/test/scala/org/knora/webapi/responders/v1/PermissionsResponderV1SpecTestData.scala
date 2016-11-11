@@ -61,17 +61,29 @@ object PermissionsResponderV1SpecTestData {
     val perm003 =
         ap(
             iri = "http://data.knora.org/permissions/003",
-            p = AdministrativePermissionV1()
+            p = AdministrativePermissionV1(
+                forProject = "mock-project",
+                forGroup = "mock-group",
+                hasPermissions = Seq.empty[PermissionV1]
+            )
         )
     val perm004 =
         ap(
             iri = "http://data.knora.org/permissions/004",
-            p = AdministrativePermissionV1()
+            p = AdministrativePermissionV1(
+                forProject = "mock-project",
+                forGroup = "mock-group",
+                hasPermissions = Seq.empty[PermissionV1]
+            )
         )
     val perm005 =
         ap (
             iri = "http://data.knora.org/permissions/005",
-            p = AdministrativePermissionV1()
+            p = AdministrativePermissionV1(
+                forProject = "mock-project",
+                forGroup = "mock-group",
+                hasPermissions = Seq.empty[PermissionV1]
+            )
         )
 
 }

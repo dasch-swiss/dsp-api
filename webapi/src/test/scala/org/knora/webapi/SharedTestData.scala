@@ -21,7 +21,7 @@
 package org.knora.webapi
 
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1, GroupPermissionV1}
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionV1
+import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionProfileV1, PermissionV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 
@@ -46,14 +46,15 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images"),
-        projectInfos = Vector.empty[ProjectInfoV1],
-        projectGroups = Map(
-            "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}"),
-            "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
-        ),
-        isInSystemAdminGroup = true,
-        isInProjectAdminGroup = Vector.empty[IRI],
-        sessionId = None
+        sessionId = None,
+        permissionProfile = PermissionProfileV1(
+            projectInfos = Vector.empty[ProjectInfoV1],
+            groupsPerProject = Map(
+                "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}"),
+                "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+            ),
+            isInSystemAdminGroup = true
+        )
     )
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
@@ -71,10 +72,10 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = Vector.empty[IRI],
-        projectGroups = Map.empty[IRI, List[IRI]],
-        isInSystemAdminGroup = true,
-        isInProjectAdminGroup = Vector.empty[IRI],
-        sessionId = None
+        sessionId = None,
+        permissionProfile = PermissionProfileV1(
+            isInSystemAdminGroup = true
+        )
     )
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
@@ -92,10 +93,8 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = Vector.empty[IRI],
-        projectGroups = Map.empty[IRI, List[IRI]],
-        isInSystemAdminGroup = false,
-        isInProjectAdminGroup = Vector.empty[IRI],
-        sessionId = None
+        sessionId = None,
+        permissionProfile = PermissionProfileV1()
     )
 
     /* represents an anonymous user */
@@ -105,10 +104,8 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = Vector.empty[IRI],
-        projectGroups = Map.empty[IRI, List[IRI]],
-        isInSystemAdminGroup = false,
-        isInProjectAdminGroup = Vector.empty[IRI],
-        sessionId = None
+        sessionId = None,
+        permissionProfile = PermissionProfileV1()
     )
 
     /* represents 'user01' as found in admin-data.ttl  */
@@ -126,12 +123,13 @@ object SharedTestData {
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
         projects = List("http://data.knora.org/projects/images"),
-        projectGroups = Map(
-            "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer")
-        ),
-        isInSystemAdminGroup = false,
-        isInProjectAdminGroup = List("http://data.knora.org/projects/images"),
-        sessionId = None
+        sessionId = None,
+        permissionProfile = PermissionProfileV1(
+            groupsPerProject = Map(
+                "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer")
+            ),
+            isInSystemAdminGroup = false
+        )
     )
 
     /* represents 'user02' as found in admin-data.ttl  */
@@ -149,18 +147,19 @@ object SharedTestData {
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
         projects = List("http://data.knora.org/projects/images"),
-        projectGroups = Map(
-            "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer")
-        ),
-        isInSystemAdminGroup = false,
-        isInProjectAdminGroup = Vector.empty[IRI],
-        sessionId = None
+        sessionId = None,
+        permissionProfile = PermissionProfileV1(
+            groupsPerProject = Map(
+                "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer")
+            ),
+            isInSystemAdminGroup = false
+        )
     )
 
     /* represents 'testuser' as found in admin-data.ttl  */
     val testuserUserProfileV1 = UserProfileV1(
         userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/b83acc5f05")    ,
+            user_id = Some("http://data.knora.org/users/b83acc5f05"),
             username = Some("testuser"),
             firstname = Some("User"),
             lastname = Some("Test"),
@@ -172,13 +171,13 @@ object SharedTestData {
         ),
         groups = Vector.empty[IRI],
         projects = List("http://data.knora.org/projects/77275339"),
-        projectGroups = Map(
-            "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
-        ),
-        isInSystemAdminGroup = false,
-        isInProjectAdminGroup = Vector.empty[IRI],
-        sessionId = None
-
+        sessionId = None,
+        permissionProfile = PermissionProfileV1(
+            groupsPerProject = Map(
+                "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+            ),
+            isInSystemAdminGroup = false
+        )
     )
 
     /* represents the 'multiuser' as found in admin-data.ttl */
@@ -196,30 +195,30 @@ object SharedTestData {
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
         projects = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
-        projectGroups = Map(
-            "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}"),
-            "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer"),
-            "http://data.knora.org/projects/666" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}")
-        ),
-        isInSystemAdminGroup = false,
-        isInProjectAdminGroup = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
-        projectAdministrativePermissions = Map(
-            "http://data.knora.org/projects/77275339" -> Set(
-                PermissionV1.ProjectResourceCreateAllPermission,
-                PermissionV1.ProjectAdminAllPermission
+        sessionId = None,
+        permissionProfile = PermissionProfileV1(
+            groupsPerProject = Map(
+                "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}"),
+                "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer"),
+                "http://data.knora.org/projects/666" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}")
             ),
-            "http://data.knora.org/projects/images" -> Set(
-                PermissionV1.ProjectResourceCreateAllPermission,
-                PermissionV1.ProjectAdminAllPermission
+            isInSystemAdminGroup = false,
+            administrativePermissionsPerProject = Map(
+                "http://data.knora.org/projects/77275339" -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission,
+                    PermissionV1.ProjectAdminAllPermission
+                ),
+                "http://data.knora.org/projects/images" -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission,
+                    PermissionV1.ProjectAdminAllPermission
+                ),
+                "http://data.knora.org/projects/666" -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission,
+                    PermissionV1.ProjectAdminAllPermission
+                )
             ),
-            "http://data.knora.org/projects/666" -> Set(
-                PermissionV1.ProjectResourceCreateAllPermission,
-                PermissionV1.ProjectAdminAllPermission
-            )
-        ),
-        projectDefaultObjectAccessPermissions = Map.empty[IRI, Set[PermissionV1]]
-
-
+            defaultObjectAccessPermissionsPerProject = Map.empty[IRI, Set[PermissionV1]]
+        )
     )
 
     /* represents the full project info of the images project */
