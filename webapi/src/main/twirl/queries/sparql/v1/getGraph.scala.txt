@@ -164,11 +164,14 @@ WHERE
         FILTER BOUND(?@Initial)
         BIND(?@Initial AS ?node)
 
-        ?node a ?nodeClass .
-        ?node rdfs:label ?nodeLabel .
-        ?node knora-base:attachedToUser ?nodeOwner .
-        ?node knora-base:attachedToProject ?nodeProject .
-        ?node knora-base:hasPermissions ?nodePermissions .
+        ?node a ?nodeClass ;
+            rdfs:label ?nodeLabel ;
+            knora-base:attachedToUser ?nodeOwner ;
+            knora-base:attachedToProject ?nodeProject .
+
+        OPTIONAL {
+            ?node knora-base:hasPermissions ?nodePermissions .
+        }
     }
 
     @for(index <- 1 to depth) {
@@ -178,22 +181,28 @@ WHERE
             FILTER BOUND(?@OutboundNode@index)
             BIND(?@OutboundNode@index AS ?node)
 
-            ?node a ?nodeClass .
-            ?node rdfs:label ?nodeLabel .
-            ?node knora-base:attachedToUser ?nodeOwner .
-            ?node knora-base:attachedToProject ?nodeProject .
-            ?node knora-base:hasPermissions ?nodePermissions .
+            ?node a ?nodeClass ;
+                rdfs:label ?nodeLabel ;
+                knora-base:attachedToUser ?nodeOwner ;
+                knora-base:attachedToProject ?nodeProject .
+
+            OPTIONAL {
+                ?node knora-base:hasPermissions ?nodePermissions .
+            }
         }
         UNION
         {
             FILTER BOUND(?@InboundNode@index)
             BIND(?@InboundNode@index AS ?node)
 
-            ?node a ?nodeClass .
-            ?node rdfs:label ?nodeLabel .
-            ?node knora-base:attachedToUser ?nodeOwner .
-            ?node knora-base:attachedToProject ?nodeProject .
-            ?node knora-base:hasPermissions ?nodePermissions .
+            ?node a ?nodeClass ;
+                rdfs:label ?nodeLabel ;
+                knora-base:attachedToUser ?nodeOwner ;
+                knora-base:attachedToProject ?nodeProject .
+
+            OPTIONAL {
+                ?node knora-base:hasPermissions ?nodePermissions .
+            }
         }
         UNION
         {
@@ -204,8 +213,11 @@ WHERE
             ?linkValue rdf:subject ?linkValueSubj ;
                 rdf:predicate ?linkValuePred ;
                 rdf:object ?linkValueObj ;
-                knora-base:attachedToUser ?linkValueOwner ;
-                knora-base:hasPermissions ?linkValuePermissions .
+                knora-base:attachedToUser ?linkValueOwner .
+
+            OPTIONAL {
+                ?linkValue knora-base:hasPermissions ?linkValuePermissions .
+            }
 
             OPTIONAL {
                 ?linkValue knora-base:attachedToProject ?linkValueProject .
@@ -220,8 +232,11 @@ WHERE
             ?linkValue rdf:subject ?linkValueSubj ;
                 rdf:predicate ?linkValuePred ;
                 rdf:object ?linkValueObj ;
-                knora-base:attachedToUser ?linkValueOwner ;
-                knora-base:hasPermissions ?linkValuePermissions .
+                knora-base:attachedToUser ?linkValueOwner .
+
+            OPTIONAL {
+                ?linkValue knora-base:hasPermissions ?linkValuePermissions .
+            }
 
             OPTIONAL {
                 ?linkValue knora-base:attachedToProject ?linkValueProject .

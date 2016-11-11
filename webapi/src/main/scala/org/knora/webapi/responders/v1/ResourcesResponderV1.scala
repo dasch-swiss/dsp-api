@@ -90,6 +90,9 @@ class ResourcesResponderV1 extends ResponderV1 {
                 depth = graphDataGetRequest.depth
             ).toString())
 
+            // _ = println(sparql)
+
+            // The graph query is a CONSTRUCT query that returns a new RDF graph.
             response: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(sparql)).mapTo[SparqlConstructResponse]
 
             // Since we know we have only one object per predicate, convert the list of statements about each subject to a map.
@@ -97,19 +100,63 @@ class ResourcesResponderV1 extends ResponderV1 {
                 case (subject, statements) => subject -> new ErrorHandlingMap(statements.toMap, { key: IRI => s"Predicate $key not found for subject $subject" })
             }
 
-            // A map of resource IRIs to statements about those resources.
-            resources: Map[IRI, Map[IRI, String]] = responseData.filter {
-                case (subject, statements) => statements(OntologyConstants.Rdf.Type) != OntologyConstants.KnoraBase.LinkValue
+            // Collect information about the resources and link values in the graph.
+            (resources, linkValues) = {
+                // Make a map of resource IRIs to statements about those resources.
+                val unfilteredResources: Map[IRI, Map[IRI, String]] = responseData.filter {
+                    case (subject, statements) => statements(OntologyConstants.Rdf.Type) != OntologyConstants.KnoraBase.LinkValue
+                }
+
+                if (!unfilteredResources.contains(graphDataGetRequest.resourceIri)) {
+                    throw NotFoundException(s"Resource ${graphDataGetRequest.resourceIri} not found (it may have been deleted)")
+                }
+
+                // Make a map of LinkValue IRIs to statements about those link values.
+                val unfilteredLinkValues: Map[IRI, Map[IRI, String]] = responseData.filter {
+                    case (subject, statements) => statements(OntologyConstants.Rdf.Type) == OntologyConstants.KnoraBase.LinkValue
+                }
+
+                // Filter out resources that the user doesn't have permission to see.
+                val filteredResources: Map[IRI, Map[IRI, String]] = unfilteredResources.filter {
+                    case (subject, statements) =>
+                        PermissionUtilV1.getUserPermissionV1(
+                            subjectIri = subject,
+                            subjectOwner = statements(OntologyConstants.KnoraBase.AttachedToUser),
+                            subjectProject = statements(OntologyConstants.KnoraBase.AttachedToProject),
+                            subjectPermissionLiteral = statements.get(OntologyConstants.KnoraBase.HasPermissions),
+                            userProfile = graphDataGetRequest.userProfile
+                        ).nonEmpty
+                }
+
+                // Filter out link values that the user doesn't have permission to see.
+                val filteredLinkValues: Map[IRI, Map[IRI, String]] = unfilteredLinkValues.filter {
+                    case (subject, statements) =>
+                        // Filter out links to or from resources that the user doesn't have permission to see.
+                        val linkSourceIri = statements(OntologyConstants.Rdf.Subject)
+                        val linkTargetIri = statements(OntologyConstants.Rdf.Object)
+
+                        filteredResources.contains(linkSourceIri) && filteredResources.contains(linkTargetIri) && {
+                            // If a link value doesn't specify a project, use the project of the containing resource.
+                            val linkValueProject = statements.get(OntologyConstants.KnoraBase.AttachedToProject) match {
+                                case Some(project) => project
+                                case None => filteredResources(linkSourceIri)(OntologyConstants.KnoraBase.AttachedToProject)
+                            }
+
+                            PermissionUtilV1.getUserPermissionOnLinkValueV1(
+                                linkValueIri = subject,
+                                predicateIri = statements(OntologyConstants.Rdf.Predicate),
+                                linkValueOwner = statements(OntologyConstants.KnoraBase.AttachedToUser),
+                                linkValueProject = linkValueProject,
+                                linkValuePermissionLiteral = statements.get(OntologyConstants.KnoraBase.HasPermissions),
+                                userProfile = graphDataGetRequest.userProfile
+                            ).nonEmpty
+                        }
+                }
+
+                (filteredResources, filteredLinkValues)
             }
 
-            resourceIris = resources.keySet
-
-            // A map of LinkValue IRIs to statements about those values.
-            linkValues: Map[IRI, Map[IRI, String]] = responseData.filter {
-                case (subject, statements) => statements(OntologyConstants.Rdf.Type) == OntologyConstants.KnoraBase.LinkValue
-            }
-
-            // TODO: filter out anything that the user doesn't have permission to see.
+            // Get the labels of the resource classes and properties from the ontology responder.
 
             resourceClassIris = resources.map {
                 case (subject, statements) => statements(OntologyConstants.Rdf.Type)
@@ -119,44 +166,61 @@ class ResourcesResponderV1 extends ResponderV1 {
                 case (subject, statements) => statements(OntologyConstants.Rdf.Predicate)
             }.toSet
 
-            // Get resource class and property labels.
             entityInfoRequest = EntityInfoGetRequestV1(resourceClassIris = resourceClassIris, propertyIris = propertyIris, userProfile = graphDataGetRequest.userProfile)
             entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? entityInfoRequest).mapTo[EntityInfoGetResponseV1]
 
-            // Build a graph data structure using Graph for Scala.
+            // Build a graph data structure using Graph for Scala. We will traverse this graph to find the nodes that
+            // are still reachable from the initial node, now that we have filtered the results by permissions. All
+            // edges must be outbound to be included in the traversal, so we have to convert each inbound edge to an
+            // outbound edge by swapping its source and target nodes. We mark each edge with a label indicating its
+            // original direction, so we can get back the inbound edges later.
 
-            // Convert the link values into edges. Since we are about to look for the nodes that are reachable from the
-            // initial node, all edges must be outbound. So we are going to make a multimap with keyed edges, in which
-            // all edges are outbound, but the key of each edge says whether it was originally outbound or inbound.
+            // Convert the link values into edges.
             edges = linkValues.map {
                 case (linkValueIri, statements) =>
-                    // The rdfs:label of each link value indicates whether it represents an outbound or inbound link.
+                    // In the graph produced by the getGraph query, the rdfs:label of each link value is either
+                    // GraphQueryConstants.OutboundLinkValue or GraphQueryConstants.InboundLinkValue. We take
+                    // that string, append a space and the link property IRI, and use the resulting string as the edge
+                    // label. This allows a pair of nodes to be connected by more than one edge, because the direction
+                    // and link property IRI of each edge distinguish it from the others.
                     statements(OntologyConstants.Rdfs.Label) match {
-                        case GraphQueryConstants.OutboundLinkValue => LkDiEdge(
-                            statements(OntologyConstants.Rdf.Subject),
-                            statements(OntologyConstants.Rdf.Object)
-                        )(GraphQueryConstants.OutboundLinkValue + " " + statements(OntologyConstants.Rdf.Predicate))
+                        case GraphQueryConstants.OutboundLinkValue =>
+                            LkDiEdge(
+                                statements(OntologyConstants.Rdf.Subject),
+                                statements(OntologyConstants.Rdf.Object)
+                            )(GraphQueryConstants.OutboundLinkValue + " " + statements(OntologyConstants.Rdf.Predicate))
 
-                        case GraphQueryConstants.InboundLinkValue => LkDiEdge(
-                            statements(OntologyConstants.Rdf.Object),
-                            statements(OntologyConstants.Rdf.Subject)
-                        )(GraphQueryConstants.InboundLinkValue + " " + statements(OntologyConstants.Rdf.Predicate))
+                        case GraphQueryConstants.InboundLinkValue =>
+                            LkDiEdge(
+                                statements(OntologyConstants.Rdf.Object),
+                                statements(OntologyConstants.Rdf.Subject)
+                            )(GraphQueryConstants.InboundLinkValue + " " + statements(OntologyConstants.Rdf.Predicate))
 
                         case other => throw InconsistentTriplestoreDataException(s"Graph query returned unrecognized direction $other for link value $linkValueIri")
                     }
             }
 
-            graph = Graph.from(resourceIris, edges)
+            // Construct the graph from the nodes and edges.
 
-            // Find the graph that is reachable from the initial node.
+            graph = Graph.from(resources.keySet, edges)
+
+            // Traverse the graph to get the subgraph that is still reachable from the initial node.
+
+            _ = if (graph.find(graphDataGetRequest.resourceIri).isEmpty) {
+                val userID = graphDataGetRequest.userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                throw ForbiddenException(s"User $userID does not have permission to view resource ${graphDataGetRequest.resourceIri}")
+            }
 
             initialNode = graph.get(graphDataGetRequest.resourceIri)
             filteredGraph = initialNode.outerEdgeTraverser.toGraph
 
-            resultNodes = filteredGraph.nodes.map {
+            // Convert each remaining node to a GraphNodeV1 for the API response message.
+            resultNodes: Vector[GraphNodeV1] = filteredGraph.nodes.map {
                 node =>
                     val resourceIri = node.toString
                     val resourceClassIri = resources(resourceIri)(OntologyConstants.Rdf.Type)
+
+                    // Get the resource class's label from the ontology information.
                     val resourceClassLabel = entityInfoResponse.resourceEntityInfoMap(resourceClassIri).getPredicateObject(
                         predicateIri = OntologyConstants.Rdfs.Label,
                         preferredLangs = Some(graphDataGetRequest.userProfile.userData.lang, settings.fallbackLanguage)
@@ -166,20 +230,29 @@ class ResourcesResponderV1 extends ResponderV1 {
                         resourceIri = resourceIri,
                         resourceLabel = resources(resourceIri)(OntologyConstants.Rdfs.Label),
                         resourceClassIri = resourceClassIri,
-                        resourceClassLabel =resourceClassLabel
+                        resourceClassLabel = resourceClassLabel
                     )
             }.toVector
 
-            resultEdges = filteredGraph.edges.map {
+            // Convert each remaining edge to a GraphEdgeV1 for the API response message.
+            resultEdges: Vector[GraphEdgeV1] = filteredGraph.edges.map {
                 edge =>
-                    val edgeInfo = edge.label.toString.split(" ")
+                    // Split the edge's label to get its direction and property IRI.
+                    val edgeInfo = edge.label.toString.split(' ')
+
+                    // edgeDirection is either GraphQueryConstants.OutboundLinkValue or GraphQueryConstants.InboundLinkValue.
                     val edgeDirection = edgeInfo.head
+
                     val propertyIri = edgeInfo.last
+
+                    // Get the property's label from the ontology information.
                     val propertyLabel = entityInfoResponse.propertyEntityInfoMap(propertyIri).getPredicateObject(
                         predicateIri = OntologyConstants.Rdfs.Label,
                         preferredLangs = Some(graphDataGetRequest.userProfile.userData.lang, settings.fallbackLanguage)
                     ).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label"))
 
+                    // If the edge was originally inbound, convert it back to an inbound edge, by swapping the source
+                    // and target nodes.
                     edgeDirection match {
                         case GraphQueryConstants.OutboundLinkValue =>
                             GraphEdgeV1(
@@ -676,7 +749,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
 
         for {
-            // Get the resource info even if the user didn't ask for it, so we can check its permissions.
+        // Get the resource info even if the user didn't ask for it, so we can check its permissions.
             (userPermission, resInfoV1) <- getResourceInfoV1(
                 resourceIri = resourceIri,
                 userProfile = userProfile,
@@ -1447,10 +1520,10 @@ class ResourcesResponderV1 extends ResponderV1 {
     /**
       * Changes a resource's label.
       *
-      * @param resourceIri the IRI of the resource.
-      * @param label the new label.
+      * @param resourceIri  the IRI of the resource.
+      * @param label        the new label.
       * @param apiRequestID the the ID of the API request.
-      * @param userProfile the profile of the user making the request.
+      * @param userProfile  the profile of the user making the request.
       * @return a [[ChangeResourceLabelResponseV1]].
       */
     private def changeResourceLabelV1(resourceIri: IRI, label: String, apiRequestID: UUID, userProfile: UserProfileV1): Future[ChangeResourceLabelResponseV1] = {
@@ -1477,25 +1550,25 @@ class ResourcesResponderV1 extends ResponderV1 {
                     label = label
                 ).toString()
 
-            //_ = print(sparqlUpdate)
+                //_ = print(sparqlUpdate)
 
-            // Do the update.
-            sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+                // Do the update.
+                sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
-            // Check whether the update succeeded.
-            sparqlQuery = queries.sparql.v1.txt.checkResourceLabelChange(
-                triplestore = settings.triplestoreType,
-                resourceIri = resourceIri,
-                label = label
-            ).toString()
+                // Check whether the update succeeded.
+                sparqlQuery = queries.sparql.v1.txt.checkResourceLabelChange(
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceIri,
+                    label = label
+                ).toString()
 
-            sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-            rows = sparqlSelectResponse.results.bindings
+                sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+                rows = sparqlSelectResponse.results.bindings
 
-            // we expect exactly one row to be returned if the label was updated correctly in the data.
-            _ = if (rows.length != 1) {
-                throw UpdateNotPerformedException(s"The label of the resource ${resourceIri} was not updated correctly. Please report this as a possible bug.")
-            }
+                // we expect exactly one row to be returned if the label was updated correctly in the data.
+                _ = if (rows.length != 1) {
+                    throw UpdateNotPerformedException(s"The label of the resource ${resourceIri} was not updated correctly. Please report this as a possible bug.")
+                }
 
             } yield ChangeResourceLabelResponseV1(res_id = resourceIri, label = label, userProfile.userData)
         }
