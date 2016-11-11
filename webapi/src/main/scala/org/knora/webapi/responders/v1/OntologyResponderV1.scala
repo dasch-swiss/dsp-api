@@ -426,13 +426,23 @@ class OntologyResponderV1 extends ResponderV1 {
                     propertyIri -> propertyEntityInfo
             }
 
+            //
             // get all the standoff class definitions and their properties
+            //
+
+            valueBaseClassesSparql <- Future(queries.sparql.v1.txt.getValueBaseClassDefinitions(triplestore = settings.triplestoreType).toString())
+            valueBaseClassesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(valueBaseClassesSparql)).mapTo[SparqlSelectResponse]
+            valueBaseClassesRows: Seq[VariableResultsRow] = valueBaseClassesResponse.results.bindings
+
             standoffClassesSparql <- Future(queries.sparql.v1.txt.getStandoffClassDefinitions(triplestore = settings.triplestoreType).toString())
             standoffClassesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(standoffClassesSparql)).mapTo[SparqlSelectResponse]
             standoffClassRows: Seq[VariableResultsRow] = standoffClassesResponse.results.bindings
 
+            // add the property Iris of the value base classes since they may be used by some standoff classes
+            combinedStandoffClasses = valueBaseClassesRows ++ standoffClassRows
+
             // collect all the standoff property Iris from the cardinalities
-            standoffPropertyIris = standoffClassRows.foldLeft(Set.empty[IRI]) {
+            standoffPropertyIris = combinedStandoffClasses.foldLeft(Set.empty[IRI]) {
                 case (acc, row) =>
                     val standoffPropIri: Option[String] = row.rowMap.get("cardinalityProp")
 
@@ -441,12 +451,17 @@ class OntologyResponderV1 extends ResponderV1 {
                     } else {
                         acc
                     }
-
             }
 
             standoffPropsSparql <- Future(queries.sparql.v1.txt.getStandoffPropertyDefinitions(triplestore = settings.triplestoreType, standoffPropertyIris.toList).toString())
             standoffPropsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(standoffPropsSparql)).mapTo[SparqlSelectResponse]
             standoffPropsRows: Seq[VariableResultsRow] = standoffPropsResponse.results.bindings
+
+            //_ = println(ScalaPrettyPrinter.prettyPrint(standoffPropsRows))
+
+            // Group the rows representing value base class definitions by value base class IRI.
+            valueBaseClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = valueBaseClassesRows.groupBy(_.rowMap("valueBaseClass"))
+            valueBaseClassIris = valueBaseClassesGrouped.keySet
 
             // Group the rows representing standoff class definitions by standoff class IRI.
             standoffClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = standoffClassRows.groupBy(_.rowMap("standoffClass"))
@@ -469,9 +484,31 @@ class OntologyResponderV1 extends ResponderV1 {
                     (standoffClassIri, baseClasses)
             }
 
-            // _ = println(ScalaPrettyPrinter.prettyPrint(directStandoffSubClassOfRelations))
+            // Make a map of the cardinalities defined directly on each value base class. Each resource class IRI points to a map of
+            // property IRIs to OwlCardinality objects.
+            valueBaseClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]] = valueBaseClassesGrouped.map {
+                case (valueBaseClassIri, rows) =>
+                    val valueBaseClassCardinalities: Map[IRI, OwlCardinality] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
+                        cardinalityRow =>
+                            val cardinalityRowMap = cardinalityRow.rowMap
+                            val propertyIri = cardinalityRowMap("cardinalityProp")
 
-            // Make a map of the cardinalities defined directly on each resource class. Each resource class IRI points to a map of
+                            val owlCardinality = OwlCardinality(
+                                propertyIri = propertyIri,
+                                cardinalityIri = cardinalityRowMap("cardinality"),
+                                cardinalityValue = cardinalityRowMap("cardinalityVal").toInt,
+                                isLinkProp = false,
+                                isLinkValueProp = false,
+                                isFileValueProp = false
+                            )
+
+                            propertyIri -> owlCardinality
+                    }.toMap
+
+                    valueBaseClassIri -> valueBaseClassCardinalities
+            }
+
+            // Make a map of the cardinalities defined directly on each standoff class. Each resource class IRI points to a map of
             // property IRIs to OwlCardinality objects.
             directStandoffClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]] = standoffClassesGrouped.map {
                 case (standoffClassIri, rows) =>
@@ -506,14 +543,14 @@ class OntologyResponderV1 extends ResponderV1 {
                         resourceClassIri = standoffClassIri,
                         directSubClassRelations = directStandoffSubClassOfRelations,
                         allSubPropertyRelations = directStandoffSubPropertyOfRelations,
-                        directResourceClassCardinalities = directStandoffClassCardinalities
+                        directResourceClassCardinalities = directStandoffClassCardinalities ++ valueBaseClassCardinalities
                     ).values.toSet
 
                     standoffClassIri -> standoffClassCardinalities
             }.toMap
 
 
-            //_ = println(ScalaPrettyPrinter.prettyPrint(standoffCardinalitiesWithInheritance))
+            // _ = println(ScalaPrettyPrinter.prettyPrint(standoffCardinalitiesWithInheritance))
 
             // Cache all the data.
 

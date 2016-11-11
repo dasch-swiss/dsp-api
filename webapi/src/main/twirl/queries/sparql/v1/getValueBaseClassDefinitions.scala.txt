@@ -21,30 +21,42 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets the standoff class property definitions.
+ * Gets all the standoff class definitions.
  *
  * @param triplestore the name of the triplestore being used.
- * @param propertIris the standoff class property Iris to search for.
  *@
-@(triplestore: String, propertyIris: Seq[IRI])
+ @(triplestore: String)
 
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-SELECT ?prop ?propPred ?propObj ?propObjLang
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
+SELECT ?graph ?valueBaseClass ?valueBaseClassPred ?valueBaseClassObj ?valueBaseClassObjLang ?cardinalityProp ?cardinality ?cardinalityVal
+
 WHERE {
-    @for((propIri, index) <- propertyIris.zipWithIndex) {
-		@if(index > 0) {UNION}
-    	{
-    		BIND(IRI("@propIri") as ?prop)
-    		?prop ?propPred ?propObj .
-            BIND(lang(?propObj) as ?propObjLang)
-    	}
+
+    GRAPH ?graph {
+        ?valueBaseClass rdf:type owl:Class .
+    }
+
+    ?valueBaseClass rdfs:subClassOf knora-base:ValueBase .
+    # exclude knora-base:Value
+    FILTER(?valueBaseClass != knora-base:Value)
+
+    {
+        ?valueBaseClass rdfs:subClassOf ?restriction .
+        ?restriction rdf:type owl:Restriction .
+        ?restriction owl:onProperty ?cardinalityProp .
+        ?cardinalityProp rdfs:subPropertyOf+ knora-base:objectCannotBeMarkedAsDeleted .
+        ?restriction ?cardinality ?cardinalityVal .
+        FILTER(?cardinality = owl:cardinality || ?cardinality = owl:minCardinality || ?cardinality = owl:maxCardinality)
+    }
+    UNION
+    {
+        ?valueBaseClass ?valueBaseClassPred ?valueBaseClassObj .
+        FILTER(?valueBaseClassPred != rdf:type && !isBlank(?valueBaseClassObj))
+        BIND(lang(?valueBaseClassObj) as ?valueBaseClassObjLang)
     }
 }
