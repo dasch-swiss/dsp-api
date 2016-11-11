@@ -452,7 +452,15 @@ class OntologyResponderV1 extends ResponderV1 {
             standoffClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = standoffClassRows.groupBy(_.rowMap("standoffClass"))
             standoffClassIris = standoffClassesGrouped.keySet
 
-            //_ = println(standoffClassIris)
+            // Group the rows representing property definitions by property IRI.
+            standoffPropertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = standoffPropsRows.groupBy(_.rowMap("prop"))
+
+            // Make a map of property IRIs to their immediate base properties.
+            directStandoffSubPropertyOfRelations: Map[IRI, Set[IRI]] = standoffPropertyDefsGrouped.map {
+                case (standoffPropIri, rows) =>
+                    val baseProperties = rows.filter(_.rowMap.get("propPred").contains(OntologyConstants.Rdfs.SubPropertyOf)).map(_.rowMap("propObj")).toSet
+                    (standoffPropIri, baseProperties)
+            }
 
             // Make a map of standoff class IRIs to their immediate base classes.
             directStandoffSubClassOfRelations: Map[IRI, Set[IRI]] = standoffClassesGrouped.map {
@@ -461,7 +469,51 @@ class OntologyResponderV1 extends ResponderV1 {
                     (standoffClassIri, baseClasses)
             }
 
-            //_ = println(ScalaPrettyPrinter.prettyPrint(directStandoffSubClassOfRelations))
+            // _ = println(ScalaPrettyPrinter.prettyPrint(directStandoffSubClassOfRelations))
+
+            // Make a map of the cardinalities defined directly on each resource class. Each resource class IRI points to a map of
+            // property IRIs to OwlCardinality objects.
+            directStandoffClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]] = standoffClassesGrouped.map {
+                case (standoffClassIri, rows) =>
+                    val standoffClassCardinalities: Map[IRI, OwlCardinality] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
+                        cardinalityRow =>
+                            val cardinalityRowMap = cardinalityRow.rowMap
+                            val propertyIri = cardinalityRowMap("cardinalityProp")
+
+                            val owlCardinality = OwlCardinality(
+                                propertyIri = propertyIri,
+                                cardinalityIri = cardinalityRowMap("cardinality"),
+                                cardinalityValue = cardinalityRowMap("cardinalityVal").toInt,
+                                isLinkProp = false,
+                                isLinkValueProp = false,
+                                isFileValueProp = false
+                            )
+
+                            propertyIri -> owlCardinality
+                    }.toMap
+
+                    standoffClassIri -> standoffClassCardinalities
+            }
+
+            //_ = println(ScalaPrettyPrinter.prettyPrint(directStandoffClassCardinalities))
+
+            // TODO: the inheritance for ValueBase classes does not work yet
+
+            // Allow each standoff class to inherit cardinalities from its base classes.
+            standoffCardinalitiesWithInheritance: Map[IRI, Set[OwlCardinality]] = standoffClassIris.map {
+                standoffClassIri =>
+                    val standoffClassCardinalities: Set[OwlCardinality] = inheritCardinalities(
+                        resourceClassIri = standoffClassIri,
+                        directSubClassRelations = directStandoffSubClassOfRelations,
+                        allSubPropertyRelations = directStandoffSubPropertyOfRelations,
+                        directResourceClassCardinalities = directStandoffClassCardinalities
+                    ).values.toSet
+
+                    standoffClassIri -> standoffClassCardinalities
+            }.toMap
+
+
+            //_ = println(ScalaPrettyPrinter.prettyPrint(standoffCardinalitiesWithInheritance))
 
             // Cache all the data.
 
