@@ -426,6 +426,43 @@ class OntologyResponderV1 extends ResponderV1 {
                     propertyIri -> propertyEntityInfo
             }
 
+            // get all the standoff class definitions and their properties
+            standoffClassesSparql <- Future(queries.sparql.v1.txt.getStandoffClassDefinitions(triplestore = settings.triplestoreType).toString())
+            standoffClassesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(standoffClassesSparql)).mapTo[SparqlSelectResponse]
+            standoffClassRows: Seq[VariableResultsRow] = standoffClassesResponse.results.bindings
+
+            // collect all the standoff property Iris from the cardinalities
+            standoffPropertyIris = standoffClassRows.foldLeft(Set.empty[IRI]) {
+                case (acc, row) =>
+                    val standoffPropIri: Option[String] = row.rowMap.get("cardinalityProp")
+
+                    if (!standoffPropIri.isEmpty) {
+                        acc + standoffPropIri.get
+                    } else {
+                        acc
+                    }
+
+            }
+
+            standoffPropsSparql <- Future(queries.sparql.v1.txt.getStandoffPropertyDefinitions(triplestore = settings.triplestoreType, standoffPropertyIris.toList).toString())
+            standoffPropsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(standoffPropsSparql)).mapTo[SparqlSelectResponse]
+            standoffPropsRows: Seq[VariableResultsRow] = standoffPropsResponse.results.bindings
+
+            // Group the rows representing standoff class definitions by standoff class IRI.
+            standoffClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = standoffClassRows.groupBy(_.rowMap("standoffClass"))
+            standoffClassIris = standoffClassesGrouped.keySet
+
+            //_ = println(standoffClassIris)
+
+            // Make a map of standoff class IRIs to their immediate base classes.
+            directStandoffSubClassOfRelations: Map[IRI, Set[IRI]] = standoffClassesGrouped.map {
+                case (standoffClassIri, rows) =>
+                    val baseClasses = rows.filter(_.rowMap.get("standoffClassPred").contains(OntologyConstants.Rdfs.SubClassOf)).map(_.rowMap("standoffClassObj")).toSet
+                    (standoffClassIri, baseClasses)
+            }
+
+            //_ = println(ScalaPrettyPrinter.prettyPrint(directStandoffSubClassOfRelations))
+
             // Cache all the data.
 
             ontologyCacheData = OntologyCacheData(
