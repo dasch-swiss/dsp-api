@@ -41,11 +41,8 @@ SELECT ?s ?p ?o
 }
 
 WHERE {
-    BIND(IRI("@projectIri") as ?project)
-    BIND(IRI("@groupIri") as ?group)
-
     ?s rdf:type knora-base:AdministrativePermission .
-    ?s knora-base:forProject ?project .
-    ?s knora-base:forGroup ?group .
+    ?s knora-base:forProject <@projectIri> .
+    ?s knora-base:forGroup <@groupIri> .
     ?s ?p ?o .
 }

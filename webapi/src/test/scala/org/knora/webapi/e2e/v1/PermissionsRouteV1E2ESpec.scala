@@ -53,7 +53,7 @@ class PermissionsRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) with
             val projectIri = java.net.URLEncoder.encode(SharedTestData.imagesProjectInfoV1.id, "utf-8")
             val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraBase.ProjectMember, "utf-8")
 
-            val request = Get(baseApiUrl + "/v1/permissions/projectIri/groupIri")
+            val request = Get(baseApiUrl + s"/v1/permissions/$projectIri/$groupIri")
             val response = singleAwaitingRequest(request, 1.seconds)
             log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)

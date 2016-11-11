@@ -26,7 +26,7 @@ import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIG
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.KnoraIdUtil
+import org.knora.webapi.util.{KnoraIdUtil, MessageUtil}
 
 import scala.concurrent.duration._
 import scala.collection.immutable.Iterable
@@ -245,10 +245,10 @@ class PermissionsResponderV1 extends ResponderV1 {
                 projectIri = projectIRI,
                 groupIri = groupIRI
             ).toString())
-            //_ = log.debug(s"getAdministrativePermissionForProjectGroupV1 - query: $sparqlQueryString")
+            _ = log.debug(s"getAdministrativePermissionForProjectGroupV1 - query: $sparqlQueryString")
 
             permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            //_ = log.debug(s"getAdministrativePermissionForProjectGroupV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
+            _ = log.debug(s"getAdministrativePermissionForProjectGroupV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
             permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
@@ -267,7 +267,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             } else {
                 None
             }
-        //_ = log.debug(s"getAdministrativePermissionForProjectGroupV1 - administrativePermission: $administrativePermission")
+            //_ = log.debug(s"getAdministrativePermissionForProjectGroupV1 - administrativePermission: $administrativePermission")
         } yield administrativePermission
     }
 

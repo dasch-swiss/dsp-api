@@ -562,7 +562,6 @@ object PermissionType extends Enumeration {
     val AP      = Value(1, "AdministrativePermission")
     val DOAP    = Value(2, "DefaultObjectAccessPermission")
 
-
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -602,23 +601,6 @@ trait PermissionV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
           */
         def write(permissionTemplate: PermissionsTemplate.Value): JsValue = {
             JsObject(Map("permission_operation" -> permissionTemplate.toString.toJson))
-        }
-    }
-
-    implicit object PermissionTypeV1Format extends JsonFormat[PermissionType] {
-        /**
-          * Not implemented.
-          */
-        def read(jsonVal: JsValue) = ???
-
-        /**
-          * Converts an [[PermissionType]] to a [[JsValue]].
-          *
-          * @param permissionType a [[PermissionType]]
-          * @return a [[JsValue]].
-          */
-        def write(permissionType: PermissionType.Value): JsValue = {
-            JsObject(Map("permission_type" -> permissionType.toString.toJson))
         }
     }
 
