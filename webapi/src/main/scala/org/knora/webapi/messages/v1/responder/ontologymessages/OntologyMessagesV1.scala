@@ -379,6 +379,19 @@ case class ResourceEntityInfoV1(resourceClassIri: IRI,
                                 fileValueProperties: Set[IRI]) extends EntityInfoV1
 
 /**
+  * Represents the assertions about a given standoff class.
+  *
+  * @param standoffClassIri the IRI of the standoff class.
+  * @param ontologyIri      the IRI of the ontology in which the standoff class is defined.
+  * @param predicates       a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
+  * @param cardinalities    a [[Map]] of property IRIs to [[Cardinality.Value]] objects.
+  */
+case class StandoffClassEntityInfoV1(standoffClassIri: IRI,
+                                     ontologyIri: IRI,
+                                     predicates: Map[IRI, PredicateInfoV1],
+                                     cardinalities: Map[IRI, Cardinality.Value]) extends EntityInfoV1
+
+/**
   * Represents the assertions about a given property.
   *
   * @param propertyIri     the IRI of the queried property.
@@ -394,6 +407,17 @@ case class PropertyEntityInfoV1(propertyIri: IRI,
                                 isLinkValueProp: Boolean,
                                 isFileValueProp: Boolean,
                                 predicates: Map[IRI, PredicateInfoV1]) extends EntityInfoV1
+
+/**
+  * Represents the assertions about a given standoff property.
+  *
+  * @param standoffPropertyIri the IRI of the queried standoff property.
+  * @param ontologyIri         the IRI of the ontology in which the standoff property is defined.
+  * @param predicates          a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
+  */
+case class StandoffPropertyEntityInfoV1(standoffPropertyIri: IRI,
+                                        ontologyIri: IRI,
+                                        predicates: Map[IRI, PredicateInfoV1]) extends EntityInfoV1
 
 /**
   * Represents the assertions about a given named graph entity.

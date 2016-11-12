@@ -70,7 +70,9 @@ class OntologyResponderV1 extends ResponderV1 {
                                  resourceClassDefs: Map[IRI, ResourceEntityInfoV1],
                                  resourceAndValueSubClassOfRelations: Map[IRI, Set[IRI]],
                                  resourceSuperClassOfRelations: Map[IRI, Set[IRI]],
-                                 propertyDefs: Map[IRI, PropertyEntityInfoV1])
+                                 propertyDefs: Map[IRI, PropertyEntityInfoV1],
+                                 standoffClassDefs: Map[IRI, StandoffClassEntityInfoV1],
+                                 standoffPropertyDefs: Map[IRI, StandoffPropertyEntityInfoV1])
 
 
     /**
@@ -456,9 +458,7 @@ class OntologyResponderV1 extends ResponderV1 {
             standoffPropsSparql <- Future(queries.sparql.v1.txt.getStandoffPropertyDefinitions(triplestore = settings.triplestoreType, standoffPropertyIris.toList).toString())
             standoffPropsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(standoffPropsSparql)).mapTo[SparqlSelectResponse]
             standoffPropsRows: Seq[VariableResultsRow] = standoffPropsResponse.results.bindings
-
-            //_ = println(ScalaPrettyPrinter.prettyPrint(standoffPropsRows))
-
+        
             // Group the rows representing value base class definitions by value base class IRI.
             valueBaseClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = valueBaseClassesRows.groupBy(_.rowMap("valueBaseClass"))
             valueBaseClassIris = valueBaseClassesGrouped.keySet
@@ -532,12 +532,8 @@ class OntologyResponderV1 extends ResponderV1 {
                     standoffClassIri -> standoffClassCardinalities
             }
 
-            //_ = println(ScalaPrettyPrinter.prettyPrint(directStandoffClassCardinalities))
-
-            // TODO: the inheritance for ValueBase classes does not work yet
-
             // Allow each standoff class to inherit cardinalities from its base classes.
-            standoffCardinalitiesWithInheritance: Map[IRI, Set[OwlCardinality]] = standoffClassIris.map {
+            standoffCardinalitiesWithInheritance = standoffClassIris.map {
                 standoffClassIri =>
                     val standoffClassCardinalities: Set[OwlCardinality] = inheritCardinalities(
                         resourceClassIri = standoffClassIri,
@@ -546,22 +542,90 @@ class OntologyResponderV1 extends ResponderV1 {
                         directResourceClassCardinalities = directStandoffClassCardinalities ++ valueBaseClassCardinalities
                     ).values.toSet
 
-                    standoffClassIri -> standoffClassCardinalities
+                    val prop2Card: Map[IRI, Cardinality.Value] = standoffClassCardinalities.map((card: OwlCardinality) => card.propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
+                        propertyIri = card.propertyIri,
+                        owlCardinalityIri = card.cardinalityIri,
+                        owlCardinalityValue = card.cardinalityValue
+                    )).toMap
+
+                    standoffClassIri -> prop2Card
             }.toMap
 
+            standoffClassEntityInfos: Map[String, StandoffClassEntityInfoV1] = standoffClassesGrouped.map {
+                case (standoffClassIri, standoffClassRows) =>
 
-            // _ = println(ScalaPrettyPrinter.prettyPrint(standoffCardinalitiesWithInheritance))
+                    val standoffGroupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = standoffClassRows.filter(_.rowMap.contains("standoffClassPred")).groupBy(_.rowMap("standoffClassPred")) - OntologyConstants.Rdfs.SubClassOf
+
+                    val predicates: Map[IRI, PredicateInfoV1] = standoffGroupedByPredicate.map {
+                        case (predicateIri, predicateRows) =>
+                            val (predicateRowsWithLang, predicateRowsWithoutLang) = predicateRows.partition(_.rowMap.contains("standoffClassObjLang"))
+                            val objects = predicateRowsWithoutLang.map(_.rowMap("standoffClassObj")).toSet
+                            val objectsWithLang = predicateRowsWithLang.map {
+                                predicateRow => predicateRow.rowMap("standoffClassObjLang") -> predicateRow.rowMap("standoffClassObj")
+                            }.toMap
+
+                            predicateIri -> PredicateInfoV1(
+                                predicateIri = predicateIri,
+                                ontologyIri = getOntologyIri(standoffClassIri),
+                                objects = objects,
+                                objectsWithLang = objectsWithLang
+                            )
+                    }
+
+                    val standoffInfo = StandoffClassEntityInfoV1(
+                        standoffClassIri = standoffClassIri,
+                        ontologyIri = getOntologyIri(standoffClassIri),
+                        predicates = predicates,
+                        cardinalities = standoffCardinalitiesWithInheritance(standoffClassIri)
+                    )
+
+                    standoffClassIri -> standoffInfo
+            }
+
+            // Construct a StandoffPropertyEntityInfoV1 for each property definition, not taking inheritance into account.
+            standoffPropertyEntityInfos: Map[IRI, StandoffPropertyEntityInfoV1] = standoffPropertyDefsGrouped.map {
+                case (standoffPropertyIri, propertyRows) =>
+                    val ontologyIri = getOntologyIri(standoffPropertyIri)
+
+                    // Group the rows for each property by predicate IRI.
+                    val groupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = propertyRows.groupBy(_.rowMap("propPred")) - OntologyConstants.Rdfs.SubPropertyOf
+
+                    val predicates: Map[IRI, PredicateInfoV1] = groupedByPredicate.map {
+                        case (predicateIri, predicateRows) =>
+                            val (predicateRowsWithLang, predicateRowsWithoutLang) = predicateRows.partition(_.rowMap.contains("propObjLang"))
+                            val objects = predicateRowsWithoutLang.map(_.rowMap("propObj")).toSet
+                            val objectsWithLang = predicateRowsWithLang.map {
+                                predicateRow => predicateRow.rowMap("propObjLang") -> predicateRow.rowMap("propObj")
+                            }.toMap
+
+                            predicateIri -> PredicateInfoV1(
+                                predicateIri = predicateIri,
+                                ontologyIri = ontologyIri,
+                                objects = objects,
+                                objectsWithLang = objectsWithLang
+                            )
+                    }
+
+                    val standoffPropertyEntityInfo = StandoffPropertyEntityInfoV1(
+                        standoffPropertyIri = standoffPropertyIri,
+                        ontologyIri = ontologyIri,
+                        predicates = predicates
+                    )
+
+                    standoffPropertyIri -> standoffPropertyEntityInfo
+            }
 
             // Cache all the data.
 
-            ontologyCacheData = OntologyCacheData(
+            ontologyCacheData: OntologyCacheData = OntologyCacheData(
                 namedGraphResourceClasses = new ErrorHandlingMap[IRI, Set[IRI]](graphClassMap, { key => s"Named graph not found: $key" }),
                 namedGraphProperties = new ErrorHandlingMap[IRI, Set[IRI]](graphPropMap, { key => s"Named graph not found: $key" }),
                 resourceClassDefs = new ErrorHandlingMap[IRI, ResourceEntityInfoV1](resourceEntityInfos, { key => s"Resource class not found: $key" }),
                 resourceAndValueSubClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSubClassOfRelations ++ allValueSubClassOfRelations, { key => s"Class not found: $key" }),
                 resourceSuperClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSuperClassOfRelations, { key => s"Class not found: $key" }),
-                propertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV1](propertyEntityInfos, { key => s"Property not found: $key" })
-            )
+                propertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV1](propertyEntityInfos, { key => s"Property not found: $key" }),
+                standoffClassDefs = new ErrorHandlingMap[IRI, StandoffClassEntityInfoV1](standoffClassEntityInfos, { key => s"Standoff class not found $key" }),
+                standoffPropertyDefs = new ErrorHandlingMap[IRI, StandoffPropertyEntityInfoV1](standoffPropertyEntityInfos, { key => s"Standoff class not found $key" }))
 
             _ = CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = ontologyCacheData)
 
