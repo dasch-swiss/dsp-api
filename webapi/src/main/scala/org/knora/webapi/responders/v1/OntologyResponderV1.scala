@@ -90,6 +90,7 @@ class OntologyResponderV1 extends ResponderV1 {
         case ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getResourceTypesForNamedGraph(namedGraphIri, userProfile), log)
         case PropertyTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getPropertyTypesForNamedGraph(namedGraphIri, userProfile), log)
         case PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile) => future2Message(sender(), getPropertyTypesForResourceType(restypeId, userProfile), log)
+        case StandoffEntityInfoGetRequestV1(standoffClassIris, standoffPropertyIris, userProfile) => future2Message(sender(), getStandoffEntityInfoResponseV1(standoffClassIris, standoffPropertyIris, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -458,7 +459,7 @@ class OntologyResponderV1 extends ResponderV1 {
             standoffPropsSparql <- Future(queries.sparql.v1.txt.getStandoffPropertyDefinitions(triplestore = settings.triplestoreType, standoffPropertyIris.toList).toString())
             standoffPropsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(standoffPropsSparql)).mapTo[SparqlSelectResponse]
             standoffPropsRows: Seq[VariableResultsRow] = standoffPropsResponse.results.bindings
-        
+
             // Group the rows representing value base class definitions by value base class IRI.
             valueBaseClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = valueBaseClassesRows.groupBy(_.rowMap("valueBaseClass"))
             valueBaseClassIris = valueBaseClassesGrouped.keySet
@@ -660,6 +661,25 @@ class OntologyResponderV1 extends ResponderV1 {
             response = EntityInfoGetResponseV1(
                 resourceEntityInfoMap = cacheData.resourceClassDefs.filterKeys(resourceIris),
                 propertyEntityInfoMap = cacheData.propertyDefs.filterKeys(propertyIris)
+            )
+        } yield response
+    }
+
+
+    /**
+      * Given a list of standoff class IRIs and a list of property IRIs (ontology entities), returns an [[StandoffEntityInfoGetResponseV1]] describing both resource and property entities.
+      *
+      * @param standoffClassIris the IRIs of the resource entities to be queried.
+      * @param standoffPropertyIris the IRIs of the property entities to be queried.
+      * @param userProfile  the profile of the user making the request.
+      * @return an [[EntityInfoGetResponseV1]].
+      */
+    private def getStandoffEntityInfoResponseV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {
+        for {
+            cacheData <- getCacheData
+            response = StandoffEntityInfoGetResponseV1(
+                standoffClassEntityInfoMap = cacheData.standoffClassDefs.filterKeys(standoffClassIris),
+                standoffPropertyEntityInfoMap = cacheData.standoffPropertyDefs.filterKeys(standoffPropertyIris)
             )
         } yield response
     }

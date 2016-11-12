@@ -68,6 +68,28 @@ case class EntityInfoGetRequestV1(resourceClassIris: Set[IRI] = Set.empty[IRI], 
 case class EntityInfoGetResponseV1(resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV1],
                                    propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1])
 
+
+/**
+  * Requests all available information about a list of ontology entities (standoff classes and/or properties). A successful response will be an
+  * [[StandoffEntityInfoGetResponseV1]].
+  *
+  * @param standoffClassIris the IRIs of the resource entities to be queried.
+  * @param standoffPropertyIris      the IRIs of the property entities to be queried.
+  * @param userProfile       the profile of the user making the request.
+  */
+case class StandoffEntityInfoGetRequestV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
+
+/**
+  * Represents assertions about one or more ontology entities (resource classes and/or properties).
+  *
+  * @param standoffClassEntityInfoMap a [[Map]] of resource entity IRIs to [[StandoffClassEntityInfoV1]] objects.
+  * @param standoffPropertyEntityInfoMap a [[Map]] of property entity IRIs to [[StandoffPropertyEntityInfoV1]] objects.
+  */
+case class StandoffEntityInfoGetResponseV1(standoffClassEntityInfoMap: Map[IRI, StandoffClassEntityInfoV1],
+                                           standoffPropertyEntityInfoMap: Map[IRI, StandoffPropertyEntityInfoV1])
+
+
 /**
   * Requests information about a resource type and its possible properties. A successful response will be a
   * [[ResourceTypeResponseV1]].

@@ -24,10 +24,11 @@ import akka.actor.Status
 import akka.stream.ActorMaterializer
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
+import org.knora.webapi.messages.v1.responder.ontologymessages.{StandoffClassEntityInfoV1, StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.ScalaPrettyPrinter
 import org.knora.webapi.util.standoff.{StandoffTag, StandoffUtil, TextWithStandoff}
 
 import scala.concurrent.Future
@@ -94,9 +95,21 @@ class StandoffResponderV1 extends ResponderV1 {
         val standoffTagIris = mapXMLTags2StandoffTags(textWithStandoff.standoff, mappingXMLTags2StandoffTags)
 
         for {
-            standoffTagEntities: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(resourceClassIris = standoffTagIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
-            _ = println(standoffTagEntities)
-        } yield standoffTagEntities
+            standoffClassEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffClassIris = standoffTagIris, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
+            _ = println(ScalaPrettyPrinter.prettyPrint(standoffClassEntities))
+
+            standoffPropertyIris = standoffClassEntities.standoffClassEntityInfoMap.foldLeft(Set.empty[IRI]) {
+                case (acc, (standoffClassIri, standoffClassEntity)) =>
+                    val props = standoffClassEntity.cardinalities.keySet
+                    acc ++ props
+            }
+
+            //_ = println(ScalaPrettyPrinter.prettyPrint(standoffPropertyIris))
+
+            standoffPropertyEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffPropertyIris = standoffPropertyIris, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
+            _ = println(ScalaPrettyPrinter.prettyPrint(standoffPropertyEntities))    
+
+        } yield ()
 
         Future(CreateStandoffResponseV1(userdata = userProfile.userData))
 
