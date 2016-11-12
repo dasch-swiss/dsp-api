@@ -202,15 +202,15 @@ case class StandoffDiffDelete(baseStartPosition: Int,
 
 
 /**
-  * Represents an attribute for a [[StandoffTagV2]].
+  * Represents an attribute for a [[StandoffTagV1]].
   *
   * @param key
   * @param value
   * @param datatype
   */
-case class StandoffTagAttributeV2(key: String, value: String, datatype: String)
+case class StandoffTagAttributeV1(key: String, value: String, datatype: String)
 
-trait StandoffTagV2 {
+trait StandoffTagV1 {
 
     def name: IRI
 
@@ -224,35 +224,34 @@ trait StandoffTagV2 {
 
     def endIndex: Option[Int]
 
-    def parentStartIndex: Int
+    def startParentIndex: Option[Int]
 
-    def parentEndIndex: Option[Int]
+    def endParentIndex: Option[Int]
 
-    def attributes: Seq[StandoffTagAttributeV2]
+    def attributes: Seq[StandoffTagAttributeV1]
 
 }
 
-case class StandoffBaseTagV2(name: IRI,
+case class StandoffBaseTagV1(name: IRI,
                              uuid: UUID,
                              startPosition: Int,
                              endPosition: Int,
                              startIndex: Int,
                              endIndex: Option[Int],
-                             parentStartIndex: Int,
-                             parentEndIndex: Option[Int],
-                             attributes: Seq[StandoffTagAttributeV2],
-                             hasLink: IRI) extends StandoffTagV2
+                             startParentIndex: Option[Int],
+                             endParentIndex: Option[Int],
+                             attributes: Seq[StandoffTagAttributeV1]) extends StandoffTagV1
 
-case class StandoffLinkTagV2(name: IRI,
+case class StandoffLinkTagV1(name: IRI,
                              uuid: UUID,
                              startPosition: Int,
                              endPosition: Int,
                              startIndex: Int,
                              endIndex: Option[Int],
-                             parentStartIndex: Int,
-                             parentEndIndex: Option[Int],
-                             attributes: Seq[StandoffTagAttributeV2],
-                             hasLink: IRI) extends StandoffTagV2
+                             startParentIndex: Option[Int],
+                             endParentIndex: Option[Int],
+                             attributes: Seq[StandoffTagAttributeV1],
+                             hasLink: IRI) extends StandoffTagV1
 
 
 /**

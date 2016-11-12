@@ -24,12 +24,12 @@ import akka.actor.Status
 import akka.stream.ActorMaterializer
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{StandoffClassEntityInfoV1, StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
+import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, StandoffClassEntityInfoV1, StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.ScalaPrettyPrinter
-import org.knora.webapi.util.standoff.{StandoffTag, StandoffUtil, TextWithStandoff}
+import org.knora.webapi.util.standoff._
 
 import scala.concurrent.Future
 import scala.xml.NodeSeq
@@ -55,23 +55,16 @@ class StandoffResponderV1 extends ResponderV1 {
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
-    /**
-      * Maps the XML tag names to standoff classes.
-      *
-      * @param standoff the standoff representation of the XML.
-      * @param mapping the provided mapping.
-      * @return a Set of standoff class Iris.
-      */
-    private def mapXMLTags2StandoffTags(standoff: Seq[StandoffTag], mapping: Map[String, IRI]): Set[IRI] = {
-
-        standoff.map {
-            case (standoffTagFromXML: StandoffTag) =>
-
-                mapping.getOrElse(standoffTagFromXML.tagName, throw BadRequestException(s"the standoff class for $standoffTagFromXML.tagName could not be found in the provided mapping"))
-
-            }.toSet
-
-    }
+    // represents the standoff properties defined on the base standoff tag
+    val systemStandoffProperties = Set(
+        OntologyConstants.KnoraBase.StandoffTagHasStart,
+        OntologyConstants.KnoraBase.StandoffTagHasEnd,
+        OntologyConstants.KnoraBase.StandoffTagHasStartIndex,
+        OntologyConstants.KnoraBase.StandoffTagHasEndIndex,
+        OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex,
+        OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex,
+        OntologyConstants.KnoraBase.StandoffTagHasUUID
+    )
 
     /**
       * Creates standoff from a given XML.
@@ -92,26 +85,77 @@ class StandoffResponderV1 extends ResponderV1 {
 
         val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(xml.toString())
 
-        val standoffTagIris = mapXMLTags2StandoffTags(textWithStandoff.standoff, mappingXMLTags2StandoffTags)
+        // get Iris of standoff classes that should be created
+        val standoffTagIris = mappingXMLTags2StandoffTags.values.toSet
 
         for {
+            // request information about standoff classes that should be created
             standoffClassEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffClassIris = standoffTagIris, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
-            _ = println(ScalaPrettyPrinter.prettyPrint(standoffClassEntities))
 
+            // get the property Iris that are defined on the standoff classes returned by the ontology responder
             standoffPropertyIris = standoffClassEntities.standoffClassEntityInfoMap.foldLeft(Set.empty[IRI]) {
                 case (acc, (standoffClassIri, standoffClassEntity)) =>
                     val props = standoffClassEntity.cardinalities.keySet
                     acc ++ props
             }
 
-            //_ = println(ScalaPrettyPrinter.prettyPrint(standoffPropertyIris))
-
+            // request information about the standoff properties
             standoffPropertyEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffPropertyIris = standoffPropertyIris, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
-            _ = println(ScalaPrettyPrinter.prettyPrint(standoffPropertyEntities))    
 
-        } yield ()
+            // loop over the standoff nodes returned by the StandoffUtil and map them to type safe case classes
+            standoffNodesToCreate = textWithStandoff.standoff.map {
+                case (standoffNodeFromXML: StandoffTag) =>
+                    val standoffClassIri: IRI = mappingXMLTags2StandoffTags.getOrElse(standoffNodeFromXML.tagName, throw BadRequestException(s"the standoff class for $standoffNodeFromXML.tagName could not be found in the provided mapping"))
 
-        Future(CreateStandoffResponseV1(userdata = userProfile.userData))
+                    // get the cardinalities of the current standoff class
+                    val cardinalities: Map[IRI, Cardinality.Value] = standoffClassEntities.standoffClassEntityInfoMap.getOrElse(standoffClassIri, throw NotFoundException(s"information about standoff class $standoffClassIri was not returned")).cardinalities
+
+                    // ignore the system properties since they are prvoded by StandoffUtil
+                    val classSpecificProps: Map[IRI, Cardinality.Value] = cardinalities -- systemStandoffProperties
+
+                    val standoffBaseTagV1 = standoffNodeFromXML match {
+                        case hierarchicalStandoffTag: HierarchicalStandoffTag =>
+                            StandoffBaseTagV1(
+                                name = standoffClassIri,
+                                startPosition = hierarchicalStandoffTag.startPosition,
+                                endPosition = hierarchicalStandoffTag.endPosition,
+                                uuid = hierarchicalStandoffTag.uuid,
+                                startIndex = hierarchicalStandoffTag.index,
+                                endIndex = None,
+                                startParentIndex = hierarchicalStandoffTag.parentIndex,
+                                endParentIndex = None,
+                                attributes = Seq.empty[StandoffTagAttributeV1]
+                            )
+                        case freeStandoffTag: FreeStandoffTag =>
+                            StandoffBaseTagV1(
+                                name = standoffClassIri,
+                                startPosition = freeStandoffTag.startPosition,
+                                endPosition = freeStandoffTag.endPosition,
+                                uuid = freeStandoffTag.uuid,
+                                startIndex = freeStandoffTag.startIndex,
+                                endIndex = Some(freeStandoffTag.endIndex),
+                                startParentIndex = freeStandoffTag.startParentIndex,
+                                endParentIndex = freeStandoffTag.endParentIndex,
+                                attributes = Seq.empty[StandoffTagAttributeV1]
+                            )
+                    }
+
+
+                    if (!classSpecificProps.isEmpty) {
+                        // additional standoff properties are required
+
+                        /*standoffBaseTagV1.copy(
+                            attributes =
+                        )*/
+                    } else {
+                        // only system props required
+                        standoffBaseTagV1
+                    }
+
+
+            }
+
+        } yield CreateStandoffResponseV1(userdata = userProfile.userData)
 
     }
 
