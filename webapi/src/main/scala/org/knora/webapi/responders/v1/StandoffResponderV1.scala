@@ -80,7 +80,8 @@ class StandoffResponderV1 extends ResponderV1 {
         val mappingXMLTags2StandoffTags: Map[String, IRI] = Map(
             "text" -> OntologyConstants.KnoraBase.StandoffRootTag,
             "p" -> OntologyConstants.KnoraBase.StandoffParagraphTag,
-            "i" -> OntologyConstants.KnoraBase.StandoffItalicTag
+            "i" -> OntologyConstants.KnoraBase.StandoffItalicTag,
+            "birthday" -> OntologyConstants.KnoraBase.StandoffDateValueTag
         )
 
         val standoffUtil = new StandoffUtil()
@@ -106,9 +107,9 @@ class StandoffResponderV1 extends ResponderV1 {
             // request information about the standoff properties
             standoffPropertyEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffPropertyIris = standoffPropertyIris, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
 
-            //_ = println(ScalaPrettyPrinter.prettyPrint(standoffClassEntities))
+            // _ = println(ScalaPrettyPrinter.prettyPrint(standoffClassEntities))
 
-            //_ = println(ScalaPrettyPrinter.prettyPrint(standoffPropertyEntities))
+            // _ = println(ScalaPrettyPrinter.prettyPrint(standoffPropertyEntities))
 
             // loop over the standoff nodes returned by the StandoffUtil and map them to type safe case classes
             standoffNodesToCreate = textWithStandoff.standoff.map {
@@ -121,7 +122,7 @@ class StandoffResponderV1 extends ResponderV1 {
                     // ignore the system properties since they are provided by StandoffUtil
                     val classSpecificProps: Map[IRI, Cardinality.Value] = cardinalities -- systemStandoffProperties
 
-                    val standoffBaseTagV1 = standoffNodeFromXML match {
+                    val standoffBaseTagV1: StandoffBaseTagV1 = standoffNodeFromXML match {
                         case hierarchicalStandoffTag: HierarchicalStandoffTag =>
                             StandoffBaseTagV1(
                                 name = standoffClassIri,

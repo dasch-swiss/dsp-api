@@ -186,7 +186,10 @@ class OntologyResponderV1 extends ResponderV1 {
             val inheritedCardinalities: Map[IRI, OwlCardinality] = cardinalitiesAvailableToInherit.filterNot {
                 case (baseClassProp, baseClassCardinality) => thisClassCardinalities.exists {
                     case (thisClassProp, cardinality) =>
-                        allSubPropertyRelations(thisClassProp).contains(baseClassProp)
+                        allSubPropertyRelations.get(thisClassProp) match {
+                            case Some(baseProps) => baseProps.contains(baseClassProp)
+                            case None => thisClassProp == baseClassProp
+                        }
                 }
             }
 
@@ -451,7 +454,7 @@ class OntologyResponderV1 extends ResponderV1 {
                 case (acc, row) =>
                     val standoffPropIri: Option[String] = row.rowMap.get("cardinalityProp")
 
-                    if (!standoffPropIri.isEmpty) {
+                    if (standoffPropIri.isDefined) {
                         acc + standoffPropIri.get
                     } else {
                         acc
@@ -475,11 +478,7 @@ class OntologyResponderV1 extends ResponderV1 {
             standoffPropertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = standoffPropsRows.groupBy(_.rowMap("prop"))
 
             // Make a map of property IRIs to their immediate base properties.
-            directStandoffSubPropertyOfRelations: Map[IRI, Set[IRI]] = standoffPropertyDefsGrouped.map {
-                case (standoffPropIri, rows) =>
-                    val baseProperties = rows.filter(_.rowMap.get("propPred").contains(OntologyConstants.Rdfs.SubPropertyOf)).map(_.rowMap("propObj")).toSet
-                    (standoffPropIri, baseProperties)
-            }
+            directStandoffSubPropertyOfRelations = Map.empty[IRI, Set[IRI]]
 
             // Make a map of standoff class IRIs to their immediate base classes.
             directStandoffSubClassOfRelations: Map[IRI, Set[IRI]] = standoffClassesGrouped.map {

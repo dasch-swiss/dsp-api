@@ -232,6 +232,8 @@ trait StandoffTagV1 {
 
 }
 
+// TODO: move this case classes to org.knora.webapi.twirl
+
 case class StandoffBaseTagV1(name: IRI,
                              uuid: UUID,
                              startPosition: Int,
@@ -370,6 +372,8 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
     def xml2TextWithStandoff(xmlStr: String): TextWithStandoff = {
         val saxParser = saxParserFactory.newSAXParser()
         val nodes: Elem = XML.withSAXParser(saxParser).loadString(xmlStr)
+
+        // TODO: make strings SPARQL safe
 
         val finishedConversionState = xmlNodes2Standoff(
             nodes = nodes,
