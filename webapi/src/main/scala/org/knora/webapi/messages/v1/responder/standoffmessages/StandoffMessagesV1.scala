@@ -31,7 +31,7 @@ import scala.xml.NodeSeq
   */
 sealed trait StandoffResponderRequestV1 extends KnoraRequestV1
 
-case class CreateStandoffRequestV1(xml: NodeSeq, userProfile: UserProfileV1) extends StandoffResponderRequestV1
+case class CreateStandoffRequestV1(xml: String, userProfile: UserProfileV1) extends StandoffResponderRequestV1
 
 
 case class CreateStandoffResponseV1(userdata: UserDataV1) extends KnoraResponseV1 {

@@ -433,10 +433,12 @@ class OntologyResponderV1 extends ResponderV1 {
             // get all the standoff class definitions and their properties
             //
 
+            // get ontology information about the value base classes
             valueBaseClassesSparql <- Future(queries.sparql.v1.txt.getValueBaseClassDefinitions(triplestore = settings.triplestoreType).toString())
             valueBaseClassesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(valueBaseClassesSparql)).mapTo[SparqlSelectResponse]
             valueBaseClassesRows: Seq[VariableResultsRow] = valueBaseClassesResponse.results.bindings
 
+            // get ontology information about the standoff classes
             standoffClassesSparql <- Future(queries.sparql.v1.txt.getStandoffClassDefinitions(triplestore = settings.triplestoreType).toString())
             standoffClassesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(standoffClassesSparql)).mapTo[SparqlSelectResponse]
             standoffClassRows: Seq[VariableResultsRow] = standoffClassesResponse.results.bindings
@@ -456,6 +458,7 @@ class OntologyResponderV1 extends ResponderV1 {
                     }
             }
 
+            // get information about the standoff properties
             standoffPropsSparql <- Future(queries.sparql.v1.txt.getStandoffPropertyDefinitions(triplestore = settings.triplestoreType, standoffPropertyIris.toList).toString())
             standoffPropsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(standoffPropsSparql)).mapTo[SparqlSelectResponse]
             standoffPropsRows: Seq[VariableResultsRow] = standoffPropsResponse.results.bindings
@@ -485,7 +488,7 @@ class OntologyResponderV1 extends ResponderV1 {
                     (standoffClassIri, baseClasses)
             }
 
-            // Make a map of the cardinalities defined directly on each value base class. Each resource class IRI points to a map of
+            // Make a map of the cardinalities defined directly on each value base class. Each value base class IRI points to a map of
             // property IRIs to OwlCardinality objects.
             valueBaseClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]] = valueBaseClassesGrouped.map {
                 case (valueBaseClassIri, rows) =>
@@ -498,9 +501,9 @@ class OntologyResponderV1 extends ResponderV1 {
                                 propertyIri = propertyIri,
                                 cardinalityIri = cardinalityRowMap("cardinality"),
                                 cardinalityValue = cardinalityRowMap("cardinalityVal").toInt,
-                                isLinkProp = false,
-                                isLinkValueProp = false,
-                                isFileValueProp = false
+                                isLinkProp = false, // TODO: cannot be used here
+                                isLinkValueProp = false, // TODO: cannot be used here
+                                isFileValueProp = false // TODO: cannot be used here
                             )
 
                             propertyIri -> owlCardinality
@@ -509,7 +512,7 @@ class OntologyResponderV1 extends ResponderV1 {
                     valueBaseClassIri -> valueBaseClassCardinalities
             }
 
-            // Make a map of the cardinalities defined directly on each standoff class. Each resource class IRI points to a map of
+            // Make a map of the cardinalities defined directly on each standoff class. Each standoff class IRI points to a map of
             // property IRIs to OwlCardinality objects.
             directStandoffClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]] = standoffClassesGrouped.map {
                 case (standoffClassIri, rows) =>
@@ -522,9 +525,9 @@ class OntologyResponderV1 extends ResponderV1 {
                                 propertyIri = propertyIri,
                                 cardinalityIri = cardinalityRowMap("cardinality"),
                                 cardinalityValue = cardinalityRowMap("cardinalityVal").toInt,
-                                isLinkProp = false,
-                                isLinkValueProp = false,
-                                isFileValueProp = false
+                                isLinkProp = false, // TODO: cannot be used here
+                                isLinkValueProp = false, // TODO: cannot be used here
+                                isFileValueProp = false // TODO: cannot be used here
                             )
 
                             propertyIri -> owlCardinality
@@ -543,11 +546,14 @@ class OntologyResponderV1 extends ResponderV1 {
                         directResourceClassCardinalities = directStandoffClassCardinalities ++ valueBaseClassCardinalities
                     ).values.toSet
 
-                    val prop2Card: Map[IRI, Cardinality.Value] = standoffClassCardinalities.map((card: OwlCardinality) => card.propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
-                        propertyIri = card.propertyIri,
-                        owlCardinalityIri = card.cardinalityIri,
-                        owlCardinalityValue = card.cardinalityValue
-                    )).toMap
+                    val prop2Card: Map[IRI, Cardinality.Value] = standoffClassCardinalities.map {
+                        (card: OwlCardinality) =>
+                            card.propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
+                                propertyIri = card.propertyIri,
+                                owlCardinalityIri = card.cardinalityIri,
+                                owlCardinalityValue = card.cardinalityValue
+                            )
+                    }.toMap
 
                     standoffClassIri -> prop2Card
             }.toMap
@@ -669,9 +675,9 @@ class OntologyResponderV1 extends ResponderV1 {
     /**
       * Given a list of standoff class IRIs and a list of property IRIs (ontology entities), returns an [[StandoffEntityInfoGetResponseV1]] describing both resource and property entities.
       *
-      * @param standoffClassIris the IRIs of the resource entities to be queried.
+      * @param standoffClassIris    the IRIs of the resource entities to be queried.
       * @param standoffPropertyIris the IRIs of the property entities to be queried.
-      * @param userProfile  the profile of the user making the request.
+      * @param userProfile          the profile of the user making the request.
       * @return an [[EntityInfoGetResponseV1]].
       */
     private def getStandoffEntityInfoResponseV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {

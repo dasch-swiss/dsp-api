@@ -45,7 +45,7 @@ object StandoffRouteV1 extends Authenticator {
 
         path("v1" / "standoff" ) {
             post {
-                entity(as[NodeSeq]) { xml: NodeSeq => requestContext =>
+                entity(as[String]) { xml: String => requestContext =>
 
                     val userProfile = getUserProfileV1(requestContext)
                     val requestMessage = CreateStandoffRequestV1(xml, userProfile)
