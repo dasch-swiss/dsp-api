@@ -73,7 +73,7 @@ class GroupsResponderV1 extends ResponderV1 {
             groupsResponseRows: Seq[VariableResultsRow] = groupsResponse.results.bindings
 
             groupsWithProperties: Map[String, Map[String, String]] = groupsResponseRows.groupBy(_.rowMap("s")).map {
-                case (projIri: String, rows: Seq[VariableResultsRow]) => (projIri, rows.map {
+                case (groupIri: String, rows: Seq[VariableResultsRow]) => (groupIri, rows.map {
                     case row => (row.rowMap("p"), row.rowMap("o"))
                 }.toMap)
             }

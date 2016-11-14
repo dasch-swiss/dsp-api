@@ -28,6 +28,12 @@ case class doap (iri: String, p: DefaultObjectAccessPermissionV1)
   */
 object PermissionsResponderV1SpecTestData {
 
+
+    /*************************************/
+    /** Images Demo Project Permissions **/
+    /*************************************/
+
+
     val IMAGES_PROJECT_IRI = "http://data.knora.org/projects/images"
 
     val perm001 =
@@ -62,28 +68,110 @@ object PermissionsResponderV1SpecTestData {
         ap(
             iri = "http://data.knora.org/permissions/003",
             p = AdministrativePermissionV1(
-                forProject = "mock-project",
-                forGroup = "mock-group",
-                hasPermissions = Seq.empty[PermissionV1]
+                forProject = IMAGES_PROJECT_IRI,
+                forGroup = OntologyConstants.KnoraBase.ProjectAdmin,
+                hasPermissions = Seq(
+                    PermissionV1.ProjectResourceCreateAllPermission,
+                    PermissionV1.ProjectAdminAllPermission
+                )
             )
         )
+
+    /*************************************/
+    /** Incunabula Project Permissions  **/
+    /*************************************/
+
+    val INCUNABULA_PROJECT_IRI = "http://data.knora.org/projects/77275339"
+
     val perm004 =
         ap(
             iri = "http://data.knora.org/permissions/004",
             p = AdministrativePermissionV1(
-                forProject = "mock-project",
-                forGroup = "mock-group",
-                hasPermissions = Seq.empty[PermissionV1]
+                forProject = INCUNABULA_PROJECT_IRI,
+                forGroup = OntologyConstants.KnoraBase.ProjectMember,
+                hasPermissions = Seq(PermissionV1.ProjectResourceCreateAllPermission)
             )
         )
+
+
     val perm005 =
-        ap (
+        doap(
             iri = "http://data.knora.org/permissions/005",
-            p = AdministrativePermissionV1(
-                forProject = "mock-project",
-                forGroup = "mock-group",
-                hasPermissions = Seq.empty[PermissionV1]
+            p = DefaultObjectAccessPermissionV1(
+                forProject = INCUNABULA_PROJECT_IRI,
+                forGroup = OntologyConstants.KnoraBase.ProjectMember,
+                forResourceClass = OntologyConstants.KnoraBase.AllResourceClasses,
+                forProperty = OntologyConstants.KnoraBase.AllProperties,
+                hasPermissions = Seq(
+                    PermissionV1.DefaultChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
+                    PermissionV1.DefaultModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
+                    PermissionV1.DefaultViewPermission(Set(OntologyConstants.KnoraBase.KnownUser))
+                )
             )
         )
+
+
+    val perm006 =
+        ap(
+            iri = "http://data.knora.org/permissions/006",
+            p = AdministrativePermissionV1(
+                forProject = INCUNABULA_PROJECT_IRI,
+                forGroup = OntologyConstants.KnoraBase.ProjectAdmin,
+                hasPermissions = Seq(
+                    PermissionV1.ProjectResourceCreateAllPermission,
+                    PermissionV1.ProjectAdminAllPermission
+                )
+            )
+        )
+
+
+    /************************************/
+    /** 666 Project Permissions        **/
+    /************************************/
+
+    val TRIPLESIX_PROJECT_IRI = "http://data.knora.org/projects/666"
+
+    val perm007 =
+        ap(
+            iri = "http://data.knora.org/permissions/007",
+            p = AdministrativePermissionV1(
+                forProject = TRIPLESIX_PROJECT_IRI,
+                forGroup = OntologyConstants.KnoraBase.ProjectMember,
+                hasPermissions = Seq(PermissionV1.ProjectResourceCreateAllPermission)
+            )
+        )
+
+
+    val perm008 =
+        doap(
+            iri = "http://data.knora.org/permissions/008",
+            p = DefaultObjectAccessPermissionV1(
+                forProject = TRIPLESIX_PROJECT_IRI,
+                forGroup = OntologyConstants.KnoraBase.ProjectMember,
+                forResourceClass = OntologyConstants.KnoraBase.AllResourceClasses,
+                forProperty = OntologyConstants.KnoraBase.AllProperties,
+                hasPermissions = Seq(
+                    PermissionV1.DefaultChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
+                    PermissionV1.DefaultModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
+                    PermissionV1.DefaultViewPermission(Set(OntologyConstants.KnoraBase.KnownUser))
+                )
+            )
+        )
+
+
+    val perm009 =
+        ap(
+            iri = "http://data.knora.org/permissions/009",
+            p = AdministrativePermissionV1(
+                forProject = TRIPLESIX_PROJECT_IRI,
+                forGroup = OntologyConstants.KnoraBase.ProjectAdmin,
+                hasPermissions = Seq(
+                    PermissionV1.ProjectResourceCreateAllPermission,
+                    PermissionV1.ProjectAdminAllPermission
+                )
+            )
+        )
+
+
 
 }

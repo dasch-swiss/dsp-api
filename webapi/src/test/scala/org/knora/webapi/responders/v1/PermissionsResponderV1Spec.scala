@@ -26,12 +26,10 @@ import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreC
 import org.knora.webapi.responders.v1.PermissionsResponderV1SpecTestData._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.KnoraIdUtil
-import org.scalatest.AsyncWordSpecLike
 
 import scala.collection.Map
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.Success
 
 
 object PermissionsResponderV1Spec {
@@ -70,52 +68,75 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
 
     "The PermissionsResponderV1 " when {
-        "queried about permissions " should {
-            "return AdministrativePermission object for project and group" in {
+
+        "queried about administrative permissions " should {
+
+            "return all AdministrativePermissions for project " in {
+                actorUnderTest ! AdministrativePermissionsForProjectGetRequestV1(
+                    projectIri = IMAGES_PROJECT_IRI,
+                    SharedTestData.rootUserProfileV1
+                )
+                expectMsg(AdministrativePermissionsForProjectGetResponseV1(
+                    Seq(perm001.p, perm003.p)
+                ))
+            }
+
+            "return AdministrativePermission for project and group" in {
                 actorUnderTest ! AdministrativePermissionForProjectGroupGetRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
                     groupIri = OntologyConstants.KnoraBase.ProjectMember,
                     SharedTestData.rootUserProfileV1
                 )
-                expectMsg(AdministrativePermissionForProjectGroupGetResponseV1(
-                    AdministrativePermissionV1(
-                        forProject = IMAGES_PROJECT_IRI,
-                        forGroup = OntologyConstants.KnoraBase.ProjectMember,
-                        hasPermissions = Seq(PermissionV1.ProjectResourceCreateAllPermission)
-                    )
-                ))
+                expectMsg(AdministrativePermissionForProjectGroupGetResponseV1(perm001.p))
             }
-            "return AdministrativePermission IRIs for project " in {
-                actorUnderTest ! AdministrativePermissionIrisForProjectGetRequestV1(
-                    projectIri = IMAGES_PROJECT_IRI,
-                    SharedTestData.rootUserProfileV1
-                )
-                expectMsg(List(perm001.iri, perm003.iri))
-            }
-            "return AdministrativePermission object for IRI " in {
+
+            "return AdministrativePermission for IRI " in {
                 actorUnderTest ! AdministrativePermissionForIriGetRequestV1(
                     administrativePermissionIri = perm001.iri,
                     SharedTestData.rootUserProfileV1
                 )
-                expectMsg(Some(perm001.p))
+                expectMsg(AdministrativePermissionForIriGetResponseV1(perm001.p))
             }
 
-            "return DefaultObjectAccessPermission IRIs for project " in {
-                actorUnderTest ! DefaultObjectAccessPermissionIrisForProjectGetRequestV1(
+        }
+
+        "queried about default object access permissions " should {
+
+            "return all DefaultObjectAccessPermissions for project " in {
+                actorUnderTest ! DefaultObjectAccessPermissionsForProjectGetRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
                     SharedTestData.rootUserProfileV1
                 )
-                expectMsg(List(perm002.iri))
+                expectMsg(DefaultObjectAccessPermissionsForProjectGetResponseV1(
+                    defaultObjectAccessPermissions = Seq(perm002.p)
+                ))
             }
-            "return DefaultObjectAccessPermission for IRI " in {
-                actorUnderTest ! DefaultObjectAccessPermissionGetRequestV1(
+
+            "return DefaultObjectAccessPermission for project and group" in {
+                actorUnderTest ! DefaultObjectAccessPermissionForProjectGroupGetRequestV1(
+                    projectIri = IMAGES_PROJECT_IRI,
+                    groupIri = OntologyConstants.KnoraBase.ProjectMember,
+                    userProfileV1 = SharedTestData.rootUserProfileV1
+                )
+                expectMsg(DefaultObjectAccessPermissionForProjectGroupGetResponseV1(
+                    defaultObjectAccessPermission = perm002.p
+                ))
+            }
+
+            "return DefaultObjectAccessPermission for IRI" in {
+                actorUnderTest ! DefaultObjectAccessPermissionForIriGetRequestV1(
                     defaultObjectAccessPermissionIri = perm002.iri,
                     SharedTestData.rootUserProfileV1
                 )
-                expectMsg(perm002.p)
+                expectMsg(DefaultObjectAccessPermissionForIriGetResponseV1(
+                    defaultObjectAccessPermission = perm002.p
+                ))
             }
+
         }
+
         "asked to create an administrative permission object " should {
+
             "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
                 val iri = knoraIdUtil.makeRandomPermissionIri
                 actorUnderTest ! AdministrativePermissionCreateRequestV1(
@@ -129,12 +150,16 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 )
                 expectMsg(Failure(DuplicateValueException(s"Permission for project: '$IMAGES_PROJECT_IRI' and group: '${OntologyConstants.KnoraBase.ProjectMember}' combination already exists.")))
             }
+
             "create and return a default object access permission " ignore {
             }
+
         }
         "asked to delete a permission object " should {
+
             "delete an administrative permission " ignore {
             }
+
             "delete a default object access permission " ignore {
             }
         }
@@ -159,15 +184,19 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
     }
 
     "The PermissensResponderV1 helper methods" when {
+
         "called" should {
+
             "return user's administrative permissions " in {
                 val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.getUserAdministrativePermissionsRequestV1(multiuserUserProfileV1.permissionProfile.groupsPerProject).mapTo[Map[IRI, Set[PermissionV1]]], 1.seconds)
                 result should equal(multiuserUserProfileV1.permissionProfile.administrativePermissionsPerProject)
             }
+
             "return user's default object access permissions " in {
                 val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.getUserDefaultObjectAccessPermissionsRequestV1(multiuserUserProfileV1.permissionProfile.groupsPerProject), 1.seconds)
                 result should equal(multiuserUserProfileV1.permissionProfile.defaultObjectAccessPermissionsPerProject)
             }
+
             "build a permission object" in {
                 underlyingActorUnderTest.buildPermissionObject(
                     name = OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission,
@@ -176,6 +205,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     PermissionV1.ProjectResourceCreateRestrictedPermission(Set("1", "2", "3"))
                 )
             }
+
         }
     }
 }
