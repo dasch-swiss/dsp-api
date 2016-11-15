@@ -234,7 +234,7 @@ WHERE {
         @{throw SparqlGenerationException(s"linkUpdateForNewLink.directLinkExists must be false in this SPARQL template"); ()}
     }
 
-    MINUS {
+    FILTER NOT EXISTS {
         ?linkSource ?linkProperty ?linkTargetForNewLink .
     }
 
@@ -242,7 +242,7 @@ WHERE {
         @{throw SparqlGenerationException(s"linkUpdateForNewLink.linkValueExists must be false in this SPARQL template"); ()}
     }
 
-    MINUS {
+    FILTER NOT EXISTS {
         ?linkSource ?linkValueProperty ?currentLinkValueForNewLink .
         ?currentLinkValueForNewLink rdf:type knora-base:LinkValue ;
             rdf:subject ?linkSource ;
