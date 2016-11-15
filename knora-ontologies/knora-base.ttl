@@ -33,10 +33,10 @@
 
 #################################################################
 #
-#    Base property of properties whose objects can't be marked
-#    as deleted
+#    Properties
 #
 #################################################################
+
 
 
 ###  http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted
@@ -45,19 +45,11 @@
 
                 rdfs:comment "The base property of properties whose objects can't be marked as deleted"@en .
 
-rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
-
-
-#################################################################
-#
-#    Annotation properties
-#
-#################################################################
 
 
 ###  http://www.knora.org/ontology/knora-base#objectDatatypeConstraint
 
-:objectDatatypeConstraint rdf:type owl:AnnotationProperty ;
+:objectDatatypeConstraint rdf:type owl:DatatypeProperty ;
 
                           rdfs:comment "Specifies the type required as the object of a datatype property"@en .
 
@@ -65,7 +57,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 ###  http://www.knora.org/ontology/knora-base#hasDefaultChangeRightsPermission
 
-:hasDefaultChangeRightsPermission rdf:type owl:AnnotationProperty ;
+:hasDefaultChangeRightsPermission rdf:type owl:ObjectProperty ;
 
                                   :objectClassConstraint :UserGroup ;
 
@@ -75,7 +67,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 ###  http://www.knora.org/ontology/knora-base#hasDefaultDeletePermission
 
-:hasDefaultDeletePermission rdf:type owl:AnnotationProperty ;
+:hasDefaultDeletePermission rdf:type owl:ObjectProperty ;
 
                             :objectClassConstraint :UserGroup ;
 
@@ -85,7 +77,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 ###  http://www.knora.org/ontology/knora-base#hasDefaultModifyPermission
 
-:hasDefaultModifyPermission rdf:type owl:AnnotationProperty ;
+:hasDefaultModifyPermission rdf:type owl:ObjectProperty ;
 
                             :objectClassConstraint :UserGroup ;
 
@@ -95,13 +87,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 ###  http://www.knora.org/ontology/knora-base#hasDefaultPermission
 
-:hasDefaultPermission rdf:type owl:AnnotationProperty .
+:hasDefaultPermission rdf:type owl:ObjectProperty .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#hasDefaultRestrictedViewPermission
 
-:hasDefaultRestrictedViewPermission rdf:type owl:AnnotationProperty ;
+:hasDefaultRestrictedViewPermission rdf:type owl:ObjectProperty ;
 
                                     :objectClassConstraint :UserGroup ;
 
@@ -111,7 +103,9 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 ###  http://www.knora.org/ontology/knora-base#hasDefaultViewPermission
 
-:hasDefaultViewPermission rdf:type owl:AnnotationProperty ;
+:hasDefaultViewPermission rdf:type owl:ObjectProperty ;
+
+                          :objectClassConstraint :UserGroup ;
 
                           rdfs:subPropertyOf :hasDefaultRestrictedViewPermission .
 
@@ -119,20 +113,11 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 ###  http://www.knora.org/ontology/knora-base#resourceIcon
 
-:resourceIcon rdf:type owl:AnnotationProperty ;
+:resourceIcon rdf:type owl:DatatypeProperty ;
 
               :subjectClassConstraint owl:Class ;
 
               :objectDatatypeConstraint xsd:string .
-
-
-
-
-#################################################################
-#
-#    Object Properties
-#
-#################################################################
 
 
 
@@ -478,25 +463,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                 :subjectClassConstraint :Resource ;
 
                 rdfs:subPropertyOf :hasValue .
-
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasProvider
-
-:hasProvider rdf:type owl:ObjectProperty ;
-
-             rdfs:label "hat Provider"@de ,
-                        "has Provider"@en ,
-                        "a Provider"@fr ,
-                        "ha Provider"@it ;
-             
-             :objectClassConstraint :ExternalResValue ;
-
-             :subjectClassConstraint :ExternalResource ;
-
-             rdfs:subPropertyOf :hasValue .
-
 
 
 
@@ -1677,7 +1643,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
                   :subjectClassConstraint :ListValue ;
 
-                  :objectDatatypeConstraint :ListNode .
+                  :objectClassConstraint :ListNode .
 
 
 
