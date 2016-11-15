@@ -348,6 +348,16 @@ Consistency: cardinality_1_not_less_any_object
 
 
 /*
+ * Consistency rule for owl:cardinality 1 with rdfs:label.
+ */
+Consistency: cardinality_1_not_greater_rdfs_label
+    i <rdfs:label> r [Context <onto:_cardinality_1_table>]
+    i <rdfs:label> j [Constraint j != k]
+    i <rdfs:label> k
+    ------------------------------------
+
+
+/*
  * Consistency rules for cardinalities on properties whose objects cannot be marked as deleted
  * using the boolean flag knora-base:isDeleted.
  */
