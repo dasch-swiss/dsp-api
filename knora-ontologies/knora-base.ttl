@@ -481,25 +481,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
-
-###  http://www.knora.org/ontology/knora-base#hasProvider
-
-:hasProvider rdf:type owl:ObjectProperty ;
-
-             rdfs:label "hat Provider"@de ,
-                        "has Provider"@en ,
-                        "a Provider"@fr ,
-                        "ha Provider"@it ;
-             
-             :objectClassConstraint :ExternalResValue ;
-
-             :subjectClassConstraint :ExternalResource ;
-
-             rdfs:subPropertyOf :hasValue .
-
-
-
-
 ###  http://www.knora.org/ontology/knora-base#hasRegionValue
 
 :hasRegionValue rdf:type owl:ObjectProperty ;
@@ -1677,7 +1658,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
                   :subjectClassConstraint :ListValue ;
 
-                  :objectDatatypeConstraint :ListNode .
+                  :objectClassConstraint :ListNode .
 
 
 
