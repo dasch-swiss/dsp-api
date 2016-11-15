@@ -66,6 +66,7 @@
 	var drop_btn = $('<span>').addClass('glyphicon glyphicon-minus').attr({title: strings._remove});
 	var rights_btn = $('<span>').addClass('glyphicon glyphicon-lock').attr({title: strings._rights});
 	var comment_btn = $('<span>').addClass('glyphicon glyphicon-comment').attr({title: strings._annotate});
+	var valinfo_btn = $('<span>').addClass('glyphicon glyphicon-info-sign').attr({title: strings._valinfo});
 
 	var set_button = function(btn_ele, type) {
 		switch (type) {

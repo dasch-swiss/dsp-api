@@ -232,6 +232,7 @@
 	"_select_all" : "Alle auswählen",
 	"_deselect_all" : "Alle abwählen",
 	"_alert_missing_restype" : "Bitte einen Resource-Typen wählen",
-	"_alert_missing_resprop" : "Bitte mindestens ein Merkmalfeld (zur Spaltenansicht) wählen."
-
+	"_alert_missing_resprop" : "Bitte mindestens ein Merkmalfeld (zur Spaltenansicht) wählen.",
+	"_valinfo" : "Informationen über den Wert",
+	"_creation_date": "Erstellungsdatum"
 }
