@@ -71,7 +71,9 @@ class ResourceCreationSpec extends SalsahSpec {
                 {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"},
                 {"path": "_test_data/ontologies/beol-onto.ttl", "name": "http://www.knora.org/ontology/beol"},
                 {"path": "_test_data/ontologies/anything-onto.ttl", "name": "http://www.knora.org/ontology/anything"},
-                {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"}
+                {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"},
+                {"path": "_test_data/all_data/biblio-data.ttl", "name": "http://www.knora.org/data/biblio"},
+                {"path": "_test_data/ontologies/biblio-onto.ttl", "name": "http://www.knora.org/ontology/biblio"}
             ]
         """
 
