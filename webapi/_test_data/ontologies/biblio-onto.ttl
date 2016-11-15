@@ -44,6 +44,26 @@
                     rdfs:subPropertyOf knora-base:hasValue, dcterms:title .
 
 
+###  http://www.knora.org/ontology/biblio#publicationHasSubtitle
+
+:publicationHasSubtitle rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Untertitel"@de ,
+                               "sous-titre"@fr ,
+                               "sottotitolo"@it ,
+                               "Subtitle"@en ;
+
+                    rdfs:comment """Represents the subtitle of a publication."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :Publication ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+
 ###  http://www.knora.org/ontology/biblio#publicationHasDate
 :publicationHasDate rdf:type owl:ObjectProperty ;
 
@@ -604,6 +624,10 @@
                                       owl:cardinality "1"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
+                                      owl:onProperty :publicationHasSubtitle ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasDOI ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ];
@@ -735,7 +759,7 @@
                                      ];
 
 
-                     rdfs:label "Zeitschrift"@de ,
+                    rdfs:label "Zeitschrift"@de ,
                                 "Journal"@en ,
                                 "Revue"@fr ,
                                 "Rivista"@it ;
