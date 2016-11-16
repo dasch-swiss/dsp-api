@@ -222,15 +222,20 @@ object OntologyConstants {
         val HasStandoffLinkToValue = "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue"
 
         val StandoffRootTag = "http://www.knora.org/ontology/knora-base#StandoffRootTag"
-        val StandoffDateValueTag = "http://www.knora.org/ontology/knora-base#StandoffDateValueTag"
+        val StandoffDateTag = "http://www.knora.org/ontology/knora-base#StandoffDateTag"
+        val StandoffColorTag = "http://www.knora.org/ontology/knora-base#StandoffColorTag"
+        val StandoffIntegerTag = "http://www.knora.org/ontology/knora-base#StandoffIntegerTag"
+        val StandoffDecimalTag = "http://www.knora.org/ontology/knora-base#StandoffDecimalTag"
+        val StandoffIntervalTag = "http://www.knora.org/ontology/knora-base#StandoffIntervalTag"
+        val StandoffBooleanTag = "http://www.knora.org/ontology/knora-base#StandoffBooleanTag"
+        val StandoffLinkTag = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
+        val StandoffUriTag = "http://www.knora.org/ontology/knora-base#StandoffUriTag"
+
         val StandoffParagraphTag = "http://www.knora.org/ontology/knora-base#StandoffParagraphTag"
         val StandoffItalicTag = "http://www.knora.org/ontology/knora-base#StandoffItalicTag"
         val StandoffBoldTag = "http://www.knora.org/ontology/knora-base#StandoffBoldTag"
         val StandoffUnderlineTag = "http://www.knora.org/ontology/knora-base#StandoffUnderlineTag"
         val StandoffStrikethroughTag = "http://www.knora.org/ontology/knora-base#StandoffStrikethroughTag"
-
-        val StandoffLinkTag = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
-        val StandoffUriTag = "http://www.knora.org/ontology/knora-base#StandoffUriTag"
 
         val StandoffHeader1Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader1Tag"
         val StandoffHeader2Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader2Tag"

@@ -411,8 +411,8 @@ case class ResourceEntityInfoV1(resourceClassIri: IRI,
 case class StandoffClassEntityInfoV1(standoffClassIri: IRI,
                                      ontologyIri: IRI,
                                      predicates: Map[IRI, PredicateInfoV1],
-                                     cardinalities: Map[IRI, Cardinality.Value]) extends EntityInfoV1
-
+                                     cardinalities: Map[IRI, Cardinality.Value],
+                                     dataType: Option[IRI] = None) extends EntityInfoV1
 /**
   * Represents the assertions about a given property.
   *

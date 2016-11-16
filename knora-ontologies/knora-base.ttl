@@ -2543,14 +2543,73 @@
               rdfs:comment "Represents an arbitrary URI in a TextValue"@en .
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffDateValueTag
+###  http://www.knora.org/ontology/knora-base#StandoffDateTag
 
-:StandoffDateValueTag rdf:type owl:Class ;
+:StandoffDateTag rdf:type owl:Class ;
 
                         rdfs:subClassOf :StandoffDataTypeTag,
                                         :DateBase ;
 
                         rdfs:comment "Represents a date in a TextValue"@en .
+
+
+###  http://www.knora.org/ontology/knora-base#StandoffColorTag
+
+:StandoffColorTag rdf:type owl:Class ;
+
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :ColorBase ;
+
+                        rdfs:comment "Represents a color in a TextValue"@en .
+
+
+###  http://www.knora.org/ontology/knora-base#StandoffIntegerTag
+
+:StandoffIntegerTag rdf:type owl:Class ;
+
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :IntBase ;
+
+                        rdfs:comment "Represents an integer value in a TextValue"@en .
+
+
+###  http://www.knora.org/ontology/knora-base#StandoffDecimalTag
+
+:StandoffDecimalTag rdf:type owl:Class ;
+
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :DecimalBase ;
+
+                        rdfs:comment "Represents a decimal (floating point) value in a TextValue"@en .
+
+
+###  http://www.knora.org/ontology/knora-base#StandoffIntervalTag
+
+:StandoffIntervalTag rdf:type owl:Class ;
+
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :IntervalBase ;
+
+                        rdfs:comment "Represents an interval in a TextValue"@en .
+
+
+###  http://www.knora.org/ontology/knora-base#StandoffBooleanTag
+
+:StandoffBooleanTag rdf:type owl:Class ;
+
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :BooleanBase ;
+
+                        rdfs:comment "Represents a boolean in a TextValue"@en .
+
+
+###  http://www.knora.org/ontology/knora-base#StandoffBirthdayTag
+
+:StandoffBirthdayTag rdf:type owl:Class ;
+
+                rdfs:subClassOf :StandoffDateTag ;
+
+                rdfs:comment "Represents a birthday in a TextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffParagraphTag

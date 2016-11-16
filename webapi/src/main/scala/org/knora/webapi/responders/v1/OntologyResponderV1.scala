@@ -116,9 +116,9 @@ class OntologyResponderV1 extends ResponderV1 {
         case class OwlCardinality(propertyIri: IRI,
                                   cardinalityIri: IRI,
                                   cardinalityValue: Int,
-                                  isLinkProp: Boolean,
-                                  isLinkValueProp: Boolean,
-                                  isFileValueProp: Boolean)
+                                  isLinkProp: Boolean = false,
+                                  isLinkValueProp: Boolean = false,
+                                  isFileValueProp: Boolean = false)
 
         /**
           * Gets the IRI of the ontology that an entity belongs to. This is assumed to be the namespace
@@ -154,25 +154,25 @@ class OntologyResponderV1 extends ResponderV1 {
           * a base class.
           *
           * @param resourceClassIri                 the IRI of the resource class whose properties are to be computed.
-          * @param directSubClassRelations          a map of the direct `rdfs:subClassOf` relations defined on each resource class.
-          * @param allSubPropertyRelations          a map in which each property IRI points to the full set of its base properties.
+          * @param directSubClassOfRelations          a map of the direct `rdfs:subClassOf` relations defined on each resource class.
+          * @param allSubPropertyOfRelations          a map in which each property IRI points to the full set of its base properties.
           * @param directResourceClassCardinalities a map of the cardinalities defined directly on each resource class.
           * @return a map in which each key is the IRI of a property that has a cardinality in the resource class (or that it inherits
           *         from its base classes), and each value is the cardinality on the property.
           */
         def inheritCardinalities(resourceClassIri: IRI,
-                                 directSubClassRelations: Map[IRI, Set[IRI]],
-                                 allSubPropertyRelations: Map[IRI, Set[IRI]],
+                                 directSubClassOfRelations: Map[IRI, Set[IRI]],
+                                 allSubPropertyOfRelations: Map[IRI, Set[IRI]],
                                  directResourceClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]]): Map[IRI, OwlCardinality] = {
             // Recursively get properties that are available to inherit from base classes. If we have no information about
             // a class, that could mean that it isn't a subclass of knora-base:Resource (e.g. it's something like
             // foaf:Person), in which case we assume that it has no base classes.
-            val cardinalitiesAvailableToInherit: Map[IRI, OwlCardinality] = directSubClassRelations.getOrElse(resourceClassIri, Set.empty[IRI]).foldLeft(Map.empty[IRI, OwlCardinality]) {
+            val cardinalitiesAvailableToInherit: Map[IRI, OwlCardinality] = directSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[IRI]).foldLeft(Map.empty[IRI, OwlCardinality]) {
                 case (acc, baseClass) =>
                     acc ++ inheritCardinalities(
                         resourceClassIri = baseClass,
-                        directSubClassRelations = directSubClassRelations,
-                        allSubPropertyRelations = allSubPropertyRelations,
+                        directSubClassOfRelations = directSubClassOfRelations,
+                        allSubPropertyOfRelations = allSubPropertyOfRelations,
                         directResourceClassCardinalities = directResourceClassCardinalities
                     )
             }
@@ -186,7 +186,7 @@ class OntologyResponderV1 extends ResponderV1 {
             val inheritedCardinalities: Map[IRI, OwlCardinality] = cardinalitiesAvailableToInherit.filterNot {
                 case (baseClassProp, baseClassCardinality) => thisClassCardinalities.exists {
                     case (thisClassProp, cardinality) =>
-                        allSubPropertyRelations.get(thisClassProp) match {
+                        allSubPropertyOfRelations.get(thisClassProp) match {
                             case Some(baseProps) => baseProps.contains(baseClassProp)
                             case None => thisClassProp == baseClassProp
                         }
@@ -321,8 +321,8 @@ class OntologyResponderV1 extends ResponderV1 {
                 resourceClassIri =>
                     val resourceClassCardinalities: Set[OwlCardinality] = inheritCardinalities(
                         resourceClassIri = resourceClassIri,
-                        directSubClassRelations = directResourceSubClassOfRelations,
-                        allSubPropertyRelations = allSubPropertyOfRelations,
+                        directSubClassOfRelations = directResourceSubClassOfRelations,
+                        allSubPropertyOfRelations = allSubPropertyOfRelations,
                         directResourceClassCardinalities = directResourceClassCardinalities
                     ).values.toSet
 
@@ -487,6 +487,12 @@ class OntologyResponderV1 extends ResponderV1 {
                     (standoffClassIri, baseClasses)
             }
 
+            // Make a map in which each standoff class IRI points to the full set of its base classes. A class is also
+            // a subclass of itself.
+            allStandoffSubClassOfRelations: Map[IRI, Set[IRI]] = standoffClassIris.map {
+                standoffClassIri => (standoffClassIri, getAllBaseDefs(standoffClassIri, directStandoffSubClassOfRelations) + standoffClassIri)
+            }.toMap
+
             // Make a map of the cardinalities defined directly on each value base class. Each value base class IRI points to a map of
             // property IRIs to OwlCardinality objects.
             valueBaseClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]] = valueBaseClassesGrouped.map {
@@ -499,10 +505,7 @@ class OntologyResponderV1 extends ResponderV1 {
                             val owlCardinality = OwlCardinality(
                                 propertyIri = propertyIri,
                                 cardinalityIri = cardinalityRowMap("cardinality"),
-                                cardinalityValue = cardinalityRowMap("cardinalityVal").toInt,
-                                isLinkProp = false, // TODO: cannot be used here
-                                isLinkValueProp = false, // TODO: cannot be used here
-                                isFileValueProp = false // TODO: cannot be used here
+                                cardinalityValue = cardinalityRowMap("cardinalityVal").toInt
                             )
 
                             propertyIri -> owlCardinality
@@ -523,10 +526,7 @@ class OntologyResponderV1 extends ResponderV1 {
                             val owlCardinality = OwlCardinality(
                                 propertyIri = propertyIri,
                                 cardinalityIri = cardinalityRowMap("cardinality"),
-                                cardinalityValue = cardinalityRowMap("cardinalityVal").toInt,
-                                isLinkProp = false, // TODO: cannot be used here
-                                isLinkValueProp = false, // TODO: cannot be used here
-                                isFileValueProp = false // TODO: cannot be used here
+                                cardinalityValue = cardinalityRowMap("cardinalityVal").toInt
                             )
 
                             propertyIri -> owlCardinality
@@ -540,8 +540,8 @@ class OntologyResponderV1 extends ResponderV1 {
                 standoffClassIri =>
                     val standoffClassCardinalities: Set[OwlCardinality] = inheritCardinalities(
                         resourceClassIri = standoffClassIri,
-                        directSubClassRelations = directStandoffSubClassOfRelations,
-                        allSubPropertyRelations = directStandoffSubPropertyOfRelations,
+                        directSubClassOfRelations = directStandoffSubClassOfRelations,
+                        allSubPropertyOfRelations = directStandoffSubPropertyOfRelations,
                         directResourceClassCardinalities = directStandoffClassCardinalities ++ valueBaseClassCardinalities
                     ).values.toSet
 
@@ -556,6 +556,17 @@ class OntologyResponderV1 extends ResponderV1 {
 
                     standoffClassIri -> prop2Card
             }.toMap
+
+            // a set representing the typed standoff classes
+            standoffDataTypeClasses: Set[IRI] = Set(
+                OntologyConstants.KnoraBase.StandoffLinkTag,
+                OntologyConstants.KnoraBase.StandoffDateTag,
+                OntologyConstants.KnoraBase.StandoffUriTag,
+                OntologyConstants.KnoraBase.StandoffColorTag,
+                OntologyConstants.KnoraBase.StandoffIntegerTag,
+                OntologyConstants.KnoraBase.StandoffDecimalTag,
+                OntologyConstants.KnoraBase.StandoffIntervalTag,
+                OntologyConstants.KnoraBase.StandoffBooleanTag)
 
             standoffClassEntityInfos: Map[String, StandoffClassEntityInfoV1] = standoffClassesGrouped.map {
                 case (standoffClassIri, standoffClassRows) =>
@@ -578,11 +589,17 @@ class OntologyResponderV1 extends ResponderV1 {
                             )
                     }
 
+                    val standoffDataType: Set[IRI] = allStandoffSubClassOfRelations(standoffClassIri).intersect(standoffDataTypeClasses)
+                    if (standoffDataType.size > 1) {
+                        throw InconsistentTriplestoreDataException(s"standoff class $standoffClassIri is a subclass of more than one standoff data type class: ${standoffDataType.mkString(", ")}")
+                    }
+
                     val standoffInfo = StandoffClassEntityInfoV1(
                         standoffClassIri = standoffClassIri,
                         ontologyIri = getOntologyIri(standoffClassIri),
                         predicates = predicates,
-                        cardinalities = standoffCardinalitiesWithInheritance(standoffClassIri)
+                        cardinalities = standoffCardinalitiesWithInheritance(standoffClassIri),
+                        dataType = standoffDataType.headOption
                     )
 
                     standoffClassIri -> standoffInfo

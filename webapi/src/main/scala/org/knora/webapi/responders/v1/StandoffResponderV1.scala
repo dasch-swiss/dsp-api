@@ -81,7 +81,7 @@ class StandoffResponderV1 extends ResponderV1 {
             "text" -> OntologyConstants.KnoraBase.StandoffRootTag,
             "p" -> OntologyConstants.KnoraBase.StandoffParagraphTag,
             "i" -> OntologyConstants.KnoraBase.StandoffItalicTag,
-            "birthday" -> OntologyConstants.KnoraBase.StandoffDateValueTag
+            "birthday" -> "http://www.knora.org/ontology/knora-base#StandoffBirthdayTag"
         )
 
         val standoffUtil = new StandoffUtil()
@@ -107,7 +107,7 @@ class StandoffResponderV1 extends ResponderV1 {
             // request information about the standoff properties
             standoffPropertyEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffPropertyIris = standoffPropertyIris, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
 
-            // _ = println(ScalaPrettyPrinter.prettyPrint(standoffClassEntities))
+             _ = println(ScalaPrettyPrinter.prettyPrint(standoffClassEntities))
 
             // _ = println(ScalaPrettyPrinter.prettyPrint(standoffPropertyEntities))
 
