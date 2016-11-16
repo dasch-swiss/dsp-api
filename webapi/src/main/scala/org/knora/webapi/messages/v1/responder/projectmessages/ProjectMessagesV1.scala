@@ -24,7 +24,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoType.ProjectInfoType
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException}
+import org.knora.webapi.{BadRequestException, IRI, InconsistentTriplestoreDataException}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +85,7 @@ case class ProjectsGetRequestV1(infoType: ProjectInfoType, userProfile: Option[U
   * @param infoType is the type of the project information: full or short.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class ProjectInfoByIRIGetRequest(iri: IRI, infoType: ProjectInfoType, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class ProjectInfoByIRIGetRequestV1(iri: IRI, infoType: ProjectInfoType, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 
 /**
@@ -95,7 +95,7 @@ case class ProjectInfoByIRIGetRequest(iri: IRI, infoType: ProjectInfoType, userP
   * @param infoType is the type of the project information.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class ProjectInfoByShortnameGetRequest(shortname: String, infoType: ProjectInfoType, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class ProjectInfoByShortnameGetRequestV1(shortname: String, infoType: ProjectInfoType, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
   * Requests the cration of a new project.
@@ -162,7 +162,47 @@ case class ProjectInfoV1(id: IRI,
                          hasSelfJoinEnabled: Option[Boolean] = None,
                          projectOntologyGraph: IRI,
                          projectDataGraph: IRI,
-                         rights: Option[Int] = None)
+                         rights: Option[Int] = None) {
+
+    def ofType(projectInfoType: ProjectInfoType): ProjectInfoV1 = {
+
+        projectInfoType match {
+            case ProjectInfoType.FULL => {
+                ProjectInfoV1(
+                    id = id,
+                    shortname = shortname,
+                    longname = longname,
+                    description = description,
+                    keywords = keywords,
+                    projectOntologyGraph = projectOntologyGraph,
+                    projectDataGraph = projectDataGraph,
+                    logo = logo,
+                    basepath = basepath,
+                    isActiveProject = isActiveProject,
+                    hasSelfJoinEnabled = hasSelfJoinEnabled,
+                    rights = rights
+                )
+            }
+            case ProjectInfoType.SHORT => {
+                ProjectInfoV1(
+                    id = id,
+                    shortname = shortname,
+                    longname = longname,
+                    description = description,
+                    keywords = None,
+                    projectOntologyGraph = projectOntologyGraph,
+                    projectDataGraph = projectDataGraph,
+                    logo = None,
+                    basepath = None,
+                    isActiveProject = None,
+                    hasSelfJoinEnabled = None,
+                    rights = None
+                )
+            }
+            case _ => throw BadRequestException(s"The requested projectInfoType: $projectInfoType is invalid.")
+        }
+    }
+}
 
 object ProjectInfoType extends Enumeration {
 

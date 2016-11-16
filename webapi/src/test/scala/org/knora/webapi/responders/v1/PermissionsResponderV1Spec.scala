@@ -23,6 +23,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.PermissionsResponderV1SpecTestData._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.KnoraIdUtil
@@ -57,6 +58,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
     val actorUnderTest = TestActorRef[PermissionsResponderV1]
     val underlyingActorUnderTest = actorUnderTest.underlyingActor
+    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List()
@@ -68,6 +70,27 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
 
     "The PermissionsResponderV1 " when {
+
+        "queried about the permission profile" should {
+
+            "return the permissions profile" in {
+                actorUnderTest ! PermissionProfileGetV1(
+                    projectIris = SharedTestData.rootUserProfileV1.projects,
+                    groupIris = SharedTestData.rootUserProfileV1.groups,
+                    isInProjectAdminGroups = Seq.empty[IRI],
+                    isInSystemAdminGroup = true
+                )
+                expectMsg(SharedTestData.rootUserProfileV1.permissionProfile)
+
+                actorUnderTest ! PermissionProfileGetV1(
+                    projectIris = SharedTestData.multiuserUserProfileV1.projects,
+                    groupIris = SharedTestData.multiuserUserProfileV1.groups,
+                    isInProjectAdminGroups = List("http://data.knora.org/projects/77275339>", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
+                    isInSystemAdminGroup = false
+                )
+                expectMsg(SharedTestData.multiuserUserProfileV1.permissionProfile)
+            }
+        }
 
         "queried about administrative permissions " should {
 
@@ -137,15 +160,15 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
         "asked to create an administrative permission" should {
 
-            "fail and return a 'BadRequestException' when project does not exist" in {
+            "fail and return a 'BadRequestException' when project does not exist" ignore {
                 fail
             }
 
-            "fail and return a  'BadRequestException' when group does not exist" in {
+            "fail and return a  'BadRequestException' when group does not exist" ignore {
                 fail
             }
 
-            "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" in {
+            "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" ignore {
                 fail
             }
 
@@ -163,7 +186,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 expectMsg(Failure(DuplicateValueException(s"Permission for project: '$IMAGES_PROJECT_IRI' and group: '${OntologyConstants.KnoraBase.ProjectMember}' combination already exists.")))
             }
 
-            "create and return an administrative permission " in {
+            "create and return an administrative permission " ignore {
                 fail
             }
 
@@ -171,27 +194,28 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
         "asked to create a default object access permission" should {
 
-            "fail and return a 'BadRequestException' when project does not exist" in {
+            "fail and return a 'BadRequestException' when project does not exist" ignore {
                 fail
             }
 
-            "fail and return a  'BadRequestException' when group does not exist" in {
+            "fail and return a  'BadRequestException' when resource class does not exist" ignore {
                 fail
             }
 
-            "fail and return a  'BadRequestException' when resource class does not exist" in {
+            "fail and return a  'BadRequestException' when property does not exist" ignore {
                 fail
             }
 
-            "fail and return a  'BadRequestException' when property does not exist" in {
+            "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" ignore {
+
+                /* defining project level default object access permissions, so I need to be at least a member of the 'ProjectAdmin' group */
+
+                /* defining system level default object access permissions, so I need to be at least a member of the 'SystemAdmin' group */
+
                 fail
             }
 
-            "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" in {
-                fail
-            }
-
-            "fail and return a 'DuplicateValueException' when permission for project / group / resource class / property  combination already exists" in {
+            "fail and return a 'DuplicateValueException' when permission for project / group / resource class / property  combination already exists" ignore {
                 fail
             }
         }

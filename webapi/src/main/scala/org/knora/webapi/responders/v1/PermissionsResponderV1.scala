@@ -18,19 +18,18 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
-import arq.iri
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1, GroupInfoType, GroupInfoV1}
+import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1, GroupInfoType}
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType.PermissionType
 import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionForProjectGroupGetResponseV1, AdministrativePermissionV1, PermissionType, _}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
+import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{KnoraIdUtil, MessageUtil}
+import org.knora.webapi.util.KnoraIdUtil
 
-import scala.concurrent.duration._
 import scala.collection.immutable.Iterable
+import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 
@@ -71,7 +70,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             a <- Future("")
 
             projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
-                projectIri => (responderManager ? ProjectInfoByIRIGetRequest(projectIri, ProjectInfoType.SHORT, None)).mapTo[ProjectInfoResponseV1] map (_.project_info)
+                projectIri => (responderManager ? ProjectInfoByIRIGetRequestV1(projectIri, ProjectInfoType.SHORT, None)).mapTo[ProjectInfoResponseV1] map (_.project_info)
             }
 
             projectInfos <- Future.sequence(projectInfoFutures)
@@ -108,16 +107,24 @@ class PermissionsResponderV1 extends ResponderV1 {
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group for each project */
             projectAdmins: List[(IRI, IRI)] = if (projectIris.nonEmpty) {
                 for {
-                    pAdmin <- isInProjectAdminGroups.toList
-                    res = (pAdmin, OntologyConstants.KnoraBase.ProjectAdmin)
+                    projectAdminForGroup <- isInProjectAdminGroups.toList
+                    res = (projectAdminForGroup, OntologyConstants.KnoraBase.ProjectAdmin)
                 } yield res
             } else {
                 List.empty[(IRI, IRI)]
             }
 
+            /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
+            systemAdmin: List[(IRI, IRI)] = if (isInSystemAdminGroup) {
+                List(("http://www.knora.org/ontology/knora-base#SystemProject", "http://www.knora.org/ontology/knora-base#SystemAdmin"))
+            } else {
+                List.empty[(IRI, IRI)]
+            }
+
+
             //ToDo: Maybe we need to add KnownUser group for all other projects
             /* combine explicit groups with materialized implicit groups */
-            allGroups = groups ::: projectMembers ::: projectAdmins
+            allGroups = groups ::: projectMembers ::: projectAdmins ::: systemAdmin
             groupsPerProject = allGroups.groupBy(_._1).map { case (k,v) => (k,v.map(_._2))}
 
             /* retrieve the administrative permissions for each group per project the user is member of */
@@ -140,7 +147,6 @@ class PermissionsResponderV1 extends ResponderV1 {
             result = PermissionProfileV1(
                 projectInfos = projectInfos,
                 groupsPerProject = groupsPerProject,
-                isInSystemAdminGroup = isInSystemAdminGroup,
                 administrativePermissionsPerProject = administrativePermissionsPerProject,
                 defaultObjectAccessPermissionsPerProject = defaultObjectAccessPermissionsPerProject
             )

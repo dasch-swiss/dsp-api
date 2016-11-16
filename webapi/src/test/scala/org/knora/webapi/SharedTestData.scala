@@ -22,7 +22,7 @@ package org.knora.webapi
 
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1, GroupPermissionV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionProfileV1, PermissionV1}
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 
 /**
@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProf
 object SharedTestData {
 
     /* represents the user profile of 'root' as found in admin-data.ttl */
-    val rootUserProfileV1 = UserProfileV1(
+    def rootUserProfileV1 = UserProfileV1(
         UserDataV1(
             user_id = Some("http://data.knora.org/users/root"),
             username = Some("root"),
@@ -48,17 +48,21 @@ object SharedTestData {
         projects = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images"),
         sessionId = None,
         permissionProfile = PermissionProfileV1(
-            projectInfos = Vector.empty[ProjectInfoV1],
+            projectInfos = List(
+                SharedTestData.incunabulaProjectInfoV1.ofType(ProjectInfoType.SHORT),
+                SharedTestData.imagesProjectInfoV1.ofType(ProjectInfoType.SHORT),
+                SharedTestData.systemProjectInfoV1.ofType(ProjectInfoType.SHORT)
+            ),
             groupsPerProject = Map(
                 "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}"),
+                "http://www.knora.org/ontology/knora-base#SystemProject" -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}"),
                 "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
-            ),
-            isInSystemAdminGroup = true
+            )
         )
     )
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    val superuserUserProfileV1 = UserProfileV1(
+    def superuserUserProfileV1 = UserProfileV1(
         UserDataV1(
             user_id = Some("http://data.knora.org/users/superuser"),
             username = Some("superuser"),
@@ -74,12 +78,14 @@ object SharedTestData {
         projects = Vector.empty[IRI],
         sessionId = None,
         permissionProfile = PermissionProfileV1(
-            isInSystemAdminGroup = true
+            groupsPerProject = Map(
+                s"${OntologyConstants.KnoraBase.SystemProject}" -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}")
+            )
         )
     )
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    val normaluserUserProfileV1 = UserProfileV1(
+    def normaluserUserProfileV1 = UserProfileV1(
         UserDataV1(
             user_id = Some("http://data.knora.org/users/normaluser"),
             username = Some("normaluser"),
@@ -98,7 +104,7 @@ object SharedTestData {
     )
 
     /* represents an anonymous user */
-    val anonymousUserProfileV1 = UserProfileV1(
+    def anonymousUserProfileV1 = UserProfileV1(
         UserDataV1(
             lang = "de"
         ),
@@ -109,7 +115,7 @@ object SharedTestData {
     )
 
     /* represents 'user01' as found in admin-data.ttl  */
-    val user01UserProfileV1 = UserProfileV1(
+    def user01UserProfileV1 = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/c266a56709"),
             username = Some("user01"),
@@ -127,13 +133,12 @@ object SharedTestData {
         permissionProfile = PermissionProfileV1(
             groupsPerProject = Map(
                 "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer")
-            ),
-            isInSystemAdminGroup = false
+            )
         )
     )
 
     /* represents 'user02' as found in admin-data.ttl  */
-    val user02UserProfileV1 = UserProfileV1(
+    def user02UserProfileV1 = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/97cec4000f"),
             username = Some("user02"),
@@ -151,13 +156,12 @@ object SharedTestData {
         permissionProfile = PermissionProfileV1(
             groupsPerProject = Map(
                 "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer")
-            ),
-            isInSystemAdminGroup = false
+            )
         )
     )
 
     /* represents 'testuser' as found in admin-data.ttl  */
-    val testuserUserProfileV1 = UserProfileV1(
+    def testuserUserProfileV1 = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/b83acc5f05"),
             username = Some("testuser"),
@@ -175,13 +179,12 @@ object SharedTestData {
         permissionProfile = PermissionProfileV1(
             groupsPerProject = Map(
                 "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
-            ),
-            isInSystemAdminGroup = false
+            )
         )
     )
 
     /* represents the 'multiuser' as found in admin-data.ttl */
-    val multiuserUserProfileV1 = UserProfileV1(
+    def multiuserUserProfileV1 = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/multiuser"),
             username = Some("multiuser"),
@@ -202,7 +205,6 @@ object SharedTestData {
                 "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer"),
                 "http://data.knora.org/projects/666" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}")
             ),
-            isInSystemAdminGroup = false,
             administrativePermissionsPerProject = Map(
                 "http://data.knora.org/projects/77275339" -> Set(
                     PermissionV1.ProjectResourceCreateAllPermission,
@@ -221,8 +223,22 @@ object SharedTestData {
         )
     )
 
+    /* represents the full project info of the Knora System project */
+    def systemProjectInfoV1 = ProjectInfoV1(
+        id = "http://www.knora.org/ontology/knora-base#SystemProject",
+        shortname = "SystemProject",
+        longname = Some("Knora System Project"),
+        description = None,
+        projectOntologyGraph = "-",
+        projectDataGraph = "-",
+        basepath = Some("-"),
+        isActiveProject = Some(true),
+        hasSelfJoinEnabled = Some(false),
+        rights = None
+    )
+
     /* represents the full project info of the images project */
-    val imagesProjectInfoV1 = ProjectInfoV1(
+    def imagesProjectInfoV1 = ProjectInfoV1(
         id = "http://data.knora.org/projects/images",
         shortname = "images",
         longname = Some("Image Collection Demo"),
@@ -238,7 +254,7 @@ object SharedTestData {
     )
 
     /* represents the ProjectInfoV1 of the incunabula project */
-    val incunabulaProjectInfoV1 = ProjectInfoV1(
+    def incunabulaProjectInfoV1 = ProjectInfoV1(
         id = "http://data.knora.org/projects/77275339",
         shortname = "incunabula",
         longname = Some("Bilderfolgen Basler Frühdrucke"),
@@ -254,7 +270,7 @@ object SharedTestData {
     )
 
     /* represents the ProjectInfoV1of the testproject */
-    val testprojectProjectInfoV1 = ProjectInfoV1(
+    def testprojectProjectInfoV1 = ProjectInfoV1(
         id = "http://data.knora.org/projects/666",
         shortname = "testproject",
         longname = Some("Test Project"),
@@ -270,7 +286,7 @@ object SharedTestData {
     )
 
     /* represents the full GroupInfoV1 of the images ProjectAdmin group */
-    val imagesProjectAdminGroupInfoV1 = GroupInfoV1(
+    def imagesProjectAdminGroupInfoV1 = GroupInfoV1(
         id = "-",
         name = "ProjectAdmin",
         description = Some("Default Project Admin Group"),
@@ -281,7 +297,7 @@ object SharedTestData {
     )
 
     /* represents the full GroupInfoV1 of the images ProjectMember group */
-    val imagesProjectMemberGroupInfoV1 = GroupInfoV1(
+    def imagesProjectMemberGroupInfoV1 = GroupInfoV1(
         id = "-",
         name = "ProjectMember",
         description = Some("Default Project Member Group"),
@@ -292,7 +308,7 @@ object SharedTestData {
     )
 
     /* represents the full GroupInfoV1 of the images project reviewer group */
-    val imageReviewerGroupInfoV1 = GroupInfoV1(
+    def imageReviewerGroupInfoV1 = GroupInfoV1(
         id = "http://data.knora.org/groups/images-reviewer",
         name = "Image reviewer",
         description = Some("A group for image reviewers."),

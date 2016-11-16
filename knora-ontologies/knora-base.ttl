@@ -3258,7 +3258,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 :SystemAdmin rdf:type :UserGroup ,
                       owl:NamedIndividual ;
 
-             :groupName "system admin" .
+             :groupName "system admin" ;
+
+             :belongsToProject <http://www.knora.org/ontology/knora-base#SystemProject> ;
+
+             :isActiveGroup "true"^^xsd:boolean ;
+
+             :hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 
@@ -3371,15 +3377,16 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
-### http://www.knora.org/ontology/knora-base#AllProjects
+### http://www.knora.org/ontology/knora-base#SystemProject
 
-:AllProjects rdf:type :knoraProject ,
-                      owl:NamedIndividual ;
+:SystemProject rdf:type :knoraProject ,
+                        owl:NamedIndividual ;
 
-            rdfs:comment "A built-in project representing all projects."@en ;
+            rdfs:comment "A built-in project representing the Knora System."@en ;
 
-            :projectShortname "AllProjects" ;
-            :projectOntologyGraph "." ;
+            :projectShortname "SystemProject" ;
+            :projectLongname "Knora System Project" ;
+            :projectOntologyGraph "-" ;
             :projectDataGraph "-" ;
             :projectBasepath "-"^^xsd:string ;
             :isActiveProject "true"^^xsd:boolean ;

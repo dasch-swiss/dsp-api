@@ -84,22 +84,45 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
         }
         "asked about a project identified by 'iri' " should {
             "return full project info if the project is known " in {
-                actorUnderTest ! ProjectInfoByIRIGetRequest(imagesPI.id, ProjectInfoType.FULL, Some(rootUserProfileV1))
-                expectMsg(ProjectInfoResponseV1(imagesPI, Some(rootUserProfileV1.userData)))
+
+                /* Incunabula project */
+                actorUnderTest ! ProjectInfoByIRIGetRequestV1(
+                    SharedTestData.incunabulaProjectInfoV1.id,
+                    ProjectInfoType.FULL,
+                    Some(SharedTestData.rootUserProfileV1)
+                )
+                expectMsg(ProjectInfoResponseV1(SharedTestData.incunabulaProjectInfoV1, Some(rootUserProfileV1.userData)))
+
+                /* Images project */
+                actorUnderTest ! ProjectInfoByIRIGetRequestV1(
+                    SharedTestData.imagesProjectInfoV1.id,
+                    ProjectInfoType.FULL,
+                    Some(SharedTestData.rootUserProfileV1)
+                )
+                expectMsg(ProjectInfoResponseV1(SharedTestData.imagesProjectInfoV1, Some(rootUserProfileV1.userData)))
+
+                /* 'SystemProject' */
+                actorUnderTest ! ProjectInfoByIRIGetRequestV1(
+                    SharedTestData.systemProjectInfoV1.id,
+                    ProjectInfoType.FULL,
+                    Some(SharedTestData.rootUserProfileV1)
+                )
+                expectMsg(ProjectInfoResponseV1(SharedTestData.systemProjectInfoV1, Some(rootUserProfileV1.userData)))
+
             }
             "return 'NotFoundException' when the project is unknown " in {
-                actorUnderTest ! ProjectInfoByIRIGetRequest("http://data.knora.org/projects/notexisting", ProjectInfoType.FULL, Some(rootUserProfileV1))
+                actorUnderTest ! ProjectInfoByIRIGetRequestV1("http://data.knora.org/projects/notexisting", ProjectInfoType.FULL, Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found")))
             }
         }
         "asked about a project identified by 'shortname' " should {
             "return 'full' project info if the project is known " in {
-                actorUnderTest ! ProjectInfoByShortnameGetRequest(incunabulaPI.shortname, ProjectInfoType.FULL, Some(rootUserProfileV1))
+                actorUnderTest ! ProjectInfoByShortnameGetRequestV1(incunabulaPI.shortname, ProjectInfoType.FULL, Some(rootUserProfileV1))
                 expectMsg(ProjectInfoResponseV1(incunabulaPI, Some(rootUserProfileV1.userData)))
             }
 
             "return 'NotFoundException' when the project is unknown " in {
-                actorUnderTest ! ProjectInfoByShortnameGetRequest("projectwrong", ProjectInfoType.FULL, Some(rootUserProfileV1))
+                actorUnderTest ! ProjectInfoByShortnameGetRequestV1("projectwrong", ProjectInfoType.FULL, Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found")))
             }
         }

@@ -294,13 +294,11 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
   *
   * @param projectInfos the project info of the projects that the user belongs to.
   * @param groupsPerProject the groups the user belongs to for each project.
-  * @param isInSystemAdminGroup the user's knora-base:SystemAdmin group membership status.
   * @param administrativePermissionsPerProject the user's administrative permissions for each project.
   * @param defaultObjectAccessPermissionsPerProject the user's default object access permissions for each project.
   */
 case class PermissionProfileV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1],
                                groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IRI, List[IRI]],
-                               isInSystemAdminGroup: Boolean = false,
                                administrativePermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],
                                defaultObjectAccessPermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]]
                               ) {
@@ -317,7 +315,6 @@ case class PermissionProfileV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[P
                 PermissionProfileV1(
                     projectInfos = Vector.empty[ProjectInfoV1], // remove
                     groupsPerProject = groupsPerProject,
-                    isInSystemAdminGroup = false, // remove system admin status
                     administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]], // remove administrative permission information
                     defaultObjectAccessPermissionsPerProject = Map.empty[IRI, Set[PermissionV1]] // remove default object access permission information
                 )
@@ -327,7 +324,6 @@ case class PermissionProfileV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[P
                 PermissionProfileV1(
                     projectInfos = projectInfos,
                     groupsPerProject = groupsPerProject,
-                    isInSystemAdminGroup = false, // remove system admin status
                     administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]], // remove administrative permission information
                     defaultObjectAccessPermissionsPerProject = Map.empty[IRI, Set[PermissionV1]] // remove default object access permission information
                 )
@@ -337,7 +333,6 @@ case class PermissionProfileV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[P
                 PermissionProfileV1(
                     projectInfos = projectInfos,
                     groupsPerProject = groupsPerProject,
-                    isInSystemAdminGroup = isInSystemAdminGroup,
                     administrativePermissionsPerProject = administrativePermissionsPerProject,
                     defaultObjectAccessPermissionsPerProject = defaultObjectAccessPermissionsPerProject
                 )
@@ -347,7 +342,7 @@ case class PermissionProfileV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[P
     }
 
     def isSystemAdmin: Boolean = {
-        isInSystemAdminGroup
+        groupsPerProject.contains("http://www.knora.org/ontology/knora-base#SystemProject")
     }
 }
 
@@ -638,7 +633,7 @@ trait PermissionV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
     implicit val permissionV1Format: JsonFormat[PermissionV1] = jsonFormat(PermissionV1.apply, "name", "restrictions") // apply needed because we have an companion object of a case class
     implicit val administrativePermissionV1Format: JsonFormat[AdministrativePermissionV1] = jsonFormat(AdministrativePermissionV1, "for_project", "for_group", "has_permissions")
     implicit val defaultObjectAccessPermissionV1Format: JsonFormat[DefaultObjectAccessPermissionV1] = jsonFormat5(DefaultObjectAccessPermissionV1)
-    implicit val permissionProfileV1Format: JsonFormat[PermissionProfileV1] = jsonFormat5(PermissionProfileV1)
+    implicit val permissionProfileV1Format: JsonFormat[PermissionProfileV1] = jsonFormat4(PermissionProfileV1)
     //implicit val templatePermissionsCreateResponseV1Format: RootJsonFormat[TemplatePermissionsCreateResponseV1] = jsonFormat4(TemplatePermissionsCreateResponseV1)
     //implicit val administrativePermissionOperationResponseV1Format: RootJsonFormat[AdministrativePermissionOperationResponseV1] = jsonFormat4(AdministrativePermissionOperationResponseV1)
     //implicit val defaultObjectAccessPermissionOperationResponseV1Format: RootJsonFormat[DefaultObjectAccessPermissionOperationResponseV1] = jsonFormat4(DefaultObjectAccessPermissionOperationResponseV1)

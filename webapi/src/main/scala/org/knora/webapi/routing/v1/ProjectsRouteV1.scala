@@ -27,7 +27,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.SettingsImpl
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoByShortnameGetRequest, ProjectInfoType, ProjectsGetRequestV1}
+import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 
 object ProjectsRouteV1 extends Authenticator {
@@ -66,10 +66,10 @@ object ProjectsRouteV1 extends Authenticator {
                     val requestType = params.getOrElse("infoType", ProjectInfoType.SHORT.toString)
                     val requestMessage = if (urlValidator.isValid(value)) {
                         /* valid URL */
-                        ProjectInfoByIRIGetRequest(value, ProjectInfoType.lookup(requestType), Some(userProfile))
+                        ProjectInfoByIRIGetRequestV1(value, ProjectInfoType.lookup(requestType), Some(userProfile))
                     } else {
                         /* not valid URL so I assume it is a project's shortname */
-                        ProjectInfoByShortnameGetRequest(value, ProjectInfoType.lookup(requestType), Some(userProfile))
+                        ProjectInfoByShortnameGetRequestV1(value, ProjectInfoType.lookup(requestType), Some(userProfile))
                     }
 
                     RouteUtilV1.runJsonRoute(

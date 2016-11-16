@@ -312,7 +312,7 @@ object OntologyConstants {
         val ForResourceClass = KnoraBasePrefixExpansion               + "forResourceClass"
         val ForProperty = KnoraBasePrefixExpansion                    + "forProperty"
 
-        val AllProjects = KnoraBasePrefixExpansion                    + "AllProjects"
+        val SystemProject = KnoraBasePrefixExpansion                  + "SystemProject"
         val AllGroups = KnoraBasePrefixExpansion                      + "AllGroups"
         val AllResourceClasses = KnoraBasePrefixExpansion             + "AllResourceClasses"
         val AllProperties = KnoraBasePrefixExpansion                  + "AllProperties"
@@ -321,7 +321,7 @@ object OntologyConstants {
           * The system user is the owner of objects that are created by the system, rather than directly by the user,
           * such as link values for standoff resource references.
           */
-        val SystemUser = "http://www.knora.org/ontology/knora-base#SystemUser"
+        val SystemUser = KnoraBasePrefixExpansion                     + "SystemUser"
 
     }
 

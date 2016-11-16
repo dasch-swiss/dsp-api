@@ -46,10 +46,10 @@ class ProjectsResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case ProjectsGetRequestV1(infoType, userProfile) => future2Message(sender(), getProjectsResponseV1(infoType, userProfile), log)
-        case ProjectInfoByIRIGetRequest(iri, infoType, userProfile) => future2Message(sender(), getProjectInfoByIRIGetRequest(iri, infoType, userProfile), log)
-        case ProjectInfoByShortnameGetRequest(shortname, infoType, userProfile) => future2Message(sender(), getProjectInfoByShortnameGetRequest(shortname, infoType, userProfile), log)
-        case ProjectCreateRequestV1(newProjectDataV1: NewProjectDataV1, userProfileV1) => future2Message(sender(), createNewProjectV1(newProjectDataV1, userProfileV1), log)
+        case ProjectsGetRequestV1(infoType, userProfile) => future2Message(sender(), projectsGetRequestV1(infoType, userProfile), log)
+        case ProjectInfoByIRIGetRequestV1(iri, infoType, userProfile) => future2Message(sender(), projectInfoByIRIGetRequestV1(iri, infoType, userProfile), log)
+        case ProjectInfoByShortnameGetRequestV1(shortname, infoType, userProfile) => future2Message(sender(), projectInfoByShortnameGetRequestV1(shortname, infoType, userProfile), log)
+        case ProjectCreateRequestV1(newProjectDataV1: NewProjectDataV1, userProfileV1) => future2Message(sender(), projectCreateRequestV1(newProjectDataV1, userProfileV1), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -82,7 +82,7 @@ class ProjectsResponderV1 extends ResponderV1 {
       * @param userProfile the profile of the user that is making the request.
       * @return all the projects as a [[ProjectsResponseV1]].
       */
-    private def getProjectsResponseV1(infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): Future[ProjectsResponseV1] = {
+    private def projectsGetRequestV1(infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): Future[ProjectsResponseV1] = {
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
@@ -140,9 +140,9 @@ class ProjectsResponderV1 extends ResponderV1 {
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */
-    private def getProjectInfoByIRIGetRequest(projectIRI: IRI, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
+    private def projectInfoByIRIGetRequestV1(projectIRI: IRI, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
 
-        log.debug(s"getProjectInfoByIRIGetRequest - projectIRI: $projectIRI, infoType: $infoType")
+        log.debug(s"projectInfoByIRIGetRequestV1 - projectIRI: $projectIRI, infoType: $infoType")
 
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(
@@ -155,7 +155,9 @@ class ProjectsResponderV1 extends ResponderV1 {
                 throw NotFoundException(s"Project '$projectIRI' not found")
             }
 
-            projectInfo = createProjectInfoV1FromProjectResponse(projectResponse = projectResponse.results.bindings, projectIri = projectIRI, infoType = infoType, userProfile)
+            projectInfo = createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIRI, infoType = infoType, userProfile)
+
+            _ = log.debug(s"projectInfoByIRIGetRequestV1 - projectInfo: $projectInfo")
 
         } yield ProjectInfoResponseV1(
             project_info = projectInfo,
@@ -174,7 +176,7 @@ class ProjectsResponderV1 extends ResponderV1 {
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */
-    private def getProjectInfoByShortnameGetRequest(shortName: String, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
+    private def projectInfoByShortnameGetRequestV1(shortName: String, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectByShortname(
                 triplestore = settings.triplestoreType,
@@ -193,7 +195,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                 throw NotFoundException(s"Project '$shortName' not found")
             }
 
-            projectInfo = createProjectInfoV1FromProjectResponse(projectResponse = projectResponse.results.bindings, projectIri = projectIri, infoType = infoType, userProfile)
+            projectInfo = createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, infoType = infoType, userProfile)
 
         } yield ProjectInfoResponseV1(
             project_info = projectInfo,
@@ -204,7 +206,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         )
     }
 
-    private def createNewProjectV1(newProjectDataV1: NewProjectDataV1, userProfileV1: UserProfileV1): Future[ProjectOperationResponseV1] = {
+    private def projectCreateRequestV1(newProjectDataV1: NewProjectDataV1, userProfileV1: UserProfileV1): Future[ProjectOperationResponseV1] = {
 
         for {
             a <- Future("")
@@ -266,7 +268,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             }
 
             // create the project info
-            newProjectInfo = createProjectInfoV1FromProjectResponse(projectResponse, projectIRI, ProjectInfoType.FULL, Some(userProfileV1))
+            newProjectInfo = createProjectInfoV1(projectResponse, projectIRI, ProjectInfoType.FULL, Some(userProfileV1))
 
             // create the project operation response
             projectOperationResponseV1 = ProjectOperationResponseV1(newProjectInfo, userProfileV1.userData)
@@ -274,7 +276,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         } yield projectOperationResponseV1
     }
 
-    private def updateProjectV1(userProfileV1: UserProfileV1): Future[ProjectInfoResponseV1] = ???
+    private def projectUpdateRequestV1(userProfileV1: UserProfileV1): Future[ProjectInfoResponseV1] = ???
 
     ////////////////////
     // Helper Methods //
@@ -289,7 +291,7 @@ class ProjectsResponderV1 extends ResponderV1 {
       * @param userProfile the profile of user that is making the request.
       * @return a [[ProjectInfoV1]] representing information about project.
       */
-    private def createProjectInfoV1FromProjectResponse(projectResponse: Seq[VariableResultsRow], projectIri: IRI, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): ProjectInfoV1 = {
+    private def createProjectInfoV1(projectResponse: Seq[VariableResultsRow], projectIri: IRI, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1]): ProjectInfoV1 = {
 
         log.debug(s"createProjectInfoV1FromProjectResponse - projectResponse: ${MessageUtil.toSource(projectResponse)}")
 
