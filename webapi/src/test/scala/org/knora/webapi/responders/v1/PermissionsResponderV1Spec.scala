@@ -135,7 +135,19 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
         }
 
-        "asked to create an administrative permission object " should {
+        "asked to create an administrative permission" should {
+
+            "fail and return a 'BadRequestException' when project does not exist" in {
+                fail
+            }
+
+            "fail and return a  'BadRequestException' when group does not exist" in {
+                fail
+            }
+
+            "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" in {
+                fail
+            }
 
             "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
                 val iri = knoraIdUtil.makeRandomPermissionIri
@@ -151,16 +163,46 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 expectMsg(Failure(DuplicateValueException(s"Permission for project: '$IMAGES_PROJECT_IRI' and group: '${OntologyConstants.KnoraBase.ProjectMember}' combination already exists.")))
             }
 
-            "create and return a default object access permission " ignore {
+            "create and return an administrative permission " in {
+                fail
             }
 
+        }
+
+        "asked to create a default object access permission" should {
+
+            "fail and return a 'BadRequestException' when project does not exist" in {
+                fail
+            }
+
+            "fail and return a  'BadRequestException' when group does not exist" in {
+                fail
+            }
+
+            "fail and return a  'BadRequestException' when resource class does not exist" in {
+                fail
+            }
+
+            "fail and return a  'BadRequestException' when property does not exist" in {
+                fail
+            }
+
+            "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" in {
+                fail
+            }
+
+            "fail and return a 'DuplicateValueException' when permission for project / group / resource class / property  combination already exists" in {
+                fail
+            }
         }
         "asked to delete a permission object " should {
 
             "delete an administrative permission " ignore {
+                fail
             }
 
             "delete a default object access permission " ignore {
+                fail
             }
         }
         /*
