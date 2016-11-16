@@ -183,12 +183,18 @@ case class LinkValueGetRequestV1(subjectIri: IRI, predicateIri: IRI, objectIri: 
   *
   * @param value     the single requested value.
   * @param valuetype the IRI of the value's type.
+  * @param valuecreator the username of the user who created the value.
+  * @param valuecreatorname the name of the user who created the value.
+  * @param valuecreationdate the date when the value was created.
   * @param comment   the comment on the value, if any.
   * @param rights    the user's permission on the value.
   * @param userdata  information about the user that made the request.
   */
 case class ValueGetResponseV1(valuetype: IRI,
                               value: ApiValueV1,
+                              valuecreator: String,
+                              valuecreatorname: String,
+                              valuecreationdate: String,
                               comment: Option[String] = None,
                               rights: Int,
                               userdata: UserDataV1) extends KnoraResponseV1 {
@@ -1501,7 +1507,7 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
 
     implicit val createFileQualityLevelFormat: RootJsonFormat[CreateFileQualityLevelV1] = jsonFormat4(CreateFileQualityLevelV1)
     implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat3(CreateFileV1)
-    implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat5(ValueGetResponseV1)
+    implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat8(ValueGetResponseV1)
     implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat3(DateValueV1)
     implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat9(StillImageFileValueV1)
     implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat4(MovingImageFileValueV1)

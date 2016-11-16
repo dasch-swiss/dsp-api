@@ -24,6 +24,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
         RdfDataObject(path = "_test_data/store.triplestore.GraphDBConsistencyCheckingSpec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
     )
 
@@ -115,6 +116,15 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
                     msg.contains(s"$CONSISTENCY_CHECK_ERROR value_prop_cardinality_any") should ===(true)
+            }
+        }
+
+        "not create a new resource with two labels" in {
+            storeManager ! SparqlUpdateRequest(twoLabels)
+
+            expectMsgPF(timeout) {
+                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+                    msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_greater_rdfs_label") should ===(true)
             }
         }
     } else {
@@ -2948,4 +2958,53 @@ object GraphDBConsistencyCheckingSpec {
           |}
         """.stripMargin
 
+
+    private val twoLabels =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |INSERT {
+          |    GRAPH ?dataNamedGraph {
+          |        ?resource rdf:type ?resourceClass ;
+          |            knora-base:isDeleted false ;
+          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToProject ?projectIri ;
+          |            rdfs:label ?label;
+          |            rdfs:label "Second label not allowed" ;
+          |
+          |
+          |                    knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |
+          |
+          |            knora-base:creationDate ?currentTime .
+          |    }
+          |}
+          |
+          |
+          |    USING <http://www.ontotext.com/explicit>
+          |
+          |WHERE {
+          |    BIND(IRI("http://www.knora.org/data/anything") AS ?dataNamedGraph)
+          |    BIND(IRI("http://data.knora.org/wrongTargetClass") AS ?resource)
+          |    BIND(IRI("http://www.knora.org/ontology/anything#Thing") AS ?resourceClass)
+          |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/projects/anything") AS ?projectIri)
+          |    BIND(str("Test Thing") AS ?label)
+          |    BIND(NOW() AS ?currentTime)
+          |
+          |
+          |
+          |    # Value 0
+          |    # Property: http://www.knora.org/ontology/anything#hasBlueThing
+          |
+          |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThing") AS ?linkProperty0)
+          |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThingValue") AS ?linkValueProperty0)
+          |    BIND(IRI("http://data.knora.org/wrongTargetClass/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
+          |    BIND(IRI("http://data.knora.org/a-thing") AS ?linkTarget0)
+          |}
+        """.stripMargin
 }

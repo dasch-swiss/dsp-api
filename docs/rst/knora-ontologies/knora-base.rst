@@ -31,7 +31,7 @@ Resource Description Framework (RDF)
 ------------------------------------
 
 Knora uses a hierarchy of ontologies based on the Resource Description
-Framework (RDF_), RDF Schema (RDFS_), and the Web Ontology Language (OWL_)
+Framework (RDF_), RDF Schema (RDFS_), and the Web Ontology Language (OWL_).
 Both RDFS and OWL are expressed in RDF. RDF expresses information as a set of
 statements (called *triples*). A triple consists of a subject, a predicate,
 and an object:
@@ -587,22 +587,25 @@ list or a tree.
 A ``ListValue`` has this property:
 
 ``valueHasListNode`` (1)
-    Points to the root ``ListNode`` of the list or tree.
+    Points to a ``ListNode``.
 
 Each ``ListNode`` can have the following properties:
-
-``hasSubListNode`` (0-n)
-    Points to the node’s child nodes, if any.
-
-``listNodePosition`` (1)
-    An integer indicating the node’s position in the list of its
-    siblings.
 
 ``isRootNode`` (0-1)
     Set to ``true`` if this is the root node.
 
-``listNodeName`` (0-n)
-    The node’s human-readable name.
+``hasSubListNode`` (0-n)
+    Points to the node’s child nodes, if any.
+
+``hasRootNode`` (0-1)
+    Points to the root node of the list (absent if ``isRootNode`` is ``true``).
+
+``listNodePosition`` (0-1)
+    An integer indicating the node’s position in the list of its
+    siblings (absent if ``isRootNode`` is ``true``).
+
+``listNodeName`` (0-1)
+    The node’s human-readable name (absent if ``isRootNode`` is ``true``).
 
 .. _knora-base-filevalue:
 
@@ -794,7 +797,7 @@ here in Turtle format, and simplified for the purposes of illustration):
 To link the paintings to the collection, we must add a “link property”
 to the ontology. In this case, the link property will point from a
 painting to the collection it belongs to. Every link property must be a
-subproperty of ``hasLinkTo``.
+subproperty of ``kb:hasLinkTo``.
 
 ::
 
@@ -804,15 +807,15 @@ subproperty of ``hasLinkTo``.
         kb:objectClassConstraint :Collection .
 
 We must then add a “link value property”, which will point from a
-painting to a ``LinkValue`` (described in
+painting to a ``kb:LinkValue`` (described in
 :ref:`knora-base-linkvalue`), which will contain metadata about the
 link between the property and the collection. In particular, the link
 value specifies the owner of the link, the date when it was created, and
 the permissions that determine who can view or modify it. The name of
 the link value property is constructed using a simple naming convention:
 the word ``Value`` is appended to the name of the link property. In this
-case, since our link property is called ``isInCollectionValue``, the
-link value property must be called ``ex:isOnPageValue``. Every link
+case, since our link property is called ``:isInCollection``, the
+link value property must be called ``:isInCollectionValue``. Every link
 value property must be a subproperty of ``kb:hasLinkToValue``.
 
 ::
@@ -859,7 +862,7 @@ We can then state that the painting is in the collection:
         rdf:object data:pompidou ;
         kb:valueHasRefCount 1 .
 
-This creates a link (``isInCollection``) between the painting and the
+This creates a link (``paintings:isInCollection``) between the painting and the
 collection, along with a reification containing metadata about the link.
 We can visualise the result as the following graph:
 
@@ -1468,7 +1471,7 @@ is done using the following Knora-specific properties:
     objects of the property must belong to. Every subproperty of
     ``kb:hasValue`` or a ``kb:hasLinkTo`` (i.e. every property of a
     resource that points to a ``kb:Value`` or to another resource) is
-    required have this constraint, because the Knora API server relies
+    required to have this constraint, because the Knora API server relies
     on it to know what type of object to expect for the property. Knora
     will attempt to enforce this constraint.
 
