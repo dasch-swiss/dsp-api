@@ -250,7 +250,7 @@
 								prop_status[event.data.name].count--;
 								if (prop_status[event.data.name].count == 0) {
 									if (prop_status[event.data.name].occurrence == '0-1') {
-										tmp_add_symbol = add_symbol.clone(true);
+										var tmp_add_symbol = add_symbol.clone(true);
 										$(this).remove();
 										prop_status[propname].td.append(tmp_add_symbol);
 										add_symbol = tmp_add_symbol;
