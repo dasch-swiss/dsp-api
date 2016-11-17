@@ -24,12 +24,14 @@ import akka.actor.Status
 import akka.stream.ActorMaterializer
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, StandoffClassEntityInfoV1, StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
+import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages.{CreateStandoffResponseV1, _}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.ScalaPrettyPrinter
 import org.knora.webapi.util.standoff._
+import org.knora.webapi.twirl._
 
 import scala.concurrent.Future
 import scala.xml.NodeSeq
@@ -75,8 +77,6 @@ class StandoffResponderV1 extends ResponderV1 {
       */
     def createStandoff(xml: String, userProfile: UserProfileV1): Future[CreateStandoffResponseV1] = {
 
-        //println(xml)
-
         val mappingXMLTags2StandoffTags: Map[String, IRI] = Map(
             "text" -> OntologyConstants.KnoraBase.StandoffRootTag,
             "p" -> OntologyConstants.KnoraBase.StandoffParagraphTag,
@@ -106,10 +106,6 @@ class StandoffResponderV1 extends ResponderV1 {
 
             // request information about the standoff properties
             standoffPropertyEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffPropertyIris = standoffPropertyIris, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
-
-             _ = println(ScalaPrettyPrinter.prettyPrint(standoffClassEntities))
-
-            // _ = println(ScalaPrettyPrinter.prettyPrint(standoffPropertyEntities))
 
             // loop over the standoff nodes returned by the StandoffUtil and map them to type safe case classes
             standoffNodesToCreate = textWithStandoff.standoff.map {
@@ -147,6 +143,32 @@ class StandoffResponderV1 extends ResponderV1 {
                                 endParentIndex = freeStandoffTag.endParentIndex,
                                 attributes = Seq.empty[StandoffTagAttributeV1]
                             )
+                    }
+
+                    // check the data type of the given standoff class
+                    val standoffTagV1: StandoffTagV1 = standoffClassEntities.standoffClassEntityInfoMap(standoffClassIri).dataType match {
+                        case Some(standoffDateTag: IRI) =>
+                            StandoffDateTagV1(
+                                name = standoffBaseTagV1.name, // TODO: very ugly, would like to copy from standoffBaseTagV1
+                                startPosition = standoffBaseTagV1.startPosition,
+                                endPosition = standoffBaseTagV1.endPosition,
+                                uuid = standoffBaseTagV1.uuid,
+                                startIndex = standoffBaseTagV1.startIndex,
+                                endIndex = standoffBaseTagV1.endIndex,
+                                startParentIndex = standoffBaseTagV1.startParentIndex,
+                                endParentIndex = standoffBaseTagV1.endParentIndex,
+                                attributes = standoffBaseTagV1.attributes,
+                                valueHasCalendar = KnoraCalendarV1.GREGORIAN, // TODO: get from XML attr
+                                valueHasStartJDC = 0, // TODO: get from XML attr
+                                valueHasEndJDC = 0, // TODO: get from XML attr
+                                valueHasStartPrecision = KnoraPrecisionV1.DAY, // TODO: get from XML attr
+                                valueHasEndPrecision = KnoraPrecisionV1.DAY // TODO: get from XML attr
+                            )
+
+                        case None => standoffBaseTagV1 // no typed standoff class
+
+                        case unknownDataType => throw InconsistentTriplestoreDataException(s"the triplestore returned the data type $unknownDataType for $standoffClassIri that could be handled")
+
                     }
 
 

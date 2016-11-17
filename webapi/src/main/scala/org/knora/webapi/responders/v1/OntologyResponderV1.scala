@@ -589,6 +589,8 @@ class OntologyResponderV1 extends ResponderV1 {
                             )
                     }
 
+                    // determine the data type of the given standoff class IRI
+                    // if the resulting set is empty, it is not a typed standoff class
                     val standoffDataType: Set[IRI] = allStandoffSubClassOfRelations(standoffClassIri).intersect(standoffDataTypeClasses)
                     if (standoffDataType.size > 1) {
                         throw InconsistentTriplestoreDataException(s"standoff class $standoffClassIri is a subclass of more than one standoff data type class: ${standoffDataType.mkString(", ")}")

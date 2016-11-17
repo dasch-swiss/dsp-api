@@ -200,62 +200,6 @@ case class StandoffDiffDelete(baseStartPosition: Int,
                               baseEndPosition: Int,
                               derivedStartPosition: Int) extends StandoffDiff
 
-
-/**
-  * Represents an attribute for a [[StandoffTagV1]].
-  *
-  * @param key
-  * @param value
-  * @param datatype
-  */
-case class StandoffTagAttributeV1(key: String, value: String, datatype: String)
-
-trait StandoffTagV1 {
-
-    def name: IRI
-
-    def uuid: UUID
-
-    def startPosition: Int
-
-    def endPosition: Int
-
-    def startIndex: Int
-
-    def endIndex: Option[Int]
-
-    def startParentIndex: Option[Int]
-
-    def endParentIndex: Option[Int]
-
-    def attributes: Seq[StandoffTagAttributeV1]
-
-}
-
-// TODO: move this case classes to org.knora.webapi.twirl
-
-case class StandoffBaseTagV1(name: IRI,
-                             uuid: UUID,
-                             startPosition: Int,
-                             endPosition: Int,
-                             startIndex: Int,
-                             endIndex: Option[Int],
-                             startParentIndex: Option[Int],
-                             endParentIndex: Option[Int],
-                             attributes: Seq[StandoffTagAttributeV1]) extends StandoffTagV1
-
-case class StandoffLinkTagV1(name: IRI,
-                             uuid: UUID,
-                             startPosition: Int,
-                             endPosition: Int,
-                             startIndex: Int,
-                             endIndex: Option[Int],
-                             startParentIndex: Option[Int],
-                             endParentIndex: Option[Int],
-                             attributes: Seq[StandoffTagAttributeV1],
-                             hasLink: IRI) extends StandoffTagV1
-
-
 /**
   * Standoff-related constants.
   */
