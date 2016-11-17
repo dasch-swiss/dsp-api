@@ -56,19 +56,19 @@ class ProjectsResponderV1 extends ResponderV1 {
     /**
       * Gets permissions for the current user on the given project.
       *
-      * @param projectIri           the Iri of the project.
+      * @param projectIRI           the Iri of the project.
       * @param propertiesForProject assertions containing permissions on the project.
       * @param userProfile          the user that is making the request.
       * @return permission level of the current user on the project.
       */
-    private def getUserPermissionV1ForProject(projectIri: IRI, propertiesForProject: Map[IRI, String], userProfile: UserProfileV1): Option[Int] = {
+    private def getUserPermissionV1ForProject(projectIRI: IRI, propertiesForProject: Map[IRI, String], userProfile: UserProfileV1): Option[Int] = {
 
         // propertiesForProject must contain an owner for the project (knora-base:attachedToUser).
         propertiesForProject.get(OntologyConstants.KnoraBase.AttachedToUser) match {
             case Some(user) => // add statement that `PermissionUtil.getUserPermissionV1` requires but is not present in the data for projects.
-                val assertionsForProject: Seq[(IRI, IRI)] = (OntologyConstants.KnoraBase.AttachedToProject, projectIri) +: propertiesForProject.toVector
+                val assertionsForProject: Seq[(IRI, IRI)] = (OntologyConstants.KnoraBase.AttachedToProject, projectIRI) +: propertiesForProject.toVector
                 PermissionUtilV1.getUserPermissionV1FromAssertions(
-                    subjectIri = projectIri,
+                    subjectIri = projectIRI,
                     assertions = assertionsForProject,
                     userProfile = userProfile
                 )
@@ -101,26 +101,27 @@ class ProjectsResponderV1 extends ResponderV1 {
             //_ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: ${MessageUtil.toSource(projectsWithProperties)}")
 
             projects = projectsWithProperties.map {
-                case (projIri: String, propsMap: Map[String, String]) =>
+                case (projectIri: String, propsMap: Map[String, String]) =>
 
                     val rightsInProject = userProfile match {
-                        case Some(profile) => getUserPermissionV1ForProject(projectIri = projIri, propertiesForProject = propsMap, profile)
+                        case Some(profile) => getUserPermissionV1ForProject(projectIRI = projectIri, propertiesForProject = propsMap, profile)
                         case None => None
                     }
 
                     ProjectInfoV1(
-                        id = projIri,
-                        shortname = propsMap(OntologyConstants.KnoraBase.ProjectShortname),
+                        id = projectIri,
+                        shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
                         longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname),
                         description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription),
                         keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords),
-                        projectOntologyGraph = propsMap(OntologyConstants.KnoraBase.ProjectOntologyGraph),
-                        projectDataGraph = propsMap(OntologyConstants.KnoraBase.ProjectDataGraph),
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo),
-                        basepath = propsMap.get(OntologyConstants.KnoraBase.ProjectBasepath),
-                        isActiveProject = propsMap.get(OntologyConstants.KnoraBase.IsActiveProject).map(_.toBoolean),
-                        hasSelfJoinEnabled = propsMap.get(OntologyConstants.KnoraBase.HasSelfJoinEnabled).map(_.toBoolean),
-                        rights = None
+                        belongsToInstitution = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject),
+                        basepath = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectBasepath, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
+                        projectOntologyGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
+                        projectDataGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
+                        isActiveProject = propsMap.getOrElse(OntologyConstants.KnoraBase.IsActiveProject, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no isActiveProject defined.")).toBoolean,
+                        hasSelfJoinEnabled = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean,
+                        rights = None // FIXME: Why do I need this?
                     )
             }.toVector
         } yield ProjectsResponseV1(
@@ -305,36 +306,29 @@ class ProjectsResponderV1 extends ResponderV1 {
 
 
             val rightsInProject = userProfile match {
-                case Some(profile) => getUserPermissionV1ForProject(projectIri = projectIri, propertiesForProject = projectProperties, profile)
+                case Some(profile) => getUserPermissionV1ForProject(projectIRI = projectIri, propertiesForProject = projectProperties, profile)
                 case None => None
             }
 
-            infoType match {
-                case ProjectInfoType.FULL =>
-                    ProjectInfoV1(
-                        id = projectIri,
-                        shortname = projectProperties.get(OntologyConstants.KnoraBase.ProjectShortname).get,
-                        longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
-                        description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
-                        keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords),
-                        projectOntologyGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectOntologyGraph).get,
-                        projectDataGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectDataGraph).get,
-                        logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
-                        basepath = projectProperties.get(OntologyConstants.KnoraBase.ProjectBasepath),
-                        isActiveProject = projectProperties.get(OntologyConstants.KnoraBase.IsActiveProject).map(_.toBoolean),
-                        hasSelfJoinEnabled = projectProperties.get(OntologyConstants.KnoraBase.HasSelfJoinEnabled).map(_.toBoolean),
-                        rights = rightsInProject
-                    )
-                case ProjectInfoType.SHORT | _ =>
-                    ProjectInfoV1(
-                        id = projectIri,
-                        shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, ""),
-                        longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
-                        description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
-                        projectOntologyGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectOntologyGraph).get,
-                        projectDataGraph = projectProperties.get(OntologyConstants.KnoraBase.ProjectDataGraph).get
-                    )
-            }
+            val projectInfoFull = ProjectInfoV1(
+                id = projectIri,
+                shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
+                longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
+                description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
+                keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords),
+                logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
+                belongsToInstitution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToProject),
+                basepath = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectBasepath, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
+                projectOntologyGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
+                projectDataGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
+                isActiveProject = projectProperties.getOrElse(OntologyConstants.KnoraBase.IsActiveProject, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no isActiveProject defined.")).toBoolean,
+                hasSelfJoinEnabled = projectProperties.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean,
+                rights = None // FIXME: Why do I need this?
+            )
+
+            /* return the requested info type */
+            projectInfoFull.ofType(infoType)
+
         } else {
             // no information was found for the given project Iri
             throw NotFoundException(s"For the given project Iri $projectIri no information was found")

@@ -50,10 +50,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
     implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    val imagesPI = SharedTestData.testprojectProjectInfoV1
-    val incunabulaPI= SharedTestData.incunabulaProjectInfoV1
-    val testprojectPI = SharedTestData.testprojectProjectInfoV1
-
     val rootUserProfileV1 = SharedTestData.rootUserProfileV1
 
     val actorUnderTest = TestActorRef[ProjectsResponderV1]
@@ -74,10 +70,10 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsgPF(timeout) {
                     case ProjectsResponseV1(projects, userdata) => {
                         //println(projects)
-                        assert(projects.contains(imagesPI))
+                        assert(projects.contains(SharedTestData.imagesProjectInfoV1))
                         //Todo: make it work with icunabula
                         //assert(projects.contains(incunabulaPI))
-                        assert(projects.contains(testprojectPI))
+                        assert(projects.contains(SharedTestData.sixerProjectProjectInfoV1))
                     }
                 }
             }
@@ -117,8 +113,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
         }
         "asked about a project identified by 'shortname' " should {
             "return 'full' project info if the project is known " in {
-                actorUnderTest ! ProjectInfoByShortnameGetRequestV1(incunabulaPI.shortname, ProjectInfoType.FULL, Some(rootUserProfileV1))
-                expectMsg(ProjectInfoResponseV1(incunabulaPI, Some(rootUserProfileV1.userData)))
+                actorUnderTest ! ProjectInfoByShortnameGetRequestV1(SharedTestData.incunabulaProjectInfoV1.shortname, ProjectInfoType.FULL, Some(rootUserProfileV1))
+                expectMsg(ProjectInfoResponseV1(SharedTestData.incunabulaProjectInfoV1, Some(rootUserProfileV1.userData)))
             }
 
             "return 'NotFoundException' when the project is unknown " in {

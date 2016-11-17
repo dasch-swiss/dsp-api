@@ -18,6 +18,7 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1, GroupInfoType}
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType.PermissionType
@@ -26,7 +27,7 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.KnoraIdUtil
+import org.knora.webapi.util.{KnoraIdUtil, MessageUtil}
 
 import scala.collection.immutable.Iterable
 import scala.concurrent.duration._
@@ -64,17 +65,34 @@ class PermissionsResponderV1 extends ResponderV1 {
     }
 
 
+    /**
+      * Creates the user's [[PermissionProfileV1]]
+      * @param projectIris the projects the user is part of.
+      * @param groupIris the groups the user is member of (without ProjectMember, ProjectAdmin, SystemAdmin)
+      * @param isInProjectAdminGroups the projects in which the user is member of the ProjectAdmin group.
+      * @param isInSystemAdminGroup the flag denoting membership in the SystemAdmin group.
+      * @return
+      */
     def permissionsProfileGetV1(projectIris: Seq[IRI], groupIris: Seq[IRI], isInProjectAdminGroups: Seq[IRI], isInSystemAdminGroup: Boolean): Future[PermissionProfileV1] = {
 
         for {
             a <- Future("")
 
-            projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
+            /* If the user is member of the SystemAdmin group, then we also need to return the SystemProject ProjectInfo */
+            extendedProjectIris: Seq[IRI] = if (isInSystemAdminGroup) {
+                projectIris.toList ::: List(OntologyConstants.KnoraBase.SystemProject)
+            } else {
+                projectIris
+            }
+            //_ = log.debug(s"permissionsProfileGetV1 - extendedProjectIris: $extendedProjectIris")
+
+            /* Retrieve short ProjectInfoV1s for each project the user is part of (now including the SystemProject */
+            projectInfoFutures: Seq[Future[ProjectInfoV1]] = extendedProjectIris.map {
                 projectIri => (responderManager ? ProjectInfoByIRIGetRequestV1(projectIri, ProjectInfoType.SHORT, None)).mapTo[ProjectInfoResponseV1] map (_.project_info)
             }
 
             projectInfos <- Future.sequence(projectInfoFutures)
-            //_ = log.debug(s"getPermissionsProfileV1 - projectInfos: ${MessageUtil.toSource(projectInfos)}")
+            //_ = log.debug(s"permissionsProfileGetV1 - projectInfos: ${MessageUtil.toSource(projectInfos)}")
 
             // find out to which project each group belongs to
             //_ = log.debug("getPermissionsProfileV1 - find out to which project each group belongs to")
@@ -91,7 +109,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             } else {
                 List.empty[(IRI, IRI)]
             }
-            //_ = log.debug(s"getPermissionsProfileV1 - found: $groups")
+            //_ = log.debug(s"permissionsProfileGetV1 - groups: ${MessageUtil.toSource(groups)}")
 
 
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectMember' group for each project */
@@ -103,6 +121,8 @@ class PermissionsResponderV1 extends ResponderV1 {
             } else {
                 List.empty[(IRI, IRI)]
             }
+            //_ = log.debug(s"permissionsProfileGetV1 - projectMembers: ${MessageUtil.toSource(projectMembers)}")
+
 
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group for each project */
             projectAdmins: List[(IRI, IRI)] = if (projectIris.nonEmpty) {
@@ -113,23 +133,27 @@ class PermissionsResponderV1 extends ResponderV1 {
             } else {
                 List.empty[(IRI, IRI)]
             }
+            //_ = log.debug(s"permissionsProfileGetV1 - projectAdmins: ${MessageUtil.toSource(projectAdmins)}")
+
 
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
             systemAdmin: List[(IRI, IRI)] = if (isInSystemAdminGroup) {
-                List(("http://www.knora.org/ontology/knora-base#SystemProject", "http://www.knora.org/ontology/knora-base#SystemAdmin"))
+                List((OntologyConstants.KnoraBase.SystemProject, OntologyConstants.KnoraBase.SystemAdmin))
             } else {
                 List.empty[(IRI, IRI)]
             }
+            //_ = log.debug(s"permissionsProfileGetV1 - systemAdmin: ${MessageUtil.toSource(systemAdmin)}")
 
 
             //ToDo: Maybe we need to add KnownUser group for all other projects
             /* combine explicit groups with materialized implicit groups */
             allGroups = groups ::: projectMembers ::: projectAdmins ::: systemAdmin
             groupsPerProject = allGroups.groupBy(_._1).map { case (k,v) => (k,v.map(_._2))}
+            //_= log.debug(s"permissionsProfileGetV1 - groupsPerProject: ${MessageUtil.toSource(groupsPerProject)}")
 
             /* retrieve the administrative permissions for each group per project the user is member of */
             administrativePermissionsPerProjectFuture: Future[Map[IRI, Set[PermissionV1]]] = if (projectIris.nonEmpty) {
-                getUserAdministrativePermissionsRequestV1(groupsPerProject)
+                userAdministrativePermissionsGetV1(groupsPerProject)
             } else {
                 Future(Map.empty[IRI, Set[PermissionV1]])
             }
@@ -137,7 +161,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             /* retrieve the default object access permissions for each group per project the user is member of */
             defaultObjectAccessPermissionsPerProjectFuture: Future[Map[IRI, Set[PermissionV1]]] = if (projectIris.nonEmpty) {
-                getUserDefaultObjectAccessPermissionsRequestV1(groupsPerProject)
+                userDefaultObjectAccessPermissionsGetV1(groupsPerProject)
             } else {
                 Future(Map.empty[IRI, Set[PermissionV1]])
             }
@@ -273,7 +297,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 projectIri = projectIRI,
                 groupIri = groupIRI
             ).toString())
-            //_ = log.debug(s"getAdministrativePermissionForProjectGroupV1 - query: $sparqlQueryString")
+            //_ = log.debug(s"administrativePermissionForProjectGroupGetV1 - query: $sparqlQueryString")
 
             permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
             //_ = log.debug(s"getAdministrativePermissionForProjectGroupV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
@@ -427,7 +451,6 @@ class PermissionsResponderV1 extends ResponderV1 {
             groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
             }
-
             //_ = log.debug(s"getDefaultObjectAccessPermissionV1 - groupedResult: ${MessageUtil.toSource(groupedPermissionsQueryResponse)}")
 
             hasPermissions = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.DOAP)
@@ -459,7 +482,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 projectIri = projectIRI,
                 groupIri = groupIRI
             ).toString())
-            //_ = log.debug(s"getAdministrativePermissionForProjectGroupV1 - query: $sparqlQueryString")
+            //_ = log.debug(s"defaultObjectAccessPermissionForProjectGroupGetV1 - query: $sparqlQueryString")
 
             permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
             //_ = log.debug(s"getAdministrativePermissionForProjectGroupV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
@@ -551,7 +574,7 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @param groupsPerProject the groups in each project the user is member of.
       * @return a the user's max permissions for each project.
       */
-    def getUserAdministrativePermissionsRequestV1(groupsPerProject: Map[IRI, List[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
+    def userAdministrativePermissionsGetV1(groupsPerProject: Map[IRI, List[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
 
         //FixMe: loop through each project the user is part of and retrieve the administrative permissions attached to each group he is in, calculate max permissions, package everything in a neat little object, and return it back
 
@@ -586,7 +609,7 @@ class PermissionsResponderV1 extends ResponderV1 {
         result
     }
 
-    def getUserDefaultObjectAccessPermissionsRequestV1(groupsPerProject: Map[IRI, List[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
+    def userDefaultObjectAccessPermissionsGetV1(groupsPerProject: Map[IRI, List[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
 
         //FixMe: loop through each project the user is part of and retrieve the default object access permissions attached to each group he is in, calculate max permissions, package everything in a neat little object, and return it back
         val result = Map.empty[IRI, Set[PermissionV1]]

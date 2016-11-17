@@ -157,12 +157,14 @@ case class ProjectInfoV1(id: IRI,
                          description: Option[String] = None,
                          keywords: Option[String] = None,
                          logo: Option[String] = None,
-                         basepath: Option[String] = None,
-                         isActiveProject: Option[Boolean] = None,
-                         hasSelfJoinEnabled: Option[Boolean] = None,
+                         belongsToInstitution: Option[IRI] = None,
+                         basepath: String,
                          projectOntologyGraph: IRI,
                          projectDataGraph: IRI,
-                         rights: Option[Int] = None) {
+                         isActiveProject: Boolean,
+                         hasSelfJoinEnabled: Boolean,
+                         rights: Option[Int] = None // FIXME: Why do I need this?
+                        ) {
 
     def ofType(projectInfoType: ProjectInfoType): ProjectInfoV1 = {
 
@@ -174,10 +176,11 @@ case class ProjectInfoV1(id: IRI,
                     longname = longname,
                     description = description,
                     keywords = keywords,
-                    projectOntologyGraph = projectOntologyGraph,
-                    projectDataGraph = projectDataGraph,
                     logo = logo,
                     basepath = basepath,
+                    belongsToInstitution = belongsToInstitution,
+                    projectOntologyGraph = projectOntologyGraph,
+                    projectDataGraph = projectDataGraph,
                     isActiveProject = isActiveProject,
                     hasSelfJoinEnabled = hasSelfJoinEnabled,
                     rights = rights
@@ -189,14 +192,15 @@ case class ProjectInfoV1(id: IRI,
                     shortname = shortname,
                     longname = longname,
                     description = description,
-                    keywords = None,
+                    keywords = None, // removed
+                    belongsToInstitution = None, //removed
+                    logo = None, //removed
+                    basepath = basepath,
                     projectOntologyGraph = projectOntologyGraph,
                     projectDataGraph = projectDataGraph,
-                    logo = None,
-                    basepath = None,
-                    isActiveProject = None,
-                    hasSelfJoinEnabled = None,
-                    rights = None
+                    isActiveProject = isActiveProject,
+                    hasSelfJoinEnabled = hasSelfJoinEnabled,
+                    rights = None // removed
                 )
             }
             case _ => throw BadRequestException(s"The requested projectInfoType: $projectInfoType is invalid.")
@@ -251,7 +255,7 @@ trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
 
     import UserV1JsonProtocol.userDataV1Format
 
-    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat12(ProjectInfoV1)
+    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat13(ProjectInfoV1)
     // we have to use lazyFormat here because `UserV1JsonProtocol` contains an import statement for this object.
     // this results in recursive import statements
     // rootFormat makes it return the expected type again.

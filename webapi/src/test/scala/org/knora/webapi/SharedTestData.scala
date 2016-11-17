@@ -49,15 +49,17 @@ object SharedTestData {
         sessionId = None,
         permissionProfile = PermissionProfileV1(
             projectInfos = List(
-                SharedTestData.incunabulaProjectInfoV1.ofType(ProjectInfoType.SHORT),
-                SharedTestData.imagesProjectInfoV1.ofType(ProjectInfoType.SHORT),
-                SharedTestData.systemProjectInfoV1.ofType(ProjectInfoType.SHORT)
+                SharedTestData.incunabulaProjectInfoV1,
+                SharedTestData.imagesProjectInfoV1,
+                SharedTestData.systemProjectInfoV1
             ),
             groupsPerProject = Map(
                 "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}"),
                 "http://www.knora.org/ontology/knora-base#SystemProject" -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}"),
                 "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
-            )
+            ),
+            administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]],
+            defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
         )
     )
 
@@ -200,6 +202,11 @@ object SharedTestData {
         projects = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
         sessionId = None,
         permissionProfile = PermissionProfileV1(
+            projectInfos = List(
+                SharedTestData.incunabulaProjectInfoV1,
+                SharedTestData.imagesProjectInfoV1,
+                SharedTestData.sixerProjectProjectInfoV1
+            ),
             groupsPerProject = Map(
                 "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}"),
                 "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer"),
@@ -219,7 +226,7 @@ object SharedTestData {
                     PermissionV1.ProjectAdminAllPermission
                 )
             ),
-            defaultObjectAccessPermissionsPerProject = Map.empty[IRI, Set[PermissionV1]]
+            defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
         )
     )
 
@@ -229,11 +236,13 @@ object SharedTestData {
         shortname = "SystemProject",
         longname = Some("Knora System Project"),
         description = None,
+        logo = None,
+        belongsToInstitution = None,
         projectOntologyGraph = "-",
         projectDataGraph = "-",
-        basepath = Some("-"),
-        isActiveProject = Some(true),
-        hasSelfJoinEnabled = Some(false),
+        basepath = "-",
+        isActiveProject = true,
+        hasSelfJoinEnabled = false,
         rights = None
     )
 
@@ -247,9 +256,9 @@ object SharedTestData {
         projectOntologyGraph = "http://www.knora.org/ontology/images",
         projectDataGraph = "http://www.knora.org/data/images",
         logo = None,
-        basepath = Some("/imldata/SALSAH-TEST-01/images"),
-        isActiveProject = Some(true),
-        hasSelfJoinEnabled = Some(false),
+        basepath = "/imldata/SALSAH-TEST-01/images",
+        isActiveProject = true,
+        hasSelfJoinEnabled = false,
         rights = None
     )
 
@@ -263,14 +272,14 @@ object SharedTestData {
         projectOntologyGraph = "http://www.knora.org/ontology/incunabula",
         projectDataGraph = "http://www.knora.org/data/incunabula",
         logo = Some("incunabula_logo.png"),
-        basepath = Some("/imldata/SALSAH-TEST-01/Incunabula"),
-        isActiveProject = Some(true),
-        hasSelfJoinEnabled = Some(false),
+        basepath = "/imldata/SALSAH-TEST-01/Incunabula",
+        isActiveProject = true,
+        hasSelfJoinEnabled = false,
         rights = None
     )
 
-    /* represents the ProjectInfoV1of the testproject */
-    def testprojectProjectInfoV1 = ProjectInfoV1(
+    /* represents the ProjectInfoV1of the testproject (666) */
+    def sixerProjectProjectInfoV1 = ProjectInfoV1(
         id = "http://data.knora.org/projects/666",
         shortname = "testproject",
         longname = Some("Test Project"),
@@ -279,9 +288,9 @@ object SharedTestData {
         projectOntologyGraph = "http://www.knora.org/ontology/testproject",
         projectDataGraph = "http://www.knora.org/data/testproject",
         logo = None,
-        basepath = Some("/imldata/testproject"),
-        isActiveProject = Some(true),
-        hasSelfJoinEnabled = Some(false),
+        basepath = "/imldata/testproject",
+        isActiveProject = true,
+        hasSelfJoinEnabled = false,
         rights = None
     )
 

@@ -20,7 +20,9 @@ import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.ontologymessages.ResourceTypeResponseV1
 import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
@@ -73,7 +75,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
         "queried about the permission profile" should {
 
-            "return the permissions profile" in {
+            "return the permissions profile (1)" in {
                 actorUnderTest ! PermissionProfileGetV1(
                     projectIris = SharedTestData.rootUserProfileV1.projects,
                     groupIris = SharedTestData.rootUserProfileV1.groups,
@@ -81,11 +83,13 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     isInSystemAdminGroup = true
                 )
                 expectMsg(SharedTestData.rootUserProfileV1.permissionProfile)
+            }
 
+            "return the permissions profile (2)" in {
                 actorUnderTest ! PermissionProfileGetV1(
                     projectIris = SharedTestData.multiuserUserProfileV1.projects,
                     groupIris = SharedTestData.multiuserUserProfileV1.groups,
-                    isInProjectAdminGroups = List("http://data.knora.org/projects/77275339>", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
+                    isInProjectAdminGroups = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
                     isInSystemAdminGroup = false
                 )
                 expectMsg(SharedTestData.multiuserUserProfileV1.permissionProfile)
@@ -254,12 +258,12 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
         "called" should {
 
             "return user's administrative permissions " in {
-                val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.getUserAdministrativePermissionsRequestV1(multiuserUserProfileV1.permissionProfile.groupsPerProject).mapTo[Map[IRI, Set[PermissionV1]]], 1.seconds)
+                val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.userAdministrativePermissionsGetV1(multiuserUserProfileV1.permissionProfile.groupsPerProject).mapTo[Map[IRI, Set[PermissionV1]]], 1.seconds)
                 result should equal(multiuserUserProfileV1.permissionProfile.administrativePermissionsPerProject)
             }
 
             "return user's default object access permissions " in {
-                val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.getUserDefaultObjectAccessPermissionsRequestV1(multiuserUserProfileV1.permissionProfile.groupsPerProject), 1.seconds)
+                val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.userDefaultObjectAccessPermissionsGetV1(multiuserUserProfileV1.permissionProfile.groupsPerProject), 1.seconds)
                 result should equal(multiuserUserProfileV1.permissionProfile.defaultObjectAccessPermissionsPerProject)
             }
 
