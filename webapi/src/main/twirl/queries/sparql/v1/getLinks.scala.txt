@@ -24,6 +24,12 @@
  * Gets the outbound or inbound links from/to a resource. This query is used recursively to get a graph of
  * resources reachable from a given resource.
  *
+ * If the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
+ * SPARQL. Specifically, we use inference to find subproperties of knora-base:hasLinkTo and knora-base:isPartOf.
+ * Without inference, we have to do this using SPARQL property path syntax (rdfs:subPropertyOf*). Using inference
+ * requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit> whenever we need to get explicit
+ * (non-inferred) statements.
+ *
  * @param triplestore the name of the triplestore being used.
  * @param startNodeIri the IRI of the resource to use as the starting point of the query.
  * @param outbound true to get outbound links, false to get inbound links.
@@ -39,14 +45,18 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 SELECT ?startNodeClass ?startNodeLabel ?startNodeOwner ?startNodeProject ?startNodePermissions
        ?otherNode ?otherNodeClass ?otherNodeLabel ?otherNodeOwner ?otherNodeProject ?otherNodePermissions
        ?linkValue ?linkProp ?linkValueOwner ?linkValueProject ?linkValuePermissions
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
 WHERE {
     BIND(IRI("@startNodeIri") AS ?startNode) .
 
-    ?startNode a ?startNodeClass ;
-        rdfs:label ?startNodeLabel ;
+    @if(triplestore.startsWith("graphdb")) {
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?startNode a ?startNodeClass .
+        }
+    } else {
+        ?startNode a ?startNodeClass .
+    }
+
+    ?startNode rdfs:label ?startNodeLabel ;
         knora-base:attachedToUser ?startNodeOwner ;
         knora-base:attachedToProject ?startNodeProject ;
         knora-base:isDeleted false .
@@ -55,20 +65,49 @@ WHERE {
         ?startNode knora-base:hasPermissions ?startNodePermissions .
     }
 
-    ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
+    @if(triplestore == "graphdb") {
+        @if(outbound) {
+            ?startNode knora-base:hasLinkTo ?otherNode .
 
-    @* Here FILTER NOT EXISTS is more efficient than MINUS on Fuseki. *@
-    @if(triplestore == "fuseki") {
-        FILTER NOT EXISTS
-    } else {
-        MINUS
-    }
-        {
-            ?linkProp rdfs:subPropertyOf* knora-base:isPartOf .
+            FILTER NOT EXISTS {
+                ?startNode knora-base:isPartOf ?otherNode .
+            }
+
+            GRAPH <http://www.ontotext.com/explicit> {
+                ?startNode ?linkProp ?otherNode .
+            }
+        } else {
+            ?otherNode knora-base:hasLinkTo ?startNode .
+
+            FILTER NOT EXISTS {
+                ?otherNode knora-base:isPartOf ?startNode .
+            }
+
+            GRAPH <http://www.ontotext.com/explicit> {
+                ?otherNode ?linkProp ?startNode .
+            }
         }
+    } else {
+        ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+        @if(outbound) {
+            ?startNode ?linkProp ?otherNode .
+
+            FILTER NOT EXISTS {
+                ?isPartOfProp rdfs:subPropertyOf* knora-base:isPartOf .
+                ?startNode ?isPartOfProp ?otherNode .
+            }
+        } else {
+            ?otherNode ?linkProp ?startNode .
+
+            FILTER NOT EXISTS {
+                ?isPartOfProp rdfs:subPropertyOf* knora-base:isPartOf .
+                ?otherNode ?isPartOfProp ?startNode .
+            }
+        }
+    }
 
     @if(outbound) {
-        ?startNode ?linkProp ?otherNode .
         ?otherNode knora-base:isDeleted false .
 
         ?linkValue a knora-base:LinkValue ;
@@ -76,7 +115,6 @@ WHERE {
             rdf:predicate ?linkProp ;
             rdf:object ?otherNode .
     } else {
-        ?otherNode ?linkProp ?startNode .
         ?otherNode knora-base:isDeleted false .
 
         ?linkValue a knora-base:LinkValue ;
@@ -85,8 +123,15 @@ WHERE {
             rdf:object ?startNode .
     }
 
-    ?otherNode a ?otherNodeClass ;
-        rdfs:label ?otherNodeLabel ;
+    @if(triplestore.startsWith("graphdb")) {
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?otherNode a ?otherNodeClass .
+        }
+    } else {
+        ?otherNode a ?otherNodeClass .
+    }
+
+    ?otherNode rdfs:label ?otherNodeLabel ;
         knora-base:attachedToUser ?otherNodeOwner ;
         knora-base:attachedToProject ?otherNodeProject .
 

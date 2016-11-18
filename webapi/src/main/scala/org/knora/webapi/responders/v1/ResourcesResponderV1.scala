@@ -144,7 +144,11 @@ class ResourcesResponderV1 extends ResponderV1 {
                 ).toString())
 
                 // _ = println(sparql)
-                response: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResponse]
+
+                // If we're using GraphDB, optimise this query by using inference.
+                useInference = settings.triplestoreType.startsWith("graphdb")
+
+                response: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql = sparql, useInference = useInference)).mapTo[SparqlSelectResponse]
                 rows = response.results.bindings
 
                 // Did we get any results?
