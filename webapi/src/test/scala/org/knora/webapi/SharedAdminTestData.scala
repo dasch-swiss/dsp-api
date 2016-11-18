@@ -27,12 +27,18 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProf
 
 /**
   * This object holds the same user which are loaded with '_test_data/all_data/admin-data.ttl'. Using this object
-  * in tests, allows easier updating of user details as they change over time.
+  * in tests, allows easier updating of details as they change over time.
   */
-object SharedTestData {
+object SharedAdminTestData {
+
+    /*************************************/
+    /** System Admin Data               **/
+    /*************************************/
+
+    val SYSTEM_PROJECT_IRI = OntologyConstants.KnoraBase.SystemProject // built-in project
 
     /* represents the user profile of 'root' as found in admin-data.ttl */
-    def rootUserProfileV1 = UserProfileV1(
+    def rootUser = UserProfileV1(
         UserDataV1(
             user_id = Some("http://data.knora.org/users/root"),
             username = Some("root"),
@@ -49,22 +55,30 @@ object SharedTestData {
         sessionId = None,
         permissionProfile = PermissionProfileV1(
             projectInfos = List(
-                SharedTestData.incunabulaProjectInfoV1,
-                SharedTestData.imagesProjectInfoV1,
-                SharedTestData.systemProjectInfoV1
+                SharedAdminTestData.incunabulaProjectInfo.ofType(ProjectInfoType.SHORT),
+                SharedAdminTestData.imagesProjectInfo.ofType(ProjectInfoType.SHORT),
+                SharedAdminTestData.systemProjectInfo.ofType(ProjectInfoType.SHORT)
             ),
             groupsPerProject = Map(
                 "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}"),
                 "http://www.knora.org/ontology/knora-base#SystemProject" -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}"),
                 "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
             ),
-            administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]],
+            administrativePermissionsPerProject = Map(
+                "http://data.knora.org/projects/77275339" -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission
+                ),
+                "http://www.knora.org/ontology/knora-base#SystemProject" -> Set(),
+                "http://data.knora.org/projects/images" -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission
+                )
+            ),
             defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
         )
     )
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    def superuserUserProfileV1 = UserProfileV1(
+    def superuserUser = UserProfileV1(
         UserDataV1(
             user_id = Some("http://data.knora.org/users/superuser"),
             username = Some("superuser"),
@@ -87,7 +101,7 @@ object SharedTestData {
     )
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    def normaluserUserProfileV1 = UserProfileV1(
+    def normalUser = UserProfileV1(
         UserDataV1(
             user_id = Some("http://data.knora.org/users/normaluser"),
             username = Some("normaluser"),
@@ -106,7 +120,7 @@ object SharedTestData {
     )
 
     /* represents an anonymous user */
-    def anonymousUserProfileV1 = UserProfileV1(
+    def anonymousUser = UserProfileV1(
         UserDataV1(
             lang = "de"
         ),
@@ -116,8 +130,77 @@ object SharedTestData {
         permissionProfile = PermissionProfileV1()
     )
 
+
+    /* represents the 'multiuser' as found in admin-data.ttl */
+    def multiuserUser = UserProfileV1(
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/multiuser"),
+            username = Some("multiuser"),
+            firstname = Some("Multi"),
+            lastname = Some("User"),
+            email = Some("multi.user@example.com"),
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            token = None,
+            isActiveUser = Some(true),
+            lang = "de"
+        ),
+        groups = List("http://data.knora.org/groups/images-reviewer"),
+        projects = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
+        sessionId = None,
+        permissionProfile = PermissionProfileV1(
+            projectInfos = List(
+                SharedAdminTestData.incunabulaProjectInfo.ofType(ProjectInfoType.SHORT),
+                SharedAdminTestData.imagesProjectInfo.ofType(ProjectInfoType.SHORT),
+                SharedAdminTestData.triplesixProjectInfo.ofType(ProjectInfoType.SHORT)
+            ),
+            groupsPerProject = Map(
+                "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}"),
+                "http://data.knora.org/projects/images" -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}"),
+                "http://data.knora.org/projects/666" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+            ),
+            administrativePermissionsPerProject = Map(
+                "http://data.knora.org/projects/77275339" -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission,
+                    PermissionV1.ProjectAdminAllPermission
+                ),
+                "http://data.knora.org/projects/images" -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission,
+                    PermissionV1.ProjectAdminAllPermission
+                ),
+                "http://data.knora.org/projects/666" -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission,
+                    PermissionV1.ProjectAdminAllPermission
+                )
+            ),
+            defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
+        )
+    )
+
+    /* represents the full project info of the Knora System project */
+    def systemProjectInfo = ProjectInfoV1(
+        id = SYSTEM_PROJECT_IRI,
+        shortname = "SystemProject",
+        longname = Some("Knora System Project"),
+        description = None,
+        logo = None,
+        belongsToInstitution = None,
+        projectOntologyGraph = "-",
+        projectDataGraph = "-",
+        basepath = "-",
+        isActiveProject = true,
+        hasSelfJoinEnabled = false,
+        rights = None
+    )
+
+
+    /*************************************/
+    /** Images Demo Project Admin Data  **/
+    /*************************************/
+
+    val IMAGES_PROJECT_IRI = "http://data.knora.org/projects/images"
+
     /* represents 'user01' as found in admin-data.ttl  */
-    def user01UserProfileV1 = UserProfileV1(
+    def imagesUser01 = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/c266a56709"),
             username = Some("user01"),
@@ -140,7 +223,7 @@ object SharedTestData {
     )
 
     /* represents 'user02' as found in admin-data.ttl  */
-    def user02UserProfileV1 = UserProfileV1(
+    def imagesUser02 = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/97cec4000f"),
             username = Some("user02"),
@@ -162,8 +245,64 @@ object SharedTestData {
         )
     )
 
-    /* represents 'testuser' as found in admin-data.ttl  */
-    def testuserUserProfileV1 = UserProfileV1(
+    /* represents the full project info of the images project */
+    def imagesProjectInfo = ProjectInfoV1(
+        id = "http://data.knora.org/projects/images",
+        shortname = "images",
+        longname = Some("Image Collection Demo"),
+        description = Some("A demo project of a collection of images"),
+        keywords = Some("images, collection"),
+        projectOntologyGraph = "http://www.knora.org/ontology/images",
+        projectDataGraph = "http://www.knora.org/data/images",
+        logo = None,
+        basepath = "/imldata/SALSAH-TEST-01/images",
+        isActiveProject = true,
+        hasSelfJoinEnabled = false,
+        rights = None
+    )
+
+    /* represents the full GroupInfoV1 of the images ProjectAdmin group */
+    def imagesProjectAdminGroupInfo = GroupInfoV1(
+        id = "-",
+        name = "ProjectAdmin",
+        description = Some("Default Project Admin Group"),
+        belongsToProject = "http://data.knora.org/projects/images",
+        isActiveGroup = true,
+        hasSelfJoinEnabled = false,
+        hasPermissions = Vector.empty[GroupPermissionV1]
+    )
+
+    /* represents the full GroupInfoV1 of the images ProjectMember group */
+    def imagesProjectMemberGroupInfo = GroupInfoV1(
+        id = "-",
+        name = "ProjectMember",
+        description = Some("Default Project Member Group"),
+        belongsToProject = "http://data.knora.org/projects/images",
+        isActiveGroup = true,
+        hasSelfJoinEnabled = false,
+        hasPermissions = Vector.empty[GroupPermissionV1]
+    )
+
+    /* represents the full GroupInfoV1 of the images project reviewer group */
+    def imageReviewerGroupInfo = GroupInfoV1(
+        id = "http://data.knora.org/groups/images-reviewer",
+        name = "Image reviewer",
+        description = Some("A group for image reviewers."),
+        belongsToProject = "http://data.knora.org/projects/images",
+        isActiveGroup = true,
+        hasSelfJoinEnabled = false,
+        hasPermissions = Vector.empty[GroupPermissionV1]
+    )
+
+
+    /*************************************/
+    /** Incunabula Project Admin Data   **/
+    /*************************************/
+
+    val INCUNABULA_PROJECT_IRI = "http://data.knora.org/projects/77275339"
+
+    /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
+    def incunabulaUser = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/b83acc5f05"),
             username = Some("testuser"),
@@ -185,85 +324,8 @@ object SharedTestData {
         )
     )
 
-    /* represents the 'multiuser' as found in admin-data.ttl */
-    def multiuserUserProfileV1 = UserProfileV1(
-        userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/multiuser"),
-            username = Some("multiuser"),
-            firstname = Some("Multi"),
-            lastname = Some("User"),
-            email = Some("multi.user@example.com"),
-            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
-            token = None,
-            isActiveUser = Some(true),
-            lang = "de"
-        ),
-        groups = List("http://data.knora.org/groups/images-reviewer"),
-        projects = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
-        sessionId = None,
-        permissionProfile = PermissionProfileV1(
-            projectInfos = List(
-                SharedTestData.incunabulaProjectInfoV1,
-                SharedTestData.imagesProjectInfoV1,
-                SharedTestData.sixerProjectProjectInfoV1
-            ),
-            groupsPerProject = Map(
-                "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}"),
-                "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer"),
-                "http://data.knora.org/projects/666" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}")
-            ),
-            administrativePermissionsPerProject = Map(
-                "http://data.knora.org/projects/77275339" -> Set(
-                    PermissionV1.ProjectResourceCreateAllPermission,
-                    PermissionV1.ProjectAdminAllPermission
-                ),
-                "http://data.knora.org/projects/images" -> Set(
-                    PermissionV1.ProjectResourceCreateAllPermission,
-                    PermissionV1.ProjectAdminAllPermission
-                ),
-                "http://data.knora.org/projects/666" -> Set(
-                    PermissionV1.ProjectResourceCreateAllPermission,
-                    PermissionV1.ProjectAdminAllPermission
-                )
-            ),
-            defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
-        )
-    )
-
-    /* represents the full project info of the Knora System project */
-    def systemProjectInfoV1 = ProjectInfoV1(
-        id = "http://www.knora.org/ontology/knora-base#SystemProject",
-        shortname = "SystemProject",
-        longname = Some("Knora System Project"),
-        description = None,
-        logo = None,
-        belongsToInstitution = None,
-        projectOntologyGraph = "-",
-        projectDataGraph = "-",
-        basepath = "-",
-        isActiveProject = true,
-        hasSelfJoinEnabled = false,
-        rights = None
-    )
-
-    /* represents the full project info of the images project */
-    def imagesProjectInfoV1 = ProjectInfoV1(
-        id = "http://data.knora.org/projects/images",
-        shortname = "images",
-        longname = Some("Image Collection Demo"),
-        description = Some("A demo project of a collection of images"),
-        keywords = Some("images, collection"),
-        projectOntologyGraph = "http://www.knora.org/ontology/images",
-        projectDataGraph = "http://www.knora.org/data/images",
-        logo = None,
-        basepath = "/imldata/SALSAH-TEST-01/images",
-        isActiveProject = true,
-        hasSelfJoinEnabled = false,
-        rights = None
-    )
-
     /* represents the ProjectInfoV1 of the incunabula project */
-    def incunabulaProjectInfoV1 = ProjectInfoV1(
+    def incunabulaProjectInfo = ProjectInfoV1(
         id = "http://data.knora.org/projects/77275339",
         shortname = "incunabula",
         longname = Some("Bilderfolgen Basler Frühdrucke"),
@@ -278,9 +340,16 @@ object SharedTestData {
         rights = None
     )
 
+
+    /************************************/
+    /** 666 Admin Data                 **/
+    /************************************/
+
+    val TRIPLESIX_PROJECT_IRI = "http://data.knora.org/projects/666"
+
     /* represents the ProjectInfoV1of the testproject (666) */
-    def sixerProjectProjectInfoV1 = ProjectInfoV1(
-        id = "http://data.knora.org/projects/666",
+    def triplesixProjectInfo = ProjectInfoV1(
+        id = TRIPLESIX_PROJECT_IRI,
         shortname = "testproject",
         longname = Some("Test Project"),
         description = Some("A test project"),
@@ -294,36 +363,40 @@ object SharedTestData {
         rights = None
     )
 
-    /* represents the full GroupInfoV1 of the images ProjectAdmin group */
-    def imagesProjectAdminGroupInfoV1 = GroupInfoV1(
-        id = "-",
-        name = "ProjectAdmin",
-        description = Some("Default Project Admin Group"),
-        belongsToProject = "http://data.knora.org/projects/images",
-        isActiveGroup = true,
-        hasSelfJoinEnabled = false,
-        hasPermissions = Vector.empty[GroupPermissionV1]
+
+    /************************************/
+    /** Anything Admin Data            **/
+    /************************************/
+
+    val ANYTHING_PROJECT_IRI = "http://data.knora.org/projects/anything"
+
+    def anythingUser1 = UserProfileV1(
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q"),
+            lang = "de"
+        ),
+        groups = Vector.empty[IRI],
+        projects = Vector(ANYTHING_PROJECT_IRI)
+
     )
 
-    /* represents the full GroupInfoV1 of the images ProjectMember group */
-    def imagesProjectMemberGroupInfoV1 = GroupInfoV1(
-        id = "-",
-        name = "ProjectMember",
-        description = Some("Default Project Member Group"),
-        belongsToProject = "http://data.knora.org/projects/images",
-        isActiveGroup = true,
-        hasSelfJoinEnabled = false,
-        hasPermissions = Vector.empty[GroupPermissionV1]
+    def anythingUser2 = UserProfileV1(
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ"),
+            lang = "de"
+        ),
+        groups = Vector.empty[IRI],
+        projects = Vector(ANYTHING_PROJECT_IRI)
     )
 
-    /* represents the full GroupInfoV1 of the images project reviewer group */
-    def imageReviewerGroupInfoV1 = GroupInfoV1(
-        id = "http://data.knora.org/groups/images-reviewer",
-        name = "Image reviewer",
-        description = Some("A group for image reviewers."),
-        belongsToProject = "http://data.knora.org/projects/images",
-        isActiveGroup = true,
-        hasSelfJoinEnabled = false,
-        hasPermissions = Vector.empty[GroupPermissionV1]
+    def anythingProjectInfo = ProjectInfoV1(
+        id = ANYTHING_PROJECT_IRI,
+        shortname = "anything",
+        longname = Some("Anything Project"),
+        projectOntologyGraph = "http://www.knora.org/ontology/anything",
+        projectDataGraph = "http://www.knora.org/data/anything",
+        basepath = "/foo/bar/baz",
+        isActiveProject = true,
+        hasSelfJoinEnabled = false
     )
 }

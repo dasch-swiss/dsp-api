@@ -26,18 +26,18 @@ import org.scalatest.{Matchers, WordSpecLike}
   */
 class UserMessagesV1Spec extends WordSpecLike with Matchers {
 
-    val lang = SharedTestData.rootUserProfileV1.userData.lang
-    val user_id = SharedTestData.rootUserProfileV1.userData.user_id
-    val token = SharedTestData.rootUserProfileV1.userData.token
-    val username = SharedTestData.rootUserProfileV1.userData.username
-    val firstname = SharedTestData.rootUserProfileV1.userData.firstname
-    val lastname = SharedTestData.rootUserProfileV1.userData.lastname
-    val email = SharedTestData.rootUserProfileV1.userData.email
-    val password = SharedTestData.rootUserProfileV1.userData.password
-    val groups = SharedTestData.rootUserProfileV1.groups
-    val projects = SharedTestData.rootUserProfileV1.projects
-    val permissionProfile = SharedTestData.rootUserProfileV1.permissionProfile
-    val sessionId = SharedTestData.rootUserProfileV1.sessionId
+    val lang = SharedAdminTestData.rootUserProfileV1.userData.lang
+    val user_id = SharedAdminTestData.rootUserProfileV1.userData.user_id
+    val token = SharedAdminTestData.rootUserProfileV1.userData.token
+    val username = SharedAdminTestData.rootUserProfileV1.userData.username
+    val firstname = SharedAdminTestData.rootUserProfileV1.userData.firstname
+    val lastname = SharedAdminTestData.rootUserProfileV1.userData.lastname
+    val email = SharedAdminTestData.rootUserProfileV1.userData.email
+    val password = SharedAdminTestData.rootUserProfileV1.userData.password
+    val groups = SharedAdminTestData.rootUserProfileV1.groups
+    val projects = SharedAdminTestData.rootUserProfileV1.projects
+    val permissionProfile = SharedAdminTestData.rootUserProfileV1.permissionProfile
+    val sessionId = SharedAdminTestData.rootUserProfileV1.sessionId
 
 
     "The UserProfileV1 case class " should {

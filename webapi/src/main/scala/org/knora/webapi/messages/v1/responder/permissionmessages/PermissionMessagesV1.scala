@@ -341,9 +341,84 @@ case class PermissionProfileV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[P
         }
     }
 
+    /* Is the user a member of the SystemAdmin group */
     def isSystemAdmin: Boolean = {
         groupsPerProject.contains("http://www.knora.org/ontology/knora-base#SystemProject")
     }
+
+    /*  */
+    /**
+      * Given an operation, checks if the user is allowed to perform it.
+      * @param operation the name of the operation.
+      * @param insideProject the IRI of the project inside which the operation will be performed.
+      * @param explain an optional parameter which defaults to false, when set to true, this method prints out an explanation for the result.
+      * @return a boolean value.
+      */
+    def hasPermissionFor(operation: OperationV1, insideProject: IRI, explain: Boolean = false): Boolean = {
+
+        if (this.isSystemAdmin) {
+            /* A member of the SystemAdmin group is allowed to perform any operation */
+            if (explain) println("TRUE: A member of the SystemAdmin group is allowed to perform any operation")
+            true
+        } else {
+            operation match {
+                case ResourceCreateOperation(resourceClassIri) => {
+                    this.administrativePermissionsPerProject.get(insideProject) match {
+                        case Some(set) => set.contains(PermissionV1.ProjectResourceCreateAllPermission)
+                        case None => false
+                    }
+                }
+            }
+        }
+
+    }
+
+    /* custom equality implementation with additional debugging output */
+    def canEqual(a: Any) = a.isInstanceOf[PermissionProfileV1]
+
+    override def equals(that: Any): Boolean =
+        that match {
+            case that: PermissionProfileV1 => that.canEqual(this) &&  {
+                val piEqual = if (this.projectInfos.hashCode != that.projectInfos.hashCode) {
+                    println("projectInfos not equal")
+                    println(s"this: ${this.projectInfos}")
+                    println(s"that: ${that.projectInfos}")
+                    false
+                } else {
+                    true
+                }
+
+                val gppEqual = if (this.groupsPerProject.hashCode != that.groupsPerProject.hashCode) {
+                    println("groupsPerProject not equal")
+                    println(s"this: ${this.groupsPerProject}")
+                    println(s"that: ${that.groupsPerProject}")
+                    false
+                } else {
+                    true
+                }
+
+                val apppEqual = if (this.administrativePermissionsPerProject.hashCode != that.administrativePermissionsPerProject.hashCode) {
+                    println("administrativePermissionsPerProject not equal")
+                    println(s"this: ${this.administrativePermissionsPerProject}")
+                    println(s"that: ${that.administrativePermissionsPerProject}")
+                    false
+                } else {
+                    true
+                }
+
+                val doapppEqual = if (this.defaultObjectAccessPermissionsPerProject.hashCode != that.defaultObjectAccessPermissionsPerProject.hashCode) {
+                    println("defaultObjectAccessPermissionsPerProject not equal")
+                    println(s"this: ${this.defaultObjectAccessPermissionsPerProject}")
+                    println(s"that: ${that.defaultObjectAccessPermissionsPerProject}")
+                    false
+                } else {
+                    true
+                }
+
+                piEqual && gppEqual && apppEqual & doapppEqual
+            }
+            case _ => false
+        }
 }
 
 
@@ -519,6 +594,15 @@ object PermissionV1 {
     }
 
 }
+
+/**
+  * An abstract trait representing operations for which the user needs Administrative Permissions.
+  */
+sealed trait OperationV1
+
+/* Creating a resource of a certain class */
+case class ResourceCreateOperation(resourceClass: IRI) extends OperationV1
+
 
 /**
   * Permission profile types:

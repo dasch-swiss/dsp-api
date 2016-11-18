@@ -56,7 +56,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     val imagesProjectIri = "http://data.knora.org/projects/images"
     val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
 
-    val rootUserProfileV1 = SharedTestData.rootUserProfileV1
+    val rootUserProfileV1 = SharedAdminTestData.rootUserProfileV1
 
     val actorUnderTest = TestActorRef[UsersResponderV1]
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -95,7 +95,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             "create the user and return it's profile if the supplied username is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
                     NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "test", "en"),
-                    SharedTestData.anonymousUserProfileV1,
+                    SharedAdminTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
@@ -111,7 +111,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             "return a 'DuplicateValueException' if the supplied username is not unique " in {
                 actorUnderTest ! UserCreateRequestV1(
                     NewUserDataV1("root", "", "", "", "test", ""),
-                    SharedTestData.anonymousUserProfileV1,
+                    SharedAdminTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
@@ -121,7 +121,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* missing username */
                 actorUnderTest ! UserCreateRequestV1(
                     NewUserDataV1("", "", "", "", "test", ""),
-                    SharedTestData.anonymousUserProfileV1,
+                    SharedAdminTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Username cannot be empty")))
@@ -129,7 +129,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* missing password */
                 actorUnderTest ! UserCreateRequestV1(
                     NewUserDataV1("dduck", "", "", "", "", ""),
-                    SharedTestData.anonymousUserProfileV1,
+                    SharedAdminTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Password cannot be empty")))
@@ -140,10 +140,10 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
                 /* User information is updated by the user */
                 actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
+                    userIri = SharedAdminTestData.normaluserUserProfileV1.userData.user_id.get,
                     propertyIri = OntologyConstants.Foaf.GivenName,
                     newValue = "Donald",
-                    userProfile = SharedTestData.normaluserUserProfileV1,
+                    userProfile = SharedAdminTestData.normaluserUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
@@ -158,10 +158,10 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
                 /* User information is updated by a system admin */
                 actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
+                    userIri = SharedAdminTestData.normaluserUserProfileV1.userData.user_id.get,
                     propertyIri = OntologyConstants.Foaf.FamilyName,
                     newValue = "Duck",
-                    userProfile = SharedTestData.superuserUserProfileV1,
+                    userProfile = SharedAdminTestData.superuserUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
@@ -170,7 +170,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                         assert(updatedUserProfile.userData.lastname.contains("Duck"))
 
                         // check if the correct userdata is returned
-                        assert(requestingUserData.user_id.contains(SharedTestData.superuserUserProfileV1.userData.user_id.get))
+                        assert(requestingUserData.user_id.contains(SharedAdminTestData.superuserUserProfileV1.userData.user_id.get))
                     }
                 }
 
@@ -179,20 +179,20 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
                 /* User information is updated by other normal user */
                 actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
+                    userIri = SharedAdminTestData.superuserUserProfileV1.userData.user_id.get,
                     propertyIri = OntologyConstants.Foaf.GivenName,
                     newValue = "Donald",
-                    userProfile = SharedTestData.normaluserUserProfileV1,
+                    userProfile = SharedAdminTestData.normaluserUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
 
                 /* User information is updated by anonymous */
                 actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
+                    userIri = SharedAdminTestData.superuserUserProfileV1.userData.user_id.get,
                     propertyIri = OntologyConstants.Foaf.GivenName,
                     newValue = ("Donald"),
-                    userProfile = SharedTestData.anonymousUserProfileV1,
+                    userProfile = SharedAdminTestData.anonymousUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
@@ -200,10 +200,10 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             }
             "update the user, (deleting) making him inactive " in {
                 actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
+                    userIri = SharedAdminTestData.normaluserUserProfileV1.userData.user_id.get,
                     propertyIri = OntologyConstants.KnoraBase.IsActiveUser,
                     newValue = false,
-                    userProfile = SharedTestData.superuserUserProfileV1,
+                    userProfile = SharedAdminTestData.superuserUserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {

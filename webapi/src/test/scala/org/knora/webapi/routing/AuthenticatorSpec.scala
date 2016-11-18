@@ -27,7 +27,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.util.ActorUtil
-import org.knora.webapi.{BadCredentialsException, CoreSpec, NotFoundException, SharedTestData}
+import org.knora.webapi.{BadCredentialsException, CoreSpec, NotFoundException, SharedAdminTestData}
 import org.scalatest.PrivateMethodTester
 
 import scala.concurrent.Future
@@ -56,7 +56,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     implicit val executionContext = system.dispatcher
     implicit val timeout: Timeout = Duration(5, SECONDS)
 
-    val rootUserProfileV1 = SharedTestData.rootUserProfileV1
+    val rootUserProfileV1 = SharedAdminTestData.rootUserProfileV1
 
     val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
         become {

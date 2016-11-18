@@ -52,16 +52,16 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    val imageReviewerFullGroupInfo = SharedTestData.imageReviewerGroupInfoV1
-    val imageReviewerSafeGroupInfo = SharedTestData.imageReviewerGroupInfoV1.ofType(GroupInfoType.SAFE)
+    val imageReviewerFullGroupInfo = SharedAdminTestData.imageReviewerGroupInfoV1
+    val imageReviewerSafeGroupInfo = SharedAdminTestData.imageReviewerGroupInfoV1.ofType(GroupInfoType.SAFE)
 
-    val imagesProjectAdminFullGroupInfo = SharedTestData.imagesProjectAdminGroupInfoV1
-    val imagesProjectAdminSafeGroupInfo = SharedTestData.imagesProjectAdminGroupInfoV1.ofType(GroupInfoType.SAFE)
+    val imagesProjectAdminFullGroupInfo = SharedAdminTestData.imagesProjectAdminGroupInfoV1
+    val imagesProjectAdminSafeGroupInfo = SharedAdminTestData.imagesProjectAdminGroupInfoV1.ofType(GroupInfoType.SAFE)
 
-    val imagesProjectMemberFullGroupInfo = SharedTestData.imagesProjectMemberGroupInfoV1
-    val imagesProjectMemberSafeGroupInfo = SharedTestData.imagesProjectMemberGroupInfoV1.ofType(GroupInfoType.SAFE)
+    val imagesProjectMemberFullGroupInfo = SharedAdminTestData.imagesProjectMemberGroupInfoV1
+    val imagesProjectMemberSafeGroupInfo = SharedAdminTestData.imagesProjectMemberGroupInfoV1.ofType(GroupInfoType.SAFE)
 
-    val rootUserProfileV1 = SharedTestData.rootUserProfileV1
+    val rootUserProfileV1 = SharedAdminTestData.rootUserProfileV1
 
     val actorUnderTest = TestActorRef[GroupsResponderV1]
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -107,7 +107,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
             "create the group and return the group's full info if the supplied group name is unique " in {
                 actorUnderTest ! GroupCreateRequestV1(
                     NewGroupInfoV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
-                    SharedTestData.user01UserProfileV1,
+                    SharedAdminTestData.user01UserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
@@ -123,7 +123,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
             "return a 'DuplicateValueException' if the supplied group name is not unique " in {
                 actorUnderTest ! GroupCreateRequestV1(
                     NewGroupInfoV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
-                    SharedTestData.user01UserProfileV1,
+                    SharedAdminTestData.user01UserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(DuplicateValueException(s"Group with the name: 'NewGroup' already exists")))
@@ -133,7 +133,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 /* missing group name */
                 actorUnderTest ! GroupCreateRequestV1(
                     NewGroupInfoV1("", Some("NoNameGroupDescription"), "http://data.knora.org/projects/images", true, false),
-                    SharedTestData.user01UserProfileV1,
+                    SharedAdminTestData.user01UserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Group name cannot be empty")))
@@ -141,7 +141,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 /* missing project */
                 actorUnderTest ! GroupCreateRequestV1(
                     NewGroupInfoV1("OtherNewGroup", Some("OtherNewGroupDescription"), "", true, false),
-                    SharedTestData.user01UserProfileV1,
+                    SharedAdminTestData.user01UserProfileV1,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Project IRI cannot be empty")))

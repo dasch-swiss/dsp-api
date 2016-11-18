@@ -42,38 +42,6 @@ import scala.concurrent.duration._
   */
 object ResourcesResponderV1Spec {
 
-    private val incunabulaUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
-
-    private val anythingUser1 = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/anything"),
-        groups = Nil,
-        userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q"),
-            lang = "de"
-        )
-    )
-
-    private val anythingUser2 = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/anything"),
-        groups = Nil,
-        userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ"),
-            lang = "de"
-        )
-    )
-
     val ReiseInsHeiligelandThreeValues = ResourceSearchResponseV1(
         resources = Vector(ResourceSearchResultRowV1(
             id = "http://data.knora.org/2a6221216701",
@@ -187,7 +155,7 @@ object ResourcesResponderV1Spec {
                                 None),
                             "http://data.knora.org/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
                             None,
-                            None))))), userdata = incunabulaUser.userData)
+                            None))))), userdata = SharedAdminTestData.incunabulaUser.userData)
 
     private val hasOtherThingIncomingLink = IncomingV1(
         value = Some("A thing that only project members can see"),
@@ -407,7 +375,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                             value = propValue,
                             rights = 6,
                             id = "http://www.knora.org/test/values/test",
-                            userdata = incunabulaUser.userData
+                            userdata = SharedAdminTestData.incunabulaUser.userData
                         )
 
                         // convert CreateValueResponseV1 to a ResourceCreateValueResponseV1
@@ -533,14 +501,14 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(incunabulaUser)
+        responderManager ! LoadOntologiesRequest(SharedAdminTestData.incunabulaUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
     "The resources responder" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/c5058f3a", userProfile = incunabulaUser)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/c5058f3a", userProfile = SharedAdminTestData.incunabulaUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse)
@@ -549,7 +517,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "return a full description of the first page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F8a0b1e75
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/8a0b1e75", userProfile = incunabulaUser)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/8a0b1e75", userProfile = SharedAdminTestData.incunabulaUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse)
@@ -558,7 +526,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "return a region with a comment containing standoff information (disabled because of issue 17)" ignore {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/047db418ae06", userProfile = incunabulaUser)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/047db418ae06", userProfile = SharedAdminTestData.incunabulaUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>

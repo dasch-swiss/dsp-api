@@ -32,9 +32,6 @@
 
                                    knora-base:isActiveUser "true"^^xsd:boolean ;
 
-                                   knora-base:isInProject <http://data.knora.org/projects/77275339> ,
-                                                          <http://data.knora.org/projects/images> ;
-
                                    knora-base:isInSystemAdminGroup "true"^^xsd:boolean .
 
 
@@ -129,7 +126,7 @@
                                         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
-
+## Project Admin
 <http://data.knora.org/users/c266a56709> rdf:type knora-base:User ;
 
                                          knora-base:userid "user01"^^xsd:string ;
@@ -153,6 +150,7 @@
                                          knora-base:isInProjectAdminGroup <http://data.knora.org/projects/images> .
 
 
+## Project Member
 <http://data.knora.org/users/97cec4000f> rdf:type knora-base:User ;
 
                                          knora-base:userid "user02"^^xsd:string ;
@@ -228,9 +226,8 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                           knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
-### ###########################################
-### <http://data.knora.org/users/b83acc5f05>
 
+## Project Admin
 <http://data.knora.org/users/b83acc5f05> rdf:type knora-base:User ;
 
                                          knora-base:userid "testuser"^^xsd:string ;
@@ -254,9 +251,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                          knora-base:isInProjectAdminGroup <http://data.knora.org/projects/77275339> .
 
 
-### ###########################################
-### <http://data.knora.org/users/91e19f1e01>
-
+## Project Member
 <http://data.knora.org/users/91e19f1e01> rdf:type knora-base:User ;
 
                                          knora-base:userid "root-alt"^^xsd:string ;
@@ -277,7 +272,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:isInProject <http://data.knora.org/projects/77275339> ;
 
-                                         knora-base:isInSystemAdminGroup "true"^^xsd:boolean .
+                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 

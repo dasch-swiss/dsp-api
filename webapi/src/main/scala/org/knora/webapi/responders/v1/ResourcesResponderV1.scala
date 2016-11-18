@@ -27,6 +27,7 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.graphdatamessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
+import org.knora.webapi.messages.v1.responder.permissionmessages.{ResourceCreateOperation, OperationV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1, ProjectInfoType}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages._
@@ -1389,7 +1390,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         }
 
         val resultFuture = for {
-        // Don't allow anonymous users to create resources.
+            // Don't allow anonymous users to create resources.
             userIri: IRI <- Future {
                 userProfile.userData.user_id match {
                     case Some(iri) => iri
@@ -1404,21 +1405,22 @@ class ResourcesResponderV1 extends ResponderV1 {
             namedGraph = settings.projectNamedGraphs(projectIri).data
             resourceIri: IRI = knoraIdUtil.makeRandomResourceIri
 
+            // FIXME: Check with user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to create a new resource in the given project.
+            _ = if (!userProfile.permissionProfile.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)) {
+                throw ForbiddenException(s"User $userIri does not have permissions to create a resource in project $projectIri")
+            }
+
             // check if the user has the permissions to create a new resource in the given project
             // get project info that includes the permissions the current user has on the project
+            /*
             projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequestV1(
                 iri = projectIri,
                 infoType = ProjectInfoType.SHORT,
                 Some(userProfile)
             )).mapTo[ProjectInfoResponseV1]
+            */
 
-            // TODO: projects rights can not be queried yet because the permissions are missing in the data
-            // if the rights returned by projects responder are set to None
-            // or if they are below the level of modify permissions, the user's request is refused.
-            /*_ = if (!projectInfo.project_info.rights.exists(permissionCode =>
-                PermissionUtil.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermissionIri = OntologyConstants.KnoraBase.HasModifyPermission))) {
-                throw ForbiddenException(s"User $userIri does not have permissions to create a resource in project $projectIri")
-            }*/
+            // FIXME: Query the PermissionsResponder for Resource Class DOAP
 
             // get default permissions for given resource type
             entityInfoResponse <- {
@@ -1473,13 +1475,14 @@ class ResourcesResponderV1 extends ResponderV1 {
 
         def makeTaskFuture(userIri: IRI): Future[ResourceDeleteResponseV1] = {
             for {
-            // Check that the user has permission to delete the resource.
+                // Check that the user has permission to delete the resource.
                 (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceDeleteRequest.resourceIri, userProfile = resourceDeleteRequest.userProfile, queryOntology = false)
 
                 _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission)) {
                     throw ForbiddenException(s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted")
                 }
 
+                // Create update sparql string
                 sparqlUpdate = queries.sparql.v1.txt.deleteResource(
                     dataNamedGraph = settings.projectNamedGraphs(resourceInfo.project_id).data,
                     triplestore = settings.triplestoreType,
