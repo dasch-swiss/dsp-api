@@ -1,0 +1,104 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi._
+
+@**
+ * Gets the outbound or inbound links from/to a resource. This query is used recursively to get a graph of
+ * resources reachable from a given resource.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param startNodeIri the IRI of the resource to use as the starting point of the query.
+ * @param outbound true to get outbound links, false to get inbound links.
+ *@
+@(triplestore: String,
+  startNodeIri: IRI,
+  outbound: Boolean)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?startNodeClass ?startNodeLabel ?startNodeOwner ?startNodeProject ?startNodePermissions
+       ?otherNode ?otherNodeClass ?otherNodeLabel ?otherNodeOwner ?otherNodeProject ?otherNodePermissions
+       ?linkValue ?linkProp ?linkValueOwner ?linkValueProject ?linkValuePermissions
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@startNodeIri") AS ?startNode) .
+
+    ?startNode a ?startNodeClass ;
+        rdfs:label ?startNodeLabel ;
+        knora-base:attachedToUser ?startNodeOwner ;
+        knora-base:attachedToProject ?startNodeProject ;
+        knora-base:isDeleted false .
+
+    OPTIONAL {
+        ?startNode knora-base:hasPermissions ?startNodePermissions .
+    }
+
+    ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+    @* Here FILTER NOT EXISTS is more efficient than MINUS on Fuseki. *@
+    @if(triplestore == "fuseki") {
+        FILTER NOT EXISTS
+    } else {
+        MINUS
+    }
+        {
+            ?linkProp rdfs:subPropertyOf* knora-base:isPartOf .
+        }
+
+    @if(outbound) {
+        ?startNode ?linkProp ?otherNode .
+        ?otherNode knora-base:isDeleted false .
+
+        ?linkValue a knora-base:LinkValue ;
+            rdf:subject ?startNode ;
+            rdf:predicate ?linkProp ;
+            rdf:object ?otherNode .
+    } else {
+        ?otherNode ?linkProp ?startNode .
+        ?otherNode knora-base:isDeleted false .
+
+        ?linkValue a knora-base:LinkValue ;
+            rdf:subject ?otherNode ;
+            rdf:predicate ?linkProp ;
+            rdf:object ?startNode .
+    }
+
+    ?otherNode a ?otherNodeClass ;
+        rdfs:label ?otherNodeLabel ;
+        knora-base:attachedToUser ?otherNodeOwner ;
+        knora-base:attachedToProject ?otherNodeProject .
+
+    OPTIONAL {
+        ?otherNode knora-base:hasPermissions ?otherNodePermissions .
+    }
+
+    ?linkValue knora-base:attachedToUser ?linkValueOwner ;
+        knora-base:hasPermissions ?linkValuePermissions .
+
+    OPTIONAL {
+        ?linkValue knora-base:attachedToProject ?linkValueProject .
+    }
+}
+LIMIT 50
