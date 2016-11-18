@@ -238,9 +238,14 @@ class ResourcesResponderV1 extends ResponderV1 {
                                     ).nonEmpty
                         }
 
+                        // Filter out the nodes that are reachable only via edges that the user doesn't have permission
+                        // to see.
+                        val visibleNodeIrisFromEdges = edges.map(_.sourceNodeIri).toSet ++ edges.map(_.targetNodeIri).toSet
+                        val filteredOtherNodes = otherNodes.filter(node => visibleNodeIrisFromEdges.contains(node.nodeIri))
+
                         // Make a GraphQueryResults containing the resulting nodes and edges, including the start
                         // node.
-                        val results = GraphQueryResults(nodes = otherNodes.toSet + startNode, edges = edges.toSet)
+                        val results = GraphQueryResults(nodes = filteredOtherNodes.toSet + startNode, edges = edges.toSet)
 
                         // Have we reached the maximum depth?
                         if (depth == 1) {
@@ -249,7 +254,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         } else {
                             // No. Recursively get results for each of the nodes we found.
 
-                            val lowerResultFutures: Seq[Future[GraphQueryResults]] = otherNodes.map {
+                            val lowerResultFutures: Seq[Future[GraphQueryResults]] = filteredOtherNodes.map {
                                 node => traverseGraph(
                                     startNodeIri = node.nodeIri,
                                     outbound = outbound,
