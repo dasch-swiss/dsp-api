@@ -65,7 +65,7 @@ WHERE {
         ?startNode knora-base:hasPermissions ?startNodePermissions .
     }
 
-    @if(triplestore == "graphdb") {
+    @if(triplestore.startsWith("graphdb")) {
         @if(outbound) {
             ?startNode knora-base:hasLinkTo ?otherNode .
 
