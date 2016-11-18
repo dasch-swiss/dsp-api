@@ -48,7 +48,7 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 * [Java Development Kit 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 * [SBT](http://www.scala-sbt.org/)
 
-[Apache Jena](https://jena.apache.org/) is included.
+[Apache Jena](https://jena.apache.org/) is included, [Ontotext GraphDB](http://ontotext.com/products/graphdb/) is recommended.
 
 ### For building the documentation
 
