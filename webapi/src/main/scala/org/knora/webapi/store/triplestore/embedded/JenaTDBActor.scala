@@ -118,7 +118,7 @@ class JenaTDBActor extends Actor with ActorLogging {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case SparqlSelectRequest(sparqlSelectString, useInference) => future2Message(sender(), executeSparqlSelectQuery(sparqlSelectString, useInference), log)
+        case SparqlSelectRequest(sparqlSelectString) => future2Message(sender(), executeSparqlSelectQuery(sparqlSelectString), log)
         case SparqlUpdateRequest(sparqlUpdateString) => future2Message(sender(), executeSparqlUpdateQuery(sparqlUpdateString), log)
         case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
         case DropAllTriplestoreContent() => future2Message(sender(), Future(dropAllTriplestoreContent()), log)
@@ -132,10 +132,9 @@ class JenaTDBActor extends Actor with ActorLogging {
       * Submits a SPARQL query to the embedded Jena TDB store and returns the response as a [[SparqlSelectResponse]].
       *
       * @param queryString the SPARQL request to be submitted.
-      * @param useInference not supported.
       * @return [[SparqlSelectResponse]].
       */
-    private def executeSparqlSelectQuery(queryString: String, useInference: Boolean): Future[SparqlSelectResponse] = {
+    private def executeSparqlSelectQuery(queryString: String): Future[SparqlSelectResponse] = {
 
         // Start read transaction
         this.dataset.begin(ReadWrite.READ)

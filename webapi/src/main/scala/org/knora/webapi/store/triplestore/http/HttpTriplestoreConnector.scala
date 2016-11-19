@@ -26,6 +26,9 @@ import java.nio.charset.StandardCharsets
 import akka.actor.{Actor, ActorLogging, Status}
 import dispatch._
 import org.apache.commons.lang3.StringUtils
+import org.eclipse.rdf4j.model.Statement
+import org.eclipse.rdf4j.rio.RDFHandler
+import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
@@ -33,9 +36,6 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FakeTriplestore
 import org.knora.webapi.util.SparqlResultProtocol._
 import spray.json._
-import org.eclipse.rdf4j.model.Statement
-import org.eclipse.rdf4j.rio.turtle._
-import org.eclipse.rdf4j.rio.RDFHandler
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -58,13 +58,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     implicit val system = context.system
     private implicit val executionContext = system.dispatcher
     private val settings = Settings(system)
-    private val tsType = settings.triplestoreType
+    private val triplestoreType = settings.triplestoreType
 
     // A base HTTP request containing the triplestore's host and port, with a username and password for authentication.
     private val triplestore = host(settings.triplestoreHost, settings.triplestorePort).as_!(settings.triplestoreUsername, settings.triplestorePassword)
 
     // HTTP paths for SPARQL queries.
-    private val queryRequestPath = settings.triplestoreType match {
+    private val queryRequestPath = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => triplestore / "repositories" / settings.triplestoreDatabaseName
         case HTTP_SESAME_TS_TYPE => triplestore / "openrdf-sesame" / "repositories" / settings.triplestoreDatabaseName
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => triplestore / settings.triplestoreDatabaseName / "query"
@@ -72,7 +72,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     }
 
     // HTTP paths for SPARQL Update operations.
-    private val updateRequestPath = settings.triplestoreType match {
+    private val updateRequestPath = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => triplestore / "repositories" / settings.triplestoreDatabaseName / "statements"
         case HTTP_SESAME_TS_TYPE => triplestore / "openrdf-sesame" / "repositories" / settings.triplestoreDatabaseName / "statements"
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => triplestore / settings.triplestoreDatabaseName / "update"
@@ -93,7 +93,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @return an HTTP request.
       */
     private def queryRequest(useInference: Boolean): Req = {
-        settings.triplestoreType match {
+        triplestoreType match {
             case HTTP_GRAPH_DB_TS_TYPE => queryRequestPath.
                 POST.
                 setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
@@ -115,7 +115,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     /**
       * Constructs an HTTP request for a SPARQL update.
       */
-    private val updateRequest = settings.triplestoreType match {
+    private val updateRequest = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => updateRequestPath.
             POST.
             setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
@@ -142,13 +142,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case SparqlSelectRequest(sparql, useInference) => future2Message(sender(), sparqlHttpSelect(sparql, useInference), log)
-        case SparqlConstructRequest(sparql, useInference) => future2Message(sender(), sparqlHttpConstruct(sparql, useInference), log)
+        case SparqlSelectRequest(sparql) => future2Message(sender(), sparqlHttpSelect(sparql), log)
+        case SparqlConstructRequest(sparql) => future2Message(sender(), sparqlHttpConstruct(sparql), log)
         case SparqlUpdateRequest(sparql) => future2Message(sender(), sparqlHttpUpdate(sparql), log)
         case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
         case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
-        case HelloTriplestore(msg) if msg == tsType => sender ! HelloTriplestore(tsType)
+        case HelloTriplestore(msg) if msg == triplestoreType => sender ! HelloTriplestore(triplestoreType)
         case CheckConnection => checkTriplestore()
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
@@ -157,10 +157,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResponse]].
       *
       * @param sparql the SPARQL SELECT query string.
-      * @param useInference if `true`, ask the triplestore to use inference in the query, if possible.
       * @return a [[SparqlSelectResponse]].
       */
-    private def sparqlHttpSelect(sparql: String, useInference: Boolean): Future[SparqlSelectResponse] = {
+    private def sparqlHttpSelect(sparql: String): Future[SparqlSelectResponse] = {
         for {
         // Are we using the fake triplestore?
             resultStr <- if (settings.useFakeTriplestore) {
@@ -168,7 +167,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 Future(FakeTriplestore.data(sparql))
             } else {
                 // No: get the response from the real triplestore over HTTP.
-                getTriplestoreHttpResponse(sparql, update = false, useInference = useInference)
+                getTriplestoreHttpResponse(sparql, update = false)
             }
 
             // Are we preparing a fake triplestore?
@@ -187,13 +186,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     /**
       * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
+      *
       * @param sparql the SPARQL SELECT query string.
-      * @param useInference if `true`, ask the triplestore to use inference in the query, if possible.
       * @return a [[SparqlConstructResponse]]
       */
-    private def sparqlHttpConstruct(sparql: String, useInference: Boolean): Future[SparqlConstructResponse] = {
+    private def sparqlHttpConstruct(sparql: String): Future[SparqlConstructResponse] = {
         for {
-            turtleStr <- getTriplestoreHttpResponse(sparql, update = false, useInference = useInference, isConstruct = true)
+            turtleStr <- getTriplestoreHttpResponse(sparql, update = false, isConstruct = true)
             response <- parseTurtleResponse(sparql, turtleStr)
         } yield response
     }
@@ -212,7 +211,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             _ <- getTriplestoreHttpResponse(sparqlUpdate, update = true)
 
             // If we're using GraphDB, update the full-text search index.
-            _ = if (tsType == HTTP_GRAPH_DB_TS_TYPE) {
+            _ = if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE) {
                 val indexUpdateSparqlString =
                     """
                         PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
@@ -228,11 +227,12 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       *
       * @param sparql the SPARQL request to be submitted.
       * @param update `true` if this is an update request.
-      * @param useInference if `true`, ask the triplestore to use inference in the request, if possible. This is
-      *                     meaningful only for query requests, not for updates.
       * @return the triplestore's response.
       */
-    private def getTriplestoreHttpResponse(sparql: String, update: Boolean, useInference: Boolean = false, isConstruct: Boolean = false): Future[String] = {
+    private def getTriplestoreHttpResponse(sparql: String, update: Boolean, isConstruct: Boolean = false): Future[String] = {
+        // Enable inference if we're using GraphDB.
+        val useInference = triplestoreType.startsWith("graphdb")
+
         val request = if (update) {
             updateRequest.addParameter("update", sparql)
         } else if (isConstruct) {
@@ -271,11 +271,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     }
 
     private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentACK] = {
-
         log.debug("resetTripleStoreContent")
         val resetTriplestoreResult = for {
 
-            // drop old content
+        // drop old content
             dropResult <- dropAllTriplestoreContent()
 
             // insert new content
@@ -306,7 +305,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     }
 
     private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject]): Future[InsertTriplestoreContentACK] = {
-
         try {
             log.debug("==>> Loading Data Start")
 
@@ -314,7 +312,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
                 GraphProtocolAccessor.put(elem.name, elem.path)
 
-                if (tsType == HTTP_GRAPH_DB_TS_TYPE || tsType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
+                if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE || triplestoreType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
                     /* need to update the lucene index */
                     val indexUpdateSparqlString =
                     """
@@ -337,7 +335,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     }
 
     private def checkTriplestore() {
-
         val sparql = "SELECT ?s ?p ?o WHERE { ?s ?p ?o  } LIMIT 10"
 
         val request = queryRequest(useInference = false).addParameter("query", sparql).addHeader(headerAccept, mimeTypeApplicationSparqlResultsJson)

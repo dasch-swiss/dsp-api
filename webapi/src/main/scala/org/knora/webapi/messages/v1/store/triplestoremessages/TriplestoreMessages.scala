@@ -24,14 +24,8 @@ case object CheckConnection extends TriplestoreRequest
   * Represents a SPARQL SELECT query to be sent to the triplestore. A successful response will be a [[SparqlSelectResponse]].
   *
   * @param sparql       the SPARQL string.
-  * @param useInference if `true`, ask the triplestore to use inference in the query, if possible. If the triplestore
-  *                     is being accessed over HTTP, this is likely to mean setting a parameter in the HTTP request.
-  *                     Note that with GraphDB, setting this to `false` is not sufficient to completely disable inference,
-  *                     because it does not disable the `owl:sameAs` optimisation. To completely disable inference
-  *                     for a query in GraphDB, you must include `FROM <http://www.ontotext.com/explicit>`
-  *                     in the SPARQL.
   */
-case class SparqlSelectRequest(sparql: String, useInference: Boolean = false) extends TriplestoreRequest
+case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
 
 /**
   * Represents a response to a SPARQL SELECT query, containing a parsed representation of the response (JSON, etc.)
@@ -92,14 +86,8 @@ case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
   * [[SparqlConstructResponse]].
   *
   * @param sparql       the SPARQL string.
-  * @param useInference if `true`, ask the triplestore to use inference in the query, if possible. If the triplestore
-  *                     is being accessed over HTTP, this is likely to mean setting a parameter in the HTTP request.
-  *                     Note that with GraphDB, setting this to `false` is not sufficient to completely disable inference,
-  *                     because it does not disable the `owl:sameAs` optimisation. To completely disable inference
-  *                     for a query in GraphDB, you must include `FROM <http://www.ontotext.com/explicit>`
-  *                     in the SPARQL.
   */
-case class SparqlConstructRequest(sparql: String, useInference: Boolean = false) extends TriplestoreRequest
+case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
 
 /**
   * A response to a [[SparqlConstructRequest]].

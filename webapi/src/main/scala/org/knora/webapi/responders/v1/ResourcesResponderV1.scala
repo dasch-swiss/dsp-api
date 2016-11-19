@@ -147,10 +147,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 // _ = println(sparql)
 
-                // If we're using GraphDB, optimise this query by using inference.
-                useInference = settings.triplestoreType.startsWith("graphdb")
-
-                response: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql = sparql, useInference = useInference)).mapTo[SparqlSelectResponse]
+                response: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResponse]
                 rows = response.results.bindings
 
                 // Did we get any results?
@@ -269,10 +266,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             // _ = println(sparql)
 
-            // If we're using GraphDB, optimise this query by using inference.
-            useInference = settings.triplestoreType.startsWith("graphdb")
-
-            response: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql = sparql, useInference = useInference)).mapTo[SparqlSelectResponse]
+            response: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResponse]
             rows = response.results.bindings
 
             _ = if (rows.isEmpty) {
@@ -1151,10 +1145,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             // _ = println(searchResourcesSparql)
 
-            // If we're using GraphDB, optimise this query by using inference.
-            useInference = settings.triplestoreType.startsWith("graphdb")
-
-            searchResponse <- (storeManager ? SparqlSelectRequest(sparql = searchResourcesSparql, useInference = useInference)).mapTo[SparqlSelectResponse]
+            searchResponse <- (storeManager ? SparqlSelectRequest(searchResourcesSparql)).mapTo[SparqlSelectResponse]
 
             resources: Seq[ResourceSearchResultRowV1] = searchResponse.results.bindings.map {
                 case (row: VariableResultsRow) =>
