@@ -89,19 +89,18 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     /**
       * Constructs an HTTP request for a SPARQL query.
       *
-      * @param useInference if `true`, ask the triplestore to use inference in the query, if possible.
       * @return an HTTP request.
       */
-    private def queryRequest(useInference: Boolean): Req = {
+    private val queryRequest: Req = {
         triplestoreType match {
             case HTTP_GRAPH_DB_TS_TYPE => queryRequestPath.
                 POST.
                 setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-                addParameter("infer", useInference.toString)
+                addParameter("infer", "true") // Use inference.
             case HTTP_GRAPH_DB_FREE_TS_TYPE => queryRequestPath.
                 POST.
                 setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name).
-                addParameter("infer", useInference.toString)
+                addParameter("infer", "true") // Use inference.
             case HTTP_FUSEKI_TS_TYPE => queryRequestPath.
                 POST.
                 setContentType(mimeTypeFormUrlEncoded, StandardCharsets.UTF_8.name)
@@ -230,15 +229,12 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @return the triplestore's response.
       */
     private def getTriplestoreHttpResponse(sparql: String, update: Boolean, isConstruct: Boolean = false): Future[String] = {
-        // Enable inference if we're using GraphDB.
-        val useInference = triplestoreType.startsWith("graphdb")
-
         val request = if (update) {
             updateRequest.addParameter("update", sparql)
         } else if (isConstruct) {
-            queryRequest(useInference).addParameter("query", sparql).addHeader(headerAccept, mimeTypeTextTurtle)
+            queryRequest.addParameter("query", sparql).addHeader(headerAccept, mimeTypeTextTurtle)
         } else {
-            queryRequest(useInference).addParameter("query", sparql).addHeader(headerAccept, mimeTypeApplicationSparqlResultsJson)
+            queryRequest.addParameter("query", sparql).addHeader(headerAccept, mimeTypeApplicationSparqlResultsJson)
         }
 
         //println(s"request url: ${request.url}")
@@ -337,7 +333,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private def checkTriplestore() {
         val sparql = "SELECT ?s ?p ?o WHERE { ?s ?p ?o  } LIMIT 10"
 
-        val request = queryRequest(useInference = false).addParameter("query", sparql).addHeader(headerAccept, mimeTypeApplicationSparqlResultsJson)
+        val request = queryRequest.addParameter("query", sparql).addHeader(headerAccept, mimeTypeApplicationSparqlResultsJson)
 
         val resppnseStrFuture = for {
             response <- Http(request)
