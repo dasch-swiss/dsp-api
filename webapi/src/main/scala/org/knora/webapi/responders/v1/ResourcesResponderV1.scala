@@ -127,19 +127,21 @@ class ResourcesResponderV1 extends ResponderV1 {
         /**
           * Recursively queries outbound or inbound links from/to a resource.
           *
-          * @param startNodeIri the resource to use as the starting point of the query.
+          * @param startNode the node to use as the starting point of the query. The user is assumed to have permission
+          *                  to see this node.
           * @param outbound `true` to get outbound links, `false` to get inbound links.
           * @param depth the maximum depth of the query.
           * @return a [[GraphQueryResults]].
           */
-        def traverseGraph(startNodeIri: IRI, outbound: Boolean, depth: Int): Future[GraphQueryResults] = {
+        def traverseGraph(startNode: QueryResultNode, outbound: Boolean, depth: Int): Future[GraphQueryResults] = {
             if (depth < 1) Future.failed(AssertionException("Depth must be at least 1"))
 
             for {
                 // Get the direct links from/to the start node.
-                sparql <- Future(queries.sparql.v1.txt.getLinks(
+                sparql <- Future(queries.sparql.v1.txt.getGraphData(
                     triplestore = settings.triplestoreType,
-                    startNodeIri = startNodeIri,
+                    startNodeIri = startNode.nodeIri,
+                    startNodeOnly = false,
                     outbound = outbound
                 ).toString())
 
@@ -156,45 +158,18 @@ class ResourcesResponderV1 extends ResponderV1 {
                     // No. Return  nothing.
                     Future(GraphQueryResults())
                 } else {
-                    // Yes. Get information about the start node.
-
-                    val firstRowMap = rows.head.rowMap
-
-                    val startNode = QueryResultNode(
-                        nodeIri = startNodeIri,
-                        nodeClass = firstRowMap("startNodeClass"),
-                        nodeLabel = firstRowMap("startNodeLabel"),
-                        nodeOwner = firstRowMap("startNodeOwner"),
-                        nodeProject = firstRowMap("startNodeProject"),
-                        nodePermissions = firstRowMap.get("startNodePermissions")
-                    )
-
-                    // Get the user's permission on the start node.
-                    val startNodePermission = PermissionUtilV1.getUserPermissionV1(
-                        subjectIri = startNodeIri,
-                        subjectOwner = startNode.nodeOwner,
-                        subjectProject = startNode.nodeProject,
-                        subjectPermissionLiteral = startNode.nodePermissions,
-                        userProfile = graphDataGetRequest.userProfile
-                    )
-
-                    // Does the user have permission to see the start node?
-                    if (startNodePermission.isEmpty) {
-                        // No. Return nothing.
-                        Future(GraphQueryResults())
-                    } else {
-                        // Yes. Get the other nodes from the query results.
+                    // Yes. Get the nodes from the query results.
                         val otherNodes: Seq[QueryResultNode] = rows.map {
                             row =>
                                 val rowMap = row.rowMap
 
                                 QueryResultNode(
-                                    nodeIri = rowMap("otherNode"),
-                                    nodeClass = rowMap("otherNodeClass"),
-                                    nodeLabel = rowMap("otherNodeLabel"),
-                                    nodeOwner = rowMap("otherNodeOwner"),
-                                    nodeProject = rowMap("otherNodeProject"),
-                                    nodePermissions = rowMap.get("otherNodePermissions")
+                                    nodeIri = rowMap("node"),
+                                    nodeClass = rowMap("nodeClass"),
+                                    nodeLabel = rowMap("nodeLabel"),
+                                    nodeOwner = rowMap("nodeOwner"),
+                                    nodeProject = rowMap("nodeProject"),
+                                    nodePermissions = rowMap.get("nodePermissions")
                                 )
                         }.filter {
                             node =>
@@ -209,13 +184,13 @@ class ResourcesResponderV1 extends ResponderV1 {
                         }
 
                         // Collect the IRIs of the nodes that the user has permission to see, including the start node.
-                        val visibleNodeIris = otherNodes.map(_.nodeIri).toSet + startNodeIri
+                        val visibleNodeIris = otherNodes.map(_.nodeIri).toSet + startNode.nodeIri
 
                         // Get the edges from the query results.
                         val edges: Seq[QueryResultEdge] = rows.map {
                             row =>
                                 val rowMap = row.rowMap
-                                val nodeIri = rowMap("otherNode")
+                                val nodeIri = rowMap("node")
 
                                 QueryResultEdge(
                                     linkValueIri = rowMap("linkValue"),
@@ -223,7 +198,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                     targetNodeIri = if (outbound) nodeIri else startNode.nodeIri,
                                     linkProp = rowMap("linkProp"),
                                     linkValueOwner = rowMap("linkValueOwner"),
-                                    linkValueProject = rowMap.getOrElse("linkValueProject", if (outbound) startNode.nodeProject else rowMap("otherNodeProject")),
+                                    linkValueProject = rowMap.getOrElse("linkValueProject", if (outbound) startNode.nodeProject else rowMap("nodeProject")),
                                     linkValuePermissions = rowMap.get("linkValuePermissions")
                                 )
                         }.filter {
@@ -260,7 +235,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                             val lowerResultFutures: Seq[Future[GraphQueryResults]] = filteredOtherNodes.map {
                                 node => traverseGraph(
-                                    startNodeIri = node.nodeIri,
+                                    startNode = node,
                                     outbound = outbound,
                                     depth = depth - 1
                                 )
@@ -280,22 +255,63 @@ class ResourcesResponderV1 extends ResponderV1 {
                                     )
                             }
                         }
-                    }
                 }
             } yield recursiveResults
         }
 
         for {
+            // Get the start node.
+            sparql <- Future(queries.sparql.v1.txt.getGraphData(
+                triplestore = settings.triplestoreType,
+                startNodeIri = graphDataGetRequest.resourceIri,
+                startNodeOnly = true
+            ).toString())
+
+            // _ = println(sparql)
+
+            // If we're using GraphDB, optimise this query by using inference.
+            useInference = settings.triplestoreType.startsWith("graphdb")
+
+            response: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql = sparql, useInference = useInference)).mapTo[SparqlSelectResponse]
+            rows = response.results.bindings
+
+            _ = if (rows.isEmpty) {
+                throw NotFoundException(s"Resource ${graphDataGetRequest.resourceIri} not found (it may have been deleted)")
+            }
+
+            firstRowMap = rows.head.rowMap
+
+            startNode = QueryResultNode(
+                nodeIri = firstRowMap("node"),
+                nodeClass = firstRowMap("nodeClass"),
+                nodeLabel = firstRowMap("nodeLabel"),
+                nodeOwner = firstRowMap("nodeOwner"),
+                nodeProject = firstRowMap("nodeProject"),
+                nodePermissions = firstRowMap.get("nodePermissions")
+            )
+
+            // Make sure the user has permission to see the start node.
+            _ = if (PermissionUtilV1.getUserPermissionV1(
+                subjectIri = startNode.nodeIri,
+                subjectOwner = startNode.nodeOwner,
+                subjectProject = startNode.nodeProject,
+                subjectPermissionLiteral = startNode.nodePermissions,
+                userProfile = graphDataGetRequest.userProfile
+            ).isEmpty) {
+                val userID = graphDataGetRequest.userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                throw ForbiddenException(s"User $userID does not have permission to view resource ${graphDataGetRequest.resourceIri}")
+            }
+
             // Recursively get the graph containing outbound links.
             outboundQueryResults: GraphQueryResults <- traverseGraph(
-                startNodeIri = graphDataGetRequest.resourceIri,
+                startNode = startNode,
                 outbound = true,
                 depth = graphDataGetRequest.depth
             )
 
             // Recursively get the graph containing inbound links.
             inboundQueryResults: GraphQueryResults <- traverseGraph(
-                startNodeIri = graphDataGetRequest.resourceIri,
+                startNode = startNode,
                 outbound = false,
                 depth = graphDataGetRequest.depth
             )
