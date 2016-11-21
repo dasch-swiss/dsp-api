@@ -313,7 +313,7 @@ stores such data outside the triplestore, in ordinary files. A resource
 can have one or more files attached to it. For each file, there is a
 ``kb:FileValue`` in the triplestore containing metadata about the file
 (see :ref:`knora-base-filevalue`). A resource that has file values
-must belong to of the subclasses of ``kb:Representation``. The base
+must belong to one of the subclasses of ``kb:Representation``. The base
 class ``Representation``, which is not intended to be used directly, has
 this property:
 
@@ -371,7 +371,8 @@ project:
 
 ``Annotation``
     Represents an annotation of a resource. The ``hasComment`` property
-    points to the text of the annotation.
+    points to the text of the annotation, represented as a
+    ``kb:TextValue``.
 
 ``LinkObj``
     Represents a link that connects two or more resources. A ``LinkObj``
@@ -553,12 +554,12 @@ coordinates. Property:
 GeonameValue
 ~~~~~~~~~~~~
 
-Represents a geolocation, using the numerical codes found at
+Represents a geolocation, using the identifiers found at
 GeoNames_. Property:
 
 ``valueHasGeonameCode`` (1)
-    the numerical code of a geographical feature from
-    GeoNames_, represented as an ``xsd:integer``.
+    the identifier of a geographical feature from
+    GeoNames_, represented as an ``xsd:string``.
 
 IntervalValue
 ~~~~~~~~~~~~~
@@ -1049,7 +1050,7 @@ representing persons, a text could be marked up so that each time a
 person’s name is mentioned, a ``StandoffLinkTag`` connects the name to
 the Knora resource describing that person. Property:
 
-standoffTagHasLink (1)
+``standoffTagHasLink`` (1)
     The IRI of the resource that is referred to.
 
 One of the design goals of the Knora ontology is to make it easy and

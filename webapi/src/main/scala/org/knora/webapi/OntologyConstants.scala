@@ -133,6 +133,8 @@ object OntologyConstants {
         val Username = "http://www.knora.org/ontology/knora-base#userid"
         val Email = "http://www.knora.org/ontology/knora-base#email"
         val Password = "http://www.knora.org/ontology/knora-base#password"
+        val GivenName = "http://www.knora.org/ontology/knora-base#givenName"
+        val FamilyName = "http://www.knora.org/ontology/knora-base#familyName"
 
         val InternalMimeType = "http://www.knora.org/ontology/knora-base#internalMimeType"
         val InternalFilename = "http://www.knora.org/ontology/knora-base#internalFilename"
@@ -284,11 +286,6 @@ object OntologyConstants {
             val assignmentOperator = "="
         }
 
-    }
-
-    object Foaf {
-        val GivenName = "http://xmlns.com/foaf/0.1/givenName"
-        val FamilyName = "http://xmlns.com/foaf/0.1/familyName"
     }
 
 }
