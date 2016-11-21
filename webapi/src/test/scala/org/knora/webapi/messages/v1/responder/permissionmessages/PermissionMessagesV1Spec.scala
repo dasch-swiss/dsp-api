@@ -38,7 +38,7 @@ class PermissionMessagesV1Spec extends WordSpecLike with Matchers {
 
             val result = SharedAdminTestData.normalUser.permissionProfile.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)
 
-            result should be(true)
+            result should be(false)
         }
     }
 }

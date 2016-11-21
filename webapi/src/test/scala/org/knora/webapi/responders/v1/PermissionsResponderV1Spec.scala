@@ -54,8 +54,8 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
     val knoraIdUtil = new KnoraIdUtil
 
-    val rootUserProfileV1 = SharedAdminTestData.rootUserProfileV1
-    val multiuserUserProfileV1 = SharedAdminTestData.multiuserUserProfileV1
+    val rootUser = SharedAdminTestData.rootUser
+    val multiuserUserProfileV1 = SharedAdminTestData.multiuserUser
 
     val actorUnderTest = TestActorRef[PermissionsResponderV1]
     val underlyingActorUnderTest = actorUnderTest.underlyingActor
@@ -76,22 +76,22 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the permissions profile (1)" in {
                 actorUnderTest ! PermissionProfileGetV1(
-                    projectIris = SharedAdminTestData.rootUserProfileV1.projects,
-                    groupIris = SharedAdminTestData.rootUserProfileV1.groups,
+                    projectIris = SharedAdminTestData.rootUser.projects,
+                    groupIris = SharedAdminTestData.rootUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = true
                 )
-                expectMsg(SharedAdminTestData.rootUserProfileV1.permissionProfile)
+                expectMsg(SharedAdminTestData.rootUser.permissionProfile)
             }
 
             "return the permissions profile (2)" in {
                 actorUnderTest ! PermissionProfileGetV1(
-                    projectIris = SharedAdminTestData.multiuserUserProfileV1.projects,
-                    groupIris = SharedAdminTestData.multiuserUserProfileV1.groups,
+                    projectIris = SharedAdminTestData.multiuserUser.projects,
+                    groupIris = SharedAdminTestData.multiuserUser.groups,
                     isInProjectAdminGroups = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
                     isInSystemAdminGroup = false
                 )
-                expectMsg(SharedAdminTestData.multiuserUserProfileV1.permissionProfile)
+                expectMsg(SharedAdminTestData.multiuserUser.permissionProfile)
             }
         }
 
@@ -100,7 +100,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return all AdministrativePermissions for project " in {
                 actorUnderTest ! AdministrativePermissionsForProjectGetRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
-                    SharedAdminTestData.rootUserProfileV1
+                    SharedAdminTestData.rootUser
                 )
                 expectMsg(AdministrativePermissionsForProjectGetResponseV1(
                     Seq(perm001.p, perm003.p)
@@ -111,7 +111,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! AdministrativePermissionForProjectGroupGetRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
                     groupIri = OntologyConstants.KnoraBase.ProjectMember,
-                    SharedAdminTestData.rootUserProfileV1
+                    SharedAdminTestData.rootUser
                 )
                 expectMsg(AdministrativePermissionForProjectGroupGetResponseV1(perm001.p))
             }
@@ -119,7 +119,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return AdministrativePermission for IRI " in {
                 actorUnderTest ! AdministrativePermissionForIriGetRequestV1(
                     administrativePermissionIri = perm001.iri,
-                    SharedAdminTestData.rootUserProfileV1
+                    SharedAdminTestData.rootUser
                 )
                 expectMsg(AdministrativePermissionForIriGetResponseV1(perm001.p))
             }
@@ -131,7 +131,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return all DefaultObjectAccessPermissions for project " in {
                 actorUnderTest ! DefaultObjectAccessPermissionsForProjectGetRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
-                    SharedAdminTestData.rootUserProfileV1
+                    SharedAdminTestData.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionsForProjectGetResponseV1(
                     defaultObjectAccessPermissions = Seq(perm002.p)
@@ -142,7 +142,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! DefaultObjectAccessPermissionForProjectGroupGetRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
                     groupIri = OntologyConstants.KnoraBase.ProjectMember,
-                    userProfileV1 = SharedAdminTestData.rootUserProfileV1
+                    userProfileV1 = SharedAdminTestData.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionForProjectGroupGetResponseV1(
                     defaultObjectAccessPermission = perm002.p
@@ -152,7 +152,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return DefaultObjectAccessPermission for IRI" in {
                 actorUnderTest ! DefaultObjectAccessPermissionForIriGetRequestV1(
                     defaultObjectAccessPermissionIri = perm002.iri,
-                    SharedAdminTestData.rootUserProfileV1
+                    SharedAdminTestData.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionForIriGetResponseV1(
                     defaultObjectAccessPermission = perm002.p
@@ -184,7 +184,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                         forGroup = OntologyConstants.KnoraBase.ProjectMember,
                         hasPermissions = Seq(PermissionV1.ProjectResourceCreateAllPermission)
                     ),
-                    userProfileV1 = rootUserProfileV1
+                    userProfileV1 = rootUser
                 )
                 expectMsg(Failure(DuplicateValueException(s"Permission for project: '${IMAGES_PROJECT_IRI}' and group: '${OntologyConstants.KnoraBase.ProjectMember}' combination already exists.")))
             }
@@ -239,7 +239,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! TemplatePermissionsCreateRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
                     permissionsTemplate = PermissionsTemplate.OPEN,
-                    rootUserProfileV1
+                    rootUser
                 )
                 expectMsg(TemplatePermissionsCreateResponseV1(
                     success = true,

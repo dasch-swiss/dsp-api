@@ -50,7 +50,7 @@ class PermissionsRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) with
     "The Permissions Route ('v1/permissions/projectIri/groupIri')" should {
 
         "return administrative permissions" in {
-            val projectIri = java.net.URLEncoder.encode(SharedAdminTestData.imagesProjectInfoV1.id, "utf-8")
+            val projectIri = java.net.URLEncoder.encode(SharedAdminTestData.imagesProjectInfo.id, "utf-8")
             val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraBase.ProjectMember, "utf-8")
 
             val request = Get(baseApiUrl + s"/v1/permissions/$projectIri/$groupIri")

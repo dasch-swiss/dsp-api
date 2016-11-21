@@ -1405,20 +1405,11 @@ class ResourcesResponderV1 extends ResponderV1 {
             namedGraph = settings.projectNamedGraphs(projectIri).data
             resourceIri: IRI = knoraIdUtil.makeRandomResourceIri
 
-            // FIXME: Check with user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to create a new resource in the given project.
+            // Check user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to
+            // create a new resource in the given project.
             _ = if (!userProfile.permissionProfile.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)) {
                 throw ForbiddenException(s"User $userIri does not have permissions to create a resource in project $projectIri")
             }
-
-            // check if the user has the permissions to create a new resource in the given project
-            // get project info that includes the permissions the current user has on the project
-            /*
-            projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequestV1(
-                iri = projectIri,
-                infoType = ProjectInfoType.SHORT,
-                Some(userProfile)
-            )).mapTo[ProjectInfoResponseV1]
-            */
 
             // FIXME: Query the PermissionsResponder for Resource Class DOAP
 

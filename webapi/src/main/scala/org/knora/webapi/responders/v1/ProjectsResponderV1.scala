@@ -20,7 +20,7 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.Status
+import akka.actor.Statusr
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.projectmessages._

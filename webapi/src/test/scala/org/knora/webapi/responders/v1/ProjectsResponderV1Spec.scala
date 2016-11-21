@@ -50,7 +50,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
     implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    val rootUserProfileV1 = SharedAdminTestData.rootUserProfileV1
+    val rootUserProfileV1 = SharedAdminTestData.rootUser
 
     val actorUnderTest = TestActorRef[ProjectsResponderV1]
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -70,10 +70,10 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsgPF(timeout) {
                     case ProjectsResponseV1(projects, userdata) => {
                         //println(projects)
-                        assert(projects.contains(SharedAdminTestData.imagesProjectInfoV1))
+                        assert(projects.contains(SharedAdminTestData.imagesProjectInfo))
                         //Todo: make it work with icunabula
                         //assert(projects.contains(incunabulaPI))
-                        assert(projects.contains(SharedAdminTestData.sixerProjectProjectInfoV1))
+                        assert(projects.contains(SharedAdminTestData.triplesixProjectInfo))
                     }
                 }
             }
@@ -83,27 +83,27 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
                 /* Incunabula project */
                 actorUnderTest ! ProjectInfoByIRIGetRequestV1(
-                    SharedAdminTestData.incunabulaProjectInfoV1.id,
+                    SharedAdminTestData.incunabulaProjectInfo.id,
                     ProjectInfoType.FULL,
-                    Some(SharedAdminTestData.rootUserProfileV1)
+                    Some(SharedAdminTestData.rootUser)
                 )
-                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfoV1, Some(rootUserProfileV1.userData)))
+                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfo, Some(rootUserProfileV1.userData)))
 
                 /* Images project */
                 actorUnderTest ! ProjectInfoByIRIGetRequestV1(
-                    SharedAdminTestData.imagesProjectInfoV1.id,
+                    SharedAdminTestData.imagesProjectInfo.id,
                     ProjectInfoType.FULL,
-                    Some(SharedAdminTestData.rootUserProfileV1)
+                    Some(SharedAdminTestData.rootUser)
                 )
-                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.imagesProjectInfoV1, Some(rootUserProfileV1.userData)))
+                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.imagesProjectInfo, Some(rootUserProfileV1.userData)))
 
                 /* 'SystemProject' */
                 actorUnderTest ! ProjectInfoByIRIGetRequestV1(
-                    SharedAdminTestData.systemProjectInfoV1.id,
+                    SharedAdminTestData.systemProjectInfo.id,
                     ProjectInfoType.FULL,
-                    Some(SharedAdminTestData.rootUserProfileV1)
+                    Some(SharedAdminTestData.rootUser)
                 )
-                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.systemProjectInfoV1, Some(rootUserProfileV1.userData)))
+                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.systemProjectInfo, Some(rootUserProfileV1.userData)))
 
             }
             "return 'NotFoundException' when the project is unknown " in {
@@ -113,8 +113,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
         }
         "asked about a project identified by 'shortname' " should {
             "return 'full' project info if the project is known " in {
-                actorUnderTest ! ProjectInfoByShortnameGetRequestV1(SharedAdminTestData.incunabulaProjectInfoV1.shortname, ProjectInfoType.FULL, Some(rootUserProfileV1))
-                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfoV1, Some(rootUserProfileV1.userData)))
+                actorUnderTest ! ProjectInfoByShortnameGetRequestV1(SharedAdminTestData.incunabulaProjectInfo.shortname, ProjectInfoType.FULL, Some(rootUserProfileV1))
+                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfo, Some(rootUserProfileV1.userData)))
             }
 
             "return 'NotFoundException' when the project is unknown " in {
@@ -135,7 +135,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         isActiveProject = true,
                         hasSelfJoinEnabled = false
                     ),
-                    SharedAdminTestData.rootUserProfileV1
+                    SharedAdminTestData.rootUser
                 )
                 expectMsgPF(timeout) {
                     case ProjectOperationResponseV1(newProjectInfo, requestingUserData) => {
@@ -159,7 +159,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         isActiveProject = true,
                         hasSelfJoinEnabled = false
                     ),
-                    SharedAdminTestData.rootUserProfileV1
+                    SharedAdminTestData.rootUser
                 )
                 expectMsg(Failure(DuplicateValueException(s"Project with the shortname: 'newproject' already exists")))
             }
@@ -176,7 +176,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         isActiveProject = true,
                         hasSelfJoinEnabled = false
                     ),
-                    SharedAdminTestData.rootUserProfileV1
+                    SharedAdminTestData.rootUser
                 )
                 expectMsg(Failure(BadRequestException("'Shortname' cannot be empty")))
             }

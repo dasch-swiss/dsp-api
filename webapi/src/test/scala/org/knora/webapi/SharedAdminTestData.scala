@@ -78,7 +78,7 @@ object SharedAdminTestData {
     )
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    def superuserUser = UserProfileV1(
+    def superUser = UserProfileV1(
         UserDataV1(
             user_id = Some("http://data.knora.org/users/superuser"),
             username = Some("superuser"),
@@ -216,9 +216,19 @@ object SharedAdminTestData {
         projects = List("http://data.knora.org/projects/images"),
         sessionId = None,
         permissionProfile = PermissionProfileV1(
+            projectInfos = List(
+                SharedAdminTestData.imagesProjectInfo.ofType(ProjectInfoType.SHORT)
+            ),
             groupsPerProject = Map(
                 "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer")
-            )
+            ),
+            administrativePermissionsPerProject = Map(
+                "http://data.knora.org/projects/images" -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission,
+                    PermissionV1.ProjectAdminAllPermission
+                )
+            ),
+            defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
         )
     )
 
@@ -319,10 +329,49 @@ object SharedAdminTestData {
         sessionId = None,
         permissionProfile = PermissionProfileV1(
             groupsPerProject = Map(
-                "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
-            )
+                "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}")
+            ),
+            administrativePermissionsPerProject = Map(
+                "http://data.knora.org/projects/77275339" -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission,
+                    PermissionV1.ProjectAdminAllPermission
+                )
+            ),
+            defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
         )
     )
+
+    /* represents 'root-alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
+    def incunabulaRootAltUser = UserProfileV1(
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/91e19f1e01"),
+            username = Some("root-alt"),
+            firstname = Some("Administrator-alt"),
+            lastname = Some("Admin-alt"),
+            email = Some("test@test.ch"),
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            token = None,
+            isActiveUser = Some(true),
+            lang = "de"
+        ),
+        groups = Vector.empty[IRI],
+        projects = List("http://data.knora.org/projects/77275339"),
+        sessionId = None,
+        permissionProfile = PermissionProfileV1(
+            groupsPerProject = Map(
+                "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+            ),
+            administrativePermissionsPerProject = Map(
+                "http://data.knora.org/projects/77275339" -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission,
+                    PermissionV1.ProjectAdminAllPermission
+                )
+            ),
+            defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
+        )
+    )
+
+
 
     /* represents the ProjectInfoV1 of the incunabula project */
     def incunabulaProjectInfo = ProjectInfoV1(
