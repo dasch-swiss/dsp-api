@@ -156,6 +156,14 @@ object InputValidation {
         }
     }
 
+    def toBoolean(s: String, errorFun: () => Nothing): Boolean = {
+        try {
+            s.toBoolean
+        } catch {
+            case e: Exception => errorFun() // value could not be converted to Boolean
+        }
+    }
+
     // TODO: Move to test case if needed
     /*
     def main(args: Array[String]): Unit = {

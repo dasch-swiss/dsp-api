@@ -26,21 +26,55 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 
 /**
-  *
   * The following case classes represent standoff classes and attributes
   * that are about to be added to the triplestore.
   *
   */
 
 
+/*
+    trait for standoff tag attribute
+ */
+trait StandoffTagAttributeV1 {
+
+    def standoffPropertyIri: IRI
+
+    def value: Any
+
+}
+
 /**
-  * Represents an attribute for a [[StandoffTagV1]].
+  * Represents a standoff tag attribute of type string.
   *
-  * @param key      IRI of the attribute (predicate).
-  * @param value    value of the attribute.
-  * @param datatype datatype of the attribute.
+  * @param standoffPropertyIri the Iri of the standoff property
+  * @param value the value of the standoff property.
   */
-case class StandoffTagAttributeV1(key: IRI, value: String, datatype: String)
+case class StandoffTagStringAttributeV1(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV1
+
+/**
+  * Represents a standoff tag attribute of type integer.
+  *
+  * @param standoffPropertyIri the Iri of the standoff property
+  * @param value the value of the standoff property.
+  */
+case class StandoffTagIntegerAttributeV1(standoffPropertyIri: IRI, value: Int) extends StandoffTagAttributeV1
+
+/**
+  * Represents a standoff tag attribute of type decimal.
+  *
+  * @param standoffPropertyIri the Iri of the standoff property
+  * @param value the value of the standoff property.
+  */
+case class StandoffTagDecimalAttributeV1(standoffPropertyIri: IRI, value: BigDecimal) extends StandoffTagAttributeV1
+
+/**
+  * Represents a standoff tag attribute of type boolean.
+  *
+  * @param standoffPropertyIri the Iri of the standoff property
+  * @param value the value of the standoff property.
+  */
+case class StandoffTagBooleanAttributeV1(standoffPropertyIri: IRI, value: Boolean) extends StandoffTagAttributeV1
+
 
 /**
   * A trait representing the required properties for a `knora-base:StandoffTag`
@@ -234,7 +268,7 @@ case class StandoffIntegerTagV1(name: IRI,
                                 startParentIndex: Option[Int],
                                 endParentIndex: Option[Int],
                                 attributes: Seq[StandoffTagAttributeV1],
-                                valueHasInteger: String) extends StandoffTagV1
+                                valueHasInteger: Int) extends StandoffTagV1
 
 /**
   * Represents a `knora-base:StandoffDecimalTag` or any subclass of it.

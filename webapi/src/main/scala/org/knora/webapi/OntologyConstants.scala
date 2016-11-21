@@ -60,6 +60,13 @@ object OntologyConstants {
         )
     }
 
+    object Xsd {
+        val String = "http://www.w3.org/2001/XMLSchema#string"
+        val Boolean = "http://www.w3.org/2001/XMLSchema#boolean"
+        val Integer = "http://www.w3.org/2001/XMLSchema#integer"
+        val Decimal = "http://www.w3.org/2001/XMLSchema#decimal"
+    }
+
     object KnoraBase {
         val KnoraBasePrefix = "knora-base:"
         val KnoraBasePrefixExpansion = "http://www.knora.org/ontology/knora-base#"
@@ -88,6 +95,7 @@ object OntologyConstants {
         )
 
         val ObjectClassConstraint = "http://www.knora.org/ontology/knora-base#objectClassConstraint"
+        val ObjectDatatypeConstraint = "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint"
 
         val HasLinkTo = "http://www.knora.org/ontology/knora-base#hasLinkTo"
         val HasLinkToValue = "http://www.knora.org/ontology/knora-base#hasLinkToValue"
