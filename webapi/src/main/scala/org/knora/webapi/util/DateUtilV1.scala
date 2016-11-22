@@ -24,7 +24,7 @@ import java.util.{Calendar, Date, GregorianCalendar}
 
 import jodd.datetime.JDateTime
 import org.knora.webapi.BadRequestException
-import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, JulianDayCountValueV1, KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 
 /**
   * Utility functions for converting dates.
@@ -41,19 +41,19 @@ object DateUtilV1 {
     case class DateRange(start: GregorianCalendar, end: GregorianCalendar, precision: KnoraPrecisionV1.Value)
 
     /**
-      * Converts a [[DateValueV1]] to a [[JulianDayCountValueV1]].
+      * Converts a [[DateValueV1]] to a [[JulianDayNumberValueV1]].
       *
       * @param dateValueV1 the [[DateValueV1]] to be converted.
-      * @return a [[JulianDayCountValueV1]].
+      * @return a [[JulianDayNumberValueV1]].
       */
-    def dateValueV1ToJulianDayCountValueV1(dateValueV1: DateValueV1): JulianDayCountValueV1 = {
+    def dateValueV1ToJulianDayNumberValueV1(dateValueV1: DateValueV1): JulianDayNumberValueV1 = {
         // Get the start and end date ranges of the DateValueV1.
         val dateRange1 = dateString2DateRange(dateValueV1.dateval1, dateValueV1.calendar)
         val dateRange2 = dateString2DateRange(dateValueV1.dateval2, dateValueV1.calendar)
 
-        JulianDayCountValueV1(
-            dateval1 = convertDateToJulianDay(dateRange1.start),
-            dateval2 = convertDateToJulianDay(dateRange2.end),
+        JulianDayNumberValueV1(
+            dateval1 = convertDateToJulianDayNumber(dateRange1.start),
+            dateval2 = convertDateToJulianDayNumber(dateRange2.end),
             calendar = dateValueV1.calendar,
             dateprecision1 = dateRange1.precision,
             dateprecision2 = dateRange2.precision
@@ -61,19 +61,19 @@ object DateUtilV1 {
     }
 
     /**
-      * Converts a [[JulianDayCountValueV1]] to a [[DateValueV1]].
+      * Converts a [[JulianDayNumberValueV1]] to a [[DateValueV1]].
       *
-      * @param julianDayCountValueV1 the [[JulianDayCountValueV1]] to be converted.
+      * @param julianDayNumberValueV1 the [[JulianDayNumberValueV1]] to be converted.
       * @return a [[DateValueV1]].
       */
-    def julianDayCountValueV1ToDateValueV1(julianDayCountValueV1: JulianDayCountValueV1): DateValueV1 = {
-        val dateval1 = julianDay2DateString(julianDayCountValueV1.dateval1, julianDayCountValueV1.calendar, julianDayCountValueV1.dateprecision1)
-        val dateval2 = julianDay2DateString(julianDayCountValueV1.dateval2, julianDayCountValueV1.calendar, julianDayCountValueV1.dateprecision2)
+    def julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1: JulianDayNumberValueV1): DateValueV1 = {
+        val dateval1 = julianDayNumber2DateString(julianDayNumberValueV1.dateval1, julianDayNumberValueV1.calendar, julianDayNumberValueV1.dateprecision1)
+        val dateval2 = julianDayNumber2DateString(julianDayNumberValueV1.dateval2, julianDayNumberValueV1.calendar, julianDayNumberValueV1.dateprecision2)
 
         DateValueV1(
             dateval1 = dateval1,
             dateval2 = dateval2,
-            calendar = julianDayCountValueV1.calendar
+            calendar = julianDayNumberValueV1.calendar
         )
     }
 
@@ -134,15 +134,15 @@ object DateUtilV1 {
     }
 
     /**
-      * Converts a Julian Day Count to a string in `YYYY[-MM[-DD] ]` format.
+      * Converts a Julian Day Number to a string in `YYYY[-MM[-DD] ]` format.
       *
-      * @param julianDay    a Julian Day Count.
+      * @param julianDay    a Julian Day Number.
       * @param calendarType the type of calendar to be used.
       * @param precision    the desired precision of the resulting string.
       * @return a string in `YYYY[-MM[-DD] ]` format.
       */
-    def julianDay2DateString(julianDay: Int, calendarType: KnoraCalendarV1.Value, precision: KnoraPrecisionV1.Value): String = {
-        val gregorianCalendar = convertJulianDayToDate(julianDay, calendarType)
+    def julianDayNumber2DateString(julianDay: Int, calendarType: KnoraCalendarV1.Value, precision: KnoraPrecisionV1.Value): String = {
+        val gregorianCalendar = convertJulianDayNumberToDate(julianDay, calendarType)
         val year = gregorianCalendar.get(Calendar.YEAR)
         val month = gregorianCalendar.get(Calendar.MONTH) + 1 // Attention: in java.util.Calendar, month count starts with 0
         val day = gregorianCalendar.get(Calendar.DAY_OF_MONTH)
@@ -163,25 +163,25 @@ object DateUtilV1 {
     }
 
     /**
-      * Converts a [[GregorianCalendar]] to a Julian Day Count.
+      * Converts a [[GregorianCalendar]] to a Julian Day Number.
       *
       * @param date a [[GregorianCalendar]].
-      * @return a Julian Day Count.
+      * @return a Julian Day Number.
       */
-    def convertDateToJulianDay(date: GregorianCalendar): Int = {
+    def convertDateToJulianDayNumber(date: GregorianCalendar): Int = {
         val conv = new JDateTime
         conv.loadFrom(date)
         conv.getJulianDate.getJulianDayNumber
     }
 
     /**
-      * Converts a Julian Day Count to a [[GregorianCalendar]].
+      * Converts a Julian Day Number to a [[GregorianCalendar]].
       *
-      * @param julianDay    a Julian Day Count.
+      * @param julianDay    a Julian Day Number.
       * @param calendarType the type of calendar to be used to configure the [[GregorianCalendar]].
       * @return a [[GregorianCalendar]].
       */
-    def convertJulianDayToDate(julianDay: Int, calendarType: KnoraCalendarV1.Value): GregorianCalendar = {
+    def convertJulianDayNumberToDate(julianDay: Int, calendarType: KnoraCalendarV1.Value): GregorianCalendar = {
         val conv = new JDateTime(julianDay.toDouble)
         val gregorianCalendar = new GregorianCalendar
 
@@ -202,12 +202,12 @@ object DateUtilV1 {
     }
 
     /**
-      * Creates a `JulianDayCountValueV1` from a date String (e.g. "GREGORIAN:2015-12-03").
+      * Creates a [[JulianDayNumberValueV1]] from a date String (e.g. "GREGORIAN:2015-12-03").
       *
       * @param dateStr the date String to be processed.
-      * @return a `JulianDayCountValueV1` representing the date.
+      * @return a [[JulianDayNumberValueV1]] representing the date.
       */
-    def createJDCValueV1FromDateString(dateStr: String): JulianDayCountValueV1 = {
+    def createJDNValueV1FromDateString(dateStr: String): JulianDayNumberValueV1 = {
         val datestring = InputValidation.toDate(dateStr, () => throw new BadRequestException(s"Invalid date format: $dateStr"))
 
         // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
@@ -220,13 +220,13 @@ object DateUtilV1 {
             val start = dateString2DateRange(parsedDate(1), calendar)
             val end = dateString2DateRange(parsedDate(2), calendar)
 
-            val dateval1 = convertDateToJulianDay(start.start)
-            val dateval2 = convertDateToJulianDay(end.end)
+            val dateval1 = convertDateToJulianDayNumber(start.start)
+            val dateval2 = convertDateToJulianDayNumber(end.end)
 
             // check if end is bigger than start (the user could have submitted a period where start is bigger than end)
             if (dateval1 > dateval2) throw BadRequestException(s"Invalid input for period: start is bigger than end: $dateStr")
 
-            JulianDayCountValueV1(
+            JulianDayNumberValueV1(
                 calendar = calendar,
                 dateval1 = dateval1,
                 dateprecision1 = start.precision,
@@ -240,10 +240,10 @@ object DateUtilV1 {
 
             val date: DateRange = dateString2DateRange(parsedDate(1), calendar)
 
-            JulianDayCountValueV1(
+            JulianDayNumberValueV1(
                 calendar = calendar,
-                dateval1 = convertDateToJulianDay(date.start),
-                dateval2 = convertDateToJulianDay(date.end),
+                dateval1 = convertDateToJulianDayNumber(date.start),
+                dateval2 = convertDateToJulianDayNumber(date.end),
                 dateprecision1 = date.precision,
                 dateprecision2 = date.precision
             )

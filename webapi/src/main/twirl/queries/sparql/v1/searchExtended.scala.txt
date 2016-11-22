@@ -247,8 +247,8 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObject@index knora-base:valueHasStartJDC ?dateStart@index .
-                        ?valueObject@index knora-base:valueHasEndJDC ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasStartJDN ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasEndJDN ?dateEnd@index .
                         ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (@searchCriterion.dateStart <= ?dateEnd@index && @searchCriterion.dateEnd >= ?dateStart@index)
@@ -348,8 +348,8 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObject@index knora-base:valueHasStartJDC ?dateStart@index .
-                        ?valueObject@index knora-base:valueHasEndJDC ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasStartJDN ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasEndJDN ?dateEnd@index .
                         ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (@searchCriterion.dateEnd < ?dateStart@index || @searchCriterion.dateStart > ?dateEnd@index )
@@ -385,7 +385,7 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObject@index knora-base:valueHasStartJDC ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasStartJDN ?dateStart@index .
                         ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (?dateStart@index > @searchCriterion.dateEnd)
@@ -421,7 +421,7 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObject@index knora-base:valueHasStartJDC ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasStartJDN ?dateStart@index .
                         ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (?dateStart@index >= @searchCriterion.dateEnd)
@@ -457,7 +457,7 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObject@index knora-base:valueHasEndJDC ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasEndJDN ?dateEnd@index .
                         ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (?dateEnd@index < @searchCriterion.dateStart)
@@ -493,7 +493,7 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObject@index knora-base:valueHasEndJDC ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasEndJDN ?dateEnd@index .
                         ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (?dateEnd@index <= @searchCriterion.dateStart)

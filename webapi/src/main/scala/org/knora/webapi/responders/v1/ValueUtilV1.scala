@@ -388,15 +388,15 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     private def makeDateValue(valueProps: ValueProps): ApiValueV1 = {
         val predicates = valueProps.literalData
 
-        val julianDayCountValueV1 = JulianDayCountValueV1(
-            dateval1 = predicates(OntologyConstants.KnoraBase.ValueHasStartJDC).literals.head.toInt,
-            dateval2 = predicates(OntologyConstants.KnoraBase.ValueHasEndJDC).literals.head.toInt,
+        val julianDayNumberValueV1 = JulianDayNumberValueV1(
+            dateval1 = predicates(OntologyConstants.KnoraBase.ValueHasStartJDN).literals.head.toInt,
+            dateval2 = predicates(OntologyConstants.KnoraBase.ValueHasEndJDN).literals.head.toInt,
             dateprecision1 = KnoraPrecisionV1.lookup(predicates(OntologyConstants.KnoraBase.ValueHasStartPrecision).literals.head),
             dateprecision2 = KnoraPrecisionV1.lookup(predicates(OntologyConstants.KnoraBase.ValueHasEndPrecision).literals.head),
             calendar = KnoraCalendarV1.lookup(predicates(OntologyConstants.KnoraBase.ValueHasCalendar).literals.head)
         )
 
-        DateUtilV1.julianDayCountValueV1ToDateValueV1(julianDayCountValueV1)
+        DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1)
     }
 
     /**

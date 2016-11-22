@@ -173,8 +173,8 @@ date (``ex:pubdate``), each of which has some metadata.
            titleStr [label = "‘King Lear’"]
            titleCreationDate [label = "2015-08-12 13:00"]
 
-           startJDC [label = "2364669"]
-           endJDC [label = "2364669"]
+           startJDN [label = "2364669"]
+           endJDN [label = "2364669"]
            pubdateCreationDate [label = "2015-08-12 13:03"]
        }
 
@@ -186,8 +186,8 @@ date (``ex:pubdate``), each of which has some metadata.
        title -> titleStr [label = "kb:valueHasString"]
        title -> titleCreationDate [label = "kb:valueCreationDate"]
 
-       pubdate -> startJDC [label = "kb:valueHasStartJDC"]
-       pubdate -> endJDC [label = "kb:valueHasEndJDC"]
+       pubdate -> startJDN [label = "kb:valueHasStartJDN"]
+       pubdate -> endJDN [label = "kb:valueHasEndJDN"]
        pubdate -> pubdateCreationDate [label = "kb:valueCreationDate"]
     }
 
@@ -497,14 +497,14 @@ regardless of the calendar in which they were entered. Properties:
     The name of the calendar in which the date should be displayed.
     Currently ``GREGORIAN`` and ``JULIAN`` are supported.
 
-``valueHasStartJDC`` (1)
+``valueHasStartJDN`` (1)
     The Julian Day Number of the start of the period (an
     ``xsd:integer``).
 
 ``valueHasStartPrecision`` (1)
     The precision of the start of the period.
 
-``valueHasEndJDC`` (1)
+``valueHasEndJDN`` (1)
     The Julian Day Number of the end of the period (an ``xsd:integer``).
 
 ``valueHasEndPrecision`` (1)

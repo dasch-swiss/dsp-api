@@ -527,9 +527,9 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 	knora-base:valueHasString "1487-01-01 - 1490-12-31" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasCalendar "JULIAN" ;
-	knora-base:valueHasStartJDC 2264185 ;
+	knora-base:valueHasStartJDN 2264185 ;
 	knora-base:valueHasStartPrecision "YEAR" ;
-	knora-base:valueHasEndJDC 2265645 ;
+	knora-base:valueHasEndJDN 2265645 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
@@ -839,9 +839,9 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "1492-01-01 - 1492-12-31" ;
 	knora-base:valueHasCalendar "JULIAN" ;
-	knora-base:valueHasStartJDC 2266011 ;
+	knora-base:valueHasStartJDN 2266011 ;
 	knora-base:valueHasStartPrecision "YEAR" ;
-	knora-base:valueHasEndJDC 2266376 ;
+	knora-base:valueHasEndJDN 2266376 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
@@ -910,9 +910,9 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "1492-01-01 - 1492-12-31" ;
 	knora-base:valueHasCalendar "JULIAN" ;
-	knora-base:valueHasStartJDC 2266011 ;
+	knora-base:valueHasStartJDN 2266011 ;
 	knora-base:valueHasStartPrecision "YEAR" ;
-	knora-base:valueHasEndJDC 2266376 ;
+	knora-base:valueHasEndJDN 2266376 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .

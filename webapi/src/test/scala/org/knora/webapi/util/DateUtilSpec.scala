@@ -20,7 +20,7 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, JulianDayCountValueV1, KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.scalatest._
 
 /**
@@ -35,9 +35,9 @@ class DateUtilSpec extends WordSpec with Matchers {
                 calendar = KnoraCalendarV1.JULIAN
             )
 
-            val bundesbriefJulianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayCountValueV1(bundesbriefDateValueV1)
+            val bundesbriefJulianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(bundesbriefDateValueV1)
 
-            bundesbriefJulianDayCountValueV1 should be(JulianDayCountValueV1(
+            bundesbriefJulianDayCountValueV1 should be(JulianDayNumberValueV1(
                 dateval1 = 2192808,
                 dateval2 = 2192808,
                 calendar = KnoraCalendarV1.JULIAN,
@@ -45,7 +45,7 @@ class DateUtilSpec extends WordSpec with Matchers {
                 dateprecision2 = KnoraPrecisionV1.DAY
             ))
 
-            val reverseConvertedBundesbriefDateValueV1 = DateUtilV1.julianDayCountValueV1ToDateValueV1(bundesbriefJulianDayCountValueV1)
+            val reverseConvertedBundesbriefDateValueV1 = DateUtilV1.julianDayNumberValueV1ToDateValueV1(bundesbriefJulianDayCountValueV1)
 
             reverseConvertedBundesbriefDateValueV1 should be(bundesbriefDateValueV1)
         }
@@ -57,9 +57,9 @@ class DateUtilSpec extends WordSpec with Matchers {
                 calendar = KnoraCalendarV1.GREGORIAN
             )
 
-            val benBirthdayJulianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayCountValueV1(benBirthdayDateValueV1)
+            val benBirthdayJulianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(benBirthdayDateValueV1)
 
-            benBirthdayJulianDayCountValueV1 should be(JulianDayCountValueV1(
+            benBirthdayJulianDayCountValueV1 should be(JulianDayNumberValueV1(
                 dateval1 = 2440291,
                 dateval2 = 2440291,
                 calendar = KnoraCalendarV1.GREGORIAN,
@@ -67,7 +67,7 @@ class DateUtilSpec extends WordSpec with Matchers {
                 dateprecision2 = KnoraPrecisionV1.DAY
             ))
 
-            val reverseConvertedBenBirthdayDateValueV1 = DateUtilV1.julianDayCountValueV1ToDateValueV1(benBirthdayJulianDayCountValueV1)
+            val reverseConvertedBenBirthdayDateValueV1 = DateUtilV1.julianDayNumberValueV1ToDateValueV1(benBirthdayJulianDayCountValueV1)
 
             reverseConvertedBenBirthdayDateValueV1 should be(benBirthdayDateValueV1)
         }
@@ -79,9 +79,9 @@ class DateUtilSpec extends WordSpec with Matchers {
                 calendar = KnoraCalendarV1.GREGORIAN
             )
 
-            val julianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayCountValueV1(dateValueV1)
+            val julianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(dateValueV1)
 
-            julianDayCountValueV1 should be(JulianDayCountValueV1(
+            julianDayCountValueV1 should be(JulianDayNumberValueV1(
                 dateval1 = 2192801,
                 dateval2 = 2440291,
                 calendar = KnoraCalendarV1.GREGORIAN,
@@ -89,7 +89,7 @@ class DateUtilSpec extends WordSpec with Matchers {
                 dateprecision2 = KnoraPrecisionV1.DAY
             ))
 
-            val reverseConvertedDateValueV1 = DateUtilV1.julianDayCountValueV1ToDateValueV1(julianDayCountValueV1)
+            val reverseConvertedDateValueV1 = DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayCountValueV1)
 
             reverseConvertedDateValueV1 should be(dateValueV1)
         }
@@ -101,9 +101,9 @@ class DateUtilSpec extends WordSpec with Matchers {
                 calendar = KnoraCalendarV1.GREGORIAN
             )
 
-            val julianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayCountValueV1(dateValueV1)
+            val julianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(dateValueV1)
 
-            julianDayCountValueV1 should be(JulianDayCountValueV1(
+            julianDayCountValueV1 should be(JulianDayNumberValueV1(
                 dateval1 = 2453615,
                 dateval2 = 2457235,
                 calendar = KnoraCalendarV1.GREGORIAN,
@@ -111,7 +111,7 @@ class DateUtilSpec extends WordSpec with Matchers {
                 dateprecision2 = KnoraPrecisionV1.MONTH
             ))
 
-            val reverseConvertedDateValueV1 = DateUtilV1.julianDayCountValueV1ToDateValueV1(julianDayCountValueV1)
+            val reverseConvertedDateValueV1 = DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayCountValueV1)
 
             reverseConvertedDateValueV1 should be(dateValueV1)
         }

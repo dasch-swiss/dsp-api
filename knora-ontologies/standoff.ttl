@@ -49,11 +49,11 @@
 
                   :objectDatatypeConstraint xsd:string .
 
-###  http://www.knora.org/ontology/knora-base#valueHasStartJDC
+###  http://www.knora.org/ontology/knora-base#valueHasStartJDN
 
-:valueHasStartJDC rdf:type owl:DatatypeProperty ;
+:valueHasStartJDN rdf:type owl:DatatypeProperty ;
 
-                  rdfs:comment "Contains the start of a date as \"Julian day count\" (JDC)"@en ;
+                  rdfs:comment "Contains the start of a date as a Julian Day Number (JDN)"@en ;
 
                   rdfs:subPropertyOf :valueHas ;
 
@@ -78,11 +78,11 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#valueHasEndJDC
+###  http://www.knora.org/ontology/knora-base#valueHasEndJDN
 
-:valueHasEndJDC rdf:type owl:DatatypeProperty ;
+:valueHasEndJDN rdf:type owl:DatatypeProperty ;
 
-                rdfs:comment "Contains the end of a date as \"Julian day count\" (JDC)"@en ;
+                rdfs:comment "Contains the end of a date as a Julian Day Number (JDN)"@en ;
 
                 rdfs:subPropertyOf :valueHas ;
 
@@ -120,7 +120,7 @@
                            owl:cardinality "1"^^xsd:nonNegativeInteger
                          ] ,
                          [ rdf:type owl:Restriction ;
-                           owl:onProperty :valueHasEndJDC ;
+                           owl:onProperty :valueHasEndJDN ;
                            owl:cardinality "1"^^xsd:nonNegativeInteger
                          ] ,
                          [ rdf:type owl:Restriction ;
@@ -128,7 +128,7 @@
                            owl:cardinality "1"^^xsd:nonNegativeInteger
                          ] ,
                          [ rdf:type owl:Restriction ;
-                           owl:onProperty :valueHasStartJDC ;
+                           owl:onProperty :valueHasStartJDN ;
                            owl:cardinality "1"^^xsd:nonNegativeInteger
                          ] .
 
