@@ -20,14 +20,17 @@
 
 package org.knora.webapi.routing.v1
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.SettingsImpl
+import org.knora.webapi.{BadRequestException, SettingsImpl}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.util.InputValidation
 
 import scala.xml.NodeSeq
 
@@ -43,12 +46,22 @@ object StandoffRouteV1 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        path("v1" / "standoff" ) {
+        path("v1" / "standoff" / Segments ) { (iris: List[String]) =>
             post {
                 entity(as[String]) { xml: String => requestContext =>
 
+                    // iris should contaon the resource IRI and the property IRI
+                    if (iris.size != 3) {
+                        throw BadRequestException(s"Expected two segments after segment 'standoff/': resourceIri/propertyIri")
+                    }
+
+                    val resourceIri =  InputValidation.toIri(iris(0), () => throw BadRequestException(s"invalid IRI ${iris(0)}"))
+                    val propertyIri =  InputValidation.toIri(iris(1), () => throw BadRequestException(s"invalid IRI ${iris(1)}"))
+                    val projectIri =  InputValidation.toIri(iris(2), () => throw BadRequestException(s"invalid IRI ${iris(2)}"))
+
+
                     val userProfile = getUserProfileV1(requestContext)
-                    val requestMessage = CreateStandoffRequestV1(xml, userProfile)
+                    val requestMessage = CreateStandoffRequestV1(projectIri = projectIri, resourceIri = resourceIri, propertyIri = propertyIri, xml = xml, userProfile = userProfile, apiRequestID = UUID.randomUUID)
 
                     RouteUtilV1.runJsonRoute(
                         requestMessage,

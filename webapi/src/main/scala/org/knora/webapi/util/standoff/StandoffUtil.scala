@@ -319,6 +319,8 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
 
         // TODO: make strings SPARQL safe
 
+        // TODO: ensure that text nodes are not concatenated to one another (e.g. <p> tags)
+
         val finishedConversionState = xmlNodes2Standoff(
             nodes = nodes,
             startState = Xml2StandoffState()

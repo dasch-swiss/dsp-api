@@ -20,18 +20,20 @@
 
 package org.knora.webapi.messages.v1.responder.standoffmessages
 
+import java.util.UUID
+
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
-import scala.xml.NodeSeq
 
 /**
   * An abstract trait representing a Knora v1 API request message that can be sent to `StandoffResponderV1`.
   */
 sealed trait StandoffResponderRequestV1 extends KnoraRequestV1
 
-case class CreateStandoffRequestV1(xml: String, userProfile: UserProfileV1) extends StandoffResponderRequestV1
+case class CreateStandoffRequestV1(projectIri: IRI, resourceIri: IRI, propertyIri: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID) extends StandoffResponderRequestV1
 
 
 case class CreateStandoffResponseV1(userdata: UserDataV1) extends KnoraResponseV1 {

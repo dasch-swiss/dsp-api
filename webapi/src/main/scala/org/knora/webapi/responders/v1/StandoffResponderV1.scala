@@ -20,18 +20,20 @@
 
 package org.knora.webapi.responders.v1
 
+import java.util.UUID
+
 import akka.actor.Status
-import akka.stream.ActorMaterializer
 import akka.pattern._
-import org.knora.webapi.{BadRequestException, _}
+import akka.stream.ActorMaterializer
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{DateUtilV1, InputValidation, ScalaPrettyPrinter}
-import org.knora.webapi.util.standoff._
+import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueRequestV1, CreateValueResponseV1, TextValueV1}
 import org.knora.webapi.twirl._
+import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.standoff._
+import org.knora.webapi.util.{DateUtilV1, InputValidation}
+import org.knora.webapi.{BadRequestException, _}
 
 import scala.concurrent.Future
 
@@ -52,7 +54,7 @@ class StandoffResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case CreateStandoffRequestV1(xml, userProfile) => future2Message(sender(), createStandoff(xml, userProfile), log)
+        case CreateStandoffRequestV1(projIri, resIri, propIri, xml, userProfile, uuid) => future2Message(sender(), createStandoff(projIri, resIri, propIri, xml, userProfile, uuid), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -226,7 +228,7 @@ class StandoffResponderV1 extends ResponderV1 {
       * @param userProfile the client that made the request.
       * @return a [[CreateStandoffResponseV1]]
       */
-    def createStandoff(xml: String, userProfile: UserProfileV1): Future[CreateStandoffResponseV1] = {
+    def createStandoff(projectIri: IRI, resourceIri: IRI, propertyIRI: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[CreateStandoffResponseV1] = {
 
         val mappingXMLTags2StandoffTags = Map(
             "text" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffRootTag, attributesToProps = Map("documentType" -> "http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType")),
@@ -239,8 +241,6 @@ class StandoffResponderV1 extends ResponderV1 {
         val standoffUtil = new StandoffUtil()
 
         val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(xml)
-
-        //println(textWithStandoff.text)
 
         // get Iris of standoff classes that should be created
         val standoffTagIris = mappingXMLTags2StandoffTags.values.map(row => row.standoffClassIri).toSet
@@ -507,7 +507,11 @@ class StandoffResponderV1 extends ResponderV1 {
 
             }
 
-            _ = println(ScalaPrettyPrinter.prettyPrint(standoffNodesToCreate))
+            // _ = println(ScalaPrettyPrinter.prettyPrint(standoffNodesToCreate))
+
+            createValueResponse: CreateValueResponseV1 <- (responderManager ? CreateValueRequestV1(projectIri = projectIri, resourceIri = resourceIri, propertyIri = propertyIRI, value = TextValueV1(utf8str = "gaga"), userProfile = userProfile, apiRequestID = apiRequestID)).mapTo[CreateValueResponseV1]
+
+            // TODO: send the list of standoff case classes and the text to value responder in order to create the triples
 
         } yield CreateStandoffResponseV1(userdata = userProfile.userData)
 
