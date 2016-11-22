@@ -651,6 +651,15 @@
                   :objectDatatypeConstraint xsd:string .
 
 
+### http://www.knora.org/ontology/knora-base#standoffTagIsUnsure
+
+:standoffTagIsUnsure rdf:type owl:DatatypeProperty ;
+
+                   rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                   :subjectClassConstraint :StandoffTag ;
+
+                   :objectDatatypeConstraint xsd:boolean .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasSubListNode
@@ -2610,6 +2619,19 @@
                 rdfs:subClassOf :StandoffDateTag ;
 
                 rdfs:comment "Represents a birthday in a TextValue"@en .
+
+
+###  http://www.knora.org/ontology/knora-base#StandoffRangeTag
+
+:StandoffRangeTag rdf:type owl:Class ;
+
+                rdfs:subClassOf :StandoffIntervalTag ,
+                                [ rdf:type owl:Restriction ;
+                                  owl:onProperty :standoffTagIsUnsure ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                ] ;
+
+                rdfs:comment "Represents a range in a TextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffParagraphTag

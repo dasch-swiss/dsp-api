@@ -137,7 +137,8 @@ class StandoffResponderV1 extends ResponderV1 {
 
             val XMLAttributeMapping: Map[String, IRI] = XMLtoStandoffMapping.attributesToProps
 
-            val attrs: Seq[StandoffTagAttributeV1] = standoffNodeFromXML.attributes.map {
+            // map over all non data type attributes
+            val attrs: Seq[StandoffTagAttributeV1] = standoffNodeFromXML.attributes.filterNot(attr => XMLtoStandoffMapping.dataType.nonEmpty && XMLtoStandoffMapping.dataTypeXMLAttribute.nonEmpty && XMLtoStandoffMapping.dataTypeXMLAttribute.get == attr.key).map {
                 attr: StandoffTagAttribute =>
                     // get the standoff property Iri for this XML attribute
                     val standoffTagPropIri = XMLAttributeMapping.getOrElse(attr.key, throw BadRequestException(s"mapping for attr '${attr.key}' not provided"))
@@ -231,7 +232,8 @@ class StandoffResponderV1 extends ResponderV1 {
             "text" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffRootTag, attributesToProps = Map("documentType" -> "http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType")),
             "p" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffParagraphTag),
             "i" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffItalicTag),
-            "birthday" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffBirthdayTag", dataType = Some(dataTypes.date), dataTypeXMLAttribute = Some("date"))
+            "birthday" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffBirthdayTag", dataType = Some(dataTypes.date), dataTypeXMLAttribute = Some("date")),
+            "interval" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffRangeTag", dataType = Some(dataTypes.interval), dataTypeXMLAttribute = Some("range"), attributesToProps = Map("unsure" -> "http://www.knora.org/ontology/knora-base#standoffTagIsUnsure"))
         )
 
         val standoffUtil = new StandoffUtil()
@@ -261,7 +263,7 @@ class StandoffResponderV1 extends ResponderV1 {
             standoffNodesToCreate: Seq[StandoffTagV1] = textWithStandoff.standoff.map {
                 case (standoffNodeFromXML: StandoffTag) =>
 
-                    val standoffDefFromMapping: MapXMLTagToStandoffClass = mappingXMLTags2StandoffTags.getOrElse(standoffNodeFromXML.tagName, throw BadRequestException(s"the standoff class for $standoffNodeFromXML.tagName could not be found in the provided mapping"))
+                    val standoffDefFromMapping: MapXMLTagToStandoffClass = mappingXMLTags2StandoffTags.getOrElse(standoffNodeFromXML.tagName, throw BadRequestException(s"the standoff class for the tag '${standoffNodeFromXML.tagName}' could not be found in the provided mapping"))
 
                     val standoffClassIri: IRI = standoffDefFromMapping.standoffClassIri
 
@@ -308,7 +310,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
                             StandoffLinkTagV1(
-                                name = standoffBaseTagV1.name, // TODO: very ugly, would like to copy from standoffBaseTagV1
+                                name = standoffBaseTagV1.name,
                                 startPosition = standoffBaseTagV1.startPosition,
                                 endPosition = standoffBaseTagV1.endPosition,
                                 uuid = standoffBaseTagV1.uuid,
@@ -317,7 +319,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 startParentIndex = standoffBaseTagV1.startParentIndex,
                                 endParentIndex = standoffBaseTagV1.endParentIndex,
                                 attributes = attributesV1,
-                                standoffTagHasLink = InputValidation.toIri(linkString, throw BadRequestException(s"Iri invalid: $linkString"))
+                                standoffTagHasLink = InputValidation.toIri(linkString, () =>  throw BadRequestException(s"Iri invalid: $linkString"))
                             )
 
                         case Some(OntologyConstants.KnoraBase.StandoffColorTag) =>
@@ -329,7 +331,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
                             StandoffColorTagV1(
-                                name = standoffBaseTagV1.name, // TODO: very ugly, would like to copy from standoffBaseTagV1
+                                name = standoffBaseTagV1.name,
                                 startPosition = standoffBaseTagV1.startPosition,
                                 endPosition = standoffBaseTagV1.endPosition,
                                 uuid = standoffBaseTagV1.uuid,
@@ -338,7 +340,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 startParentIndex = standoffBaseTagV1.startParentIndex,
                                 endParentIndex = standoffBaseTagV1.endParentIndex,
                                 attributes = attributesV1,
-                                valueHasColor = InputValidation.toColor(colorString, throw BadRequestException(s"Color invalid: $colorString"))
+                                valueHasColor = InputValidation.toColor(colorString, () => throw BadRequestException(s"Color invalid: $colorString"))
                             )
 
                         case Some(OntologyConstants.KnoraBase.StandoffUriTag) =>
@@ -350,7 +352,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
                             StandoffUriTagV1(
-                                name = standoffBaseTagV1.name, // TODO: very ugly, would like to copy from standoffBaseTagV1
+                                name = standoffBaseTagV1.name,
                                 startPosition = standoffBaseTagV1.startPosition,
                                 endPosition = standoffBaseTagV1.endPosition,
                                 uuid = standoffBaseTagV1.uuid,
@@ -359,7 +361,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 startParentIndex = standoffBaseTagV1.startParentIndex,
                                 endParentIndex = standoffBaseTagV1.endParentIndex,
                                 attributes = attributesV1,
-                                valueHasUri = InputValidation.toIri(uriString, throw BadRequestException(s"Iri invalid: $uriString"))
+                                valueHasUri = InputValidation.toIri(uriString, () =>  throw BadRequestException(s"Iri invalid: $uriString"))
                             )
 
 
@@ -373,7 +375,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
                             StandoffIntegerTagV1(
-                                name = standoffBaseTagV1.name, // TODO: very ugly, would like to copy from standoffBaseTagV1
+                                name = standoffBaseTagV1.name,
                                 startPosition = standoffBaseTagV1.startPosition,
                                 endPosition = standoffBaseTagV1.endPosition,
                                 uuid = standoffBaseTagV1.uuid,
@@ -382,7 +384,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 startParentIndex = standoffBaseTagV1.startParentIndex,
                                 endParentIndex = standoffBaseTagV1.endParentIndex,
                                 attributes = attributesV1,
-                                valueHasInteger = InputValidation.toInt(integerString, throw BadRequestException(s"Integer value invalid: $integerString"))
+                                valueHasInteger = InputValidation.toInt(integerString, () => throw BadRequestException(s"Integer value invalid: $integerString"))
                             )
 
                         case Some(OntologyConstants.KnoraBase.StandoffDecimalTag) =>
@@ -394,7 +396,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
                             StandoffIntegerTagV1(
-                                name = standoffBaseTagV1.name, // TODO: very ugly, would like to copy from standoffBaseTagV1
+                                name = standoffBaseTagV1.name,
                                 startPosition = standoffBaseTagV1.startPosition,
                                 endPosition = standoffBaseTagV1.endPosition,
                                 uuid = standoffBaseTagV1.uuid,
@@ -403,7 +405,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 startParentIndex = standoffBaseTagV1.startParentIndex,
                                 endParentIndex = standoffBaseTagV1.endParentIndex,
                                 attributes = attributesV1,
-                                valueHasInteger = InputValidation.toInt(decimalString, throw BadRequestException(s"Integer value invalid: $decimalString"))
+                                valueHasInteger = InputValidation.toInt(decimalString, () => throw BadRequestException(s"Integer value invalid: $decimalString"))
                             )
 
                         case Some(OntologyConstants.KnoraBase.StandoffBooleanTag) =>
@@ -415,7 +417,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
                             StandoffBooleanTagV1(
-                                name = standoffBaseTagV1.name, // TODO: very ugly, would like to copy from standoffBaseTagV1
+                                name = standoffBaseTagV1.name,
                                 startPosition = standoffBaseTagV1.startPosition,
                                 endPosition = standoffBaseTagV1.endPosition,
                                 uuid = standoffBaseTagV1.uuid,
@@ -424,30 +426,27 @@ class StandoffResponderV1 extends ResponderV1 {
                                 startParentIndex = standoffBaseTagV1.startParentIndex,
                                 endParentIndex = standoffBaseTagV1.endParentIndex,
                                 attributes = attributesV1,
-                                valueHasBoolean = InputValidation.toBoolean(booleanString, throw BadRequestException(s"Integer value invalid: $booleanString"))
+                                valueHasBoolean = InputValidation.toBoolean(booleanString, () => throw BadRequestException(s"Integer value invalid: $booleanString"))
                             )
 
                         case Some(OntologyConstants.KnoraBase.StandoffIntervalTag) =>
 
-                            if (standoffDefFromMapping.dataType.isEmpty || standoffDefFromMapping.dataType.get != dataTypes.interval) {
-                                throw BadRequestException(s"wrong data type definition provided in mapping")
+                            val intervalString: String = getDataTypeAttribute(standoffDefFromMapping, dataTypes.interval, standoffNodeFromXML)
+
+                            // interval String contains two decimals separated by a comma
+                            val interval: Array[String] = intervalString.split(",")
+                            if (interval.size != 2) {
+                                throw BadRequestException(s"interval string $intervalString is invalid, it should contain two decimals separated by a comma")
                             }
 
-                            val intervalAttrName = standoffDefFromMapping.dataTypeXMLAttribute.getOrElse(throw BadRequestException(s"no data type attribute definition provided in mapping"))
-
-                            val intervalStringOption: Option[StandoffTagAttribute] = standoffNodeFromXML.attributes.find(attr => attr.key == intervalAttrName)
-                            if (intervalStringOption.isEmpty) {
-                                throw BadRequestException(s"required attribute $intervalAttrName could not be found for a date value")
-                            }
-
-                            // TODO: how should this attribute be parsed? Do we need two attributes, one for start and one for end?
+                            val start: String = interval(0)
 
                             val classSpecificProps = cardinalities -- systemStandoffProperties -- Set(OntologyConstants.KnoraBase.ValueHasIntervalStart, OntologyConstants.KnoraBase.ValueHasIntervalEnd)
 
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
                             StandoffIntervalTagV1(
-                                name = standoffBaseTagV1.name, // TODO: very ugly, would like to copy from standoffBaseTagV1
+                                name = standoffBaseTagV1.name,
                                 startPosition = standoffBaseTagV1.startPosition,
                                 endPosition = standoffBaseTagV1.endPosition,
                                 uuid = standoffBaseTagV1.uuid,
@@ -456,8 +455,8 @@ class StandoffResponderV1 extends ResponderV1 {
                                 startParentIndex = standoffBaseTagV1.startParentIndex,
                                 endParentIndex = standoffBaseTagV1.endParentIndex,
                                 attributes = attributesV1,
-                                valueHasIntervalStart = InputValidation.toBigDecimal("0", throw BadRequestException(s"Decimal value invalid: $intervalStringOption.get.value")),
-                                valueHasIntervalEnd = InputValidation.toBigDecimal("0", throw BadRequestException(s"Decimal value invalid: $intervalStringOption.get.value"))
+                                valueHasIntervalStart = InputValidation.toBigDecimal(interval(0), () => throw BadRequestException(s"Decimal value invalid: ${interval(0)}")),
+                                valueHasIntervalEnd = InputValidation.toBigDecimal(interval(1), () => throw BadRequestException(s"Decimal value invalid: ${interval(1)}"))
                             )
 
                         case Some(OntologyConstants.KnoraBase.StandoffDateTag) =>
@@ -471,7 +470,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
                             StandoffDateTagV1(
-                                name = standoffBaseTagV1.name, // TODO: very ugly, would like to copy from standoffBaseTagV1
+                                name = standoffBaseTagV1.name,
                                 startPosition = standoffBaseTagV1.startPosition,
                                 endPosition = standoffBaseTagV1.endPosition,
                                 uuid = standoffBaseTagV1.uuid,
