@@ -21,6 +21,8 @@
 Reading and Searching Resources
 ===============================
 
+.. contents:: :local:
+
 In order to get an existing resource, the HTTP method ``GET`` has to be used.
 The request has to be sent to the Knora server using the ``resources`` path segment (depending on the type of request, this segment has to be exchanged, see below).
 Reading resources may require authentication since some resources may have restricted viewing permissions.
@@ -269,11 +271,26 @@ Some sample searches:
 The response presents the retrieved resources (according to ``show_nrows`` and ``start_at``) and information about paging.
 If not all resources could be presented on one page (``nhits`` is greater than ``shown_nrows``), the next page can be requested (by increasing ``start_at`` by the number of ``show_nrows``).
 You can simply go through the elements of ``paging`` to request the single pages one by one.
-See TypeScript interface ``searchResponse`` in module ``searchResponseFormats``.
+See the TypeScript interface ``searchResponse`` in module ``searchResponseFormats``.
 
+************************
+Get a Graph of Resources
+************************
+
+The path segment ``graphdata`` returns a graph of resources that are reachable via links to or from an initial resource.
+
+::
+
+    HTTP GET to http://host/v1/search/graphdata/resourceIRI?depth=Integer
+
+The parameter ``depth`` specifies the maximum depth of the graph, and defaults to 4. If ``depth`` is 1, the operation will return only the initial resource and any resources that are directly linked to or from it.
+
+The graph includes any link that is a subproperty of ``knora-base:hasLinkTo``, except for links that are subproperties of ``knora-base:isPartOf``. Specifically, if resource ``R1`` has a link that is a subproperty of ``knora-base:isPartOf`` pointing to resource ``R2``, no link from ``R1`` to ``R2`` is included in the graph.
+
+The response represents the graph as a list of nodes (resources) and a list of edges (links). For details, see the TypeScript interface ``graphDataResponse`` in module ``graphDataResponseFormats``.
 
 **********************
-Get hierarchical Lists
+Get Hierarchical Lists
 **********************
 
 The knora-base ontology allows for the definition of hierarchical lists. These can be queried by providing the IRI of the root node.

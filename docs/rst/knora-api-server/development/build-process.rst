@@ -21,6 +21,8 @@
 Build Process
 =============
 
+.. contents:: :local:
+
 TODO: complete this file.
     - SBT
     - Using GraphDB for development and how to initializing the 'knora-test-unit' repository

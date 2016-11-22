@@ -19,6 +19,8 @@
 Plans for Knora API v2
 =======================
 
+.. contents:: :local:
+
 Naming
 -------
 

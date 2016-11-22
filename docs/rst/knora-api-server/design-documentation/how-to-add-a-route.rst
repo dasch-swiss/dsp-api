@@ -21,6 +21,8 @@
 How to Add an API Route
 =======================
 
+.. contents:: :local:
+
 Write SPARQL templates
 -----------------------
 
