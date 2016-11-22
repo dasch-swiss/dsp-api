@@ -86,9 +86,8 @@
 				else {
 					lc.append(' ').append($('<a>').attr({href: '#'}).data({lang: l, language_id: SALSAH.userdata.lang[l]}).on('click', function(data) {
 						if (confirm(s_('_langchangeq'))) {
-							SALSAH.ApiPost('userdata', {lang: $(this).data('lang')}, function(data) {
-								location.reload();
-							});
+							var newref = 'http://' + window.location.host + window.location.pathname + '?lang=' + $(this).data('lang');
+							location.replace(newref);
 						}
 						return false;
 					}).append(l))
@@ -146,11 +145,12 @@
 		}
 	};
 	
-	$(function() {
-		SALSAH.reset_project_selection();
-	});
 	
 	$(function(){
+$.get('lang/' + SALSAH.userdata.lang + '.json', function(data) {
+    console.log("Getting language strings: " + SALSAH.userdata.lang)
+	strings = data;
+}, 'json');
 		$('#login_title').text(s_('_login'));
 		$('#logout_title').text(s_('_logout'));
 		$('#username_label').text(s_('_username'));
@@ -169,7 +169,7 @@
 			if (event.keyCode == 27) $('#cancel_login').click();	// esc
 		});
 		$('#password').on('keydown', function(event) {
-			if (event.keyCode == 13) $('#login_button').click();	// enter
+			//if (event.keyCode == 13) $('#login_button').click();	// enter
 			if (event.keyCode == 27) $('#cancel_login').click();	// esc
 		});
 
@@ -177,21 +177,26 @@
 		//$('#dologout').simpledialog('logoutbox', {'class': 'loginbox', width: 400, positioning: 'upper'});
 		$('#userctrl').append($('<img>').attr({id: 'dologin', src: 'app/icons/24x24/user.png', title: s_('_login')})
 		.simpledialog('loginbox', {'class': 'loginbox', width: 400, positioning: 'upper', focus: '#user_id'}));
+		var json_userdata;
+		if ((json_userdata = window.sessionStorage.getItem('userdata')) != null) {
+			SALSAH.userdata = JSON.parse(json_userdata);
+		}
+		SALSAH.reset_project_selection();
 
 		$('#login_button').on('click', function(){
 			var credentials = {
 				salsah_username: $('#user_id').val(),
 				salsah_password: $('#password').val()
 			};
-
             SALSAH.ApiPost('session', {username: credentials.salsah_username, password: credentials.salsah_password}, function(data) {
 
 				if (data.status == ApiErrors.OK) {
-
 					// The login to Knora is successful.
 					// Now do a request to Sipi providing the Knora session id.
 					// When retrieving a file from Sipi (e.g. an IIIF URL), Sipi can send the session id to Knora with the request,
 					// identifying the user that is making the request to Knora.
+					window.sessionStorage.setItem('userdata', JSON.stringify(SALSAH.userdata));
+
 					$.ajax({
 						url: SIPI_URL + SIPI_LOGIN_ROUTE,
 						type: "POST",
@@ -205,12 +210,14 @@
 							if (errorThrown !== undefined && jqXHR !== undefined && jqXHR.responseJSON !== undefined) {
 								alert("Sipi returned error " + errorThrown + " with message: " + jqXHR.responseJSON['message']);
 							} else {
-								alert("Call to Sipi failed")
+								alert("Call to Sipi failed");
 							}
 						}
 					});
 
 					$('#dologin').simpledialog('loginbox', 'close');
+
+console.log("LOGIN!!!!!!!!!!!")
 
 
 					//SALSAH.reload_css();
@@ -220,6 +227,38 @@
 						.simpledialog('logoutbox', {'class': 'loginbox', width: 400, positioning: 'upper'})
 					);
 					if (SALSAH.reset_project_selection !== undefined) SALSAH.reset_project_selection();
+
+
+
+
+
+
+
+		if (SALSAH.userdata.projects_info) {
+			var active_project = SALSAH.userdata.active_project;
+			var selele;
+			$('#searchlimsel')
+			.empty()
+			.append(s_('_limitsearch'))
+			.append(selele = $('<select>').attr({id: 'limitproject', title: 'limit search to project'}));
+			selele.append($('<option>').attr({title: 'ALl'}).val(-1).text('-'));
+			for (var p in SALSAH.userdata.projects_info) {
+				selele.append($('<option>').attr({title: SALSAH.userdata.projects_info[p].longname}).val(SALSAH.userdata.projects_info[p].id).text(SALSAH.userdata.projects_info[p].shortname));
+			}
+		}
+
+/* !!!!!!!!!!!!!!!!!!!!!!!!!!!
+					if (SALSAH.userdata.projects_info) {
+						var active_project = SALSAH.userdata.active_project;
+						var selele;
+						$('#searchctrl').append(s_('_limitsearch'));
+						$('#searchctrl').append(selele = $('<select>').attr({id: 'limitproject', title: 'limit search to project'}));
+						selele.append($('<option>').attr({title: 'ALl'}).val(-1).text('-'));
+						for (var p in SALSAH.userdata.projects_info) {
+							selele.append($('<option>').attr({title: SALSAH.userdata.projects_info[p].longname}).val(SALSAH.userdata.projects_info[p].id).text(SALSAH.userdata.projects_info[p].shortname));
+						}
+					}
+*/
 				}
 				else {
 					alert(data.errormsg);
@@ -231,7 +270,8 @@
 		$('#logout_button').on('click', function() {
             SALSAH.ApiDelete('session', function(data) {
 				if (data.status == ApiErrors.OK) {
-
+					window.sessionStorage.removeItem('userdata');
+					SALSAH.userdata = null;
 					// invalidate cookie obtained from Sipi when logging in to Knora
 					$.ajax({
 						url: SIPI_URL + SIPI_LOGOUT_ROUTE,
@@ -254,6 +294,7 @@
 						.simpledialog('loginbox', {'class': 'loginbox', width: 400, positioning: 'upper', focus: '#user_id'})
 					);
 					if (SALSAH.reset_project_selection !== undefined) SALSAH.reset_project_selection();
+					$('#searchlimsel').empty()
 				}
 				else {
 					alert(data.errormsg);
@@ -280,24 +321,15 @@
 				RESVIEW.LinkageWindow(RESVIEW.winclass);
 			})
 		);
-	});
+//	});
 	
 	//
 	// search
 	//
-	$(function(){
-		if (SALSAH.userdata.projects_info) {
-			var active_project = SALSAH.userdata.active_project;
-			var selele;
-			$('#searchctrl').append(strings['_limitsearch']);
-			$('#searchctrl').append(selele = $('<select>').attr({id: 'limitproject', title: 'limit search to project'}));
-			selele.append($('<option>').attr({title: 'ALl'}).val(-1).text('-'));
-			for (var p in SALSAH.userdata.projects_info) {
-				selele.append($('<option>').attr({title: SALSAH.userdata.projects_info[p].longname}).val(SALSAH.userdata.projects_info[p].id).text(SALSAH.userdata.projects_info[p].shortname));
-			}
-		}
-
-		$('#searchctrl').append($('<input>').attr({
+//	$(function(){
+		$('#searchctrl').append(
+			$('<span>').attr({id: "searchlimsel"})
+		).append($('<input>').attr({
 			type: 'text',
 			id: 'simplesearch',
 			name: 'simplesearch'
@@ -329,6 +361,21 @@
 			})
 		);
 		
+
+		if (SALSAH.userdata.projects_info) {
+			var active_project = SALSAH.userdata.active_project;
+			var selele;
+			$('#searchlimsel')
+			.empty()
+			.append(s_('_limitsearch'))
+			.append(selele = $('<select>').attr({id: 'limitproject', title: 'limit search to project'}));
+			selele.append($('<option>').attr({title: 'ALl'}).val(-1).text('-'));
+			for (var p in SALSAH.userdata.projects_info) {
+				selele.append($('<option>').attr({title: SALSAH.userdata.projects_info[p].longname}).val(SALSAH.userdata.projects_info[p].id).text(SALSAH.userdata.projects_info[p].shortname));
+			}
+		}
+
+
 	});
 	</script>
 	<link id="loadcss" rel="stylesheet" type="text/css" href="default.css" />
