@@ -42,6 +42,16 @@ import scala.collection.JavaConversions._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
+import java.io.InputStream
+import java.security.{ SecureRandom, KeyStore }
+import javax.net.ssl.{ SSLContext, TrustManagerFactory, KeyManagerFactory }
+
+import akka.actor.ActorSystem
+import akka.http.scaladsl.server.{ RouteResult, Route, Directives }
+import akka.http.scaladsl.{ ConnectionContext, HttpsConnectionContext, Http }
+import akka.stream.ActorMaterializer
+import com.typesafe.sslconfig.akka.AkkaSSLConfig
+
 trait Core {
     implicit val system: ActorSystem
 }
@@ -154,21 +164,53 @@ trait KnoraService {
             println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
         }
 
-        val host = settings.httpInterface
-        val port = settings.httpPort
-        val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(Route.handlerFlow(apiRoutes), host, port)
-        println(s"Knora API Server started. You can access it on http://${settings.httpInterface}:${settings.httpPort}.")
+        if (!(settings.knoraApiUseHttp || settings.knoraApiUseHttps)) {
+            throw HttpConfigurationException("Knora API server could not start, because neither HTTP nor HTTPS is enabled.")
+        }
 
-        bindingFuture.onFailure {
-            case ex: Exception =>
-                log.error(ex, s"Failed to bind to ${settings.httpInterface}:${settings.httpPort}!")
+        if (settings.knoraApiUseHttps) {
+            val keystorePassword: Array[Char] = settings.httpsKeystorePassword.toCharArray
+            val keystore: KeyStore = KeyStore.getInstance("JKS")
+            val keystoreFile: InputStream = getClass.getClassLoader.getResourceAsStream(settings.httpsKeystore)
+            require(keystoreFile != null, s"Could not load keystore ${settings.httpsKeystore}")
+            keystore.load(keystoreFile, keystorePassword)
+
+            val keyManagerFactory: KeyManagerFactory = KeyManagerFactory.getInstance("SunX509")
+            keyManagerFactory.init(keystore, keystorePassword)
+
+            val trustManagerFactory: TrustManagerFactory = TrustManagerFactory.getInstance("SunX509")
+            trustManagerFactory.init(keystore)
+
+            val sslContext: SSLContext = SSLContext.getInstance("TLS")
+            sslContext.init(keyManagerFactory.getKeyManagers, trustManagerFactory.getTrustManagers, new SecureRandom)
+            val https: HttpsConnectionContext = ConnectionContext.https(sslContext)
+
+            Http().setDefaultServerHttpContext(https)
+
+            val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpsPort, connectionContext = https)
+            println(s"Knora API Server using HTTPS at https://${settings.knoraApiHost}:${settings.knoraApiHttpsPort}.")
+
+            bindingFuture.onFailure {
+                case ex: Exception =>
+                    log.error(ex, s"Could not bind to ${settings.knoraApiHost}:${settings.knoraApiHttpsPort}")
+            }
+        }
+
+        if (settings.knoraApiUseHttp) {
+            val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpPort)
+            println(s"Knora API Server using HTTP at http://${settings.knoraApiHost}:${settings.knoraApiHttpPort}.")
+
+            bindingFuture.onFailure {
+                case ex: Exception =>
+                    log.error(ex, s"Could not bind to ${settings.knoraApiHost}:${settings.knoraApiHttpPort}")
+            }
         }
     }
 
     /**
       * Stops Knora.
       */
-    def stopService = {
+    def stopService() = {
         system.terminate()
         CacheUtil.removeAllCaches()
         //Kamon.shutdown()

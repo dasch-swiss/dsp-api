@@ -47,7 +47,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
     /* needed by the core trait */
     implicit lazy val system = _system
 
-    override val log: LoggingAdapter = akka.event.Logging(system, this.getClass())
+    override val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     val baseApiUrl = settings.baseApiUrl
 
@@ -66,14 +66,14 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
         /* Set the startup flags and start the Knora Server */
         log.debug(s"Starting Knora Service")
         StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
-        checkActorSystem
-        startService
+        checkActorSystem()
+        startService()
     }
 
     override def afterAll: Unit = {
         /* Stop the server when everything else has finished */
         log.debug(s"Stopping Knora Service")
-        stopService
+        stopService()
     }
 
 }

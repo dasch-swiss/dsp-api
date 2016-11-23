@@ -36,11 +36,27 @@ import scala.concurrent.duration._
   * Reads application settings that come from `application.conf`.
   */
 class SettingsImpl(config: Config) extends Extension {
-    val baseSALSAHUrl = config.getString("app.http.base-salsah-url")
+    val httpsKeystore = config.getString("app.http.https.keystore")
+    val httpsKeystorePassword = config.getString("app.http.https.keystore-password")
+
+    val knoraApiHost = config.getString("app.http.knora-api.host")
+    val knoraApiHttpPort = config.getInt("app.http.knora-api.http-port")
+    val knoraApiHttpsPort = config.getInt("app.http.knora-api.https-port")
+    val knoraApiUseHttp = config.getBoolean("app.http.knora-api.use-http")
+    val knoraApiUseHttps = config.getBoolean("app.http.knora-api.use-https")
+    val baseApiUrl = if (knoraApiUseHttps) s"https://$knoraApiHost:$knoraApiHttpsPort" else s"http://$knoraApiHost:$knoraApiHttpPort"
+
+    val salsahHost = config.getString("app.http.salsah.host")
+    val salsahHttpPort = config.getInt("app.http.salsah.http-port")
+    val salsahHttpsPort = config.getInt("app.http.salsah.https-port")
+    val salsahUseHttp = config.getBoolean("app.http.salsah.use-http")
+    val salsahUseHttps = config.getBoolean("app.http.salsah.use-https")
     val projectIconsBasePath = config.getString("app.http.project-icons-basepath")
-    val httpInterface = config.getString("app.http.interface")
+    val baseSalsahUrl = if (salsahUseHttps) s"https://$salsahHost:$salsahHttpsPort/" else s"http://$salsahHost:$salsahHttpPort/"
+
     val tmpDataDir = config.getString("app.tmp-datadir")
     val dataDir = config.getString("app.datadir")
+
     val imageMimeTypes: Vector[String] = config.getList("app.sipi.image-mime-types").iterator.map {
         (mType: ConfigValue) => mType.unwrapped.toString
     }.toVector
@@ -52,8 +68,7 @@ class SettingsImpl(config: Config) extends Extension {
     val sipiImageConversionUrl = s"$sipiBaseUrl:$sipiPort"
     val sipiPathConversionRoute = config.getString("app.sipi.path-conversion-route")
     val sipiFileConversionRoute = config.getString("app.sipi.file-conversion-route")
-    val httpPort = config.getInt("app.http.port")
-    val baseApiUrl = s"http://$httpInterface:$httpPort"
+
     val caches = config.getList("app.caches").iterator.map {
         (cacheConfigItem: ConfigValue) =>
             val cacheConfigMap = cacheConfigItem.unwrapped.asInstanceOf[java.util.HashMap[String, Any]]
@@ -64,6 +79,7 @@ class SettingsImpl(config: Config) extends Extension {
                 cacheConfigMap("time-to-live-seconds").asInstanceOf[Int],
                 cacheConfigMap("time-to-idle-seconds").asInstanceOf[Int])
     }.toVector
+
     val defaultTimeout = Timeout(config.getInt("app.default-timeout").seconds)
     val defaultRestoreTimeout = Timeout(config.getInt("app.default-restore-timeout").seconds)
     val dumpMessages = config.getBoolean("app.dump-messages")
@@ -73,6 +89,7 @@ class SettingsImpl(config: Config) extends Extension {
     val defaultIconSizeDimY = config.getInt("app.gui.default-icon-size.dimY")
     val triplestoreType = config.getString("app.triplestore.dbtype")
     val triplestoreHost = config.getString("app.triplestore.host")
+
     val triplestorePort = triplestoreType match {
         case HTTP_SESAME_TS_TYPE => config.getInt("app.triplestore.sesame.port")
         case HTTP_GRAPH_DB_TS_TYPE => config.getInt("app.triplestore.graphdb.port")
@@ -80,6 +97,7 @@ class SettingsImpl(config: Config) extends Extension {
         case HTTP_FUSEKI_TS_TYPE => config.getInt("app.triplestore.fuseki.port")
         case other => 9999
     }
+
     val triplestoreDatabaseName = triplestoreType match {
         case HTTP_SESAME_TS_TYPE => config.getString("app.triplestore.sesame.repository-name")
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.repository-name")
@@ -87,10 +105,12 @@ class SettingsImpl(config: Config) extends Extension {
         case HTTP_FUSEKI_TS_TYPE => config.getString("app.triplestore.fuseki.repository-name")
         case other => ""
     }
+
     val triplestoreUsername = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.username")
         case other => ""
     }
+
     val triplestorePassword = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.password")
         case other => ""
