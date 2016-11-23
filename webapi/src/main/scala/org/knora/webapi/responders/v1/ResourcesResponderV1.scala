@@ -1407,7 +1407,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             // Check user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to
             // create a new resource in the given project.
-            _ = if (!userProfile.permissionProfile.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)) {
+            _ = if (!userProfile.permissionData.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)) {
                 throw ForbiddenException(s"User $userIri does not have permissions to create a resource in project $projectIri")
             }
 

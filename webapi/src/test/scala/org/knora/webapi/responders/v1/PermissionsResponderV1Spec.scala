@@ -75,23 +75,23 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
         "queried about the permission profile" should {
 
             "return the permissions profile (1)" in {
-                actorUnderTest ! PermissionProfileGetV1(
+                actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.rootUser.projects,
                     groupIris = SharedAdminTestData.rootUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = true
                 )
-                expectMsg(SharedAdminTestData.rootUser.permissionProfile)
+                expectMsg(SharedAdminTestData.rootUser.permissionData)
             }
 
             "return the permissions profile (2)" in {
-                actorUnderTest ! PermissionProfileGetV1(
+                actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.multiuserUser.projects,
                     groupIris = SharedAdminTestData.multiuserUser.groups,
                     isInProjectAdminGroups = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
                     isInSystemAdminGroup = false
                 )
-                expectMsg(SharedAdminTestData.multiuserUser.permissionProfile)
+                expectMsg(SharedAdminTestData.multiuserUser.permissionData)
             }
         }
 
@@ -257,13 +257,13 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
         "called" should {
 
             "return user's administrative permissions " in {
-                val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.userAdministrativePermissionsGetV1(multiuserUserProfileV1.permissionProfile.groupsPerProject).mapTo[Map[IRI, Set[PermissionV1]]], 1.seconds)
-                result should equal(multiuserUserProfileV1.permissionProfile.administrativePermissionsPerProject)
+                val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.userAdministrativePermissionsGetV1(multiuserUserProfileV1.permissionData.groupsPerProject).mapTo[Map[IRI, Set[PermissionV1]]], 1.seconds)
+                result should equal(multiuserUserProfileV1.permissionData.administrativePermissionsPerProject)
             }
 
             "return user's default object access permissions " in {
-                val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.userDefaultObjectAccessPermissionsGetV1(multiuserUserProfileV1.permissionProfile.groupsPerProject), 1.seconds)
-                result should equal(multiuserUserProfileV1.permissionProfile.defaultObjectAccessPermissionsPerProject)
+                val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.userDefaultObjectAccessPermissionsGetV1(multiuserUserProfileV1.permissionData.groupsPerProject), 1.seconds)
+                result should equal(multiuserUserProfileV1.permissionData.defaultObjectAccessPermissionsPerProject)
             }
 
             "parse permissions" ignore {}

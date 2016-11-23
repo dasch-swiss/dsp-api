@@ -56,7 +56,13 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     val imagesProjectIri = "http://data.knora.org/projects/images"
     val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
 
-    val rootUserProfileV1 = SharedAdminTestData.rootUser
+    val rootUser = SharedAdminTestData.rootUser
+    val rootUserIri = rootUser.userData.user_id.get
+    val rootUserName = rootUser.userData.username.get
+
+    val incunabulaUser = SharedAdminTestData.incunabulaUser
+    val incunabulaUserIri = incunabulaUser.userData.user_id.get
+    val incunabulaUserName = incunabulaUser.userData.username.get
 
     val actorUnderTest = TestActorRef[UsersResponderV1]
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -71,19 +77,32 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
     "The UsersResponder " when {
         "asked about an user identified by 'iri' " should {
-            "return a profile if the user is known " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/root", UserProfileType.SHORT)
-                expectMsg(rootUserProfileV1.ofType(UserProfileType.SHORT))
+
+            "return a profile if the user (root) is known" in {
+                actorUnderTest ! UserProfileByIRIGetRequestV1(rootUserIri, UserProfileType.FULL)
+                expectMsg(rootUser.ofType(UserProfileType.FULL))
             }
+
+            "return a profile if the user (incunabulaUser) is known" in {
+                actorUnderTest ! UserProfileByIRIGetRequestV1(incunabulaUserIri, UserProfileType.FULL)
+                expectMsg(incunabulaUser.ofType(UserProfileType.FULL))
+            }
+
             "return 'NotFoundException' when the user is unknown " in {
                 actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", UserProfileType.SHORT)
                 expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
             }
         }
         "asked about an user identified by 'username' " should {
-            "return a profile if the user is known " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1("root", UserProfileType.SHORT)
-                expectMsg(rootUserProfileV1.ofType(UserProfileType.SHORT))
+
+            "return a profile if the user (root) is known " in {
+                actorUnderTest ! UserProfileByUsernameGetRequestV1(rootUserName, UserProfileType.SHORT)
+                expectMsg(rootUser.ofType(UserProfileType.SHORT))
+            }
+
+            "return a profile if the user (testuser) is known " in {
+                actorUnderTest ! UserProfileByUsernameGetRequestV1(incunabulaUserName, UserProfileType.SHORT)
+                expectMsg(incunabulaUser.ofType(UserProfileType.SHORT))
             }
 
             "return 'NotFoundException' when the user is unknown " in {
@@ -92,6 +111,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             }
         }
         "asked to create a new user " should {
+
             "create the user and return it's profile if the supplied username is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
                     NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "test", "en"),
@@ -108,6 +128,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     }
                 }
             }
+
             "return a 'DuplicateValueException' if the supplied username is not unique " in {
                 actorUnderTest ! UserCreateRequestV1(
                     NewUserDataV1("root", "", "", "", "test", ""),
@@ -116,6 +137,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 )
                 expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
             }
+
             "return 'BadRequestException' if username or password are missing" in {
 
                 /* missing username */
@@ -136,6 +158,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             }
         }
         "asked to update a user " should {
+
             "update the user " in {
 
                 /* User information is updated by the user */
@@ -175,6 +198,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 }
 
             }
+
             "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin " in {
 
                 /* User information is updated by other normal user */
@@ -198,6 +222,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
 
             }
+
             "update the user, (deleting) making him inactive " in {
                 actorUnderTest ! UserUpdateRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,

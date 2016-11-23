@@ -148,3 +148,52 @@
                       knora-base:forGroup knora-base:ProjectAdmin ;
 
                       knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
+
+
+
+##########################################################
+#
+# Anything Project Permissions
+#
+##########################################################
+
+### Administrative Permissions on ProjectMember
+<http://data.knora.org/permissions/010>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://data.knora.org/projects/anything> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
+
+
+
+### Default Object Access Permissions on ProjectMember Group
+<http://data.knora.org/permissions/011>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://data.knora.org/projects/anything> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:forResourceClass knora-base:AllResourceClasses ;
+
+                      knora-base:forProperty knora-base:AllProperties ;
+
+                      knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser"^^xsd:string .
+
+
+
+### Administrative Permissions on ProjectAdmin
+<http://data.knora.org/permissions/012>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://data.knora.org/projects/anything> ;
+
+                      knora-base:forGroup knora-base:ProjectAdmin ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .

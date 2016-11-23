@@ -20,7 +20,7 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.Statusr
+import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.projectmessages._
@@ -120,8 +120,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                         projectOntologyGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
                         projectDataGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
                         isActiveProject = propsMap.getOrElse(OntologyConstants.KnoraBase.IsActiveProject, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no isActiveProject defined.")).toBoolean,
-                        hasSelfJoinEnabled = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean,
-                        rights = None // FIXME: Why do I need this?
+                        hasSelfJoinEnabled = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
                     )
             }.toVector
         } yield ProjectsResponseV1(
@@ -322,8 +321,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                 projectOntologyGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
                 projectDataGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
                 isActiveProject = projectProperties.getOrElse(OntologyConstants.KnoraBase.IsActiveProject, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no isActiveProject defined.")).toBoolean,
-                hasSelfJoinEnabled = projectProperties.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean,
-                rights = None // FIXME: Why do I need this?
+                hasSelfJoinEnabled = projectProperties.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
             )
 
             /* return the requested info type */

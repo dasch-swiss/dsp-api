@@ -18,7 +18,7 @@ package org.knora.webapi.messages.v1.responder.permissionmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionProfileType.PermissionProfileType
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataType.PermissionProfileType
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsTemplate.PermissionsTemplate
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -35,16 +35,17 @@ import spray.json._
 sealed trait PermissionsResponderRequestV1 extends KnoraRequestV1
 
 /**
-  * A message that requests the user's [[PermissionProfileV1]].
+  * A message that requests the user's [[PermissionDataV1]].
+ *
   * @param projectIris the projects the user is part of.
   * @param groupIris the groups the user is member of.
   * @param isInProjectAdminGroups the projects for which the user is member of the ProjectAdmin group.
   * @param isInSystemAdminGroup the flag denoting users membership in the SystemAdmin group.
   */
-case class PermissionProfileGetV1(projectIris: Seq[IRI],
-                                  groupIris: Seq[IRI],
-                                  isInProjectAdminGroups: Seq[IRI],
-                                  isInSystemAdminGroup: Boolean
+case class PermissionDataGetV1(projectIris: Seq[IRI],
+                               groupIris: Seq[IRI],
+                               isInProjectAdminGroups: Seq[IRI],
+                               isInSystemAdminGroup: Boolean
                                  ) extends PermissionsResponderRequestV1
 
 /**
@@ -297,10 +298,10 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
   * @param administrativePermissionsPerProject the user's administrative permissions for each project.
   * @param defaultObjectAccessPermissionsPerProject the user's default object access permissions for each project.
   */
-case class PermissionProfileV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1],
-                               groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IRI, List[IRI]],
-                               administrativePermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],
-                               defaultObjectAccessPermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]]
+case class PermissionDataV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1],
+                            groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IRI, List[IRI]],
+                            administrativePermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],
+                            defaultObjectAccessPermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]]
                               ) {
 
     /**
@@ -308,30 +309,30 @@ case class PermissionProfileV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[P
       *
       * @return a [[UserProfileV1]]
       */
-    def ofType(permissionProfileType: PermissionProfileType): PermissionProfileV1 = {
+    def ofType(permissionProfileType: PermissionProfileType): PermissionDataV1 = {
         permissionProfileType match {
-            case PermissionProfileType.SHORT => {
+            case PermissionDataType.SHORT => {
 
-                PermissionProfileV1(
-                    projectInfos = Vector.empty[ProjectInfoV1], // remove
+                PermissionDataV1(
+                    //projectInfos = Vector.empty[ProjectInfoV1], // remove
                     groupsPerProject = groupsPerProject,
                     administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]], // remove administrative permission information
                     defaultObjectAccessPermissionsPerProject = Map.empty[IRI, Set[PermissionV1]] // remove default object access permission information
                 )
             }
-            case PermissionProfileType.SAFE => {
+            case PermissionDataType.SAFE => {
 
-                PermissionProfileV1(
-                    projectInfos = projectInfos,
+                PermissionDataV1(
+                    //projectInfos = projectInfos,
                     groupsPerProject = groupsPerProject,
                     administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]], // remove administrative permission information
                     defaultObjectAccessPermissionsPerProject = Map.empty[IRI, Set[PermissionV1]] // remove default object access permission information
                 )
             }
-            case PermissionProfileType.FULL => {
+            case PermissionDataType.FULL => {
 
-                PermissionProfileV1(
-                    projectInfos = projectInfos,
+                PermissionDataV1(
+                    //projectInfos = projectInfos,
                     groupsPerProject = groupsPerProject,
                     administrativePermissionsPerProject = administrativePermissionsPerProject,
                     defaultObjectAccessPermissionsPerProject = defaultObjectAccessPermissionsPerProject
@@ -364,8 +365,14 @@ case class PermissionProfileV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[P
             operation match {
                 case ResourceCreateOperation(resourceClassIri) => {
                     this.administrativePermissionsPerProject.get(insideProject) match {
-                        case Some(set) => set.contains(PermissionV1.ProjectResourceCreateAllPermission)
-                        case None => false
+                        case Some(set) => {
+                            println(s"hasPermissionFor - set: $set")
+                            set.contains(PermissionV1.ProjectResourceCreateAllPermission)
+                        }
+                        case None => {
+                            if (explain) println("FALSE: No administrative permissions defined for this project.")
+                            false
+                        }
                     }
                 }
             }
@@ -374,11 +381,11 @@ case class PermissionProfileV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[P
     }
 
     /* custom equality implementation with additional debugging output */
-    def canEqual(a: Any) = a.isInstanceOf[PermissionProfileV1]
+    def canEqual(a: Any) = a.isInstanceOf[PermissionDataV1]
 
     override def equals(that: Any): Boolean =
         that match {
-            case that: PermissionProfileV1 => that.canEqual(this) &&  {
+            case that: PermissionDataV1 => that.canEqual(this) &&  {
                 val piEqual = if (this.projectInfos.hashCode != that.projectInfos.hashCode) {
                     println("projectInfos not equal")
                     println(s"this: ${this.projectInfos}")
@@ -610,7 +617,7 @@ case class ResourceCreateOperation(resourceClass: IRI) extends OperationV1
   * safe: everything without sensitive information
   * full: everything
   */
-object PermissionProfileType extends Enumeration {
+object PermissionDataType extends Enumeration {
     /* TODO: Extend to incorporate user privacy wishes */
 
     type PermissionProfileType = Value
@@ -687,12 +694,12 @@ trait PermissionV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
         def read(jsonVal: JsValue) = ???
 
         /**
-          * Converts a [[PermissionProfileType]] into [[JsValue]] for formatting as JSON.
+          * Converts a [[PermissionDataType]] into [[JsValue]] for formatting as JSON.
           *
-          * @param permissionProfileType the [[PermissionProfileType]] to be converted.
+          * @param permissionProfileType the [[PermissionDataType]] to be converted.
           * @return a [[JsValue]].
           */
-        def write(permissionProfileType: PermissionProfileType.Value): JsValue = {
+        def write(permissionProfileType: PermissionDataType.Value): JsValue = {
             JsObject(Map("permission_profile_type" -> permissionProfileType.toString.toJson))
         }
     }
@@ -717,7 +724,7 @@ trait PermissionV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
     implicit val permissionV1Format: JsonFormat[PermissionV1] = jsonFormat(PermissionV1.apply, "name", "restrictions") // apply needed because we have an companion object of a case class
     implicit val administrativePermissionV1Format: JsonFormat[AdministrativePermissionV1] = jsonFormat(AdministrativePermissionV1, "for_project", "for_group", "has_permissions")
     implicit val defaultObjectAccessPermissionV1Format: JsonFormat[DefaultObjectAccessPermissionV1] = jsonFormat5(DefaultObjectAccessPermissionV1)
-    implicit val permissionProfileV1Format: JsonFormat[PermissionProfileV1] = jsonFormat4(PermissionProfileV1)
+    implicit val permissionDataV1Format: JsonFormat[PermissionDataV1] = jsonFormat4(PermissionDataV1)
     //implicit val templatePermissionsCreateResponseV1Format: RootJsonFormat[TemplatePermissionsCreateResponseV1] = jsonFormat4(TemplatePermissionsCreateResponseV1)
     //implicit val administrativePermissionOperationResponseV1Format: RootJsonFormat[AdministrativePermissionOperationResponseV1] = jsonFormat4(AdministrativePermissionOperationResponseV1)
     //implicit val defaultObjectAccessPermissionOperationResponseV1Format: RootJsonFormat[DefaultObjectAccessPermissionOperationResponseV1] = jsonFormat4(DefaultObjectAccessPermissionOperationResponseV1)

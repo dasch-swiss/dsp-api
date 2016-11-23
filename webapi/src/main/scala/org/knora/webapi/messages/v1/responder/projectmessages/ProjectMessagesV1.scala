@@ -162,8 +162,7 @@ case class ProjectInfoV1(id: IRI,
                          projectOntologyGraph: IRI,
                          projectDataGraph: IRI,
                          isActiveProject: Boolean,
-                         hasSelfJoinEnabled: Boolean,
-                         rights: Option[Int] = None // FIXME: Why do I need this?
+                         hasSelfJoinEnabled: Boolean
                         ) {
 
     def ofType(projectInfoType: ProjectInfoType): ProjectInfoV1 = {
@@ -182,8 +181,7 @@ case class ProjectInfoV1(id: IRI,
                     projectOntologyGraph = projectOntologyGraph,
                     projectDataGraph = projectDataGraph,
                     isActiveProject = isActiveProject,
-                    hasSelfJoinEnabled = hasSelfJoinEnabled,
-                    rights = rights
+                    hasSelfJoinEnabled = hasSelfJoinEnabled
                 )
             }
             case ProjectInfoType.SHORT => {
@@ -199,8 +197,7 @@ case class ProjectInfoV1(id: IRI,
                     projectOntologyGraph = projectOntologyGraph,
                     projectDataGraph = projectDataGraph,
                     isActiveProject = isActiveProject,
-                    hasSelfJoinEnabled = hasSelfJoinEnabled,
-                    rights = None // removed
+                    hasSelfJoinEnabled = hasSelfJoinEnabled
                 )
             }
             case _ => throw BadRequestException(s"The requested projectInfoType: $projectInfoType is invalid.")
@@ -255,7 +252,7 @@ trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
 
     import UserV1JsonProtocol.userDataV1Format
 
-    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat13(ProjectInfoV1)
+    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat12(ProjectInfoV1)
     // we have to use lazyFormat here because `UserV1JsonProtocol` contains an import statement for this object.
     // this results in recursive import statements
     // rootFormat makes it return the expected type again.

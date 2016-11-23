@@ -352,7 +352,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:userid "anything-user" ;
 	foaf:givenName "Anything" ;
 	foaf:familyName "User01" ;
-	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+	knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
 	knora-base:email "anything.user01@example.org" ;
 	knora-base:preferredLanguage "de" ;
 	knora-base:isActiveUser "true"^^xsd:boolean ;
@@ -363,7 +363,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:userid "anything-user-2" ;
 	foaf:givenName "Anything" ;
 	foaf:familyName "User02" ;
-	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+	knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
 	knora-base:email "anything.user02@example.org" ;
 	knora-base:preferredLanguage "de" ;
 	knora-base:isActiveUser "true"^^xsd:boolean ;

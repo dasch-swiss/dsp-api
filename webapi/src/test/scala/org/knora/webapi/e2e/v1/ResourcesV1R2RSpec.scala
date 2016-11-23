@@ -63,23 +63,13 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    private val incunabulaUsername = "root"
-    private val anythingUsername = "anything-user"
-    private val password = "test"
+    private val incunabulaUser = SharedAdminTestData.incunabulaUser
+    private val incunabulaUsername = incunabulaUser.userData.username.get
 
-    private val incunabulaUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
+    private val anythingUser = SharedAdminTestData.anythingUser1
+    private val anythingUsername = anythingUser.userData.username.get
+
+    private val password = "test"
 
     implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 

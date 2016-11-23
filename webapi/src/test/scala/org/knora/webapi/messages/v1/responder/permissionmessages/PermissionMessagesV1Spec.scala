@@ -16,7 +16,7 @@ class PermissionMessagesV1Spec extends WordSpecLike with Matchers {
             val projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI
             val resourceClassIri = "http://www.knora.org/ontology/incunabula#book"
 
-            val result = SharedAdminTestData.rootUser.permissionProfile.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)
+            val result = SharedAdminTestData.rootUser.permissionData.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)
 
             result should be(true)
         }
@@ -27,7 +27,7 @@ class PermissionMessagesV1Spec extends WordSpecLike with Matchers {
             val projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI
             val resourceClassIri = "http://www.knora.org/ontology/incunabula#book"
 
-            val result = SharedAdminTestData.incunabulaUser.permissionProfile.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)
+            val result = SharedAdminTestData.incunabulaUser.permissionData.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)
 
             result should be(true)
         }
@@ -36,7 +36,7 @@ class PermissionMessagesV1Spec extends WordSpecLike with Matchers {
             val projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI
             val resourceClassIri = "http://www.knora.org/ontology/incunabula#book"
 
-            val result = SharedAdminTestData.normalUser.permissionProfile.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)
+            val result = SharedAdminTestData.normalUser.permissionData.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)
 
             result should be(false)
         }

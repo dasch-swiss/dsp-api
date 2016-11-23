@@ -17,7 +17,7 @@
 package org.knora.webapi.messages.v1.responder.usermessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionProfileType, PermissionProfileV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataType, PermissionDataV1}
 import org.mindrot.jbcrypt.BCrypt
 import org.scalatest.{Matchers, WordSpecLike}
 
@@ -36,7 +36,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
     val password = SharedAdminTestData.rootUser.userData.password
     val groups = SharedAdminTestData.rootUser.groups
     val projects = SharedAdminTestData.rootUser.projects
-    val permissionProfile = SharedAdminTestData.rootUser.permissionProfile
+    val permissionData = SharedAdminTestData.rootUser.permissionData
     val sessionId = SharedAdminTestData.rootUser.sessionId
 
 
@@ -55,7 +55,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                 ),
                 groups = groups,
                 projects = projects,
-                permissionProfile = permissionProfile,
+                permissionData = permissionData,
                 sessionId = sessionId
 
             )
@@ -72,7 +72,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                     ),
                 groups = groups,
                 projects = projects,
-                permissionProfile = permissionProfile.ofType(PermissionProfileType.SAFE),
+                permissionData = permissionData.ofType(PermissionDataType.SAFE),
                 sessionId = sessionId
             )
 

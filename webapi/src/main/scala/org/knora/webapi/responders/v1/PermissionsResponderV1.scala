@@ -48,7 +48,7 @@ class PermissionsResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case PermissionProfileGetV1(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup) => future2Message(sender(), permissionsProfileGetV1(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup), log)
+        case PermissionDataGetV1(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup) => future2Message(sender(), permissionsProfileGetV1(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup), log)
         case AdministrativePermissionsForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), administrativePermissionsForProjectGetRequestV1(projectIri, userProfileV1), log)
         case AdministrativePermissionForIriGetRequestV1(administrativePermissionIri, userProfileV1) => future2Message(sender(), administrativePermissionForIriGetRequestV1(administrativePermissionIri, userProfileV1), log)
         case AdministrativePermissionForProjectGroupGetV1(projectIri, groupIri, userProfileV1) => future2Message(sender(), administrativePermissionForProjectGroupGetV1(projectIri, groupIri), log)
@@ -66,14 +66,15 @@ class PermissionsResponderV1 extends ResponderV1 {
 
 
     /**
-      * Creates the user's [[PermissionProfileV1]]
+      * Creates the user's [[PermissionDataV1]]
+      *
       * @param projectIris the projects the user is part of.
       * @param groupIris the groups the user is member of (without ProjectMember, ProjectAdmin, SystemAdmin)
       * @param isInProjectAdminGroups the projects in which the user is member of the ProjectAdmin group.
       * @param isInSystemAdminGroup the flag denoting membership in the SystemAdmin group.
       * @return
       */
-    def permissionsProfileGetV1(projectIris: Seq[IRI], groupIris: Seq[IRI], isInProjectAdminGroups: Seq[IRI], isInSystemAdminGroup: Boolean): Future[PermissionProfileV1] = {
+    def permissionsProfileGetV1(projectIris: Seq[IRI], groupIris: Seq[IRI], isInProjectAdminGroups: Seq[IRI], isInSystemAdminGroup: Boolean): Future[PermissionDataV1] = {
 
         for {
             a <- Future("")
@@ -86,13 +87,17 @@ class PermissionsResponderV1 extends ResponderV1 {
             }
             //_ = log.debug(s"permissionsProfileGetV1 - extendedProjectIris: $extendedProjectIris")
 
-            /* Retrieve short ProjectInfoV1s for each project the user is part of (now including the SystemProject */
+            /* FIXME: I don't think that we need this anymore, as nothing pertaining to permissions is stored here
+             * Retrieve short ProjectInfoV1s for each project the user is part of (now including the SystemProject
+             */
+            /*
             projectInfoFutures: Seq[Future[ProjectInfoV1]] = extendedProjectIris.map {
                 projectIri => (responderManager ? ProjectInfoByIRIGetRequestV1(projectIri, ProjectInfoType.SHORT, None)).mapTo[ProjectInfoResponseV1] map (_.project_info)
             }
 
             projectInfos <- Future.sequence(projectInfoFutures)
             //_ = log.debug(s"permissionsProfileGetV1 - projectInfos: ${MessageUtil.toSource(projectInfos)}")
+            */
 
             // find out to which project each group belongs to
             //_ = log.debug("getPermissionsProfileV1 - find out to which project each group belongs to")
@@ -168,8 +173,8 @@ class PermissionsResponderV1 extends ResponderV1 {
             defaultObjectAccessPermissionsPerProject <- defaultObjectAccessPermissionsPerProjectFuture
 
             /* construct the permission profile from the different parts */
-            result = PermissionProfileV1(
-                projectInfos = projectInfos,
+            result = PermissionDataV1(
+                //projectInfos = projectInfos,
                 groupsPerProject = groupsPerProject,
                 administrativePermissionsPerProject = administrativePermissionsPerProject,
                 defaultObjectAccessPermissionsPerProject = defaultObjectAccessPermissionsPerProject

@@ -196,7 +196,7 @@ class UsersResponderV1 extends ResponderV1 {
         _ = if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
         // check if the requesting user is allowed to perform updates
-        _ = if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionProfile.isSystemAdmin) {
+        _ = if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
             // not the user and not a system admin
             throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
         }
@@ -389,8 +389,8 @@ class UsersResponderV1 extends ResponderV1 {
             isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
 
             /* get the user's permission profile from the permissions responder */
-            permissionProfileFuture = (responderManager ? PermissionProfileGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionProfileV1]
-            permissionProfile <- permissionProfileFuture
+            permissionDataFuture = (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
+            permissionData <- permissionDataFuture
 
             /* construct the user profile from the different parts */
             up = UserProfileV1(
@@ -398,7 +398,7 @@ class UsersResponderV1 extends ResponderV1 {
                 groups = groupIris,
                 projects = projectIris,
                 sessionId = None,
-                permissionProfile = permissionProfile
+                permissionData = permissionData
             )
             //_ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
 
