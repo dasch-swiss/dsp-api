@@ -53,19 +53,8 @@ var RESVIEW = {
 
 var urlparams = getUrlVars();
 
-var SALSAH = {};
-if (urlparams["lang"] !== undefined) {
-    SALSAH.userdata = {lang: urlparams["lang"]};
-}
-else {
-    SALSAH.userdata = {lang: 'en'};
-}
-
-var strings = {};
-$.get('lang/' + SALSAH.userdata.lang + '.json', function(data) {
-    console.log("Getting language strings: " + SALSAH.userdata.lang)
-	strings = data;
-}, 'json');
+var SALSAH = {}; // Populated in index.html.
+var strings = {}; // Populated in index.html.
 
 var searchresult_window_title = "searchresult";
 var extendedsearch_window_title = "Erweiterte Suche";

@@ -74,31 +74,6 @@
 	/*
 	 * language selection
 	*/
-	$(function() {
-		var lc = $('#langctrl');
-
-		var build_lang_ctrl = function() {
-			if (SALSAH.userdata.lang === undefined) SALSAH.userdata.lang = 'de';
-			for (var l in langs) {
-				if (l == SALSAH.userdata.lang) {
-					lc.append(' ' + l)
-				}
-				else {
-					lc.append(' ').append($('<a>').attr({href: '#'}).data({lang: l, language_id: SALSAH.userdata.lang[l]}).on('click', function(data) {
-						if (confirm(s_('_langchangeq'))) {
-							var newref = 'http://' + window.location.host + window.location.pathname + '?lang=' + $(this).data('lang');
-							location.replace(newref);
-						}
-						return false;
-					}).append(l))
-				}
-			}
-		}
-
-		build_lang_ctrl();
-
-	});
-
 	SALSAH.reset_project_selection = function() {
 		$('#projectctrl').text(s_('_project') + ' : ');
 		if (SALSAH.userdata === null) {
@@ -145,12 +120,30 @@
 		}
 	};
 	
-	
-	$(function(){
-$.get('lang/' + SALSAH.userdata.lang + '.json', function(data) {
-    console.log("Getting language strings: " + SALSAH.userdata.lang)
-	strings = data;
-}, 'json');
+	// Called after language data has been loaded below.
+	function init_gui() {
+		var lc = $('#langctrl');
+
+		var build_lang_ctrl = function() {
+			if (SALSAH.userdata.lang === undefined) SALSAH.userdata.lang = 'de';
+			for (var l in langs) {
+				if (l == SALSAH.userdata.lang) {
+					lc.append(' ' + l);
+				}
+				else {
+					lc.append(' ').append($('<a>').attr({href: '#'}).data({lang: l, language_id: SALSAH.userdata.lang[l]}).on('click', function(data) {
+						if (confirm(s_('_langchangeq'))) {
+							var newref = 'http://' + window.location.host + window.location.pathname + '?lang=' + $(this).data('lang');
+							location.replace(newref);
+						}
+						return false;
+					}).append(l));
+				}
+			}
+		}
+
+		build_lang_ctrl();
+
 		$('#login_title').text(s_('_login'));
 		$('#logout_title').text(s_('_logout'));
 		$('#username_label').text(s_('_username'));
@@ -159,7 +152,7 @@ $.get('lang/' + SALSAH.userdata.lang + '.json', function(data) {
 		$('#cancel_login').attr({src: 'app/icons/32x32/delete.png', title: s_('_cancel')}).on('click', function(event){
 			$('#dologin').simpledialog('loginbox', 'close');
 		});
-		$('#logout_button').attr({src: 'app/icons/32x32/shut_down.png'})
+		$('#logout_button').attr({src: 'app/icons/32x32/shut_down.png'});
 		$('#cancel_logout').attr({src: 'app/icons/32x32/green_arrow_up.png', title: s_('_cancel')}).on('click', function(event){
 			$('#dologout').simpledialog('logoutbox', 'close');
 		});
@@ -217,11 +210,6 @@ $.get('lang/' + SALSAH.userdata.lang + '.json', function(data) {
 
 					$('#dologin').simpledialog('loginbox', 'close');
 
-console.log("LOGIN!!!!!!!!!!!")
-
-
-					//SALSAH.reload_css();
-
 					$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userdata.username)
 						.append($('<img>').attr({id: 'dologout', src: 'app/icons/24x24/delete_user.png', title: s_('_logout')})
 						.simpledialog('logoutbox', {'class': 'loginbox', width: 400, positioning: 'upper'})
@@ -229,36 +217,19 @@ console.log("LOGIN!!!!!!!!!!!")
 					if (SALSAH.reset_project_selection !== undefined) SALSAH.reset_project_selection();
 
 
-
-
-
-
-
-		if (SALSAH.userdata.projects_info) {
-			var active_project = SALSAH.userdata.active_project;
-			var selele;
-			$('#searchlimsel')
-			.empty()
-			.append(s_('_limitsearch'))
-			.append(selele = $('<select>').attr({id: 'limitproject', title: 'limit search to project'}));
-			selele.append($('<option>').attr({title: 'ALl'}).val(-1).text('-'));
-			for (var p in SALSAH.userdata.projects_info) {
-				selele.append($('<option>').attr({title: SALSAH.userdata.projects_info[p].longname}).val(SALSAH.userdata.projects_info[p].id).text(SALSAH.userdata.projects_info[p].shortname));
-			}
-		}
-
-/* !!!!!!!!!!!!!!!!!!!!!!!!!!!
 					if (SALSAH.userdata.projects_info) {
 						var active_project = SALSAH.userdata.active_project;
 						var selele;
-						$('#searchctrl').append(s_('_limitsearch'));
-						$('#searchctrl').append(selele = $('<select>').attr({id: 'limitproject', title: 'limit search to project'}));
+						$('#searchlimsel')
+						.empty()
+						.append(s_('_limitsearch'))
+						.append(selele = $('<select>').attr({id: 'limitproject', title: 'limit search to project'}));
 						selele.append($('<option>').attr({title: 'ALl'}).val(-1).text('-'));
 						for (var p in SALSAH.userdata.projects_info) {
 							selele.append($('<option>').attr({title: SALSAH.userdata.projects_info[p].longname}).val(SALSAH.userdata.projects_info[p].id).text(SALSAH.userdata.projects_info[p].shortname));
 						}
 					}
-*/
+
 				}
 				else {
 					alert(data.errormsg);
@@ -281,9 +252,9 @@ console.log("LOGIN!!!!!!!!!!!")
 						},
 						error: function(jqXHR, textStatus, errorThrown) {
 							if (errorThrown !== undefined) {
-								alert("Sipi returned an error: " + errorThrown)
+								alert("Sipi returned an error: " + errorThrown);
 							} else {
-								alert("Call to Sipi failed")
+								alert("Call to Sipi failed");
 							}
 						}
 					});
@@ -294,13 +265,13 @@ console.log("LOGIN!!!!!!!!!!!")
 						.simpledialog('loginbox', {'class': 'loginbox', width: 400, positioning: 'upper', focus: '#user_id'})
 					);
 					if (SALSAH.reset_project_selection !== undefined) SALSAH.reset_project_selection();
-					$('#searchlimsel').empty()
+					$('#searchlimsel').empty();
 				}
 				else {
 					alert(data.errormsg);
 					$('#dolout').simpledialog('logoutbox', 'close');
 				}
-			})
+			});
 		});
 
 		if (SALSAH.userdata.user_id !== undefined) {
@@ -321,12 +292,7 @@ console.log("LOGIN!!!!!!!!!!!")
 				RESVIEW.LinkageWindow(RESVIEW.winclass);
 			})
 		);
-//	});
-	
-	//
-	// search
-	//
-//	$(function(){
+
 		$('#searchctrl').append(
 			$('<span>').attr({id: "searchlimsel"})
 		).append($('<input>').attr({
@@ -375,7 +341,20 @@ console.log("LOGIN!!!!!!!!!!!")
 			}
 		}
 
-
+	};
+	
+	$(function(){
+		if (urlparams["lang"] !== undefined) {
+    		SALSAH.userdata = {lang: urlparams["lang"]};
+		}
+		else {
+    		SALSAH.userdata = {lang: 'en'};
+		}
+		$.get('lang/' + SALSAH.userdata.lang + '.json', function(data) {
+    		console.log("Getting language strings: " + SALSAH.userdata.lang)
+			strings = data;
+			init_gui();
+		}, 'json');
 	});
 	</script>
 	<link id="loadcss" rel="stylesheet" type="text/css" href="default.css" />
