@@ -20,11 +20,15 @@
 
 package org.knora.webapi
 
-import akka.actor._
-import akka.http.scaladsl.Http
+import java.io.InputStream
+import java.security.{KeyStore, SecureRandom}
+import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
+
+import akka.actor.{ActorSystem, _}
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi.http.CORSSupport.CORS
@@ -41,16 +45,6 @@ import org.knora.webapi.util.CacheUtil
 import scala.collection.JavaConversions._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-
-import java.io.InputStream
-import java.security.{ SecureRandom, KeyStore }
-import javax.net.ssl.{ SSLContext, TrustManagerFactory, KeyManagerFactory }
-
-import akka.actor.ActorSystem
-import akka.http.scaladsl.server.{ RouteResult, Route, Directives }
-import akka.http.scaladsl.{ ConnectionContext, HttpsConnectionContext, Http }
-import akka.stream.ActorMaterializer
-import com.typesafe.sslconfig.akka.AkkaSSLConfig
 
 trait Core {
     implicit val system: ActorSystem
@@ -104,19 +98,19 @@ trait KnoraService {
     /**
       * All routes composed together and CORS activated.
       */
-    private val apiRoutes = CORS (
+    private val apiRoutes = CORS(
         ResourcesRouteV1.knoraApiPath(system, settings, log) ~
-                ValuesRouteV1.knoraApiPath(system, settings, log) ~
-                SipiRouteV1.knoraApiPath(system, settings, log) ~
-                ListsRouteV1.knoraApiPath(system, settings, log) ~
-                ResourceTypesRouteV1.knoraApiPath(system, settings, log) ~
-                SearchRouteV1.knoraApiPath(system, settings, log) ~
-                AuthenticateRouteV1.knoraApiPath(system, settings, log) ~
-                AssetsRouteV1.knoraApiPath(system, settings, log) ~
-                GraphDataRouteV1.knoraApiPath(system, settings, log) ~
-                ProjectsRouteV1.knoraApiPath(system, settings, log) ~
-                CkanRouteV1.knoraApiPath(system, settings, log) ~
-                StoreRouteV1.knoraApiPath(system, settings, log),
+            ValuesRouteV1.knoraApiPath(system, settings, log) ~
+            SipiRouteV1.knoraApiPath(system, settings, log) ~
+            ListsRouteV1.knoraApiPath(system, settings, log) ~
+            ResourceTypesRouteV1.knoraApiPath(system, settings, log) ~
+            SearchRouteV1.knoraApiPath(system, settings, log) ~
+            AuthenticateRouteV1.knoraApiPath(system, settings, log) ~
+            AssetsRouteV1.knoraApiPath(system, settings, log) ~
+            GraphDataRouteV1.knoraApiPath(system, settings, log) ~
+            ProjectsRouteV1.knoraApiPath(system, settings, log) ~
+            CkanRouteV1.knoraApiPath(system, settings, log) ~
+            StoreRouteV1.knoraApiPath(system, settings, log),
         settings,
         log
     )
@@ -139,6 +133,7 @@ trait KnoraService {
       * Starts the Knora API server.
       */
     def startService(): Unit = {
+
         implicit val materializer = ActorMaterializer()
 
         // needed for startup flags and the future map/flatmap in the end
@@ -164,8 +159,14 @@ trait KnoraService {
             println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
         }
 
-        if (!(settings.knoraApiUseHttp || settings.knoraApiUseHttps)) {
-            throw HttpConfigurationException("Knora API server could not start, because neither HTTP nor HTTPS is enabled.")
+
+        if (!(settings.knoraApiUseHttp || settings.knoraApiUseHttp)) {
+            throw HttpConfigurationException("Neither HTTP nor HTTPS is enabled")
+        }
+
+        if (settings.knoraApiUseHttp) {
+            Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpPort)
+            println(s"Knora API Server using HTTP at http://${settings.knoraApiHost}:${settings.knoraApiHttpPort}.")
         }
 
         if (settings.knoraApiUseHttps) {
@@ -183,27 +184,10 @@ trait KnoraService {
 
             val sslContext: SSLContext = SSLContext.getInstance("TLS")
             sslContext.init(keyManagerFactory.getKeyManagers, trustManagerFactory.getTrustManagers, new SecureRandom)
-            val https: HttpsConnectionContext = ConnectionContext.https(sslContext)
+            val https = ConnectionContext.https(sslContext)
 
-            Http().setDefaultServerHttpContext(https)
-
-            val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpsPort, connectionContext = https)
+            Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpsPort, connectionContext = https)
             println(s"Knora API Server using HTTPS at https://${settings.knoraApiHost}:${settings.knoraApiHttpsPort}.")
-
-            bindingFuture.onFailure {
-                case ex: Exception =>
-                    log.error(ex, s"Could not bind to ${settings.knoraApiHost}:${settings.knoraApiHttpsPort}")
-            }
-        }
-
-        if (settings.knoraApiUseHttp) {
-            val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpPort)
-            println(s"Knora API Server using HTTP at http://${settings.knoraApiHost}:${settings.knoraApiHttpPort}.")
-
-            bindingFuture.onFailure {
-                case ex: Exception =>
-                    log.error(ex, s"Could not bind to ${settings.knoraApiHost}:${settings.knoraApiHttpPort}")
-            }
         }
     }
 

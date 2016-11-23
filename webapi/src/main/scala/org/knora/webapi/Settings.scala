@@ -44,15 +44,10 @@ class SettingsImpl(config: Config) extends Extension {
     val knoraApiHttpsPort = config.getInt("app.http.knora-api.https-port")
     val knoraApiUseHttp = config.getBoolean("app.http.knora-api.use-http")
     val knoraApiUseHttps = config.getBoolean("app.http.knora-api.use-https")
-    val baseApiUrl = if (knoraApiUseHttps) s"https://$knoraApiHost:$knoraApiHttpsPort" else s"http://$knoraApiHost:$knoraApiHttpPort"
+    val knoraApiBaseUrl = if (knoraApiUseHttps) s"https://$knoraApiHost:$knoraApiHttpsPort" else s"http://$knoraApiHost:$knoraApiHttpPort"
 
-    val salsahHost = config.getString("app.http.salsah.host")
-    val salsahHttpPort = config.getInt("app.http.salsah.http-port")
-    val salsahHttpsPort = config.getInt("app.http.salsah.https-port")
-    val salsahUseHttp = config.getBoolean("app.http.salsah.use-http")
-    val salsahUseHttps = config.getBoolean("app.http.salsah.use-https")
-    val projectIconsBasePath = config.getString("app.http.project-icons-basepath")
-    val baseSalsahUrl = if (salsahUseHttps) s"https://$salsahHost:$salsahHttpsPort/" else s"http://$salsahHost:$salsahHttpPort/"
+    val salsahBaseUrl = config.getString("app.http.salsah.base-url")
+    val salsahProjectIconsBasePath = config.getString("app.http.salsah.project-icons-basepath")
 
     val tmpDataDir = config.getString("app.tmp-datadir")
     val dataDir = config.getString("app.datadir")

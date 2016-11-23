@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export PW="test"
+export PW="test keystore password"
 
 # Create a self signed key pair root CA certificate.
 keytool -genkeypair -v \

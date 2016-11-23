@@ -49,7 +49,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
 
     override val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
-    val baseApiUrl = settings.baseApiUrl
+    val baseApiUrl = settings.knoraApiBaseUrl
 
     implicit val postfix = scala.language.postfixOps
 

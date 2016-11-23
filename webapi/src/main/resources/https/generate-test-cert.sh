@@ -2,7 +2,7 @@
 
 CERTHOST="localhost"
 
-export PW="test"
+export PW="test keystore password"
 
 # Create a server certificate, tied to ${CERTHOST}
 keytool -genkeypair -v \
