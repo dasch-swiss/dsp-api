@@ -101,8 +101,8 @@ class StandoffResponderV1 extends ResponderV1 {
       * Tries to find a data type attribute in the XML attributes of a given standoff node. Throws an appropriate error if information is inconsistent or missing.
       *
       * @param XMLtoStandoffMapping the mapping from XML to standoff classes and properties for the given standoff node.
-      * @param dataType the expected data type of the given standoff node.
-      * @param standoffNodeFromXML the given standoff node.
+      * @param dataType             the expected data type of the given standoff node.
+      * @param standoffNodeFromXML  the given standoff node.
       * @return the value of the attribute.
       */
     private def getDataTypeAttribute(XMLtoStandoffMapping: MapXMLTagToStandoffClass, dataType: dataTypes.Value, standoffNodeFromXML: StandoffTag): String = {
@@ -126,9 +126,9 @@ class StandoffResponderV1 extends ResponderV1 {
     /**
       * Creates a sequence of [[StandoffTagAttributeV1]] for the given standoff node.
       *
-      * @param XMLtoStandoffMapping the mapping from XML to standoff classes and properties for the given standoff node.
-      * @param classSpecificProps the properties that may or have to be created (cardinalities) for the given standoff node.
-      * @param standoffNodeFromXML the given standoff node.
+      * @param XMLtoStandoffMapping     the mapping from XML to standoff classes and properties for the given standoff node.
+      * @param classSpecificProps       the properties that may or have to be created (cardinalities) for the given standoff node.
+      * @param standoffNodeFromXML      the given standoff node.
       * @param standoffPropertyEntities the ontology information about the standoff properties.
       * @return a sequence of [[StandoffTagAttributeV1]]
       */
@@ -224,12 +224,13 @@ class StandoffResponderV1 extends ResponderV1 {
     /**
       * Creates standoff from a given XML.
       *
-      * @param xml the xml file sent by the client.
+      * @param xml         the xml file sent by the client.
       * @param userProfile the client that made the request.
       * @return a [[CreateStandoffResponseV1]]
       */
     def createStandoff(projectIri: IRI, resourceIri: IRI, propertyIRI: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[CreateStandoffResponseV1] = {
 
+        // TODO: consider namespaces of tags and attributes
         val mappingXMLTags2StandoffTags = Map(
             "text" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffRootTag, attributesToProps = Map("documentType" -> "http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType")),
             "p" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffParagraphTag),
@@ -246,7 +247,7 @@ class StandoffResponderV1 extends ResponderV1 {
         val standoffTagIris = mappingXMLTags2StandoffTags.values.map(row => row.standoffClassIri).toSet
 
         for {
-            // request information about standoff classes that should be created
+        // request information about standoff classes that should be created
             standoffClassEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffClassIris = standoffTagIris, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
 
             // get the property Iris that are defined on the standoff classes returned by the ontology responder
@@ -319,7 +320,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 startParentIndex = standoffBaseTagV1.startParentIndex,
                                 endParentIndex = standoffBaseTagV1.endParentIndex,
                                 attributes = attributesV1,
-                                standoffTagHasLink = InputValidation.toIri(linkString, () =>  throw BadRequestException(s"Iri invalid: $linkString"))
+                                standoffTagHasLink = InputValidation.toIri(linkString, () => throw BadRequestException(s"Iri invalid: $linkString"))
                             )
 
                         case Some(OntologyConstants.KnoraBase.StandoffColorTag) =>
@@ -361,9 +362,8 @@ class StandoffResponderV1 extends ResponderV1 {
                                 startParentIndex = standoffBaseTagV1.startParentIndex,
                                 endParentIndex = standoffBaseTagV1.endParentIndex,
                                 attributes = attributesV1,
-                                valueHasUri = InputValidation.toIri(uriString, () =>  throw BadRequestException(s"Iri invalid: $uriString"))
+                                valueHasUri = InputValidation.toIri(uriString, () => throw BadRequestException(s"Iri invalid: $uriString"))
                             )
-
 
 
                         case Some(OntologyConstants.KnoraBase.StandoffIntegerTag) =>
@@ -503,15 +503,34 @@ class StandoffResponderV1 extends ResponderV1 {
                     }
 
 
-
-
             }
 
             // _ = println(ScalaPrettyPrinter.prettyPrint(standoffNodesToCreate))
 
-            createValueResponse: CreateValueResponseV1 <- (responderManager ? CreateValueRequestV1(projectIri = projectIri, resourceIri = resourceIri, propertyIri = propertyIRI, value = TextValueV1(utf8str = "gaga"), userProfile = userProfile, apiRequestID = apiRequestID)).mapTo[CreateValueResponseV1]
+            // collect the resource references from the linking standoff nodes
+            resourceReferences: Set[IRI] = standoffNodesToCreate.foldLeft(Set.empty[IRI]) {
+                case (acc: Set[IRI], standoffNode: StandoffTagV1) =>
 
-            // TODO: send the list of standoff case classes and the text to value responder in order to create the triples
+                    standoffNode match {
+
+                        case node: StandoffLinkTagV1 => acc + node.standoffTagHasLink
+
+                        case _ => acc
+                    }
+
+
+            }
+
+            createValueResponse: CreateValueResponseV1 <- (responderManager ? CreateValueRequestV1(
+                projectIri = projectIri,
+                resourceIri = resourceIri,
+                propertyIri = propertyIRI,
+                value = TextValueV1(
+                    utf8str = textWithStandoff.text,
+                    resource_reference = resourceReferences),
+                userProfile = userProfile,
+                apiRequestID = apiRequestID)).mapTo[CreateValueResponseV1]
+
 
         } yield CreateStandoffResponseV1(userdata = userProfile.userData)
 
