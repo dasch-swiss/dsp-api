@@ -527,19 +527,7 @@ class StandoffResponderV1 extends ResponderV1 {
             // _ = println(ScalaPrettyPrinter.prettyPrint(standoffNodesToCreate))
 
             // collect the resource references from the linking standoff nodes
-            resourceReferences: Set[IRI] = standoffNodesToCreate.foldLeft(Set.empty[IRI]) {
-                case (acc: Set[IRI], standoffNode: StandoffTagV1) =>
-
-                    standoffNode match {
-
-                        case node: StandoffTagV1 if node.dataType == StandoffDataTypeClasses.StandoffLinkTag =>
-                            acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
-
-                        case _ => acc
-                    }
-
-
-            }
+            resourceReferences: Set[IRI] = InputValidation.getResourceIrisFromStandoffTags(standoffNodesToCreate)
 
             createValueResponse: CreateValueResponseV1 <- (responderManager ? CreateValueRequestV1(
                 projectIri = projectIri,

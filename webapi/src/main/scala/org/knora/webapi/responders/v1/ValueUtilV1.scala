@@ -467,6 +467,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
         //val groupedByStandoffClassIri: Map[String, Seq[Map[IRI, String]]] = valueProps.standoff.groupBy(_(OntologyConstants.Rdf.Type))
 
+
+
         val standoffTags: Seq[StandoffTagV1] = valueProps.standoff.map {
             // TODO: get remaining props (and attributes) and data type!
             standoffInfo =>
@@ -478,7 +480,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
         }
 
-
+        // TODO: get resource Iris
+        val resids = InputValidation.getResourceIrisFromStandoffTags(standoffTags)
 
         // If there's an empty string in the data (which does sometimes happen), the store package will remove it from
         // the query results. Therefore, if knora-base:valueHasString is missing, we interpret it as an empty string.
@@ -487,7 +490,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         TextValueV1(
             utf8str = valueHasString,
             textattr = standoffTags,
-            resource_reference = Set.empty[IRI] // TODO: collect res ids from linking standoff tags
+            resource_reference = resids // TODO: collect res ids from linking standoff tags
         )
     }
 

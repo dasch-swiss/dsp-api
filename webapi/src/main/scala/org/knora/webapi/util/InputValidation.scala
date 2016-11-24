@@ -289,7 +289,6 @@ object InputValidation {
         val EnumValueToIri: Map[TextattrV1.Value, IRI] = new ErrorHandlingMap(IriToEnumValue.map(_.swap), { key => throw InconsistentTriplestoreDataException(s"Invalid standoff tag name: $key") })
 
         def textattrToStandoffTagV1(tagname: String, positions: Seq[StandoffPositionV1]): Seq[StandoffTagV1] = {
-            // (TextattrV1.lookup(tagname, () => throw BadRequestException(s"Standoff tag not supported: $tagname")), standoffPos)
 
             val standoffTagName: TextattrV1.Value = TextattrV1.lookup(tagname, () => throw BadRequestException(s"Standoff tag not supported: $tagname"))
 
@@ -304,18 +303,18 @@ object InputValidation {
                                 case internalLink if internalLink.resid.isDefined && internalLink.href.isDefined =>
                                     val internalLink = StandoffTagIriAttributeV1(
                                         standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink,
-                                        InputValidation.toIri(position.resid.get, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute resid: ${position.resid}"))
+                                        value = InputValidation.toIri(position.resid.get, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute resid: ${position.resid}"))
                                     )
 
-                                    StandoffTagV1(dataType = Some(StandoffDataTypeClasses.StandoffLinkTag), standoffTagClassIri = EnumValueToIri(linkingTag), startPosition = position.start, endPosition = position.end, attributes = List(internalLink))
+                                    StandoffTagV1(dataType = Some(StandoffDataTypeClasses.StandoffLinkTag), standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag, startPosition = position.start, endPosition = position.end, attributes = List(internalLink))
 
                                 case internalLink if internalLink.href.isDefined =>
                                     val reference = StandoffTagIriAttributeV1(
                                         standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri,
-                                        InputValidation.toIri(position.href.get, () => throw BadRequestException(s"Invalid URL in attribute href: ${position.href}"))
+                                        value = InputValidation.toIri(position.href.get, () => throw BadRequestException(s"Invalid URL in attribute href: ${position.href}"))
                                     )
 
-                                    StandoffTagV1(dataType = Some(StandoffDataTypeClasses.StandoffUriTag), standoffTagClassIri = EnumValueToIri(linkingTag), startPosition = position.start, endPosition = position.end, attributes = List(reference))
+                                    StandoffTagV1(dataType = Some(StandoffDataTypeClasses.StandoffUriTag), standoffTagClassIri = OntologyConstants.KnoraBase.StandoffUriTag, startPosition = position.start, endPosition = position.end, attributes = List(reference))
 
                                 case _ => throw BadRequestException("no resid or href given for linking tag")
                             }
@@ -356,11 +355,11 @@ object InputValidation {
     def handleRichtext(richtext: CreateRichtextV1): RichtextComponents = {
         import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 
-        // parse `textattr` into a [[Map[StandoffTagV1.Value, Seq[StandoffPositionV1]]]]
+        // convert the given string into a Seq[StandoffTagV1]
         val textattr: Seq[StandoffTagV1] = richtext.textattr match {
             case Some(textattrString: String) =>
 
-                // convert the given string into a Seq[StandoffTagV1]
+                // convert each `StandoffPositionV1` to a `StandoffTagV1` and append it to the Seq
                 JsonParser(textattrString).convertTo[Map[String, Seq[StandoffPositionV1]]].foldLeft(Seq.empty[StandoffTagV1]) {
                     case (acc, (tagname: String, standoffPos: Seq[StandoffPositionV1])) =>
 
@@ -379,18 +378,8 @@ object InputValidation {
                 Set.empty[IRI]
         }
 
-        // collect the standoff link tags' IRIs (`resid`)
-        val resIrisfromStandoffLinkTags: Set[IRI] = textattr.foldLeft(Set.empty[IRI]) {
-            case (acc: Set[IRI], standoffNode: StandoffTagV1) =>
-
-                standoffNode match {
-
-                    case node: StandoffTagV1 if node.dataType == StandoffDataTypeClasses.StandoffLinkTag =>
-                        acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
-
-                    case _ => acc
-                }
-        }
+        // collect the links from the standoff linking tags
+        val resIrisfromStandoffLinkTags: Set[IRI] = getResourceIrisFromStandoffTags(textattr)
 
         // check if resources references in standoff link tags exactly correspond to those submitted in richtext.resource_reference
         if (resourceReference != resIrisfromStandoffLinkTags) throw BadRequestException("Submitted resource references in standoff link tags and in member 'resource_reference' are inconsistent")
@@ -412,20 +401,24 @@ object InputValidation {
     }
 
     /**
-      * Map over all standoff link tags to collect IRIs that are referred to.
+      * Map over all standoff tags to collect IRIs that are referred to by linking standoff tags.
       *
-      * @param links The list of [[StandoffPositionV1]] for [[TextattrV1.link]].
-      * @return a set of Iris referred to in the [[StandoffPositionV1]].
+      * @param standoffTags The list of [[StandoffTagV1]].
+      * @return a set of Iris referred to in the [[StandoffTagV1]].
       */
-    /*def getResourceIrisFromStandoffLinkTags(links: Seq[StandoffPositionV1]): Set[IRI] = {
-        links.foldLeft(Set.empty[IRI]) {
-            // use a set to eliminate redundancy of identical Iris
-            case (acc, position) => position.resid match {
-                case Some(resid: IRI) => acc + resid
-                case None => acc
-            }
+    def getResourceIrisFromStandoffTags(standoffTags: Seq[StandoffTagV1]): Set[IRI] = {
+        standoffTags.foldLeft(Set.empty[IRI]) {
+            case (acc: Set[IRI], standoffNode: StandoffTagV1) =>
+
+                standoffNode match {
+
+                    case node: StandoffTagV1 if node.dataType.isDefined && node.dataType.get == StandoffDataTypeClasses.StandoffLinkTag =>
+                        acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
+
+                    case _ => acc
+                }
         }
-    }*/
+    }
 
     /**
       * Turn a possibly empty value returned by the triplestore into a Boolean value.

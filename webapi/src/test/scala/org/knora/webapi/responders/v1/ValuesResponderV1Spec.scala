@@ -142,7 +142,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
     private def checkComment1aResponse(response: CreateValueResponseV1, utf8str: String, textattr: Seq[StandoffTagV1] = Seq.empty[StandoffTagV1]): Unit = {
         assert(response.rights == 8, "rights was not 8")
         assert(response.value.asInstanceOf[TextValueV1].utf8str == utf8str, "comment value did not match")
-        assert(response.value.asInstanceOf[TextValueV1].textattr == textattr, "textattr did not match")
+        assert(response.value.asInstanceOf[TextValueV1].textattr.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)) == textattr.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)), "textattr did not match")
         commentIri.set(response.id)
     }
 
@@ -164,13 +164,13 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
         )
 
-        assert(response.value.asInstanceOf[TextValueV1].textattr == textattr, "textattr did not match")
+        assert(response.value.asInstanceOf[TextValueV1].textattr.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)) == textattr.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)), "textattr did not match")
     }
 
     private def checkComment1bResponse(response: ChangeValueResponseV1, utf8str: String, textattr: Seq[StandoffTagV1] = Seq.empty[StandoffTagV1]): Unit = {
         assert(response.rights == 8, "rights was not 8")
         assert(response.value.asInstanceOf[TextValueV1].utf8str == utf8str, "comment value did not match")
-        assert(response.value.asInstanceOf[TextValueV1].textattr == textattr, "textattr did not match")
+        assert(response.value.asInstanceOf[TextValueV1].textattr.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)) == textattr.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)), "textattr did not match")
         commentIri.set(response.id)
     }
 
@@ -184,17 +184,18 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
     }
 
     private def checkTextValue(expected: TextValueV1, received: TextValueV1): Unit = {
-        def orderPositions(left: StandoffPositionV1, right: StandoffPositionV1): Boolean = {
+        /*def orderPositions(left: StandoffPositionV1, right: StandoffPositionV1): Boolean = {
             if (left.start != right.start) {
                 left.start < right.start
             } else {
                 left.end < right.end
             }
-        }
+        }*/
 
         assert(received.utf8str == expected.utf8str)
         assert(received.resource_reference == expected.resource_reference)
         assert(received.textattr.map(_.standoffTagClassIri).sorted == expected.textattr.map(_.standoffTagClassIri).sorted)
+        assert(received.textattr.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)) == expected.textattr.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)))
 
         // TODO: compare the start and end positions
 

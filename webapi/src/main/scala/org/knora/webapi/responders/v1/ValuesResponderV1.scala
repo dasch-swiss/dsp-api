@@ -2272,12 +2272,15 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     @throws(classOf[BadRequestException])
     private def checkTextValueResourceRefs(textValue: TextValueV1): Unit = {
+
+        // please note that the function `InputValidation.getResourceIrisFromStandoffTags` is not used here
+        // because we want a double check (the function has already been called in the route or in standoff responder)
         val resourceRefsInStandoff: Set[IRI] = textValue.textattr.foldLeft(Set.empty[IRI]) {
             case (acc: Set[IRI], standoffNode: StandoffTagV1) =>
 
                 standoffNode match {
 
-                    case node: StandoffTagV1 if node.dataType == StandoffDataTypeClasses.StandoffLinkTag =>
+                    case node: StandoffTagV1 if node.dataType.isDefined && node.dataType.get == StandoffDataTypeClasses.StandoffLinkTag =>
                         acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
 
                     case _ => acc
