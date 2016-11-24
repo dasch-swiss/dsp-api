@@ -26,11 +26,12 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileGetRequestV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.ResourceLocker
-import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagV1}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
@@ -2271,9 +2272,16 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     @throws(classOf[BadRequestException])
     private def checkTextValueResourceRefs(textValue: TextValueV1): Unit = {
-        val resourceRefsInStandoff: Set[IRI] = textValue.textattr.get(StandoffTagV1.link) match {
-            case Some(positions) => positions.flatMap(_.resid).toSet
-            case None => Set.empty[IRI]
+        val resourceRefsInStandoff: Set[IRI] = textValue.textattr.foldLeft(Set.empty[IRI]) {
+            case (acc: Set[IRI], standoffNode: StandoffTagV1) =>
+
+                standoffNode match {
+
+                    case node: StandoffTagV1 if node.dataType == StandoffDataTypeClasses.StandoffLinkTag =>
+                        acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
+
+                    case _ => acc
+                }
         }
 
         if (resourceRefsInStandoff != textValue.resource_reference) {

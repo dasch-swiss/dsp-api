@@ -28,11 +28,14 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
+import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
+import org.knora.webapi.util.InputValidation.TextattrV1
 import org.knora.webapi.util._
 
 import scala.concurrent.duration._
@@ -758,16 +761,19 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             val citation1 = TextValueV1("ein Zitat")
             val citation2 = TextValueV1(
                 utf8str = "This citation refers to another resource",
-                textattr = Map(
-                    StandoffTagV1.bold -> Vector(StandoffPositionV1(
-                        start = 5,
-                        end = 13
-                    )),
-                    StandoffTagV1.link -> Vector(StandoffPositionV1(
-                        start = 32,
-                        end = 40,
-                        resid = Some("http://data.knora.org/c5058f3a")
-                    ))
+                textattr = Vector(
+                    StandoffTagV1(
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffBoldTag,
+                        startPosition = 5,
+                        endPosition = 13
+                    ),
+                    StandoffTagV1(
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                        startPosition = 32,
+                        endPosition = 40,
+                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://data.knora.org/c5058f3a"))
+                    )
                 ),
                 resource_reference = Set("http://data.knora.org/c5058f3a")
             )

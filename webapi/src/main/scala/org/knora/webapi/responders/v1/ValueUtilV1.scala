@@ -24,13 +24,16 @@ import akka.actor.ActorSelection
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{CheckSubClassRequestV1, CheckSubClassResponseV1}
+import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
+import org.knora.webapi.twirl.StandoffTagV1
+import org.knora.webapi.util.InputValidation.TextattrV1
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
 
+import scala.collection.immutable.Iterable
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -422,12 +425,15 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       */
     private def makeTextValue(valueProps: ValueProps): ApiValueV1 = {
 
-        val groupedByAttr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(row =>
+        // TODO: The ValueProps needs to contain an object from the ontology responder, containing all the rdfs:subClassOf relations between standoff tag classes and standoff datatype classes.
+        // The responder that uses ValueUtilV1 needs to get this information first from the ontology responder and put it in ValueProps.
+
+        /*val groupedByAttr: Map[TextattrV1.Value, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(row =>
             // group by the enumeration name of the standoff tag IRI by converting the standoff tag IRI
             // standoff lik and href tags have the same enumeration name, so the groupBy has to combine their standoff positions
-            StandoffTagV1.IriToEnumValue(row(OntologyConstants.Rdf.Type))
+            TextattrV1.IriToEnumValue(row(OntologyConstants.Rdf.Type))
         ).map {
-            case (tagName: StandoffTagV1.Value, standoffInfos: Seq[Map[String, String]]) =>
+            case (tagName: TextattrV1.Value, standoffInfos: Seq[Map[String, String]]) =>
 
                 // we grouped by the attribute name, return it as the key of that Map
                 (tagName, standoffInfos.map {
@@ -454,10 +460,25 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         }
 
         // map over all _link attributes to collect IRIs that are referred to
-        val resids: Set[IRI] = groupedByAttr.get(StandoffTagV1.link) match {
+        val resids: Set[IRI] = groupedByAttr.get(TextattrV1.link) match {
             case Some(links: Seq[StandoffPositionV1]) => InputValidation.getResourceIrisFromStandoffLinkTags(links)
             case None => Set.empty[IRI]
+        }*/
+
+        //val groupedByStandoffClassIri: Map[String, Seq[Map[IRI, String]]] = valueProps.standoff.groupBy(_(OntologyConstants.Rdf.Type))
+
+        val standoffTags: Seq[StandoffTagV1] = valueProps.standoff.map {
+            // TODO: get remaining props (and attributes) and data type!
+            standoffInfo =>
+                StandoffTagV1(
+                    standoffTagClassIri = standoffInfo(OntologyConstants.Rdf.Type),
+                    startPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
+                    endPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt
+                )
+
         }
+
+
 
         // If there's an empty string in the data (which does sometimes happen), the store package will remove it from
         // the query results. Therefore, if knora-base:valueHasString is missing, we interpret it as an empty string.
@@ -465,8 +486,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
         TextValueV1(
             utf8str = valueHasString,
-            textattr = groupedByAttr,
-            resource_reference = resids
+            textattr = standoffTags,
+            resource_reference = Set.empty[IRI] // TODO: collect res ids from linking standoff tags
         )
     }
 
@@ -613,10 +634,11 @@ object GroupedProps {
     /**
       * Represents the object properties belonging to a value object
       *
-      * @param literalData The value properties: The Map's keys (IRI) consist of value object properties (e.g. http://www.knora.org/ontology/knora-base#valueHasString).
-      * @param standoff    Each Map in the List stands for one standoff node, its keys consist of standoff properties (e.g. http://www.knora.org/ontology/knora-base#standoffHasStart
+      * @param literalData                 The value properties: The Map's keys (IRI) consist of value object properties (e.g. http://www.knora.org/ontology/knora-base#valueHasString).
+      * @param standoff                    Each Map in the List stands for one standoff node, its keys consist of standoff properties (e.g. http://www.knora.org/ontology/knora-base#standoffHasStart.
+      * @param standoffClassesWithDataType The entity infos about standoff classes that are a subclass of a data type standoff class.
       */
-    case class ValueProps(literalData: Map[IRI, ValueLiterals], standoff: Seq[Map[IRI, String]] = Vector.empty[Map[IRI, String]])
+    case class ValueProps(literalData: Map[IRI, ValueLiterals], standoff: Seq[Map[IRI, String]] = Vector.empty[Map[IRI, String]], standoffClassesWithDataType: Map[IRI, StandoffClassEntityInfoV1] = Map.empty[IRI, StandoffClassEntityInfoV1])
 
     /**
       * Represents the literal values of a property (e.g. a number or a string)

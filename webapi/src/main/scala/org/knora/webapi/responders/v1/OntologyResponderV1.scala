@@ -26,6 +26,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
@@ -72,7 +73,8 @@ class OntologyResponderV1 extends ResponderV1 {
                                  resourceSuperClassOfRelations: Map[IRI, Set[IRI]],
                                  propertyDefs: Map[IRI, PropertyEntityInfoV1],
                                  standoffClassDefs: Map[IRI, StandoffClassEntityInfoV1],
-                                 standoffPropertyDefs: Map[IRI, StandoffPropertyEntityInfoV1])
+                                 standoffPropertyDefs: Map[IRI, StandoffPropertyEntityInfoV1],
+                                 standoffClassDefsWithDataType: Map[IRI, StandoffClassEntityInfoV1])
 
 
     /**
@@ -91,6 +93,7 @@ class OntologyResponderV1 extends ResponderV1 {
         case PropertyTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getPropertyTypesForNamedGraph(namedGraphIri, userProfile), log)
         case PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile) => future2Message(sender(), getPropertyTypesForResourceType(restypeId, userProfile), log)
         case StandoffEntityInfoGetRequestV1(standoffClassIris, standoffPropertyIris, userProfile) => future2Message(sender(), getStandoffEntityInfoResponseV1(standoffClassIris, standoffPropertyIris, userProfile), log)
+        case StandoffClassesWithDataTypeGetRequestV1(userProfile) => future2Message(sender(), getStandoffStandoffClassesWithDataTypeV1(userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -557,18 +560,7 @@ class OntologyResponderV1 extends ResponderV1 {
                     standoffClassIri -> prop2Card
             }.toMap
 
-            // a set representing the typed standoff classes
-            standoffDataTypeClasses: Set[IRI] = Set(
-                OntologyConstants.KnoraBase.StandoffLinkTag,
-                OntologyConstants.KnoraBase.StandoffDateTag,
-                OntologyConstants.KnoraBase.StandoffUriTag,
-                OntologyConstants.KnoraBase.StandoffColorTag,
-                OntologyConstants.KnoraBase.StandoffIntegerTag,
-                OntologyConstants.KnoraBase.StandoffDecimalTag,
-                OntologyConstants.KnoraBase.StandoffIntervalTag,
-                OntologyConstants.KnoraBase.StandoffBooleanTag)
-
-            standoffClassEntityInfos: Map[String, StandoffClassEntityInfoV1] = standoffClassesGrouped.map {
+            standoffClassEntityInfos: Map[IRI, StandoffClassEntityInfoV1] = standoffClassesGrouped.map {
                 case (standoffClassIri, standoffClassRows) =>
 
                     val standoffGroupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = standoffClassRows.filter(_.rowMap.contains("standoffClassPred")).groupBy(_.rowMap("standoffClassPred")) - OntologyConstants.Rdfs.SubClassOf
@@ -591,7 +583,7 @@ class OntologyResponderV1 extends ResponderV1 {
 
                     // determine the data type of the given standoff class IRI
                     // if the resulting set is empty, it is not a typed standoff class
-                    val standoffDataType: Set[IRI] = allStandoffSubClassOfRelations(standoffClassIri).intersect(standoffDataTypeClasses)
+                    val standoffDataType: Set[IRI] = allStandoffSubClassOfRelations(standoffClassIri).intersect(StandoffDataTypeClasses.getStandoffClassIris)
                     if (standoffDataType.size > 1) {
                         throw InconsistentTriplestoreDataException(s"standoff class $standoffClassIri is a subclass of more than one standoff data type class: ${standoffDataType.mkString(", ")}")
                     }
@@ -601,7 +593,10 @@ class OntologyResponderV1 extends ResponderV1 {
                         ontologyIri = getOntologyIri(standoffClassIri),
                         predicates = predicates,
                         cardinalities = standoffCardinalitiesWithInheritance(standoffClassIri),
-                        dataType = standoffDataType.headOption
+                        dataType = standoffDataType.headOption match {
+                            case Some(dataType: IRI) => Some(StandoffDataTypeClasses.lookup(dataType, () => throw InconsistentTriplestoreDataException(s"$dataType is not a valid standoff data type")))
+                            case None => None
+                        }
                     )
 
                     standoffClassIri -> standoffInfo
@@ -640,6 +635,17 @@ class OntologyResponderV1 extends ResponderV1 {
                     standoffPropertyIri -> standoffPropertyEntityInfo
             }
 
+            // collect all the standoff classes that hace a data type (i.e. are subclasses of a data type standoff class)
+            standoffClassEntityInfosWithDataType: Map[IRI, StandoffClassEntityInfoV1] = standoffClassEntityInfos.filter {
+                case (standoffClassIri: IRI, entityInfo: StandoffClassEntityInfoV1) =>
+                    entityInfo.dataType.isDefined
+            }
+
+            /*_ = println(ScalaPrettyPrinter.prettyPrint(standoffClassEntityInfos))
+            _ = println("+++++++++")
+            _ = println(ScalaPrettyPrinter.prettyPrint(standoffClassEntityInfosWithDataType))*/
+
+
             // Cache all the data.
 
             ontologyCacheData: OntologyCacheData = OntologyCacheData(
@@ -650,7 +656,8 @@ class OntologyResponderV1 extends ResponderV1 {
                 resourceSuperClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSuperClassOfRelations, { key => s"Class not found: $key" }),
                 propertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV1](propertyEntityInfos, { key => s"Property not found: $key" }),
                 standoffClassDefs = new ErrorHandlingMap[IRI, StandoffClassEntityInfoV1](standoffClassEntityInfos, { key => s"Standoff class not found $key" }),
-                standoffPropertyDefs = new ErrorHandlingMap[IRI, StandoffPropertyEntityInfoV1](standoffPropertyEntityInfos, { key => s"Standoff class not found $key" }))
+                standoffPropertyDefs = new ErrorHandlingMap[IRI, StandoffPropertyEntityInfoV1](standoffPropertyEntityInfos, { key => s"Standoff class not found $key" }),
+                standoffClassDefsWithDataType = new ErrorHandlingMap[IRI, StandoffClassEntityInfoV1](standoffClassEntityInfosWithDataType, { key => s"Standoff class not found $key" }))
 
             _ = CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = ontologyCacheData)
 
@@ -704,6 +711,15 @@ class OntologyResponderV1 extends ResponderV1 {
             response = StandoffEntityInfoGetResponseV1(
                 standoffClassEntityInfoMap = cacheData.standoffClassDefs.filterKeys(standoffClassIris),
                 standoffPropertyEntityInfoMap = cacheData.standoffPropertyDefs.filterKeys(standoffPropertyIris)
+            )
+        } yield response
+    }
+
+    private def getStandoffStandoffClassesWithDataTypeV1(userProfile: UserProfileV1): Future[StandoffClassesWithDataTypeGetResponseV1] = {
+        for {
+            cacheData <- getCacheData
+            response = StandoffClassesWithDataTypeGetResponseV1(
+                standoffClassEntityInfoMap = cacheData.standoffClassDefsWithDataType
             )
         } yield response
     }

@@ -23,6 +23,7 @@ import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.rio.turtle._
 import org.eclipse.rdf4j.rio.{RDFHandler, RDFWriter}
 import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.util.InputValidation.TextattrV1
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import org.rogach.scallop._
 
@@ -583,13 +584,13 @@ object TransformData extends App {
                     val linefeedsToInsertForTextValue = linefeedsToInsert.get(textValueIri)
                     val maybeTagName = getObject(tagStatements, StandoffHasAttribute)
 
-                    val newTagClassIri = maybeTagName match {
+                    val newTagClassIri = maybeTagName match { // TODO: check if this still works with the new standoff design (structure of textattr)
                         case Some(tagName) =>
                             if (tagName == "_link") {
                                 oldToNewClassIris(oldTagClassIri)
                             } else {
                                 // Otherwise, generate the new class name from the tag name.
-                                StandoffTagV1.EnumValueToIri(StandoffTagV1.lookup(tagName, () => throw InconsistentTriplestoreDataException(s"Unrecognised standoff tag name $tagName")))
+                                TextattrV1.EnumValueToIri(TextattrV1.lookup(tagName, () => throw InconsistentTriplestoreDataException(s"Unrecognised standoff tag name $tagName")))
                             }
 
                         case None => oldTagClassIri

@@ -21,6 +21,7 @@
 package org.knora.webapi.messages.v1.responder.ontologymessages
 
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
@@ -88,6 +89,23 @@ case class StandoffEntityInfoGetRequestV1(standoffClassIris: Set[IRI] = Set.empt
   */
 case class StandoffEntityInfoGetResponseV1(standoffClassEntityInfoMap: Map[IRI, StandoffClassEntityInfoV1],
                                            standoffPropertyEntityInfoMap: Map[IRI, StandoffPropertyEntityInfoV1])
+
+/**
+  * Requests information about all standoff classes that are a subclass of a data type standoff class. A successful response will be an
+  * [[StandoffClassesWithDataTypeGetResponseV1]].
+  *
+  * @param userProfile       the profile of the user making the request.
+  */
+case class StandoffClassesWithDataTypeGetRequestV1(userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
+
+/**
+  * Represents assertions about all standoff classes that are a subclass of a data type standoff class.
+  *
+  * @param standoffClassEntityInfoMap a [[Map]] of resource entity IRIs to [[StandoffClassEntityInfoV1]] objects.
+  */
+case class StandoffClassesWithDataTypeGetResponseV1(standoffClassEntityInfoMap: Map[IRI, StandoffClassEntityInfoV1])
+
 
 
 /**
@@ -412,7 +430,7 @@ case class StandoffClassEntityInfoV1(standoffClassIri: IRI,
                                      ontologyIri: IRI,
                                      predicates: Map[IRI, PredicateInfoV1],
                                      cardinalities: Map[IRI, Cardinality.Value],
-                                     dataType: Option[IRI] = None) extends EntityInfoV1
+                                     dataType: Option[StandoffDataTypeClasses.Value] = None) extends EntityInfoV1
 /**
   * Represents the assertions about a given property.
   *

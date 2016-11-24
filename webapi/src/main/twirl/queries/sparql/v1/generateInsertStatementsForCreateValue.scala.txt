@@ -62,37 +62,53 @@
         @value match {
             case textValue: TextValueV1 => {
 
-                @* Create a Standoff node for each StandoffPositionV1. *@
+                @* Create a Standoff node for each StandoffTagV1. *@
 
                 @for(createStandoff <- textValue.prepareForSparqlInsert(newValueIri)) {
-                    ?newValue@valueIndex knora-base:valueHasStandoff <@createStandoff.standoffTagIri> .
+                    ?newValue@valueIndex knora-base:valueHasStandoff <@createStandoff.standoffTagInstanceIri> .
 
-                    <@createStandoff.standoffTagIri>
+                    <@createStandoff.standoffTagInstanceIri>
 
                             @*
 
-                            If the StandoffPositionV1 contains both a resid and an href, we assume that the href is
-                            redundant (i.e. it's based on the resid), so we ignore it.
+                            Check for optional standoff properties
 
                             *@
-                            @(createStandoff.standoffPosition.resid, createStandoff.standoffPosition.href) match {
-                                case (Some(resid), _) => {
-                                    rdf:type knora-base:StandoffLinkTag ;
-                                    knora-base:standoffTagHasLink <@resid> ;
-                                }
-
-                                case (None, Some(href)) => {
-                                    rdf:type knora-base:StandoffUriTag ;
-                                    knora-base:valueHasUri <@href> ;
-                                }
-
-                                case (None, None) => {
-                                    rdf:type <@createStandoff.standoffTagClassIri> ;
-                                }
+                            @if(createStandoff.standoffNode.uuid.isDefined) {
+                                knora-base:standoffTagHasUUID """@createStandoff.standoffNode.uuid.get""" ;
                             }
 
-                            knora-base:standoffTagHasStart @createStandoff.standoffPosition.start ;
-                            knora-base:standoffTagHasEnd @createStandoff.standoffPosition.end .
+                            @if(createStandoff.standoffNode.startIndex.isDefined) {
+                                knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex.get ;
+                            }
+
+                            @if(createStandoff.standoffNode.endIndex.isDefined) {
+                                knora-base:standoffTagHasEndIndex @createStandoff.standoffNode.endIndex.get ;
+                            }
+
+                            @if(createStandoff.standoffNode.startParentIndex.isDefined) {
+                                knora-base:standoffTagHasStartParentIndex @createStandoff.standoffNode.startParentIndex.get ;
+                            }
+
+                            @if(createStandoff.standoffNode.endParentIndex.isDefined) {
+                                knora-base:standoffTagHasEndParentIndex @createStandoff.standoffNode.endParentIndex.get ;
+                            }
+
+                            @*
+
+                            Handle standoff class specific standoff properties
+
+                            *@
+                            @for(createProperty <- createStandoff.standoffNode.attributes) {
+
+                                <@createProperty.standoffPropertyIri> @createProperty.rdfValue ;
+
+                            }
+
+                            knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
+                            knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
+                            rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .
+
                 }
             }
 

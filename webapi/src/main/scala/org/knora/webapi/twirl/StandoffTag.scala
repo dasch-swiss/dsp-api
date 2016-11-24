@@ -23,6 +23,7 @@ package org.knora.webapi.twirl
 import java.util.UUID
 
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 
 /**
@@ -39,7 +40,9 @@ trait StandoffTagAttributeV1 {
 
     def standoffPropertyIri: IRI
 
-    def value: Any
+    def stringValue: String
+
+    def rdfValue: String
 
 }
 
@@ -49,7 +52,27 @@ trait StandoffTagAttributeV1 {
   * @param standoffPropertyIri the Iri of the standoff property
   * @param value the value of the standoff property.
   */
-case class StandoffTagStringAttributeV1(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV1
+case class StandoffTagIriAttributeV1(standoffPropertyIri: IRI, value: IRI) extends StandoffTagAttributeV1 {
+
+    def stringValue = value
+
+    def rdfValue = s"<$value>"
+
+}
+
+/**
+  * Represents a standoff tag attribute of type string.
+  *
+  * @param standoffPropertyIri the Iri of the standoff property
+  * @param value the value of the standoff property.
+  */
+case class StandoffTagStringAttributeV1(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV1 {
+
+    def stringValue = value
+
+    def rdfValue = s"""\"\"\"$value\"\"\""""
+
+}
 
 /**
   * Represents a standoff tag attribute of type integer.
@@ -57,7 +80,13 @@ case class StandoffTagStringAttributeV1(standoffPropertyIri: IRI, value: String)
   * @param standoffPropertyIri the Iri of the standoff property
   * @param value the value of the standoff property.
   */
-case class StandoffTagIntegerAttributeV1(standoffPropertyIri: IRI, value: Int) extends StandoffTagAttributeV1
+case class StandoffTagIntegerAttributeV1(standoffPropertyIri: IRI, value: Int) extends StandoffTagAttributeV1 {
+
+    def stringValue = value.toString
+
+    def rdfValue = value.toString
+
+}
 
 /**
   * Represents a standoff tag attribute of type decimal.
@@ -65,7 +94,13 @@ case class StandoffTagIntegerAttributeV1(standoffPropertyIri: IRI, value: Int) e
   * @param standoffPropertyIri the Iri of the standoff property
   * @param value the value of the standoff property.
   */
-case class StandoffTagDecimalAttributeV1(standoffPropertyIri: IRI, value: BigDecimal) extends StandoffTagAttributeV1
+case class StandoffTagDecimalAttributeV1(standoffPropertyIri: IRI, value: BigDecimal) extends StandoffTagAttributeV1 {
+
+    def stringValue = value.toString
+
+    def rdfValue = s""""${value.toString}"^^xsd:decimal"""
+
+}
 
 /**
   * Represents a standoff tag attribute of type boolean.
@@ -73,31 +108,11 @@ case class StandoffTagDecimalAttributeV1(standoffPropertyIri: IRI, value: BigDec
   * @param standoffPropertyIri the Iri of the standoff property
   * @param value the value of the standoff property.
   */
-case class StandoffTagBooleanAttributeV1(standoffPropertyIri: IRI, value: Boolean) extends StandoffTagAttributeV1
+case class StandoffTagBooleanAttributeV1(standoffPropertyIri: IRI, value: Boolean) extends StandoffTagAttributeV1 {
 
+    def stringValue = value.toString
 
-/**
-  * A trait representing the required properties for a `knora-base:StandoffTag`
-  */
-trait StandoffTagV1 {
-
-    def name: IRI
-
-    def uuid: UUID
-
-    def startPosition: Int
-
-    def endPosition: Int
-
-    def startIndex: Int
-
-    def endIndex: Option[Int]
-
-    def startParentIndex: Option[Int]
-
-    def endParentIndex: Option[Int]
-
-    def attributes: Seq[StandoffTagAttributeV1]
+    def rdfValue = value.toString
 
 }
 
@@ -105,7 +120,7 @@ trait StandoffTagV1 {
   * Represents a `knora-base:StandoffTag` or any subclass of it
   * that is not a subclass of a data type standoff tag (e.g. `knora-base:StandoffDateTag`).
   *
-  * @param name             the IRI of the standoff class to be created.
+  * @param standoffTagClassIri             the IRI of the standoff class to be created.
   * @param uuid             a [[UUID]] representing this tag and any other tags that
   *                         point to semantically equivalent content in other versions of the same text.
   * @param startPosition    the start position of the range of characters marked up with this tag.
@@ -117,240 +132,16 @@ trait StandoffTagV1 {
   * @param endParentIndex   the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
   * @param attributes       the attributes attached to this tag.
   */
-case class StandoffBaseTagV1(name: IRI,
-                             uuid: UUID,
-                             startPosition: Int,
-                             endPosition: Int,
-                             startIndex: Int,
-                             endIndex: Option[Int],
-                             startParentIndex: Option[Int],
-                             endParentIndex: Option[Int],
-                             attributes: Seq[StandoffTagAttributeV1]) extends StandoffTagV1
+case class StandoffTagV1(standoffTagClassIri: IRI,
+                         dataType: Option[StandoffDataTypeClasses.Value] = None,
+                         uuid: Option[UUID] = None,
+                         startPosition: Int,
+                         endPosition: Int,
+                         startIndex: Option[Int] = None,
+                         endIndex: Option[Int] = None,
+                         startParentIndex: Option[Int] = None,
+                         endParentIndex: Option[Int] = None,
+                         attributes: Seq[StandoffTagAttributeV1] = Seq.empty[StandoffTagAttributeV1])
 
-/**
-  * Represents a `knora-base:StandoffLinkTag` or any subclass of it.
-  *
-  * @param name               the IRI of the standoff class to be created.
-  * @param uuid               a [[UUID]] representing this tag and any other tags that
-  *                           point to semantically equivalent content in other versions of the same text.
-  * @param startPosition      the start position of the range of characters marked up with this tag.
-  * @param endPosition        the end position of the range of characters marked up with this tag.
-  * @param startIndex         the index of this tag (start index in case of a virtual hierarchy tag that has two parents). Indexes are numbered from 0 within the context of a particular text,
-  *                           and make it possible to order tags that share the same position.
-  * @param endIndex           the index of the end position (only in case of a virtual hierarchy tag).
-  * @param startParentIndex   the index of the parent node (start index in case of a virtual hierarchy tag that has two parents), if any, that contains the start position.
-  * @param endParentIndex     the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
-  * @param attributes         the attributes attached to this tag.
-  * @param standoffTagHasLink the resource IRI referred to.
-  */
-case class StandoffLinkTagV1(name: IRI,
-                             uuid: UUID,
-                             startPosition: Int,
-                             endPosition: Int,
-                             startIndex: Int,
-                             endIndex: Option[Int],
-                             startParentIndex: Option[Int],
-                             endParentIndex: Option[Int],
-                             attributes: Seq[StandoffTagAttributeV1],
-                             standoffTagHasLink: IRI) extends StandoffTagV1
-
-/**
-  * Represents a `knora-base:StandoffDateTag` or any subclass of it.
-  *
-  * @param name                   the IRI of the standoff class to be created.
-  * @param uuid                   a [[UUID]] representing this tag and any other tags that
-  *                               point to semantically equivalent content in other versions of the same text.
-  * @param startPosition          the start position of the range of characters marked up with this tag.
-  * @param endPosition            the end position of the range of characters marked up with this tag.
-  * @param startIndex             the index of this tag (start index in case of a virtual hierarchy tag that has two parents). Indexes are numbered from 0 within the context of a particular text,
-  *                               and make it possible to order tags that share the same position.
-  * @param endIndex               the index of the end position (only in case of a virtual hierarchy tag).
-  * @param startParentIndex       the index of the parent node (start index in case of a virtual hierarchy tag that has two parents), if any, that contains the start position.
-  * @param endParentIndex         the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
-  * @param attributes             the attributes attached to this tag.
-  * @param valueHasCalendar       the calendar used for the given date.
-  * @param valueHasStartPrecision the precision of the start data.
-  * @param valueHasEndPrecision   the precision of the end date.
-  * @param valueHasStartJDC       the Julian Day Count of the start date.
-  * @param valueHasEndJDC         the Julian Day Count of the end date.
-  */
-case class StandoffDateTagV1(name: IRI,
-                             uuid: UUID,
-                             startPosition: Int,
-                             endPosition: Int,
-                             startIndex: Int,
-                             endIndex: Option[Int],
-                             startParentIndex: Option[Int],
-                             endParentIndex: Option[Int],
-                             attributes: Seq[StandoffTagAttributeV1],
-                             valueHasCalendar: KnoraCalendarV1.Value,
-                             valueHasStartPrecision: KnoraPrecisionV1.Value,
-                             valueHasEndPrecision: KnoraPrecisionV1.Value,
-                             valueHasStartJDC: Int,
-                             valueHasEndJDC: Int) extends StandoffTagV1
-
-/**
-  * Represents a `knora-base:StandoffUriTag` or any subclass of it.
-  *
-  * @param name             the IRI of the standoff class to be created.
-  * @param uuid             a [[UUID]] representing this tag and any other tags that
-  *                         point to semantically equivalent content in other versions of the same text.
-  * @param startPosition    the start position of the range of characters marked up with this tag.
-  * @param endPosition      the end position of the range of characters marked up with this tag.
-  * @param startIndex       the index of this tag (start index in case of a virtual hierarchy tag that has two parents). Indexes are numbered from 0 within the context of a particular text,
-  *                         and make it possible to order tags that share the same position.
-  * @param endIndex         the index of the end position (only in case of a virtual hierarchy tag).
-  * @param startParentIndex the index of the parent node (start index in case of a virtual hierarchy tag that has two parents), if any, that contains the start position.
-  * @param endParentIndex   the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
-  * @param attributes       the attributes attached to this tag.
-  * @param valueHasUri      the URI the standoff class points to.
-  */
-case class StandoffUriTagV1(name: IRI,
-                            uuid: UUID,
-                            startPosition: Int,
-                            endPosition: Int,
-                            startIndex: Int,
-                            endIndex: Option[Int],
-                            startParentIndex: Option[Int],
-                            endParentIndex: Option[Int],
-                            attributes: Seq[StandoffTagAttributeV1],
-                            valueHasUri: String) extends StandoffTagV1
-
-/**
-  * Represents a `knora-base:StandoffColorTag` or any subclass of it.
-  *
-  * @param name             the IRI of the standoff class to be created.
-  * @param uuid             a [[UUID]] representing this tag and any other tags that
-  *                         point to semantically equivalent content in other versions of the same text.
-  * @param startPosition    the start position of the range of characters marked up with this tag.
-  * @param endPosition      the end position of the range of characters marked up with this tag.
-  * @param startIndex       the index of this tag (start index in case of a virtual hierarchy tag that has two parents). Indexes are numbered from 0 within the context of a particular text,
-  *                         and make it possible to order tags that share the same position.
-  * @param endIndex         the index of the end position (only in case of a virtual hierarchy tag).
-  * @param startParentIndex the index of the parent node (start index in case of a virtual hierarchy tag that has two parents), if any, that contains the start position.
-  * @param endParentIndex   the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
-  * @param attributes       the attributes attached to this tag.
-  * @param valueHasColor    the color the standoff tag represents.
-  */
-case class StandoffColorTagV1(name: IRI,
-                              uuid: UUID,
-                              startPosition: Int,
-                              endPosition: Int,
-                              startIndex: Int,
-                              endIndex: Option[Int],
-                              startParentIndex: Option[Int],
-                              endParentIndex: Option[Int],
-                              attributes: Seq[StandoffTagAttributeV1],
-                              valueHasColor: String) extends StandoffTagV1
-
-/**
-  * Represents a `knora-base:StandoffIntegerTag` or any subclass of it.
-  *
-  * @param name             the IRI of the standoff class to be created.
-  * @param uuid             a [[UUID]] representing this tag and any other tags that
-  *                         point to semantically equivalent content in other versions of the same text.
-  * @param startPosition    the start position of the range of characters marked up with this tag.
-  * @param endPosition      the end position of the range of characters marked up with this tag.
-  * @param startIndex       the index of this tag (start index in case of a virtual hierarchy tag that has two parents). Indexes are numbered from 0 within the context of a particular text,
-  *                         and make it possible to order tags that share the same position.
-  * @param endIndex         the index of the end position (only in case of a virtual hierarchy tag).
-  * @param startParentIndex the index of the parent node (start index in case of a virtual hierarchy tag that has two parents), if any, that contains the start position.
-  * @param endParentIndex   the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
-  * @param attributes       the attributes attached to this tag.
-  * @param valueHasInteger  the integer value the standoff tag represents.
-  */
-case class StandoffIntegerTagV1(name: IRI,
-                                uuid: UUID,
-                                startPosition: Int,
-                                endPosition: Int,
-                                startIndex: Int,
-                                endIndex: Option[Int],
-                                startParentIndex: Option[Int],
-                                endParentIndex: Option[Int],
-                                attributes: Seq[StandoffTagAttributeV1],
-                                valueHasInteger: Int) extends StandoffTagV1
-
-/**
-  * Represents a `knora-base:StandoffDecimalTag` or any subclass of it.
-  *
-  * @param name             the IRI of the standoff class to be created.
-  * @param uuid             a [[UUID]] representing this tag and any other tags that
-  *                         point to semantically equivalent content in other versions of the same text.
-  * @param startPosition    the start position of the range of characters marked up with this tag.
-  * @param endPosition      the end position of the range of characters marked up with this tag.
-  * @param startIndex       the index of this tag (start index in case of a virtual hierarchy tag that has two parents). Indexes are numbered from 0 within the context of a particular text,
-  *                         and make it possible to order tags that share the same position.
-  * @param endIndex         the index of the end position (only in case of a virtual hierarchy tag).
-  * @param startParentIndex the index of the parent node (start index in case of a virtual hierarchy tag that has two parents), if any, that contains the start position.
-  * @param endParentIndex   the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
-  * @param attributes       the attributes attached to this tag.
-  * @param valueHasDecimal  the decimal (floating point) value the standoff tag represents.
-  */
-case class StandoffDecimalTagV1(name: IRI,
-                                uuid: UUID,
-                                startPosition: Int,
-                                endPosition: Int,
-                                startIndex: Int,
-                                endIndex: Option[Int],
-                                startParentIndex: Option[Int],
-                                endParentIndex: Option[Int],
-                                attributes: Seq[StandoffTagAttributeV1],
-                                valueHasDecimal: BigDecimal) extends StandoffTagV1
-
-/**
-  * Represents a `knora-base:StandoffIntervalTag` or any subclass of it.
-  *
-  * @param name                  the IRI of the standoff class to be created.
-  * @param uuid                  a [[UUID]] representing this tag and any other tags that
-  *                              point to semantically equivalent content in other versions of the same text.
-  * @param startPosition         the start position of the range of characters marked up with this tag.
-  * @param endPosition           the end position of the range of characters marked up with this tag.
-  * @param startIndex            the index of this tag (start index in case of a virtual hierarchy tag that has two parents). Indexes are numbered from 0 within the context of a particular text,
-  *                              and make it possible to order tags that share the same position.
-  * @param endIndex              the index of the end position (only in case of a virtual hierarchy tag).
-  * @param startParentIndex      the index of the parent node (start index in case of a virtual hierarchy tag that has two parents), if any, that contains the start position.
-  * @param endParentIndex        the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
-  * @param attributes            the attributes attached to this tag.
-  * @param valueHasIntervalStart the start of the interval the standoff tag represents.
-  * @param valueHasIntervalEnd   the start of the interval the standoff tag represents.
-  */
-case class StandoffIntervalTagV1(name: IRI,
-                                 uuid: UUID,
-                                 startPosition: Int,
-                                 endPosition: Int,
-                                 startIndex: Int,
-                                 endIndex: Option[Int],
-                                 startParentIndex: Option[Int],
-                                 endParentIndex: Option[Int],
-                                 attributes: Seq[StandoffTagAttributeV1],
-                                 valueHasIntervalStart: BigDecimal,
-                                 valueHasIntervalEnd: BigDecimal) extends StandoffTagV1
-
-/**
-  * Represents a `knora-base:StandoffBooleanTag` or any subclass of it.
-  *
-  * @param name             the IRI of the standoff class to be created.
-  * @param uuid             a [[UUID]] representing this tag and any other tags that
-  *                         point to semantically equivalent content in other versions of the same text.
-  * @param startPosition    the start position of the range of characters marked up with this tag.
-  * @param endPosition      the end position of the range of characters marked up with this tag.
-  * @param startIndex       the index of this tag (start index in case of a virtual hierarchy tag that has two parents). Indexes are numbered from 0 within the context of a particular text,
-  *                         and make it possible to order tags that share the same position.
-  * @param endIndex         the index of the end position (only in case of a virtual hierarchy tag).
-  * @param startParentIndex the index of the parent node (start index in case of a virtual hierarchy tag that has two parents), if any, that contains the start position.
-  * @param endParentIndex   the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
-  * @param attributes       the attributes attached to this tag.
-  * @param valueHasBoolean  the Boolean value that the standoff tag represents.
-  */
-case class StandoffBooleanTagV1(name: IRI,
-                                uuid: UUID,
-                                startPosition: Int,
-                                endPosition: Int,
-                                startIndex: Int,
-                                endIndex: Option[Int],
-                                startParentIndex: Option[Int],
-                                endParentIndex: Option[Int],
-                                attributes: Seq[StandoffTagAttributeV1],
-                                valueHasBoolean: Boolean) extends StandoffTagV1
 
 

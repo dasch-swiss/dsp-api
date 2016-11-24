@@ -24,7 +24,8 @@ import akka.actor.ActorSystem
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.{IRI, Settings}
+import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
+import org.knora.webapi.{IRI, OntologyConstants, Settings}
 
 object ResourcesResponderV1SpecFullData {
 
@@ -991,19 +992,18 @@ object ResourcesResponderV1SpecFullData {
                 value_ids = Vector("http://data.knora.org/047db418ae06/values/7331b94196a104"),
                 values = Vector(TextValueV1(
                     resource_reference = Set("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"), // TODO: Why is this a Value onject IRI?
-                    textattr = Map(
-                        StandoffTagV1.paragraph -> Vector(StandoffPositionV1(
-                            href = None,
-                            resid = None,
-                            end = 94,
-                            start = 0
-                        )),
-                        StandoffTagV1.link -> Vector(StandoffPositionV1(
-                            href = Some("http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06%2Fvalues%2F2428fc96-1383-4457-9704-077b37256103"),
-                            resid = Some("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"),
-                            end = 39,
-                            start = 36
-                        ))
+                    textattr =
+                        Vector(StandoffTagV1(
+                            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffParagraphTag,
+                            endPosition = 94,
+                            startPosition = 0
+                        ),
+                        StandoffTagV1(
+                            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                            endPosition = 39,
+                            startPosition = 36,
+                            attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"))
+                        )
                     ),
                     utf8str = "Derselbe Holzschnitt wird auf Seite c7r der lateinischen Ausgabe des Narrenschiffs verwendet.\r"
                 )),

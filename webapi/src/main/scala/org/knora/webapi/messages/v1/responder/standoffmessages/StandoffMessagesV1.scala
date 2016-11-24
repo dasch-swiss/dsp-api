@@ -23,10 +23,15 @@ package org.knora.webapi.messages.v1.responder.standoffmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.IRI
+import org.knora.webapi.{IRI, OntologyConstants}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
+
+import scala.collection.immutable.SortedSet
+
+
+
 
 /**
   * An abstract trait representing a Knora v1 API request message that can be sent to `StandoffResponderV1`.
@@ -38,6 +43,48 @@ case class CreateStandoffRequestV1(projectIri: IRI, resourceIri: IRI, propertyIr
 
 case class CreateStandoffResponseV1(userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = RepresentationV1JsonProtocol.createStandoffResponseV1Format.write(this)
+}
+
+/**
+  * Represents the data types of standoff classes.
+  */
+object StandoffDataTypeClasses extends Enumeration {
+
+    val StandoffLinkTag = Value(OntologyConstants.KnoraBase.StandoffLinkTag)
+
+    val StandoffDateTag = Value(OntologyConstants.KnoraBase.StandoffDateTag)
+
+    val StandoffUriTag = Value(OntologyConstants.KnoraBase.StandoffUriTag)
+
+    val StandoffColorTag = Value(OntologyConstants.KnoraBase.StandoffColorTag)
+
+    val StandoffIntegerTag = Value(OntologyConstants.KnoraBase.StandoffIntegerTag)
+
+    val StandoffDecimalTag = Value(OntologyConstants.KnoraBase.StandoffDecimalTag)
+
+    val StandoffIntervalTag = Value(OntologyConstants.KnoraBase.StandoffIntervalTag)
+
+    val StandoffBooleanTag = Value(OntologyConstants.KnoraBase.StandoffBooleanTag)
+
+    val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+
+    /**
+      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
+      * [[org.knora.webapi.BadRequestException]].
+      *
+      * @param name     the name of the value.
+      * @param errorFun the function to be called in case of an error.
+      * @return the requested value.
+      */
+    def lookup(name: String, errorFun: () => Nothing): Value = {
+        valueMap.get(name) match {
+            case Some(value) => value
+            case None => errorFun()
+        }
+    }
+
+    def getStandoffClassIris: SortedSet[IRI] = StandoffDataTypeClasses.values.map(_.toString)
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
