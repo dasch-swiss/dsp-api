@@ -19,10 +19,10 @@ package org.knora.webapi.messages.v1.responder.permissionmessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataType.PermissionProfileType
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsTemplate.PermissionsTemplate
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.util.MessageUtil
 import spray.json._
 
 
@@ -357,6 +357,8 @@ case class PermissionDataV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[Proj
       */
     def hasPermissionFor(operation: OperationV1, insideProject: IRI, explain: Boolean = false): Boolean = {
 
+        //println(s"hasPermissionFor - administrativePermissionsPerProject: ${administrativePermissionsPerProject}, operation: $operation, insideProject: $insideProject")
+
         if (this.isSystemAdmin) {
             /* A member of the SystemAdmin group is allowed to perform any operation */
             if (explain) println("TRUE: A member of the SystemAdmin group is allowed to perform any operation")
@@ -366,7 +368,6 @@ case class PermissionDataV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[Proj
                 case ResourceCreateOperation(resourceClassIri) => {
                     this.administrativePermissionsPerProject.get(insideProject) match {
                         case Some(set) => {
-                            println(s"hasPermissionFor - set: $set")
                             set.contains(PermissionV1.ProjectResourceCreateAllPermission)
                         }
                         case None => {
@@ -426,6 +427,15 @@ case class PermissionDataV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[Proj
             }
             case _ => false
         }
+
+    def toSourceString: String = {
+        "PermissionDataV1( \n" +
+                s"\t projectInfos = ${MessageUtil.toSource(projectInfos)} \n" +
+                s"\t groupsPerProject = ${MessageUtil.toSource(groupsPerProject)} \n" +
+                s"\t administrativePermissionsPerProject = ${MessageUtil.toSource(administrativePermissionsPerProject)} \n" +
+                s"\t defaultObjectAccessPermissionsPerProject = ${MessageUtil.toSource(defaultObjectAccessPermissionsPerProject)}" + "\n" +
+        ")"
+    }
 }
 
 
@@ -643,33 +653,6 @@ object PermissionDataType extends Enumeration {
     }
 }
 
-/**
-  * Permissions template values
-  */
-object PermissionsTemplate extends Enumeration {
-
-    type PermissionsTemplate = Value
-
-    val NONE = Value(0, "none")
-    val OPEN = Value(1, "open")
-    val CLOSED = Value(2, "closed")
-
-    val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
-
-    /**
-      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-      * [[InconsistentTriplestoreDataException]].
-      *
-      * @param name the name of the calue.
-      * @return the requested value.
-      */
-    def lookup(name: String): Value = {
-        valueMap.get(name) match {
-            case Some(value) => value
-            case None => throw InconsistentTriplestoreDataException(s"Initial permissions template not supported: $name")
-        }
-    }
-}
 
 object PermissionType extends Enumeration {
 
@@ -701,23 +684,6 @@ trait PermissionV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
           */
         def write(permissionProfileType: PermissionDataType.Value): JsValue = {
             JsObject(Map("permission_profile_type" -> permissionProfileType.toString.toJson))
-        }
-    }
-
-    implicit object PermissionsTemplateFormat extends JsonFormat[PermissionsTemplate] {
-        /**
-          * Not implemented.
-          */
-        def read(jsonVal: JsValue) = ???
-
-        /**
-          * Converts a [[PermissionsTemplate]] into [[JsValue]] for formatting as JSON.
-          *
-          * @param permissionTemplate the [[PermissionsTemplate]] to be converted.
-          * @return a [[JsValue]].
-          */
-        def write(permissionTemplate: PermissionsTemplate.Value): JsValue = {
-            JsObject(Map("permission_operation" -> permissionTemplate.toString.toJson))
         }
     }
 

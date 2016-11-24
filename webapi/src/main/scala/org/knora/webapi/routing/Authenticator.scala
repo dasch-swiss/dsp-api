@@ -331,10 +331,10 @@ object Authenticator {
         cookies.find(_.name == "KnoraAuthentication") match {
             case Some(authCookie) =>
                 val value = CacheUtil.get[UserProfileV1](cacheName, authCookie.value)
-                log.debug(s"Found this session id: ${authCookie.value} leading to this content in the cache: $value")
+                log.debug(s"found this session id: ${authCookie.value} leading to this content in the cache: ${value}")
                 value
             case None =>
-                log.debug(s"No session id found")
+                log.debug(s"no session id found")
                 None
         }
     }
@@ -351,12 +351,13 @@ object Authenticator {
       *         if no credentials could be found.
       */
     private def extractCredentials(requestContext: RequestContext): Option[(String, String)] = {
-        log.debug("extractCredentials start ...")
+
         val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
         val headers: Seq[HttpHeader] = requestContext.request.headers
 
-
+        //
         // extract username / password from parameters
+        //
         val usernameFromParams: String = params get "username" match {
             case Some(value) => value.head
             case None => ""
@@ -374,15 +375,15 @@ object Authenticator {
             log.debug("no credentials sent as parameters")
         }
 
+        //
         // extract username / password from the auth header
+        //
         val authHeaderList = headers filter (httpHeader => httpHeader.lowercaseName.equals("authorization"))
         val authHeaderEncoded = if (authHeaderList.nonEmpty) {
             authHeaderList.head.value.substring(6)
         } else {
             ""
         }
-
-        log.debug(s"authHeaderEncoded.nonEmpty: " + authHeaderEncoded.nonEmpty)
 
         val (usernameFromHeader: String, passwordFromHeader: String) = if (authHeaderEncoded.nonEmpty) {
             val authHeaderDecoded = ByteString.fromArray(Base64.getDecoder.decode(authHeaderEncoded)).decodeString("UTF8")
@@ -399,7 +400,9 @@ object Authenticator {
             log.debug("no credentials found in the header")
         }
 
+        //
         // get only one set of credentials based on precedence
+        //
         val (username, password) = if (usernameFromParams.nonEmpty && passwordFromParams.nonEmpty) {
             (usernameFromParams, passwordFromParams)
         } else if (usernameFromHeader.nonEmpty && passwordFromHeader.nonEmpty) {
@@ -433,9 +436,9 @@ object Authenticator {
 
         val userProfileV1Future = responderManager ? UserProfileByIRIGetRequestV1(iri)
         Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
-            case Some(userProfileV1) => {
-                log.debug("This user was found: " + userProfileV1.toString)
-                Some(userProfileV1)
+            case Some(userProfile) => {
+                log.debug(s"getUserProfileByIri - fresh from the triplestore: $userProfile")
+                Some(userProfile)
             }
             case None => log.debug("No user found by this IRI"); None
 
@@ -459,18 +462,19 @@ object Authenticator {
         if (username.nonEmpty) {
             // try to get it from the cache
             CacheUtil.get[UserProfileV1](cacheName, username) match {
-                case Some(userProfileV1) =>
+                case Some(userProfile) =>
                     // found a user profile in the cache
-                    userProfileV1
+                    log.debug(s"getUserProfileByUsername - cache hit: $userProfile")
+                    userProfile
                 case None =>
                     // didn't found one, so I will try to get it from the triple store
                     val userProfileV1Future = responderManager ? UserProfileByUsernameGetRequestV1(username, UserProfileType.FULL)
                     Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[UserProfileV1] match {
-                        case userProfileV1: UserProfileV1 => {
-                            log.debug("This user was found: " + userProfileV1.toString)
+                        case userProfile: UserProfileV1 => {
+                            log.debug(s"getUserProfileByUsername - fresh from the triplestore: $userProfile")
                             // before I return the found user profile, let's put it into the cache
-                            CacheUtil.put(cacheName, username, userProfileV1)
-                            userProfileV1
+                            CacheUtil.put(cacheName, username, userProfile)
+                            userProfile
                         }
                         case _ => {
                             log.debug("No user found by this username")

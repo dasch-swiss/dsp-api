@@ -182,7 +182,7 @@ object SharedAdminTestData {
     def imagesUser01 = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/c266a56709"),
-            username = Some("user01"),
+            username = Some("images-user01"),
             firstname = Some("User01"),
             lastname = Some("User"),
             email = Some("user01.user1@example.com"),
@@ -212,7 +212,7 @@ object SharedAdminTestData {
     def imagesUser02 = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/97cec4000f"),
-            username = Some("user02"),
+            username = Some("images-user02"),
             firstname = Some("User02"),
             lastname = Some("User"),
             email = Some("user02.user@example.com"),

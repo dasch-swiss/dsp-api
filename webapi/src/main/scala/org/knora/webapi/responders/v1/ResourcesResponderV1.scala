@@ -27,8 +27,7 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.graphdatamessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{ResourceCreateOperation, OperationV1}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1, ProjectInfoType}
+import org.knora.webapi.messages.v1.responder.permissionmessages.ResourceCreateOperation
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -1390,7 +1389,8 @@ class ResourcesResponderV1 extends ResponderV1 {
         }
 
         val resultFuture = for {
-            // Don't allow anonymous users to create resources.
+
+            // Get user's IRI and don't allow anonymous users to create resources.
             userIri: IRI <- Future {
                 userProfile.userData.user_id match {
                     case Some(iri) => iri
@@ -1401,6 +1401,9 @@ class ResourcesResponderV1 extends ResponderV1 {
             _ = if (resourceClassIri == OntologyConstants.KnoraBase.Resource) {
                 throw BadRequestException(s"Instances of knora-base:Resource cannot be created, only instances of subclasses")
             }
+
+
+            // FIXME: Query ProjectsResponder for project's projectNamedGraph
 
             namedGraph = settings.projectNamedGraphs(projectIri).data
             resourceIri: IRI = knoraIdUtil.makeRandomResourceIri

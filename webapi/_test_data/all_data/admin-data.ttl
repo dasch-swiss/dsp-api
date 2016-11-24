@@ -129,7 +129,7 @@
 ## Project Admin
 <http://data.knora.org/users/c266a56709> rdf:type knora-base:User ;
 
-                                         knora-base:userid "user01"^^xsd:string ;
+                                         knora-base:userid "images-user01"^^xsd:string ;
 
                                          foaf:givenName "User01"^^xsd:string ;
 
@@ -153,7 +153,7 @@
 ## Project Member
 <http://data.knora.org/users/97cec4000f> rdf:type knora-base:User ;
 
-                                         knora-base:userid "user02"^^xsd:string ;
+                                         knora-base:userid "images-user02"^^xsd:string ;
 
                                          foaf:givenName "User02"^^xsd:string ;
 

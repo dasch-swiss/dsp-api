@@ -29,6 +29,7 @@ import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionData
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.util.MessageUtil
 import spray.json._
 
 
@@ -211,6 +212,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
       */
     def ofType(userProfileType: UserProfileType): UserProfileV1 = {
 
+        /* TODO: Need to rething this as only information from userdata is allowed to be changed. The rest is always needed */
         userProfileType match {
             case UserProfileType.SHORT => {
                 val olduserdata = userData
@@ -231,8 +233,8 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     userData = newuserdata,
                     groups = groups,
                     projects = projects,
-                    permissionData = permissionData.ofType(PermissionDataType.SHORT),
-                    sessionId = None // remove session id
+                    permissionData = permissionData,
+                    sessionId = sessionId
                 )
             }
             case UserProfileType.SAFE => {
@@ -254,8 +256,8 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     userData = newuserdata,
                     groups = groups,
                     projects = projects,
-                    permissionData = permissionData.ofType(PermissionDataType.SAFE),
-                    sessionId = None // remove session id
+                    permissionData = permissionData,
+                    sessionId = sessionId
                 )
             }
             case UserProfileType.FULL => {
@@ -288,6 +290,20 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
         )
     }
 
+    def toSourceString: String = {
+        MessageUtil.toSource(userData) + "\n" +
+                MessageUtil.toSource(groups) + "\n" +
+                MessageUtil.toSource(projects) + "\n" +
+                permissionData.toSourceString + "\n" +
+                MessageUtil.toSource(sessionId)
+    }
+
+    def isAnonymousUser: Boolean = {
+        userData.user_id match {
+            case Some(iri) => true
+            case None => false
+        }
+    }
 
 }
 
@@ -321,7 +337,6 @@ case class UserDataV1(lang: String,
                       active_project: Option[IRI] = None ) {
 
     def toJsValue = UserV1JsonProtocol.userDataV1Format.write(this)
-
 }
 
 
