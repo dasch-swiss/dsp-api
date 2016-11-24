@@ -77,12 +77,12 @@ trait KnoraService {
     /**
       * The application's configuration.
       */
-    private val settings: SettingsImpl = Settings(system)
+    protected val settings: SettingsImpl = Settings(system)
 
     /**
       * Provide logging
       */
-    private val log = akka.event.Logging(system, this.getClass)
+    protected val log = akka.event.Logging(system, this.getClass)
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
