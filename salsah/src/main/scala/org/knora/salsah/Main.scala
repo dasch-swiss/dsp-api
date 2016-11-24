@@ -29,7 +29,7 @@ object Main extends App {
     implicit val materializer = ActorMaterializer()
     implicit val ec = system.dispatcher
 
-    val log = akka.event.Logging(system, this.getClass
+    val log = akka.event.Logging(system, this.getClass)
 
     val handler =
         get {

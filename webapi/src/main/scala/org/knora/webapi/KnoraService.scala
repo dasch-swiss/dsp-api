@@ -25,7 +25,6 @@ import java.security.{KeyStore, SecureRandom}
 import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 
 import akka.actor.{ActorSystem, _}
-import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.{ConnectionContext, Http}
@@ -43,8 +42,8 @@ import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.CacheUtil
 
 import scala.collection.JavaConversions._
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 trait Core {
     implicit val system: ActorSystem
@@ -78,17 +77,17 @@ trait KnoraService {
     /**
       * The application's configuration.
       */
-    val settings: SettingsImpl = Settings(system)
+    private val settings: SettingsImpl = Settings(system)
 
     /**
       * Provide logging
       */
-    val log = akka.event.Logging(system, this.getClass)
+    private val log = akka.event.Logging(system, this.getClass)
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
       */
-    implicit val timeout = settings.defaultRestoreTimeout
+    implicit private val timeout = settings.defaultRestoreTimeout
 
     /**
       * A user representing the Knora API server, used for initialisation on startup.
@@ -118,8 +117,7 @@ trait KnoraService {
     /**
       * Sends messages to all supervisor actors in a blocking manner, checking if they are all ready.
       */
-    def checkActorSystem() {
-
+    def checkActorSystem(): Unit = {
         // TODO: Check if ResponderManager is ready
         log.info(s"ResponderManager ready: - ")
 
@@ -159,16 +157,18 @@ trait KnoraService {
             println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
         }
 
-
+        // Either HTTP or HTTPs, or both, must be enabled.
         if (!(settings.knoraApiUseHttp || settings.knoraApiUseHttp)) {
             throw HttpConfigurationException("Neither HTTP nor HTTPS is enabled")
         }
 
+        // Activate HTTP if enabled.
         if (settings.knoraApiUseHttp) {
             Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpPort)
             println(s"Knora API Server using HTTP at http://${settings.knoraApiHost}:${settings.knoraApiHttpPort}.")
         }
 
+        // Activate HTTPS if enabled.
         if (settings.knoraApiUseHttps) {
             val keystorePassword: Array[Char] = settings.httpsKeystorePassword.toCharArray
             val keystore: KeyStore = KeyStore.getInstance("JKS")
@@ -194,7 +194,7 @@ trait KnoraService {
     /**
       * Stops Knora.
       */
-    def stopService() = {
+    def stopService(): Unit = {
         system.terminate()
         CacheUtil.removeAllCaches()
         //Kamon.shutdown()
