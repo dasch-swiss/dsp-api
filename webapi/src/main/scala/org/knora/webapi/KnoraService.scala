@@ -158,7 +158,7 @@ trait KnoraService {
         }
 
         // Either HTTP or HTTPs, or both, must be enabled.
-        if (!(settings.knoraApiUseHttp || settings.knoraApiUseHttp)) {
+        if (!(settings.knoraApiUseHttp || settings.knoraApiUseHttps)) {
             throw HttpConfigurationException("Neither HTTP nor HTTPS is enabled")
         }
 

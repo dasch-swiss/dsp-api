@@ -45,6 +45,6 @@ object Main extends App {
 
     bindingFuture onFailure {
         case ex: Exception =>
-            log.error(ex, s"Failed to bind to {}:{}!", host, port)
+            log.error(ex, s"Failed to bind to $host:$port")
     }
 }
