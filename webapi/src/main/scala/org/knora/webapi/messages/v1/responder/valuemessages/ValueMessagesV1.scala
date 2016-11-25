@@ -613,8 +613,13 @@ case class TextValueV1(utf8str: String,
         // because otherwise StandoffPositionV1JsonFormat is not necessarily compiled before this class, and spray-json
         // says it can't find a formatter for StandoffPositionV1.
 
+        // filter out all standoff tags that are not supported by the JSON v1 format.
+        // otherwise an error would be thrown
+        // TODO: we have to prevent users from creating new version of text values created directly from XML using the JSON v1 format because they would possibly lose annotations (those that have been filtered out).
+        val textattrV1 = textattr.filter(standoffTag => TextattrV1.IriToEnumValue.keySet.contains(standoffTag.standoffTagClassIri))
+
         // Group by JSON format attribute name and not by Iri because _link used both for resource references and hyperlinks.
-        val standoffTagsGroupedByClassIri: Map[IRI, Seq[StandoffTagV1]] = textattr.groupBy((row: StandoffTagV1) => TextattrV1.IriToEnumValue(row.standoffTagClassIri).toString)
+        val standoffTagsGroupedByClassIri: Map[IRI, Seq[StandoffTagV1]] = textattrV1.groupBy((row: StandoffTagV1) => TextattrV1.IriToEnumValue(row.standoffTagClassIri).toString)
 
         val textattrAsJsValue = JsObject(standoffTagsGroupedByClassIri.map {
             case (attrName, standoffTags: Seq[StandoffTagV1]) =>

@@ -224,6 +224,7 @@ class StandoffResponderV1 extends ResponderV1 {
             "text" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffRootTag, attributesToProps = Map("documentType" -> "http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType")),
             "p" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffParagraphTag),
             "i" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffItalicTag),
+            "b" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffBoldTag),
             "birthday" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffBirthdayTag", dataType = Some(dataTypes.date), dataTypeXMLAttribute = Some("date")),
             "interval" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffRangeTag", dataType = Some(dataTypes.interval), dataTypeXMLAttribute = Some("range"), attributesToProps = Map("unsure" -> "http://www.knora.org/ontology/knora-base#standoffTagIsUnsure"))
         )
@@ -531,7 +532,7 @@ class StandoffResponderV1 extends ResponderV1 {
                 apiRequestID = apiRequestID)).mapTo[CreateValueResponseV1]
 
 
-        } yield CreateStandoffResponseV1(userdata = userProfile.userData)
+        } yield CreateStandoffResponseV1(id = createValueResponse.id, userdata = userProfile.userData)
 
     }
 

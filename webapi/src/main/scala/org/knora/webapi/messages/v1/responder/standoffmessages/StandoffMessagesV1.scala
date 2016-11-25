@@ -31,17 +31,30 @@ import spray.json._
 import scala.collection.immutable.SortedSet
 
 
-
-
 /**
   * An abstract trait representing a Knora v1 API request message that can be sent to `StandoffResponderV1`.
   */
 sealed trait StandoffResponderRequestV1 extends KnoraRequestV1
 
+/**
+  * Represents a request to add a text value containing standoff to a resource.
+  *  A successful response will be an [[CreateStandoffResponseV1]].
+  *
+  * @param projectIri   the project in which the text value is to be added.
+  * @param resourceIri  the IRI of the resource to which the text value should be added.
+  * @param propertyIri  the IRI of the property that should receive the text value.
+  * @param xml          the xml representing the text with markup.
+  * @param userProfile  the profile of the user making the request.
+  * @param apiRequestID the ID of this API request.
+  */
 case class CreateStandoffRequestV1(projectIri: IRI, resourceIri: IRI, propertyIri: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID) extends StandoffResponderRequestV1
 
-
-case class CreateStandoffResponseV1(userdata: UserDataV1) extends KnoraResponseV1 {
+/**
+  *
+  * @param id       the Iri of the new text value.compile
+  * @param userdata information about the user that made the request.
+  */
+case class CreateStandoffResponseV1(id: IRI, userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = RepresentationV1JsonProtocol.createStandoffResponseV1Format.write(this)
 }
 
@@ -114,5 +127,5 @@ object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions
 
     import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
-    implicit val createStandoffResponseV1Format: RootJsonFormat[CreateStandoffResponseV1] = jsonFormat1(CreateStandoffResponseV1)
+    implicit val createStandoffResponseV1Format: RootJsonFormat[CreateStandoffResponseV1] = jsonFormat2(CreateStandoffResponseV1)
 }
