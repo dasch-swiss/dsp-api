@@ -821,7 +821,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "should filter full-text search results using permissions on resources and values" in {
+        "filter full-text search results using permissions on resources and values" in {
             // When the owner of the resource and its values, anythingUser1, searches for something that matches the resource's label
             // as well as both values, the search result should include the resource and show that both values matched.
 
@@ -854,7 +854,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // User anythingUser2 should also get the resource as a search result by searching for something that matches the resource's label, but not the values.
 
             actorUnderTest ! FulltextSearchGetRequestV1(
-                searchValue = "für wen",
+                searchValue = "für jemanden",
                 filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
                 userProfile = anythingUser2,
                 startAt = 0,
@@ -909,7 +909,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
             actorUnderTest ! FulltextSearchGetRequestV1(
-                searchValue = "für wen",
+                searchValue = "für jemanden",
                 filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
                 userProfile = incunabulaUser,
                 startAt = 0,
