@@ -2774,7 +2774,7 @@
 
 :User rdf:type owl:Class ;
 
-      rdfs:subClassOf foaf:Person ,
+      rdfs:subClassOf foaf:Agent ,
                       [ rdf:type owl:Restriction ;
                         owl:onProperty :familyName ;
                         owl:cardinality "1"^^xsd:nonNegativeInteger
