@@ -20,7 +20,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
-	rdfs:label "Ein Ding für wen, dem die Dinge gefallen" ;
+	rdfs:label "Ein Ding für jemanden, dem die Dinge gefallen" ;
 	anything:hasText <http://data.knora.org/a-thing-with-text-values/values/1> , <http://data.knora.org/a-thing-with-text-values/values/2> ;
 	knora-base:hasStandoffLinkTo <http://data.knora.org/a-thing> ;
 	knora-base:hasStandoffLinkToValue <http://data.knora.org/a-thing-with-text-values/values/0> ;

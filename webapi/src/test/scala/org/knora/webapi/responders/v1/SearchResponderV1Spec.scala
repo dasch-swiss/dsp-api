@@ -74,7 +74,7 @@ object SearchResponderV1Spec {
         preview_ny = 32,
         preview_nx = 32,
         value = Vector(
-            "Ein Ding f\u00FCr wen, dem die Dinge gefallen",
+            "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
             "Ich liebe die Dinge, sie sind alles f\u00FCr mich.",
             "Na ja, die Dinge sind OK."
         ),
@@ -100,7 +100,7 @@ object SearchResponderV1Spec {
         preview_ny = 32,
         preview_nx = 32,
         value = Vector(
-            "Ein Ding f\u00FCr wen, dem die Dinge gefallen",
+            "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
             "Ich liebe die Dinge, sie sind alles f\u00FCr mich."
         ),
         valuelabel = Vector(
@@ -122,7 +122,7 @@ object SearchResponderV1Spec {
         rights = Some(2),
         preview_ny = 32,
         preview_nx = 32,
-        value = Vector("Ein Ding f\u00FCr wen, dem die Dinge gefallen"),
+        value = Vector("Ein Ding f\u00FCr jemanden, dem die Dinge gefallen"),
         valuelabel = Vector("Label"),
         valuetype_id = Vector("http://www.w3.org/2000/01/rdf-schema#label"),
         iconlabel = Some("Ding"),

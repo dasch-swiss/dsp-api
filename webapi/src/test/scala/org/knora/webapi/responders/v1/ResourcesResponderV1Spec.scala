@@ -549,7 +549,7 @@ object ResourcesResponderV1Spec {
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
-                resourceLabel = "Ein Ding f\u00FCr wen, dem die Dinge gefallen",
+                resourceLabel = "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
                 resourceIri = "http://data.knora.org/a-thing-with-text-values"
             ),
             GraphNodeV1(
