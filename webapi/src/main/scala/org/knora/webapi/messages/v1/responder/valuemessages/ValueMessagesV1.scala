@@ -622,7 +622,7 @@ case class TextValueV1(utf8str: String,
                     standoffTag =>
 
                         val (resid, href) = if (standoffTag.dataType.isDefined && standoffTag.dataType.get == StandoffDataTypeClasses.StandoffLinkTag) {
-                            // It is a reference to a Knora resource, resid and href conain its Iri
+                            // It is a reference to a Knora resource, resid and href contain its Iri
                             val resRef = Some(standoffTag.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $standoffTag")).stringValue)
                             (resRef, resRef)
                         } else if (standoffTag.dataType.isDefined && standoffTag.dataType.get == StandoffDataTypeClasses.StandoffUriTag) {
