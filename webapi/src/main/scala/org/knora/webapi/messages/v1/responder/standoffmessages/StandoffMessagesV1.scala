@@ -87,6 +87,23 @@ object StandoffDataTypeClasses extends Enumeration {
 
 }
 
+/**
+  * Represents collections of standoff properties.
+  */
+object StandoffProperties {
+
+    // represents the standoff properties defined on the base standoff tag
+    val systemProperties = Set(
+        OntologyConstants.KnoraBase.StandoffTagHasStart,
+        OntologyConstants.KnoraBase.StandoffTagHasEnd,
+        OntologyConstants.KnoraBase.StandoffTagHasStartIndex,
+        OntologyConstants.KnoraBase.StandoffTagHasEndIndex,
+        OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex,
+        OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex,
+        OntologyConstants.KnoraBase.StandoffTagHasUUID
+    )
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 

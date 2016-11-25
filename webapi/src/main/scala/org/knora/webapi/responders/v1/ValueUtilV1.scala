@@ -26,14 +26,13 @@ import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffProperties
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
-import org.knora.webapi.twirl.StandoffTagV1
-import org.knora.webapi.util.InputValidation.TextattrV1
-import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
+import org.knora.webapi.twirl._
+import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation, ScalaPrettyPrinter}
 
-import scala.collection.immutable.Iterable
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -425,63 +424,72 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       */
     private def makeTextValue(valueProps: ValueProps): ApiValueV1 = {
 
-        // TODO: The ValueProps needs to contain an object from the ontology responder, containing all the rdfs:subClassOf relations between standoff tag classes and standoff datatype classes.
-        // The responder that uses ValueUtilV1 needs to get this information first from the ontology responder and put it in ValueProps.
-
-        /*val groupedByAttr: Map[TextattrV1.Value, Seq[StandoffPositionV1]] = valueProps.standoff.groupBy(row =>
-            // group by the enumeration name of the standoff tag IRI by converting the standoff tag IRI
-            // standoff lik and href tags have the same enumeration name, so the groupBy has to combine their standoff positions
-            TextattrV1.IriToEnumValue(row(OntologyConstants.Rdf.Type))
-        ).map {
-            case (tagName: TextattrV1.Value, standoffInfos: Seq[Map[String, String]]) =>
-
-                // we grouped by the attribute name, return it as the key of that Map
-                (tagName, standoffInfos.map {
-                    // for each attribute name, we may have several positions that have to be turned into a StandoffPositionV1
-
-                    case standoffInfo =>
-                        val maybeResId = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasLink)
-
-                        // If there's a resid, generate an href from it, because the SALSAH GUI expects this.
-                        // Otherwise, use the href returned by the query, if present.
-                        val maybeHref = if (maybeResId.nonEmpty) {
-                            maybeResId
-                        } else {
-                            standoffInfo.get(OntologyConstants.KnoraBase.ValueHasUri)
-                        }
-
-                        StandoffPositionV1(
-                            start = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
-                            end = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
-                            href = maybeHref,
-                            resid = maybeResId
-                        )
-                })
+        if (valueProps.standoffClassesWithDataType.isEmpty || valueProps.standoffAllPropertyEntities.isEmpty) {
+            throw NotFoundException(s"Ontology information about standoff entities is missing")
         }
-
-        // map over all _link attributes to collect IRIs that are referred to
-        val resids: Set[IRI] = groupedByAttr.get(TextattrV1.link) match {
-            case Some(links: Seq[StandoffPositionV1]) => InputValidation.getResourceIrisFromStandoffLinkTags(links)
-            case None => Set.empty[IRI]
-        }*/
-
-        //val groupedByStandoffClassIri: Map[String, Seq[Map[IRI, String]]] = valueProps.standoff.groupBy(_(OntologyConstants.Rdf.Type))
-
 
 
         val standoffTags: Seq[StandoffTagV1] = valueProps.standoff.map {
-            // TODO: get remaining props (and attributes) and data type!
-            standoffInfo =>
+
+            (standoffInfo: Map[IRI, String]) =>
+
+                // create a sequence of `StandoffTagAttributeV1` from the given attributes
+                val attributes: Seq[StandoffTagAttributeV1] =  (standoffInfo -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
+                    case (propIri, value) =>
+
+                        // check if the given property has an object type constraint (linking property) or an object data type constraint
+                        if (valueProps.standoffAllPropertyEntities(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint).isDefined) {
+
+                            // it is a linking property
+                            StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
+                        } else if (valueProps.standoffAllPropertyEntities(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint).isDefined) {
+
+                            // it is a data type property (literal)
+
+                            val propDataType = valueProps.standoffAllPropertyEntities(propIri).predicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
+
+                            propDataType.objects.headOption match {
+                                case Some(OntologyConstants.Xsd.String) =>
+                                    StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = value)
+
+                                case Some(OntologyConstants.Xsd.Integer) =>
+                                    StandoffTagIntegerAttributeV1(standoffPropertyIri = propIri, value = value.toInt)
+
+                                case Some(OntologyConstants.Xsd.Decimal) =>
+                                    StandoffTagDecimalAttributeV1(standoffPropertyIri = propIri, value = BigDecimal(value))
+
+                                case Some(OntologyConstants.Xsd.Boolean) =>
+                                    StandoffTagBooleanAttributeV1(standoffPropertyIri = propIri, value = value.toBoolean)
+
+                                case Some(OntologyConstants.Xsd.Uri) => StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
+
+                                case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $propIri")
+
+                                case other => throw InconsistentTriplestoreDataException(s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $propIri")
+
+                            }
+                        } else {
+                            throw InconsistentTriplestoreDataException(s"no object class or data type constraint found for property '$propIri'")
+                        }
+
+                }.toVector
+
                 StandoffTagV1(
                     standoffTagClassIri = standoffInfo(OntologyConstants.Rdf.Type),
                     startPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
-                    endPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt
+                    endPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
+                    dataType = valueProps.standoffClassesWithDataType.get(standoffInfo(OntologyConstants.Rdf.Type)) match {
+                        case Some(dataTypeClassEntityInfo: EntityInfoV1) =>
+                            dataTypeClassEntityInfo.dataType
+
+                        case None => None
+                    },
+                    attributes = attributes
                 )
 
         }
 
-        // TODO: get resource Iris
-        val resids = InputValidation.getResourceIrisFromStandoffTags(standoffTags)
+        val resIds = InputValidation.getResourceIrisFromStandoffTags(standoffTags)
 
         // If there's an empty string in the data (which does sometimes happen), the store package will remove it from
         // the query results. Therefore, if knora-base:valueHasString is missing, we interpret it as an empty string.
@@ -490,7 +498,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         TextValueV1(
             utf8str = valueHasString,
             textattr = standoffTags,
-            resource_reference = resids // TODO: collect res ids from linking standoff tags
+            resource_reference = resIds
         )
     }
 
@@ -641,7 +649,7 @@ object GroupedProps {
       * @param standoff                    Each Map in the List stands for one standoff node, its keys consist of standoff properties (e.g. http://www.knora.org/ontology/knora-base#standoffHasStart.
       * @param standoffClassesWithDataType The entity infos about standoff classes that are a subclass of a data type standoff class.
       */
-    case class ValueProps(literalData: Map[IRI, ValueLiterals], standoff: Seq[Map[IRI, String]] = Vector.empty[Map[IRI, String]], standoffClassesWithDataType: Map[IRI, StandoffClassEntityInfoV1] = Map.empty[IRI, StandoffClassEntityInfoV1])
+    case class ValueProps(literalData: Map[IRI, ValueLiterals], standoff: Seq[Map[IRI, String]] = Vector.empty[Map[IRI, String]], standoffClassesWithDataType: Map[IRI, StandoffClassEntityInfoV1] = Map.empty[IRI, StandoffClassEntityInfoV1], standoffAllPropertyEntities: Map[IRI, StandoffPropertyEntityInfoV1] = Map.empty[IRI, StandoffPropertyEntityInfoV1])
 
     /**
       * Represents the literal values of a property (e.g. a number or a string)

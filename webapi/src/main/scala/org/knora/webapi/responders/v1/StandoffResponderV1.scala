@@ -58,17 +58,6 @@ class StandoffResponderV1 extends ResponderV1 {
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
-    // represents the standoff properties defined on the base standoff tag
-    val systemStandoffProperties = Set(
-        OntologyConstants.KnoraBase.StandoffTagHasStart,
-        OntologyConstants.KnoraBase.StandoffTagHasEnd,
-        OntologyConstants.KnoraBase.StandoffTagHasStartIndex,
-        OntologyConstants.KnoraBase.StandoffTagHasEndIndex,
-        OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex,
-        OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex,
-        OntologyConstants.KnoraBase.StandoffTagHasUUID
-    )
-
     // represents the possible data types of a standoff class
     object dataTypes extends Enumeration {
         val date = Value(0, "date")
@@ -151,7 +140,7 @@ class StandoffResponderV1 extends ResponderV1 {
                     }
 
                     // check if the object datatype constraint is respected for the current property
-                    val propDataType = standoffPropertyEntities.standoffPropertyEntityInfoMap(standoffTagPropIri).predicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
+                    val propDataType = standoffPropertyEntities.standoffPropertyEntityInfoMap(standoffTagPropIri).predicates.getOrElse(OntologyConstants.KnoraBase.ObjectDatatypeConstraint, throw InconsistentTriplestoreDataException(s"no ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} given for property '$standoffTagPropIri'"))
 
                     propDataType.objects.headOption match {
                         case Some(OntologyConstants.Xsd.String) =>
@@ -308,7 +297,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                             val internalLink: StandoffTagAttributeV1 = StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = InputValidation.toIri(linkString, () => throw BadRequestException(s"Iri invalid: $linkString")))
 
-                            val classSpecificProps = cardinalities -- systemStandoffProperties -- Set(OntologyConstants.KnoraBase.StandoffTagHasLink)
+                            val classSpecificProps = cardinalities -- StandoffProperties.systemProperties -- Set(OntologyConstants.KnoraBase.StandoffTagHasLink)
 
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
@@ -331,7 +320,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                             val colorValue = StandoffTagStringAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasColor ,value = InputValidation.toColor(colorString, () => throw BadRequestException(s"Color invalid: $colorString")))
 
-                            val classSpecificProps = cardinalities -- systemStandoffProperties -- Set(OntologyConstants.KnoraBase.ValueHasColor)
+                            val classSpecificProps = cardinalities -- StandoffProperties.systemProperties -- Set(OntologyConstants.KnoraBase.ValueHasColor)
 
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
@@ -354,7 +343,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                             val uriValue = StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri, value = InputValidation.toIri(uriString, () => throw BadRequestException(s"Iri invalid: $uriString")))
 
-                            val classSpecificProps = cardinalities -- systemStandoffProperties -- Set(OntologyConstants.KnoraBase.ValueHasUri)
+                            val classSpecificProps = cardinalities -- StandoffProperties.systemProperties -- Set(OntologyConstants.KnoraBase.ValueHasUri)
 
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
@@ -378,7 +367,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                             val integerValue = StandoffTagIntegerAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasInteger, value = InputValidation.toInt(integerString, () => throw BadRequestException(s"Integer value invalid: $integerString")))
 
-                            val classSpecificProps = cardinalities -- systemStandoffProperties -- Set(OntologyConstants.KnoraBase.ValueHasInteger)
+                            val classSpecificProps = cardinalities -- StandoffProperties.systemProperties -- Set(OntologyConstants.KnoraBase.ValueHasInteger)
 
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
@@ -401,7 +390,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                             val decimalValue = StandoffTagDecimalAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasDecimal, value = InputValidation.toInt(decimalString, () => throw BadRequestException(s"Integer value invalid: $decimalString")))
 
-                            val classSpecificProps = cardinalities -- systemStandoffProperties -- Set(OntologyConstants.KnoraBase.ValueHasDecimal)
+                            val classSpecificProps = cardinalities -- StandoffProperties.systemProperties -- Set(OntologyConstants.KnoraBase.ValueHasDecimal)
 
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
@@ -424,7 +413,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                             val booleanValue = StandoffTagBooleanAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasBoolean, value = InputValidation.toBoolean(booleanString, () => throw BadRequestException(s"Integer value invalid: $booleanString")))
 
-                            val classSpecificProps = cardinalities -- systemStandoffProperties -- Set(OntologyConstants.KnoraBase.ValueHasBoolean)
+                            val classSpecificProps = cardinalities -- StandoffProperties.systemProperties -- Set(OntologyConstants.KnoraBase.ValueHasBoolean)
 
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
@@ -455,7 +444,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                             val intervalEnd = StandoffTagDecimalAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasIntervalEnd, value = InputValidation.toBigDecimal(interval(1), () => throw BadRequestException(s"Decimal value invalid: ${interval(1)}")))
 
-                            val classSpecificProps = cardinalities -- systemStandoffProperties -- Set(OntologyConstants.KnoraBase.ValueHasIntervalStart, OntologyConstants.KnoraBase.ValueHasIntervalEnd)
+                            val classSpecificProps = cardinalities -- StandoffProperties.systemProperties -- Set(OntologyConstants.KnoraBase.ValueHasIntervalStart, OntologyConstants.KnoraBase.ValueHasIntervalEnd)
 
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
@@ -488,7 +477,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                             val dateEndPrecision = StandoffTagStringAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasEndPrecision, value = dateValue.dateprecision2.toString)
 
-                            val classSpecificProps = cardinalities -- systemStandoffProperties -- Set(OntologyConstants.KnoraBase.ValueHasCalendar, OntologyConstants.KnoraBase.ValueHasStartJDC, OntologyConstants.KnoraBase.ValueHasEndJDC, OntologyConstants.KnoraBase.ValueHasStartPrecision, OntologyConstants.KnoraBase.ValueHasEndPrecision)
+                            val classSpecificProps = cardinalities -- StandoffProperties.systemProperties -- Set(OntologyConstants.KnoraBase.ValueHasCalendar, OntologyConstants.KnoraBase.ValueHasStartJDC, OntologyConstants.KnoraBase.ValueHasEndJDC, OntologyConstants.KnoraBase.ValueHasStartPrecision, OntologyConstants.KnoraBase.ValueHasEndPrecision)
 
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 
@@ -508,7 +497,7 @@ class StandoffResponderV1 extends ResponderV1 {
                         case None =>
 
                             // ignore the system properties since they are provided by StandoffUtil
-                            val classSpecificProps: Map[IRI, Cardinality.Value] = cardinalities -- systemStandoffProperties
+                            val classSpecificProps: Map[IRI, Cardinality.Value] = cardinalities -- StandoffProperties.systemProperties
 
                             val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, standoffNodeFromXML, standoffPropertyEntities)
 

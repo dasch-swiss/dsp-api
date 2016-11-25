@@ -65,6 +65,7 @@ object OntologyConstants {
         val Boolean = "http://www.w3.org/2001/XMLSchema#boolean"
         val Integer = "http://www.w3.org/2001/XMLSchema#integer"
         val Decimal = "http://www.w3.org/2001/XMLSchema#decimal"
+        val Uri = "http://www.w3.org/2001/XMLSchema#anyURI"
     }
 
     object KnoraBase {

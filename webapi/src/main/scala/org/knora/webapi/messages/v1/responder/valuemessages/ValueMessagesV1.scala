@@ -29,6 +29,7 @@ import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, KnoraIdUtil}
 import org.knora.webapi.{BadRequestException, _}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.InputValidation.TextattrV1
 import spray.json._
@@ -611,19 +612,33 @@ case class TextValueV1(utf8str: String,
         // Convert textattr to JSON by mapping over it rather than using spray-json's built-in support for collections,
         // because otherwise StandoffPositionV1JsonFormat is not necessarily compiled before this class, and spray-json
         // says it can't find a formatter for StandoffPositionV1.
-        /*val textattrAsJsValue = JsObject(textattr.map {
-            case (attrName, positionList) => (attrName.toString, JsArray(positionList.map(_.toJsValue).toVector))
-        })*/
 
-        val standoffTagsGroupedByClassIri: Map[IRI, Seq[StandoffTagV1]] = textattr.groupBy(_.standoffTagClassIri)
+        // Group by JSON format attribute name and not by Iri because _link used both for resource references and hyperlinks.
+        val standoffTagsGroupedByClassIri: Map[IRI, Seq[StandoffTagV1]] = textattr.groupBy((row: StandoffTagV1) => TextattrV1.IriToEnumValue(row.standoffTagClassIri).toString)
 
         val textattrAsJsValue = JsObject(standoffTagsGroupedByClassIri.map {
-            case (standoffClassIri, standoffTags: Seq[StandoffTagV1]) =>
-                (TextattrV1.IriToEnumValue(standoffClassIri).toString, JsArray(standoffTags.map {
+            case (attrName, standoffTags: Seq[StandoffTagV1]) =>
+                (attrName, JsArray(standoffTags.map {
                     standoffTag =>
-                        StandoffPositionV1( // TODO: check for linking tags and hrefs
+
+                        val (resid, href) = if (standoffTag.dataType.isDefined && standoffTag.dataType.get == StandoffDataTypeClasses.StandoffLinkTag) {
+                            // It is a reference to a Knora resource, resid and href conain its Iri
+                            val resRef = Some(standoffTag.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $standoffTag")).stringValue)
+                            (resRef, resRef)
+                        } else if (standoffTag.dataType.isDefined && standoffTag.dataType.get == StandoffDataTypeClasses.StandoffUriTag) {
+                            // it is a hyperlink, only href is given
+                            val urlRef = Some(standoffTag.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasUri).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.ValueHasUri} was not found in $standoffTag")).stringValue)
+                            (None, urlRef)
+                        } else {
+                            // it is not a link
+                            (None, None)
+                        }
+
+                        StandoffPositionV1(
                             start = standoffTag.startPosition,
-                            end = standoffTag.endPosition
+                            end = standoffTag.endPosition,
+                            resid = resid,
+                            href = href
                         ).toJsValue
                 }.toVector))
         })

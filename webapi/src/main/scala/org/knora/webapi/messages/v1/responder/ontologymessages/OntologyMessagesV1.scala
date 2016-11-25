@@ -106,6 +106,21 @@ case class StandoffClassesWithDataTypeGetRequestV1(userProfile: UserProfileV1) e
   */
 case class StandoffClassesWithDataTypeGetResponseV1(standoffClassEntityInfoMap: Map[IRI, StandoffClassEntityInfoV1])
 
+/**
+  * Requests information about all standoff property entities. A successful response will be an
+  * [[StandoffAllPropertyEntitiesGetResponseV1]].
+  *
+  * @param userProfile       the profile of the user making the request.
+  */
+case class StandoffAllPropertyEntitiesGetRequestV1(userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
+
+/**
+  * Represents assertions about all standoff all standoff property entities.
+  *
+  * @param standoffAllPropertiesEntityInfoMap a [[Map]] of resource entity IRIs to [[StandoffPropertyEntityInfoV1]] objects.
+  */
+case class StandoffAllPropertyEntitiesGetResponseV1(standoffAllPropertiesEntityInfoMap: Map[IRI, StandoffPropertyEntityInfoV1])
 
 
 /**

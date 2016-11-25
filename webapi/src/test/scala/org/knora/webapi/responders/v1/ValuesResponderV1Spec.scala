@@ -28,6 +28,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
@@ -184,38 +185,12 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
     }
 
     private def checkTextValue(expected: TextValueV1, received: TextValueV1): Unit = {
-        /*def orderPositions(left: StandoffPositionV1, right: StandoffPositionV1): Boolean = {
-            if (left.start != right.start) {
-                left.start < right.start
-            } else {
-                left.end < right.end
-            }
-        }*/
 
         assert(received.utf8str == expected.utf8str)
         assert(received.resource_reference == expected.resource_reference)
         assert(received.textattr.map(_.standoffTagClassIri).sorted == expected.textattr.map(_.standoffTagClassIri).sorted)
         assert(received.textattr.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)) == expected.textattr.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)))
 
-        // TODO: compare the start and end positions
-
-        /*for (standoffNode <- expected.textattr) {
-            val expectedPositions = expected.textattr(standoffNode).sortWith(orderPositions)
-            val receivedPositions = received.textattr(standoffNode).sortWith(orderPositions)
-
-            assert(receivedPositions.length == expectedPositions.length)
-
-            for ((receivedPosition, expectedPosition) <- receivedPositions.zip(expectedPositions)) {
-                assert(receivedPosition.start == expectedPosition.start)
-                assert(receivedPosition.end == expectedPosition.end)
-
-                assert(receivedPosition.resid == expectedPosition.resid)
-
-                if (expectedPosition.resid.isEmpty) {
-                    assert(receivedPosition.href == expectedPosition.href)
-                }
-            }
-        }*/
     }
 
     private def getLastModificationDate(resourceIri: IRI): Option[String] = {
@@ -724,6 +699,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 utf8str = "This comment refers to another resource",
                 textattr = Vector(
                     StandoffTagV1(
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                         startPosition = 31,
                         endPosition = 39,
@@ -797,12 +773,14 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 utf8str = "This updated comment refers to another resource",
                 textattr = Vector(
                         StandoffTagV1(
+                            dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                             standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                             startPosition = 39,
                             endPosition = 47,
                             attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri))
                         ),
                         StandoffTagV1(
+                            dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                             standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                             startPosition = 0,
                             endPosition = 4,
@@ -872,6 +850,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 utf8str = "This remark refers to another resource",
                 textattr = Vector(
                     StandoffTagV1(
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                         startPosition = 30,
                         endPosition = 38,
@@ -1067,6 +1046,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 utf8str = "This updated comment refers again to another resource",
                 textattr = Vector(
                     StandoffTagV1(
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                         startPosition = 45,
                         endPosition = 53,

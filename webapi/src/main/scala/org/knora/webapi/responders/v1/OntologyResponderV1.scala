@@ -94,6 +94,7 @@ class OntologyResponderV1 extends ResponderV1 {
         case PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile) => future2Message(sender(), getPropertyTypesForResourceType(restypeId, userProfile), log)
         case StandoffEntityInfoGetRequestV1(standoffClassIris, standoffPropertyIris, userProfile) => future2Message(sender(), getStandoffEntityInfoResponseV1(standoffClassIris, standoffPropertyIris, userProfile), log)
         case StandoffClassesWithDataTypeGetRequestV1(userProfile) => future2Message(sender(), getStandoffStandoffClassesWithDataTypeV1(userProfile), log)
+        case StandoffAllPropertyEntitiesGetRequestV1(userProfile) => future2Message(sender(), getAllStandoffPropertyEntities(userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -715,11 +716,32 @@ class OntologyResponderV1 extends ResponderV1 {
         } yield response
     }
 
+    /**
+      * Gets information about all standoff classes that are a subclass of a data type standoff class.
+      *
+      * @param userProfile the profile of the user making the request.
+      * @return a [[StandoffClassesWithDataTypeGetResponseV1]]
+      */
     private def getStandoffStandoffClassesWithDataTypeV1(userProfile: UserProfileV1): Future[StandoffClassesWithDataTypeGetResponseV1] = {
         for {
             cacheData <- getCacheData
             response = StandoffClassesWithDataTypeGetResponseV1(
                 standoffClassEntityInfoMap = cacheData.standoffClassDefsWithDataType
+            )
+        } yield response
+    }
+
+    /**
+      * Gets all standoff property entities.
+      *
+      * @param userProfile the profile of the user making the request.
+      * @return a [[StandoffAllPropertyEntitiesGetResponseV1]].
+      */
+    private def getAllStandoffPropertyEntities(userProfile: UserProfileV1): Future[StandoffAllPropertyEntitiesGetResponseV1] = {
+        for {
+            cacheData <- getCacheData
+            response = StandoffAllPropertyEntitiesGetResponseV1(
+                standoffAllPropertiesEntityInfoMap = cacheData.standoffPropertyDefs
             )
         } yield response
     }

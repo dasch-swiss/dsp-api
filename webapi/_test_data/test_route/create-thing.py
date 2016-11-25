@@ -10,11 +10,32 @@ try:
     base_url = "http://localhost/v1/"
 
     params = {
+        "_link": [{
+            "start": 0,
+            "end": 4,
+            "resid": "http://data.knora.org/9935159f67",
+            "href": "http://data.knora.org/9935159f67"
+        },{
+            "start": 5,
+            "end": 7,
+            "href": "http://www.google.ch"
+        }],
+        "bold": [{
+            "start": 9,
+            "end": 11
+        },
+        {
+            "start": 16,
+            "end": 18
+        }]
+    }
+
+    params = {
        "restype_id": "http://www.knora.org/ontology/anything#Thing",
-       "label": "A thing",
+       "label": "A thing to test with",
        "project_id": "http://data.knora.org/projects/anything",
        "properties": {
-            "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":json.dumps({}),"resource_reference" :[],"utf8str":"Test text"}}],
+            "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":json.dumps(params),"resource_reference" :["http://data.knora.org/9935159f67"],"utf8str":"This is a text to test with"}}],
             "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}]
        }
     }
