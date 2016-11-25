@@ -275,7 +275,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             firstRowMap = rows.head.rowMap
 
-            startNode = QueryResultNode(
+            startNode: QueryResultNode = QueryResultNode(
                 nodeIri = firstRowMap("node"),
                 nodeClass = firstRowMap("nodeClass"),
                 nodeLabel = firstRowMap("nodeLabel"),
@@ -311,8 +311,8 @@ class ResourcesResponderV1 extends ResponderV1 {
             )
 
             // Combine the outbound and inbound graphs into a single graph.
-            nodes = outboundQueryResults.nodes ++ inboundQueryResults.nodes
-            edges = outboundQueryResults.edges ++ inboundQueryResults.edges
+            nodes: Set[QueryResultNode] = outboundQueryResults.nodes ++ inboundQueryResults.nodes + startNode
+            edges: Set[QueryResultEdge] = outboundQueryResults.edges ++ inboundQueryResults.edges
 
             // Get the labels of the resource classes and properties from the ontology responder.
 

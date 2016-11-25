@@ -194,10 +194,6 @@ object ResourcesResponderV1Spec {
         resinfo = ResourceInfoV1(
             regions = None,
             firstproperty = Some("A thing that only project members can see"),
-            value_of = 0,
-            lastmod = "0000-00-00 00:00:00",
-            resclass_has_location = false,
-            resclass_name = "object",
             locdata = None,
             locations = None,
             preview = None,
@@ -220,10 +216,6 @@ object ResourcesResponderV1Spec {
         resinfo = ResourceInfoV1(
             regions = None,
             firstproperty = Some("A thing that only project members can see"),
-            value_of = 0,
-            lastmod = "0000-00-00 00:00:00",
-            resclass_has_location = false,
-            resclass_name = "object",
             locdata = None,
             locations = None,
             preview = None,
@@ -259,11 +251,9 @@ object ResourcesResponderV1Spec {
         occurrence = Some("0-n"),
         attributes = "restypeid=http://www.knora.org/ontology/anything#Thing",
         label = Some("Ein anderes Ding"),
-        is_annotation = "0",
         guielement = Some("searchbox"),
         guiorder = Some(1),
         valuetype_id = Some("http://www.knora.org/ontology/knora-base#LinkValue"),
-        regular_property = 1,
         pid = "http://www.knora.org/ontology/anything#hasOtherThing"
     )
 
@@ -285,11 +275,9 @@ object ResourcesResponderV1Spec {
         occurrence = Some("0-n"),
         attributes = "restypeid=http://www.knora.org/ontology/knora-base#Resource",
         label = Some("hat Standoff Link zu"),
-        is_annotation = "0",
         guielement = None,
         guiorder = None,
         valuetype_id = Some("http://www.knora.org/ontology/knora-base#LinkValue"),
-        regular_property = 1,
         pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
     )
 
@@ -547,6 +535,41 @@ object ResourcesResponderV1Spec {
                 resourceIri = "http://data.knora.org/A67ka6UQRHWf313tbhQBjw"
             )
         )
+    )
+
+    private val graphWithStandoffLink = GraphDataGetResponseV1(
+        userdata = anythingUser1.userData,
+        edges = Vector(GraphEdgeV1(
+            propertyLabel = "hat Standoff Link zu",
+            propertyIri = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
+            target = "http://data.knora.org/a-thing",
+            source = "http://data.knora.org/a-thing-with-text-values"
+        )),
+        nodes = Vector(
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Ein Ding f\u00FCr wen, dem die Dinge gefallen",
+                resourceIri = "http://data.knora.org/a-thing-with-text-values"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "A thing",
+                resourceIri = "http://data.knora.org/a-thing"
+            )
+        )
+    )
+
+    private val graphWithOneNode = GraphDataGetResponseV1(
+        userdata = anythingUser1.userData,
+        edges = Nil,
+        nodes = Vector(GraphNodeV1(
+            resourceClassLabel = "Ding",
+            resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+            resourceLabel = "Another thing",
+            resourceIri = "http://data.knora.org/another-thing"
+        ))
     )
 }
 
@@ -1384,6 +1407,30 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: GraphDataGetResponseV1 => response should ===(graphForIncunabulaUser)
+            }
+        }
+
+        "return a graph containing a standoff link" in {
+            actorUnderTest ! GraphDataGetRequestV1(
+                resourceIri = "http://data.knora.org/a-thing",
+                depth = 4,
+                userProfile = anythingUser1
+            )
+
+            expectMsgPF(timeout) {
+                case response: GraphDataGetResponseV1 => response should===(graphWithStandoffLink)
+            }
+        }
+
+        "return a graph containing just one node" in {
+            actorUnderTest ! GraphDataGetRequestV1(
+                resourceIri = "http://data.knora.org/another-thing",
+                depth = 4,
+                userProfile = anythingUser1
+            )
+
+            expectMsgPF(timeout) {
+                case response: GraphDataGetResponseV1 => response should===(graphWithOneNode)
             }
         }
     }

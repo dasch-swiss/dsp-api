@@ -143,8 +143,11 @@ WHERE {
             ?node knora-base:hasPermissions ?nodePermissions .
         }
 
-        ?linkValue knora-base:attachedToUser ?linkValueOwner ;
-            knora-base:hasPermissions ?linkValuePermissions .
+        ?linkValue knora-base:attachedToUser ?linkValueOwner .
+
+        OPTIONAL {
+            ?linkValue knora-base:hasPermissions ?linkValuePermissions .
+        }
 
         OPTIONAL {
             ?linkValue knora-base:attachedToProject ?linkValueProject .
