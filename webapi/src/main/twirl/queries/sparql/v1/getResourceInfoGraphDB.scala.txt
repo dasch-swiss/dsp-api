@@ -1,0 +1,98 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Gets all the properties of a resource, along with the properties of its file values, but not
+ * including subproperties of knora-base:hasValue.
+ *
+ * This template is used only by getResourceInfo.scala.txt.
+ *
+ * Since the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
+ * SPARQL. Specifically, we use inference to return search results matching subproperties of Knora base properties
+ * such as knora-base:hasFileValue. Without inference, we have to do this using SPARQL property path syntax
+ * (rdfs:subPropertyOf*). Using inference requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit>
+ * whenever we need to get explicit (non-inferred) statements.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param resourceIri the IRI of the resource to be queried.
+ *@
+@(resourceIri: IRI)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?prop ?obj ?isFileValue ?objPred ?objObj
+WHERE {
+    BIND(IRI("@resourceIri") AS ?resource)
+
+    ?resource rdf:type knora-base:Resource ;
+        knora-base:isDeleted false .
+
+    {
+        @* Query statements about the resource's file values. *@
+
+        ?resource knora-base:hasFileValue ?obj .
+
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?resource ?prop ?obj .
+        }
+
+        BIND(true AS ?isFileValue)
+
+        @* Get the file value's project if it has one, otherwise use the resource's project. *@
+
+        {
+            ?obj knora-base:isDeleted false .
+
+            GRAPH <http://www.ontotext.com/explicit> {
+                ?obj ?objPred ?objObj .
+            }
+
+            FILTER(?objPred != knora-base:attachedToProject)
+        }
+        UNION
+        {
+            ?obj knora-base:isDeleted false .
+            ?resource knora-base:attachedToProject ?resourceProject .
+
+            OPTIONAL {
+                ?obj knora-base:attachedToProject ?valueProject .
+            }
+
+            BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+            BIND(knora-base:attachedToProject AS ?objPred)
+        }
+    }
+    UNION
+    {
+        @* Query other statements about the resource. *@
+
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?resource ?prop ?obj .
+        }
+
+        FILTER NOT EXISTS {
+            ?resource knora-base:resourceProperty ?obj .
+        }
+    }
+}

@@ -22,7 +22,9 @@
 
 @**
  * Gets all the properties of a resource, along with the properties of its file values, but not
- * including subproperties of knora-base:hasValue.
+ * including subproperties of knora-base:hasValue. If the triplestore type is GraphDB, delegates to
+ * getResourceInfoGraphDB.sparql.txt, which is optimised for GraphDB. Otherwise, delegates to
+ * getResourcePropertiesInfoStandard.sparql.txt.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource to be queried.
@@ -30,65 +32,13 @@
 @(triplestore: String,
   resourceIri: IRI)
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
-
-SELECT ?prop ?obj ?isFileValue ?objPred ?objObj
-@* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
-WHERE {
-    BIND(IRI("@resourceIri") AS ?resource)
-
-    ?resource rdf:type ?resourceClass ;
-        knora-base:isDeleted false .
-
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
-
-    {
-        @* Query statements about the resource's file values. *@
-
-        ?prop rdfs:subPropertyOf+ knora-base:hasFileValue .
-        BIND(true AS ?isFileValue)
-
-        @* Get the file value's project if it has one, otherwise use the resource's project. *@
-
-        {
-            ?resource ?prop ?obj .
-            ?obj knora-base:isDeleted false .
-            ?obj ?objPred ?objObj .
-            FILTER(?objPred != knora-base:attachedToProject)
-        }
-        UNION
-        {
-            ?resource ?prop ?obj .
-            ?obj knora-base:isDeleted false .
-            ?resource knora-base:attachedToProject ?resourceProject .
-
-            OPTIONAL {
-                ?obj knora-base:attachedToProject ?valueProject .
-            }
-
-            BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
-            BIND(knora-base:attachedToProject AS ?objPred)
-        }
+    @{
+        queries.sparql.v1.txt.getResourceInfoGraphDB(resourceIri = resourceIri)
     }
-    UNION
-    {
-        @* Query other statements about the resource. *@
-
-        ?resource ?prop ?obj .
-
-        @* Here FILTER NOT EXISTS is more efficient than MINUS on Fuseki, but it returns different results on GraphDB. *@
-        @if(triplestore == "fuseki") {
-            FILTER NOT EXISTS
-        } else {
-            MINUS
-        }
-            {
-                ?prop rdfs:subPropertyOf+ knora-base:hasValue .
-            }
+} else {
+    @{
+        queries.sparql.v1.txt.getResourceInfoStandard(triplestore = triplestore,
+                                                      resourceIri = resourceIri)
     }
 }
