@@ -1,0 +1,120 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Gets the values of all the Knora properties of a resource that have values.
+ *
+ * Since the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
+ * SPARQL. Specifically, we use inference to return search results matching subproperties of Knora base properties
+ * such as knora-base:hasValue. Without inference, we have to do this using SPARQL property path syntax
+ * (rdfs:subPropertyOf*). Using inference requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit>
+ * whenever we need to get explicit (non-inferred) statements.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param resourceIri the IRI of the resource to be queried.
+ *@
+@(resourceIri: IRI)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?prop ?isLinkProp ?isLinkValueProp ?obj ?objPred ?objObj ?predStandoff ?objStandoff
+WHERE {
+    BIND(IRI("@resourceIri") as ?resource)
+
+    ?resource rdf:type knora-base:Resource ;
+        knora-base:isDeleted false ;
+        knora-base:attachedToProject ?resourceProject .
+
+    {
+        @* Get properties that point to Value objects. *@
+        ?resource knora-base:hasValue ?obj .
+
+        @* Exclude FileValue objects, because if the resource is a representation, we get its file values with its resource info. *@
+        FILTER NOT EXISTS {
+            ?resource knora-base:hasFileValue ?obj .
+        }
+
+        @* Identify properties that point to LinkValue objects. *@
+        OPTIONAL {
+            ?resource knora-base:hasLinkToValue ?obj .
+
+            BIND(true as ?isLinkValueProp)
+        }
+
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?resource ?prop ?obj .
+        }
+
+        {
+            ?obj knora-base:isDeleted false .
+
+            @* Get the value's project if it has one, otherwise use the project of the containing resource. *@
+
+            ?resource knora-base:attachedToProject ?resourceProject .
+
+            OPTIONAL {
+                ?obj knora-base:attachedToProject ?valueProject .
+            }
+
+            BIND(knora-base:attachedToProject AS ?objPred)
+        	BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+        }
+        UNION
+        {
+            @* Get the value's standoff markup nodes if it has any. *@
+
+            GRAPH <http://www.ontotext.com/explicit> {
+                ?obj knora-base:isDeleted false .
+                ?obj a knora-base:TextValue .
+                BIND(knora-base:valueHasStandoff AS ?objPred)
+                ?obj ?objPred ?objObj .
+                ?objObj ?predStandoff ?objStandoff .
+            }
+        }
+        UNION
+        {
+            @* Get any other statements about the value. *@
+
+            GRAPH <http://www.ontotext.com/explicit> {
+                ?obj knora-base:isDeleted false .
+                ?obj ?objPred ?objObj .
+
+                FILTER(!(?objPred = knora-base:attachedToProject || ?objPred = knora-base:valueHasStandoff))
+            }
+        }
+    }
+    UNION
+    {
+        @* Get link properties, i.e. properties that point to other Resource objects. *@
+
+        ?resource knora-base:hasLinkTo ?obj .
+        BIND(true AS ?isLinkProp)
+
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?resource ?prop ?obj .
+            ?obj knora-base:isDeleted false .
+            ?obj ?objPred ?objObj .
+        }
+    }
+}
