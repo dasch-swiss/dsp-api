@@ -262,8 +262,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 iconlabel = Some("Buch"),
                 icontitle = Some("Buch"),
-                iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
-                preview_path = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
+                iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
+                preview_path = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
                 obj_id = "http://data.knora.org/c5058f3a"
             ),
             SearchResultRowV1(
@@ -284,8 +284,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 iconlabel = Some("Buch"),
                 icontitle = Some("Buch"),
-                iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
-                preview_path = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
+                iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
+                preview_path = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
                 obj_id = "http://data.knora.org/ff17e5ef9601"
             )
         ),
