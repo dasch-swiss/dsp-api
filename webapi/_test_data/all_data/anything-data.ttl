@@ -221,8 +221,8 @@
 
 <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> a knora-base:User ;
 	knora-base:userid "anything-user" ;
-	foaf:givenName "Anything" ;
-	foaf:familyName "User01" ;
+	knora-base:givenName "Anything" ;
+	knora-base:familyName "User01" ;
 	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 	knora-base:email "anything.user01@example.org" ;
 	knora-base:preferredLanguage "de" ;
@@ -230,8 +230,8 @@
 
 <http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ> a knora-base:User ;
 	knora-base:userid "anything-user-2" ;
-	foaf:givenName "Anything" ;
-	foaf:familyName "User02" ;
+	knora-base:givenName "Anything" ;
+	knora-base:familyName "User02" ;
 	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 	knora-base:email "anything.user02@example.org" ;
 	knora-base:preferredLanguage "de" ;

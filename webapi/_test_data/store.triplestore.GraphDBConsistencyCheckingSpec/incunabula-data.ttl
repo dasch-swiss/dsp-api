@@ -8,31 +8,62 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix incunabula: <http://www.knora.org/ontology/incunabula#> .
-# ## ###########################################
-# ## <http://data.knora.org/projects/77275339>
 
-<http://data.knora.org/projects/77275339> a knora-base:knoraProject ;
-	knora-base:projectBasepath "/path/Incunabula" ;
-	knora-base:projectLongname "Bilderfolgen Basler Frühdrucke" ;
-	knora-base:projectShortname "incunabula" ;
-	knora-base:projectDescription """<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.
-</p>
-<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler). 
-</p>
-<p>
-Das Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.
-</p>
-Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.
-</p>""" ;
-	knora-base:projectKeyword "Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images" ;
-	knora-base:projectLogo "incunabula_logo.png" .
-# #########################################################
-# 
-#  RESOURCES
-# 
-# #########################################################
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a>
+<http://data.knora.org/482a33d65c36> a incunabula:Sideband ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" ;
+	incunabula:sbTitle <http://data.knora.org/482a33d65c36/values/25279d8dcd8e01> ;
+	incunabula:description <http://data.knora.org/482a33d65c36/values/a4167701aa4d03> ;
+	rdfs:label "l_1a" ;
+	knora-base:hasStillImageFileValue <http://data.knora.org/482a33d65c36/reps/ed80ada52b2a> , <http://data.knora.org/482a33d65c36/reps/aca600df2b2a> ;
+	knora-base:creationDate "2016-03-02T15:05:55Z"^^xsd:dateTimeStamp .
+
+<http://data.knora.org/482a33d65c36/reps/aca600df2b2a> a knora-base:StillImageFileValue ;
+	knora-base:valueHasString "l1a.tiff" ;
+	knora-base:originalFilename "l1a.tiff" ;
+	knora-base:originalMimeType "image/tiff" ;
+	knora-base:internalFilename "incunabula_0000060840.jp2" ;
+	knora-base:internalMimeType "image/jp2" ;
+	knora-base:valueCreationDate "2015-05-19T22:39:12Z"^^xsd:dateTimeStamp ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:dimX 328 ;
+	knora-base:dimY 4240 ;
+	knora-base:qualityLevel 100 ;
+	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
+
+<http://data.knora.org/482a33d65c36/reps/ed80ada52b2a> a knora-base:StillImageFileValue ;
+	knora-base:valueHasString "l1a.tiff" ;
+	knora-base:originalFilename "l1a.tiff" ;
+	knora-base:originalMimeType "image/tiff" ;
+	knora-base:internalFilename "incunabula_0000060840.jpg" ;
+	knora-base:internalMimeType "image/jpeg" ;
+	knora-base:valueCreationDate "2015-05-19T22:39:12Z"^^xsd:dateTimeStamp ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:dimX 9 ;
+	knora-base:dimY 128 ;
+	knora-base:qualityLevel 10 ;
+	knora-base:isPreview true ;
+	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
+
+<http://data.knora.org/482a33d65c36/values/25279d8dcd8e01> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:valueHasString "l_1a" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2016-03-02T15:05:55Z"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "V knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
+
+<http://data.knora.org/482a33d65c36/values/a4167701aa4d03> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:valueHasString "213610" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2016-03-02T15:05:55Z"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "V knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
 
 <http://data.knora.org/c5058f3a> a incunabula:book ;
 	knora-base:isDeleted false ;
@@ -50,41 +81,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	incunabula:citation <http://data.knora.org/c5058f3a/values/184e99ca01> , <http://data.knora.org/c5058f3a/values/db77ec0302> , <http://data.knora.org/c5058f3a/values/9ea13f3d02> ;
 	rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/c3295339>
-
-<http://data.knora.org/c5058f3a/values/c3295339> a knora-base:TextValue ;
-	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:valueHasOrder 0 ;
-	knora-base:valueHasString "Zeitglöcklein des Lebens und Leidens Christi" ;
-	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:Owner|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/8653a672>
-
-<http://data.knora.org/c5058f3a/values/8653a672> a knora-base:TextValue ;
-	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:valueHasOrder 0 ;
-	knora-base:valueHasString "Berthold, der Bruder" ;
-	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/497df9ab>
-
-<http://data.knora.org/c5058f3a/values/497df9ab> a knora-base:TextValue ;
-	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:valueHasOrder 0 ;
-	knora-base:valueHasString "Johann Amerbach" ;
-	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/0ca74ce5>
 
 <http://data.knora.org/c5058f3a/values/0ca74ce5> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -94,35 +90,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:valueHasString "Basel" ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:ProjectMember,knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/cfd09f1e01>
-
-<http://data.knora.org/c5058f3a/values/cfd09f1e01> a knora-base:DateValue ;
-	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:valueHasOrder 0 ;
-	knora-base:valueHasString "1492-01-01 - 1492-12-31" ;
-	knora-base:valueHasCalendar "JULIAN" ;
-	knora-base:valueHasStartJDC 2266011 ;
-	knora-base:valueHasStartPrecision "YEAR" ;
-	knora-base:valueHasEndJDC 2266376 ;
-	knora-base:valueHasEndPrecision "YEAR" ;
-	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/92faf25701>
-
-<http://data.knora.org/c5058f3a/values/92faf25701> a knora-base:TextValue ;
-	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:valueHasOrder 0 ;
-	knora-base:valueHasString "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167" ;
-	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/10e00c7acc2704>
 
 <http://data.knora.org/c5058f3a/values/10e00c7acc2704> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -132,19 +99,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:valueHasString "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1" ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/5524469101>
-
-<http://data.knora.org/c5058f3a/values/5524469101> a knora-base:TextValue ;
-	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:valueHasOrder 0 ;
-	knora-base:valueHasString "Dimension: 8°" ;
-	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/184e99ca01>
 
 <http://data.knora.org/c5058f3a/values/184e99ca01> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -154,19 +108,42 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:valueHasString "Schramm Bd. XXI, S. 27" ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/db77ec0302>
 
-<http://data.knora.org/c5058f3a/values/db77ec0302> a knora-base:TextValue ;
+<http://data.knora.org/c5058f3a/values/497df9ab> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:valueHasOrder 1 ;
-	knora-base:valueHasString "GW 4168" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueHasString "Johann Amerbach" ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/9ea13f3d02>
+
+<http://data.knora.org/c5058f3a/values/5524469101> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueHasString "Dimension: 8°" ;
+	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
+
+<http://data.knora.org/c5058f3a/values/8653a672> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueHasString "Berthold, der Bruder" ;
+	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
+
+<http://data.knora.org/c5058f3a/values/92faf25701> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueHasString "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167" ;
+	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
 
 <http://data.knora.org/c5058f3a/values/9ea13f3d02> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -176,96 +153,69 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:valueHasString "ISTC ib00512000" ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/482a33d65c36>
 
-<http://data.knora.org/482a33d65c36> a incunabula:Sideband ;
+<http://data.knora.org/c5058f3a/values/c3295339> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" ;
-	incunabula:sbTitle <http://data.knora.org/482a33d65c36/values/25279d8dcd8e01> ;
-	incunabula:description <http://data.knora.org/482a33d65c36/values/a4167701aa4d03> ;
-	rdfs:label "l_1a" ;
-	knora-base:hasStillImageFileValue <http://data.knora.org/482a33d65c36/reps/ed80ada52b2a> , <http://data.knora.org/482a33d65c36/reps/aca600df2b2a> ;
-	knora-base:creationDate "2016-03-02T15:05:55Z"^^xsd:dateTimeStamp .
-# ## ###########################################
-# ## <http://data.knora.org/482a33d65c36/values/25279d8dcd8e01>
-
-<http://data.knora.org/482a33d65c36/values/25279d8dcd8e01> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
-	knora-base:valueHasString "l_1a" ;
 	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2016-03-02T15:05:55Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/482a33d65c36/values/a4167701aa4d03>
+	knora-base:valueHasString "Zeitglöcklein des Lebens und Leidens Christi" ;
+	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:Owner|D knora-base:Owner" .
 
-<http://data.knora.org/482a33d65c36/values/a4167701aa4d03> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
-	knora-base:valueHasString "213610" ;
+<http://data.knora.org/c5058f3a/values/cfd09f1e01> a knora-base:DateValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2016-03-02T15:05:55Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/482a33d65c36/reps/ed80ada52b2a>
-
-<http://data.knora.org/482a33d65c36/reps/ed80ada52b2a> knora-base:valueHasString "l1a.tiff" ;
-	knora-base:originalFilename "l1a.tiff" ;
-	knora-base:originalMimeType "image/tiff" ;
-	knora-base:internalFilename "incunabula_0000060840.jpg" ;
-	knora-base:internalMimeType "image/jpeg" ;
-	knora-base:valueCreationDate "2015-05-19T22:39:12Z"^^xsd:dateTimeStamp ;
-	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
-	a knora-base:StillImageFileValue ;
-	knora-base:dimX 9 ;
-	knora-base:dimY 128 ;
-	knora-base:qualityLevel 10 ;
-	knora-base:isPreview true ;
+	knora-base:valueHasString "1492-01-01 - 1492-12-31" ;
+	knora-base:valueHasCalendar "JULIAN" ;
+	knora-base:valueHasStartJDN 2266011 ;
+	knora-base:valueHasStartPrecision "YEAR" ;
+	knora-base:valueHasEndJDN 2266376 ;
+	knora-base:valueHasEndPrecision "YEAR" ;
+	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/482a33d65c36/reps/aca600df2b2a>
 
-<http://data.knora.org/482a33d65c36/reps/aca600df2b2a> knora-base:valueHasString "l1a.tiff" ;
-	knora-base:originalFilename "l1a.tiff" ;
-	knora-base:originalMimeType "image/tiff" ;
-	knora-base:internalFilename "incunabula_0000060840.jp2" ;
-	knora-base:internalMimeType "image/jp2" ;
-	knora-base:valueCreationDate "2015-05-19T22:39:12Z"^^xsd:dateTimeStamp ;
+<http://data.knora.org/c5058f3a/values/db77ec0302> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
-	a knora-base:StillImageFileValue ;
-	knora-base:dimX 328 ;
-	knora-base:dimY 4240 ;
-	knora-base:qualityLevel 100 ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+	knora-base:valueHasOrder 1 ;
+	knora-base:valueHasString "GW 4168" ;
+	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# #########################################################
-# 
-#  PERSONS
-# 
-# #########################################################
-# ## ###########################################
-# ## <http://data.knora.org/users/91e19f1e01>
+
+<http://data.knora.org/projects/77275339> a knora-base:knoraProject ;
+	knora-base:projectBasepath "/path/Incunabula" ;
+	knora-base:projectLongname "Bilderfolgen Basler Frühdrucke" ;
+	knora-base:projectShortname "incunabula" ;
+	knora-base:projectDescription """<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.
+</p>
+<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler). 
+</p>
+<p>
+Das Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.
+</p>
+Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.
+</p>""" ;
+	knora-base:projectKeyword "Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images" ;
+	knora-base:projectLogo "incunabula_logo.png" .
 
 <http://data.knora.org/users/91e19f1e01> a knora-base:User ;
 	knora-base:userid "root" ;
-	foaf:familyName "Admin" ;
-	foaf:givenName "Administrator" ;
+	knora-base:familyName "Admin" ;
+	knora-base:givenName "Administrator" ;
 	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 	knora-base:email "test@test.ch" ;
 	knora-base:phone "123456" ;
 	knora-base:preferredLanguage "de" ;
 	knora-base:isInProject <http://data.knora.org/projects/77275339> .
-# ## ###########################################
-# ## <http://data.knora.org/users/b83acc5f05>
 
 <http://data.knora.org/users/b83acc5f05> a knora-base:User ;
 	knora-base:userid "testuer" ;
-	foaf:familyName "Test" ;
-	foaf:givenName "User" ;
+	knora-base:familyName "Test" ;
+	knora-base:givenName "User" ;
 	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 	knora-base:email "test@test.ch" ;
 	knora-base:preferredLanguage "de" ;

@@ -26,8 +26,8 @@
 
 <http://data.knora.org/users/Q-6Sssu8TBWrcCGuVJ0lVw> a knora-base:User ;
     knora-base:userid "biblio" ;
-    foaf:familyName "biblio" ;
-    foaf:givenName "biblio" ;
+    knora-base:familyName "biblio" ;
+    knora-base:givenName "biblio" ;
     knora-base:password "biblio" ;
     knora-base:email "sepideh.alassi@unibas.ch" ;
     knora-base:preferredLanguage "de" ;

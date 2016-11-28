@@ -1076,8 +1076,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
-          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                ?newValue1 knora-base:valueHasStartJDN 2457360 ;
+          |                                     knora-base:valueHasEndJDN 2457360 ;
           |                                     knora-base:valueHasStartPrecision "DAY" ;
           |                                     knora-base:valueHasEndPrecision "DAY" ;
           |                                     knora-base:valueHasCalendar "GREGORIAN" ;
@@ -1656,8 +1656,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
-          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                ?newValue1 knora-base:valueHasStartJDN 2457360 ;
+          |                                     knora-base:valueHasEndJDN 2457360 ;
           |                                     knora-base:valueHasStartPrecision "DAY" ;
           |                                     knora-base:valueHasEndPrecision "DAY" ;
           |                                     knora-base:valueHasCalendar "GREGORIAN" ;
@@ -1901,8 +1901,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
-          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                ?newValue1 knora-base:valueHasStartJDN 2457360 ;
+          |                                     knora-base:valueHasEndJDN 2457360 ;
           |                                     knora-base:valueHasStartPrecision "DAY" ;
           |                                     knora-base:valueHasEndPrecision "DAY" ;
           |                                     knora-base:valueHasCalendar "GREGORIAN" ;
@@ -2143,8 +2143,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
-          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                ?newValue1 knora-base:valueHasStartJDN 2457360 ;
+          |                                     knora-base:valueHasEndJDN 2457360 ;
           |                                     knora-base:valueHasStartPrecision "DAY" ;
           |                                     knora-base:valueHasEndPrecision "DAY" ;
           |                                     knora-base:valueHasCalendar "GREGORIAN" ;
@@ -2379,8 +2379,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
-          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                ?newValue1 knora-base:valueHasStartJDN 2457360 ;
+          |                                     knora-base:valueHasEndJDN 2457360 ;
           |                                     knora-base:valueHasStartPrecision "DAY" ;
           |                                     knora-base:valueHasEndPrecision "DAY" ;
           |                                     knora-base:valueHasCalendar "GREGORIAN" ;
@@ -2674,8 +2674,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
-          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                ?newValue1 knora-base:valueHasStartJDN 2457360 ;
+          |                                     knora-base:valueHasEndJDN 2457360 ;
           |                                     knora-base:valueHasStartPrecision "DAY" ;
           |                                     knora-base:valueHasEndPrecision "DAY" ;
           |                                     knora-base:valueHasCalendar "GREGORIAN" ;

@@ -378,8 +378,8 @@ class SearchResponderV1 extends ResponderV1 {
                                     val periodStart = DateUtilV1.dateString2DateRange(parsedDate(1), calendar).start
                                     val periodEnd = DateUtilV1.dateString2DateRange(parsedDate(2), calendar).end
 
-                                    val start = DateUtilV1.convertDateToJulianDay(periodStart)
-                                    val end = DateUtilV1.convertDateToJulianDay(periodEnd)
+                                    val start = DateUtilV1.convertDateToJulianDayNumber(periodStart)
+                                    val end = DateUtilV1.convertDateToJulianDayNumber(periodEnd)
 
                                     // check if end is bigger than start (the user could have submitted a period where start is bigger than end)
                                     if (start > end) throw BadRequestException(s"Invalid input for period: start is bigger than end: $searchval")
@@ -390,8 +390,8 @@ class SearchResponderV1 extends ResponderV1 {
 
                                     val dateRange = DateUtilV1.dateString2DateRange(parsedDate(1), calendar)
 
-                                    val start = DateUtilV1.convertDateToJulianDay(dateRange.start)
-                                    val end = DateUtilV1.convertDateToJulianDay(dateRange.end)
+                                    val start = DateUtilV1.convertDateToJulianDayNumber(dateRange.start)
+                                    val end = DateUtilV1.convertDateToJulianDayNumber(dateRange.end)
 
                                     (start, end)
                                 }
