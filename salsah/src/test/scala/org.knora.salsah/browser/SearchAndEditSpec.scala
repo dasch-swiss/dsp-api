@@ -676,7 +676,7 @@ class SearchAndEditSpec extends SalsahSpec {
             val seasons = page.getRadioButtons(seasonField)
 
             // summer is the first item
-            seasons(0).click()
+            seasons.head.click()
 
             page.clickSaveButton(seasonField)
 

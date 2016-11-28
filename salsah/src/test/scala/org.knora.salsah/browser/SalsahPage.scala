@@ -20,17 +20,15 @@
 
 package org.knora.salsah.browser
 
-import java.io.File
+import java.io.{File, FileNotFoundException}
 
-import scala.collection.JavaConversions._
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.support.ui.Select
 import org.openqa.selenium.{By, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
-import java.io.FileNotFoundException
-import java.util
 
+import scala.collection.JavaConversions._
 import scala.concurrent.duration._
 
 
@@ -56,7 +54,7 @@ class SalsahPage {
 
     // check if the Selenium driver for Chrome exists
     val SeleniumChromeDriver = new File(chromeDriverPath)
-    if (!SeleniumChromeDriver.exists) throw new FileNotFoundException(s"${chromeDriverPath} could not be found. Please install Selenium Chrome Driver.")
+    if (!SeleniumChromeDriver.exists) throw new FileNotFoundException(s"$chromeDriverPath could not be found. Please install Selenium Chrome Driver.")
 
     // Load the native Selenium driver for Chrome.
     System.setProperty("webdriver.chrome.driver", chromeDriverPath)
@@ -86,10 +84,10 @@ class SalsahPage {
     /**
       * Does login with given credentials.
       *
-      * @param user username
+      * @param user     username
       * @param password password
       */
-    def doLogin(user: String, password: String) = {
+    def doLogin(user: String, password: String): Unit = {
         val loginButton = driver.findElement(By.id("dologin"))
 
         loginButton.click()
@@ -144,7 +142,7 @@ class SalsahPage {
     /**
       * Clicks the SALSAH extended search button.
       */
-    def clickExtendedSearchButton() = {
+    def clickExtendedSearchButton(): Unit = {
         driver.findElement(By.xpath("//div[@id='searchctrl']/img[2][@class='link']")).click()
     }
 
@@ -153,7 +151,7 @@ class SalsahPage {
       *
       * @param restype the restype to be selected.
       */
-    def selectRestype(restype: String) = {
+    def selectRestype(restype: String): Unit = {
         eventually {
             val restypeSelect = driver.findElement(By.name("selrestype"))
             new Select(restypeSelect).selectByValue(restype)
@@ -165,7 +163,7 @@ class SalsahPage {
       * Get a selection in extended search.
       *
       * @param propIndex indicate which (first, second, third etc. ) property field set to use: the user may perform a search involving several properties.
-      * @param name the name of the selection ("selprop" or "compop")
+      * @param name      the name of the selection ("selprop" or "compop")
       * @return a [[Select]] representing the HTML select.
       */
     def getExtendedSearchSelectionByName(propIndex: Int, name: String): Select = {
@@ -237,7 +235,7 @@ class SalsahPage {
       *
       * @param dateForm the [[WebElement]] representing the date form.
       */
-    def makePeriod(dateForm: WebElement) = {
+    def makePeriod(dateForm: WebElement): Unit = {
         eventually {
             dateForm.findElement(By.xpath("//input[contains(@class,'periodsel')]")).click()
         }
@@ -247,10 +245,10 @@ class SalsahPage {
       * Get month selection in extended search form.
       *
       * @param dateForm the [[WebElement]] representing the date form.
-      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @param index    1 indicates start date, 2 end date in case of a period.
       * @return a [[Select]] representing the month.
       */
-    def getMonthSelectionInExtendedSearchForm(dateForm: WebElement, index: Int = 1) = {
+    def getMonthSelectionInExtendedSearchForm(dateForm: WebElement, index: Int = 1): Select = {
         eventually {
             new Select(dateForm.findElement(By.xpath(s"span[$index]/select[contains(@class,'monthsel')]")))
         }
@@ -260,7 +258,7 @@ class SalsahPage {
       * Get the days in the extended search form.
       *
       * @param dateForm dateForm the [[WebElement]] representing the date form.
-      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @param index    1 indicates start date, 2 end date in case of a period.
       * @return a list of `td` representing the days.
       */
     def getDaysInExtendedSearchForm(dateForm: WebElement, index: Int = 1): List[WebElement] = {
@@ -274,7 +272,6 @@ class SalsahPage {
             dayForm.findElements(By.xpath("tbody/tr/td[normalize-space(.)!='']")).toList
 
 
-
         }
     }
 
@@ -282,10 +279,10 @@ class SalsahPage {
       * Get year entry field in extended search form.
       *
       * @param dateForm the [[WebElement]] representing the date form.
-      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @param index    1 indicates start date, 2 end date in case of a period.
       * @return a `input` representing the year entry field.
       */
-    def getYearFieldInExtendedSearchForm(dateForm: WebElement, index: Int = 1) = {
+    def getYearFieldInExtendedSearchForm(dateForm: WebElement, index: Int = 1): WebElement = {
         eventually {
             dateForm.findElement(By.xpath(s"span[$index]/input[contains(@class,'yearsel')]"))
         }
@@ -312,7 +309,7 @@ class SalsahPage {
       *
       * @param eleIndex the index of the element to choose (beginning with 1).
       */
-    def chooseElementFromSearchbox(eleIndex: Int) = {
+    def chooseElementFromSearchbox(eleIndex: Int): Unit = {
         val searchbox = eventually {
             driver.findElement(By.className("searchbox"))
         }
@@ -325,7 +322,7 @@ class SalsahPage {
     /**
       * Submit the extended search form.
       */
-    def submitExtendedSearch = {
+    def submitExtendedSearch(): Unit = {
         eventually {
             driver.findElement(By.xpath("//input[@value='Search']")).click()
         }
@@ -377,7 +374,7 @@ class SalsahPage {
       * @param window a [[WebElement]] representing the window.
       * @return a [[WebElement]] representing the metadat section.
       */
-    def getMetadataSection(window: WebElement) = {
+    def getMetadataSection(window: WebElement): WebElement = {
         eventually {
             window.findElement(By.xpath("div[@class='content contentWithTaskbar']//div[contains(@class, 'metadata') and contains(@class, 'section') and not (contains(@class, 'sectionheader'))]"))
         }
@@ -396,11 +393,11 @@ class SalsahPage {
     /**
       * Moves a window.
       *
-      * @param window the [[WebElement]] representing the window.
+      * @param window  the [[WebElement]] representing the window.
       * @param offsetX horizontal moving distance.
       * @param offsetY vertical moving distance.
       */
-    def dragWindow(window: WebElement, offsetX: Int, offsetY: Int) = {
+    def dragWindow(window: WebElement, offsetX: Int, offsetY: Int): Unit = {
         val titlebar = window.findElement(By.className("titlebar"))
 
         val builder = new Actions(driver)
@@ -430,7 +427,7 @@ class SalsahPage {
       *
       * @param field the editing field in question.
       */
-    def clickEditButton(field: WebElement) = {
+    def clickEditButton(field: WebElement): Unit = {
         eventually {
             field.findElement(By.xpath("div/img[contains(@src,'edit.png')]")).click()
         }
@@ -441,13 +438,13 @@ class SalsahPage {
       *
       * @param field the editing field in question.
       */
-    def clickAddButton(field: WebElement) = {
+    def clickAddButton(field: WebElement): Unit = {
         eventually {
             field.findElement(By.xpath("div/img[contains(@src,'add.png')]")).click()
         }
     }
 
-    def clickSaveButton(field: WebElement) = {
+    def clickSaveButton(field: WebElement): Unit = {
         eventually {
             field.findElement(By.xpath("div/img[contains(@src,'save.png')]")).click()
         }
@@ -497,7 +494,7 @@ class SalsahPage {
       *
       * @param integerField the editing field of an integer value.
       */
-    def clickOnSpinboxUp(integerField: WebElement) = {
+    def clickOnSpinboxUp(integerField: WebElement): Unit = {
         eventually {
             integerField.findElement(By.xpath("//img[contains(@src,'spin-up.png')]")).click()
         }
@@ -507,10 +504,10 @@ class SalsahPage {
       * Get year entry field.
       *
       * @param dateForm the [[WebElement]] representing the date form.
-      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @param index    1 indicates start date, 2 end date in case of a period.
       * @return a `input` representing the year entry field.
       */
-    def getYearField(dateForm: WebElement, index: Int = 1) = {
+    def getYearField(dateForm: WebElement, index: Int = 1): WebElement = {
         eventually {
             dateForm.findElement(By.xpath(s"//span[@class='propedit']/span[$index]/input[contains(@class,'yearsel')]"))
         }
@@ -520,10 +517,10 @@ class SalsahPage {
       * Get month selection.
       *
       * @param dateForm the [[WebElement]] representing the date form.
-      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @param index    1 indicates start date, 2 end date in case of a period.
       * @return a [[Select]] representing the month.
       */
-    def getMonthSelection(dateForm: WebElement, index: Int = 1) = {
+    def getMonthSelection(dateForm: WebElement, index: Int = 1): Select = {
         eventually {
             new Select(dateForm.findElement(By.xpath(s"//span[@class='propedit']/span[$index]/select[contains(@class,'monthsel')]")))
         }
@@ -533,7 +530,7 @@ class SalsahPage {
       * Get the days.
       *
       * @param dateForm dateForm the [[WebElement]] representing the date form.
-      * @param index 1 indicates start date, 2 end date in case of a period.
+      * @param index    1 indicates start date, 2 end date in case of a period.
       * @return a list of `td` representing the days.
       */
     def getDays(dateForm: WebElement, index: Int = 1): List[WebElement] = {
@@ -574,13 +571,13 @@ class SalsahPage {
       * @param radioField radio property field.
       * @return a list of `input` representing the options.
       */
-    def getRadioButtons(radioField: WebElement) = {
+    def getRadioButtons(radioField: WebElement): List[WebElement] = {
         eventually {
             val radios = radioField.findElements(By.xpath("div//input[@type='radio']"))
 
             if (radios.length < 1) throw new Exception
 
-            radios
+            radios.toList
 
         }
 
@@ -594,7 +591,7 @@ class SalsahPage {
      */
 
 
-    def clickAddResourceButton() = {
+    def clickAddResourceButton(): Unit = {
         driver.findElement(By.xpath("//div[@id='addresctrl']/img")).click()
     }
 
@@ -606,12 +603,28 @@ class SalsahPage {
 
     }
 
-    def clickSaveButtonForResourceCreationForm() = {
+    def clickSaveButtonForResourceCreationForm(): Unit = {
 
         eventually {
             driver.findElement(By.xpath("//form[@class='propedit']//input[@value='Save']")).click()
         }
 
+    }
+
+
+    /**
+      * Clicks on a link to change the user-interface language.
+      *
+      * @param lang the language to change to.
+      */
+    def changeLanguage(lang: String): Unit = {
+        eventually {
+            driver.findElement(By.xpath(s"//div[@id='langctrl']/a[normalize-space(.) = '$lang']")).click()
+        }
+
+        eventually {
+            driver.switchTo().alert().accept()
+        }
     }
 
 }
