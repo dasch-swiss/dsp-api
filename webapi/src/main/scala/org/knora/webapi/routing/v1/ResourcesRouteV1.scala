@@ -445,6 +445,23 @@ object ResourcesRouteV1 extends Authenticator {
                     )
                 }
             }
+        } ~ path("v1" / "graphdata" / Segment) { iri =>
+            get {
+                parameters("depth".as[Int].?) { depth =>
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
+                        val resourceIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                        val requestMessage = GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userProfile)
+
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
+            }
         }
     }
 }

@@ -24,7 +24,6 @@ import akka.actor.{Actor, ActorLogging, Props, Status}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
-import org.knora.webapi.messages.v1.responder.graphdatamessages.GraphDataResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
@@ -177,10 +176,9 @@ class ResponderManagerV1 extends Actor with ActorLogging {
         case listsResponderRequest: ListsResponderRequestV1 => listsRouter.forward(listsResponderRequest)
         case searchResponderRequest: SearchResponderRequestV1 => searchRouter.forward(searchResponderRequest)
         case ontologyResponderRequest: OntologyResponderRequestV1 => ontologyRouter.forward(ontologyResponderRequest)
-        case graphdataResponderRequest: GraphDataResponderRequestV1 => resourcesRouter.forward(graphdataResponderRequest)
-        case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter forward projectsResponderRequest
-        case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter forward ckanResponderRequest
-        case storeResponderRequest: StoreResponderRequestV1 => storeRouter forward storeResponderRequest
+        case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter.forward(projectsResponderRequest)
+        case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter.forward(ckanResponderRequest)
+        case storeResponderRequest: StoreResponderRequestV1 => storeRouter.forward(storeResponderRequest)
         case standoffResponderRequest: StandoffResponderRequestV1 => standoffRouter forward standoffResponderRequest
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }

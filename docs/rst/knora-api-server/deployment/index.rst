@@ -24,4 +24,5 @@ Deploying the Knora API Server
    :maxdepth: 2
 
    webapi-getting-started
+   webapi-https
    webapi-production

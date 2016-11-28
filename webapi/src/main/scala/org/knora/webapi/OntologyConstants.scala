@@ -166,8 +166,6 @@ object OntologyConstants {
         val LinkValue = "http://www.knora.org/ontology/knora-base#LinkValue"
         val GeonameValue = "http://www.knora.org/ontology/knora-base#GeonameValue"
 
-        val ValueCreationDate = "http://www.knora.org/ontology/knora-base#valueCreationDate"
-
         val ListNode = "http://www.knora.org/ontology/knora-base#ListNode"
 
         val IsInGroup = "http://www.knora.org/ontology/knora-base#isInGroup"
@@ -278,6 +276,8 @@ object OntologyConstants {
           */
         val SystemUser = "http://www.knora.org/ontology/knora-base#SystemUser"
 
+        val CreationDate = "http://www.knora.org/ontology/knora-base#creationDate"
+        val ValueCreationDate = "http://www.knora.org/ontology/knora-base#valueCreationDate"
     }
 
     object SalsahGui {

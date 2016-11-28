@@ -136,7 +136,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val ontologyName = resourceClassIri.substring(resourceClassIri.lastIndexOf('/') + 1, resourceClassIri.lastIndexOf('#'))
 
         // create URL: combine salsah-address and port, project icons base path, ontology name, icon name
-        settings.baseSALSAHUrl + settings.projectIconsBasePath + ontologyName + '/' + iconsSrc
+        settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + ontologyName + '/' + iconsSrc
     }
 
     /**
