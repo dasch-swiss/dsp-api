@@ -198,12 +198,12 @@ object TransformData extends App {
         /**
           * An instance of [[org.openrdf.model.ValueFactory]] for creating RDF statements.
           */
-        protected val valueFactory = SimpleValueFactory.getInstance()
+        protected val valueFactory: SimpleValueFactory = SimpleValueFactory.getInstance()
 
         /**
           * A collection of all the statements in the input file, grouped and sorted by subject IRI.
           */
-        protected var statements = TreeMap.empty[IRI, Vector[Statement]]
+        protected var statements: TreeMap[IRI, Vector[Statement]] = TreeMap.empty[IRI, Vector[Statement]]
 
         /**
           * A convenience method that returns the first object of the specified predicate in a list of statements.
@@ -260,6 +260,8 @@ object TransformData extends App {
 
     /**
       * Looks for regions that have the label "test" and changes their label to the value of their `knora-base:hasComment`.
+      *
+      * @param turtleWriter an [[RDFWriter]] that writes to the output file.
       */
     private class RegionLabelHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
         override def endRDF(): Unit = {
@@ -298,6 +300,8 @@ object TransformData extends App {
 
     /**
       * Adds `knora-base:isDeleted false` to resources and values that don't have a `knora-base:isDeleted` predicate.
+      *
+      * @param turtleWriter an [[RDFWriter]] that writes to the output file.
       */
     private class IsDeletedHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
         override def endRDF(): Unit = {
@@ -338,6 +342,8 @@ object TransformData extends App {
 
     /**
       * Transforms old-style Knora permissions statements into new-style permissions statements.
+      *
+      * @param turtleWriter an [[RDFWriter]] that writes to the output file.
       */
     private class PermissionsHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
         override def endRDF(): Unit = {
@@ -381,6 +387,8 @@ object TransformData extends App {
 
     /**
       * Adds missing `knora-base:valueHasString` statements.
+      *
+      * @param turtleWriter an [[RDFWriter]] that writes to the output file.
       */
     private class ValueHasStringHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
 
@@ -464,6 +472,8 @@ object TransformData extends App {
 
     /**
       * Changes standoff blank nodes into `StandoffTag` objects.
+      *
+      * @param turtleWriter an [[RDFWriter]] that writes to the output file.
       */
     private class StandoffHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
         private val knoraIdUtil = new KnoraIdUtil
@@ -744,6 +754,8 @@ object TransformData extends App {
     /**
       * Replaces `knora-base:valueHasStartJDC` with `knora-base:valueHasStartJDN` and `knora-base:valueHasEndJDC`
       * with `knora-base:valueHasEndJDN`.
+      *
+      * @param turtleWriter an [[RDFWriter]] that writes to the output file.
       */
     private class JDNHandler(turtleWriter: RDFWriter) extends RDFHandler {
         private val valueFactory = SimpleValueFactory.getInstance()
@@ -790,14 +802,14 @@ object TransformData extends App {
                |Usage: org.knora.webapi.util.TransformData -t [$IsDeletedTransformationOption|$PermissionsTransformationOption|$MissingValueHasStringTransformationOption|$StandoffTransformationOption|$RegionLabelTransformation|$JulianDayTransformation|$AllTransformationsOption] input output
             """.stripMargin)
 
-        val transform = opt[String](
+        val transform: ScallopOption[String] = opt[String](
             required = true,
             validate = t => Set(IsDeletedTransformationOption, PermissionsTransformationOption, MissingValueHasStringTransformationOption, StandoffTransformationOption, RegionLabelTransformation, JulianDayTransformation, AllTransformationsOption).contains(t),
             descr = s"Selects a transformation. Available transformations: '$IsDeletedTransformationOption' (adds missing 'knora-base:isDeleted' statements), '$PermissionsTransformationOption' (combines old-style multiple permission statements into single permission statements), '$MissingValueHasStringTransformationOption' (adds missing valueHasString), '$StandoffTransformationOption' (transforms old-style standoff into new-style standoff), '$RegionLabelTransformation' (fixes the labels of regions whose label is 'test'), '$JulianDayTransformation' (changes Julian Day Count to Julian Day Number), '$AllTransformationsOption' (all of the above)"
         )
 
-        val input = trailArg[String](required = true, descr = "Input Turtle file")
-        val output = trailArg[String](required = true, descr = "Output Turtle file")
+        val input: ScallopOption[String] = trailArg[String](required = true, descr = "Input Turtle file")
+        val output: ScallopOption[String] = trailArg[String](required = true, descr = "Output Turtle file")
         verify()
     }
 
