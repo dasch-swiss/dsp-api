@@ -142,7 +142,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     triplestore = settings.triplestoreType,
                     startNodeIri = startNode.nodeIri,
                     startNodeOnly = false,
-                    outbound = outbound
+                    outbound = outbound // true to query outbound edges, false to query inbound edges
                 ).toString())
 
                 // _ = println(sparql)
@@ -188,6 +188,14 @@ class ResourcesResponderV1 extends ResponderV1 {
                             row =>
                                 val rowMap = row.rowMap
                                 val nodeIri = rowMap("node")
+
+                                // The SPARQL query takes a start node and returns the other node in the edge.
+                                //
+                                // If we're querying outbound edges, the start node is the source node, and the other
+                                // node is the target node.
+                                //
+                                // If we're querying inbound edges, the start node is the target node, and the other
+                                // node is the source node.
 
                                 QueryResultEdge(
                                     linkValueIri = rowMap("linkValue"),

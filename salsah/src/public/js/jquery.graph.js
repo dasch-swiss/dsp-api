@@ -61,12 +61,6 @@
 		          boxSelectionEnabled: false,
 		          autounselectify: true,
 
-		          layout: {
-		            name: 'cola',
-		            infinite: true,
-		            fit: true
-		          },
-
 		          style: [
 		            {
 		              selector: 'node',
@@ -102,6 +96,22 @@
 		          ],
 
 		          elements: elements
+		        });
+
+		        // Make a cytoscape-cola layout (https://github.com/cytoscape/cytoscape.js-cola)
+		        var layout = cy.makeLayout({
+		            name: 'cola',
+		            // infinite: true,
+		            maxSimulationTime: 4000,
+		            fit: true
+		        });
+
+		        // Run the layout.
+		        layout.run();
+
+		        // Re-run the layout if the user drags a node.
+		        cy.on('tapdrag', 'node', function(event){
+		          layout.run();
 		        });
 
 		        /*
