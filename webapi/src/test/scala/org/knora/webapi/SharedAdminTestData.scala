@@ -22,7 +22,7 @@ package org.knora.webapi
 
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1, GroupPermissionV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoType, ProjectInfoV1}
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 
 /**
@@ -160,8 +160,8 @@ object SharedAdminTestData {
     def systemProjectInfo = ProjectInfoV1(
         id = SYSTEM_PROJECT_IRI,
         shortname = "SystemProject",
-        longname = Some("Knora System Project"),
-        description = None,
+        longname = "Knora System Project",
+        description = "Knora System Project",
         logo = None,
         belongsToInstitution = None,
         projectOntologyGraph = "-",
@@ -235,8 +235,8 @@ object SharedAdminTestData {
     def imagesProjectInfo = ProjectInfoV1(
         id = "http://data.knora.org/projects/images",
         shortname = "images",
-        longname = Some("Image Collection Demo"),
-        description = Some("A demo project of a collection of images"),
+        longname = "Image Collection Demo",
+        description = "A demo project of a collection of images",
         keywords = Some("images, collection"),
         projectOntologyGraph = "http://www.knora.org/ontology/images",
         projectDataGraph = "http://www.knora.org/data/images",
@@ -346,14 +346,12 @@ object SharedAdminTestData {
         )
     )
 
-
-
     /* represents the ProjectInfoV1 of the incunabula project */
     def incunabulaProjectInfo = ProjectInfoV1(
         id = "http://data.knora.org/projects/77275339",
         shortname = "incunabula",
-        longname = Some("Bilderfolgen Basler Frühdrucke"),
-        description = Some("<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>"),
+        longname = "Bilderfolgen Basler Frühdrucke",
+        description = "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
         keywords = Some("Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images"),
         projectOntologyGraph = "http://www.knora.org/ontology/incunabula",
         projectDataGraph = "http://www.knora.org/data/incunabula",
@@ -374,8 +372,8 @@ object SharedAdminTestData {
     def triplesixProjectInfo = ProjectInfoV1(
         id = TRIPLESIX_PROJECT_IRI,
         shortname = "testproject",
-        longname = Some("Test Project"),
-        description = Some("A test project"),
+        longname = "Test Project",
+        description = "A test project",
         keywords = None,
         projectOntologyGraph = "http://www.knora.org/ontology/testproject",
         projectDataGraph = "http://www.knora.org/data/testproject",
@@ -428,7 +426,8 @@ object SharedAdminTestData {
     def anythingProjectInfo = ProjectInfoV1(
         id = ANYTHING_PROJECT_IRI,
         shortname = "anything",
-        longname = Some("Anything Project"),
+        longname = "Anything Project",
+        description = "Anything Project",
         projectOntologyGraph = "http://www.knora.org/ontology/anything",
         projectDataGraph = "http://www.knora.org/data/anything",
         basepath = "/foo/bar/baz",

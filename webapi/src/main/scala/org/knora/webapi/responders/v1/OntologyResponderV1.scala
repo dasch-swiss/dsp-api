@@ -25,13 +25,13 @@ import akka.pattern._
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsNamedGraphGetV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
-import scala.collection.breakOut
 import scala.concurrent.Future
 
 /**
@@ -632,6 +632,19 @@ class OntologyResponderV1 extends ResponderV1 {
       * @return a [[NamedGraphsResponseV1]].
       */
     private def getNamedGraphs(userProfile: UserProfileV1): Future[NamedGraphsResponseV1] = {
+
+        // FIXME: Get this information from the ProjectsResponder instead of application.conf
+
+        for {
+            projectsNamedGraph <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
+
+            response = NamedGraphsResponseV1(
+                vocabularies = projectsNamedGraph,
+                userdata = userProfile.userData
+            )
+        } yield response
+
+        /*
         val namedGraphs: Vector[NamedGraphV1] = settings.namedGraphs.filter(_.visibleInGUI).map {
             (namedGraph: ProjectNamedGraphs) =>
                 NamedGraphV1(
@@ -644,11 +657,7 @@ class OntologyResponderV1 extends ResponderV1 {
                     active = false
                 )
         }
-
-        Future(NamedGraphsResponseV1(
-            vocabularies = namedGraphs,
-            userdata = userProfile.userData
-        ))
+        */
     }
 
     /**
@@ -679,7 +688,7 @@ class OntologyResponderV1 extends ResponderV1 {
     private def getResourceTypesForNamedGraph(namedGraphIriOption: Option[IRI], userProfile: UserProfileV1): Future[ResourceTypesForNamedGraphResponseV1] = {
 
         // get the resource types for a named graph
-        def getResourceTypes(namedGraphIri: IRI): Future[Vector[ResourceTypeV1]] = {
+        def getResourceTypes(namedGraphIri: IRI): Future[Seq[ResourceTypeV1]] = {
             for {
 
             // get NamedGraphEntityInfoV1 for the given named graph
@@ -723,14 +732,10 @@ class OntologyResponderV1 extends ResponderV1 {
                 } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes, userdata = userProfile.userData)
 
             case None => // map over all named graphs and collect the resource types
-                val resourceTypesFuture: Vector[Future[Vector[ResourceTypeV1]]] = settings.namedGraphs.filter(_.visibleInGUI).map {
-                    namedGraphs: ProjectNamedGraphs => getResourceTypes(namedGraphs.ontology)
-                }
-
-                val sequencedFuture = Future.sequence(resourceTypesFuture)
-
                 for {
-                    resourceTypes <- sequencedFuture
+                    projectNamedGraphIris: Seq[IRI] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]] map (_.map(_.uri))
+                    resourceTypesPerProject: Seq[Future[Seq[ResourceTypeV1]]] = projectNamedGraphIris map (iri => getResourceTypes(iri))
+                    resourceTypes: Seq[Seq[ResourceTypeV1]] <- Future.sequence(resourceTypesPerProject)
                 } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes.flatten, userdata = userProfile.userData)
         }
 
@@ -745,7 +750,7 @@ class OntologyResponderV1 extends ResponderV1 {
       */
     private def getPropertyTypesForNamedGraph(namedGraphIriOption: Option[IRI], userProfile: UserProfileV1): Future[PropertyTypesForNamedGraphResponseV1] = {
 
-        def getPropertiesForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[Vector[PropertyDefinitionInNamedGraphV1]] = {
+        def getPropertiesForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[Seq[PropertyDefinitionInNamedGraphV1]] = {
             for {
                 namedGraphEntityInfo <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
                 propertyIris: Set[IRI] = namedGraphEntityInfo.propertyIris
@@ -798,14 +803,11 @@ class OntologyResponderV1 extends ResponderV1 {
 
                 } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes, userdata = userProfile.userData)
             case None => // get the property types for all named graphs (collect them by mapping over all named graphs)
-                val propertyTypesFutures: Vector[Future[Vector[PropertyDefinitionInNamedGraphV1]]] = settings.namedGraphs.filter(_.visibleInGUI).map {
-                    namedGraphs: ProjectNamedGraphs => getPropertiesForNamedGraph(namedGraphs.ontology, userProfile)
-                }
-
-                val sequencedFuture: Future[Vector[Vector[PropertyDefinitionInNamedGraphV1]]] = Future.sequence(propertyTypesFutures)
 
                 for {
-                    propertyTypes <- sequencedFuture
+                    projectNamedGraphIris: Seq[IRI] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]] map (_.map(_.uri))
+                    propertyTypesPerProject: Seq[Future[Seq[PropertyDefinitionInNamedGraphV1]]] = projectNamedGraphIris map (iri => getPropertiesForNamedGraph(iri, userProfile))
+                    propertyTypes: Seq[Seq[PropertyDefinitionInNamedGraphV1]] <- Future.sequence(propertyTypesPerProject)
                 } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes.flatten, userdata = userProfile.userData)
         }
 

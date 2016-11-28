@@ -652,11 +652,11 @@
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLongname ;
-                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectDescription ;
-                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLogo ;
@@ -704,8 +704,7 @@
 
 ###  http://www.knora.org/ontology/knora-base#KnownUser
 
-:KnownUser rdf:type :UserGroup ,
-                    owl:NamedIndividual ;
+:KnownUser rdf:type :UserGroup ;
 
            :groupName "known user" .
 
@@ -713,8 +712,7 @@
 ###  Was changed to :Creator
 ###  http://www.knora.org/ontology/knora-base#Owner
 
-:Owner rdf:type :UserGroup ,
-                owl:NamedIndividual ;
+:Owner rdf:type :UserGroup ;
 
        :groupName  "owner" .
 
@@ -722,8 +720,7 @@
 
 ###  http://www.knora.org/ontology/knora-base#Creator
 
-:Creator rdf:type :UserGroup ,
-                  owl:NamedIndividual ;
+:Creator rdf:type :UserGroup ;
 
          :groupName  "creator" .
 
@@ -731,8 +728,7 @@
 
 ###  http://www.knora.org/ontology/knora-base#ProjectMember
 
-:ProjectMember rdf:type :UserGroup ,
-                        owl:NamedIndividual ;
+:ProjectMember rdf:type :UserGroup ;
 
                :groupName "project member" .
 
@@ -740,8 +736,7 @@
 
 ###  http://www.knora.org/ontology/knora-base#UnknownUser
 
-:UnknownUser rdf:type :UserGroup ,
-                      owl:NamedIndividual ;
+:UnknownUser rdf:type :UserGroup ;
 
              :groupName "unknown user" .
 
@@ -749,8 +744,7 @@
 
 ###  http://www.knora.org/ontology/knora-base#SystemAdmin
 
-:SystemAdmin rdf:type :UserGroup ,
-                      owl:NamedIndividual ;
+:SystemAdmin rdf:type :UserGroup ;
 
              :groupName "system admin" ;
 
@@ -873,14 +867,14 @@
 
 ### http://www.knora.org/ontology/knora-base#SystemProject
 
-:SystemProject rdf:type :knoraProject ,
-                        owl:NamedIndividual ;
+:SystemProject rdf:type :knoraProject ;
 
             rdfs:comment "A built-in project representing the Knora System."@en ;
 
             :projectShortname "SystemProject" ;
             :projectLongname "Knora System Project" ;
-            :projectOntologyGraph "-" ;
+            :projectDescription "Knora System Project" ;
+            :projectOntologyGraph "http://www.knora.org/ontology/knora-base" ;
             :projectDataGraph "-" ;
             :projectBasepath "-"^^xsd:string ;
             :isActiveProject "true"^^xsd:boolean ;
@@ -890,8 +884,7 @@
 
 ### http://www.knora.org/ontology/knora-base#AllGroups
 
-:AllGroups rdf:type :UserGroup ,
-                    owl:NamedIndividual ;
+:AllGroups rdf:type :UserGroup ;
 
            rdfs:comment "A built-in group representing all groups."@en ;
 
@@ -901,8 +894,7 @@
 
 ### http://www.knora.org/ontology/knora-base#AllResourceClasses
 
-:AllResourceClasses rdf:type owl:Class ,
-                             owl:NamedIndividual ;
+:AllResourceClasses rdf:type owl:Class ;
 
             rdfs:comment "A built-in resource class used in permission instances to denote that the defined default object access permission should be applied to all resource classes defined for the project."@en .
 
@@ -910,7 +902,6 @@
 
 ### http://www.knora.org/ontology/knora-base#AllProperties
 
-:PropertyNotApplicable rdf:type owl:ObjectProperty ,
-                                owl:NamedIndividual ;
+:PropertyNotApplicable rdf:type owl:ObjectProperty ;
 
             rdfs:comment "A built-in resource property used in permission instances where the property is not applicable."@en .

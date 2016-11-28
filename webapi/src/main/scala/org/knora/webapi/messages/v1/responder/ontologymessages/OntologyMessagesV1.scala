@@ -121,7 +121,7 @@ case class NamedGraphsGetRequestV1(userProfile: UserProfileV1) extends OntologyR
   * @param vocabularies all the existing named graphs.
   * @param userdata     information about the user that made the request.
   */
-case class NamedGraphsResponseV1(vocabularies: Vector[NamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
+case class NamedGraphsResponseV1(vocabularies: Seq[NamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.namedGraphsResponseV1Format.write(this)
 }
 
@@ -140,7 +140,7 @@ case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userP
   * @param resourcetypes the resource classes for the queried named graph.
   * @param userdata      information about the user that made the request.
   */
-case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Vector[ResourceTypeV1], userdata: UserDataV1) extends KnoraResponseV1 {
+case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Seq[ResourceTypeV1], userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.resourceTypesForNamedGraphResponseV1Format.write(this)
 }
 
@@ -160,7 +160,7 @@ case class PropertyTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userP
   * @param properties the property types for the requested named graph.
   * @param userdata   information about the user that made the request.
   */
-case class PropertyTypesForNamedGraphResponseV1(properties: Vector[PropertyDefinitionInNamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
+case class PropertyTypesForNamedGraphResponseV1(properties: Seq[PropertyDefinitionInNamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.propertyTypesForNamedGraphResponseV1Format.write(this)
 }
 

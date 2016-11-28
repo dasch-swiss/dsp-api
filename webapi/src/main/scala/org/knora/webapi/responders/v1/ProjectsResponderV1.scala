@@ -22,7 +22,9 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
+import arq.iri
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages._
@@ -47,6 +49,7 @@ class ProjectsResponderV1 extends ResponderV1 {
       */
     def receive = {
         case ProjectsGetRequestV1(infoType, userProfile) => future2Message(sender(), projectsGetRequestV1(infoType, userProfile), log)
+        case ProjectsNamedGraphGetV1(userProfile) => future2Message(sender(), projectsNamedGraphGetV1(userProfile), log)
         case ProjectInfoByIRIGetRequestV1(iri, infoType, userProfile) => future2Message(sender(), projectInfoByIRIGetRequestV1(iri, infoType, userProfile), log)
         case ProjectInfoByShortnameGetRequestV1(shortname, infoType, userProfile) => future2Message(sender(), projectInfoByShortnameGetRequestV1(shortname, infoType, userProfile), log)
         case ProjectCreateRequestV1(newProjectDataV1: NewProjectDataV1, userProfileV1) => future2Message(sender(), projectCreateRequestV1(newProjectDataV1, userProfileV1), log)
@@ -110,9 +113,9 @@ class ProjectsResponderV1 extends ResponderV1 {
 
                     ProjectInfoV1(
                         id = projectIri,
-                        shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
-                        longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname),
-                        description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription),
+                        shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")),
+                        longname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectLongname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no longname defined.")),
+                        description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")),
                         keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords),
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo),
                         belongsToInstitution = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject),
@@ -130,6 +133,45 @@ class ProjectsResponderV1 extends ResponderV1 {
                 case None => None
             }
         )
+    }
+
+    /**
+      * Gets all the named graphs from all projects and returns them as a sequence of [[NamedGraphV1]]
+      * @param userProfile
+      * @return a sequence of [[NamedGraphV1]]
+      */
+    private def projectsNamedGraphGetV1(userProfile: UserProfileV1): Future[Seq[NamedGraphV1]] = {
+
+        for {
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
+                triplestore = settings.triplestoreType
+            ).toString())
+            //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
+
+            projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            //_ = log.debug(s"getProjectsResponseV1 - result: ${MessageUtil.toSource(projectsResponse)}")
+
+            projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
+
+            projectsWithProperties: Map[String, Map[String, String]] = projectsResponseRows.groupBy(_.rowMap("s")).map {
+                case (projIri: String, rows: Seq[VariableResultsRow]) => (projIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
+            }
+            //_ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: ${MessageUtil.toSource(projectsWithProperties)}")
+
+            namedGraphs: Seq[NamedGraphV1] = projectsWithProperties.map {
+                case (projectIri: String, propsMap: Map[String, String]) =>
+
+                    NamedGraphV1(
+                        id = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
+                        shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
+                        longname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectLongname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no longname defined.")),
+                        description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")),
+                        project_id = projectIri,
+                        uri = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
+                        active = false
+                    )
+            }.toSeq
+        } yield namedGraphs
     }
 
     /**
@@ -311,9 +353,9 @@ class ProjectsResponderV1 extends ResponderV1 {
 
             val projectInfoFull = ProjectInfoV1(
                 id = projectIri,
-                shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
-                longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
-                description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
+                shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")),
+                longname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectLongname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no longname defined.")),
+                description = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")),
                 keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords),
                 logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
                 belongsToInstitution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToProject),

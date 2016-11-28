@@ -67,7 +67,7 @@ case class CkanResponseV1(projects: Seq[CkanProjectV1],
   */
 case class CkanProjectV1(project_info: CkanProjectInfoV1, project_datasets: Option[Seq[CkanProjectDatasetV1]] = None)
 
-case class CkanProjectInfoV1(shortname: String, longname: Option[String] = None, ckan_tags: Seq[String], ckan_license_id: String)
+case class CkanProjectInfoV1(shortname: String, longname: String, ckan_tags: Seq[String], ckan_license_id: String)
 
 case class CkanProjectDatasetV1(ckan_title: String,
                                 ckan_tags: Seq[String],

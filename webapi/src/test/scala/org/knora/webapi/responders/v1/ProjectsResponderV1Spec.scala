@@ -59,13 +59,18 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
     val rdfDataObjects = List()
 
     "Load test data" in {
+
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
+
     }
 
     "The ProjectsResponderV1 " when {
+
         "asked about all projects " should {
+
             "return 'full' project info for every project" in {
+
                 actorUnderTest ! ProjectsGetRequestV1(ProjectInfoType.FULL, Some(rootUserProfileV1))
                 expectMsgPF(timeout) {
                     case ProjectsResponseV1(projects, userdata) => {
@@ -76,9 +81,13 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         assert(projects.contains(SharedAdminTestData.triplesixProjectInfo))
                     }
                 }
+
             }
+
         }
+
         "asked about a project identified by 'iri' " should {
+
             "return full project info if the project is known " in {
 
                 /* Incunabula project */
@@ -106,12 +115,17 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsg(ProjectInfoResponseV1(SharedAdminTestData.systemProjectInfo, Some(rootUserProfileV1.userData)))
 
             }
+
             "return 'NotFoundException' when the project is unknown " in {
+
                 actorUnderTest ! ProjectInfoByIRIGetRequestV1("http://data.knora.org/projects/notexisting", ProjectInfoType.FULL, Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found")))
+
             }
+
         }
         "asked about a project identified by 'shortname' " should {
+
             "return 'full' project info if the project is known " in {
                 actorUnderTest ! ProjectInfoByShortnameGetRequestV1(SharedAdminTestData.incunabulaProjectInfo.shortname, ProjectInfoType.FULL, Some(rootUserProfileV1))
                 expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfo, Some(rootUserProfileV1.userData)))
@@ -121,8 +135,11 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 actorUnderTest ! ProjectInfoByShortnameGetRequestV1("projectwrong", ProjectInfoType.FULL, Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found")))
             }
+
         }
+
         "asked to create a new project " should {
+
             "create the project with using a permissions template, and return the 'full' project info if the supplied shortname is unique " in {
                 actorUnderTest ! ProjectCreateRequestV1(
                     NewProjectDataV1(
@@ -141,12 +158,14 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                     case ProjectOperationResponseV1(newProjectInfo, requestingUserData) => {
                         //println(newProjectInfo)
                         assert(newProjectInfo.shortname.equals("newproject"))
-                        assert(newProjectInfo.longname.get.equals("project longname"))
+                        assert(newProjectInfo.longname.equals("project longname"))
+                        assert(newProjectInfo.description.equals("project description"))
                         assert(newProjectInfo.projectOntologyGraph.equals("http://www.knora.org/ontology/newproject"))
                         assert(newProjectInfo.projectDataGraph.equals("http://www.knora.org/data/newproject"))
                     }
                 }
             }
+
             "return a 'DuplicateValueException' if the supplied project shortname is not unique " in {
                 actorUnderTest ! ProjectCreateRequestV1(
                     NewProjectDataV1(
@@ -163,6 +182,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 )
                 expectMsg(Failure(DuplicateValueException(s"Project with the shortname: 'newproject' already exists")))
             }
+
             "return 'BadRequestException' if 'shortname' is missing" in {
 
                 actorUnderTest ! ProjectCreateRequestV1(
@@ -180,10 +200,11 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 )
                 expectMsg(Failure(BadRequestException("'Shortname' cannot be empty")))
             }
+
         }
         /*
-        "asked to update a user " should {
-            "update the user " in {
+        "asked to update a project " should {
+            "update the project " in {
 
                 /* User information is updated by the user */
                 actorUnderTest ! UserUpdateRequestV1(
@@ -222,7 +243,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 }
 
             }
-            "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin " in {
+
+            "return a 'ForbiddenException' if the user requesting the update does not have the necessary permission" in {
 
                 /* User information is updated by other normal user */
                 actorUnderTest ! UserUpdateRequestV1(
@@ -245,33 +267,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
 
             }
-            "return a 'ForbiddenException' if the update gives SA rights but the user requesting the update is not SA " in {
-                /* User information is updated by the user */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.IsSystemAdmin,
-                    newValue = true,
-                    userProfile = SharedTestData.normaluserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(ForbiddenException("Giving an user system admin rights can only be performed by another system admin")))
-            }
-            "update the user, giving him SA rights " in {
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.IsSystemAdmin,
-                    newValue = true,
-                    userProfile = SharedTestData.superuserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.isSystemAdmin.contains(true))
-                    }
-                }
-            }
-            "update the user, (deleting) making him inactive " in {
+
+            "update the project, (deleting) making it inactive " in {
                 actorUnderTest ! UserUpdateRequestV1(
                     userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
                     propertyIri = OntologyConstants.KnoraBase.IsActiveUser,

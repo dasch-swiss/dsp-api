@@ -917,6 +917,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 // Generate a SPARQL update.
                 sparqlUpdate = queries.sparql.v1.txt.changeComment(
+                    // FIXME: Get info from ProjectsResponder
                     dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
                     triplestore = settings.triplestoreType,
                     resourceIri = findResourceWithValueResult.resourceIri,
@@ -1021,6 +1022,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         )
 
                         sparqlUpdate = queries.sparql.v1.txt.deleteLink(
+                            // FIXME: Get info from ProjectsResponder
                             dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
                             triplestore = settings.triplestoreType,
                             linkSourceIri = findResourceWithValueResult.resourceIri,
@@ -1057,6 +1059,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         linkUpdates <- linkUpdatesFuture
 
                         sparqlUpdate = queries.sparql.v1.txt.deleteValue(
+                            // FIXME: Get info from ProjectsResponder
                             dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
                             triplestore = settings.triplestoreType,
                             resourceIri = findResourceWithValueResult.resourceIri,
@@ -1754,6 +1757,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createLink(
+                // FIXME: Get info from ProjectsResponder
                 dataNamedGraph = settings.projectNamedGraphs(valueProject).data,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
@@ -1828,6 +1832,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createValue(
+                // FIXME: Get info from ProjectsResponder
                 dataNamedGraph = settings.projectNamedGraphs(valueProject).data,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
@@ -1906,6 +1911,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.changeLink(
+                // FIXME: Get info from ProjectsResponder
                 dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
                 triplestore = settings.triplestoreType,
                 linkSourceIri = resourceIri,
@@ -2024,6 +2030,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Generate a SPARQL update.
             sparqlUpdate = queries.sparql.v1.txt.addValueVersion(
+                // FIXME: Get info from ProjectsResponder
                 dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,

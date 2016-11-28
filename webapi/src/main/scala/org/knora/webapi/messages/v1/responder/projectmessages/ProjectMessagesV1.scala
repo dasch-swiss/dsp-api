@@ -79,6 +79,13 @@ case class ProjectsGetRequestV1(infoType: ProjectInfoType, userProfile: Option[U
 
 
 /**
+  * Get all the existing named graphs from all projects as a vector of [[org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1]].
+  *
+  * @param userProfile the profile of the user making the request.
+  */
+case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsResponderRequestV1
+
+/**
   * Get everything about a single project identified through it's IRI.
   *
   * @param iri Iri of the project.
@@ -153,8 +160,8 @@ case class ProjectOperationResponseV1(project_info: ProjectInfoV1, userData: Use
 
 case class ProjectInfoV1(id: IRI,
                          shortname: String,
-                         longname: Option[String] = None,
-                         description: Option[String] = None,
+                         longname: String,
+                         description: String,
                          keywords: Option[String] = None,
                          logo: Option[String] = None,
                          belongsToInstitution: Option[IRI] = None,

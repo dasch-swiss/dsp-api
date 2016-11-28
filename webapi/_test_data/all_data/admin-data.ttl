@@ -342,6 +342,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 <http://data.knora.org/projects/anything> a knora-base:knoraProject ;
 	knora-base:projectShortname "anything" ;
 	knora-base:projectLongname "Anything Project" ;
+	knora-base:projectDescription "Anything Project" ;
 	knora-base:projectOntologyGraph "http://www.knora.org/ontology/anything"^^xsd:string ;
     knora-base:projectDataGraph "http://www.knora.org/data/anything"^^xsd:string ;
     knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
@@ -369,3 +370,47 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:isActiveUser "true"^^xsd:boolean ;
 	knora-base:isInProject <http://data.knora.org/projects/anything> ;
 	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+###################################
+# DOKUBIB                         #
+###################################
+
+<http://data.knora.org/projects/b83b99ca01> a knora-base:knoraProject ;
+	knora-base:projectShortname "dokubib" ;
+	knora-base:projectLongname "Dokubib" ;
+    knora-base:projectDescription "Dokubib" ;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/dokubib"^^xsd:string ;
+    knora-base:projectDataGraph "http://www.knora.org/data/dokubib"^^xsd:string ;
+    knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
+    knora-base:isActiveProject "false"^^xsd:boolean ;
+    knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+###################################
+# BEOL                            #
+###################################
+
+<http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> a knora-base:knoraProject ;
+	knora-base:projectShortname "beol" ;
+	knora-base:projectLongname "Bernoulli-Euler Online" ;
+    knora-base:projectDescription "Bernoulli-Euler Online" ;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/beol"^^xsd:string ;
+    knora-base:projectDataGraph "http://www.knora.org/data/beol"^^xsd:string ;
+    knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
+    knora-base:isActiveProject "true"^^xsd:boolean ;
+    knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+###################################
+# BIBLIO                          #
+###################################
+
+<http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> a knora-base:knoraProject ;
+	knora-base:projectShortname "biblio" ;
+	knora-base:projectLongname "Bibliography" ;
+    knora-base:projectDescription "Bibliography" ;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/biblio"^^xsd:string ;
+    knora-base:projectDataGraph "http://www.knora.org/data/biblio"^^xsd:string ;
+    knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
+    knora-base:isActiveProject "true"^^xsd:boolean ;
+    knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .

@@ -28,6 +28,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.graphdatamessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.permissionmessages.ResourceCreateOperation
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -1402,10 +1403,16 @@ class ResourcesResponderV1 extends ResponderV1 {
                 throw BadRequestException(s"Instances of knora-base:Resource cannot be created, only instances of subclasses")
             }
 
+            projectInfo <- {
+                responderManager ? ProjectInfoByIRIGetRequestV1(
+                    projectIri,
+                    infoType = ProjectInfoType.FULL,
+                    Some(userProfile)
+                )
+            }.mapTo[ProjectInfoResponseV1]
 
-            // FIXME: Query ProjectsResponder for project's projectNamedGraph
-
-            namedGraph = settings.projectNamedGraphs(projectIri).data
+            //namedGraph = settings.projectNamedGraphs(projectIri).data
+            namedGraph = projectInfo.project_info.projectDataGraph
             resourceIri: IRI = knoraIdUtil.makeRandomResourceIri
 
             // Check user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to
@@ -1478,6 +1485,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 // Create update sparql string
                 sparqlUpdate = queries.sparql.v1.txt.deleteResource(
+                    // FIXME: Get info from ProjectsResponder
                     dataNamedGraph = settings.projectNamedGraphs(resourceInfo.project_id).data,
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceDeleteRequest.resourceIri,
@@ -1570,6 +1578,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 }
 
                 // get the named graph the resource is contained in by the resource's project
+                // FIXME: Get info from ProjectsResponder
                 namedGraph = settings.projectNamedGraphs(resourceInfo.project_id).data
 
                 // the user has sufficient permissions to change the resource's label
