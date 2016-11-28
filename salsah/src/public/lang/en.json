@@ -228,7 +228,7 @@
 	"_hlist_node_expl" : "Please click on %s below to delete the node, or %s to return without deleting it!",
 	"_salsah_help" : "SALSAH Help",
 	"_limitsearch" : "Limit search to",
-	"_langchangeq" : "Change language of GUI ?",
+	"_langchangeq" : "Change language of GUI (unsaved changes will be lost)?",
 	"_select_all" : "Select all",
 	"_deselect_all" : "Deselect all",
 	"_alert_missing_restype" : "You have to choose a resource type!",

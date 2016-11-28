@@ -225,7 +225,7 @@
 	"_hlist_node_expl" : "Clickez sur %s en-dessous pour effacer le nœud, ou sur %s pour fermer la fenêtre sans effaces le nœud!",
 	"_salsah_help" : "SALSAH Aide",
 	"_limitsearch" : "Limiter la recherche sur",
-	"_langchangeq" : "Changer la langue de l'interface utilisateur ?",
+	"_langchangeq" : "Changer la langue de l'interface utilisateur (les modifications non enregistrées seront perdues)?",
 	"_valinfo" : "Information sur la valeur",
 	"_creation_date": "Date de création"
 }
