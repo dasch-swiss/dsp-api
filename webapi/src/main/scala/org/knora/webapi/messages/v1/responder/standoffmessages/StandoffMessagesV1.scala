@@ -38,7 +38,7 @@ sealed trait StandoffResponderRequestV1 extends KnoraRequestV1
 
 /**
   * Represents a request to add a text value containing standoff to a resource.
-  *  A successful response will be an [[CreateStandoffResponseV1]].
+  * A successful response will be an [[CreateStandoffResponseV1]].
   *
   * @param projectIri   the project in which the text value is to be added.
   * @param resourceIri  the IRI of the resource to which the text value should be added.
@@ -57,6 +57,22 @@ case class CreateStandoffRequestV1(projectIri: IRI, resourceIri: IRI, propertyIr
 case class CreateStandoffResponseV1(id: IRI, userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = RepresentationV1JsonProtocol.createStandoffResponseV1Format.write(this)
 }
+
+/**
+  * Represents a request for a text value. A successful response will be a [[StandoffGetResponseV1]].
+  *
+  * @param valueIri    the IRI of the value requested.
+  * @param userProfile the profile of the user making the request.
+  */
+case class StandoffGetRequestV1(valueIri: IRI, userProfile: UserProfileV1) extends StandoffResponderRequestV1
+
+/**
+  * Provides a text value in XML.
+  *
+  * @param xml      the XML file representing the text value.
+  * @param userdata information about the user that made the request.
+  */
+case class StandoffGetResponseV1(xml: String, userdata: UserDataV1)
 
 /**
   * Represents the data types of standoff classes.

@@ -72,6 +72,20 @@ object StandoffRouteV1 extends Authenticator {
                     )
                 }
             }
+        } ~ path("v1" / "standoff" / Segment) { iri: String =>
+            requestContext => {
+                val userProfile = getUserProfileV1(requestContext)
+                val requestMessage = StandoffGetRequestV1(valueIri = InputValidation.toIri(iri, () => throw BadRequestException("invalid Iri")), userProfile = userProfile)
+
+
+                RouteUtilV1.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+            }
         }
 
     }

@@ -28,7 +28,7 @@ import akka.stream.ActorMaterializer
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueRequestV1, CreateValueResponseV1, TextValueV1}
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.standoff._
@@ -55,35 +55,8 @@ class StandoffResponderV1 extends ResponderV1 {
       */
     def receive = {
         case CreateStandoffRequestV1(projIri, resIri, propIri, xml, userProfile, uuid) => future2Message(sender(), createStandoff(projIri, resIri, propIri, xml, userProfile, uuid), log)
+        case StandoffGetRequestV1(valueIri, userProfile) => future2Message(sender(), getStandoffV1(valueIri, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
-    }
-
-    // represents the possible data types of a standoff class
-    object dataTypes extends Enumeration {
-        val date = Value(0, "date")
-        val uri = Value(1, "uri")
-        val color = Value(2, "color")
-        val integer = Value(3, "integer")
-        val decimal = Value(4, "decimal")
-        val interval = Value(5, "interval")
-        val boolean = Value(6, "boolean")
-        val link = Value(7, "link")
-
-        val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
-
-        /**
-          * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-          * [[BadRequestException]].
-          *
-          * @param name the name of the value.
-          * @return the requested value.
-          */
-        def lookup(name: String): Value = {
-            valueMap.get(name) match {
-                case Some(value) => value
-                case None => throw BadRequestException(s"requested data type not supported: $name")
-            }
-        }
     }
 
     /**
@@ -94,7 +67,7 @@ class StandoffResponderV1 extends ResponderV1 {
       * @param standoffNodeFromXML  the given standoff node.
       * @return the value of the attribute.
       */
-    private def getDataTypeAttribute(XMLtoStandoffMapping: MapXMLTagToStandoffClass, dataType: dataTypes.Value, standoffNodeFromXML: StandoffTag): String = {
+    private def getDataTypeAttribute(XMLtoStandoffMapping: MapXMLTagToStandoffClass, dataType: StandoffDataTypeClasses.Value, standoffNodeFromXML: StandoffTag): String = {
 
         if (XMLtoStandoffMapping.dataType.isEmpty || XMLtoStandoffMapping.dataType.get != dataType) {
             throw BadRequestException(s"wrong data type definition provided in mapping for standoff class ${XMLtoStandoffMapping.standoffClassIri}")
@@ -136,7 +109,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                     // check if a cardinality exists for the current attribute
                     if (classSpecificProps.get(standoffTagPropIri).isEmpty) {
-                        throw BadRequestException(s"no cardinility defined for attr '${attr.key}'")
+                        throw BadRequestException(s"no cardinality defined for attr '${attr.key}'")
                     }
 
                     // check if the object datatype constraint is respected for the current property
@@ -208,16 +181,16 @@ class StandoffResponderV1 extends ResponderV1 {
 
     }
 
-    case class MapXMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, IRI] = Map.empty[String, IRI], dataType: Option[dataTypes.Value] = None, dataTypeXMLAttribute: Option[String] = None)
+    case class MapXMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, IRI] = Map.empty[String, IRI], dataType: Option[StandoffDataTypeClasses.Value] = None, dataTypeXMLAttribute: Option[String] = None)
 
     /**
-      * Creates standoff from a given XML.
+      * Creates standoff from a given XML file.
       *
       * @param xml         the xml file sent by the client.
       * @param userProfile the client that made the request.
       * @return a [[CreateStandoffResponseV1]]
       */
-    def createStandoff(projectIri: IRI, resourceIri: IRI, propertyIRI: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[CreateStandoffResponseV1] = {
+    private def createStandoff(projectIri: IRI, resourceIri: IRI, propertyIRI: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[CreateStandoffResponseV1] = {
 
         // TODO: consider namespaces of tags and attributes
         val mappingXMLTags2StandoffTags = Map(
@@ -225,8 +198,8 @@ class StandoffResponderV1 extends ResponderV1 {
             "p" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffParagraphTag),
             "i" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffItalicTag),
             "b" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffBoldTag),
-            "birthday" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffBirthdayTag", dataType = Some(dataTypes.date), dataTypeXMLAttribute = Some("date")),
-            "interval" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffRangeTag", dataType = Some(dataTypes.interval), dataTypeXMLAttribute = Some("range"), attributesToProps = Map("unsure" -> "http://www.knora.org/ontology/knora-base#standoffTagIsUnsure"))
+            "birthday" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffBirthdayTag", dataType = Some(StandoffDataTypeClasses.StandoffDateTag), dataTypeXMLAttribute = Some("date")),
+            "interval" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffRangeTag", dataType = Some(StandoffDataTypeClasses.StandoffIntervalTag), dataTypeXMLAttribute = Some("range"), attributesToProps = Map("unsure" -> "http://www.knora.org/ontology/knora-base#standoffTagIsUnsure"))
         )
 
         val standoffUtil = new StandoffUtil()
@@ -294,7 +267,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                         case Some(StandoffDataTypeClasses.StandoffLinkTag) =>
 
-                            val linkString: String = getDataTypeAttribute(standoffDefFromMapping, dataTypes.link, standoffNodeFromXML)
+                            val linkString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffLinkTag, standoffNodeFromXML)
 
                             val internalLink: StandoffTagAttributeV1 = StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = InputValidation.toIri(linkString, () => throw BadRequestException(s"Iri invalid: $linkString")))
 
@@ -317,7 +290,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                         case Some(StandoffDataTypeClasses.StandoffColorTag) =>
 
-                            val colorString: String = getDataTypeAttribute(standoffDefFromMapping, dataTypes.color, standoffNodeFromXML)
+                            val colorString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffColorTag, standoffNodeFromXML)
 
                             val colorValue = StandoffTagStringAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasColor ,value = InputValidation.toColor(colorString, () => throw BadRequestException(s"Color invalid: $colorString")))
 
@@ -340,7 +313,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                         case Some(StandoffDataTypeClasses.StandoffUriTag) =>
 
-                            val uriString: String = getDataTypeAttribute(standoffDefFromMapping, dataTypes.uri, standoffNodeFromXML)
+                            val uriString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffUriTag, standoffNodeFromXML)
 
                             val uriValue = StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri, value = InputValidation.toIri(uriString, () => throw BadRequestException(s"Iri invalid: $uriString")))
 
@@ -364,7 +337,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                         case Some(StandoffDataTypeClasses.StandoffIntegerTag) =>
 
-                            val integerString: String = getDataTypeAttribute(standoffDefFromMapping, dataTypes.integer, standoffNodeFromXML)
+                            val integerString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffIntegerTag, standoffNodeFromXML)
 
                             val integerValue = StandoffTagIntegerAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasInteger, value = InputValidation.toInt(integerString, () => throw BadRequestException(s"Integer value invalid: $integerString")))
 
@@ -387,7 +360,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                         case Some(StandoffDataTypeClasses.StandoffDecimalTag) =>
 
-                            val decimalString: String = getDataTypeAttribute(standoffDefFromMapping, dataTypes.decimal, standoffNodeFromXML)
+                            val decimalString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffDecimalTag, standoffNodeFromXML)
 
                             val decimalValue = StandoffTagDecimalAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasDecimal, value = InputValidation.toInt(decimalString, () => throw BadRequestException(s"Integer value invalid: $decimalString")))
 
@@ -410,7 +383,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                         case Some(StandoffDataTypeClasses.StandoffBooleanTag) =>
 
-                            val booleanString: String = getDataTypeAttribute(standoffDefFromMapping, dataTypes.boolean, standoffNodeFromXML)
+                            val booleanString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffBooleanTag, standoffNodeFromXML)
 
                             val booleanValue = StandoffTagBooleanAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasBoolean, value = InputValidation.toBoolean(booleanString, () => throw BadRequestException(s"Integer value invalid: $booleanString")))
 
@@ -433,11 +406,11 @@ class StandoffResponderV1 extends ResponderV1 {
 
                         case Some(StandoffDataTypeClasses.StandoffIntervalTag) =>
 
-                            val intervalString: String = getDataTypeAttribute(standoffDefFromMapping, dataTypes.interval, standoffNodeFromXML)
+                            val intervalString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffIntervalTag, standoffNodeFromXML)
 
                             // interval String contains two decimals separated by a comma
                             val interval: Array[String] = intervalString.split(",")
-                            if (interval.size != 2) {
+                            if (interval.length != 2) {
                                 throw BadRequestException(s"interval string $intervalString is invalid, it should contain two decimals separated by a comma")
                             }
 
@@ -464,7 +437,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                         case Some(StandoffDataTypeClasses.StandoffDateTag) =>
 
-                            val dateString: String = getDataTypeAttribute(standoffDefFromMapping, dataTypes.date, standoffNodeFromXML)
+                            val dateString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffDateTag, standoffNodeFromXML)
 
                             val dateValue = DateUtilV1.createJDCValueV1FromDateString(dateString)
 
@@ -533,6 +506,59 @@ class StandoffResponderV1 extends ResponderV1 {
 
 
         } yield CreateStandoffResponseV1(id = createValueResponse.id, userdata = userProfile.userData)
+
+    }
+
+    /**
+      *
+      * Queries a text value with standoff and returns it as XML.
+      *
+      * @param valueIri    the IRI of the text value to be queried.
+      * @param userProfile the profile of the user making the request.
+      * @return a [[StandoffGetResponseV1]].
+      */
+    private def getStandoffV1(valueIri: IRI, userProfile: UserProfileV1): Future[StandoffGetResponseV1] = {
+
+        for {
+            // ask the ValuesResponder to query the text value.
+            value: ValueGetResponseV1 <- (responderManager ? ValueGetRequestV1(valueIri = valueIri, userProfile = userProfile)).mapTo[ValueGetResponseV1]
+
+            // make sure it is a text value
+            _ = if (value.valuetype != OntologyConstants.KnoraBase.TextValue) {
+                throw BadRequestException(s"the requested value $valueIri is not a text value, but a ${value.valuetype}")
+            }
+
+            // create XML from the text value
+            textValue: TextValueV1 = value.value match {
+                case textValue: TextValueV1 => textValue
+                case _ => throw BadRequestException(s"value could not be interpreted as a TextValueV1")
+            }
+
+            standoffUtil = new StandoffUtil()
+
+            /*textValue.textattr.map {
+                standoffTagV1 =>
+
+                    if (standoffTagV1.endIndex.isDefined) {
+                        // it is a free standoff tag
+                        FreeStandoffTag(
+                            standoffClassIri =
+                        )
+                    } else {
+                        // it is a hierarchical standoff tag
+                        HierarchicalStandoffTag(
+
+                        )
+                    }
+
+
+            }*/
+
+            //standoffUtil.textWithStandoff2Xml
+
+        } yield Unit
+
+        Future(StandoffGetResponseV1(xml = "", userdata = userProfile.userData))
 
     }
 
