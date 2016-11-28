@@ -146,10 +146,7 @@ class SearchResponderV1 extends ResponderV1 {
 
             // _ = println("================" + pagingSparql)
 
-            // If we're using GraphDB, optimise this query by using inference.
-            useInference = settings.triplestoreType.startsWith("graphdb")
-
-            searchResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql = searchSparql, useInference = useInference)).mapTo[SparqlSelectResponse]
+            searchResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
 
             // Get the IRIs of all the properties mentioned in the search results.
             propertyIris: Set[IRI] = searchResponse.results.bindings.flatMap(_.rowMap.get("resourceProperty")).toSet
@@ -474,10 +471,7 @@ class SearchResponderV1 extends ResponderV1 {
 
             // _ = println(searchSparql)
 
-            // If we're using GraphDB, optimise this query by using inference.
-            useInference = settings.triplestoreType.startsWith("graphdb")
-
-            searchResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql = searchSparql, useInference = useInference)).mapTo[SparqlSelectResponse]
+            searchResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
 
             // Collect all the resource class IRIs mentioned in the search results.
             resourceClassIris: Set[IRI] = searchResponse.results.bindings.map(_.rowMap("resourceClass")).toSet

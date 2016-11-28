@@ -340,16 +340,23 @@ object SipiException {
 abstract class ApplicationConfigurationException(message: String) extends Exception(message) with KnoraException
 
 object ApplicationConfigurationException {
-    // So we can match instances of InternalServerException, even though it's an abstract class
+    // So we can match instances of ApplicationConfigurationException, even though it's an abstract class
     def unapply(e: ApplicationConfigurationException): Option[ApplicationConfigurationException] = Option(e)
 }
 
 /**
-  * Indicates that an unsupported triplestore was selected in the configuration
+  * Indicates that an unsupported triplestore was selected in the configuration.
   *
   * @param message a description of the error.
   */
 case class UnsuportedTriplestoreException(message: String) extends ApplicationConfigurationException(message)
+
+/**
+  * Indicates that the HTTP configuration is incorrect.
+  *
+  * @param message a description of the error.
+  */
+case class HttpConfigurationException(message: String) extends ApplicationConfigurationException(message)
 
 
 /**

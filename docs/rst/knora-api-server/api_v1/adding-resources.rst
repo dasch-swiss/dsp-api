@@ -21,6 +21,8 @@
 Adding Resources
 ================
 
+.. contents:: :local:
+
 In order to create a resource, the HTTP method ``POST`` has to be used.
 The request has to be sent to the Knora server using the ``resources`` path segment:
 

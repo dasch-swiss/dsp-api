@@ -74,7 +74,7 @@ object SearchResponderV1Spec {
         preview_ny = 32,
         preview_nx = 32,
         value = Vector(
-            "Ein Ding f\u00FCr wen, der die Dinge liebe",
+            "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
             "Ich liebe die Dinge, sie sind alles f\u00FCr mich.",
             "Na ja, die Dinge sind OK."
         ),
@@ -100,7 +100,7 @@ object SearchResponderV1Spec {
         preview_ny = 32,
         preview_nx = 32,
         value = Vector(
-            "Ein Ding f\u00FCr wen, der die Dinge liebe",
+            "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
             "Ich liebe die Dinge, sie sind alles f\u00FCr mich."
         ),
         valuelabel = Vector(
@@ -122,7 +122,7 @@ object SearchResponderV1Spec {
         rights = Some(2),
         preview_ny = 32,
         preview_nx = 32,
-        value = Vector("Ein Ding f\u00FCr wen, der die Dinge liebe"),
+        value = Vector("Ein Ding f\u00FCr jemanden, dem die Dinge gefallen"),
         valuelabel = Vector("Label"),
         valuetype_id = Vector("http://www.w3.org/2000/01/rdf-schema#label"),
         iconlabel = Some("Ding"),
@@ -262,8 +262,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 iconlabel = Some("Buch"),
                 icontitle = Some("Buch"),
-                iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
-                preview_path = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
+                iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
+                preview_path = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
                 obj_id = "http://data.knora.org/c5058f3a"
             ),
             SearchResultRowV1(
@@ -284,8 +284,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 iconlabel = Some("Buch"),
                 icontitle = Some("Buch"),
-                iconsrc = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
-                preview_path = Some(settings.baseSALSAHUrl + settings.projectIconsBasePath + "incunabula/book.gif"),
+                iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
+                preview_path = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
                 obj_id = "http://data.knora.org/ff17e5ef9601"
             )
         ),
@@ -821,7 +821,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "should filter full-text search results using permissions on resources and values" in {
+        "filter full-text search results using permissions on resources and values" in {
             // When the owner of the resource and its values, anythingUser1, searches for something that matches the resource's label
             // as well as both values, the search result should include the resource and show that both values matched.
 
@@ -854,7 +854,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // User anythingUser2 should also get the resource as a search result by searching for something that matches the resource's label, but not the values.
 
             actorUnderTest ! FulltextSearchGetRequestV1(
-                searchValue = "für wen",
+                searchValue = "für jemanden",
                 filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
                 userProfile = anythingUser2,
                 startAt = 0,
@@ -909,7 +909,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
             actorUnderTest ! FulltextSearchGetRequestV1(
-                searchValue = "für wen",
+                searchValue = "für jemanden",
                 filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
                 userProfile = incunabulaUser,
                 startAt = 0,

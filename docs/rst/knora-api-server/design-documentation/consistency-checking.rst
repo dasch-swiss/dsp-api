@@ -169,7 +169,7 @@ Rules use variable names for subjects, predicates, and objects, and they can use
 property names.
 
 Empty string as object
-~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^
 
 If subject ``i`` has a predicate ``p`` whose object is an empty string,
 the constraint is violated:
@@ -181,7 +181,7 @@ the constraint is violated:
         ------------------------------------
 
 Subject and object class constraints
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If subject ``i`` has a predicate ``p`` that requires a subject of type ``t``,
 and ``i`` is not a ``t``, the constraint is violated:
@@ -206,7 +206,7 @@ and the object of ``p`` is not a ``t``, the constraint is violated:
         j <rdf:type> t
 
 Cardinality constraints
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^
 
 A simple implementation of a consistency rule to check ``owl:maxCardinality
 1``, for objects that can be marked as deleted, could look like this:

@@ -26,8 +26,8 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 * The OWL ontologies
 * API operations for querying and updating data
-* The unit testing framework, which includes many tests
 * API operations dealing with binary files and Sipi
+* The testing framework, which includes many tests
 * Documentation
 
 ### Currently being implemented
