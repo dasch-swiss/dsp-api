@@ -22,6 +22,7 @@
 Store Module
 ============
 
+.. contents:: :local:
 
 Overview
 --------

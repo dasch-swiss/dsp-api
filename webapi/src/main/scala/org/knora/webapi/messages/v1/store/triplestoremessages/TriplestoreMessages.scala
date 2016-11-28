@@ -2,7 +2,7 @@ package org.knora.webapi.messages.v1.store.triplestoremessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.util.ErrorHandlingMap
-import org.knora.webapi.{InconsistentTriplestoreDataException, TriplestoreResponseException}
+import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, TriplestoreResponseException}
 import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -21,17 +21,11 @@ case class HelloTriplestore(txt: String) extends TriplestoreRequest
 case object CheckConnection extends TriplestoreRequest
 
 /**
-  * Represents a SPARQL SELECT query to be sent to the triplestore.
+  * Represents a SPARQL SELECT query to be sent to the triplestore. A successful response will be a [[SparqlSelectResponse]].
   *
   * @param sparql       the SPARQL string.
-  * @param useInference if `true`, ask the triplestore to use inference in the query, if possible. If the triplestore
-  *                     is being accessed over HTTP, this is likely to mean setting a parameter in the HTTP request.
-  *                     Note that with GraphDB, setting this to `false` is not sufficient to completely disable inference,
-  *                     because it does not disable the `owl:sameAs` optimisation. To completely disable inference
-  *                     for a query in GraphDB, you must include `FROM <http://www.ontotext.com/explicit>`
-  *                     in the SPARQL.
   */
-case class SparqlSelectRequest(sparql: String, useInference: Boolean = false) extends TriplestoreRequest
+case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
 
 /**
   * Represents a response to a SPARQL SELECT query, containing a parsed representation of the response (JSON, etc.)
@@ -87,62 +81,20 @@ case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
     }, "An empty string is not allowed as a variable name or value in a VariableResultsRow")
 }
 
-/*
- * Transaction management for SPARQL updates over HTTP is currently commented out because of
- * issue <https://github.com/dhlab-basel/Knora/issues/85>.
- */
-
-/*
+/**
+  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
+  * [[SparqlConstructResponse]].
+  *
+  * @param sparql       the SPARQL string.
+  */
+case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
 
 /**
-  * Starts a new SPARQL update transaction.
+  * A response to a [[SparqlConstructRequest]].
+  *
+  * @param statements a map of subject IRIs to statements about each subject.
   */
-case class BeginUpdateTransaction() extends TriplestoreRequest
-
-/**
-  * Indicates that the specified transaction was begun.
-  * @param transactionID the transaction ID.
-  */
-case class UpdateTransactionBegun(transactionID: UUID)
-
-/**
-  * Commits a SPARQL update transaction.
-  * @param transactionID the transaction ID.
-  */
-case class CommitUpdateTransaction(transactionID: UUID) extends TriplestoreRequest
-
-/**
-  * Indicates that the specified transaction was committed.
-  * @param transactionID the transaction ID.
-  */
-case class UpdateTransactionCommitted(transactionID: UUID)
-
-/**
-  * Rolls back an uncommitted SPARQL update transaction.
-  * @param transactionID the transaction ID.
-  */
-case class RollbackUpdateTransaction(transactionID: UUID) extends TriplestoreRequest
-
-/**
-  * Indicates that the specified transaction was rolled back.
-  * @param transactionID the transaction ID.
-  */
-case class UpdateTransactionRolledBack(transactionID: UUID)
-
-/**
-  * Represents a SPARQL Update operation to be entered as part of an update transaction.
-  * @param transactionID the transaction ID.
-  * @param sparql the SPARQL string.
-  */
-case class SparqlUpdateRequest(transactionID: UUID, sparql: String) extends TriplestoreRequest
-
-/**
-  * Indicates that the requested SPARQL Update was entered into the transaction..
-  * @param transactionID the transaction ID.
-  */
-case class SparqlUpdateResponse(transactionID: UUID)
-
-*/
+case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
 
 /**
   * Represents a SPARQL Update operation to be performed.

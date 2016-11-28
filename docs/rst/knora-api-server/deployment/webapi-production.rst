@@ -20,6 +20,8 @@
 Running the Knora API Server on a Production System
 ====================================================
 
+.. contents:: :local:
+
 This section describes possible ways of running the Knora API server in
 an production environment. The description should only be taken as a first
 short introduction to this topic. Further reading of the referenced materials
@@ -27,7 +29,7 @@ is advised.
 
 .. note::
     Our platform of choice is Linux CentOS 7 and is thus assumed in the
-    description. The generall idea should be usable on all platforms with
+    description. The general idea should be usable on all platforms with
     small changes.
 
 To run the Knora API server, we have two main components. First, the ``jar``

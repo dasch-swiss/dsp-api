@@ -19,10 +19,12 @@
 .. _futures-with-akka:
 
 Futures with Akka
-==================
+=================
+
+.. contents:: :local:
 
 Introduction
---------------
+------------
 
 `Scala's documentation on futures`_ introduces them in this way:
 
@@ -102,7 +104,7 @@ are available; see ``org.knora.webapi.util.ActorUtils.parallelAsk``.
 .. _handling-errors-with-futures:
 
 Handling Errors with Futures
------------------------------
+----------------------------
 
 The constructors and methods of ``Future`` (like those of ``Try``) catch
 exceptions, which cause the future to fail. This very useful property of
@@ -153,7 +155,7 @@ beginning* of a ``for``-comprehension. In the rest of the ``for``
 comprehension, you'll already implicitly have a ``Future`` object.
 
 Designing with Futures
------------------------
+----------------------
 
 In the current design, the Knora API Server almost never blocks to wait for a
 future to complete. The normal flow of control works like this:
@@ -193,7 +195,7 @@ need to use ``ask`` to get some information from another actor), have
 the method return a future.
 
 Mixing Futures with non-Futures
---------------------------------
+-------------------------------
 
 If you have a ``match ... case`` or ``if`` expression, and one branch
 obtains some data in a future, but another branch can produce the data
@@ -216,7 +218,7 @@ so that both branches have the same type:
     }
 
 How to Write For-Comprehensions
---------------------------------
+-------------------------------
 
 Here are some basic rules for writing ``for``-comprehensions:
 
@@ -236,7 +238,7 @@ The ``yield`` returns an object of the same type as the generators,
 which all have to produce the same type (e.g. ``Future``).
 
 Execution Contexts
--------------------
+------------------
 
 Whenever you use a future, there has to be an implicit 'execution context' in
 scope. `Scala's documentation on futures`_ says, 'you can think of execution

@@ -1385,31 +1385,15 @@ $(function() {
 				height: '25px',
 				'background-color': '#bbb'
 			}));
-			graph_tb.append($('<input>').attr({type: 'checkbox'}).prop({checked: true}).css({float: 'left'}).on('click', function(event) {
-				tab_content.find('.graphview').graph('showAttributes', $(this).prop('checked'));
-			}))
-			.append($('<div>').css({float: 'left'}).text('Show attributes'))
-			.append($('<div>').append('&nbsp;').css({float: 'left', width: '50px'}))
-			.append($('<input>').attr({type: 'radio', name: 'mouseaction'}).prop({checked: 'checked'}).css({float: 'left'}).on('click', function(event){
-				tab_content.find('.graphview').graph('setMouseAction', 'MOVE');
-			}))
-			.append($('<div>').css({float: 'left'}).text('move node'))
-			.append($('<input>').attr({type: 'radio', name: 'mouseaction'}).css({float: 'left'}).on('click', function(event) {
-				tab_content.find('.graphview').graph('setMouseAction', 'NODEACTION');
-			}))
-			.append($('<div>').css({float: 'left'}).text('collapse/expand node'));
-			tab_content.append($('<canvas>').addClass('graphview').attr({
-				width: tab_content.innerWidth(),
-				height: tab_content.innerHeight() - 26
-			}).css({
+			graph_tb.css({
 				width: tab_content.innerWidth(),
 				height: tab_content.innerHeight() - 26,
 				top: '26px',
 				'background-color': '#fff'
-			}));
+			}).addClass('graphview');
 			SALSAH.ApiGet('graphdata', res_id, {}, function(data) {
 				if (data.status == ApiErrors.OK) {
-					tab_content.find('.graphview').graph({nodes: data.graph.nodes, edges: data.graph.edges});
+					tab_content.find('.graphview').graph("init", {nodes: data.nodes, edges: data.edges});
 				}
 				else {
 					alert(data.errormsg);
