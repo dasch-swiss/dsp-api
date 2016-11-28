@@ -434,7 +434,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             (standoffInfo: Map[IRI, String]) =>
 
                 // create a sequence of `StandoffTagAttributeV1` from the given attributes
-                val attributes: Seq[StandoffTagAttributeV1] =  (standoffInfo -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
+                val attributes: Seq[StandoffTagAttributeV1] = (standoffInfo -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
                     case (propIri, value) =>
 
                         // check if the given property has an object type constraint (linking property) or an object data type constraint
@@ -474,7 +474,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
                 }.toVector
 
-                StandoffTagV1(
+            StandoffTagV1(
                     standoffTagClassIri = standoffInfo(OntologyConstants.Rdf.Type),
                     startPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
                     endPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
@@ -482,6 +482,23 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                         case Some(dataTypeClassEntityInfo: EntityInfoV1) =>
                             dataTypeClassEntityInfo.dataType
 
+                        case None => None
+                    },
+                    startIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasStartIndex) match {
+                        case Some(startIndex: String) => Some(startIndex.toInt)
+                        case None => None
+                    },
+                    endIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex) match {
+                        case Some(endIndex: String) => Some(endIndex.toInt)
+                        case None => None
+                    },
+                    uuid = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasUUID),
+                    startParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex) match {
+                        case Some(startParentIndex: String) => Some(startParentIndex.toInt)
+                        case None => None
+                    },
+                    endParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex) match {
+                        case Some(endParentIndex: String) => Some(endParentIndex.toInt)
                         case None => None
                     },
                     attributes = attributes

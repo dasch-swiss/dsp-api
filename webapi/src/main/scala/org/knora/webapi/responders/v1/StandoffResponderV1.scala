@@ -183,6 +183,16 @@ class StandoffResponderV1 extends ResponderV1 {
 
     case class MapXMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, IRI] = Map.empty[String, IRI], dataType: Option[StandoffDataTypeClasses.Value] = None, dataTypeXMLAttribute: Option[String] = None)
 
+    // TODO: consider namespaces of tags and attributes
+    val mappingXMLTags2StandoffTags = Map(
+        "text" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffRootTag, attributesToProps = Map("documentType" -> "http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType")),
+        "p" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffParagraphTag),
+        "i" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffItalicTag),
+        "b" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffBoldTag),
+        "birthday" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffBirthdayTag", dataType = Some(StandoffDataTypeClasses.StandoffDateTag), dataTypeXMLAttribute = Some("date")),
+        "interval" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffRangeTag", dataType = Some(StandoffDataTypeClasses.StandoffIntervalTag), dataTypeXMLAttribute = Some("range"), attributesToProps = Map("unsure" -> "http://www.knora.org/ontology/knora-base#standoffTagIsUnsure"))
+    )
+
     /**
       * Creates standoff from a given XML file.
       *
@@ -191,16 +201,6 @@ class StandoffResponderV1 extends ResponderV1 {
       * @return a [[CreateStandoffResponseV1]]
       */
     private def createStandoff(projectIri: IRI, resourceIri: IRI, propertyIRI: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[CreateStandoffResponseV1] = {
-
-        // TODO: consider namespaces of tags and attributes
-        val mappingXMLTags2StandoffTags = Map(
-            "text" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffRootTag, attributesToProps = Map("documentType" -> "http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType")),
-            "p" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffParagraphTag),
-            "i" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffItalicTag),
-            "b" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffBoldTag),
-            "birthday" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffBirthdayTag", dataType = Some(StandoffDataTypeClasses.StandoffDateTag), dataTypeXMLAttribute = Some("date")),
-            "interval" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffRangeTag", dataType = Some(StandoffDataTypeClasses.StandoffIntervalTag), dataTypeXMLAttribute = Some("range"), attributesToProps = Map("unsure" -> "http://www.knora.org/ontology/knora-base#standoffTagIsUnsure"))
-        )
 
         val standoffUtil = new StandoffUtil()
 
@@ -241,7 +241,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 standoffTagClassIri = standoffClassIri,
                                 startPosition = hierarchicalStandoffTag.startPosition,
                                 endPosition = hierarchicalStandoffTag.endPosition,
-                                uuid = Some(hierarchicalStandoffTag.uuid),
+                                uuid = Some(hierarchicalStandoffTag.uuid.toString),
                                 startIndex = Some(hierarchicalStandoffTag.index),
                                 endIndex = None,
                                 startParentIndex = hierarchicalStandoffTag.parentIndex,
@@ -253,7 +253,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 standoffTagClassIri = standoffClassIri,
                                 startPosition = freeStandoffTag.startPosition,
                                 endPosition = freeStandoffTag.endPosition,
-                                uuid = Some(freeStandoffTag.uuid),
+                                uuid = Some(freeStandoffTag.uuid.toString),
                                 startIndex = Some(freeStandoffTag.startIndex),
                                 endIndex = Some(freeStandoffTag.endIndex),
                                 startParentIndex = freeStandoffTag.startParentIndex,
@@ -536,23 +536,85 @@ class StandoffResponderV1 extends ResponderV1 {
 
             standoffUtil = new StandoffUtil()
 
-            /*textValue.textattr.map {
+            _ = textValue.textattr.map {
                 standoffTagV1 =>
+
+                    // get tagname from standoff class Iri
+                    val (tagname: String, mapping: MapXMLTagToStandoffClass) = mappingXMLTags2StandoffTags.find {
+                        case (tagname: String, mapping: MapXMLTagToStandoffClass) =>
+                            mapping.standoffClassIri == standoffTagV1.standoffTagClassIri
+                    }.getOrElse(throw NotFoundException(s"standoff class Iri ${standoffTagV1.standoffTagClassIri} not found in mapping"))
+
+
+                    // recreate data type specific attribute
+                    val attributes: Seq[StandoffTagAttribute] = standoffTagV1.dataType match {
+                        case Some(StandoffDataTypeClasses.StandoffDateTag) =>
+                            // create one attribute from date properties
+                            val dataTypeAttrName = mapping.dataTypeXMLAttribute.getOrElse(throw NotFoundException(s"data type attribute not founn in mapping for $tagname"))
+
+                            val julianDayCountValueV1: UpdateValueV1 = JulianDayCountValueV1(
+                                dateval1 = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasStartJDC).get.stringValue.toInt,
+                                dateval2 = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasEndJDC).get.stringValue.toInt,
+                                dateprecision1 = KnoraPrecisionV1.lookup(standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasStartPrecision).get.stringValue),
+                                dateprecision2 = KnoraPrecisionV1.lookup(standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasEndPrecision).get.stringValue),
+                                calendar = KnoraCalendarV1.lookup(standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasCalendar).get.stringValue)
+                            )
+
+                            val conventionalAttributes = standoffTagV1.attributes.filterNot(attr => Set(OntologyConstants.KnoraBase.ValueHasCalendar, OntologyConstants.KnoraBase.ValueHasStartJDC, OntologyConstants.KnoraBase.ValueHasEndJDC, OntologyConstants.KnoraBase.ValueHasStartPrecision, OntologyConstants.KnoraBase.ValueHasEndPrecision).contains(attr.standoffPropertyIri))
+
+                            StandoffTagAttribute(key = dataTypeAttrName, value = julianDayCountValueV1.toString, xmlNamespace = None) +: conventionalAttributes.map {
+                                attr =>
+                                    StandoffTagAttribute(key = mapping.attributesToProps.find {
+                                        case (attrName, propIri) =>
+                                            propIri == attr.standoffPropertyIri
+                                    }.getOrElse(throw NotFoundException(s"attribute name not found in mapping for: ${attr.standoffPropertyIri}"))._1,
+                                        value = attr.stringValue,
+                                        xmlNamespace = None
+                                    )
+                            }
+
+                        case None => standoffTagV1.attributes.map { // TODO: create a method that handles this
+                            attr =>
+                                StandoffTagAttribute(key = mapping.attributesToProps.find {
+                                    case (attrName, propIri) =>
+                                        propIri == attr.standoffPropertyIri
+                                }.getOrElse(throw NotFoundException(s"attribute name not found in mapping for: ${attr.standoffPropertyIri}"))._1,
+                                    value = attr.stringValue,
+                                    xmlNamespace = None
+                                )
+                        }
+
+                        case unknownDataType => throw InconsistentTriplestoreDataException(s"the triplestore returned the data type $unknownDataType for $standoffTagV1 that could be handled")
+                    }
+
 
                     if (standoffTagV1.endIndex.isDefined) {
                         // it is a free standoff tag
                         FreeStandoffTag(
-                            standoffClassIri =
+                            tagName = tagname,
+                            uuid = UUID.fromString(standoffTagV1.uuid.get), // TODO: this is an option in knora-base! UUID should also be an option in StandoffUtil
+                            startPosition = standoffTagV1.startPosition,
+                            endPosition = standoffTagV1.endPosition,
+                            startIndex = standoffTagV1.startIndex.getOrElse(throw InconsistentTriplestoreDataException(s"start index is missing for a free standoff tag belonging to $valueIri")),
+                            endIndex = standoffTagV1.endIndex.getOrElse(throw InconsistentTriplestoreDataException(s"end index is missing for a free standoff tag belonging to $valueIri")),
+                            startParentIndex = standoffTagV1.startParentIndex,
+                            endParentIndex = standoffTagV1.endParentIndex,
+                            attributes = attributes.toSet
                         )
                     } else {
                         // it is a hierarchical standoff tag
                         HierarchicalStandoffTag(
-
+                            tagName = tagname,
+                            uuid = UUID.fromString(standoffTagV1.uuid.get), // TODO: this is an option in  knora-base! UUID should also be an option in StandoffUtil
+                            startPosition = standoffTagV1.startPosition,
+                            endPosition = standoffTagV1.endPosition,
+                            index = standoffTagV1.startIndex.getOrElse(throw InconsistentTriplestoreDataException(s"start index is missing for a hierarchical standoff tag belonging to $valueIri")),
+                            parentIndex = standoffTagV1.startParentIndex,
+                            attributes = attributes.toSet
                         )
                     }
 
-
-            }*/
+            }
 
             //standoffUtil.textWithStandoff2Xml
 

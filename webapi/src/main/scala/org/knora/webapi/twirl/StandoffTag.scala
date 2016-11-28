@@ -134,7 +134,7 @@ case class StandoffTagBooleanAttributeV1(standoffPropertyIri: IRI, value: Boolea
   */
 case class StandoffTagV1(standoffTagClassIri: IRI,
                          dataType: Option[StandoffDataTypeClasses.Value] = None,
-                         uuid: Option[UUID] = None,
+                         uuid: Option[String] = None,
                          startPosition: Int,
                          endPosition: Int,
                          startIndex: Option[Int] = None,
