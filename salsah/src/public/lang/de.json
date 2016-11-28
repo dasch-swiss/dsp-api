@@ -228,7 +228,7 @@
 	"_hlist_node_expl" : "Klicken sie unten auf %s, um den Knoten zu löschen, oder auf %s, um ohne löschen das Fenster zu schliessen!",
 	"_salsah_help" : "SALSAH Hilfe",
 	"_limitsearch" : "Suche eingrenzen auf",
-	"_langchangeq" : "Sprache der Benutzeroberfläche ändern ?",
+	"_langchangeq" : "Sprache der Benutzeroberfläche ändern (nicht gesicherte änderungen gehen verloren)?",
 	"_select_all" : "Alle auswählen",
 	"_deselect_all" : "Alle abwählen",
 	"_alert_missing_restype" : "Bitte einen Resource-Typen wählen",

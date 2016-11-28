@@ -22,17 +22,10 @@ package org.knora.salsah.browser
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
-import org.knora.salsah.SettingsImpl
 import org.openqa.selenium.{By, WebElement}
-import org.scalatest._
 import org.scalatest.concurrent.Eventually._
-import spray.client.pipelining._
-import spray.http.MediaTypes._
-import spray.http.{HttpRequest, HttpResponse, _}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 /**
   * Tests the SALSAH web interface using Selenium.
@@ -85,10 +78,9 @@ class ResourceCreationSpec extends SalsahSpec {
         }
 
 
-
         "have the correct title" in {
             page.load()
-            page.getPageTitle should be ("System for Annotation and Linkage of Sources in Arts and Humanities")
+            page.getPageTitle should be("System for Annotation and Linkage of Sources in Arts and Humanities")
 
         }
 
