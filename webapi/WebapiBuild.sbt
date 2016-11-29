@@ -3,6 +3,7 @@ import sbt.Keys._
 import spray.revolver.RevolverPlugin._
 import com.typesafe.sbt.SbtNativePackager.autoImport._
 
+connectInput in run := true
 
 // Bring the sbt-aspectj settings into this build
 //aspectjSettings
