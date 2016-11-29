@@ -72,7 +72,9 @@ case class StandoffGetRequestV1(valueIri: IRI, userProfile: UserProfileV1) exten
   * @param xml      the XML file representing the text value.
   * @param userdata information about the user that made the request.
   */
-case class StandoffGetResponseV1(xml: String, userdata: UserDataV1)
+case class StandoffGetResponseV1(xml: String, userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = RepresentationV1JsonProtocol.standoffGetResponseV1Format.write(this)
+}
 
 /**
   * Represents the data types of standoff classes.
@@ -131,6 +133,39 @@ object StandoffProperties {
         OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex,
         OntologyConstants.KnoraBase.StandoffTagHasUUID
     )
+
+    // represents the standoff properties defined on the date standoff tag
+    val dateProperties = Set(
+        OntologyConstants.KnoraBase.ValueHasCalendar,
+        OntologyConstants.KnoraBase.ValueHasStartJDC,
+        OntologyConstants.KnoraBase.ValueHasEndJDC,
+        OntologyConstants.KnoraBase.ValueHasStartPrecision,
+        OntologyConstants.KnoraBase.ValueHasEndPrecision
+    )
+
+    // represents the standoff properties defined on the interval standoff tag
+    val intervalProperties = Set(
+        OntologyConstants.KnoraBase.ValueHasIntervalStart,
+        OntologyConstants.KnoraBase.ValueHasIntervalEnd
+    )
+
+    // represents the standoff properties defined on the boolean standoff tag
+    val booleanProperties = Set(OntologyConstants.KnoraBase.ValueHasBoolean)
+
+    // represents the standoff properties defined on the decimal standoff tag
+    val decimalProperties = Set(OntologyConstants.KnoraBase.ValueHasDecimal)
+
+    // represents the standoff properties defined on the integer standoff tag
+    val integerProperties = Set(OntologyConstants.KnoraBase.ValueHasInteger)
+
+    // represents the standoff properties defined on the uri standoff tag
+    val uriProperties = Set(OntologyConstants.KnoraBase.ValueHasUri)
+
+    // represents the standoff properties defined on the color standoff tag
+    val colorProperties = Set(OntologyConstants.KnoraBase.ValueHasColor)
+
+    // represents the standoff properties defined on the link standoff tag
+    val linkProperties = Set(OntologyConstants.KnoraBase.StandoffTagHasLink)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -144,4 +179,5 @@ object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions
     import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val createStandoffResponseV1Format: RootJsonFormat[CreateStandoffResponseV1] = jsonFormat2(CreateStandoffResponseV1)
+    implicit val standoffGetResponseV1Format: RootJsonFormat[StandoffGetResponseV1] = jsonFormat2(StandoffGetResponseV1)
 }

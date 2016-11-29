@@ -616,6 +616,8 @@ case class TextValueV1(utf8str: String,
         // filter out all standoff tags that are not supported by the JSON v1 format.
         // otherwise an error would be thrown
         // TODO: we have to prevent users from creating new version of text values created directly from XML using the JSON v1 format because they would possibly lose annotations (those that have been filtered out).
+
+        // TODO: if the text value contains non JSON v1 format information, display all the supported standoff tags and make it read only in the GUI
         val textattrV1 = textattr.filter(standoffTag => TextattrV1.IriToEnumValue.keySet.contains(standoffTag.standoffTagClassIri))
 
         // Group by JSON format attribute name and not by Iri because _link used both for resource references and hyperlinks.
