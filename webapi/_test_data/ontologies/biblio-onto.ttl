@@ -116,26 +116,26 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 ###  http://www.knora.org/ontology/biblio#publicationHasEditor
-
 :publicationHasEditor rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "Editor"@de ,
-                               "Editor"@en ;
+                    rdfs:label "Redaktor"@de ,
+                            "Editor "@en,
+                            "éditeur "@fr ,
+                            "casa editrice"@it ;
 
-                    rdfs:comment """Represents the author of the publication."""@en ;
+                    rdfs:comment """Represents the editor of the publication."""@en ;
 
-                    knora-base:objectClassConstraint knora-base:Person ;
+                    knora-base:objectClassConstraint :Editor ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
                     knora-base:subjectClassConstraint :Publication ;
 
-                    rdfs:subPropertyOf knora-base:hasLinkTo, bibo:editor .
+                    rdfs:subPropertyOf knora-base:hasLinkTo , dcterms:editor.
 
 
 
-
-###  http://www.knora.org/ontology/biblio#publicationHasEditorValue
+###  http://www.knora.org/ontology/bibliopublicationHasEditorValue
 
 :publicationHasEditorValue rdf:type owl:ObjectProperty ;
 
@@ -272,6 +272,68 @@
                     knora-base:subjectClassConstraint :Publication ;
 
                     rdfs:subPropertyOf knora-base:hasValue , bibo:doi.
+
+
+###  http://www.knora.org/ontology/biblio#editionHasEditor
+
+:editionHasEditor rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Redaktor (Person)"@de ,
+                               "Editor (Person) "@en ;
+
+                    rdfs:comment """Represents the editor of the publication."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:Person ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    knora-base:subjectClassConstraint :Editor ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo, bibo:editor .
+
+
+
+
+###  http://www.knora.org/ontology/biblio#editionHasEditorValue
+
+:editionHasEditorValue rdf:type owl:ObjectProperty ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    knora-base:subjectClassConstraint :Editor ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+###  http://www.knora.org/ontology/biblio#editionHasOrganization
+
+:editionHasOrganization rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Organisation"@de ,
+                               "Organization"@en ;
+
+                    rdfs:comment """Represents the organization which has edited the publication."""@en ;
+
+                    knora-base:objectClassConstraint :Organization ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    knora-base:subjectClassConstraint :Editor ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo, bibo:editor .
+
+
+
+
+###  http://www.knora.org/ontology/biblio#editionHasorganizationValue
+
+:editionHasOrganizationValue rdf:type owl:ObjectProperty ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    knora-base:subjectClassConstraint :Editor ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
 
 
 ###  http://www.knora.org/ontology/biblio#bookOtherEdition
@@ -687,15 +749,55 @@
                     rdfs:comment "A resource representing a publication"@en .
 
 
+###  http://www.knora.org/ontology/biblio#Editor
+:Editor rdf:type owl:Class ;
+
+                    rdfs:subClassOf knora-base:Resource,
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :editionHasEditor ;
+                                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                        ],
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :editionHasEditorValue ;
+                                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                        ],
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :editionHasOrganization ;
+                                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                        ],
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :editionHasOrganizationValue ;
+                                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                        ];
+                    rdfs:label "Redaktor"@de ,
+                               "Editor"@en ,
+                               "Editeur"@fr ,
+                               "editore"@it ;
+
+                    rdfs:comment "A resource representing an editorial"@en .
+
+###  http://www.knora.org/ontology/biblio#Organization
+:Organization rdf:type owl:Class ;
+
+                    rdfs:subClassOf knora-base:Resource, foaf:organization,
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :hasName ;
+                                          owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                        ];
+
+                    rdfs:label "Organisation"@de ,
+                               "Organization"@en ,
+                               "Organisation"@fr ,
+                               "organizzazione"@it ;
+
+                    rdfs:comment "A resource representing an organization"@en .
+
+
 ###  http://www.knora.org/ontology/biblio#Publisher
 
 :Publisher rdf:type owl:Class ;
 
-                    rdfs:subClassOf knora-base:Resource, foaf:Organization , dcterms:publisher,
-                                    [ rdf:type owl:Restriction ;
-                                      owl:onProperty :hasName ;
-                                      owl:minCardinality "1"^^xsd:nonNegativeInteger
-                                    ],
+                    rdfs:subClassOf :Organization, dcterms:publisher,
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publisherHasLocation ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
