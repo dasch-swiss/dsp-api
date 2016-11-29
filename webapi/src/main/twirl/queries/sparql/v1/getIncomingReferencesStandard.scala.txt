@@ -1,0 +1,79 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Gets information about the incoming references to a resource, as well as about the referring resources, using
+ * standard SPARQL, without inference.
+ *
+ * This template is used only by getIncomingReferences.scala.txt.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param resourceIri the IRI of the resource.
+ *@
+@(triplestore: String,
+  resourceIri: IRI)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?referringResource ?linkProp ?prop ?obj ?isLinkValue ?objPred ?objObj
+WHERE {
+    BIND(IRI("@resourceIri") as ?resource)
+
+    ?resource knora-base:isDeleted false .
+
+    @* Find incoming links that are subproperties of knora-base:hasLinkTo but not knora-base:isPartOf. *@
+
+    ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+    FILTER NOT EXISTS {
+        ?linkProp rdfs:subPropertyOf+ knora-base:isPartOf .
+    }
+
+    ?referringResource ?linkProp ?resource ;
+        knora-base:isDeleted false .
+
+    {
+        @* Get basic information about the source of each link. *@
+
+        ?referringResource ?prop ?obj .
+
+        FILTER NOT EXISTS {
+            ?prop rdfs:subPropertyOf+ knora-base:resourceProperty .
+        }
+    }
+    UNION
+    {
+        @* Get the LinkValue for each link from ?referringResource to ?resource, so its permissions can be checked. *@
+
+        ?prop rdfs:subPropertyOf* knora-base:hasLinkToValue .
+        ?referringResource ?prop ?obj .
+
+        ?obj rdf:predicate ?linkProp ;
+            rdf:object ?resource ;
+            knora-base:isDeleted false ;
+            ?objPred ?objObj .
+
+        BIND(true as ?isLinkValue)
+    }
+}

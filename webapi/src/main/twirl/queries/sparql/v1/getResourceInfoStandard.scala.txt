@@ -21,9 +21,10 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets all the properties of a resource, along with the properties of its file values, but not
- * including subproperties of knora-base:hasValue. This template is used only by getResourceInfo.scala.txt.
- * It assumes that inference is not available.
+ * Gets all the properties of a resource, along with the properties of its file values, but not including subproperties
+ * of knora-base:hasValue, using standard SPARQL, without inference.
+ *
+ * This template is used only by getResourceInfo.scala.txt.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource to be queried.

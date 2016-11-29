@@ -1,0 +1,595 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.twirl.SearchCriterion
+@import org.knora.webapi.messages.v1.responder.searchmessages.SearchComparisonOperatorV1
+@import org.knora.webapi.SparqlGenerationException
+
+@**
+ * Performs an extended search using standard SPARQL (except for the interface to Lucene, which is triplestore-specific),
+ * and without inference.
+ *
+ * The number of rows returned per matching resource is the product of the number of values that each search criterion
+ * matched in the resource.
+ *
+ * This template is used only by searchExtended.scala.txt.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param searchCriteria a list of maps containing search criteria, each of which contains:
+ * @param preferredLanguage the language code of the user's preferred language.
+ * @param fallbackLanguage the language code of the application's default language.
+ * @param projectIriOption if filtering by project is desired, the IRI of the project to search.
+ * @param restypeIriOption if given, returns only resources of this class and its subclasses.
+ * @param ownerIriOption if filtering by owner is desired, the IRI of the resource owner to search for.
+ *@
+@(triplestore: String,
+  searchCriteria: Seq[SearchCriterion],
+  preferredLanguage: String,
+  fallbackLanguage: String,
+  projectIriOption: Option[IRI],
+  restypeIriOption: Option[IRI],
+  ownerIriOption: Option[IRI])
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT
+    ?resource
+    ?resourceLabel @* The label of a matching resource. This is called "firstprop" in the v1 API. *@
+    ?resourceClass
+    ?previewPath
+    ?previewDimX
+    ?previewDimY
+    ?resourceOwner
+    ?resourceProject
+    ?resourcePermissions
+    @for((searchCriterion, index) <- searchCriteria.zipWithIndex) {
+        ?valueObject@index
+        ?valueOwner@index
+        ?valueProject@index
+        ?valuePermissions@index
+        ?targetResource@index
+        ?targetResourceOwner@index
+        ?targetResourceProject@index
+        ?targetResourcePermissions@index
+        ?literal@index
+    }
+WHERE {
+    BIND(STR("@preferredLanguage") AS ?preferredLanguage)
+    BIND(STR("@fallbackLanguage") AS ?fallbackLanguage)
+
+    @for((searchCriterion, index) <- searchCriteria.zipWithIndex) {
+
+        # Search criterion @index: operator @searchCriterion.comparisonOperator
+
+        @*
+
+        If this search criterion involves a property that points to a knora-base:Value, find a resource that has
+        that property pointing to some value. If this search criterion involves a link property, the property will
+        point to another resource, and this is handled in the cases for comparison operators EQ and EXISTS in the
+        match-case expression below.
+
+        *@
+
+        @if(searchCriterion.valueType != "http://www.knora.org/ontology/knora-base#Resource") {
+
+            ?p@index rdfs:subPropertyOf* <@searchCriterion.propertyIri> .
+            ?resource ?p@index ?valueObject@index .
+
+        }
+
+        @*
+
+        possible values of searchCriterion.comparisonOperator: EXISTS, EQ, NOT_EQ, GT, GT_EQ, LT, LT_EQ, MATCH, MATCH_BOOLEAN, LIKE, NOT_LIKE, IN
+
+        *@
+
+        @searchCriterion.comparisonOperator match {
+
+            case SearchComparisonOperatorV1.MATCH => {
+
+                @*
+
+                    TODO: Handle single search terms correctly: combine them with an AND
+
+                *@
+
+                @triplestore match {
+
+                    case "embedded-jena-tdb" | "fuseki" => {
+
+                        ?valueObject@index <http://jena.apache.org/text#query> ( '@searchCriterion.searchValue' ) .
+                        ?valueObject@index knora-base:valueHasString ?literal@index .
+
+                    }
+
+                    case other => {
+                        @{throw SparqlGenerationException(s"Triplestore type $other is not supported in this SPARQL template"); ()}
+                    }
+                }
+            }
+
+            case SearchComparisonOperatorV1.LIKE => {
+
+                @* TODO: escape regex metachars *@
+                ?valueObject@index knora-base:valueHasString ?literal@index .
+
+                FILTER regex(?literal@index, '@searchCriterion.searchValue', "i")
+            }
+
+            case SearchComparisonOperatorV1.NOT_LIKE => {
+
+                @*
+
+                Previously we used FILTER NOT EXISTS here, but then we couldn't get the value of ?literal
+                (the literal that doesn't match the regex). So now we use just a negated regex. However, if a
+                resource has two instances of the same property and one of them matches and the other doesn't,
+                it will be returned in the search results.
+
+                *@
+
+                ?valueObject@index knora-base:valueHasString ?literal@index .
+
+                FILTER (!regex(?literal@index, '@searchCriterion.searchValue', "i"))
+            }
+
+            case SearchComparisonOperatorV1.EXISTS => {
+
+                @searchCriterion.valueType match {
+                    case "http://www.knora.org/ontology/knora-base#Resource" => {
+
+                        ?linkProperty@index rdfs:subPropertyOf* <@searchCriterion.propertyIri> .
+                        ?resource ?linkProperty@index ?targetResource@index .
+                        ?linkValueProperty@index rdfs:subPropertyOf* <@{searchCriterion.propertyIri}Value> .
+                        ?resource ?linkValueProperty@index ?valueObject@index .
+
+                        ?targetResource@index rdfs:label ?literal@index ;
+                            knora-base:isDeleted false ;
+                            knora-base:attachedToUser ?targetResourceOwner@index ;
+                            knora-base:attachedToProject ?targetResourceProject@index .
+
+                        OPTIONAL {
+                            ?targetResource@index knora-base:hasPermissions ?targetResourcePermissions@index .
+                        }
+
+                        ?valueObject@index rdf:type knora-base:LinkValue ;
+                            rdf:subject ?resource ;
+                            rdf:predicate ?linkProperty@index ;
+                            rdf:object ?targetResource@index .
+                    }
+
+                    case other => {
+
+                        ?valueObject@index knora-base:valueHasString ?literal@index .
+
+                    }
+                }
+            }
+
+            case SearchComparisonOperatorV1.EQ => {
+
+                @searchCriterion.valueType match {
+
+                    case "http://www.knora.org/ontology/knora-base#TextValue" => {
+
+                        ?valueObject@index knora-base:valueHasString '@searchCriterion.searchValue' .
+
+                        BIND('@searchCriterion.searchValue' AS ?literal@index)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#IntValue" => {
+
+                        ?valueObject@index knora-base:valueHasInteger @searchCriterion.searchValue .
+
+                        BIND('@searchCriterion.searchValue' AS ?literal@index)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
+
+                        ?valueObject@index knora-base:valueHasDecimal @searchCriterion.searchValue .
+
+                        BIND('@searchCriterion.searchValue' AS ?literal@index)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#DateValue" => {
+
+                        ?valueObject@index knora-base:valueHasStartJDN ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasEndJDN ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasString ?dateString@index .
+
+                        FILTER (@searchCriterion.dateStart <= ?dateEnd@index && @searchCriterion.dateEnd >= ?dateStart@index)
+                        BIND(?dateString@index as ?literal@index)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#Resource" => {
+
+                        BIND(IRI("@searchCriterion.searchValue") AS ?targetResource@index)
+
+                        ?linkProperty@index rdfs:subPropertyOf* <@searchCriterion.propertyIri> .
+                        ?resource ?linkProperty@index <@searchCriterion.searchValue> .
+                        ?linkValueProperty@index rdfs:subPropertyOf* <@{searchCriterion.propertyIri}Value> .
+                        ?resource ?linkValueProperty@index ?valueObject@index .
+
+                        <@searchCriterion.searchValue> rdfs:label ?literal@index ;
+                            knora-base:isDeleted false ;
+                            knora-base:attachedToUser ?targetResourceOwner@index ;
+                            knora-base:attachedToProject ?targetResourceProject@index .
+
+                        OPTIONAL {
+                            <@searchCriterion.searchValue> knora-base:hasPermissions ?targetResourcePermissions@index .
+                        }
+
+                        ?valueObject@index rdf:type knora-base:LinkValue ;
+                            rdf:subject ?resource ;
+                            rdf:predicate ?linkProperty@index ;
+                            rdf:object <@searchCriterion.searchValue> .
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#ListValue" => {
+
+                        @*
+
+                        Get all the subnodes of the given node, including the given node (operator *)
+
+                        *@
+
+                        ?valueObject@index knora-base:valueHasListNode ?listNode .
+                        <@searchCriterion.searchValue> knora-base:hasSubListNode* ?listNode .
+
+                        ?listNode rdfs:label ?listNodeLabel .
+                        BIND(?listNodeLabel AS ?literal@index)
+
+                    }
+
+                    case other => {
+                        @{throw SparqlGenerationException(s"Value type $other is not supported with comparison operator ${searchCriterion.comparisonOperator}"); ()}
+                    }
+                }
+            }
+
+            case SearchComparisonOperatorV1.NOT_EQ => {
+
+                @searchCriterion.valueType match {
+
+                    case "http://www.knora.org/ontology/knora-base#TextValue" => {
+
+                        ?valueObject@index knora-base:valueHasString ?literal@index .
+
+                        FILTER (?literal@index != '@searchCriterion.searchValue')
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#IntValue" => {
+
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
+
+                        FILTER (?literal@index != @searchCriterion.searchValue)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
+
+                        ?valueObject@index knora-base:valueHasDecimal ?literal@index .
+
+                        FILTER (?literal@index != @searchCriterion.searchValue)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#DateValue" => {
+
+                        ?valueObject@index knora-base:valueHasStartJDN ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasEndJDN ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasString ?dateString@index .
+
+                        FILTER (@searchCriterion.dateEnd < ?dateStart@index || @searchCriterion.dateStart > ?dateEnd@index )
+                        BIND(?dateString@index as ?literal@index)
+
+                    }
+
+                    case other => {
+                        @{throw SparqlGenerationException(s"Value type $other is not supported with comparison operator ${searchCriterion.comparisonOperator}"); ()}
+                    }
+                }
+            }
+
+            case SearchComparisonOperatorV1.GT => {
+
+                @searchCriterion.valueType match {
+
+                    case "http://www.knora.org/ontology/knora-base#IntValue" => {
+
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
+
+                        FILTER (?literal@index > @searchCriterion.searchValue)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
+
+                        ?valueObject@index knora-base:valueHasDecimal ?literal@index .
+
+                        FILTER (?literal@index > searchCriterion.searchValue )
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#DateValue" => {
+
+                        ?valueObject@index knora-base:valueHasStartJDN ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasString ?dateString@index .
+
+                        FILTER (?dateStart@index > @searchCriterion.dateEnd)
+                        BIND(?dateString@index as ?literal@index)
+
+                    }
+
+                    case other => {
+                        @{throw SparqlGenerationException(s"Value type $other is not supported with comparison operator ${searchCriterion.comparisonOperator}"); ()}
+                    }
+                }
+            }
+
+            case SearchComparisonOperatorV1.GT_EQ => {
+
+                @searchCriterion.valueType match {
+
+                    case "http://www.knora.org/ontology/knora-base#IntValue" => {
+
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
+
+                        FILTER (?literal@index >= @searchCriterion.searchValue)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
+
+                        ?valueObject@index knora-base:valueHasDecimal ?literal@index .
+
+                        FILTER (?literal@index >= @searchCriterion.searchValue)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#DateValue" => {
+
+                        ?valueObject@index knora-base:valueHasStartJDN ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasString ?dateString@index .
+
+                        FILTER (?dateStart@index >= @searchCriterion.dateEnd)
+                        BIND(?dateString@index as ?literal@index)
+
+                    }
+
+                    case other => {
+                        @{throw SparqlGenerationException(s"Value type $other is not supported with comparison operator ${searchCriterion.comparisonOperator}"); ()}
+                    }
+                }
+            }
+
+            case SearchComparisonOperatorV1.LT => {
+
+                @searchCriterion.valueType match {
+
+                    case "http://www.knora.org/ontology/knora-base#IntValue" => {
+
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
+
+                        FILTER (?literal@index < @searchCriterion.searchValue)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
+
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
+
+                        FILTER (?literal@index < @searchCriterion.searchValue)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#DateValue" => {
+
+                        ?valueObject@index knora-base:valueHasEndJDN ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasString ?dateString@index .
+
+                        FILTER (?dateEnd@index < @searchCriterion.dateStart)
+                        BIND(?dateString@index as ?literal@index)
+
+                    }
+
+                    case other => {
+                        @{throw SparqlGenerationException(s"Value type $other is not supported with comparison operator ${searchCriterion.comparisonOperator}"); ()}
+                    }
+                }
+            }
+
+            case SearchComparisonOperatorV1.LT_EQ => {
+
+                @searchCriterion.valueType match {
+
+                    case "http://www.knora.org/ontology/knora-base#IntValue" => {
+
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
+
+                        FILTER (?literal@index <= @searchCriterion.searchValue)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#DecimalValue" => {
+
+                        ?valueObject@index knora-base:valueHasInteger ?literal@index .
+
+                        FILTER (?literal@index <= @searchCriterion.searchValue)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#DateValue" => {
+
+                        ?valueObject@index knora-base:valueHasEndJDN ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasString ?dateString@index .
+
+                        FILTER (?dateEnd@index <= @searchCriterion.dateStart)
+                        BIND(?dateString@index as ?literal@index)
+
+                    }
+
+                    case other => {
+                        @{throw SparqlGenerationException(s"Value type $other is not supported with comparison operator ${searchCriterion.comparisonOperator}"); ()}
+                    }
+                }
+            }
+
+            case SearchComparisonOperatorV1.MATCH_BOOLEAN => {
+
+                @* see https://dev.mysql.com/doc/refman/5.5/en/fulltext-boolean.html *@
+
+                ?valueObject@index knora-base:valueHasString ?literal@index .
+
+                @for(positiveTerm <- searchCriterion.matchBooleanPositiveTerms) {
+
+                    @triplestore match {
+
+                        case "embedded-jena-tdb" | "fuseki" => {
+
+                            ?valueObject@index <http://jena.apache.org/text#query> ( '@positiveTerm' ) .
+
+                        }
+
+                        case other => {
+                            @{throw SparqlGenerationException(s"Triplestore type $other is not supported in this SPARQL template"); ()}
+                        }
+                    }
+                }
+
+                @if(searchCriterion.matchBooleanNegativeTerms.nonEmpty) {
+                    MINUS {
+                        @for(negativeTerm <- searchCriterion.matchBooleanNegativeTerms) {
+
+                            @triplestore match {
+
+                                case "embedded-jena-tdb" | "fuseki" => {
+
+                                    ?valueObject@index <http://jena.apache.org/text#query> ( '@negativeTerm' ) .
+
+                                }
+
+                                case other => {
+                                    @{throw SparqlGenerationException(s"Triplestore type $other is not supported in this SPARQL template"); ()}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            case other => {
+                @{throw SparqlGenerationException(s"Comparison operator $other is not supported in this SPARQL template"); ()}
+            }
+        }
+
+        ?valueObject@index knora-base:isDeleted false ;
+            knora-base:attachedToUser ?valueOwner@index .
+
+        OPTIONAL {
+            ?valueObject@index knora-base:attachedToProject ?valueProject@index .
+        }
+
+        OPTIONAL {
+            ?valueObject@index knora-base:hasPermissions ?valuePermissions@index .
+        }
+    }
+
+    ?resource knora-base:isDeleted false .
+
+    @projectIriOption match {
+        case Some(projectIri) => {
+
+            # filter by projectIri
+            ?resource knora-base:attachedToProject <@projectIri> .
+
+        }
+
+        case None => {}
+    }
+
+    ?resource a ?resourceClass .
+
+    @restypeIriOption match {
+
+        case Some(restypeIri) => {
+
+            # Filter by resource class.
+
+            ?resClass rdfs:subClassOf* <@restypeIri> .
+            ?resource a ?resClass .
+
+        }
+
+        case None => {
+
+            @* Ensure that each matching resource is a knora-base:Resource. *@
+
+            ?resClass rdfs:subClassOf+ knora-base:Resource .
+            ?resource a ?resClass .
+
+        }
+    }
+
+    @ownerIriOption match {
+        case Some(ownerIri) => {
+
+            # filter by ownerIri
+            ?resource knora-base:attachedToUser <@ownerIri> .
+        }
+
+        case None => {}
+    }
+
+    ?resource rdfs:label ?resourceLabel .
+
+    OPTIONAL {
+        ?resource knora-base:hasStillImageFileValue ?fileValue .
+        ?fileValue a knora-base:StillImageFileValue .
+        ?fileValue knora-base:isPreview true .
+        ?fileValue knora-base:internalFilename ?previewPath .
+
+        OPTIONAL {
+            ?fileValue knora-base:dimX ?previewDimX .
+            ?fileValue knora-base:dimY ?previewDimY .
+        }
+    }
+
+    OPTIONAL {
+        ?resource knora-base:hasPermissions ?resourcePermissions .
+    }
+
+    OPTIONAL {
+        ?resource knora-base:attachedToUser ?resourceOwner .
+    }
+
+    OPTIONAL {
+        ?resource knora-base:attachedToProject ?resourceProject .
+    }
+}
+LIMIT 500

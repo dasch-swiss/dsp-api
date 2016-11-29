@@ -23,6 +23,9 @@
 @**
  * Returns all versions of a value.
  *
+ * If the triplestore type is GraphDB, this template delegates to getVersionHistoryGraphDB.sparql.txt, which is optimised
+ * for GraphDB. Otherwise, it delegates to getVersionHistoryStandard.sparql.txt.
+ *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource to search.
  * @param propertyIri the property to search.
@@ -35,54 +38,17 @@
    propertyIri: IRI,
    currentValueIri: IRI)
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
-
-SELECT ?value ?valueCreationDate ?previousValue ?isLinkValue ?linkValuePredicate ?valueOwner ?project ?valuePermissions
-@* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
-WHERE {
-    BIND(IRI("@resourceIri") AS ?resource)
-    BIND(IRI("@propertyIri") AS ?prop)
-    BIND(IRI("@currentValueIri") AS ?currentValue)
-
-    ?resource knora-base:isDeleted false .
-    ?currentValue knora-base:isDeleted false .
-
-    ?resource ?prop ?currentValue .
-    ?prop rdfs:subPropertyOf+ knora-base:hasValue .
-    ?resource knora-base:attachedToProject ?resourceProject .
-
-    ?currentValue knora-base:previousValue* ?value .
-
-    OPTIONAL {
-        ?value knora-base:valueCreationDate ?valueCreationDate .
+    @{
+        queries.sparql.v1.txt.getVersionHistoryGraphDB(resourceIri = resourceIri,
+                                                       propertyIri = propertyIri,
+                                                       currentValueIri = currentValueIri)
     }
-
-    OPTIONAL {
-        ?value knora-base:previousValue ?previousValue .
-    }
-
-    OPTIONAL {
-        ?value rdf:type knora-base:LinkValue .
-        ?value rdf:predicate ?linkValuePredicate .
-        BIND(true as ?isLinkValue)
-    }
-
-    OPTIONAL {
-        ?value knora-base:attachedToUser ?valueOwner .
-    }
-
-    OPTIONAL {
-        ?value knora-base:attachedToProject ?valueProject .
-    }
-
-    BIND(COALESCE(?valueProject, ?resourceProject) AS ?project)
-
-    OPTIONAL {
-        ?value knora-base:hasPermissions ?valuePermissions .
+} else {
+    @{
+        queries.sparql.v1.txt.getVersionHistoryStandard(triplestore = triplestore,
+                                                        resourceIri = resourceIri,
+                                                        propertyIri = propertyIri,
+                                                        currentValueIri = currentValueIri)
     }
 }

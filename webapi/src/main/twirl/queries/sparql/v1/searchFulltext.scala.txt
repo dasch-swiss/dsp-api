@@ -22,14 +22,11 @@
 @import org.knora.webapi.SparqlGenerationException
 
 @*
- * Performs a simple full-text search. The number of rows returned per matching resource is equal to the number of
- * values that matched in the resource, plus one if the resource's label matched.
+ * Performs a simple full-text search. The number of rows returned per matching resource is equal to the
+ * number of values that matched in the resource, plus one if the resource's label matched.
  *
- * If the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
- * SPARQL. Specifically, we use inference to return search results matching subclasses of the resource class
- * specified by the user. Without inference, we have to do this using SPARQL property path syntax
- * (rdfs:subClassOf*). Using inference requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit> whenever
- * we need to get explicit (non-inferred) statements.
+ * If the triplestore type is GraphDB, this template delegates to searchFulltextGraphDB.sparql.txt, which is optimised
+ * for GraphDB. Otherwise, it delegates to searchFulltextStandard.sparql.txt.
  *
  * @param triplestore the name of the triplestore being used.
  * @param searchTerms search terms to be combined with AND in Lucene full-text search syntax.
@@ -45,196 +42,21 @@
   projectIriOption: Option[IRI],
   restypeIriOption: Option[IRI])
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
-
-SELECT DISTINCT
-    ?resource
-    ?resourceLabel @* The label of a matching resource. This is called "firstprop" in the v1 API. *@
-    ?resourceClass
-    ?previewPath
-    ?previewDimX
-    ?previewDimY
-    ?resourceOwner
-    ?resourceProject
-    ?resourcePermissions
-    ?resourceProperty
-    ?valueObject
-    ?valueObjectType
-    ?valueOwner
-    ?valueProject
-    ?valuePermissions
-    ?literal
-WHERE {
-    BIND(STR("@preferredLanguage") AS ?preferredLanguage)
-    BIND(STR("@fallbackLanguage") AS ?fallbackLanguage)
-
-    @*
-
-    Lucene Search Syntax: Combine single terms with Boolean operator AND.
-    By default, Lucene would make an OR.
-
-    Loop over the search terms and prepend an AND when processing the second or any latter search term:
-
-    '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}'
-
-    *@
-
-    @triplestore match {
-        case "graphdb" | "graphdb-free" => {
-
-            ?matchingSubject ?matchingProperty ?literal .
-            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}' .
-
-        }
-
-        case "embedded-jena-tdb" | "fuseki" => {
-
-            ?matchingSubject <http://jena.apache.org/text#query> '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}' .
-
-        }
-
-        case other => {
-            @{throw SparqlGenerationException(s"Triplestore type $other is not supported in this SPARQL template"); ()}
-        }
+@if(triplestore.startsWith("graphdb")) {
+    @{
+        queries.sparql.v1.txt.searchFulltextGraphDB(searchTerms = searchTerms,
+                                                    preferredLanguage = preferredLanguage,
+                                                    fallbackLanguage = fallbackLanguage,
+                                                    projectIriOption = projectIriOption,
+                                                    restypeIriOption = restypeIriOption)
     }
-
-    ?matchingSubject knora-base:isDeleted false .
-
-    # ?matchingSubject could be a resource (whose rdfs:label matched) or a value object
-
-    OPTIONAL {
-        # If this clause is executed, it is a value object. We set ?containingResource to the resource that contains the matching value object.
-
-        @if(triplestore.startsWith("graphdb")) {
-
-            ?matchingSubject a knora-base:Value .
-            ?containingResource knora-base:hasValue ?matchingSubject .
-
-            GRAPH <http://www.ontotext.com/explicit> {
-
-                ?matchingSubject a ?valueObjectType .
-                ?containingResource ?resourceProperty ?matchingSubject .
-
-            }
-
-        } else {
-
-            ?matchingSubject a ?valueObjectType .
-            ?valueObjectType rdfs:subClassOf+ knora-base:Value .
-            ?containingResource ?resourceProperty ?matchingSubject .
-            ?resourceProperty rdfs:subPropertyOf+ knora-base:hasValue .
-
-        }
-
-        FILTER(?valueObjectType != knora-base:LinkValue)
-        ?containingResource knora-base:isDeleted false .
-
-        BIND(?matchingSubject AS ?valueObject)
-
-        ?valueObject knora-base:attachedToUser ?valueOwner .
-
-        OPTIONAL {
-            ?valueObject knora-base:attachedToProject ?valueProject .
-        }
-
-        OPTIONAL {
-            ?valueObject knora-base:hasPermissions ?valuePermissions .
-        }
-
-
-        @if(triplestore == "embedded-jena-tdb" || triplestore == "fuseki") {
-            ?valueObject knora-base:valueHasString ?literal .
-        }
-
-    }
-
-    # If the previous OPTIONAL clause executed, ?matchingSubject is a value, and ?containingResource will be set. Otherwise, ?matchingSubject is a resource.
-    BIND(COALESCE(?containingResource, ?matchingSubject) AS ?resource)
-
-    @projectIriOption match {
-        case Some(projectIri) => {
-
-            # filter by projectIri
-            ?resource knora-base:attachedToProject <@projectIri> .
-
-        }
-
-        case None => {}
-    }
-
-    @if(triplestore.startsWith("graphdb")) {
-
-        GRAPH <http://www.ontotext.com/explicit> {
-
-            ?resource a ?resourceClass .
-
-        }
-
-        @restypeIriOption match {
-
-            case Some(restypeIri) => {
-
-                # Filter by resource class.
-
-                ?resource a <@restypeIri> .
-
-            }
-
-            case None => {
-
-                @* Ensure that each matching resource is a knora-base:Resource. *@
-
-                ?resource a knora-base:Resource .
-            }
-        }
-
-    } else {
-
-        ?resource a ?resourceClass .
-
-        @restypeIriOption match {
-
-            case Some(restypeIri) => {
-
-                # Filter by resource class.
-
-                ?resClass rdfs:subClassOf* <@restypeIri> .
-                ?resource a ?resClass .
-
-            }
-
-            case None => {
-
-                @* Ensure that each matching resource is a knora-base:Resource. *@
-
-                ?resClass rdfs:subClassOf+ knora-base:Resource .
-                ?resource a ?resClass .
-
-            }
-        }
-    }
-
-    ?resource rdfs:label ?resourceLabel .
-
-    OPTIONAL {
-       ?resource knora-base:hasStillImageFileValue ?fileValue .
-       ?fileValue a knora-base:StillImageFileValue .
-       ?fileValue knora-base:isPreview true .
-       ?fileValue knora-base:internalFilename ?previewPath .
-
-        OPTIONAL {
-            ?fileValue knora-base:dimX ?previewDimX .
-            ?fileValue knora-base:dimY ?previewDimY .
-        }
-    }
-
-    ?resource knora-base:attachedToUser ?resourceOwner .
-    ?resource knora-base:attachedToProject ?resourceProject .
-
-    OPTIONAL {
-        ?resource knora-base:hasPermissions ?resourcePermissions .
+} else {
+    @{
+        queries.sparql.v1.txt.searchFulltextStandard(triplestore = triplestore,
+                                                     searchTerms = searchTerms,
+                                                     preferredLanguage = preferredLanguage,
+                                                     fallbackLanguage = fallbackLanguage,
+                                                     projectIriOption = projectIriOption,
+                                                     restypeIriOption = restypeIriOption)
     }
 }
-LIMIT 500

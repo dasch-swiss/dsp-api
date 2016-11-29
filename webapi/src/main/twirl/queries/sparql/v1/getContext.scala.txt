@@ -22,8 +22,9 @@
 
 @**
  * Given the IRI of a resource, gets information about the resources that are part of that resource.
- * If the triplestore type is GraphDB, delegates to getContextGraphDB.sparql.txt, which is optimised for GraphDB.
- * Otherwise, delegates to getContextStandard.sparql.txt.
+ *
+ * If the triplestore type is GraphDB, this template delegates to getContextGraphDB.sparql.txt, which is optimised for
+ * GraphDB. Otherwise, it delegates to getContextStandard.sparql.txt.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.

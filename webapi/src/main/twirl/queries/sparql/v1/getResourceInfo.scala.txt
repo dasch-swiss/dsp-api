@@ -22,9 +22,10 @@
 
 @**
  * Gets all the properties of a resource, along with the properties of its file values, but not
- * including subproperties of knora-base:hasValue. If the triplestore type is GraphDB, delegates to
- * getResourceInfoGraphDB.sparql.txt, which is optimised for GraphDB. Otherwise, delegates to
- * getResourcePropertiesInfoStandard.sparql.txt.
+ * including subproperties of knora-base:hasValue.
+ *
+ * If the triplestore type is GraphDB, this template delegates to getResourceInfoGraphDB.sparql.txt, which is optimised
+ * for GraphDB. Otherwise, it delegates to getResourceInfoStandard.sparql.txt.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource to be queried.

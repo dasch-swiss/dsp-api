@@ -21,9 +21,10 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets the values of all the Knora properties of a resource that have values. If the triplestore type is
- * GraphDB, delegates to getResourcePropertiesAndValuesGraphDB.sparql.txt, which is optimised for GraphDB.
- * Otherwise, delegates to getResourcePropertiesAndValuesStandard.sparql.txt.
+ * Gets the values of all the Knora properties of a resource that have values.
+ *
+ * If the triplestore type is GraphDB, this template delegates to getResourcePropertiesAndValuesGraphDB.sparql.txt,
+ * which is optimised for GraphDB. Otherwise, it delegates to getResourcePropertiesAndValuesStandard.sparql.txt.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource to be queried.

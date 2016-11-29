@@ -21,76 +21,65 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets all the properties of a resource, along with the properties of its file values, but not
- * including subproperties of knora-base:hasValue, using GraphDB.
+ * Given a knora:base:internalFilename, retrieves the file value and information attached to it, using GraphDB.
  *
- * This template is used only by getResourceInfo.scala.txt.
+ * This template is used only by getFileValue.scala.txt.
  *
  * Since the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
  * SPARQL. Specifically, we use inference to return search results matching subproperties of Knora base properties
  * such as knora-base:hasFileValue. This requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit>
  * whenever we need to get explicit (non-inferred) statements.
  *
- * @param resourceIri the IRI of the resource to be queried.
+ * @param fileValueIri the IRI of the file value.
  *@
-@(resourceIri: IRI)
+@(filename: String)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?prop ?obj ?isFileValue ?objPred ?objObj
+SELECT ?objPred ?objObj
 WHERE {
-    BIND(IRI("@resourceIri") AS ?resource)
 
-    ?resource rdf:type knora-base:Resource ;
+    ?fileValue knora-base:internalFilename "@filename" ;
         knora-base:isDeleted false .
 
     {
-        @* Query statements about the resource's file values. *@
-
-        ?resource knora-base:hasFileValue ?obj .
-
         GRAPH <http://www.ontotext.com/explicit> {
-            ?resource ?prop ?obj .
+            ?fileValue ?objPred ?objObj .
         }
 
-        BIND(true AS ?isFileValue)
-
-        @* Get the file value's project if it has one, otherwise use the resource's project. *@
-
-        {
-            ?obj knora-base:isDeleted false .
-
-            GRAPH <http://www.ontotext.com/explicit> {
-                ?obj ?objPred ?objObj .
-            }
-
-            FILTER(?objPred != knora-base:attachedToProject)
-        }
-        UNION
-        {
-            ?obj knora-base:isDeleted false .
-            ?resource knora-base:attachedToProject ?resourceProject .
-
-            OPTIONAL {
-                ?obj knora-base:attachedToProject ?valueProject .
-            }
-
-            BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
-            BIND(knora-base:attachedToProject AS ?objPred)
-        }
+        FILTER(?objPred != knora-base:attachedToProject)
     }
     UNION
     {
-        @* Query other statements about the resource. *@
+        @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
 
-        GRAPH <http://www.ontotext.com/explicit> {
-            ?resource ?prop ?obj .
+        ?resource knora-base:hasFileValue ?fileValue ;
+            knora-base:attachedToProject ?resourceProject .
+
+        OPTIONAL {
+            ?fileValue knora-base:attachedToProject ?valueProject .
         }
 
-        FILTER NOT EXISTS {
-            ?resource knora-base:resourceProperty ?obj .
+        BIND(knora-base:attachedToProject AS ?objPred)
+        BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+    }
+    UNION
+    {
+        @* Return the base path of whichever project was found. *@
+
+        ?resource knora-base:hasFileValue ?fileValue ;
+            knora-base:attachedToProject ?resourceProject .
+        ?resourceProject knora-base:projectBasepath ?resourceProjectBasepath .
+
+        OPTIONAL {
+            ?fileValue knora-base:attachedToProject ?valueProject .
+	        ?valueProject knora-base:projectBasepath ?valueProjectBasePath .
         }
+
+        BIND(COALESCE(?valueProjectBasePath, ?resourceProjectBasepath) AS ?projectBasepath)
+        BIND(knora-base:projectBasepath AS ?objPred)
+        BIND(?projectBasepath AS ?objObj)
     }
 }

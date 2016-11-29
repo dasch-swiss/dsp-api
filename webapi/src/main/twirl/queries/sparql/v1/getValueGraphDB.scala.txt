@@ -21,59 +21,55 @@
 @import org.knora.webapi.IRI
 
 @**
- * Searches for a value in the version history of the values of a resource property. If the value is found, returns
- * all assertions about it. If the value is not found, returns no rows.
+ * Queries a knora-base:Value using GraphDB.
  *
- * @param triplestore the name of the triplestore being used.
- * @param resourceIri the resource to search.
- * @param propertyIri the property to search.
- * @param searchValueIri the IRI of the value to look for.
+ * This template is used only by getValue.scala.txt.
+ *
+ * Since the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
+ * SPARQL. Specifically, we use inference to return search results matching subproperties of Knora base properties
+ * such as knora-base:hasValue. This requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit>
+ * whenever we need to get explicit (non-inferred) statements.
+ *
+ * @param iri the IRI of the Value.
  *@
-@(triplestore: String,
-  resourceIri: IRI,
-  propertyIri: IRI,
-  searchValueIri: IRI)
+@(valueIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?objPred ?objObj ?predStandoff ?objStandoff
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
 WHERE {
-    BIND(IRI("@resourceIri") as ?resource)
-    BIND(IRI("@propertyIri") as ?property)
-    BIND(IRI("@searchValueIri") as ?searchValue)
+    BIND(IRI("@valueIri") AS ?obj)
+
+    ?resource knora-base:hasValue ?obj .
 
     {
-        ?resource ?property ?currentValue ;
-            knora-base:isDeleted false .
-        ?currentValue knora-base:previousValue* ?searchValue ;
-            knora-base:isDeleted false .
-        ?searchValue ?objPred ?objObj .
+        ?obj knora-base:isDeleted false .
+
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?obj ?objPred ?objObj .
+        }
 
         FILTER(?objPred != knora-base:attachedToProject)
 
         OPTIONAL {
-            FILTER(?objPred = knora-base:valueHasStandoff) .
-            ?objObj ?predStandoff ?objStandoff .
+            FILTER(?objPred = knora-base:valueHasStandoff)
+
+            GRAPH <http://www.ontotext.com/explicit> {
+                ?objObj ?predStandoff ?objStandoff .
+            }
         }
     }
     UNION
     {
-        ?resource ?property ?currentValue ;
-            knora-base:isDeleted false ;
-            knora-base:attachedToProject ?resourceProject .
-        ?currentValue knora-base:previousValue* ?searchValue ;
-            knora-base:isDeleted false .
-
         @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
 
+        ?obj knora-base:isDeleted false .
+        ?resource knora-base:attachedToProject ?resourceProject .
+
         OPTIONAL {
-            ?currentValue knora-base:attachedToProject ?valueProject .
+            ?obj knora-base:attachedToProject ?valueProject .
         }
 
         BIND(knora-base:attachedToProject AS ?objPred)

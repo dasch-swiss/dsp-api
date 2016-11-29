@@ -1,0 +1,86 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Returns all versions of a value, using standard SPARQL, without inference.
+ *
+ * This template is used only by getVersionHistory.scala.txt.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param resourceIri the resource to search.
+ * @param propertyIri the property to search.
+ * @param currentValueIri the most recent version of the value.
+ *
+ * Returns nothing if currentValueIri is not the most recent version.
+ *@
+ @(triplestore: String,
+   resourceIri: IRI,
+   propertyIri: IRI,
+   currentValueIri: IRI)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?value ?valueCreationDate ?previousValue ?isLinkValue ?linkValuePredicate ?valueOwner ?project ?valuePermissions
+WHERE {
+    BIND(IRI("@resourceIri") AS ?resource)
+    BIND(IRI("@propertyIri") AS ?prop)
+    BIND(IRI("@currentValueIri") AS ?currentValue)
+
+    ?resource knora-base:isDeleted false .
+    ?currentValue knora-base:isDeleted false .
+
+    ?resource ?prop ?currentValue .
+    ?prop rdfs:subPropertyOf+ knora-base:hasValue .
+    ?resource knora-base:attachedToProject ?resourceProject .
+
+    ?currentValue knora-base:previousValue* ?value .
+
+    OPTIONAL {
+        ?value knora-base:valueCreationDate ?valueCreationDate .
+    }
+
+    OPTIONAL {
+        ?value knora-base:previousValue ?previousValue .
+    }
+
+    OPTIONAL {
+        ?value rdf:type knora-base:LinkValue .
+        ?value rdf:predicate ?linkValuePredicate .
+        BIND(true as ?isLinkValue)
+    }
+
+    OPTIONAL {
+        ?value knora-base:attachedToUser ?valueOwner .
+    }
+
+    OPTIONAL {
+        ?value knora-base:attachedToProject ?valueProject .
+    }
+
+    BIND(COALESCE(?valueProject, ?resourceProject) AS ?project)
+
+    OPTIONAL {
+        ?value knora-base:hasPermissions ?valuePermissions .
+    }
+}
