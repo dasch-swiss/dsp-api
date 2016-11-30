@@ -23,8 +23,10 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import arq.iri
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoType.ProjectInfoType
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages._
@@ -51,6 +53,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         case ProjectsGetRequestV1(infoType, userProfile) => future2Message(sender(), projectsGetRequestV1(infoType, userProfile), log)
         case ProjectsNamedGraphGetV1(userProfile) => future2Message(sender(), projectsNamedGraphGetV1(userProfile), log)
         case ProjectInfoByIRIGetRequestV1(iri, infoType, userProfile) => future2Message(sender(), projectInfoByIRIGetRequestV1(iri, infoType, userProfile), log)
+        case ProjectInfoByIRIGetV1(iri, infoType, userProfile) => future2Message(sender(), projectInfoByIRIGetV1(iri, infoType, userProfile), log)
         case ProjectInfoByShortnameGetRequestV1(shortname, infoType, userProfile) => future2Message(sender(), projectInfoByShortnameGetRequestV1(shortname, infoType, userProfile), log)
         case ProjectCreateRequestV1(newProjectDataV1: NewProjectDataV1, userProfileV1) => future2Message(sender(), projectCreateRequestV1(newProjectDataV1, userProfileV1), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
@@ -120,8 +123,8 @@ class ProjectsResponderV1 extends ResponderV1 {
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo),
                         belongsToInstitution = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject),
                         basepath = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectBasepath, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
-                        projectOntologyGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
-                        projectDataGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
+                        ontologyNamedGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
+                        dataNamedGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
                         isActiveProject = propsMap.getOrElse(OntologyConstants.KnoraBase.IsActiveProject, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no isActiveProject defined.")).toBoolean,
                         hasSelfJoinEnabled = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
                     )
@@ -182,9 +185,32 @@ class ProjectsResponderV1 extends ResponderV1 {
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */
-    private def projectInfoByIRIGetRequestV1(projectIRI: IRI, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
+    private def projectInfoByIRIGetRequestV1(projectIRI: IRI, infoType: ProjectInfoType, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
 
         log.debug(s"projectInfoByIRIGetRequestV1 - projectIRI: $projectIRI, infoType: $infoType")
+
+        for {
+            projectInfo <- projectInfoByIRIGetV1(projectIRI, infoType, userProfile)
+        } yield ProjectInfoResponseV1(
+            project_info = projectInfo,
+            userdata = userProfile match {
+                case Some(profile) => Some(profile.userData)
+                case None => None
+            }
+        )
+    }
+
+    /**
+      * Gets the project with the given project Iri and returns the information as a [[ProjectInfoV1]].
+      *
+      * @param projectIRI the Iri of the project requested.
+      * @param infoType type request: either short or full.
+      * @param userProfile the profile of user that is making the request.
+      * @return information about the project as a [[ProjectInfoResponseV1]].
+      */
+    private def projectInfoByIRIGetV1(projectIRI: IRI, infoType: ProjectInfoType.Value, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoV1] = {
+
+        log.debug(s"projectInfoByIRIGetV1 - projectIRI: $projectIRI, infoType: $infoType")
 
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(
@@ -199,15 +225,9 @@ class ProjectsResponderV1 extends ResponderV1 {
 
             projectInfo = createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIRI, infoType = infoType, userProfile)
 
-            _ = log.debug(s"projectInfoByIRIGetRequestV1 - projectInfo: $projectInfo")
+            _ = log.debug(s"projectInfoByIRIGetV1 - projectInfo: $projectInfo")
 
-        } yield ProjectInfoResponseV1(
-            project_info = projectInfo,
-            userdata = userProfile match {
-                case Some(profile) => Some(profile.userData)
-                case None => None
-            }
-        )
+        } yield projectInfo
     }
 
     /**
@@ -283,6 +303,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                 projectClassIri = OntologyConstants.KnoraBase.KnoraProject,
                 shortname = SparqlUtil.any2SparqlLiteral(newProjectDataV1.shortname),
                 longname = SparqlUtil.any2SparqlLiteral(newProjectDataV1.longname),
+                description = SparqlUtil.any2SparqlLiteral(newProjectDataV1.description),
                 keywords = SparqlUtil.any2SparqlLiteral(newProjectDataV1.keywords),
                 logo = SparqlUtil.any2SparqlLiteral(newProjectDataV1.logo),
                 basepath = SparqlUtil.any2SparqlLiteral(newProjectDataV1.basepath),
@@ -360,8 +381,8 @@ class ProjectsResponderV1 extends ResponderV1 {
                 logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
                 belongsToInstitution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToProject),
                 basepath = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectBasepath, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
-                projectOntologyGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
-                projectDataGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
+                ontologyNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
+                dataNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
                 isActiveProject = projectProperties.getOrElse(OntologyConstants.KnoraBase.IsActiveProject, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no isActiveProject defined.")).toBoolean,
                 hasSelfJoinEnabled = projectProperties.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
             )

@@ -30,6 +30,7 @@
  * @param projectClassIri the IRI of the OWL class that the new project should belong to.
  * @param shortname the new project's shortname (required / unique).
  * @param longname the new project's longname.
+ * @param description the new project's description.
  * @param keywords the new project's keywords.
  * @param logo the new project's logo.
  * @param basepath the new project's basepath.
@@ -45,6 +46,7 @@
   projectClassIri: IRI,
   shortname: String,
   longname: String,
+  description: String,
   keywords: String,
   logo: String,
   basepath: String,
@@ -66,9 +68,9 @@ INSERT {
 
             knora-base:projectShortname @shortname ;
 
-            @if(longname.nonEmpty) {
-                knora-base:projectLongname @longname ;
-            }
+            knora-base:projectLongname @longname ;
+
+            knora-base:projectDescription @description ;
 
             @if(keywords.nonEmpty) {
                 knora-base:keywords @keywords ;

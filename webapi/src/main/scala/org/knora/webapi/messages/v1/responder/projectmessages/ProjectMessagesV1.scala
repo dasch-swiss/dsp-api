@@ -86,13 +86,22 @@ case class ProjectsGetRequestV1(infoType: ProjectInfoType, userProfile: Option[U
 case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsResponderRequestV1
 
 /**
-  * Get everything about a single project identified through it's IRI.
+  * Get info about a single project identified through it's IRI. The response is in form of [[ProjectInfoResponseV1]].
   *
-  * @param iri Iri of the project.
-  * @param infoType is the type of the project information: full or short.
-  * @param userProfileV1 the profile of the user making the request.
+  * @param iri the IRI of the project.
+  * @param infoType the type of the project information: full or short.
+  * @param userProfileV1 the profile of the user making the request (optional).
   */
 case class ProjectInfoByIRIGetRequestV1(iri: IRI, infoType: ProjectInfoType, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+
+/**
+  *Get info about a single project identified through it's IRI. The response is in form of [[ProjectInfoV1]].
+  *
+  * @param iri the IRI of the project.
+  * @param infoType the type of the project information: full or short.
+  * @param userProfileV1 the profile of the user making the request (optional).
+  */
+case class ProjectInfoByIRIGetV1(iri: IRI, infoType: ProjectInfoType, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 
 /**
@@ -166,8 +175,8 @@ case class ProjectInfoV1(id: IRI,
                          logo: Option[String] = None,
                          belongsToInstitution: Option[IRI] = None,
                          basepath: String,
-                         projectOntologyGraph: IRI,
-                         projectDataGraph: IRI,
+                         ontologyNamedGraph: IRI,
+                         dataNamedGraph: IRI,
                          isActiveProject: Boolean,
                          hasSelfJoinEnabled: Boolean
                         ) {
@@ -185,8 +194,8 @@ case class ProjectInfoV1(id: IRI,
                     logo = logo,
                     basepath = basepath,
                     belongsToInstitution = belongsToInstitution,
-                    projectOntologyGraph = projectOntologyGraph,
-                    projectDataGraph = projectDataGraph,
+                    ontologyNamedGraph = ontologyNamedGraph,
+                    dataNamedGraph = dataNamedGraph,
                     isActiveProject = isActiveProject,
                     hasSelfJoinEnabled = hasSelfJoinEnabled
                 )
@@ -201,8 +210,8 @@ case class ProjectInfoV1(id: IRI,
                     belongsToInstitution = None, //removed
                     logo = None, //removed
                     basepath = basepath,
-                    projectOntologyGraph = projectOntologyGraph,
-                    projectDataGraph = projectDataGraph,
+                    ontologyNamedGraph = ontologyNamedGraph,
+                    dataNamedGraph = dataNamedGraph,
                     isActiveProject = isActiveProject,
                     hasSelfJoinEnabled = hasSelfJoinEnabled
                 )

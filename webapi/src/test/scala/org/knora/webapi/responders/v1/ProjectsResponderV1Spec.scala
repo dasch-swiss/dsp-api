@@ -147,7 +147,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         longname = "project longname",
                         description = "project description",
                         keywords = "keywords",
-                        logo = "",
+                        logo = "/fu/bar/baz.jpg",
                         basepath = "/fu/bar",
                         isActiveProject = true,
                         hasSelfJoinEnabled = false
@@ -160,8 +160,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         assert(newProjectInfo.shortname.equals("newproject"))
                         assert(newProjectInfo.longname.equals("project longname"))
                         assert(newProjectInfo.description.equals("project description"))
-                        assert(newProjectInfo.projectOntologyGraph.equals("http://www.knora.org/ontology/newproject"))
-                        assert(newProjectInfo.projectDataGraph.equals("http://www.knora.org/data/newproject"))
+                        assert(newProjectInfo.ontologyNamedGraph.equals("http://www.knora.org/ontology/newproject"))
+                        assert(newProjectInfo.dataNamedGraph.equals("http://www.knora.org/data/newproject"))
                     }
                 }
             }
@@ -173,8 +173,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         longname = "project longname",
                         description = "project description",
                         keywords = "keywords",
-                        logo = "",
-                        basepath = "",
+                        logo = "/fu/bar/baz.jpg",
+                        basepath = "/fu/bar",
                         isActiveProject = true,
                         hasSelfJoinEnabled = false
                     ),
@@ -191,8 +191,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         longname = "project longname",
                         description = "project description",
                         keywords = "keywords",
-                        logo = "",
-                        basepath = "",
+                        logo = "/fu/bar/baz.jpg",
+                        basepath = "/fu/bar",
                         isActiveProject = true,
                         hasSelfJoinEnabled = false
                     ),

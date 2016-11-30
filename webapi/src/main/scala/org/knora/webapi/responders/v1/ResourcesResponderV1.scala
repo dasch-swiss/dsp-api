@@ -28,7 +28,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.graphdatamessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.permissionmessages.ResourceCreateOperation
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
+import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -1412,7 +1412,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             }.mapTo[ProjectInfoResponseV1]
 
             //namedGraph = settings.projectNamedGraphs(projectIri).data
-            namedGraph = projectInfo.project_info.projectDataGraph
+            namedGraph = projectInfo.project_info.dataNamedGraph
             resourceIri: IRI = knoraIdUtil.makeRandomResourceIri
 
             // Check user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to
@@ -1483,10 +1483,17 @@ class ResourcesResponderV1 extends ResponderV1 {
                     throw ForbiddenException(s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted")
                 }
 
+                projectInfo <- {
+                    responderManager ? ProjectInfoByIRIGetV1(
+                        resourceInfo.project_id,
+                        infoType = ProjectInfoType.FULL,
+                        None
+                    )
+                }.mapTo[ProjectInfoV1]
+
                 // Create update sparql string
                 sparqlUpdate = queries.sparql.v1.txt.deleteResource(
-                    // FIXME: Get info from ProjectsResponder
-                    dataNamedGraph = settings.projectNamedGraphs(resourceInfo.project_id).data,
+                    dataNamedGraph = projectInfo.dataNamedGraph,
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceDeleteRequest.resourceIri,
                     maybeDeleteComment = resourceDeleteRequest.deleteComment
@@ -1577,9 +1584,16 @@ class ResourcesResponderV1 extends ResponderV1 {
                     throw ForbiddenException(s"User $userIri does not have permission to change the label of resource $resourceIri")
                 }
 
+                projectInfo <- {
+                    responderManager ? ProjectInfoByIRIGetV1(
+                        resourceInfo.project_id,
+                        infoType = ProjectInfoType.FULL,
+                        None
+                    )
+                }.mapTo[ProjectInfoV1]
+
                 // get the named graph the resource is contained in by the resource's project
-                // FIXME: Get info from ProjectsResponder
-                namedGraph = settings.projectNamedGraphs(resourceInfo.project_id).data
+                namedGraph = projectInfo.dataNamedGraph
 
                 // the user has sufficient permissions to change the resource's label
                 sparqlUpdate = queries.sparql.v1.txt.changeResourceLabel(

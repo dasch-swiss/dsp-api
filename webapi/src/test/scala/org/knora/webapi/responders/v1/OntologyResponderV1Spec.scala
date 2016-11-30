@@ -735,19 +735,37 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 active = false,
                 uri = "http://www.knora.org/ontology/images",
                 project_id = "http://data.knora.org/projects/images",
-                description = "Images Test Project",
-                longname = "Images Test Project",
-                shortname = "Images Test Project",
+                description = "Images Collection Demo",
+                longname = "Images Collection Demo",
+                shortname = "images",
                 id = "http://www.knora.org/ontology/images"
             ),
             NamedGraphV1(
                 active = false,
                 uri = "http://www.knora.org/ontology/anything",
                 project_id = "http://data.knora.org/projects/anything",
-                description = "Anything Test Project",
-                longname = "Anything Test Project",
-                shortname = "Anything Test Project",
+                description = "Anything Project",
+                longname = "Anything Project",
+                shortname = "Anything Project",
                 id = "http://www.knora.org/ontology/anything"
+            ),
+            NamedGraphV1(
+                active = false,
+                uri = "http://www.knora.org/ontology/dokubib",
+                project_id = "http://www.knora.org/ontology/dokubib",
+                description = "Dokubib",
+                longname = "Dokubib",
+                shortname = "dokubib",
+                id = "http://www.knora.org/ontology/dokubib"
+            ),
+            NamedGraphV1(
+                active = false,
+                uri = "http://www.knora.org/ontology/testproject",
+                project_id = "http://data.knora.org/projects/666",
+                description = "Test Project",
+                longname = "A test Project",
+                shortname = "testproject",
+                id = "http://www.knora.org/ontology/testproject"
             )
         )
     )

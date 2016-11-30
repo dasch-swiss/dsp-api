@@ -24,6 +24,7 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -915,10 +916,19 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Generate an IRI for the new value.
                 newValueIri = knoraIdUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
 
+                // Get project info
+                projectInfo <- {
+                    responderManager ? ProjectInfoByIRIGetV1(
+                        findResourceWithValueResult.projectIri,
+                        infoType = ProjectInfoType.FULL,
+                        None
+                    )
+                }.mapTo[ProjectInfoV1]
+
+
                 // Generate a SPARQL update.
                 sparqlUpdate = queries.sparql.v1.txt.changeComment(
-                    // FIXME: Get info from ProjectsResponder
-                    dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
+                    dataNamedGraph = projectInfo.dataNamedGraph,
                     triplestore = settings.triplestoreType,
                     resourceIri = findResourceWithValueResult.resourceIri,
                     propertyIri = findResourceWithValueResult.propertyIri,
@@ -1011,6 +1021,16 @@ class ValuesResponderV1 extends ResponderV1 {
                     val linkPropertyIri = knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
 
                     for {
+                        // Get project info
+                        projectInfo <- {
+                            responderManager ? ProjectInfoByIRIGetV1(
+                                findResourceWithValueResult.projectIri,
+                                infoType = ProjectInfoType.FULL,
+                                None
+                            )
+                        }.mapTo[ProjectInfoV1]
+
+
                         sparqlTemplateLinkUpdate <- decrementLinkValue(
                             sourceResourceIri = findResourceWithValueResult.resourceIri,
                             linkPropertyIri = linkPropertyIri,
@@ -1022,8 +1042,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         )
 
                         sparqlUpdate = queries.sparql.v1.txt.deleteLink(
-                            // FIXME: Get info from ProjectsResponder
-                            dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
+                            dataNamedGraph = projectInfo.dataNamedGraph,
                             triplestore = settings.triplestoreType,
                             linkSourceIri = findResourceWithValueResult.resourceIri,
                             linkUpdate = sparqlTemplateLinkUpdate,
@@ -1058,9 +1077,17 @@ class ValuesResponderV1 extends ResponderV1 {
                     for {
                         linkUpdates <- linkUpdatesFuture
 
+                        // Get project info
+                        projectInfo <- {
+                            responderManager ? ProjectInfoByIRIGetV1(
+                                findResourceWithValueResult.projectIri,
+                                infoType = ProjectInfoType.FULL,
+                                None
+                            )
+                        }.mapTo[ProjectInfoV1]
+
                         sparqlUpdate = queries.sparql.v1.txt.deleteValue(
-                            // FIXME: Get info from ProjectsResponder
-                            dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
+                            dataNamedGraph = projectInfo.dataNamedGraph,
                             triplestore = settings.triplestoreType,
                             resourceIri = findResourceWithValueResult.resourceIri,
                             propertyIri = findResourceWithValueResult.propertyIri,
@@ -1755,10 +1782,18 @@ class ValuesResponderV1 extends ResponderV1 {
                 userProfile = userProfile
             )
 
+            // Get project info
+            projectInfo <- {
+                responderManager ? ProjectInfoByIRIGetV1(
+                    valueProject,
+                    infoType = ProjectInfoType.FULL,
+                    None
+                )
+            }.mapTo[ProjectInfoV1]
+
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createLink(
-                // FIXME: Get info from ProjectsResponder
-                dataNamedGraph = settings.projectNamedGraphs(valueProject).data,
+                dataNamedGraph = projectInfo.dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
@@ -1830,10 +1865,18 @@ class ValuesResponderV1 extends ResponderV1 {
                 case _ => Future(Vector.empty[SparqlTemplateLinkUpdate])
             }
 
+            // Get project info
+            projectInfo <- {
+                responderManager ? ProjectInfoByIRIGetV1(
+                    valueProject,
+                    infoType = ProjectInfoType.FULL,
+                    None
+                )
+            }.mapTo[ProjectInfoV1]
+
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createValue(
-                // FIXME: Get info from ProjectsResponder
-                dataNamedGraph = settings.projectNamedGraphs(valueProject).data,
+                dataNamedGraph = projectInfo.dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
@@ -1887,7 +1930,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                              valuePermissions: Option[String],
                                              userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
-        // Delete the existing link and decrement its LinkValue's reference count.
+            // Delete the existing link and decrement its LinkValue's reference count.
             sparqlTemplateLinkUpdateForCurrentLink <- decrementLinkValue(
                 sourceResourceIri = resourceIri,
                 linkPropertyIri = propertyIri,
@@ -1909,10 +1952,18 @@ class ValuesResponderV1 extends ResponderV1 {
                 userProfile = userProfile
             )
 
+            // Get project info
+            projectInfo <- {
+                responderManager ? ProjectInfoByIRIGetV1(
+                    projectIri,
+                    infoType = ProjectInfoType.FULL,
+                    None
+                )
+            }.mapTo[ProjectInfoV1]
+
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.changeLink(
-                // FIXME: Get info from ProjectsResponder
-                dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
+                dataNamedGraph = projectInfo.dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 linkSourceIri = resourceIri,
                 linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
@@ -2028,10 +2079,18 @@ class ValuesResponderV1 extends ResponderV1 {
                 case _ => Future(Vector.empty[SparqlTemplateLinkUpdate])
             }
 
+            // Get project info
+            projectInfo <- {
+                responderManager ? ProjectInfoByIRIGetV1(
+                    projectIri,
+                    infoType = ProjectInfoType.FULL,
+                    None
+                )
+            }.mapTo[ProjectInfoV1]
+
             // Generate a SPARQL update.
             sparqlUpdate = queries.sparql.v1.txt.addValueVersion(
-                // FIXME: Get info from ProjectsResponder
-                dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
+                dataNamedGraph = projectInfo.dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
