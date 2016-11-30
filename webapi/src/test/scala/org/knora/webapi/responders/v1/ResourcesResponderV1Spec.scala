@@ -1014,7 +1014,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             val valuesToBeCreated = Map(
                 "http://www.knora.org/ontology/incunabula#hasAuthor" -> author,
-                "http://www.knora.org/ontology/incunabula#pubdate" -> pubdate.map(date => CreateValueV1WithComment(DateUtilV1.dateValueV1ToJulianDayCountValueV1(date), None))
+                "http://www.knora.org/ontology/incunabula#pubdate" -> pubdate.map(date => CreateValueV1WithComment(DateUtilV1.dateValueV1ToJulianDayNumberValueV1(date), None))
             )
 
             val resourceCreateRequest = ResourceCreateRequestV1(
@@ -1061,7 +1061,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             val publoc = TextValueV1("Entenhausen")
 
-            val pubdateRequest = DateUtilV1.createJDCValueV1FromDateString("GREGORIAN:2015-12-03")
+            val pubdateRequest = DateUtilV1.createJDNValueV1FromDateString("GREGORIAN:2015-12-03")
             val pubdateResponse = DateValueV1(dateval1 = "2015-12-03", dateval2 = "2015-12-03", calendar = KnoraCalendarV1.GREGORIAN)
 
             val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = Map(

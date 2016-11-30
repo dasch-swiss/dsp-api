@@ -107,8 +107,8 @@ object OntologyConstants {
         val ValueHasDecimal = "http://www.knora.org/ontology/knora-base#valueHasDecimal"
         val ValueHasStandoff = "http://www.knora.org/ontology/knora-base#valueHasStandoff"
         val ValueHasResPtr = "http://www.knora.org/ontology/knora-base#valueHasResPtr"
-        val ValueHasStartJDC = "http://www.knora.org/ontology/knora-base#valueHasStartJDC"
-        val ValueHasEndJDC = "http://www.knora.org/ontology/knora-base#valueHasEndJDC"
+        val ValueHasStartJDN = "http://www.knora.org/ontology/knora-base#valueHasStartJDN"
+        val ValueHasEndJDN = "http://www.knora.org/ontology/knora-base#valueHasEndJDN"
         val ValueHasCalendar = "http://www.knora.org/ontology/knora-base#valueHasCalendar"
         val ValueHasStartPrecision = "http://www.knora.org/ontology/knora-base#valueHasStartPrecision"
         val ValueHasEndPrecision = "http://www.knora.org/ontology/knora-base#valueHasEndPrecision"
@@ -142,6 +142,8 @@ object OntologyConstants {
         val Username = "http://www.knora.org/ontology/knora-base#userid"
         val Email = "http://www.knora.org/ontology/knora-base#email"
         val Password = "http://www.knora.org/ontology/knora-base#password"
+        val GivenName = "http://www.knora.org/ontology/knora-base#givenName"
+        val FamilyName = "http://www.knora.org/ontology/knora-base#familyName"
 
         val InternalMimeType = "http://www.knora.org/ontology/knora-base#internalMimeType"
         val InternalFilename = "http://www.knora.org/ontology/knora-base#internalFilename"
@@ -306,11 +308,6 @@ object OntologyConstants {
             val assignmentOperator = "="
         }
 
-    }
-
-    object Foaf {
-        val GivenName = "http://xmlns.com/foaf/0.1/givenName"
-        val FamilyName = "http://xmlns.com/foaf/0.1/familyName"
     }
 
 }

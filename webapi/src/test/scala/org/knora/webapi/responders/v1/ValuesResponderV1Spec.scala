@@ -1154,7 +1154,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/21abac2162",
                 propertyIri = "http://www.knora.org/ontology/incunabula#pubdate",
-                value = JulianDayCountValueV1(
+                value = JulianDayNumberValueV1(
                     dateval1 = 2451545,
                     dateval2 = 2457044,
                     dateprecision1 = KnoraPrecisionV1.YEAR,
@@ -1175,7 +1175,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         "change an existing date (pubdate of a book)" in {
 
             actorUnderTest ! ChangeValueRequestV1(
-                value = JulianDayCountValueV1(
+                value = JulianDayNumberValueV1(
                     dateval1 = 2265854,
                     dateval2 = 2265854,
                     dateprecision1 = KnoraPrecisionV1.DAY,

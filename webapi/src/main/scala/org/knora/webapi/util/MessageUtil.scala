@@ -123,7 +123,7 @@ object MessageUtil {
                 )
 
             case dateValue: DateValueV1 =>
-                val julianDayCountValue = DateUtilV1.dateValueV1ToJulianDayCountValueV1(dateValue)
+                val julianDayCountValue = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(dateValue)
                 basicObjectResponse.copy(
                     dateval1 = Some(Map(LiteralValueType.StringValue -> dateValue.dateval1)),
                     dateval2 = Some(Map(LiteralValueType.StringValue -> dateValue.dateval2)),

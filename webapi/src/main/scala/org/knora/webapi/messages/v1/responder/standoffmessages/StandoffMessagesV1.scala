@@ -162,8 +162,8 @@ object StandoffProperties {
     // represents the standoff properties defined on the date standoff tag
     val dateProperties = Set(
         OntologyConstants.KnoraBase.ValueHasCalendar,
-        OntologyConstants.KnoraBase.ValueHasStartJDC,
-        OntologyConstants.KnoraBase.ValueHasEndJDC,
+        OntologyConstants.KnoraBase.ValueHasStartJDN,
+        OntologyConstants.KnoraBase.ValueHasEndJDN,
         OntologyConstants.KnoraBase.ValueHasStartPrecision,
         OntologyConstants.KnoraBase.ValueHasEndPrecision
     )

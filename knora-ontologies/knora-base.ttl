@@ -55,6 +55,30 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#name
+
+:name rdf:type owl:DatatypeProperty ;
+
+      rdfs:subPropertyOf foaf:name, :objectCannotBeMarkedAsDeleted .
+
+
+
+###  http://www.knora.org/ontology/knora-base#givenName
+
+:givenName rdf:type owl:DatatypeProperty ;
+
+      rdfs:subPropertyOf foaf:givenName, :objectCannotBeMarkedAsDeleted .
+
+
+
+###  http://www.knora.org/ontology/knora-base#familyName
+
+:familyName rdf:type owl:DatatypeProperty ;
+
+      rdfs:subPropertyOf foaf:familyName, :objectCannotBeMarkedAsDeleted .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#hasDefaultChangeRightsPermission
 
 :hasDefaultChangeRightsPermission rdf:type owl:ObjectProperty ;
@@ -185,20 +209,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#currentproject
-
-:currentproject rdf:type owl:ObjectProperty ;
-
-                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-                rdfs:comment "This property indicates, which is the \"current project\" of a given user. A user can be part of any number of projects, but only one can be the active project."@en ;
-
-                :subjectClassConstraint :User ;
-
-                :objectClassConstraint :knoraProject .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#hasColor
 
 :hasColor rdf:type owl:ObjectProperty ;
@@ -208,7 +218,7 @@
                      "Couleur"@fr ,
                      "Colore"@it ;
 
-		  rdfs:comment """Represents a color."""@en ;
+          rdfs:comment """Represents a color."""@en ;
 
           salsah-gui:guiAttribute "ncolors=8"^^xsd:string ;
 
@@ -231,11 +241,13 @@
                        "Commentaire"@fr ,
                        "Commento"@it ;
 
-			rdfs:comment """Represents a comment"""@de ;
+            rdfs:comment """Represents a comment on a resource as a knora-base:TextValue"""@de ;
+
+            :subjectClassConstraint :Resource ;
 
             :objectClassConstraint :TextValue ;
 
-			      salsah-gui:guiElement salsah-gui:Richtext ;
+            salsah-gui:guiElement salsah-gui:Richtext ;
 
             rdfs:subPropertyOf :hasValue .
 
@@ -268,7 +280,7 @@
                          "a fichier"@fr ,
                          "ha file"@it ;
               
-              rdfs:comment "Connects a Representation to a file"@en ;	
+              rdfs:comment "Connects a Representation to a file"@en ;    
 
               salsah-gui:guiElement salsah-gui:Fileupload ;
 
@@ -295,11 +307,11 @@
 
               salsah-gui:guiElement salsah-gui:Fileupload ;
 
-			        :hasDefaultRestrictedViewPermission :UnknownUser ;
+              :hasDefaultRestrictedViewPermission :UnknownUser ;
 
-        		  :hasDefaultViewPermission :KnownUser ;
+              :hasDefaultViewPermission :KnownUser ;
 
-      	  	  :hasDefaultModifyPermission :ProjectMember , :Owner ;
+              :hasDefaultModifyPermission :ProjectMember , :Owner ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -419,7 +431,7 @@
                         "Géometrie"@fr ,
                         "Geometria"@it ;
 
-             rdfs:comment """Represents a geometrical shape."""@en ;	
+             rdfs:comment """Represents a geometrical shape."""@en ;    
 
              rdfs:subPropertyOf :hasValue ;
 
@@ -688,7 +700,6 @@
 
 
 
-
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOf
 
 :isAnnotationOf rdf:type owl:ObjectProperty ;
@@ -703,6 +714,8 @@
                 :objectClassConstraint :Resource ;
 
                 rdfs:subPropertyOf :hasLinkTo .
+
+
 
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOfValue
 
@@ -725,9 +738,7 @@
 
            :subjectClassConstraint :User ;
 
-           :objectClassConstraint :UserGroup ;
-
-           rdfs:subPropertyOf foaf:member .
+           :objectClassConstraint :UserGroup .
 
 
 
@@ -741,9 +752,7 @@
 
              :subjectClassConstraint :User ;
 
-             :objectClassConstraint :knoraProject ;
-
-             rdfs:subPropertyOf foaf:member .
+             :objectClassConstraint :knoraProject .
 
 
 
@@ -813,6 +822,8 @@
 
 :previousValue rdf:type owl:ObjectProperty ;
 
+               rdfs:subPropertyOf :valueHas ;
+
                rdfs:comment "Points to the previous verson of a value"@en ;
 
                :subjectClassConstraint :Value ;
@@ -854,7 +865,7 @@
 
 :valueHasStandoff rdf:type owl:ObjectProperty ;
 
-                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+                  rdfs:subPropertyOf :valueHas ;
 
                   :objectClassConstraint :StandoffTag ;
 
@@ -871,7 +882,7 @@
                         "prénom"@fr ,
                         "nome di battesimo"@it ;
 
-			        rdfs:comment """Represents a Given name."""@en ;
+              rdfs:comment """Represents a Given name."""@en ;
 
               :objectClassConstraint :TextValue ;
 
@@ -879,7 +890,7 @@
 
               :subjectClassConstraint :Person ;
 
-              rdfs:subPropertyOf :hasValue, foaf:givenName .
+              rdfs:subPropertyOf :hasValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasFamilyName
@@ -891,7 +902,7 @@
                         "nom de famille"@fr ,
                         "nome di famiglia"@it ;
 
-			         rdfs:comment """Represents a family name."""@en ;
+               rdfs:comment """Represents a family name."""@en ;
 
                :objectClassConstraint :TextValue ;
 
@@ -899,7 +910,7 @@
 
                :subjectClassConstraint :Person ;
 
-               rdfs:subPropertyOf :hasValue, foaf:familyName .
+               rdfs:subPropertyOf :hasValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasIAFIdentifier
@@ -910,7 +921,7 @@
                              "Integrated Authority File"@en ;
 
                   rdfs:comment """Repräsentiert eine GND-Nummer."""@de,
-                  			       """Represents a IAF identifier."""@en ;
+                               """Represents an IAF identifier."""@en ;
 
                   :objectClassConstraint :TextValue ;
 
@@ -937,7 +948,7 @@
 
               :subjectClassConstraint :Person ;
 
-              rdfs:subPropertyOf :hasValue, foaf:birthday .
+              rdfs:subPropertyOf :hasValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasDeathDate
@@ -948,7 +959,7 @@
                          "date of death"@en ;
 
               rdfs:comment """Repräsentiert ein Sterbedatum."""@de,
-                  			   """Represents a date of death."""@en ;
+                           """Represents a date of death."""@en ;
 
               :objectClassConstraint :DateValue ;
 
@@ -1149,21 +1160,12 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#filename
-
-:filename rdf:type owl:DatatypeProperty ;
-
-          rdfs:subPropertyOf :valueHas ;
-
-          :subjectClassConstraint :Representation ;
-
-          :objectDatatypeConstraint xsd:string .
-
-
 
 ###  http://www.knora.org/ontology/knora-base#fps
 
 :fps rdf:type owl:DatatypeProperty ;
+
+     rdfs:label "Frames per second"@en ;
 
      rdfs:subPropertyOf :valueHas ;
 
@@ -1356,18 +1358,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#protocol
-
-:protocol rdf:type owl:DatatypeProperty ;
-
-          rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-          rdfs:comment "An Internet protocol (\"http\", \"https\", etc.)"@en ;
-
-          :objectDatatypeConstraint xsd:string .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#qualityLevel
 
 :qualityLevel rdf:type owl:DatatypeProperty ;
@@ -1430,10 +1420,6 @@
 
 
 
-
-
-
-
 ###  http://www.knora.org/ontology/knora-base#userid
 
 :userid rdf:type owl:DatatypeProperty ;
@@ -1490,7 +1476,7 @@
 
 ###  http://www.knora.org/ontology/knora-base#valueHas
 
-:valueHas rdf:type owl:DatatypeProperty ;
+:valueHas rdf:type rdf:Property ;
 
           :subjectClassConstraint :ValueBase ;
 
@@ -1526,11 +1512,11 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#valueHasEndJDC
+###  http://www.knora.org/ontology/knora-base#valueHasEndJDN
 
-:valueHasEndJDC rdf:type owl:DatatypeProperty ;
+:valueHasEndJDN rdf:type owl:DatatypeProperty ;
 
-                rdfs:comment "Contains the end of a date as \"Julian day count\" (JDC)"@en ;
+                rdfs:comment "Contains the end of a date as a Julian Day Number (JDN)"@en ;
 
                 rdfs:subPropertyOf :valueHas ;
 
@@ -1570,7 +1556,7 @@
 
 :valueHasGeometry rdf:type owl:DatatypeProperty ;
 
-                  rdfs:comment "JSON string describing a geometry (e.g. a region). Currently geometries are limited to 2D unions of primitive objects like circles, squartes and polygons."@en ;
+                  rdfs:comment "JSON string describing a geometry (e.g. a region). Currently geometries are limited to 2D unions of primitive objects like circles, squares and polygons."@en ;
 
                   rdfs:subPropertyOf :valueHas ;
 
@@ -1654,7 +1640,7 @@
 
 ###  http://www.knora.org/ontology/knora-base#valueHasListNode
 
-:valueHasListNode rdf:type owl:DatatypeProperty ;
+:valueHasListNode rdf:type owl:ObjectProperty ;
 
                   rdfs:subPropertyOf :valueHas ;
 
@@ -1687,11 +1673,11 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#valueHasStartJDC
+###  http://www.knora.org/ontology/knora-base#valueHasStartJDN
 
-:valueHasStartJDC rdf:type owl:DatatypeProperty ;
+:valueHasStartJDN rdf:type owl:DatatypeProperty ;
 
-                  rdfs:comment "Contains the start of a date as \"Julian day count\" (JDC)"@en ;
+                  rdfs:comment "Contains the start of a date as a Julian Day Number (JDN)"@en ;
 
                   rdfs:subPropertyOf :valueHas ;
 
@@ -1783,10 +1769,6 @@
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :duration ;
                                   owl:cardinality "1"^^xsd:nonNegativeInteger
-                                ] ,
-                                [ rdf:type owl:Restriction ;
-                                  owl:onProperty :hasComment ;
-                                  owl:minCardinality "0"^^xsd:nonNegativeInteger
                                 ] ;
 
                 rdfs:comment "Represents an audio file"@en .
@@ -1836,11 +1818,7 @@
 
 :DDDFileValue rdf:type owl:Class ;
 
-              rdfs:subClassOf :FileValue ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :hasComment ;
-                                owl:minCardinality "0"^^xsd:nonNegativeInteger
-                              ] ;
+              rdfs:subClassOf :FileValue ;
 
               rdfs:comment "This represents some 3D-object with mesh data, point cloud, etc."@en .
 
@@ -1878,7 +1856,7 @@
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :valueHasEndJDC ;
+                            owl:onProperty :valueHasEndJDN ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
@@ -1886,7 +1864,7 @@
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :valueHasStartJDC ;
+                            owl:onProperty :valueHasStartJDN ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] .
 
@@ -1920,7 +1898,7 @@
 
                         rdfs:subClassOf :Representation ,
                                 [ rdf:type owl:Restriction ;
-                                  owl:onProperty :hasFileValue ;
+                                  owl:onProperty :hasDocumentFileValue ;
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] .
 
@@ -2062,7 +2040,7 @@
                                owl:minCardinality "0"^^xsd:nonNegativeInteger
                              ] ,
                              [ rdf:type owl:Restriction ;
-                               owl:onProperty foaf:name ;
+                               owl:onProperty :name ;
                                owl:minCardinality "1"^^xsd:nonNegativeInteger
                              ] ,
                              [ rdf:type owl:Restriction ;
@@ -2282,11 +2260,7 @@
                                       ] ,
                                       [ rdf:type owl:Restriction ;
                                         owl:onProperty :qualityLevel ;
-                                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                                      ] ,
-                                      [ rdf:type owl:Restriction ;
-                                        owl:onProperty :hasComment ;
-                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                        owl:cardinality "1"^^xsd:nonNegativeInteger
                                       ] ,
                                       [ rdf:type owl:Restriction ;
                                         owl:onProperty :duration ;
@@ -2788,10 +2762,6 @@
 
                      rdfs:subClassOf :FileValue ,
                                      [ rdf:type owl:Restriction ;
-                                       owl:onProperty :hasComment ;
-                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                     ] ,
-                                     [ rdf:type owl:Restriction ;
                                        owl:onProperty :dimY ;
                                        owl:cardinality "1"^^xsd:nonNegativeInteger
                                      ] ,
@@ -2831,11 +2801,7 @@
 
 :TextFileValue rdf:type owl:Class ;
 
-               rdfs:subClassOf :FileValue ,
-                               [ rdf:type owl:Restriction ;
-                                 owl:onProperty :hasComment ;
-                                 owl:minCardinality "0"^^xsd:nonNegativeInteger
-                               ] ;
+               rdfs:subClassOf :FileValue ;
 
                rdfs:comment "A text file such as plain Unicode text, LaTeX, TEI/XML, etc."@en .
 
@@ -2845,7 +2811,11 @@
 
 :TextRepresentation rdf:type owl:Class ;
 
-                    rdfs:subClassOf :Representation ;
+                    rdfs:subClassOf :Representation ,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :hasTextFileValue ;
+                                      owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                    ] ;
 
                     rdfs:label "Repräsentation (Text)"@de ,
                                                "Representation (Text)"@en ,
@@ -2905,9 +2875,9 @@
 
 :User rdf:type owl:Class ;
 
-      rdfs:subClassOf foaf:Person ,
+      rdfs:subClassOf foaf:Agent ,
                       [ rdf:type owl:Restriction ;
-                        owl:onProperty foaf:familyName ;
+                        owl:onProperty :familyName ;
                         owl:cardinality "1"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
@@ -2919,7 +2889,7 @@
                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
-                        owl:onProperty foaf:givenName ;
+                        owl:onProperty :givenName ;
                         owl:cardinality "1"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
@@ -2945,7 +2915,7 @@
 
            rdfs:subClassOf foaf:Group ,
                            [ rdf:type owl:Restriction ;
-                             owl:onProperty foaf:name ;
+                             owl:onProperty :name ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
@@ -3064,7 +3034,7 @@
 :KnownUser rdf:type :UserGroup ,
                     owl:NamedIndividual ;
 
-           foaf:name "known user" .
+           :name "known user" .
 
 
 
@@ -3073,7 +3043,7 @@
 :Owner rdf:type :UserGroup ,
                 owl:NamedIndividual ;
 
-                foaf:name "owner" .
+                :name "owner" .
 
 
 
@@ -3082,7 +3052,7 @@
 :ProjectMember rdf:type :UserGroup ,
                         owl:NamedIndividual ;
 
-              foaf:name "project member" .
+              :name "project member" .
 
 
 
@@ -3091,19 +3061,20 @@
 :UnknownUser rdf:type :UserGroup ,
                       owl:NamedIndividual ;
 
-             foaf:name "unknown user" .
+             :name "unknown user" .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#SystemUser
 
-:SystemUser rdf:type :User ;
+:SystemUser rdf:type :User ,
+                     owl:NamedIndividual ;
 
                      :userid "system" ;
 
-                     foaf:givenName "Knora" ;
+                     :givenName "Knora" ;
 
-                     foaf:familyName "System" ;
+                     :familyName "System" ;
 
                      :password "-" ;
 

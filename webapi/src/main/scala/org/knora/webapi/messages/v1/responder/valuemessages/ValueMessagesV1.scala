@@ -1032,25 +1032,25 @@ case class IntervalValueV1(timeval1: BigDecimal, timeval2: BigDecimal) extends U
 }
 
 /**
-  * Represents a date value as a period bounded by Julian Day Counts. Knora stores dates internally in this format.
+  * Represents a date value as a period bounded by Julian Day Numbers. Knora stores dates internally in this format.
   *
-  * @param dateval1       the beginning of the date (a Julian day count).
-  * @param dateval2       the end of the date (a Julian day count).
+  * @param dateval1       the beginning of the date (a Julian day number).
+  * @param dateval2       the end of the date (a Julian day number).
   * @param calendar       the preferred calendar for representing the date.
   * @param dateprecision1 the precision of the beginning of the date.
   * @param dateprecision2 the precision of the end of the date.
   */
-case class JulianDayCountValueV1(dateval1: Int,
-                                 dateval2: Int,
-                                 calendar: KnoraCalendarV1.Value,
-                                 dateprecision1: KnoraPrecisionV1.Value,
-                                 dateprecision2: KnoraPrecisionV1.Value) extends UpdateValueV1 {
+case class JulianDayNumberValueV1(dateval1: Int,
+                                  dateval2: Int,
+                                  calendar: KnoraCalendarV1.Value,
+                                  dateprecision1: KnoraPrecisionV1.Value,
+                                  dateprecision2: KnoraPrecisionV1.Value) extends UpdateValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DateValue
 
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
-            case dateValueV1: DateValueV1 => DateUtilV1.julianDayCountValueV1ToDateValueV1(this) == other
+            case dateValueV1: DateValueV1 => DateUtilV1.julianDayNumberValueV1ToDateValueV1(this) == other
             case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
@@ -1061,8 +1061,8 @@ case class JulianDayCountValueV1(dateval1: Int,
     override def toString = {
         // use only precision DAY: either the date is exact (a certain day)
         // or it is a period expressed as a range from one day to another.
-        val date1 = DateUtilV1.julianDay2DateString(dateval1, calendar, KnoraPrecisionV1.DAY)
-        val date2 = DateUtilV1.julianDay2DateString(dateval2, calendar, KnoraPrecisionV1.DAY)
+        val date1 = DateUtilV1.julianDayNumber2DateString(dateval1, calendar, KnoraPrecisionV1.DAY)
+        val date2 = DateUtilV1.julianDayNumber2DateString(dateval2, calendar, KnoraPrecisionV1.DAY)
 
         // if date1 and date2 are identical, it's not a period.
         if (date1 == date2) {

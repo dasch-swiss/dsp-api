@@ -167,13 +167,13 @@ DELETE {
 
             }
 
-            case jdcValue: JulianDayCountValueV1 => {
+            case jdnValue: JulianDayNumberValueV1 => {
 
-                ?newValue knora-base:valueHasStartJDC @jdcValue.dateval1 .
-                ?newValue knora-base:valueHasEndJDC @jdcValue.dateval2 .
-                ?newValue knora-base:valueHasStartPrecision "@jdcValue.dateprecision1" .
-                ?newValue knora-base:valueHasEndPrecision "@jdcValue.dateprecision2" .
-                ?newValue knora-base:valueHasCalendar "@jdcValue.calendar" .
+                ?newValue knora-base:valueHasStartJDN @jdnValue.dateval1 .
+                ?newValue knora-base:valueHasEndJDN @jdnValue.dateval2 .
+                ?newValue knora-base:valueHasStartPrecision "@jdnValue.dateprecision1" .
+                ?newValue knora-base:valueHasEndPrecision "@jdnValue.dateprecision2" .
+                ?newValue knora-base:valueHasCalendar "@jdnValue.calendar" .
 
             }
 

@@ -429,7 +429,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "1-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("Represents a comment"),
+                    description = Some("Represents a comment on a resource as a knora-base:TextValue"),
                     label = Some("Kommentar"),
                     name = "http://www.knora.org/ontology/knora-base#hasComment",
                     id = "http://www.knora.org/ontology/knora-base#hasComment"
@@ -513,7 +513,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("Represents a comment"),
+                    description = Some("Represents a comment on a resource as a knora-base:TextValue"),
                     label = Some("Kommentar"),
                     name = "http://www.knora.org/ontology/knora-base#hasComment",
                     id = "http://www.knora.org/ontology/knora-base#hasComment"

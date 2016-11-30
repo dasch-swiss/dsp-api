@@ -527,9 +527,9 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 	knora-base:valueHasString "1487-01-01 - 1490-12-31" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasCalendar "JULIAN" ;
-	knora-base:valueHasStartJDC 2264185 ;
+	knora-base:valueHasStartJDN 2264185 ;
 	knora-base:valueHasStartPrecision "YEAR" ;
-	knora-base:valueHasEndJDC 2265645 ;
+	knora-base:valueHasEndJDN 2265645 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
@@ -839,9 +839,9 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "1492-01-01 - 1492-12-31" ;
 	knora-base:valueHasCalendar "JULIAN" ;
-	knora-base:valueHasStartJDC 2266011 ;
+	knora-base:valueHasStartJDN 2266011 ;
 	knora-base:valueHasStartPrecision "YEAR" ;
-	knora-base:valueHasEndJDC 2266376 ;
+	knora-base:valueHasEndJDN 2266376 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
@@ -910,9 +910,9 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "1492-01-01 - 1492-12-31" ;
 	knora-base:valueHasCalendar "JULIAN" ;
-	knora-base:valueHasStartJDC 2266011 ;
+	knora-base:valueHasStartJDN 2266011 ;
 	knora-base:valueHasStartPrecision "YEAR" ;
-	knora-base:valueHasEndJDC 2266376 ;
+	knora-base:valueHasEndJDN 2266376 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
@@ -1056,8 +1056,8 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/users/91e19f1e01> a knora-base:User ;
 	knora-base:userid "root" ;
-	foaf:familyName "Admin" ;
-	foaf:givenName "Administrator" ;
+	knora-base:familyName "Admin" ;
+	knora-base:givenName "Administrator" ;
 	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 	knora-base:email "test@test.ch" ;
 	knora-base:phone "123456" ;
@@ -1066,8 +1066,8 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/users/b83acc5f05> a knora-base:User ;
 	knora-base:userid "testuer" ;
-	foaf:familyName "Test" ;
-	foaf:givenName "User" ;
+	knora-base:familyName "Test" ;
+	knora-base:givenName "User" ;
 	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 	knora-base:email "test@test.ch" ;
 	knora-base:preferredLanguage "de" ;
