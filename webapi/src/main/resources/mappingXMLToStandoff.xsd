@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <!--
+
+    This is the schema used to validate any mapping XML to standoff provided by the user.
+
+    -->
+
+    <!-- root element that contains all the elements of the mapping -->
+    <xs:element name="mapping">
+        <xs:complexType>
+            <xs:sequence maxOccurs="unbounded">
+                <xs:element name="mappingElement" type="mapping_element"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- an element mapping a tagname to a standoff class -->
+    <xs:complexType name="mapping_element">
+        <xs:sequence>
+            <xs:element name="tag" type="tag_element"/>
+            <xs:element name="standoffClass" type="standoffclass_element"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- represents a tagname possibly including a namespace -->
+    <xs:complexType name="tag_element">
+        <xs:sequence>
+            <!-- name of the XML element -->
+            <xs:element name="name"/>
+            <!-- namespace of the XML element -->
+            <xs:element name="namespace" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- represents a standoff class optionally inlcuding attributes and a data type -->
+    <xs:complexType name="standoffclass_element">
+        <xs:sequence>
+            <!-- IRI of the corresponding standoff class -->
+            <xs:element name="classIri"/>
+            <!-- maps XML attributes to standoff properties -->
+            <xs:element name="attributes" type="attributes_element" minOccurs="0"/>
+            <!-- the data type of the standoff class (optional) -->
+            <xs:element name="datatype" type="datatype_element" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- contains all the attributes that may occur on this element -->
+    <xs:complexType name="attributes_element">
+        <xs:sequence>
+            <xs:element name="attribute" type="attribute_element"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- maps an attribute to a property -->
+    <xs:complexType name="attribute_element">
+        <xs:sequence>
+            <!-- the name of the XML attribute -->
+            <xs:element name="attributeName"/>
+            <!-- the IRI of the corresponding standoff property -->
+            <xs:element name="propertyIri"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- represents a typed standoff class -->
+    <xs:complexType name="datatype_element">
+        <xs:sequence>
+            <!-- the data type of standoff class -->
+            <xs:element name="type"/>
+            <!-- the name of the XML attribute containing the representation of the data type value (e.g. a date string) -->
+            <xs:element name="attributeName"/>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>

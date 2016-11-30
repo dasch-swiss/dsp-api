@@ -37,6 +37,31 @@ import scala.collection.immutable.SortedSet
 sealed trait StandoffResponderRequestV1 extends KnoraRequestV1
 
 /**
+  * Represents a request to create a mapping between XML elements and attributes and standoff classes and properties.
+  * A successful response will be a [[CreateMappingResponseV1]].
+  *
+  * @param xml the mapping in XML.
+  * @param userProfile the profile of the user making the request.
+  */
+case class CreateMappingRequestV1(xml: String, userProfile: UserProfileV1) extends StandoffResponderRequestV1
+
+/**
+  * Provides the name of the file containing the mapping.
+  *
+  * @param filename the file name of the mapping that has been created.
+  * @param userdata information about the user that made the request.
+  */
+case class CreateMappingResponseV1(filename: String, userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = RepresentationV1JsonProtocol.createMappingResponseV1Format.write(this)
+}
+
+case class MapXMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, IRI] = Map.empty[String, IRI], dataType: Option[StandoffDataTypeClasses.Value] = None, dataTypeXMLAttribute: Option[String] = None)
+
+case class XMLTag(name: String, mapping: MapXMLTagToStandoffClass)
+
+case class MappingXMLtoStandoff(namespace: Map[String, XMLTag])
+
+/**
   * Represents a request to add a text value containing standoff to a resource.
   * A successful response will be an [[CreateStandoffResponseV1]].
   *
@@ -180,4 +205,5 @@ object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions
 
     implicit val createStandoffResponseV1Format: RootJsonFormat[CreateStandoffResponseV1] = jsonFormat2(CreateStandoffResponseV1)
     implicit val standoffGetResponseV1Format: RootJsonFormat[StandoffGetResponseV1] = jsonFormat2(StandoffGetResponseV1)
+    implicit val createMappingResponseV1Format: RootJsonFormat[CreateMappingResponseV1] = jsonFormat2(CreateMappingResponseV1)
 }

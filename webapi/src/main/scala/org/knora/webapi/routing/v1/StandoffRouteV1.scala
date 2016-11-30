@@ -46,47 +46,65 @@ object StandoffRouteV1 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        path("v1" / "standoff" / Segments ) { (iris: List[String]) =>
+        path("v1" / "standoff" / Segments) { (iris: List[String]) =>
             post {
-                entity(as[String]) { xml: String => requestContext =>
+                entity(as[String]) { xml: String =>
+                    requestContext =>
 
-                    // iris should contain the resource IRI, the property IRI, and the project IRI
-                    if (iris.size != 3) {
-                        throw BadRequestException(s"Expected two segments after segment 'standoff/': resourceIri/propertyIri/projectIri")
-                    }
+                        // iris should contain the resource IRI, the property IRI, and the project IRI
+                        if (iris.size != 3) {
+                            throw BadRequestException(s"Expected two segments after segment 'standoff/': resourceIri/propertyIri/projectIri")
+                        }
 
-                    val resourceIri =  InputValidation.toIri(iris(0), () => throw BadRequestException(s"invalid IRI ${iris(0)}"))
-                    val propertyIri =  InputValidation.toIri(iris(1), () => throw BadRequestException(s"invalid IRI ${iris(1)}"))
-                    val projectIri =  InputValidation.toIri(iris(2), () => throw BadRequestException(s"invalid IRI ${iris(2)}"))
+                        val resourceIri = InputValidation.toIri(iris(0), () => throw BadRequestException(s"invalid IRI ${iris(0)}"))
+                        val propertyIri = InputValidation.toIri(iris(1), () => throw BadRequestException(s"invalid IRI ${iris(1)}"))
+                        val projectIri = InputValidation.toIri(iris(2), () => throw BadRequestException(s"invalid IRI ${iris(2)}"))
 
+
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestMessage = CreateStandoffRequestV1(projectIri = projectIri, resourceIri = resourceIri, propertyIri = propertyIri, xml = xml, userProfile = userProfile, apiRequestID = UUID.randomUUID)
+
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
+            }
+        } ~ path("v1" / "standoff" / Segment) { iri: String =>
+            get {
+                requestContext => {
 
                     val userProfile = getUserProfileV1(requestContext)
-                    val requestMessage = CreateStandoffRequestV1(projectIri = projectIri, resourceIri = resourceIri, propertyIri = propertyIri, xml = xml, userProfile = userProfile, apiRequestID = UUID.randomUUID)
+                    val requestMessage = StandoffGetRequestV1(valueIri = InputValidation.toIri(iri, () => throw BadRequestException("invalid Iri")), userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
                         responderManager,
-                        log
-                    )
+                        log)
                 }
             }
-        } ~ path("v1" / "standoff" / Segment) { iri: String =>
-            requestContext => {
-                val userProfile = getUserProfileV1(requestContext)
-                val requestMessage = StandoffGetRequestV1(valueIri = InputValidation.toIri(iri, () => throw BadRequestException("invalid Iri")), userProfile = userProfile)
+        } ~path("v1" / "mapping") {
+            post {
+                entity(as[String]) { xml:String =>
+                    requestContext =>
 
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestMessage = CreateMappingRequestV1(xml = xml, userProfile = userProfile)
 
-                RouteUtilV1.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
-                )
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
             }
         }
-
     }
 }

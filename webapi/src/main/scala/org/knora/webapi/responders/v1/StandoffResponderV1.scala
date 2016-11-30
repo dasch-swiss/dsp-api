@@ -20,7 +20,11 @@
 
 package org.knora.webapi.responders.v1
 
+import java.io.{File, IOException, StringReader}
 import java.util.UUID
+import javax.xml.XMLConstants
+import javax.xml.transform.stream.StreamSource
+import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 
 import akka.actor.Status
 import akka.pattern._
@@ -32,8 +36,9 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.standoff._
-import org.knora.webapi.util.{DateUtilV1, InputValidation, ScalaPrettyPrinter}
+import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.{BadRequestException, _}
+import org.xml.sax.SAXException
 
 import scala.concurrent.Future
 
@@ -54,9 +59,48 @@ class StandoffResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case CreateStandoffRequestV1(projIri, resIri, propIri, xml, userProfile, uuid) => future2Message(sender(), createStandoff(projIri, resIri, propIri, xml, userProfile, uuid), log)
+        case CreateStandoffRequestV1(projIri, resIri, propIri, xml, userProfile, uuid) => future2Message(sender(), createStandoffV1(projIri, resIri, propIri, xml, userProfile, uuid), log)
         case StandoffGetRequestV1(valueIri, userProfile) => future2Message(sender(), getStandoffV1(valueIri, userProfile), log)
+        case CreateMappingRequestV1(xml, userProfile) => future2Message(sender(), createMappingV1(xml, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+    }
+
+    /**
+      * Creates a mapping from XML elements and attributes to standoff classes and properties.
+      *
+      * @param xml the provided mapping.
+      * @param userProfile the client that made the request.
+      */
+    private def createMappingV1(xml: String, userProfile: UserProfileV1): Future[CreateMappingResponseV1] = {
+
+        val createMappingFuture = for {
+
+            factory <- Future(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI))
+
+            // get the schema the mapping has to be validated against
+            schemaFile: File = new File("src/main/resources/mappingXMLToStandoff.xsd")
+
+            schemaSource: StreamSource = new StreamSource(schemaFile)
+
+            // create a schema instance
+            schemaInstance: Schema = factory.newSchema(schemaSource)
+            validator: JValidator = schemaInstance.newValidator()
+
+            // validate the provided mapping
+            _ = validator.validate(new StreamSource(new StringReader(xml)))
+
+            // TODO: if the validation is successful, store the mapping using Sipi
+
+
+        } yield CreateMappingResponseV1(filename = "", userdata = userProfile.userData)
+
+        createMappingFuture.recoverWith {
+            case validationException: SAXException => throw BadRequestException(s"the provided mapping is invalid: ${validationException.getMessage}")
+
+            case ioException: IOException => throw NotFoundException(s"The schema could not be found")
+
+            case unknown: Exception => throw BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
+        }
     }
 
     /**
@@ -200,7 +244,7 @@ class StandoffResponderV1 extends ResponderV1 {
       * @param userProfile the client that made the request.
       * @return a [[CreateStandoffResponseV1]]
       */
-    private def createStandoff(projectIri: IRI, resourceIri: IRI, propertyIRI: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[CreateStandoffResponseV1] = {
+    private def createStandoffV1(projectIri: IRI, resourceIri: IRI, propertyIRI: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[CreateStandoffResponseV1] = {
 
         val standoffUtil = new StandoffUtil()
 
@@ -508,6 +552,8 @@ class StandoffResponderV1 extends ResponderV1 {
         } yield CreateStandoffResponseV1(id = createValueResponse.id, userdata = userProfile.userData)
 
     }
+
+    private def changeStandoffV1() = ???
 
     /**
       *
