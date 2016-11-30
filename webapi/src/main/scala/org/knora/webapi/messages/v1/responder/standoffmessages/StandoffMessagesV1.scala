@@ -57,9 +57,9 @@ case class CreateMappingResponseV1(filename: String, userdata: UserDataV1) exten
 
 case class MapXMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, IRI] = Map.empty[String, IRI], dataType: Option[StandoffDataTypeClasses.Value] = None, dataTypeXMLAttribute: Option[String] = None)
 
-case class XMLTag(name: String, mapping: MapXMLTagToStandoffClass)
+case class XMLTag(name: String/*, mapping: MapXMLTagToStandoffClass*/)
 
-case class MappingXMLtoStandoff(namespace: Map[String, XMLTag])
+case class MappingXMLtoStandoff(namespace: Map[String, Map[String, XMLTag]])
 
 /**
   * Represents a request to add a text value containing standoff to a resource.

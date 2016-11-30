@@ -23,6 +23,7 @@ package org.knora.webapi.responders.v1
 import java.io.{File, IOException, StringReader}
 import java.util.UUID
 import javax.xml.XMLConstants
+import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 
@@ -41,6 +42,7 @@ import org.knora.webapi.{BadRequestException, _}
 import org.xml.sax.SAXException
 
 import scala.concurrent.Future
+import scala.xml.{Elem, Node, NodeSeq, XML}
 
 /**
   * Responds to requests for information about binary representations of resources, and returns responses in Knora API
@@ -68,7 +70,7 @@ class StandoffResponderV1 extends ResponderV1 {
     /**
       * Creates a mapping from XML elements and attributes to standoff classes and properties.
       *
-      * @param xml the provided mapping.
+      * @param xml         the provided mapping.
       * @param userProfile the client that made the request.
       */
     private def createMappingV1(xml: String, userProfile: UserProfileV1): Future[CreateMappingResponseV1] = {
@@ -89,7 +91,7 @@ class StandoffResponderV1 extends ResponderV1 {
             // validate the provided mapping
             _ = validator.validate(new StreamSource(new StringReader(xml)))
 
-            // TODO: if the validation is successful, store the mapping using Sipi
+        // TODO: if the validation is successful, store the mapping using Sipi
 
 
         } yield CreateMappingResponseV1(filename = "", userdata = userProfile.userData)
@@ -237,6 +239,117 @@ class StandoffResponderV1 extends ResponderV1 {
         "interval" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffRangeTag", dataType = Some(StandoffDataTypeClasses.StandoffIntervalTag), dataTypeXMLAttribute = Some("range"), attributesToProps = Map("unsure" -> "http://www.knora.org/ontology/knora-base#standoffTagIsUnsure"))
     )
 
+    val noNamespace = "noNamespace"
+
+    // TODO call this method when creating the mapping and cache it
+    private def getMapping(): MappingXMLtoStandoff = {
+
+        // TODO: get mapping from file value
+        val mappingString =
+            """<?xml version="1.0" encoding="UTF-8"?>
+            <mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="mapping.xsd">
+                <mappingElement>
+                    <tag><name>text</name></tag>
+                    <standoffClass>
+                        <classIri>http://www.knora.org/ontology/knora-base#StandoffRootTag</classIri>
+                        <attributes><attribute><attributeName>documentType</attributeName><propertyIri>http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType</propertyIri></attribute></attributes>
+                    </standoffClass>
+                </mappingElement>
+
+                <mappingElement>
+                    <tag>
+                        <name>p</name>
+                    </tag>
+                    <standoffClass>
+                        <classIri>OntologyConstants.KnoraBase.StandoffParagraphTag</classIri>
+                    </standoffClass>
+                </mappingElement>
+
+                <mappingElement>
+                    <tag>
+                        <name>i</name>
+                    </tag>
+                    <standoffClass>
+                        <classIri>OntologyConstants.KnoraBase.StandoffItalicTag</classIri>
+                    </standoffClass>
+                </mappingElement>
+
+                <mappingElement>
+                    <tag>
+                        <name>b</name>
+                    </tag>
+                    <standoffClass>
+                        <classIri>OntologyConstants.KnoraBase.StandoffBoldTag</classIri>
+                    </standoffClass>
+                </mappingElement>
+
+                <mappingElement>
+                    <tag>
+                        <name>interval</name>
+                    </tag>
+                    <standoffClass>
+                        <classIri>http://www.knora.org/ontology/knora-base#StandoffRangeTag</classIri>
+                        <datatype>
+                            <type>OntologyConstants.KnoraBase.StandoffIntervalTag</type>
+                            <attributeName>range</attributeName>
+                        </datatype>
+                    </standoffClass>
+                </mappingElement>
+
+                <mappingElement>
+                    <tag><name>birthday</name></tag>
+                    <standoffClass>
+                        <classIri>http://www.knora.org/ontology/knora-base#StandoffBirthdayTag</classIri>
+                        <datatype><type>OntologyConstants.KnoraBase.StandoffDateTag</type>
+                            <attributeName>date</attributeName>
+                        </datatype>
+                    </standoffClass>
+                </mappingElement>
+
+                <mappingElement>
+                     <tag><name>birthday</name><namespace>dumm</namespace></tag>
+                        <standoffClass>
+                         <classIri>http://www.knora.org/ontology/knora-base#StandoffBirthdayTag</classIri>
+                         <datatype><type>OntologyConstants.KnoraBase.StandoffDateTag</type>
+                            <attributeName>date</attributeName>
+                         </datatype>
+                   </standoffClass>
+                </mappingElement>
+
+
+            </mapping>""".stripMargin
+
+        val mappingXML = XML.loadString(mappingString)
+
+        val mappingElements: NodeSeq = mappingXML \ "mappingElement"
+
+        mappingElements.foldLeft(MappingXMLtoStandoff(namespace = Map.empty[String, Map[String, XMLTag]])) {
+            case (acc: MappingXMLtoStandoff, curNode: Node) =>
+
+                val tagname = (curNode \ "tag" \ "name").text
+
+                val namespaceMaybe = curNode \ "tag" \ "namespace"
+
+                val namespace = if (namespaceMaybe.isEmpty) {
+                    noNamespace
+                } else {
+                    namespaceMaybe.head.text
+                }
+
+                val namespaceMap = acc.namespace.getOrElse(namespace, Map.empty[String, XMLTag])
+
+                val newNamespaceMap = namespaceMap.get(tagname) match {
+                    case Some(tag) => throw BadRequestException("Duplicate tag name in namespace")
+                    case None => namespaceMap + (tagname -> XMLTag(name = tagname))
+                }
+
+                MappingXMLtoStandoff(
+                    namespace = acc.namespace + (namespace -> newNamespaceMap)
+                )
+        }
+
+    }
+
     /**
       * Creates standoff from a given XML file.
       *
@@ -336,7 +449,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                             val colorString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffColorTag, standoffNodeFromXML)
 
-                            val colorValue = StandoffTagStringAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasColor ,value = InputValidation.toColor(colorString, () => throw BadRequestException(s"Color invalid: $colorString")))
+                            val colorValue = StandoffTagStringAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasColor, value = InputValidation.toColor(colorString, () => throw BadRequestException(s"Color invalid: $colorString")))
 
                             val classSpecificProps = cardinalities -- StandoffProperties.systemProperties -- StandoffProperties.colorProperties
 
@@ -458,7 +571,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 throw BadRequestException(s"interval string $intervalString is invalid, it should contain two decimals separated by a comma")
                             }
 
-                            val intervalStart = StandoffTagDecimalAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasIntervalStart ,value = InputValidation.toBigDecimal(interval(0), () => throw BadRequestException(s"Decimal value invalid: ${interval(0)}")))
+                            val intervalStart = StandoffTagDecimalAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasIntervalStart, value = InputValidation.toBigDecimal(interval(0), () => throw BadRequestException(s"Decimal value invalid: ${interval(0)}")))
 
                             val intervalEnd = StandoffTagDecimalAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasIntervalEnd, value = InputValidation.toBigDecimal(interval(1), () => throw BadRequestException(s"Decimal value invalid: ${interval(1)}")))
 
@@ -565,6 +678,10 @@ class StandoffResponderV1 extends ResponderV1 {
       */
     private def getStandoffV1(valueIri: IRI, userProfile: UserProfileV1): Future[StandoffGetResponseV1] = {
 
+        val mapping = getMapping()
+
+        println(mapping)
+
         // converts a sequence of `StandoffTagAttributeV1` to a sequence of `StandoffTagAttribute`
         def convertStandoffAttributeTags(mapping: MapXMLTagToStandoffClass, attributes: Seq[StandoffTagAttributeV1]): Seq[StandoffTagAttribute] = {
             attributes.map {
@@ -589,7 +706,7 @@ class StandoffResponderV1 extends ResponderV1 {
         }
 
         for {
-            // ask the ValuesResponder to query the text value.
+        // ask the ValuesResponder to query the text value.
             value: ValueGetResponseV1 <- (responderManager ? ValueGetRequestV1(valueIri = valueIri, userProfile = userProfile)).mapTo[ValueGetResponseV1]
 
             // make sure it is a text value
