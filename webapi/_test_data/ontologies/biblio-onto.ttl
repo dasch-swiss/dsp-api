@@ -464,7 +464,7 @@
 
                     rdfs:comment """Represents the collection the article is published in."""@en ;
 
-                    knora-base:objectClassConstraint :Book ;
+                    knora-base:objectClassConstraint :Collection ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -670,6 +670,24 @@
                     knora-base:subjectClassConstraint :Translation ;
 
                     rdfs:subPropertyOf knora-base:hasValue .
+
+###  http://www.knora.org/ontology/biblio#collectionNumber
+
+:collectionNumber rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Serie Nummer"@de ,
+                               "Collection Number"@en ;
+
+                    rdfs:comment """Repräsentiert die Nummer in die Serie."""@de,
+                               """Represents the number in collection."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+
 
 
 #################################################################
@@ -975,7 +993,16 @@
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :numVolumes;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :isPartOfCollection ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :isPartOfCollectionValue ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ];
+;
 
 
                     rdfs:label "Buch"@de ,
@@ -987,7 +1014,26 @@
 
 
 
+###  http://www.knora.org/ontology/biblio#Collection
+
+:Collection rdf:type owl:Class ;
+
+                    rdfs:subClassOf knora-base:Resource, bibo:Collection,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :hasName ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :collectionNumber;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ];
 
 
+                    rdfs:label "Serie"@de ,
+                                "Collection"@en ,
+                                "série "@fr ,
+                                "serie"@it ;
+
+                    rdfs:comment "A resource representing a collection "@en .
 
 
