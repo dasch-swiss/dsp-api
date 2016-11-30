@@ -12,21 +12,13 @@ import scala.io.StdIn
 object AkkaStressTestWebServer {
     def main(args: Array[String]) {
 
-        val parallel = 1024
-
         implicit val system = ActorSystem("my-system", ConfigFactory.parseString(
             s"""
                |akka {
                |    http {
                |        server {
-               |            backlog = $parallel
-               |            pipelining-limit = $parallel
-               |        }
-               |
-               |        host-connection-pool {
-               |            max-connections = $parallel
-               |            max-open-requests = $parallel
-               |            max-connections = $parallel
+               |            backlog = 1024
+               |            max-connections = 2048
                |        }
                |    }
                |}
@@ -35,6 +27,8 @@ object AkkaStressTestWebServer {
         implicit val materializer = ActorMaterializer()
         // needed for the future flatMap/onComplete in the end
         implicit val executionContext = system.dispatcher
+
+
 
         val route =
             path("hello") {
