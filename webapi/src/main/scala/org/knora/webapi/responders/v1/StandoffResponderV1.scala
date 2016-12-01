@@ -104,140 +104,6 @@ class StandoffResponderV1 extends ResponderV1 {
         }
     }
 
-    /**
-      * Tries to find a data type attribute in the XML attributes of a given standoff node. Throws an appropriate error if information is inconsistent or missing.
-      *
-      * @param XMLtoStandoffMapping the mapping from XML to standoff classes and properties for the given standoff node.
-      * @param dataType             the expected data type of the given standoff node.
-      * @param standoffNodeFromXML  the given standoff node.
-      * @return the value of the attribute.
-      */
-    private def getDataTypeAttribute(XMLtoStandoffMapping: MapXMLTagToStandoffClass, dataType: StandoffDataTypeClasses.Value, standoffNodeFromXML: StandoffTag): String = {
-
-        if (XMLtoStandoffMapping.dataType.isEmpty || XMLtoStandoffMapping.dataType.get != dataType) {
-            throw BadRequestException(s"wrong data type definition provided in mapping for standoff class ${XMLtoStandoffMapping.standoffClassIri}")
-        }
-
-        val attrName = XMLtoStandoffMapping.dataTypeXMLAttribute.getOrElse(throw BadRequestException(s"no data type attribute definition provided in mapping for ${XMLtoStandoffMapping.standoffClassIri}"))
-
-        val attrStringOption: Option[StandoffTagAttribute] = standoffNodeFromXML.attributes.find(attr => attr.key == attrName)
-
-        if (attrStringOption.isEmpty) {
-            throw BadRequestException(s"required data type attribute '$attrName' could not be found for a $dataType value")
-        } else {
-            attrStringOption.get.value
-        }
-
-    }
-
-    /**
-      * Creates a sequence of [[StandoffTagAttributeV1]] for the given standoff node.
-      *
-      * @param XMLtoStandoffMapping     the mapping from XML to standoff classes and properties for the given standoff node.
-      * @param classSpecificProps       the properties that may or have to be created (cardinalities) for the given standoff node.
-      * @param standoffNodeFromXML      the given standoff node.
-      * @param standoffPropertyEntities the ontology information about the standoff properties.
-      * @return a sequence of [[StandoffTagAttributeV1]]
-      */
-    private def createAttributes(XMLtoStandoffMapping: MapXMLTagToStandoffClass, classSpecificProps: Map[IRI, Cardinality.Value], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: StandoffEntityInfoGetResponseV1): Seq[StandoffTagAttributeV1] = {
-
-        if (classSpecificProps.nonEmpty) {
-            // additional standoff properties are required
-
-            val XMLAttributeMapping: Map[String, IRI] = XMLtoStandoffMapping.attributesToProps
-
-            // map over all non data type attributes
-            val attrs: Seq[StandoffTagAttributeV1] = standoffNodeFromXML.attributes.filterNot(attr => XMLtoStandoffMapping.dataType.nonEmpty && XMLtoStandoffMapping.dataTypeXMLAttribute.nonEmpty && XMLtoStandoffMapping.dataTypeXMLAttribute.get == attr.key).map {
-                attr: StandoffTagAttribute =>
-                    // get the standoff property Iri for this XML attribute
-                    val standoffTagPropIri = XMLAttributeMapping.getOrElse(attr.key, throw BadRequestException(s"mapping for attr '${attr.key}' not provided"))
-
-                    // check if a cardinality exists for the current attribute
-                    if (classSpecificProps.get(standoffTagPropIri).isEmpty) {
-                        throw BadRequestException(s"no cardinality defined for attr '${attr.key}'")
-                    }
-
-                    // check if the object datatype constraint is respected for the current property
-                    val propDataType = standoffPropertyEntities.standoffPropertyEntityInfoMap(standoffTagPropIri).predicates.getOrElse(OntologyConstants.KnoraBase.ObjectDatatypeConstraint, throw InconsistentTriplestoreDataException(s"no ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} given for property '$standoffTagPropIri'"))
-
-                    propDataType.objects.headOption match {
-                        case Some(OntologyConstants.Xsd.String) =>
-                            StandoffTagStringAttributeV1(standoffPropertyIri = standoffTagPropIri, value = InputValidation.toSparqlEncodedString(attr.value, () => throw BadRequestException(s"Invalid string attribute: '${attr.value}'")))
-
-                        case Some(OntologyConstants.Xsd.Integer) =>
-                            StandoffTagIntegerAttributeV1(standoffPropertyIri = standoffTagPropIri, value = InputValidation.toInt(attr.value, () => throw BadRequestException(s"Invalid integer attribute: '${attr.value}'")))
-
-                        case Some(OntologyConstants.Xsd.Decimal) =>
-                            StandoffTagDecimalAttributeV1(standoffPropertyIri = standoffTagPropIri, value = InputValidation.toBigDecimal(attr.value, () => throw BadRequestException(s"Invalid decimal attribute: '${attr.value}'")))
-
-                        case Some(OntologyConstants.Xsd.Boolean) =>
-                            StandoffTagBooleanAttributeV1(standoffPropertyIri = standoffTagPropIri, value = InputValidation.toBoolean(attr.value, () => throw BadRequestException(s"Invalid boolean attribute: '${attr.value}'")))
-
-                        case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $standoffTagPropIri")
-
-                        case other => throw InconsistentTriplestoreDataException(s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $standoffTagPropIri")
-
-                    }
-
-            }.toList
-
-            val attrsGroupedByPropIri: Map[IRI, Seq[StandoffTagAttributeV1]] = attrs.groupBy(attr => attr.standoffPropertyIri)
-
-            // filter all the required props
-            val mustExistOnce: Set[IRI] = classSpecificProps.filter {
-                case (propIri, card) =>
-                    card == Cardinality.MustHaveOne || card == Cardinality.MustHaveSome
-            }.keySet
-
-            // check if all the min cardinalities are respected
-            mustExistOnce.map {
-                propIri =>
-                    attrsGroupedByPropIri.get(propIri) match {
-                        case Some(attrs: Seq[StandoffTagAttributeV1]) => ()
-
-                        case None => throw BadRequestException(s"the min cardinalities were not respected for $propIri")
-                    }
-            }
-
-            // filter all the props that have a limited occurrence
-            val mayExistOnce = classSpecificProps.filter {
-                case (propIri, card) =>
-                    card == Cardinality.MustHaveOne || card == Cardinality.MayHaveOne
-            }.keySet
-
-            // check if all the max cardinalities are respected
-            mayExistOnce.map {
-                propIri =>
-                    attrsGroupedByPropIri.get(propIri) match {
-                        case Some(attrs: Seq[StandoffTagAttributeV1]) =>
-                            if (attrs.size > 1) {
-                                throw BadRequestException(s"the max cardinalities were not respected for $propIri")
-                            }
-                        case None => ()
-                    }
-            }
-
-            attrs
-
-        } else {
-            // only system props are required
-            Seq.empty[StandoffTagAttributeV1]
-        }
-
-    }
-
-    case class MapXMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, IRI] = Map.empty[String, IRI], dataType: Option[StandoffDataTypeClasses.Value] = None, dataTypeXMLAttribute: Option[String] = None)
-
-    // TODO: consider namespaces of tags and attributes
-    val mappingXMLTags2StandoffTags = Map(
-        "text" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffRootTag, attributesToProps = Map("documentType" -> "http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType")),
-        "p" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffParagraphTag),
-        "i" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffItalicTag),
-        "b" -> MapXMLTagToStandoffClass(standoffClassIri = OntologyConstants.KnoraBase.StandoffBoldTag),
-        "birthday" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffBirthdayTag", dataType = Some(StandoffDataTypeClasses.StandoffDateTag), dataTypeXMLAttribute = Some("date")),
-        "interval" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffRangeTag", dataType = Some(StandoffDataTypeClasses.StandoffIntervalTag), dataTypeXMLAttribute = Some("range"), attributesToProps = Map("unsure" -> "http://www.knora.org/ontology/knora-base#standoffTagIsUnsure"))
-    )
-
     // string constant used to mark the absence of an XML namespace
     val noNamespace = "noNamespace"
 
@@ -405,6 +271,133 @@ class StandoffResponderV1 extends ResponderV1 {
 
     }
 
+
+    /**
+      * Tries to find a data type attribute in the XML attributes of a given standoff node. Throws an appropriate error if information is inconsistent or missing.
+      *
+      * @param XMLtoStandoffMapping the mapping from XML to standoff classes and properties for the given standoff node.
+      * @param dataType             the expected data type of the given standoff node.
+      * @param standoffNodeFromXML  the given standoff node.
+      * @return the value of the attribute.
+      */
+    private def getDataTypeAttribute(XMLtoStandoffMapping: XMLTagToStandoffClass, dataType: StandoffDataTypeClasses.Value, standoffNodeFromXML: StandoffTag): String = {
+
+        if (XMLtoStandoffMapping.dataType.isEmpty || XMLtoStandoffMapping.dataType.get != dataType) {
+            throw BadRequestException(s"wrong data type definition provided in mapping for standoff class ${XMLtoStandoffMapping.standoffClassIri}")
+        }
+
+        val attrName = XMLtoStandoffMapping.dataTypeXMLAttribute.getOrElse(throw BadRequestException(s"no data type attribute definition provided in mapping for ${XMLtoStandoffMapping.standoffClassIri}"))
+
+        val attrStringOption: Option[StandoffTagAttribute] = standoffNodeFromXML.attributes.find(attr => attr.key == attrName)
+
+        if (attrStringOption.isEmpty) {
+            throw BadRequestException(s"required data type attribute '$attrName' could not be found for a $dataType value")
+        } else {
+            attrStringOption.get.value
+        }
+
+    }
+
+    /**
+      * Creates a sequence of [[StandoffTagAttributeV1]] for the given standoff node.
+      *
+      * @param XMLtoStandoffMapping     the mapping from XML to standoff classes and properties for the given standoff node.
+      * @param classSpecificProps       the properties that may or have to be created (cardinalities) for the given standoff node.
+      * @param standoffNodeFromXML      the given standoff node.
+      * @param standoffPropertyEntities the ontology information about the standoff properties.
+      * @return a sequence of [[StandoffTagAttributeV1]]
+      */
+    private def createAttributes(XMLtoStandoffMapping: XMLTagToStandoffClass, classSpecificProps: Map[IRI, Cardinality.Value], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: StandoffEntityInfoGetResponseV1): Seq[StandoffTagAttributeV1] = {
+
+        if (classSpecificProps.nonEmpty) {
+            // additional standoff properties are required
+
+            // map over all non data type attributes
+            val attrs: Seq[StandoffTagAttributeV1] = standoffNodeFromXML.attributes.filterNot(attr => XMLtoStandoffMapping.dataType.nonEmpty && XMLtoStandoffMapping.dataTypeXMLAttribute.nonEmpty && XMLtoStandoffMapping.dataTypeXMLAttribute.get == attr.key).map {
+                attr: StandoffTagAttribute =>
+                    // get the standoff property Iri for this XML attribute
+
+                    val xmlNamespace = attr.xmlNamespace match {
+                    case None => noNamespace
+                    case Some(namespace) => namespace
+                }
+
+                    val standoffTagPropIri = XMLtoStandoffMapping.attributesToProps.getOrElse(xmlNamespace, throw throw BadRequestException(s"namespace $xmlNamespace unknown for attribute ${attr.key}")).getOrElse(attr.key, throw BadRequestException(s"mapping for attr '${attr.key}' not provided"))
+
+                    // check if a cardinality exists for the current attribute
+                    if (classSpecificProps.get(standoffTagPropIri).isEmpty) {
+                        throw BadRequestException(s"no cardinality defined for attr '${attr.key}'")
+                    }
+
+                    // check if the object datatype constraint is respected for the current property
+                    val propDataType = standoffPropertyEntities.standoffPropertyEntityInfoMap(standoffTagPropIri).predicates.getOrElse(OntologyConstants.KnoraBase.ObjectDatatypeConstraint, throw InconsistentTriplestoreDataException(s"no ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} given for property '$standoffTagPropIri'"))
+
+                    propDataType.objects.headOption match {
+                        case Some(OntologyConstants.Xsd.String) =>
+                            StandoffTagStringAttributeV1(standoffPropertyIri = standoffTagPropIri, value = InputValidation.toSparqlEncodedString(attr.value, () => throw BadRequestException(s"Invalid string attribute: '${attr.value}'")))
+
+                        case Some(OntologyConstants.Xsd.Integer) =>
+                            StandoffTagIntegerAttributeV1(standoffPropertyIri = standoffTagPropIri, value = InputValidation.toInt(attr.value, () => throw BadRequestException(s"Invalid integer attribute: '${attr.value}'")))
+
+                        case Some(OntologyConstants.Xsd.Decimal) =>
+                            StandoffTagDecimalAttributeV1(standoffPropertyIri = standoffTagPropIri, value = InputValidation.toBigDecimal(attr.value, () => throw BadRequestException(s"Invalid decimal attribute: '${attr.value}'")))
+
+                        case Some(OntologyConstants.Xsd.Boolean) =>
+                            StandoffTagBooleanAttributeV1(standoffPropertyIri = standoffTagPropIri, value = InputValidation.toBoolean(attr.value, () => throw BadRequestException(s"Invalid boolean attribute: '${attr.value}'")))
+
+                        case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $standoffTagPropIri")
+
+                        case other => throw InconsistentTriplestoreDataException(s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $standoffTagPropIri")
+
+                    }
+
+            }.toList
+
+            val attrsGroupedByPropIri: Map[IRI, Seq[StandoffTagAttributeV1]] = attrs.groupBy(attr => attr.standoffPropertyIri)
+
+            // filter all the required props
+            val mustExistOnce: Set[IRI] = classSpecificProps.filter {
+                case (propIri, card) =>
+                    card == Cardinality.MustHaveOne || card == Cardinality.MustHaveSome
+            }.keySet
+
+            // check if all the min cardinalities are respected
+            mustExistOnce.map {
+                propIri =>
+                    attrsGroupedByPropIri.get(propIri) match {
+                        case Some(attrs: Seq[StandoffTagAttributeV1]) => ()
+
+                        case None => throw BadRequestException(s"the min cardinalities were not respected for $propIri")
+                    }
+            }
+
+            // filter all the props that have a limited occurrence
+            val mayExistOnce = classSpecificProps.filter {
+                case (propIri, card) =>
+                    card == Cardinality.MustHaveOne || card == Cardinality.MayHaveOne
+            }.keySet
+
+            // check if all the max cardinalities are respected
+            mayExistOnce.map {
+                propIri =>
+                    attrsGroupedByPropIri.get(propIri) match {
+                        case Some(attrs: Seq[StandoffTagAttributeV1]) =>
+                            if (attrs.size > 1) {
+                                throw BadRequestException(s"the max cardinalities were not respected for $propIri")
+                            }
+                        case None => ()
+                    }
+            }
+
+            attrs
+
+        } else {
+            // only system props are required
+            Seq.empty[StandoffTagAttributeV1]
+        }
+
+    }
+
     /**
       * Creates standoff from a given XML file.
       *
@@ -418,8 +411,18 @@ class StandoffResponderV1 extends ResponderV1 {
 
         val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(xml)
 
-        // get Iris of standoff classes that should be created
-        val standoffTagIris = mappingXMLTags2StandoffTags.values.map(row => row.standoffClassIri).toSet
+        // TODO: get the mapping that was used when creating the standoff values
+        val mappingXMLtoStandoff: MappingXMLtoStandoff = getMapping("")
+
+        // collect standoff classes Iris from mapping
+        val standoffTagIris: Set[IRI] = mappingXMLtoStandoff.namespace.flatMap {
+            case (namespace: String, mapping: Map[String, XMLTag]) =>
+                mapping.map {
+                    case (tagname: String, tagItem: XMLTag) =>
+                        tagItem.mapping.standoffClassIri
+                }
+        }.toSet
+
 
         for {
         // request information about standoff classes that should be created
@@ -439,7 +442,15 @@ class StandoffResponderV1 extends ResponderV1 {
             standoffNodesToCreate: Seq[StandoffTagV1] = textWithStandoff.standoff.map {
                 case (standoffNodeFromXML: StandoffTag) =>
 
-                    val standoffDefFromMapping: MapXMLTagToStandoffClass = mappingXMLTags2StandoffTags.getOrElse(standoffNodeFromXML.tagName, throw BadRequestException(s"the standoff class for the tag '${standoffNodeFromXML.tagName}' could not be found in the provided mapping"))
+                    val xmlNamespace = standoffNodeFromXML.xmlNamespace match {
+                        case None => noNamespace
+                        case Some(namespace) => namespace
+                    }
+
+                    // get the mapping corresponding to the given namespace and tagname
+                    val standoffDefFromMapping = mappingXMLtoStandoff.namespace
+                        .getOrElse(xmlNamespace, throw BadRequestException(s"namespace ${xmlNamespace} not defined in mapping"))
+                        .getOrElse(standoffNodeFromXML.tagName, throw BadRequestException(s"the standoff class for the tag '${standoffNodeFromXML.tagName}' could not be found in the provided mapping")).mapping
 
                     val standoffClassIri: IRI = standoffDefFromMapping.standoffClassIri
 
