@@ -55,11 +55,41 @@ case class CreateMappingResponseV1(filename: String, userdata: UserDataV1) exten
     def toJsValue = RepresentationV1JsonProtocol.createMappingResponseV1Format.write(this)
 }
 
-case class MapXMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, IRI] = Map.empty[String, IRI], dataType: Option[StandoffDataTypeClasses.Value] = None, dataTypeXMLAttribute: Option[String] = None)
-
-case class XMLTag(name: String/*, mapping: MapXMLTagToStandoffClass*/)
-
+/**
+  * Represents a mapping between XML tags and standoff entities (classes and properties).
+  * The map's keys are XML namespaces, the values are Maps themselves that have XML tag names as keys.
+  *
+  * Example:
+  *
+  * namespace = Map("myXMLNamespace" -> Map("myXMLTagName" -> XMLTag(...)))
+  *
+  * @param namespace a Map of XML namespaces and a Map of tag names and [[XMLTag]].
+  */
 case class MappingXMLtoStandoff(namespace: Map[String, Map[String, XMLTag]])
+
+/**
+  * Represents a mapping between an XML tag and standoff entities (classes and properties).
+  *
+  * @param name the tag name.
+  * @param mapping the corresponding standoff entities.
+  */
+case class XMLTag(name: String, mapping: XMLTagToStandoffClass)
+
+/**
+  * Represents standoff entities referred to in the mapping.
+  * The attributes are represented as a Map of namespaces and a Map of attribute names and standoff properties.
+  *
+  * Example for attributesToProps:
+  *
+  * attributesToProps = Map("myXMLNamespace" -> Map("myXMLAttributeName" -> "standoffPropertyIri"))
+  *
+  * @param standoffClassIri the Iri of the standoff class.
+  * @param attributesToProps a mapping between XML namespaces and attribute names and standoff properties.
+  * @param dataType the data type of the standoff class (e.g., a date).
+  * @param dataTypeXMLAttribute the XML attribute holding the information needed for the standoff class data type (e.g., a date string).
+  */
+case class XMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, Map[String, IRI]] = Map.empty[String, Map[String, IRI]], dataType: Option[StandoffDataTypeClasses.Value] = None, dataTypeXMLAttribute: Option[String] = None)
+
 
 /**
   * Represents a request to add a text value containing standoff to a resource.

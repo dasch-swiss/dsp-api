@@ -32,7 +32,7 @@
                 <!-- name of the XML element -->
                 <xs:element name="name" type="xs:string"/>
                 <!-- namespace of the XML element -->
-                <xs:element name="namespace" type="xs:string" minOccurs="0"/>
+                <xs:element name="namespace" type="xs:string"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -54,10 +54,15 @@
     <!-- contains all the attributes that may occur on this element -->
     <xs:element name="attributes">
         <xs:complexType>
-            <xs:sequence>
+            <xs:sequence maxOccurs="unbounded">
                 <xs:element ref="attribute"/>
             </xs:sequence>
         </xs:complexType>
+        <xs:unique name="attribute">
+            <xs:selector xpath="attribute"/>
+            <xs:field xpath="attributeName"/>
+            <xs:field xpath="namespace"/>
+        </xs:unique>
     </xs:element>
 
     <!-- maps an attribute to a property -->
@@ -65,7 +70,9 @@
         <xs:complexType >
             <xs:sequence>
                 <!-- the name of the XML attribute -->
-                <xs:element name="attributeName"/>
+                <xs:element name="attributeName" type="xs:string"/>
+                <!-- the namespace of the XML attribute -->
+                <xs:element name="namespace" type="xs:string"/>
                 <!-- the IRI of the corresponding standoff property -->
                 <xs:element name="propertyIri"/>
             </xs:sequence>

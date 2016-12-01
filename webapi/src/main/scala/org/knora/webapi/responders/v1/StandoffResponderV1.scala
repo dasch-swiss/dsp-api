@@ -239,85 +239,84 @@ class StandoffResponderV1 extends ResponderV1 {
         "interval" -> MapXMLTagToStandoffClass(standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffRangeTag", dataType = Some(StandoffDataTypeClasses.StandoffIntervalTag), dataTypeXMLAttribute = Some("range"), attributesToProps = Map("unsure" -> "http://www.knora.org/ontology/knora-base#standoffTagIsUnsure"))
     )
 
+    // string constant used to mark the absence of an XML namespace
     val noNamespace = "noNamespace"
 
     // TODO call this method when creating the mapping and cache it
-    private def getMapping(): MappingXMLtoStandoff = {
+    private def getMapping(mappingFileValueIri: IRI): MappingXMLtoStandoff = {
 
         // TODO: get mapping from file value
         val mappingString =
             """<?xml version="1.0" encoding="UTF-8"?>
-            <mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="mapping.xsd">
-                <mappingElement>
-                    <tag><name>text</name></tag>
-                    <standoffClass>
-                        <classIri>http://www.knora.org/ontology/knora-base#StandoffRootTag</classIri>
-                        <attributes><attribute><attributeName>documentType</attributeName><propertyIri>http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType</propertyIri></attribute></attributes>
-                    </standoffClass>
-                </mappingElement>
-
-                <mappingElement>
-                    <tag>
-                        <name>p</name>
-                    </tag>
-                    <standoffClass>
-                        <classIri>OntologyConstants.KnoraBase.StandoffParagraphTag</classIri>
-                    </standoffClass>
-                </mappingElement>
-
-                <mappingElement>
-                    <tag>
-                        <name>i</name>
-                    </tag>
-                    <standoffClass>
-                        <classIri>OntologyConstants.KnoraBase.StandoffItalicTag</classIri>
-                    </standoffClass>
-                </mappingElement>
-
-                <mappingElement>
-                    <tag>
-                        <name>b</name>
-                    </tag>
-                    <standoffClass>
-                        <classIri>OntologyConstants.KnoraBase.StandoffBoldTag</classIri>
-                    </standoffClass>
-                </mappingElement>
-
-                <mappingElement>
-                    <tag>
-                        <name>interval</name>
-                    </tag>
-                    <standoffClass>
-                        <classIri>http://www.knora.org/ontology/knora-base#StandoffRangeTag</classIri>
-                        <datatype>
-                            <type>OntologyConstants.KnoraBase.StandoffIntervalTag</type>
-                            <attributeName>range</attributeName>
-                        </datatype>
-                    </standoffClass>
-                </mappingElement>
-
-                <mappingElement>
-                    <tag><name>birthday</name></tag>
-                    <standoffClass>
-                        <classIri>http://www.knora.org/ontology/knora-base#StandoffBirthdayTag</classIri>
-                        <datatype><type>OntologyConstants.KnoraBase.StandoffDateTag</type>
-                            <attributeName>date</attributeName>
-                        </datatype>
-                    </standoffClass>
-                </mappingElement>
-
-                <mappingElement>
-                     <tag><name>birthday</name><namespace>dumm</namespace></tag>
-                        <standoffClass>
-                         <classIri>http://www.knora.org/ontology/knora-base#StandoffBirthdayTag</classIri>
-                         <datatype><type>OntologyConstants.KnoraBase.StandoffDateTag</type>
-                            <attributeName>date</attributeName>
-                         </datatype>
-                   </standoffClass>
-                </mappingElement>
-
-
-            </mapping>""".stripMargin
+              |<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="mapping.xsd">
+              |  <mappingElement>
+              |    <tag><name>text</name><namespace>noNamespace</namespace></tag>
+              |    <standoffClass>
+              |      <classIri>http://www.knora.org/ontology/knora-base#StandoffRootTag</classIri>
+              |      <attributes>
+              |        <attribute><attributeName>documentType</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType</propertyIri></attribute>
+              |      </attributes>
+              |    </standoffClass>
+              |  </mappingElement>
+              |
+              |  <mappingElement>
+              |    <tag>
+              |      <name>p</name>
+              |      <namespace>noNamespace</namespace>
+              |    </tag>
+              |    <standoffClass>
+              |      <classIri>OntologyConstants.KnoraBase.StandoffParagraphTag</classIri>
+              |    </standoffClass>
+              |  </mappingElement>
+              |
+              |  <mappingElement>
+              |    <tag>
+              |      <name>i</name>
+              |      <namespace>noNamespace</namespace>
+              |    </tag>
+              |    <standoffClass>
+              |      <classIri>OntologyConstants.KnoraBase.StandoffItalicTag</classIri>
+              |    </standoffClass>
+              |  </mappingElement>
+              |
+              |  <mappingElement>
+              |    <tag>
+              |      <name>b</name>
+              |      <namespace>noNamespace</namespace>
+              |    </tag>
+              |    <standoffClass>
+              |      <classIri>OntologyConstants.KnoraBase.StandoffBoldTag</classIri>
+              |    </standoffClass>
+              |  </mappingElement>
+              |
+              |  <mappingElement>
+              |    <tag>
+              |      <name>interval</name>
+              |      <namespace>noNamespace</namespace>
+              |    </tag>
+              |    <standoffClass>
+              |      <classIri>http://www.knora.org/ontology/knora-base#StandoffRangeTag</classIri>
+              |      <datatype>
+              |        <type>http://www.knora.org/ontology/knora-base#StandoffIntervalTag</type>
+              |        <attributeName>range</attributeName>
+              |      </datatype>
+              |    </standoffClass>
+              |  </mappingElement>
+              |
+              | <mappingElement>
+              |    <tag><name>birthday</name><namespace>test</namespace></tag>
+              |    <standoffClass>
+              |      <classIri>http://www.knora.org/ontology/knora-base#StandoffBirthdayTag</classIri>
+              |      <datatype><type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
+              |        <attributeName>date</attributeName>
+              |      </datatype>
+              |    </standoffClass>
+              |  </mappingElement>
+              |
+              |
+              |
+              |
+              |</mapping>""".stripMargin
 
         val mappingXML = XML.loadString(mappingString)
 
@@ -326,23 +325,73 @@ class StandoffResponderV1 extends ResponderV1 {
         mappingElements.foldLeft(MappingXMLtoStandoff(namespace = Map.empty[String, Map[String, XMLTag]])) {
             case (acc: MappingXMLtoStandoff, curNode: Node) =>
 
+                // get the name of the XML tag
                 val tagname = (curNode \ "tag" \ "name").text
 
-                val namespaceMaybe = curNode \ "tag" \ "namespace"
+                // get the namespace the tag is defined in
+                val namespace = (curNode \ "tag" \ "namespace").head.text
 
-                val namespace = if (namespaceMaybe.isEmpty) {
-                    noNamespace
-                } else {
-                    namespaceMaybe.head.text
-                }
-
+                // get tags from this namespace if already existent, otherwise create an empty map
                 val namespaceMap = acc.namespace.getOrElse(namespace, Map.empty[String, XMLTag])
 
-                val newNamespaceMap = namespaceMap.get(tagname) match {
-                    case Some(tag) => throw BadRequestException("Duplicate tag name in namespace")
-                    case None => namespaceMap + (tagname -> XMLTag(name = tagname))
+                // get the standoff class Iri
+                val standoffClassIri = (curNode \ "standoffClass" \ "classIri").text
+
+                // get a collection containing all the attributes
+                val attributeNodes: NodeSeq = curNode \ "standoffClass" \ "attributes" \ "attribute"
+
+                // group attributes by their namespace
+                val attributeNodesByNamespace: Map[String, NodeSeq] = attributeNodes.groupBy {
+                    (attrNode: Node) =>
+                        (attrNode \ "namespace").head.text
                 }
 
+                // create attribute entries for each given namespace
+                val attributes: Map[String, Map[String, IRI]] = attributeNodesByNamespace.map {
+                    case (namespace: String, attrNodes: NodeSeq) =>
+
+                        // collect all the attributes for the current namespace
+                        val attributesInNamespace: Map[String, IRI] = attrNodes.foldLeft(Map.empty[String, IRI]) {
+                            case (acc: Map[String, IRI], attrNode: Node) =>
+
+                                // get the current attribute's name
+                                val attrName = (attrNode \ "attributeName").text
+
+                                // check if the current attribute already exists in this namespace
+                                if (acc.get(attrName).nonEmpty) {
+                                    throw BadRequestException("Duplicate attribute name in namespace")
+                                }
+
+                                // get the standoff property Iri for the current attribute
+                                val propIri = (attrNode \ "propertyIri").text
+
+                                // add the current attribute to the collection
+                                acc + (attrName -> propIri)
+                        }
+
+                        namespace -> attributesInNamespace
+                }
+
+                // get the optional element datatype
+                val datatypeMaybe = curNode \ "standoffClass" \ "datatype"
+
+                // if "datatype" is given, get the the standoff class data type and the name of the XML data type attribute
+                val (dataTypeOption: Option[StandoffDataTypeClasses.Value], dataTypeAttributeOption: Option[String]) = if (datatypeMaybe.nonEmpty) {
+                    val dataType = StandoffDataTypeClasses.lookup((datatypeMaybe \ "type").text, () => throw BadRequestException("Invalid data type provided"))
+                    val dataTypeAttribute = (datatypeMaybe \ "attributeName").text
+
+                    (Some(dataType), Some(dataTypeAttribute))
+                } else {
+                    (None, None)
+                }
+
+                // add the current tag to the map
+                val newNamespaceMap = namespaceMap.get(tagname) match {
+                    case Some(tag) => throw BadRequestException("Duplicate tag name in namespace")
+                    case None => namespaceMap + (tagname -> XMLTag(name = tagname, mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri, attributesToProps = attributes, dataType = dataTypeOption, dataTypeXMLAttribute = dataTypeAttributeOption)))
+                }
+
+                // recreate the whole structure
                 MappingXMLtoStandoff(
                     namespace = acc.namespace + (namespace -> newNamespaceMap)
                 )
@@ -678,7 +727,7 @@ class StandoffResponderV1 extends ResponderV1 {
       */
     private def getStandoffV1(valueIri: IRI, userProfile: UserProfileV1): Future[StandoffGetResponseV1] = {
 
-        val mapping = getMapping()
+        val mapping = getMapping("")
 
         println(mapping)
 
