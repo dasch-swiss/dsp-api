@@ -8,10 +8,14 @@
                 <xs:element ref="mappingElement"/>
             </xs:sequence>
         </xs:complexType>
-        <xs:unique name="mappingElement">
+        <xs:unique name="tagname">
             <xs:selector xpath="mappingElement/tag"/>
             <xs:field xpath="name"/>
             <xs:field xpath="namespace"/>
+        </xs:unique>
+        <xs:unique name="standoffClass">
+            <xs:selector xpath="mappingElement/standoffClass"/>
+            <xs:field xpath="classIri"/>
         </xs:unique>
     </xs:element>
 
@@ -42,7 +46,7 @@
         <xs:complexType>
             <xs:sequence>
                 <!-- IRI of the corresponding standoff class -->
-                <xs:element name="classIri"/>
+                <xs:element name="classIri" type="xs:anyURI"/>
                 <!-- maps XML attributes to standoff properties -->
                 <xs:element ref="attributes" minOccurs="0"/>
                 <!-- the data type of the standoff class (optional) -->
@@ -63,6 +67,10 @@
             <xs:field xpath="attributeName"/>
             <xs:field xpath="namespace"/>
         </xs:unique>
+        <xs:unique name="property">
+            <xs:selector xpath="attribute"/>
+            <xs:field xpath="propertyIri"/>
+        </xs:unique>
     </xs:element>
 
     <!-- maps an attribute to a property -->
@@ -74,7 +82,7 @@
                 <!-- the namespace of the XML attribute -->
                 <xs:element name="namespace" type="xs:string"/>
                 <!-- the IRI of the corresponding standoff property -->
-                <xs:element name="propertyIri"/>
+                <xs:element name="propertyIri" type="xs:anyURI"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
