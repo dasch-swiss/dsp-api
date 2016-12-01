@@ -195,16 +195,16 @@ class StandoffResponderV1 extends ResponderV1 {
             case (acc: MappingXMLtoStandoff, curNode: Node) =>
 
                 // get the name of the XML tag
-                val tagname = (curNode \ "tag" \ "name").text
+                val tagname = (curNode \ "tag" \ "name").headOption.getOrElse(throw BadRequestException(s"no '<name>' given for node $curNode")).text
 
                 // get the namespace the tag is defined in
-                val namespace = (curNode \ "tag" \ "namespace").head.text
+                val namespace = (curNode \ "tag" \ "namespace").headOption.getOrElse(throw BadRequestException(s"no '<namespace>' given for node $curNode")).text
 
                 // get tags from this namespace if already existent, otherwise create an empty map
                 val namespaceMap = acc.namespace.getOrElse(namespace, Map.empty[String, XMLTag])
 
                 // get the standoff class Iri
-                val standoffClassIri = (curNode \ "standoffClass" \ "classIri").text
+                val standoffClassIri = (curNode \ "standoffClass" \ "classIri").headOption.getOrElse(throw BadRequestException(s"no '<classIri>' given for node $curNode")).text
 
                 // get a collection containing all the attributes
                 val attributeNodes: NodeSeq = curNode \ "standoffClass" \ "attributes" \ "attribute"
@@ -212,7 +212,7 @@ class StandoffResponderV1 extends ResponderV1 {
                 // group attributes by their namespace
                 val attributeNodesByNamespace: Map[String, NodeSeq] = attributeNodes.groupBy {
                     (attrNode: Node) =>
-                        (attrNode \ "namespace").head.text
+                        (attrNode \ "namespace").headOption.getOrElse(throw BadRequestException(s"no '<namespace>' given for attribute $attrNode")).text
                 }
 
                 // create attribute entries for each given namespace
@@ -224,7 +224,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             case (acc: Map[String, IRI], attrNode: Node) =>
 
                                 // get the current attribute's name
-                                val attrName = (attrNode \ "attributeName").text
+                                val attrName = (attrNode \ "attributeName").headOption.getOrElse(throw BadRequestException(s"no '<attributeName>' given for attribute $attrNode")).text
 
                                 // check if the current attribute already exists in this namespace
                                 if (acc.get(attrName).nonEmpty) {
@@ -232,7 +232,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 }
 
                                 // get the standoff property Iri for the current attribute
-                                val propIri = (attrNode \ "propertyIri").text
+                                val propIri = (attrNode \ "propertyIri").headOption.getOrElse(throw BadRequestException(s"no '<propertyIri>' given for attribute $attrNode")).text
 
                                 // add the current attribute to the collection
                                 acc + (attrName -> propIri)
@@ -242,12 +242,12 @@ class StandoffResponderV1 extends ResponderV1 {
                 }
 
                 // get the optional element datatype
-                val datatypeMaybe = curNode \ "standoffClass" \ "datatype"
+                val datatypeMaybe: NodeSeq = curNode \ "standoffClass" \ "datatype"
 
                 // if "datatype" is given, get the the standoff class data type and the name of the XML data type attribute
                 val (dataTypeOption: Option[StandoffDataTypeClasses.Value], dataTypeAttributeOption: Option[String]) = if (datatypeMaybe.nonEmpty) {
-                    val dataType = StandoffDataTypeClasses.lookup((datatypeMaybe \ "type").text, () => throw BadRequestException("Invalid data type provided"))
-                    val dataTypeAttribute = (datatypeMaybe \ "attributeName").text
+                    val dataType = StandoffDataTypeClasses.lookup((datatypeMaybe \ "type").headOption.getOrElse(throw BadRequestException(s"no '<type>' given for datatype")).text, () => throw BadRequestException("Invalid data type provided"))
+                    val dataTypeAttribute = (datatypeMaybe \ "attributeName").headOption.getOrElse(throw BadRequestException(s"no '<attributeName>' given for datatype")).text
 
                     (Some(dataType), Some(dataTypeAttribute))
                 } else {

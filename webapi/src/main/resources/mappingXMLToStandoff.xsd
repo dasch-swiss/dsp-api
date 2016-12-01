@@ -35,9 +35,21 @@
         <xs:complexType>
             <xs:sequence>
                 <!-- name of the XML element -->
-                <xs:element name="name" type="xs:string"/>
+                <xs:element name="name">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
                 <!-- namespace of the XML element -->
-                <xs:element name="namespace" type="xs:string"/>
+                <xs:element name="namespace">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -47,7 +59,13 @@
         <xs:complexType>
             <xs:sequence>
                 <!-- IRI of the corresponding standoff class -->
-                <xs:element name="classIri" type="xs:anyURI"/>
+                <xs:element name="classIri">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:anyURI">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
                 <!-- maps XML attributes to standoff properties -->
                 <xs:element ref="attributes" minOccurs="0"/>
                 <!-- the data type of the standoff class (optional) -->
@@ -79,12 +97,30 @@
         <xs:complexType >
             <xs:sequence>
                 <!-- the name of the XML attribute -->
-                <xs:element name="attributeName" type="xs:string"/>
+                <xs:element name="attributeName">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
                 <!-- the namespace of the XML attribute -->
                 <!-- if no namespace is used, "noNamespace" has to be used -->
-                <xs:element name="namespace" type="xs:string"/>
+                <xs:element name="namespace">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
                 <!-- the IRI of the corresponding standoff property -->
-                <xs:element name="propertyIri" type="xs:anyURI"/>
+                <xs:element name="propertyIri">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:anyURI">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -94,9 +130,21 @@
         <xs:complexType>
             <xs:sequence>
                 <!-- the data type of standoff class -->
-                <xs:element name="type"/>
+                <xs:element name="type">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
                 <!-- the name of the XML attribute containing the representation of the data type value (e.g. a date string) -->
-                <xs:element name="attributeName"/>
+                <xs:element name="attributeName">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
