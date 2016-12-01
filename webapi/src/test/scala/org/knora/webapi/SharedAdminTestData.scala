@@ -55,7 +55,7 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                "http://www.knora.org/ontology/knora-base#SystemProject" -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}")
+                SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}")
             ),
             administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]],
             defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
@@ -80,7 +80,7 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                s"${OntologyConstants.KnoraBase.SystemProject}" -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}")
+                SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}")
             )
         )
     )
@@ -130,24 +130,24 @@ object SharedAdminTestData {
             lang = "de"
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
-        projects = List("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
+        projects = List(INCUNABULA_PROJECT_IRI, IMAGES_PROJECT_IRI, TRIPLESIX_PROJECT_IRI),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}"),
-                "http://data.knora.org/projects/images" -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}"),
-                "http://data.knora.org/projects/666" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}"),
+                IMAGES_PROJECT_IRI -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}"),
+                TRIPLESIX_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
             ),
             administrativePermissionsPerProject = Map(
-                "http://data.knora.org/projects/77275339" -> Set(
+                INCUNABULA_PROJECT_IRI -> Set(
                     PermissionV1.ProjectResourceCreateAllPermission,
                     PermissionV1.ProjectAdminAllPermission
                 ),
-                "http://data.knora.org/projects/images" -> Set(
+                IMAGES_PROJECT_IRI -> Set(
                     PermissionV1.ProjectResourceCreateAllPermission,
                     PermissionV1.ProjectAdminAllPermission
                 ),
-                "http://data.knora.org/projects/666" -> Set(
+                TRIPLESIX_PROJECT_IRI -> Set(
                     PermissionV1.ProjectResourceCreateAllPermission,
                     PermissionV1.ProjectAdminAllPermission
                 )
@@ -300,14 +300,14 @@ object SharedAdminTestData {
             lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects = List("http://data.knora.org/projects/77275339"),
+        projects = List(INCUNABULA_PROJECT_IRI),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
             ),
             administrativePermissionsPerProject = Map(
-                "http://data.knora.org/projects/77275339" -> Set(
+                INCUNABULA_PROJECT_IRI -> Set(
                     PermissionV1.ProjectResourceCreateAllPermission,
                     PermissionV1.ProjectAdminAllPermission
                 )
@@ -334,10 +334,10 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                "http://data.knora.org/projects/77275339" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
             ),
             administrativePermissionsPerProject = Map(
-                "http://data.knora.org/projects/77275339" -> Set(
+                INCUNABULA_PROJECT_IRI -> Set(
                     PermissionV1.ProjectResourceCreateAllPermission,
                     PermissionV1.ProjectAdminAllPermission
                 )
@@ -348,7 +348,7 @@ object SharedAdminTestData {
 
     /* represents the ProjectInfoV1 of the incunabula project */
     def incunabulaProjectInfo = ProjectInfoV1(
-        id = "http://data.knora.org/projects/77275339",
+        id = INCUNABULA_PROJECT_IRI,
         shortname = "incunabula",
         longname = "Bilderfolgen Basler Frühdrucke",
         description = "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
@@ -434,4 +434,62 @@ object SharedAdminTestData {
         isActiveProject = true,
         hasSelfJoinEnabled = false
     )
+
+
+    /************************************/
+    /** BEOL                           **/
+    /************************************/
+
+    val BEOL_PROJECT_IRI = "http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF"
+
+    def beolProjectInfo = ProjectInfoV1(
+        id = BEOL_PROJECT_IRI,
+        shortname = "beol",
+        longname = "Bernoulli-Euler Online",
+        description = "Bernoulli-Euler Online",
+        ontologyNamedGraph = "http://www.knora.org/ontology/beol",
+        dataNamedGraph = "http://www.knora.org/data/beol",
+        basepath = "/foo/bar/baz",
+        isActiveProject = true,
+        hasSelfJoinEnabled = false
+    )
+
+
+    /************************************/
+    /** BIBLIO                         **/
+    /************************************/
+
+    val BIBLIO_PROJECT_IRI = "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ"
+
+    def biblioProjectInfo = ProjectInfoV1(
+        id = BIBLIO_PROJECT_IRI,
+        shortname = "biblio",
+        longname = "Bibliography",
+        description = "Bibliography",
+        ontologyNamedGraph = "http://www.knora.org/ontology/biblio",
+        dataNamedGraph = "http://www.knora.org/data/biblio",
+        basepath = "/foo/bar/baz",
+        isActiveProject = true,
+        hasSelfJoinEnabled = false
+    )
+
+
+    /************************************/
+    /** DOKUBIB                        **/
+    /************************************/
+
+    val DOKUBIB_PROJECT_IRI = "http://data.knora.org/projects/b83b99ca01"
+
+    def dokubibProjectInfo = ProjectInfoV1(
+        id = DOKUBIB_PROJECT_IRI,
+        shortname = "dokubib",
+        longname = "Dokubib",
+        description = "Dokubib",
+        ontologyNamedGraph = "http://www.knora.org/ontology/dokubib",
+        dataNamedGraph = "http://www.knora.org/data/dokubib",
+        basepath = "/foo/bar/baz",
+        isActiveProject = false,
+        hasSelfJoinEnabled = false
+    )
+
 }

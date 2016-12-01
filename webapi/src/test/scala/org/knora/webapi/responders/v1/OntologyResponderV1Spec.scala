@@ -695,77 +695,77 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             lang = "en"
         ),
         vocabularies = Vector(
-            NamedGraphV1(
-                active = false,
-                uri = "http://www.knora.org/ontology/knora-base",
-                project_id = "http://data.knora.org/projects/knora-base",
-                description = "Knora-Base",
-                longname = "Knora-Base",
-                shortname = "Knora-Base",
-                id = "http://www.knora.org/ontology/knora-base"
+            NamedGraphV1( // SystemProject
+                active = true,
+                uri = SharedAdminTestData.systemProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.systemProjectInfo.id,
+                description = SharedAdminTestData.systemProjectInfo.description,
+                longname = SharedAdminTestData.systemProjectInfo.longname,
+                shortname = SharedAdminTestData.systemProjectInfo.shortname,
+                id = SharedAdminTestData.systemProjectInfo.ontologyNamedGraph
             ),
-            NamedGraphV1(
-                active = false,
-                uri = "http://www.knora.org/ontology/incunabula",
-                project_id = "http://data.knora.org/projects/77275339",
-                description = "Incunabula",
-                longname = "Incunabula",
-                shortname = "Incunabula",
-                id = "http://www.knora.org/ontology/incunabula"
+            NamedGraphV1( // Incunabula
+                active = true,
+                uri = SharedAdminTestData.incunabulaProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.incunabulaProjectInfo.id,
+                description = SharedAdminTestData.incunabulaProjectInfo.description,
+                longname = SharedAdminTestData.incunabulaProjectInfo.longname,
+                shortname = SharedAdminTestData.incunabulaProjectInfo.shortname,
+                id = SharedAdminTestData.incunabulaProjectInfo.ontologyNamedGraph
             ),
-            NamedGraphV1(
-                active = false,
-                uri = "http://www.knora.org/ontology/beol",
-                project_id = "http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF",
-                description = "Bernoulli-Euler Online",
-                longname = "Bernoulli-Euler Online",
-                shortname = "Bernoulli-Euler Online",
-                id = "http://www.knora.org/ontology/beol"
+            NamedGraphV1( // BEOL
+                active = true,
+                uri = SharedAdminTestData.beolProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.beolProjectInfo.id,
+                description = SharedAdminTestData.beolProjectInfo.description,
+                longname = SharedAdminTestData.beolProjectInfo.longname,
+                shortname = SharedAdminTestData.beolProjectInfo.shortname,
+                id = SharedAdminTestData.beolProjectInfo.ontologyNamedGraph
             ),
-            NamedGraphV1(
-                active = false,
-                uri = "http://www.knora.org/ontology/biblio",
-                project_id = "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ",
-                description = "Bibliography",
-                longname = "Bibliography",
-                shortname = "Bibliography",
-                id = "http://www.knora.org/ontology/biblio"
+            NamedGraphV1( // BIBLIO
+                active = true,
+                uri = SharedAdminTestData.biblioProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.biblioProjectInfo.id,
+                description = SharedAdminTestData.biblioProjectInfo.description,
+                longname = SharedAdminTestData.biblioProjectInfo.longname,
+                shortname = SharedAdminTestData.biblioProjectInfo.shortname,
+                id = SharedAdminTestData.biblioProjectInfo.ontologyNamedGraph
             ),
-            NamedGraphV1(
-                active = false,
-                uri = "http://www.knora.org/ontology/images",
-                project_id = "http://data.knora.org/projects/images",
-                description = "Images Collection Demo",
-                longname = "Images Collection Demo",
-                shortname = "images",
-                id = "http://www.knora.org/ontology/images"
+            NamedGraphV1( // Images
+                active = true,
+                uri = SharedAdminTestData.imagesProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.imagesProjectInfo.id,
+                description = SharedAdminTestData.imagesProjectInfo.description,
+                longname = SharedAdminTestData.imagesProjectInfo.longname,
+                shortname = SharedAdminTestData.imagesProjectInfo.shortname,
+                id = SharedAdminTestData.imagesProjectInfo.ontologyNamedGraph
             ),
-            NamedGraphV1(
-                active = false,
-                uri = "http://www.knora.org/ontology/anything",
-                project_id = "http://data.knora.org/projects/anything",
-                description = "Anything Project",
-                longname = "Anything Project",
-                shortname = "Anything Project",
-                id = "http://www.knora.org/ontology/anything"
+            NamedGraphV1( // Anything
+                active = true,
+                uri = SharedAdminTestData.anythingProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.anythingProjectInfo.id,
+                description = SharedAdminTestData.anythingProjectInfo.description,
+                longname = SharedAdminTestData.anythingProjectInfo.longname,
+                shortname = SharedAdminTestData.anythingProjectInfo.shortname,
+                id = SharedAdminTestData.anythingProjectInfo.ontologyNamedGraph
             ),
-            NamedGraphV1(
+            NamedGraphV1( // Dokubib
                 active = false,
-                uri = "http://www.knora.org/ontology/dokubib",
-                project_id = "http://www.knora.org/ontology/dokubib",
-                description = "Dokubib",
-                longname = "Dokubib",
-                shortname = "dokubib",
-                id = "http://www.knora.org/ontology/dokubib"
+                uri = SharedAdminTestData.dokubibProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.dokubibProjectInfo.id,
+                description = SharedAdminTestData.dokubibProjectInfo.description,
+                longname = SharedAdminTestData.dokubibProjectInfo.longname,
+                shortname = SharedAdminTestData.dokubibProjectInfo.shortname,
+                id = SharedAdminTestData.dokubibProjectInfo.ontologyNamedGraph
             ),
-            NamedGraphV1(
-                active = false,
-                uri = "http://www.knora.org/ontology/testproject",
-                project_id = "http://data.knora.org/projects/666",
-                description = "Test Project",
-                longname = "A test Project",
-                shortname = "testproject",
-                id = "http://www.knora.org/ontology/testproject"
+            NamedGraphV1( // Testproject / 666
+                active = true,
+                uri = SharedAdminTestData.triplesixProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.triplesixProjectInfo.id,
+                description = SharedAdminTestData.triplesixProjectInfo.description,
+                longname = SharedAdminTestData.triplesixProjectInfo.longname,
+                shortname = SharedAdminTestData.triplesixProjectInfo.shortname,
+                id = SharedAdminTestData.triplesixProjectInfo.ontologyNamedGraph
             )
         )
     )
@@ -1160,9 +1160,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: NamedGraphsResponseV1 =>
-                    checkVocabularies(received = msg, expected = vocabulariesResponseV1)
-
+                case receivedMsg: NamedGraphsResponseV1 => {
+                    checkVocabularies(received = receivedMsg, expected = vocabulariesResponseV1)
+                    receivedMsg.userdata should equal(vocabulariesResponseV1.userdata)
+                    receivedMsg.vocabularies should contain allElementsOf(vocabulariesResponseV1.vocabularies)
+                }
             }
 
         }

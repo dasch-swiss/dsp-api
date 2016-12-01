@@ -171,7 +171,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                         description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")),
                         project_id = projectIri,
                         uri = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
-                        active = false
+                        active = propsMap.getOrElse(OntologyConstants.KnoraBase.IsActiveProject, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no isActiveProject defined.")).toBoolean
                     )
             }.toSeq
         } yield namedGraphs
