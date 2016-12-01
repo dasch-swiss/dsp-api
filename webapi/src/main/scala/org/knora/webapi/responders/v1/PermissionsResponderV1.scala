@@ -53,15 +53,23 @@ class PermissionsResponderV1 extends ResponderV1 {
         case AdministrativePermissionForProjectGroupGetRequestV1(projectIri, groupIri, userProfileV1) => future2Message(sender(), administrativePermissionForProjectGroupGetRequestV1(projectIri, groupIri), log)
         case AdministrativePermissionCreateRequestV1(newAdministrativePermissionV1, userProfileV1) => future2Message(sender(), createAdministrativePermissionV1(newAdministrativePermissionV1, userProfileV1), log)
         //case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, userProfileV1) => future2Message(sender(), deleteAdministrativePermissionV1(administrativePermissionIri, userProfileV1), log)
+        case ObjectAccessPermissionsForResourceGetV1(resourceIri, projectIri, userProfile) => future2Message(sender(), objectAccessPermissionsForResourceGetV1(resourceIri, projectIri, userProfile) , log)
+        case ObjectAccessPermissionsForValueGetV1(valueIri, projectIri, userProfile) => future2Message(sender(), objectAccessPermissionsForValueGetV1(valueIri, projectIri, userProfile), log)
         case DefaultObjectAccessPermissionsForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), defaultObjectAccessPermissionsForProjectGetRequestV1(projectIri, userProfileV1), log)
         case DefaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), defaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         case DefaultObjectAccessPermissionForProjectGroupGetRequestV1(projectIri, groupIri, userProfileV1) => future2Message(sender(), defaultObjectAccessPermissionForProjectGroupGetRequestV1(projectIri, groupIri, userProfileV1), log)
+        case DefaultObjectAccessPermissionsForResourceClassGetV1(projectIri, resourceClassIri, userProfile) => future2Message(sender(), defaultObjectAccessPermissionsForResourceClassGetV1(projectIri, resourceClassIri, userProfile), log)
+        case DefaultObjectAccessPermissionsForPropertyTypeGetV1(projectIri,propertyTypeIri, userProfile) => future2Message(sender(), defaultObjectAccessPermissionsForPropertyTypeGetV1(projectIri, propertyTypeIri, userProfile) , log)
         //case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, userProfileV1), log)
         //case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         //case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1) => future2Message(sender(), templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
+
+    /*************************************************************************/
+    /* PERMISSION DATA                                                       */
+    /*************************************************************************/
 
     /**
       * Creates the user's [[PermissionDataV1]]
@@ -184,6 +192,11 @@ class PermissionsResponderV1 extends ResponderV1 {
 
 
     }
+
+
+    /*************************************************************************/
+    /* ADMINISTRATIVE PERMISSIONS                                            */
+    /*************************************************************************/
 
     /**
       * Gets all administrative permissions defined inside a project.
@@ -380,14 +393,46 @@ class PermissionsResponderV1 extends ResponderV1 {
 /*
     private def deleteAdministrativePermissionV1(administrativePermissionIri: IRI, userProfileV1: UserProfileV1): Future[AdministrativePermissionOperationResponseV1] = ???
 */
+
+    /*************************************************************************/
+    /* OBJECT ACCESS PERMISSIONS                                             */
+    /*************************************************************************/
+
+    /**
+      *
+      * @param resourceIri
+      * @param projectIri
+      * @param userProfile
+      * @return
+      */
+    def objectAccessPermissionsForResourceGetV1(resourceIri: IRI, projectIri: IRI, userProfile: UserProfileV1): Future[Seq[PermissionV1]] = {
+        Future(Seq.empty[PermissionV1])
+    }
+
+    /**
+      *
+      * @param valueIri
+      * @param projectIri
+      * @param userProfile
+      * @return
+      */
+    def objectAccessPermissionsForValueGetV1(valueIri: IRI, projectIri: IRI, userProfile: UserProfileV1): Future[Seq[PermissionV1]] = {
+        Future(Seq.empty[PermissionV1])
+    }
+
+
+    /*************************************************************************/
+    /* DEFAULT OBJECT ACCESS PERMISSIONS                                     */
+    /*************************************************************************/
+
     /**
       * Gets all IRI's of all default object access permissions defined inside a project.
       *
       * @param projectIRI    the IRI of the project.
-      * @param userProfileV1 the [[UserProfileV1]] of the requesting user.
+      * @param userProfile the [[UserProfileV1]] of the requesting user.
       * @return a list of IRIs of [[DefaultObjectAccessPermissionV1]] objects.
       */
-    private def defaultObjectAccessPermissionsForProjectGetRequestV1(projectIRI: IRI, userProfileV1: UserProfileV1): Future[DefaultObjectAccessPermissionsForProjectGetResponseV1] = {
+    private def defaultObjectAccessPermissionsForProjectGetRequestV1(projectIRI: IRI, userProfile: UserProfileV1): Future[DefaultObjectAccessPermissionsForProjectGetResponseV1] = {
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getDefaultObjectAccessPermissionsForProject(
@@ -517,15 +562,41 @@ class PermissionsResponderV1 extends ResponderV1 {
         } yield permission
     }
 
-    def defaultObjectAccessPermissionForProjectGroupGetRequestV1(projectIRI: IRI, groupIRI: IRI, userProfileV1: UserProfileV1): Future[DefaultObjectAccessPermissionForProjectGroupGetResponseV1] = {
+    def defaultObjectAccessPermissionForProjectGroupGetRequestV1(projectIRI: IRI, groupIRI: IRI, userProfile: UserProfileV1): Future[DefaultObjectAccessPermissionForProjectGroupGetResponseV1] = {
         for {
-            doap <- defaultObjectAccessPermissionForProjectGroupGetV1(projectIRI, groupIRI, userProfileV1)
+            doap <- defaultObjectAccessPermissionForProjectGroupGetV1(projectIRI, groupIRI, userProfile)
             result = doap match {
                 case Some(doap) => DefaultObjectAccessPermissionForProjectGroupGetResponseV1(doap)
                 case None => throw NotFoundException(s"No Default Object Access Permission found for project: $projectIRI, group: $groupIRI combination")
             }
         } yield result
     }
+
+    /**
+      * Returns a string containing default object permissions statements ready for usage during creation of a new resource.
+      * The permissions include any default object access permissions defined for the resource class and on any groups the
+      * user is member of.
+      *
+      * @param projectIri the IRI of the project.
+      * @param resourceClassIri the IRI of the resource class for which the default object access permissions are requested.
+      * @param userProfile the user for which the default object access permissions are requested.
+      * @return an optional string with object access permission statements
+      */
+    def defaultObjectAccessPermissionsForResourceClassGetV1(projectIri: IRI, resourceClassIri: IRI, userProfile: UserProfileV1): Future[Option[String]] = {
+        Future(None)
+    }
+
+    /**
+      *
+      * @param projectIri the IRI of the project inside which the resource is created.
+      * @param propertyTypeIri the IRI of the property type for which the default object access permissions are requested.
+      * @param userProfile the user for which the default object access permissions are requested.
+      * @return an optional string with object access permission statements.
+      */
+    def defaultObjectAccessPermissionsForPropertyTypeGetV1(projectIri: IRI, propertyTypeIri: IRI, userProfile: UserProfileV1): Future[Option[String]] = {
+        Future(None)
+    }
+
 /*
 
     private def createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1: NewDefaultObjectAccessPermissionV1, userProfileV1: UserProfileV1): Future[DefaultObjectAccessPermissionOperationResponseV1] = ???

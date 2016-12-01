@@ -741,6 +741,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: ResourceCreateResponseV1 =>
+                    println(response)
                     newBookResourceIri.set(response.res_id)
                     checkResourceCreation(received = response, expected = valuesExpected)
             }

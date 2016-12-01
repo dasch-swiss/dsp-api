@@ -27,7 +27,7 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.graphdatamessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.permissionmessages.ResourceCreateOperation
+import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsForResourceClassGetV1, ResourceCreateOperation}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages._
@@ -1431,9 +1431,17 @@ class ResourcesResponderV1 extends ResponderV1 {
                 )
             }.mapTo[EntityInfoGetResponseV1]
 
+            defaultObjectAccessPermissions <- {
+                responderManager ? DefaultObjectAccessPermissionsForResourceClassGetV1(
+                    projectIri = projectIri,
+                    resourceClassIri = resourceClassIri,
+                    userProfile = userProfile
+                )
+            }.mapTo[Option[String]]
+
             // represents the permissions as a List of 2-tuples:
             // e.g. (http://www.knora.org/ontology/knora-base#hasViewPermission,http://www.knora.org/ontology/knora-base#KnownUser)
-            permissions: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(entityInfoResponse.resourceEntityInfoMap(resourceClassIri))
+            //permissions: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(entityInfoResponse.resourceEntityInfoMap(resourceClassIri))
 
             result: ResourceCreateResponseV1 <- ResourceLocker.runWithResourceLock(
                 apiRequestID,
@@ -1442,7 +1450,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     resourceIri = resourceIri,
                     values = values,
                     sipiConversionRequest = sipiConversionRequest,
-                    permissions = permissions,
+                    permissions = defaultObjectAccessPermissions,
                     namedGraph = namedGraph,
                     ownerIri = userIri,
                     apiRequestID = apiRequestID

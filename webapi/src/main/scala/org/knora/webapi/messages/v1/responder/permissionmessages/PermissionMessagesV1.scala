@@ -121,6 +121,31 @@ case class AdministrativePermissionDeleteRequestV1(administrativePermissionIri: 
   */
 case class AdministrativePermissionUpdateRequestV1(userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
+
+// Object Access Permissions
+
+
+/**
+  * A message that requests the object access permissions attached to a resource via the 'knora-base:hasPermissions' property.
+  *
+  * @param resourceIri
+  * @param projectIri
+  * @param userProfile
+  */
+case class ObjectAccessPermissionsForResourceGetV1(resourceIri: IRI, projectIri: IRI, userProfile: UserProfileV1) extends PermissionsResponderRequestV1
+
+/**
+  * A message that requests the object access permissions attached to a value via the 'knora-base:hasPermissions' property.
+  *
+  * @param valueIri
+  * @param projectIri
+  * @param userProfile
+  */
+case class ObjectAccessPermissionsForValueGetV1(valueIri: IRI, projectIri: IRI, userProfile: UserProfileV1) extends PermissionsResponderRequestV1
+
+
+
+
 // Default Object Access Permissions
 
 /**
@@ -151,8 +176,27 @@ case class DefaultObjectAccessPermissionForProjectGroupGetRequestV1(projectIri: 
   */
 case class DefaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPermissionIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
+
 /**
-  * Create a singel [[DefaultObjectAccessPermissionV1]].
+  * A message that requests default object access permissions for a resource class inside a specific project.
+  *
+  * @param projectIri the project for which the default object permissions need to be retrieved.
+  * @param resourceClassIri the resource class which can also cary default object access permissions.
+  * @param userProfile the user initiating the request which group membership can also influence the resulting set of default object access permissions.
+  */
+case class DefaultObjectAccessPermissionsForResourceClassGetV1(projectIri: IRI, resourceClassIri: IRI, userProfile: UserProfileV1) extends PermissionsResponderRequestV1
+
+/**
+  * A message that requests default object access permissions for a resource class inside a specific project.
+  *
+  * @param projectIri the project for which the default object permissions need to be retrieved.
+  * @param propertyTypeIri the property type which can also cary default object access permissions.
+  * @param userProfile the user initiating the request which group membership can also influence the resulting set of default object access permissions.
+  */
+case class DefaultObjectAccessPermissionsForPropertyTypeGetV1(projectIri: IRI, propertyTypeIri: IRI, userProfile: UserProfileV1) extends PermissionsResponderRequestV1
+
+/**
+  * Create a single [[DefaultObjectAccessPermissionV1]].
   *
   * @param newDefaultObjectAccessPermissionV1
   * @param userProfileV1
@@ -572,38 +616,78 @@ object PermissionV1 {
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    // Object Access Permissions
+    ///////////////////////////////////////////////////////////////////////////
+
+    def ChangeRightsPermission(restriction: Set[IRI]) = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.ChangeRightsPermission,
+            restrictions = restriction
+        )
+    }
+
+    def DeletePermission(restriction: Set[IRI]) = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.DeletePermission,
+            restrictions = restriction
+        )
+    }
+
+    def ModifyPermission(restriction: Set[IRI]) = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.ModifyPermission,
+            restrictions = restriction
+        )
+    }
+
+    def ViewPermission(restriction: Set[IRI]) = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.ViewPermission,
+            restrictions = restriction
+        )
+    }
+
+    def RestrictedViewPermission(restriction: Set[IRI]) = {
+        PermissionV1(
+            name = OntologyConstants.KnoraBase.RestrictedViewPermission,
+            restrictions = restriction
+        )
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////
     // Default Object Access Permissions
     ///////////////////////////////////////////////////////////////////////////
 
-    def DefaultChangeRightsPermission(restriction: Set[IRI] = Set.empty[IRI]) = {
+    def DefaultChangeRightsPermission(restriction: Set[IRI]) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.DefaultChangeRightsPermission,
             restrictions = restriction
         )
     }
 
-    def DefaultDeletePermission(restriction: Set[IRI] = Set.empty[IRI]) = {
+    def DefaultDeletePermission(restriction: Set[IRI]) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.DefaultDeletePermission,
             restrictions = restriction
         )
     }
 
-    def DefaultModifyPermission(restriction: Set[IRI] = Set.empty[IRI]) = {
+    def DefaultModifyPermission(restriction: Set[IRI]) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.DefaultModifyPermission,
             restrictions = restriction
         )
     }
 
-    def DefaultViewPermission(restriction: Set[IRI] = Set.empty[IRI]) = {
+    def DefaultViewPermission(restriction: Set[IRI]) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.DefaultViewPermission,
             restrictions = restriction
         )
     }
 
-    def DefaultRestrictedViewPermission(restriction: Set[IRI] = Set.empty[IRI]) = {
+    def DefaultRestrictedViewPermission(restriction: Set[IRI]) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.DefaultRestrictedViewPermission,
             restrictions = restriction
