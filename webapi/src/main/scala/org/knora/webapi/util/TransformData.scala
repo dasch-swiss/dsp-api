@@ -37,13 +37,16 @@ object TransformData extends App {
     private val PermissionsTransformationOption = "permissions"
     private val MissingValueHasStringTransformationOption = "strings"
     private val StandoffTransformationOption = "standoff"
+    private val CreatorTransformationOption = "creator"
+    private val OwnerBehaviourTransformationOption = "owner"
     private val AllTransformationsOption = "all"
 
     private val allTransformations = Vector(
         IsDeletedTransformationOption,
         PermissionsTransformationOption,
         MissingValueHasStringTransformationOption,
-        StandoffTransformationOption
+        StandoffTransformationOption,
+        CreatorTransformationOption
     )
 
     private val TempFilePrefix = "TransformData"
@@ -168,6 +171,8 @@ object TransformData extends App {
             case PermissionsTransformationOption => new PermissionsHandler(turtleWriter)
             case MissingValueHasStringTransformationOption => new ValueHasStringHandler(turtleWriter)
             case StandoffTransformationOption => new StandoffHandler(turtleWriter)
+            case CreatorTransformationOption => new CreatorHandler(turtleWriter)
+            case OwnerBehaviourTransformationOption => new OwnerBehaviourHandler(turtleWriter)
             case _ => throw new Exception(s"Unsupported transformation $transformation")
         }
 
@@ -696,6 +701,29 @@ object TransformData extends App {
         }
     }
 
+
+    /**
+      *
+      * Transforms existing 'knora-base:Owner' group inside permissions statements to 'knora-base:Creator'
+      */
+    private class CreatorHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
+        override def endRDF(): Unit = {
+            turtleWriter.endRDF()
+        }
+    }
+
+    /**
+      * Adds 'knora-base:Creator' group to 'CR' permission statement. This corresponds to the previous behaviour with
+      * 'knora-base:Owner'. Use carefully as it will add permissions that
+      * where not there before
+      */
+    private class OwnerBehaviourHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
+        override def endRDF(): Unit = {
+            turtleWriter.endRDF()
+        }
+    }
+
+
     /**
       * Parses command-line arguments.
       */
@@ -704,13 +732,22 @@ object TransformData extends App {
             s"""
                |Updates the structure of Knora repository data to accommodate changes in Knora.
                |
-               |Usage: org.knora.webapi.util.TransformData -t [$IsDeletedTransformationOption|$PermissionsTransformationOption|$MissingValueHasStringTransformationOption|$StandoffTransformationOption|$AllTransformationsOption] input output
+               |Usage: org.knora.webapi.util.TransformData -t [$IsDeletedTransformationOption|$PermissionsTransformationOption|$MissingValueHasStringTransformationOption|$StandoffTransformationOption|$CreatorTransformationOption|$OwnerBehaviourTransformationOption|$AllTransformationsOption] input output
             """.stripMargin)
 
         val transform = opt[String](
             required = true,
-            validate = t => Set(IsDeletedTransformationOption, PermissionsTransformationOption, MissingValueHasStringTransformationOption, StandoffTransformationOption, AllTransformationsOption).contains(t),
-            descr = s"Selects a transformation. Available transformations: '$IsDeletedTransformationOption' (adds missing 'knora-base:isDeleted' statements), '$PermissionsTransformationOption' (combines old-style multiple permission statements into single permission statements), '$MissingValueHasStringTransformationOption' (adds missing valueHasString), '$StandoffTransformationOption' (transforms old-style standoff into new-style standoff), '$AllTransformationsOption' (all of the above)"
+            validate = t => Set(IsDeletedTransformationOption, PermissionsTransformationOption, MissingValueHasStringTransformationOption, StandoffTransformationOption, CreatorTransformationOption, OwnerBehaviourTransformationOption, AllTransformationsOption).contains(t),
+            descr = s"""
+                Selects a transformation. Available transformations:
+                    '$IsDeletedTransformationOption' (adds missing 'knora-base:isDeleted' statements),
+                    '$PermissionsTransformationOption' (combines old-style multiple permission statements into single permission statements),
+                    '$MissingValueHasStringTransformationOption' (adds missing valueHasString),
+                    '$StandoffTransformationOption' (transforms old-style standoff into new-style standoff),
+                    '$CreatorTransformationOption' (transforms existing 'knora-base:Owner' group inside permissions to 'knora-base:Creator'),
+                    '$OwnerBehaviourTransformationOption' (gives 'knora-base:Creator' CR permissions to correspond to the previous behaviour for owners - use with care as it will add permissions that where not there before),
+                    '$AllTransformationsOption' (all of the above minus '$OwnerBehaviourTransformationOption')
+            """
         )
 
         val input = trailArg[String](required = true, descr = "Input Turtle file")
