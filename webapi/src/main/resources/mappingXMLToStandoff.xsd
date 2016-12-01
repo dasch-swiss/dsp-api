@@ -29,7 +29,8 @@
         </xs:complexType>
     </xs:element>
 
-    <!-- represents a tagname possibly including a namespace -->
+    <!-- represents a tagname including a namespace -->
+    <!-- if no namespace is used, "noNamespace" has to be used -->
     <xs:element name="tag">
         <xs:complexType>
             <xs:sequence>
@@ -80,6 +81,7 @@
                 <!-- the name of the XML attribute -->
                 <xs:element name="attributeName" type="xs:string"/>
                 <!-- the namespace of the XML attribute -->
+                <!-- if no namespace is used, "noNamespace" has to be used -->
                 <xs:element name="namespace" type="xs:string"/>
                 <!-- the IRI of the corresponding standoff property -->
                 <xs:element name="propertyIri" type="xs:anyURI"/>

@@ -186,11 +186,12 @@ class StandoffResponderV1 extends ResponderV1 {
               |
               |</mapping>""".stripMargin
 
+        // the mapping conforms to the XML schema "src/main/resources/mappingXMLToStandoff.xsd"
         val mappingXML = XML.loadString(mappingString)
 
         val mappingElements: NodeSeq = mappingXML \ "mappingElement"
 
-        mappingElements.foldLeft(MappingXMLtoStandoff(namespace = Map.empty[String, Map[String, XMLTag]])) {
+        val mappingXMLToStandoff: MappingXMLtoStandoff = mappingElements.foldLeft(MappingXMLtoStandoff(namespace = Map.empty[String, Map[String, XMLTag]])) {
             case (acc: MappingXMLtoStandoff, curNode: Node) =>
 
                 // get the name of the XML tag
@@ -240,8 +241,6 @@ class StandoffResponderV1 extends ResponderV1 {
                         namespace -> attributesInNamespace
                 }
 
-                // TODO: check that a property Iri (attribute) is only used once per tag definition
-
                 // get the optional element datatype
                 val datatypeMaybe = curNode \ "standoffClass" \ "datatype"
 
@@ -267,8 +266,11 @@ class StandoffResponderV1 extends ResponderV1 {
                 )
         }
 
-        // TODO: check that a standoff class Iri can only be used once
+        // invert mapping in order to run checks for duplicate use of
+        // standoff class Iris and property Iris in the attributes for a standoff class
+        invertXMLToStandoffMapping(mappingXMLToStandoff)
 
+        mappingXMLToStandoff
     }
 
 
@@ -734,6 +736,72 @@ class StandoffResponderV1 extends ResponderV1 {
 
     private def changeStandoffV1() = ???
 
+    // maps a standoff class to an XML tag with attributes
+    case class XMLTagItem(namespace: String, tagname: String, tagItem: XMLTag, attributes: Map[IRI, XMLAttrItem])
+
+    // maps a standoff property to XML attributes
+    case class XMLAttrItem(namespace: String, attrname: String)
+
+    /**
+      *  Inverts a [[MappingXMLtoStandoff]] and makes standoff class Iris keys.
+      *  This is makes it easier to map standoff classes back to XML tags (recreating XML from standoff).
+      *
+      *  This method also checks for duplicate usage of standoff classes and properties in the attribute mapping of a tag.
+      *
+      * @param mappingXMLtoStandoff  mapping from XML to standoff.
+      * @return a Map standoff class Iris to [[XMLTagItem]].
+      */
+    private def invertXMLToStandoffMapping(mappingXMLtoStandoff: MappingXMLtoStandoff): Map[IRI, XMLTagItem] = {
+
+        // check for duplicate standoff class Iris
+        val classIris: Iterable[IRI] = mappingXMLtoStandoff.namespace.values.flatten.map {
+            case (tagname, tagItem) =>
+                tagItem.mapping.standoffClassIri
+        }
+
+        // check for duplicate standoff class Iris
+        if (classIris.size != classIris.toSet.size) {
+            throw BadRequestException("the same standoff class Iri is used more than once in the mapping")
+        }
+
+        mappingXMLtoStandoff.namespace.flatMap {
+            case (tagNamespace: String, tagMappings: Map[String, XMLTag]) =>
+
+                tagMappings.map {
+                    case (tagname: String, tagItem: XMLTag) =>
+
+                        // collect all the property Iris defined in the attributes for the current tag
+                        // over all namespaces
+                        val propIris: Iterable[IRI] = tagItem.mapping.attributesToProps.values.flatten.map {
+                            case (attrName, propIri) =>
+                                propIri
+                        }
+
+                        // check for duplicate property Iris
+                        if (propIris.size != propIris.toSet.size) {
+                            throw BadRequestException(s"the same property Iri is used more than once for the attributes mapping for tag $tagname")
+                        }
+
+                        // inverts the mapping and makes standoff property Iris keys (for attributes)
+                        // this is makes it easier to map standoff properties back to XML attributes
+                        val attrItems: Map[IRI, XMLAttrItem] = tagItem.mapping.attributesToProps.flatMap {
+                            case (attrNamespace: String, attrMappings: Map[String, IRI]) =>
+
+                                attrMappings.map {
+                                    case (attrName, propIri) =>
+                                        (propIri -> XMLAttrItem(attrNamespace, attrName))
+                                }
+                        }
+
+                        // standoff class Iri -> XMLTagItem(... attributes -> attrItems)
+                        (tagItem.mapping.standoffClassIri -> XMLTagItem(tagNamespace, tagname, tagItem, attributes = attrItems))
+
+                }
+        }
+
+
+    }
+
     /**
       *
       * Queries a text value with standoff and returns it as XML.
@@ -765,35 +833,8 @@ class StandoffResponderV1 extends ResponderV1 {
         // TODO: get the mapping that was used when creating the standoff values
         val mappingXMLtoStandoff: MappingXMLtoStandoff = getMapping("")
 
-        // maps a standoff class to an XML tag with attributes
-        case class XMLTagItem(namespace: String, tagname: String, tagItem: XMLTag, attributes: Map[IRI, XMLAttrItem])
-
-        // maps a standoff property to XML attributes
-        case class XMLAttrItem(namespace: String, attrname: String)
-
         // inverts the mapping and makes standoff class Iris keys (for tags)
-        // this is makes it easier to map standoff classes back to XML tags
-        val mappingStandoffToXML: Map[IRI, XMLTagItem] = mappingXMLtoStandoff.namespace.flatMap {
-            case (tagNamespace: String, tagMappings: Map[String, XMLTag]) =>
-
-                tagMappings.map {
-                    case (tagname: String, tagItem: XMLTag) =>
-
-                        // inverts the mapping and makes standoff property Iris keys (for attributes)
-                        // this is makes it easier to map standoff properties back to XML attributes
-                        val attrItems: Map[IRI, XMLAttrItem] = tagItem.mapping.attributesToProps.flatMap {
-                            case (attrNamespace, attrMappings) =>
-                                attrMappings.map {
-                                    case (attrName, propIri) =>
-                                        (propIri -> XMLAttrItem(attrNamespace, attrName))
-                                }
-                        }
-
-                        // standoff class Iri -> XMLTagItem(... attributes -> attrItems)
-                        (tagItem.mapping.standoffClassIri -> XMLTagItem(tagNamespace, tagname, tagItem, attributes = attrItems))
-
-                }
-        }
+        val mappingStandoffToXML: Map[IRI, XMLTagItem] = invertXMLToStandoffMapping(mappingXMLtoStandoff)
 
         for {
         // ask the ValuesResponder to query the text value.
