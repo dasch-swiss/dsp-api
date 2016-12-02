@@ -703,174 +703,48 @@
 
 
 ###  http://www.knora.org/ontology/knora-base#KnownUser
-
 :KnownUser rdf:type :UserGroup ;
-
            :groupName "known user" .
-
 
 ###  Was changed to :Creator
 ###  http://www.knora.org/ontology/knora-base#Owner
 
 :Owner rdf:type :UserGroup ;
-
        :groupName  "owner" .
 
-
-
 ###  http://www.knora.org/ontology/knora-base#Creator
-
 :Creator rdf:type :UserGroup ;
-
          :groupName  "creator" .
 
-
-
 ###  http://www.knora.org/ontology/knora-base#ProjectMember
-
 :ProjectMember rdf:type :UserGroup ;
-
                :groupName "project member" .
 
-
-
 ###  http://www.knora.org/ontology/knora-base#UnknownUser
-
 :UnknownUser rdf:type :UserGroup ;
-
              :groupName "unknown user" .
 
-
-
 ###  http://www.knora.org/ontology/knora-base#SystemAdmin
-
 :SystemAdmin rdf:type :UserGroup ;
-
              :groupName "system admin" ;
-
              :belongsToProject <http://www.knora.org/ontology/knora-base#SystemProject> ;
-
              :isActiveGroup "true"^^xsd:boolean ;
-
              :hasSelfJoinEnabled "false"^^xsd:boolean .
 
-
-
 ###  http://www.knora.org/ontology/knora-base#SystemUser
-
 :SystemUser rdf:type :User ;
-
+            rdfs:comment "A built-in system user."@en ;
             :userid "system" ;
-
             foaf:givenName "Knora" ;
-
             foaf:familyName "System" ;
-
             :password "-" ;
-
             :email "-" ;
-
             :preferredLanguage "en" ;
-
             :isInSystemAdminGroup "false"^^xsd:boolean .
 
-
-#
-##
-### Permission Class Properties
-##
-#
-### http://www.knora.org/ontology/knora-base#forProject
-
-:forProject rdf:type rdf:Property ;
-
-            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-            rdfs:comment "Permission property pointing to a knoraProject."@en ;
-
-            :subjectClassConstraint :Permission ;
-
-            :objectClassConstraint :knoraProject .
-
-
-
-### http://www.knora.org/ontology/knora-base#forGroup
-
-:forGroup rdf:type rdf:Property ;
-
-            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-            rdfs:comment "Permission property pointing to a UserGroup."@en ;
-
-            :subjectClassConstraint :Permission ;
-
-            :objectClassConstraint :UserGroup .
-
-
-
-### http://www.knora.org/ontology/knora-base#forResourceClass
-
-:forResourceClass rdf:type rdf:Property ;
-
-            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-            rdfs:comment "Permission property pointing to a resource class."@en ;
-
-            :subjectClassConstraint :Permission .
-
-
-
-### http://www.knora.org/ontology/knora-base#forProperty
-
-:forProperty rdf:type rdf:property ;
-
-            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-            rdfs:comment "Permission property pointing to a resource property."@en ;
-
-            :subjectClassConstraint :Permission .
-
-
-
-#
-##
-### Permission Class and Sub-Classes
-##
-#
-### http://www.knora.org/ontology/knora-base#Permission
-
-:Permission rdf:type owl:Class ;
-
-            rdfs:comment "Base Permission class."@en.
-
-
-
-### http://www.knora.org/ontology/knora-base#AdministrativePermission
-
-:AdministrativePermission rdf:type owl:Class ;
-
-            rdfs:comment "Administrative Permission class used to create instances for storing administrative permissions on groups."@en ;
-
-            rdfs:subClassOf :Permission .
-
-
-
-### http://www.knora.org/ontology/knora-base#DefaultObjectAccessPermission
-
-:DefaultObjectAccessPermission rdf:type owl:Class ;
-
-            rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission on groups."@en ;
-
-            rdfs:subClassOf :Permission .
-
-
-
 ### http://www.knora.org/ontology/knora-base#SystemProject
-
 :SystemProject rdf:type :knoraProject ;
-
             rdfs:comment "A built-in project representing the Knora System."@en ;
-
             :projectShortname "SystemProject" ;
             :projectLongname "Knora System Project" ;
             :projectDescription "Knora System Project" ;
@@ -880,28 +754,65 @@
             :isActiveProject "true"^^xsd:boolean ;
             :hasSelfJoinEnabled "false"^^xsd:boolean .
 
+#
+##
+### Permission Class Properties
+##
+#
+### http://www.knora.org/ontology/knora-base#forProject
+
+:forProject rdf:type rdf:Property ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+            rdfs:comment "Permission property pointing to a knoraProject."@en ;
+            :subjectClassConstraint :Permission ;
+            :objectClassConstraint :knoraProject .
+
+### http://www.knora.org/ontology/knora-base#forGroup
+:forGroup rdf:type rdf:Property ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+            rdfs:comment "Permission property pointing to a UserGroup."@en ;
+            :subjectClassConstraint :Permission ;
+            :objectClassConstraint :UserGroup .
+
+### http://www.knora.org/ontology/knora-base#forResourceClass
+:forResourceClass rdf:type rdf:Property ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+            rdfs:comment "Permission property pointing to a resource class."@en ;
+            :subjectClassConstraint :Permission .
+
+### http://www.knora.org/ontology/knora-base#forProperty
+:forProperty rdf:type rdf:property ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+            rdfs:comment "Permission property pointing to a resource property."@en ;
+            :subjectClassConstraint :Permission .
 
 
-### http://www.knora.org/ontology/knora-base#AllGroups
-
-:AllGroups rdf:type :UserGroup ;
-
-           rdfs:comment "A built-in group representing all groups."@en ;
-
-           :groupName "AllGroups" .
-
-
-
-### http://www.knora.org/ontology/knora-base#AllResourceClasses
-
-:AllResourceClasses rdf:type owl:Class ;
-
-            rdfs:comment "A built-in resource class used in permission instances to denote that the defined default object access permission should be applied to all resource classes defined for the project."@en .
+#
+##
+### Permission Class and Sub-Classes
+##
+#
+### http://www.knora.org/ontology/knora-base#Permission
+:Permission rdf:type owl:Class ;
+            rdfs:comment "Base Permission class."@en.
 
 
+### http://www.knora.org/ontology/knora-base#AdministrativePermission
+:AdministrativePermission rdf:type owl:Class ;
+            rdfs:comment "Administrative Permission class used to create instances for storing administrative permissions on groups."@en ;
+            rdfs:subClassOf :Permission .
 
-### http://www.knora.org/ontology/knora-base#AllProperties
+### http://www.knora.org/ontology/knora-base#DefaultObjectAccessPermissionOnGroup
+:DefaultObjectAccessPermissionOnGroup rdf:type owl:Class ;
+            rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission on groups."@en ;
+            rdfs:subClassOf :Permission .
 
-:PropertyNotApplicable rdf:type owl:ObjectProperty ;
+### http://www.knora.org/ontology/knora-base#DefaultObjectAccessPermissionOnResourceClass
+:DefaultObjectAccessPermissionOnResourceClass rdf:type owl:Class ;
+            rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission on resource classes."@en ;
+            rdfs:subClassOf :Permission .
 
-            rdfs:comment "A built-in resource property used in permission instances where the property is not applicable."@en .
+### http://www.knora.org/ontology/knora-base#DefaultObjectAccessPermissionOnProperty
+:DefaultObjectAccessPermissionOnProperty rdf:type owl:Class ;
+            rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission on properties."@en ;
+            rdfs:subClassOf :Permission .

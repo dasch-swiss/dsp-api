@@ -313,9 +313,6 @@ object OntologyConstants {
         val ForProperty = KnoraBasePrefixExpansion                    + "forProperty"
 
         val SystemProject = KnoraBasePrefixExpansion                  + "SystemProject"
-        val AllGroups = KnoraBasePrefixExpansion                      + "AllGroups"
-        val AllResourceClasses = KnoraBasePrefixExpansion             + "AllResourceClasses"
-        val AllProperties = KnoraBasePrefixExpansion                  + "AllProperties"
 
         /**
           * The system user is the owner of objects that are created by the system, rather than directly by the user,

@@ -5,6 +5,54 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 
+
+
+##########################################################
+#
+# Knora System Permissions
+#
+##########################################################
+
+
+### Default Object Access Permissions on knora-base:LinkObj resource class
+<http://data.knora.org/permissions/001-1>
+
+                      rdf:type knora-base:DefaultObjectAccessPermissionOnResourceClass ;
+
+                      knora-base:forProject knora-base:SystemProject ;
+
+                      knora-base:forResourceClass knora-base:LinkObj ;
+
+                      knora-base:hasPermissions "DM knora-base:ProjectMember|DV knora-base:KnownUser, knora-base:UnknownUser"^^xsd:string .
+
+
+
+### Default Object Access Permissions on knora-base:Region resource class
+<http://data.knora.org/permissions/001-2>
+
+                      rdf:type knora-base:DefaultObjectAccessPermissionOnResourceClass ;
+
+                      knora-base:forProject knora-base:SystemProject ;
+
+                      knora-base:forResourceClass knora-base:Region ;
+
+                      knora-base:hasPermissions "DM knora-base:ProjectMember|DV knora-base:KnownUser, knora-base:UnknownUser"^^xsd:string .
+
+
+
+### Default Object Access Permissions on knora-base:hasStillImageFileValue property
+<http://data.knora.org/permissions/001-3>
+
+                      rdf:type knora-base:DefaultObjectAccessPermissionOnProperty ;
+
+                      knora-base:forProject knora-base:SystemProject ;
+
+                      knora-base:forProperty knora-base:hasStillImageFileValue ;
+
+                      knora-base:hasPermissions "DM knora-base:Creator, knora-base:ProjectMember|DV knora-base:KnownUser|DRV knora-base:UnknownUser"^^xsd:string .
+
+
+
 ##########################################################
 #
 # Images Demo Project Permissions
@@ -12,7 +60,7 @@
 ##########################################################
 
 ### Administrative Permissions on ProjectMember
-<http://data.knora.org/permissions/001>
+<http://data.knora.org/permissions/002-1>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -25,24 +73,20 @@
 
 
 ### Default Object Access Permissions on ProjectMember Group
-<http://data.knora.org/permissions/002>
+<http://data.knora.org/permissions/002-2>
 
-                      rdf:type knora-base:DefaultObjectAccessPermission ;
+                      rdf:type knora-base:DefaultObjectAccessPermissionForGroup ;
 
                       knora-base:forProject <http://data.knora.org/projects/images> ;
 
                       knora-base:forGroup knora-base:ProjectMember ;
-
-                      knora-base:forResourceClass knora-base:AllResourceClasses ;
-
-                      knora-base:forProperty knora-base:AllProperties ;
 
                       knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser"^^xsd:string .
 
 
 
 ### Administrative Permissions on ProjectAdmin
-<http://data.knora.org/permissions/003>
+<http://data.knora.org/permissions/002-3>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -60,7 +104,7 @@
 ##########################################################
 
 ### Administrative Permissions on ProjectMember
-<http://data.knora.org/permissions/004>
+<http://data.knora.org/permissions/003-1>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -73,24 +117,46 @@
 
 
 ### Default Object Access Permissions on ProjectMember Group
-<http://data.knora.org/permissions/005>
+<http://data.knora.org/permissions/003-2>
 
-                      rdf:type knora-base:DefaultObjectAccessPermission ;
+                      rdf:type knora-base:DefaultObjectAccessPermissionOnGroup ;
 
                       knora-base:forProject <http://data.knora.org/projects/77275339> ;
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
-                      knora-base:forResourceClass knora-base:AllResourceClasses ;
+                      knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser|DRV knora-base:UnknownUser"^^xsd:string .
 
-                      knora-base:forProperty knora-base:AllProperties ;
 
-                      knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser"^^xsd:string .
+
+### Default Object Access Permissions on incunabula:Page resource class
+<http://data.knora.org/permissions/003-3>
+
+                      rdf:type knora-base:DefaultObjectAccessPermissionOnResourceClass ;
+
+                      knora-base:forProject <http://data.knora.org/projects/77275339> ;
+
+                      knora-base:forResourceClass <> ;
+
+                      knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser|DRV knora-base:UnknownUser"^^xsd:string .
+
+
+
+### Default Object Access Permissions on ProjectMember Group
+<http://data.knora.org/permissions/003-4>
+
+                      rdf:type knora-base:DefaultObjectAccessPermissionOnProperty ;
+
+                      knora-base:forProject <http://data.knora.org/projects/77275339> ;
+
+                      knora-base:forProperty <> ;
+
+                      knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser|DRV knora-base:UnknownUser"^^xsd:string .
 
 
 
 ### Administrative Permissions on ProjectAdmin
-<http://data.knora.org/permissions/006>
+<http://data.knora.org/permissions/003-5>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -109,7 +175,7 @@
 ##########################################################
 
 ### Administrative Permissions on ProjectMember
-<http://data.knora.org/permissions/007>
+<http://data.knora.org/permissions/004-1>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -122,24 +188,20 @@
 
 
 ### Default Object Access Permissions on ProjectMember Group
-<http://data.knora.org/permissions/008>
+<http://data.knora.org/permissions/004-2>
 
-                      rdf:type knora-base:DefaultObjectAccessPermission ;
+                      rdf:type knora-base:DefaultObjectAccessPermissionForGroup ;
 
                       knora-base:forProject <http://data.knora.org/projects/666> ;
 
                       knora-base:forGroup knora-base:ProjectMember ;
-
-                      knora-base:forResourceClass knora-base:AllResourceClasses ;
-
-                      knora-base:forProperty knora-base:AllProperties ;
 
                       knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser"^^xsd:string .
 
 
 
 ### Administrative Permissions on ProjectAdmin
-<http://data.knora.org/permissions/009>
+<http://data.knora.org/permissions/004-3>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -158,7 +220,7 @@
 ##########################################################
 
 ### Administrative Permissions on ProjectMember
-<http://data.knora.org/permissions/010>
+<http://data.knora.org/permissions/005-1>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -171,24 +233,20 @@
 
 
 ### Default Object Access Permissions on ProjectMember Group
-<http://data.knora.org/permissions/011>
+<http://data.knora.org/permissions/005-2>
 
-                      rdf:type knora-base:DefaultObjectAccessPermission ;
+                      rdf:type knora-base:DefaultObjectAccessPermissionForGroup ;
 
                       knora-base:forProject <http://data.knora.org/projects/anything> ;
 
                       knora-base:forGroup knora-base:ProjectMember ;
-
-                      knora-base:forResourceClass knora-base:AllResourceClasses ;
-
-                      knora-base:forProperty knora-base:AllProperties ;
 
                       knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser"^^xsd:string .
 
 
 
 ### Administrative Permissions on ProjectAdmin
-<http://data.knora.org/permissions/012>
+<http://data.knora.org/permissions/005-3>
 
                       rdf:type knora-base:AdministrativePermission ;
 
