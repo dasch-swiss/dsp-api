@@ -165,7 +165,7 @@ case class DefaultObjectAccessPermissionsForProjectGetRequestV1(projectIri: IRI,
   * @param groupIri the group.
   * @param userProfileV1 the user initiating this request.
   */
-case class DefaultObjectAccessPermissionForProjectGroupGetRequestV1(projectIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+case class DefaultObjectAccessPermissionGetRequestV1(projectIRI: IRI, groupIRI: Option[IRI], resourceClassIRI: Option[IRI], propertyIRI: Option[IRI], userProfile: UserProfileV1) extends PermissionsResponderRequestV1
 
 /**
   * A message that requests a default object access permission object identified through his IRI.
@@ -178,13 +178,13 @@ case class DefaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPe
 
 
 /**
-  * A message that requests default object access permissions for a resource class inside a specific project.
+  * A message that requests the default object access permissions string for a resource class inside a specific project.
   *
   * @param projectIri the project for which the default object permissions need to be retrieved.
   * @param resourceClassIri the resource class which can also cary default object access permissions.
   * @param userProfile the user initiating the request which group membership can also influence the resulting set of default object access permissions.
   */
-case class DefaultObjectAccessPermissionsForResourceClassGetV1(projectIri: IRI, resourceClassIri: IRI, userProfile: UserProfileV1) extends PermissionsResponderRequestV1
+case class DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri: IRI, resourceClassIri: IRI, userProfile: UserProfileV1) extends PermissionsResponderRequestV1
 
 /**
   * A message that requests default object access permissions for a resource class inside a specific project.
@@ -193,7 +193,7 @@ case class DefaultObjectAccessPermissionsForResourceClassGetV1(projectIri: IRI, 
   * @param propertyTypeIri the property type which can also cary default object access permissions.
   * @param userProfile the user initiating the request which group membership can also influence the resulting set of default object access permissions.
   */
-case class DefaultObjectAccessPermissionsForPropertyTypeGetV1(projectIri: IRI, propertyTypeIri: IRI, userProfile: UserProfileV1) extends PermissionsResponderRequestV1
+case class DefaultObjectAccessPermissionsStringForPropertyTypeGetV1(projectIri: IRI, propertyTypeIri: IRI, userProfile: UserProfileV1) extends PermissionsResponderRequestV1
 
 /**
   * Create a single [[DefaultObjectAccessPermissionV1]].
@@ -266,10 +266,11 @@ case class DefaultObjectAccessPermissionsForProjectGetResponseV1(defaultObjectAc
 }
 
 /**
-  * Represents an answer to [[DefaultObjectAccessPermissionForProjectGroupGetRequestV1]].
+  * Represents an answer to [[DefaultObjectAccessPermissionGetRequestV1]].
+  *
   * @param defaultObjectAccessPermission the retrieved [[DefaultObjectAccessPermissionV1]].
   */
-case class DefaultObjectAccessPermissionForProjectGroupGetResponseV1(defaultObjectAccessPermission: DefaultObjectAccessPermissionV1) extends KnoraResponseV1 with PermissionV1JsonProtocol {
+case class DefaultObjectAccessPermissionGetResponseV1(defaultObjectAccessPermission: DefaultObjectAccessPermissionV1) extends KnoraResponseV1 with PermissionV1JsonProtocol {
     def toJsValue = defaultObjectAccessPermissionForProjectGroupGetResponseV1Format.write(this)
 }
 
@@ -522,9 +523,9 @@ case class NewAdministrativePermissionV1(iri: IRI,
   * @param hasPermissions
   */
 case class DefaultObjectAccessPermissionV1(forProject: IRI,
-                                           forGroup: IRI,
-                                           forResourceClass: IRI,
-                                           forProperty: IRI,
+                                           forGroup: Option[IRI],
+                                           forResourceClass: Option[IRI],
+                                           forProperty: Option[IRI],
                                            hasPermissions: Seq[PermissionV1]
                                           )
 
@@ -784,6 +785,6 @@ trait PermissionV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
     implicit val administrativePermissionCreateResponseV1Format: RootJsonFormat[AdministrativePermissionCreateResponseV1] = jsonFormat(AdministrativePermissionCreateResponseV1, "administrative_permission")
     implicit val defaultObjectAccessPermissionsForProjectGetResponseV1Format: RootJsonFormat[DefaultObjectAccessPermissionsForProjectGetResponseV1] = jsonFormat(DefaultObjectAccessPermissionsForProjectGetResponseV1, "default_object_access_permissions")
     implicit val defaultObjectAccessPermissionForIriGetResponseV1Format: RootJsonFormat[DefaultObjectAccessPermissionForIriGetResponseV1] = jsonFormat(DefaultObjectAccessPermissionForIriGetResponseV1, "default_object_access_permission")
-    implicit val defaultObjectAccessPermissionForProjectGroupGetResponseV1Format: RootJsonFormat[DefaultObjectAccessPermissionForProjectGroupGetResponseV1] = jsonFormat(DefaultObjectAccessPermissionForProjectGroupGetResponseV1, "default_object_access_permission")
+    implicit val defaultObjectAccessPermissionForProjectGroupGetResponseV1Format: RootJsonFormat[DefaultObjectAccessPermissionGetResponseV1] = jsonFormat(DefaultObjectAccessPermissionGetResponseV1, "default_object_access_permission")
 
 }

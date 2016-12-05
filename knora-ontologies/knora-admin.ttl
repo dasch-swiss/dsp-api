@@ -802,17 +802,7 @@
             rdfs:comment "Administrative Permission class used to create instances for storing administrative permissions on groups."@en ;
             rdfs:subClassOf :Permission .
 
-### http://www.knora.org/ontology/knora-base#DefaultObjectAccessPermissionOnGroup
+### http://www.knora.org/ontology/knora-base#DefaultObjectAccessPermission
 :DefaultObjectAccessPermissionOnGroup rdf:type owl:Class ;
-            rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission on groups."@en ;
-            rdfs:subClassOf :Permission .
-
-### http://www.knora.org/ontology/knora-base#DefaultObjectAccessPermissionOnResourceClass
-:DefaultObjectAccessPermissionOnResourceClass rdf:type owl:Class ;
-            rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission on resource classes."@en ;
-            rdfs:subClassOf :Permission .
-
-### http://www.knora.org/ontology/knora-base#DefaultObjectAccessPermissionOnProperty
-:DefaultObjectAccessPermissionOnProperty rdf:type owl:Class ;
-            rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission on properties."@en ;
+            rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission for a project and either groups, resource classes, or properties."@en ;
             rdfs:subClassOf :Permission .

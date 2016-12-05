@@ -27,7 +27,7 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.graphdatamessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsForResourceClassGetV1, ResourceCreateOperation}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetV1, ResourceCreateOperation}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages._
@@ -1432,7 +1432,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             }.mapTo[EntityInfoGetResponseV1]
 
             defaultObjectAccessPermissions <- {
-                responderManager ? DefaultObjectAccessPermissionsForResourceClassGetV1(
+                responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(
                     projectIri = projectIri,
                     resourceClassIri = resourceClassIri,
                     userProfile = userProfile

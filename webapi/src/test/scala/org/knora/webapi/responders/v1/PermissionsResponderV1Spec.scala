@@ -103,7 +103,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     SharedAdminTestData.rootUser
                 )
                 expectMsg(AdministrativePermissionsForProjectGetResponseV1(
-                    Seq(perm001.p, perm003.p)
+                    Seq(perm002_1.p, perm002_2.p)
                 ))
             }
 
@@ -113,15 +113,15 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     groupIri = OntologyConstants.KnoraBase.ProjectMember,
                     SharedAdminTestData.rootUser
                 )
-                expectMsg(AdministrativePermissionForProjectGroupGetResponseV1(perm001.p))
+                expectMsg(AdministrativePermissionForProjectGroupGetResponseV1(perm002_1.p))
             }
 
             "return AdministrativePermission for IRI " in {
                 actorUnderTest ! AdministrativePermissionForIriGetRequestV1(
-                    administrativePermissionIri = perm001.iri,
+                    administrativePermissionIri = perm002_1.iri,
                     SharedAdminTestData.rootUser
                 )
-                expectMsg(AdministrativePermissionForIriGetResponseV1(perm001.p))
+                expectMsg(AdministrativePermissionForIriGetResponseV1(perm002_1.p))
             }
 
         }
@@ -134,28 +134,30 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     SharedAdminTestData.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionsForProjectGetResponseV1(
-                    defaultObjectAccessPermissions = Seq(perm002.p)
+                    defaultObjectAccessPermissions = Seq(perm002_3.p)
                 ))
             }
 
             "return DefaultObjectAccessPermission for project and group" in {
-                actorUnderTest ! DefaultObjectAccessPermissionForProjectGroupGetRequestV1(
-                    projectIri = IMAGES_PROJECT_IRI,
-                    groupIri = OntologyConstants.KnoraBase.ProjectMember,
-                    userProfileV1 = SharedAdminTestData.rootUser
+                actorUnderTest ! DefaultObjectAccessPermissionGetRequestV1(
+                    projectIRI = IMAGES_PROJECT_IRI,
+                    groupIRI = Some(OntologyConstants.KnoraBase.ProjectMember),
+                    resourceClassIRI = None,
+                    propertyIRI = None,
+                    userProfile = SharedAdminTestData.rootUser
                 )
-                expectMsg(DefaultObjectAccessPermissionForProjectGroupGetResponseV1(
-                    defaultObjectAccessPermission = perm002.p
+                expectMsg(DefaultObjectAccessPermissionGetResponseV1(
+                    defaultObjectAccessPermission = perm002_3.p
                 ))
             }
 
             "return DefaultObjectAccessPermission for IRI" in {
                 actorUnderTest ! DefaultObjectAccessPermissionForIriGetRequestV1(
-                    defaultObjectAccessPermissionIri = perm002.iri,
+                    defaultObjectAccessPermissionIri = perm002_3.iri,
                     SharedAdminTestData.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionForIriGetResponseV1(
-                    defaultObjectAccessPermission = perm002.p
+                    defaultObjectAccessPermission = perm002_3.p
                 ))
             }
 

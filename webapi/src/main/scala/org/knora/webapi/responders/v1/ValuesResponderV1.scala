@@ -24,6 +24,7 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages.DefaultObjectAccessPermissionsStringForPropertyTypeGetV1
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
@@ -175,8 +176,17 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Everything seems OK, so we can create the value.
 
+            // FIXME: Query the PermissionsResponder for Property DOAP
+            defaultObjectAccessPermissions <- {
+                responderManager ? DefaultObjectAccessPermissionsStringForPropertyTypeGetV1(
+                    projectIri = createValueRequest.projectIri,
+                    propertyTypeIri = createValueRequest.propertyIri,
+                    userProfile = createValueRequest.userProfile
+                )
+            }.mapTo[Option[String]]
+
             // Construct its permissions from the default permissions of the resource property.
-            permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
+            //permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
 
             // Create the new value.
             unverifiedValue <- createValueV1AfterChecks(
@@ -187,7 +197,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 comment = createValueRequest.comment,
                 valueOwner = userIri, // Make the requesting user the owner.
                 valueProject = resourceFullResponse.resinfo.get.project_id, // Give the new value the same project as the containing resource
-                valuePermissions = permissionsFromDefaults,
+                valuePermissions = defaultObjectAccessPermissions,
                 updateResourceLastModificationDate = true,
                 userProfile = createValueRequest.userProfile)
 
@@ -371,6 +381,8 @@ class ValuesResponderV1 extends ResponderV1 {
                         // i.e. the values' owner and project plus their permissions. Use the property's default
                         // permissions to make permissions for the new values.
                         val propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
+
+                        // FIXME: Query the PermissionsResponder for Property DOAP
                         val permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
 
                         // For each property, construct a SparqlGenerationResultForProperty containing WHERE clause statements, INSERT clause statements, and UnverifiedValueV1s.
@@ -825,6 +837,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                         // We'll need to create a new LinkValue. Use the property's default permissions to make permissions
                         // for it.
+                        // FIXME: Query the PermissionsResponder for Property DOAP
                         val permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
 
                         changeLinkValueV1AfterChecks(projectIri = currentValueQueryResult.projectIri,
@@ -1200,6 +1213,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     val valuePermissions = rowMap.get("valuePermissions")
 
                     // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
+                    // FIXME: This should be refactored to use the PermissionsResponder
                     val valuePermissionCode = if (InputValidation.optionStringToBoolean(rowMap.get("isLinkValue"))) {
                         // It's a LinkValue.
                         PermissionUtilV1.getUserPermissionOnLinkValueV1(

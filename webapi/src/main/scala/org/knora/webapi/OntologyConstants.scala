@@ -88,8 +88,10 @@ object OntologyConstants {
 
         val ObjectClassConstraint = "http://www.knora.org/ontology/knora-base#objectClassConstraint"
 
+        val LinkObj = "http://www.knora.org/ontology/knora-base#LinkObj"
         val HasLinkTo = "http://www.knora.org/ontology/knora-base#hasLinkTo"
         val HasLinkToValue = "http://www.knora.org/ontology/knora-base#hasLinkToValue"
+        val Region = "http://www.knora.org/ontology/knora-base#Region"
         val IsRegionOf = "http://www.knora.org/ontology/knora-base#isRegionOf"
 
         val ValueHasString = "http://www.knora.org/ontology/knora-base#valueHasString"

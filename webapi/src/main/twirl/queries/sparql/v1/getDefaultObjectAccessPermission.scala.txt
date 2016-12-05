@@ -21,15 +21,19 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets the administrative permission object identified by project and entity.
+ * Gets the administrative permission object identified by project and either group / resource class / property.
  *
  * @param triplestore the name of the triplestore being used.
- * @param administrativePermissionIri the permission's IRI.
+ * @param projectIri the project's IRI.
+ * @param groupIri the group's IRI.
+ * @param resourceClassIri the resource's class IRI.
+ * @param propertyIri the property's IRI.
  *@
 @(triplestore: String,
   projectIri: IRI,
+  groupIri: IRI,
   resourceClassIri: IRI,
-  propertyTypeIri: IRI
+  propertyIri: IRI
   )
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -46,12 +50,16 @@ WHERE {
     ?s rdf:type knora-base:DefaultObjectAccessPermission .
     ?s knora-base:forProject <@projectIri> .
 
+    @if(groupIri.nonEmpty) {
+        ?s knora-base:forGroup <@groupIri> .
+    }
+
     @if(resourceClassIri.nonEmpty) {
         ?s knora-base:forResourceClass <@resourceClassIri> .
     }
 
     @if(resourceClassIri.nonEmpty) {
-        ?s knora-base:forProperty <@propertyTypeIri> .
+        ?s knora-base:forProperty <@propertyIri> .
     }
 
     ?s ?p ?o .
