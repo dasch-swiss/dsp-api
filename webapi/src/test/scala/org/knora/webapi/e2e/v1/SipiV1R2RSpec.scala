@@ -22,15 +22,14 @@ package org.knora.webapi.e2e.v1
 
 import java.io.File
 import java.net.URLEncoder
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Paths}
 
 import akka.actor._
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
-import akka.stream.scaladsl.{Source, _}
 import akka.util.Timeout
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}

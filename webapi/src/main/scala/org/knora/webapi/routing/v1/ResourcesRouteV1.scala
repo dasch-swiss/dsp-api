@@ -305,39 +305,43 @@ object ResourcesRouteV1 extends Authenticator {
                     }.runFold(Map.empty[Name, FileInfo])((set, value) => set ++ value)
 
                     // TODO: refactor to remove blocking (issue #291)
-                    val jsonMap = Await.result(jsonMapFuture, Timeout(10.seconds).duration)
-                    val fileMap = Await.result(fileMapFuture, Timeout(10.seconds).duration)
+                    val requestMessageFuture: Future[ResourceCreateRequestV1] = for {
+                        jsonMap <- jsonMapFuture
+                        fileMap <- fileMapFuture
 
-                    // get the json params (access first member of the tuple) and turn them into a case class
-                    val apiRequest: CreateResourceApiRequestV1 = try {
-                        jsonMap.getOrElse("json", throw BadRequestException("Required param 'json' was not submitted"))
-                                .convertTo[CreateResourceApiRequestV1]
-                    } catch {
-                        case e: DeserializationException => throw BadRequestException("JSON params structure is invalid: " + e.toString)
-                    }
+                        // get the json params (access first member of the tuple) and turn them into a case class
+                        apiRequest: CreateResourceApiRequestV1 = try {
+                            jsonMap.getOrElse("json", throw BadRequestException("Required param 'json' was not submitted"))
+                                    .convertTo[CreateResourceApiRequestV1]
+                        } catch {
+                            case e: DeserializationException => throw BadRequestException("JSON params structure is invalid: " + e.toString)
+                        }
 
-                    // check if the API request contains file information: this is illegal for this route
-                    if (apiRequest.file.nonEmpty) throw BadRequestException("param 'file' is set for a post multipart request. This is not allowed.")
+                        // check if the API request contains file information: this is illegal for this route
+                        _ = if (apiRequest.file.nonEmpty) throw BadRequestException("param 'file' is set for a post multipart request. This is not allowed.")
 
-                    val sourcePath = receivedFile.getOrElse(throw FileUploadException("Error during file upload. Please report this as a possible bug."))
+                        sourcePath = receivedFile.getOrElse(throw FileUploadException("Error during file upload. Please report this as a possible bug."))
 
-                    val (originalFilename, originalMimeType) = fileMap.headOption match {
-                        case Some((name, fileinfo)) => (name, fileinfo.contentType.toString)
-                        case None => throw BadRequestException("MultiPart Post request was sent but no files")
-                    }
+                        (originalFilename, originalMimeType) = fileMap.headOption match {
+                            case Some((name, fileinfo)) => (name, fileinfo.contentType.toString)
+                            case None => throw BadRequestException("MultiPart Post request was sent but no files")
+                        }
 
-                    val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
-                        originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
-                        originalMimeType = InputValidation.toSparqlEncodedString(originalMimeType, () => throw BadRequestException(s"Original MIME type is invalid: '$originalMimeType'")),
-                        source = sourcePath,
-                        userProfile = userProfile
-                    )
+                        sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
+                            originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
+                            originalMimeType = InputValidation.toSparqlEncodedString(originalMimeType, () => throw BadRequestException(s"Original MIME type is invalid: '$originalMimeType'")),
+                            source = sourcePath,
+                            userProfile = userProfile
+                        )
 
-                    val requestMessage = makeCreateResourceRequestMessage(
-                        apiRequest = apiRequest,
-                        multipartConversionRequest = Some(sipiConvertPathRequest),
-                        userProfile = userProfile
-                    )
+                        requestMessage = makeCreateResourceRequestMessage(
+                            apiRequest = apiRequest,
+                            multipartConversionRequest = Some(sipiConvertPathRequest),
+                            userProfile = userProfile
+                        )
+                    } yield requestMessage
+
+                    val requestMessage = Await.result(requestMessageFuture, Timeout(13.seconds).duration)
 
                     RouteUtilV1.runJsonRoute(
                         requestMessage,

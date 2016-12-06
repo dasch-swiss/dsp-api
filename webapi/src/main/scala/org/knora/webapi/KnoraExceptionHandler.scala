@@ -31,11 +31,7 @@ object KnoraExceptionHandler {
                 complete(exceptionToJsonHttpResponse(ise, settingsImpl))
             }
 
-        case other =>
-            extractUri { uri =>
-                log.error(other, s"Unable to run route $uri")
-                complete(exceptionToJsonHttpResponse(other, settingsImpl))
-            }
+        case other => complete(exceptionToJsonHttpResponse(other, settingsImpl))
 
 
     }
