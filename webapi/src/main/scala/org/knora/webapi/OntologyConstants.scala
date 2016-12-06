@@ -82,6 +82,7 @@ object OntologyConstants {
         val StillImageRepresentation = "http://www.knora.org/ontology/knora-base#StillImageRepresentation"
         val TextRepresentation = "http://www.knora.org/ontology/knora-base#TextRepresentation"
         val Region = "http://www.knora.org/ontology/knora-base#Region"
+        val XMLToStandoffMapping = "http://www.knora.org/ontology/knora-base#XMLToStandoffMapping"
 
         val AbstractResourceClasses = Set(
             Resource,

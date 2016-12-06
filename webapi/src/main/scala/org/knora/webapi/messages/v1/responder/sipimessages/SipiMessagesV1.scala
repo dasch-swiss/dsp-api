@@ -191,6 +191,7 @@ object SipiConstants {
     // TODO: Shall we better use an ErrorHandlingMap here?
     // map file types converted by Sipi to file value properties in Knora
     val fileType2FileValueProperty = Map(
+        FileType.TEXT -> OntologyConstants.KnoraBase.HasTextFileValue,
         FileType.IMAGE -> OntologyConstants.KnoraBase.HasStillImageFileValue,
         FileType.MOVIE -> OntologyConstants.KnoraBase.HasMovingImageFileValue,
         FileType.AUDIO -> OntologyConstants.KnoraBase.HasAudioFileValue,

@@ -31,7 +31,8 @@ import akka.actor.Status
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
-import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionPathRequestV1, SipiResponderConversionResponseV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceCreateRequestV1, ResourceCreateResponseV1}
+import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
@@ -65,7 +66,7 @@ class StandoffResponderV1 extends ResponderV1 {
     def receive = {
         case CreateStandoffRequestV1(projIri, resIri, propIri, xml, userProfile, uuid) => future2Message(sender(), createStandoffV1(projIri, resIri, propIri, xml, userProfile, uuid), log)
         case StandoffGetRequestV1(valueIri, userProfile) => future2Message(sender(), getStandoffV1(valueIri, userProfile), log)
-        case CreateMappingRequestV1(xml, userProfile) => future2Message(sender(), createMappingV1(xml, userProfile), log)
+        case CreateMappingRequestV1(xml, projectIri, userProfile) => future2Message(sender(), createMappingV1(xml, projectIri, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -75,11 +76,8 @@ class StandoffResponderV1 extends ResponderV1 {
       * @param xml         the provided mapping.
       * @param userProfile the client that made the request.
       */
-    private def createMappingV1(xml: String, userProfile: UserProfileV1): Future[CreateMappingResponseV1] = {
+    private def createMappingV1(xml: String, projectIri: IRI, userProfile: UserProfileV1): Future[CreateMappingResponseV1] = {
 
-        // http://stackoverflow.com/questions/7087353/can-a-scala-for-loop-modify-variables-outside-its-scope
-        // FIXME Ben, I am so ugly and non functional style
-        var tmpFileG = new File("test")
 
         val createMappingFuture = for {
 
@@ -101,18 +99,26 @@ class StandoffResponderV1 extends ResponderV1 {
             tmpFile = InputValidation.createTempFile(settings)
             _ = Files.write(tmpFile.toPath(), xml.getBytes());
 
-            sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? SipiResponderConversionPathRequestV1(
-                originalFilename = "mapping.xml",
-                originalMimeType = "application/xml",
-                source = tmpFile,
-                userProfile = userProfile)).mapTo[SipiResponderConversionResponseV1]
+            // create Text File Resource
+            createResourceResponse: ResourceCreateResponseV1 <- (responderManager ? ResourceCreateRequestV1(
+                projectIri = projectIri,
+                resourceTypeIri = OntologyConstants.KnoraBase.XMLToStandoffMapping,
+                label = "mapping",
+                values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
+                file = Some(
+                    SipiResponderConversionPathRequestV1(
+                        originalFilename = "mapping.xml",
+                        originalMimeType = "application/xml",
+                        source = tmpFile,
+                        userProfile = userProfile)
+                ),
+                userProfile = userProfile,
+                apiRequestID =  UUID.randomUUID
+            )).mapTo[ResourceCreateResponseV1]
 
-            // delete the temporary file
 
 
         } yield {
-            // FIXME Ben
-            tmpFileG = tmpFile
             CreateMappingResponseV1(filename = "", userdata = userProfile.userData)
         }
 
@@ -124,14 +130,6 @@ class StandoffResponderV1 extends ResponderV1 {
             case unknown: Exception => throw BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
         }
 
-        // delete the temporary file in either case
-        createMappingFuture.andThen {
-            case msg: Try[CreateMappingResponseV1] =>
-
-                // FIXME Ben
-                InputValidation.deleteFileFromTmpLocation(tmpFileG, log)
-
-        }
     }
 
     // string constant used to mark the absence of an XML namespace

@@ -88,13 +88,15 @@ object StandoffRouteV1 extends Authenticator {
                         log)
                 }
             }
-        } ~path("v1" / "mapping") {
+        } ~path("v1" / "mapping" / Segment) { (iri: String) =>
             post {
                 entity(as[String]) { xml:String =>
                     requestContext =>
 
+                        val projectIri = InputValidation.toIri(iri, () => throw BadRequestException("invalid Iri"))
+
                         val userProfile = getUserProfileV1(requestContext)
-                        val requestMessage = CreateMappingRequestV1(xml = xml, userProfile = userProfile)
+                        val requestMessage = CreateMappingRequestV1(xml = xml, projectIri = projectIri, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRoute(
                             requestMessage,

@@ -205,6 +205,13 @@ DELETE {
 
             }
 
+            case textFileValue: TextFileValueV1 => {
+                ?newValue knora-base:originalFilename """@textFileValue.originalFilename""" ;
+                          knora-base:originalMimeType """@textFileValue.originalMimeType""" ;
+                          knora-base:internalFilename """@textFileValue.internalFilename""" ;
+                          knora-base:internalMimeType """@textFileValue.internalMimeType""" .
+            }
+
             case listValue: HierarchicalListValueV1 => {
 
                 ?newValue knora-base:valueHasListNode <@listValue.hierarchicalListIri> .

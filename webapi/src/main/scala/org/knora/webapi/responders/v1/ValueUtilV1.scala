@@ -76,7 +76,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     // A Map of MIME types to Knora API v1 binary format name.
-    private val mimeType2V1Format = new ErrorHandlingMap(Map(
+    private val mimeType2V1Format = new ErrorHandlingMap(Map( // TODO: add mime types for text files that are supported by Sipi
         "application/octet-stream" -> "BINARY-UNKNOWN",
         "image/jpeg" -> "JPEG",
         "image/jp2" -> "JPEG2000",
@@ -114,6 +114,12 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                     nx = Some(stillImageFileValueV1.dimX),
                     ny = Some(stillImageFileValueV1.dimY),
                     path = makeSipiImageGetUrlFromFilename(stillImageFileValueV1)
+                )
+            case textFileValue: TextFileValueV1 =>
+                LocationV1(
+                    format_name = mimeType2V1Format(textFileValue.internalMimeType),
+                    origname = textFileValue.originalFilename,
+                    path = "to be written by my future self" // TODO: add route to Sipi to serve text files and create URL here
                 )
             case otherType => throw NotImplementedException(s"Type not yet implemented: ${otherType.valueTypeIri}")
         }
@@ -330,6 +336,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         OntologyConstants.KnoraBase.ListValue -> makeListValue,
         OntologyConstants.KnoraBase.IntervalValue -> makeIntervalValue,
         OntologyConstants.KnoraBase.StillImageFileValue -> makeStillImageValue,
+        OntologyConstants.KnoraBase.TextFileValue -> makeTextFileValue,
         OntologyConstants.KnoraBase.LinkValue -> makeLinkValue
     ), { key: IRI => s"Unknown value type: $key" })
 
@@ -572,6 +579,22 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt,
             qualityLevel = predicates(OntologyConstants.KnoraBase.QualityLevel).literals.head.toInt,
             isPreview = InputValidation.optionStringToBoolean(predicates.get(OntologyConstants.KnoraBase.IsPreview).flatMap(_.literals.headOption))
+        )
+    }
+
+    /**
+      * Converts a [[ValueProps]] into a [[TextFileValueV1]].
+      *
+      * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+      * @return a [[TextFileValueV1]].
+      */
+    private def makeTextFileValue(valueProps: ValueProps): ApiValueV1 = {
+        val predicates = valueProps.literalData
+
+        TextFileValueV1(
+            internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
+            internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
+            originalFilename = predicates(OntologyConstants.KnoraBase.OriginalFilename).literals.head
         )
     }
 
