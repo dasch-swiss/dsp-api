@@ -31,7 +31,6 @@ import org.knora.webapi.messages.v1.responder.{ApiStatusCodesV1, KnoraRequestV1,
 import org.knora.webapi.util.MessageUtil
 import spray.json.{JsNumber, JsObject}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 

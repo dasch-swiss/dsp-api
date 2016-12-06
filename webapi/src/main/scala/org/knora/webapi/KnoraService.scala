@@ -82,7 +82,7 @@ trait KnoraService {
     /**
       * Provide logging
       */
-    protected val log = akka.event.Logging(system, this.getClass)
+    protected val log = akka.event.Logging(system, "KnoraService")
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)

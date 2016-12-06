@@ -104,7 +104,6 @@ lazy val webApiLibs = Seq(
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion,
     "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
     // testing
     "org.scalatest" %% "scalatest" % "3.0.0" % "test",
@@ -120,8 +119,6 @@ lazy val webApiLibs = Seq(
     "ch.qos.logback" % "logback-classic" % "1.1.7",
     // input validation
     "commons-validator" % "commons-validator" % "1.4.1",
-    // pretty printing
-    "com.googlecode.kiama" % "kiama_2.11" % "1.8.0",
     // authentication
     "com.github.t3hnar" %% "scala-bcrypt" % "3.0",
     // caching
@@ -147,7 +144,7 @@ lazy val webApiLibs = Seq(
     "org.xmlunit" % "xmlunit-core" % "2.1.1",
     // testing
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
-    "com.typesafe.akka" %% "akka-http-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.0M3",
