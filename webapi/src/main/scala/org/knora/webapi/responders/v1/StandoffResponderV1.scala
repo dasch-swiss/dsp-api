@@ -21,6 +21,7 @@
 package org.knora.webapi.responders.v1
 
 import java.io.{File, IOException, StringReader}
+import java.nio.file.Files
 import java.util.UUID
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
@@ -30,6 +31,7 @@ import akka.actor.Status
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
+import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionPathRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
@@ -90,8 +92,17 @@ class StandoffResponderV1 extends ResponderV1 {
             // validate the provided mapping
             _ = validator.validate(new StreamSource(new StringReader(xml)))
 
-        // TODO: if the validation is successful, store the mapping using Sipi
+            // TODO: if the validation is successful, store the mapping using Sipi
+            tmpFile: File = InputValidation.createTempFile(settings)
+            _ = Files.write(tmpFile.toPath(), xml.getBytes());
 
+            sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? SipiResponderConversionPathRequestV1(
+                originalFilename = "mapping.xml",
+                originalMimeType = "application/xml",
+                source = tmpFile,
+                userProfile = userProfile)).mapTo[SipiResponderConversionResponseV1]
+
+            _ = println(sipiResponse)
 
         } yield CreateMappingResponseV1(filename = "", userdata = userProfile.userData)
 
