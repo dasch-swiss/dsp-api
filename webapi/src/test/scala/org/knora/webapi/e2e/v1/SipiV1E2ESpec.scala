@@ -120,6 +120,11 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SessionJsonProtoc
 
         "create a resource with a digital representation doing a multipart request containing the binary data (non GUI-case)" in {
 
+            /* for live testing do:
+             * inside sipi folder: ./local/bin/sipi -config config/sipi.knora-config.lua
+             * inside webapi folder ./_test_data/test_route/create_page_with_binaries.py
+             */
+
             val fileToSend = new File(RequestParams.pathToFile)
             // check if the file exists
             assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
