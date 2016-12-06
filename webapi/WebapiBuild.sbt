@@ -3,6 +3,7 @@ import sbt.Keys._
 import spray.revolver.RevolverPlugin._
 import com.typesafe.sbt.SbtNativePackager.autoImport._
 
+connectInput in run := true
 
 // Bring the sbt-aspectj settings into this build
 //aspectjSettings
@@ -90,28 +91,30 @@ lazy val webApiCommonSettings = Seq(
     name := "webapi",
     version := "0.1.0",
     ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
-    scalaVersion := "2.11.8"
+    scalaVersion := "2.12.1"
 )
 
-lazy val akkaVersion = "2.4.11"
+lazy val akkaVersion = "2.4.14"
+lazy val akkaHttpVersion = "10.0.0"
 
 lazy val webApiLibs = Seq(
     // akka
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-agent" % akkaVersion,
-    "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
-    "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
-    "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
-    "com.typesafe.akka" %% "akka-http-xml-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
+    "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion,
+    "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+    // testing
+    "org.scalatest" %% "scalatest" % "3.0.0" % "test",
     //CORS support
-    "ch.megard" %% "akka-http-cors" % "0.1.7",
+    "ch.megard" %% "akka-http-cors" % "0.1.10",
     // jena
     "org.apache.jena" % "apache-jena-libs" % "3.0.0" exclude("org.slf4j", "slf4j-log4j12"),
     "org.apache.jena" % "jena-text" % "3.0.0" exclude("org.slf4j", "slf4j-log4j12"),
     // http client
-    "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
+    // "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
     // logging
     "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
     "ch.qos.logback" % "logback-classic" % "1.1.7",
@@ -120,7 +123,7 @@ lazy val webApiLibs = Seq(
     // pretty printing
     "com.googlecode.kiama" % "kiama_2.11" % "1.8.0",
     // authentication
-    "com.github.t3hnar" %% "scala-bcrypt" % "2.4",
+    "com.github.t3hnar" %% "scala-bcrypt" % "3.0",
     // caching
     "net.sf.ehcache" % "ehcache" % "2.10.0",
     // monitoring - disabled for now
@@ -148,7 +151,7 @@ lazy val webApiLibs = Seq(
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
     "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.0M3",
-    "org.rogach" %% "scallop" % "2.0.3"
+    "org.rogach" %% "scallop" % "2.0.5"
 )
 
 lazy val javaRunOptions = Seq(
