@@ -155,7 +155,7 @@ case class SipiErrorConversionResponse(message: String) {
   * @param filename_thumb    filename of the thumbnail representation.
   * @param original_mimetype mime type of the original file.
   * @param original_filename name of the original file.
-  * @param file_type         type of file that has been converted (image, audio, video etc.)
+  * @param file_type         type of file that has been converted (image).
   */
 case class SipiImageConversionResponse(nx_full: Int,
                                        ny_full: Int,
@@ -168,6 +168,23 @@ case class SipiImageConversionResponse(nx_full: Int,
                                        original_mimetype: String,
                                        original_filename: String,
                                        file_type: String)
+
+/**
+  * Represents the response received from Sipi after a text file store request.
+  *
+  * @param mimetype mime type of the text file.
+  * @param charset encoding of the text file.
+  * @param filename filename of the text file.
+  * @param original_mimetype original mime type of the text file (equals `mimetype`).
+  * @param original_filename original name of the text file.
+  * @param file_type type of file that has been stored (text).
+  */
+case class SipiTextResponse(mimetype: String,
+                            charset: String,
+                            filename: String,
+                            original_mimetype: String,
+                            original_filename: String,
+                            file_type: String)
 
 
 object SipiConstants {
@@ -184,9 +201,10 @@ object SipiConstants {
     object FileType extends Enumeration {
         // the string representations correspond to Sipi's internal enum.
         val IMAGE = Value(0, "image")
-        val MOVIE = Value(1, "movie")
-        val AUDIO = Value(2, "audio")
-        val BINARY = Value(3, "binary")
+        val TEXT = Value(1, "text")
+        val MOVIE = Value(2, "movie")
+        val AUDIO = Value(3, "audio")
+        val BINARY = Value(4, "binary")
 
         val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
@@ -317,6 +335,7 @@ object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions
     implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat3(SipiFileInfoGetResponseV1)
     implicit val sipiErrorConversionResponseFormat = jsonFormat1(SipiErrorConversionResponse)
     implicit val sipiImageConversionResponseFormat = jsonFormat11(SipiImageConversionResponse)
+    implicit val textStoreResponseFormat = jsonFormat6(SipiTextResponse)
 }
 
 

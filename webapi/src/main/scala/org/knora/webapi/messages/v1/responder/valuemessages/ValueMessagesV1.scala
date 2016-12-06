@@ -1338,6 +1338,45 @@ case class MovingImageFileValueV1(internalMimeType: String,
 
 }
 
+case class TextFileValueV1(internalMimeType: String,
+                           internalFilename: String,
+                           originalFilename: String,
+                           originalMimeType: Option[String] = None) extends FileValueV1 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.TextFileValue
+
+    def toJsValue = ApiValueV1JsonProtocol.textFileValueV1Format.write(this)
+
+    override def toString = originalFilename
+
+    /**
+      * Checks if a new text file value would duplicate an existing text file value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case textFileValueV1: TextFileValueV1 => textFileValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of a text file value would be redundant given the current version of the value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case textFileValueV1: TextFileValueV1 => textFileValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
+
+}
+
 
 /**
   * Represents information about a version of a value.
@@ -1455,6 +1494,7 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
     implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat8(ValueGetResponseV1)
     implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat3(DateValueV1)
     implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat9(StillImageFileValueV1)
+    implicit val textFileValueV1Format: JsonFormat[TextFileValueV1] = jsonFormat4(TextFileValueV1)
     implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat4(MovingImageFileValueV1)
     implicit val valueVersionV1Format: JsonFormat[ValueVersionV1] = jsonFormat3(ValueVersionV1)
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)

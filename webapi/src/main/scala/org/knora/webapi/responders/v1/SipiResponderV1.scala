@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v1.responder.sipimessages.RepresentationV1JsonP
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiConstants.FileType
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.valuemessages.{ApiValueV1, FileValueV1, StillImageFileValueV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{ApiValueV1, FileValueV1, StillImageFileValueV1, TextFileValueV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{InputValidation, PermissionUtilV1}
@@ -203,6 +203,22 @@ class SipiResponderV1 extends ResponderV1 {
                             qualityName = Some(SipiConstants.StillImage.thumbnailQuality),
                             isPreview = true
                         ))
+
+                case SipiConstants.FileType.TEXT =>
+
+                    // parse response as a [[SipiTextResponse]]
+                    val textStoreResult = try {
+                        responseAsJson.convertTo[SipiTextResponse]
+                    } catch {
+                        case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiImageConversionResponse", e = e, log = log)
+                    }
+
+                    Vector(TextFileValueV1(
+                        internalMimeType = InputValidation.toSparqlEncodedString(textStoreResult.mimetype, () => throw BadRequestException(s"The internal MIME type returned by Sipi is invalid: '${textStoreResult.mimetype}")),
+                        internalFilename = InputValidation.toSparqlEncodedString(textStoreResult.filename, () => throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${textStoreResult.filename}")),
+                        originalFilename = InputValidation.toSparqlEncodedString(textStoreResult.original_filename, () => throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${textStoreResult.original_filename}")),
+                        originalMimeType = Some(InputValidation.toSparqlEncodedString(textStoreResult.mimetype, () => throw BadRequestException(s"The orignal MIME type returned by Sipi is invalid: '${textStoreResult.original_mimetype}")))
+                    ))
 
                 case unknownType => throw NotImplementedException(s"Could not handle file type $unknownType")
 

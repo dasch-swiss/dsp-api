@@ -164,6 +164,7 @@ object OntologyConstants {
         val IntervalValue = "http://www.knora.org/ontology/knora-base#IntervalValue"
         val StillImageFileValue = "http://www.knora.org/ontology/knora-base#StillImageFileValue"
         val MovingImageFileValue = "http://www.knora.org/ontology/knora-base#MovingImageFileValue"
+        val TextFileValue = "http://www.knora.org/ontology/knora-base#TextFileValue"
         val FileValue = "http://www.knora.org/ontology/knora-base#FileValue"
         val LinkValue = "http://www.knora.org/ontology/knora-base#LinkValue"
         val GeonameValue = "http://www.knora.org/ontology/knora-base#GeonameValue"

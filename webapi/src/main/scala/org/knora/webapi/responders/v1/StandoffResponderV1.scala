@@ -38,11 +38,12 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.standoff._
-import org.knora.webapi.util.{DateUtilV1, InputValidation, ScalaPrettyPrinter}
+import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.{BadRequestException, _}
 import org.xml.sax.SAXException
 
 import scala.concurrent.Future
+import scala.util.Try
 import scala.xml.{Node, NodeSeq, XML}
 
 /**
@@ -76,6 +77,10 @@ class StandoffResponderV1 extends ResponderV1 {
       */
     private def createMappingV1(xml: String, userProfile: UserProfileV1): Future[CreateMappingResponseV1] = {
 
+        // http://stackoverflow.com/questions/7087353/can-a-scala-for-loop-modify-variables-outside-its-scope
+        // FIXME Ben, I am so ugly and non functional style
+        var tmpFileG = new File("test")
+
         val createMappingFuture = for {
 
             factory <- Future(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI))
@@ -93,7 +98,7 @@ class StandoffResponderV1 extends ResponderV1 {
             _ = validator.validate(new StreamSource(new StringReader(xml)))
 
             // TODO: if the validation is successful, store the mapping using Sipi
-            tmpFile: File = InputValidation.createTempFile(settings)
+            tmpFile = InputValidation.createTempFile(settings)
             _ = Files.write(tmpFile.toPath(), xml.getBytes());
 
             sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? SipiResponderConversionPathRequestV1(
@@ -102,9 +107,14 @@ class StandoffResponderV1 extends ResponderV1 {
                 source = tmpFile,
                 userProfile = userProfile)).mapTo[SipiResponderConversionResponseV1]
 
-            _ = println(sipiResponse)
+            // delete the temporary file
 
-        } yield CreateMappingResponseV1(filename = "", userdata = userProfile.userData)
+
+        } yield {
+            // FIXME Ben
+            tmpFileG = tmpFile
+            CreateMappingResponseV1(filename = "", userdata = userProfile.userData)
+        }
 
         createMappingFuture.recoverWith {
             case validationException: SAXException => throw BadRequestException(s"the provided mapping is invalid: ${validationException.getMessage}")
@@ -112,6 +122,15 @@ class StandoffResponderV1 extends ResponderV1 {
             case ioException: IOException => throw NotFoundException(s"The schema could not be found")
 
             case unknown: Exception => throw BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
+        }
+
+        // delete the temporary file in either case
+        createMappingFuture.andThen {
+            case msg: Try[CreateMappingResponseV1] =>
+
+                // FIXME Ben
+                InputValidation.deleteFileFromTmpLocation(tmpFileG, log)
+
         }
     }
 
