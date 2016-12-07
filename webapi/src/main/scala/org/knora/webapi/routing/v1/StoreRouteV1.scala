@@ -27,6 +27,7 @@ import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreCon
 import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
@@ -58,7 +59,7 @@ object StoreRouteV1 extends Authenticator with StoreV1JsonProtocol {
                         val requestMessage = ResetTriplestoreContentRequestV1(apiRequest)
 
                         RouteUtilV1.runJsonRoute(
-                            requestMessage,
+                            Future(requestMessage),
                             requestContext,
                             settings,
                             responderManager,

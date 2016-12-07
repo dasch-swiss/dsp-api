@@ -29,6 +29,7 @@ import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanRequestV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
@@ -54,7 +55,7 @@ object CkanRouteV1 extends Authenticator {
                     val requestMessage = CkanRequestV1(project, limit, info, userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessage,
+                        Future(requestMessage),
                         requestContext,
                         settings,
                         responderManager,
