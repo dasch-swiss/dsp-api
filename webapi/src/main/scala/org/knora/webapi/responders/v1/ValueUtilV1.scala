@@ -62,7 +62,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * Creates a IIIF URL for accessing an image file via Sipi.
       *
       * @param imageFileValueV1 the image file value representing the image.
-      * @return a Sipi URL.
+      * @return a Sipi IIIF URL.
       */
     def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String = {
         if (!imageFileValueV1.isPreview) {
@@ -73,6 +73,16 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             // thumbnail
             makeSipiImagePreviewGetUrlFromFilename(imageFileValueV1.internalFilename)
         }
+    }
+
+    /**
+      * Creates a URL for accessing a text file via Sipi.
+      *
+      * @param textFileValue the text file value representing the text file.
+      * @return a Sipi URL.
+      */
+    def makeSipiTextFileGetUrlFromFilename(textFileValue: TextFileValueV1): String = {
+        s"${settings.sipieFileServerGetUrl}/${textFileValue.internalFilename}"
     }
 
     // A Map of MIME types to Knora API v1 binary format name.
@@ -119,7 +129,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                 LocationV1(
                     format_name = mimeType2V1Format(textFileValue.internalMimeType),
                     origname = textFileValue.originalFilename,
-                    path = "to be written by my future self" // TODO: add route to Sipi to serve text files and create URL here
+                    path = makeSipiTextFileGetUrlFromFilename(textFileValue)
                 )
             case otherType => throw NotImplementedException(s"Type not yet implemented: ${otherType.valueTypeIri}")
         }
