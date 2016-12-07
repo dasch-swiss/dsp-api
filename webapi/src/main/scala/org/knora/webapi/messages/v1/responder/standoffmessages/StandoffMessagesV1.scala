@@ -99,11 +99,12 @@ case class XMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[S
   * @param projectIri   the project in which the text value is to be added.
   * @param resourceIri  the IRI of the resource to which the text value should be added.
   * @param propertyIri  the IRI of the property that should receive the text value.
+  * @param mappingIri   the IRI of the mapping resource that is used to turn the XML into standoff.
   * @param xml          the xml representing the text with markup.
   * @param userProfile  the profile of the user making the request.
   * @param apiRequestID the ID of this API request.
   */
-case class CreateStandoffRequestV1(projectIri: IRI, resourceIri: IRI, propertyIri: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID) extends StandoffResponderRequestV1
+case class CreateStandoffRequestV1(projectIri: IRI, resourceIri: IRI, propertyIri: IRI, mappingIri: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID) extends StandoffResponderRequestV1
 
 /**
   *

@@ -51,18 +51,28 @@ object StandoffRouteV1 extends Authenticator {
                 entity(as[String]) { xml: String =>
                     requestContext =>
 
-                        // iris should contain the resource IRI, the property IRI, and the project IRI
-                        if (iris.size != 3) {
+                        // TODO: make this a multipart request with JSON for the params and a part for the XML
+
+                        // iris should contain the resource IRI, the property IRI, the project IRI, and the mapping IRI
+                        if (iris.size != 4) {
                             throw BadRequestException(s"Expected two segments after segment 'standoff/': resourceIri/propertyIri/projectIri")
                         }
 
                         val resourceIri = InputValidation.toIri(iris(0), () => throw BadRequestException(s"invalid IRI ${iris(0)}"))
                         val propertyIri = InputValidation.toIri(iris(1), () => throw BadRequestException(s"invalid IRI ${iris(1)}"))
                         val projectIri = InputValidation.toIri(iris(2), () => throw BadRequestException(s"invalid IRI ${iris(2)}"))
+                        val mappingIri = InputValidation.toIri(iris(3), () => throw BadRequestException(s"invalid IRI ${iris(3)}"))
 
 
                         val userProfile = getUserProfileV1(requestContext)
-                        val requestMessage = CreateStandoffRequestV1(projectIri = projectIri, resourceIri = resourceIri, propertyIri = propertyIri, xml = xml, userProfile = userProfile, apiRequestID = UUID.randomUUID)
+                        val requestMessage = CreateStandoffRequestV1(
+                            projectIri = projectIri,
+                            resourceIri = resourceIri,
+                            propertyIri = propertyIri,
+                            mappingIri = mappingIri,
+                            xml = xml,
+                            userProfile = userProfile,
+                            apiRequestID = UUID.randomUUID)
 
                         RouteUtilV1.runJsonRoute(
                             requestMessage,
@@ -92,6 +102,8 @@ object StandoffRouteV1 extends Authenticator {
             post {
                 entity(as[String]) { xml:String =>
                     requestContext =>
+
+                        // TODO: make this a multipart request with JSON for the params and a part for the XML
 
                         val projectIri = InputValidation.toIri(iri, () => throw BadRequestException("invalid Iri"))
 
