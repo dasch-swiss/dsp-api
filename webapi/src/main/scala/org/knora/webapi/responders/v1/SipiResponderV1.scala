@@ -23,6 +23,7 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
+import akka.http.scaladsl.model.HttpEntity.Strict
 import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
@@ -34,7 +35,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{ApiValueV1, FileValueV1, StillImageFileValueV1, TextFileValueV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{InputValidation, PermissionUtilV1}
+import org.knora.webapi.util.{InputValidation, PermissionUtilV1, ScalaPrettyPrinter}
 import spray.json._
 
 import scala.concurrent.Future
@@ -142,17 +143,31 @@ class SipiResponderV1 extends ResponderV1 {
 
             /* get json from response body */
             responseAsJson: JsValue <- statusInt match {
-                case 2 => conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8").parseJson) // returns a Future(Map(...))
+                case 2 => conversionResultResponse.entity.toStrict(5.seconds).map(
+                    (strict: Strict) =>
+                        try {
+                            strict.data.decodeString("UTF-8").parseJson
+                        } catch {
+                            // the Sipi response message could not be parsed correctly
+                            case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = e, log = log)
+
+                            case all: Throwable => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = all, log = log)
+                        }
+                ) // returns a Future(Map(...))
                 case 4 =>
                     // Bad Request: it is the user's responsibility
-                    val errMessage: Future[SipiErrorConversionResponse] = try {
-                        // parse answer as a Sipi error message
-                        val sef: Future[SipiErrorConversionResponse] = conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8").parseJson.convertTo[SipiErrorConversionResponse])
-                        sef
-                    } catch {
-                        // the Sipi error message could not be parsed correctly
-                        case e: DeserializationException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
-                    }
+                    val errMessage: Future[SipiErrorConversionResponse] = conversionResultResponse.entity.toStrict(5.seconds).map(
+                        (strict: Strict) =>
+                            try {
+                                strict.data.decodeString("UTF-8").parseJson.convertTo[SipiErrorConversionResponse]
+                            } catch {
+                                // the Sipi error message could not be parsed correctly
+                                case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
+
+                                case all: Throwable => throw SipiException(message = "JSON error response returned by Sipi is not valid JSON", e = all, log = log)
+                            }
+                    )
+
                     // most probably the user sent invalid data which caused a Sipi error
                     errMessage.map(errMsg => throw BadRequestException(s"Sipi returned a non successful HTTP status code $httpStatusCode: $errMsg"))
                 case 5 =>
