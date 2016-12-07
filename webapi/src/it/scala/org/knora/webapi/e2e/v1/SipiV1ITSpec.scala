@@ -19,26 +19,19 @@ package org.knora.webapi.e2e.v1
 import java.io.File
 import java.nio.file.{Files, Paths}
 
-import akka.actor.ActorSystem
+import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
-import akka.http.scaladsl.model.headers.{`Set-Cookie`, _}
-import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.{E2ESpec, FileWriteException, SharedTestData}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
-import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
 import org.knora.webapi.messages.v1.responder.valuemessages.CreateRichtextV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.responders.v1.SourcePath
-import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
+import org.knora.webapi.{FileWriteException, ITSpec}
 import spray.json._
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
-object SipiV1E2ESpec {
+object SipiV1ITSpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -47,9 +40,9 @@ object SipiV1E2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing sipi integration.
+  * End-to-End (E2E) test specification for testing sipi integration. A running SIPI server is needed!
   */
-class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
+class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProtocol {
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
@@ -57,12 +50,19 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SessionJsonProtoc
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
+        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
-    private val username = SharedTestData.rootUserProfileV1.userData.username.get
+    private val username = "root"
     private val password = "test"
+
+    "Check if SIPI is running" in {
+        // Contact the SIPI '/info' route, to see if SIPI is running
+        val request = Get(baseSipiUrl + "/info")
+        val response = singleAwaitingRequest(request, 1.second)
+        assert(response.status == StatusCodes.OK, s"SIPI is probably not running!")
+    }
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
@@ -118,7 +118,7 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SessionJsonProtoc
 
     "The Resources Endpoint" should {
 
-        "create a resource with a digital representation doing a multipart request containing the binary data (non GUI-case)" in {
+        "create an 'incunabula:page' with binary data" in {
 
             /* for live testing do:
              * inside sipi folder: ./local/bin/sipi -config config/sipi.knora-config.lua
@@ -143,8 +143,20 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SessionJsonProtoc
 
             RequestParams.createTmpFileDir()
             val request = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
-            val response = singleAwaitingRequest(request, 15.seconds)
+            val response = singleAwaitingRequest(request, 20.seconds)
             assert(response.status === StatusCodes.OK)
         }
+
+        "create an 'incunabula:page' with parameters" in {
+
+
+
+        }
+
+        "change an 'incunabula:page' with binary data" in {}
+
+        "change an 'incunabula:page' with parameters" in {}
+
+        "create an 'anything:thing'" in {}
     }
 }
