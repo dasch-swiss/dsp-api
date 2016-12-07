@@ -373,6 +373,8 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
 
             case (acc, hierarchicalTag: HierarchicalStandoffTag) =>
                 acc :+ hierarchicalTag
+
+            case (_, other) => throw InvalidStandoffException(s"Unrecognised standoff object $other")
         }
 
         val groupedTags: Map[Option[Int], Seq[IndexedStandoffTag]] = tags.groupBy(_.parentIndex)
@@ -390,7 +392,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
                     xmlString = stringBuilder
                 )
 
-            case Some(children) =>
+            case Some(_) =>
                 throw InvalidStandoffException("The standoff cannot be serialised to XML because it would have multiple root nodes")
 
             case None =>
@@ -408,7 +410,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
       * @return the differences between the two texts.
       */
     def makeStandoffDiffs(baseText: String, derivedText: String): Seq[StandoffDiff] = {
-        import scala.collection.JavaConversions._
+        import scala.collection.JavaConverters._
 
         case class DiffConversionState(standoffDiffs: Vector[StandoffDiff] = Vector.empty[StandoffDiff],
                                        basePos: Int = 0,
@@ -416,7 +418,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
 
         val diffList = diffMatchPatch.diff_main(baseText, derivedText)
         diffMatchPatch.diff_cleanupSemantic(diffList)
-        val diffs: Seq[Diff] = diffList
+        val diffs: Seq[Diff] = diffList.asScala
 
         val conversionResult = diffs.foldLeft(DiffConversionState()) {
             case (conversionState, diff) =>
