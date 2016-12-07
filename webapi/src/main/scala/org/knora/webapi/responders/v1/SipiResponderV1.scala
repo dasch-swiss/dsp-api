@@ -33,7 +33,7 @@ import org.knora.webapi.messages.v1.responder.sipimessages.SipiConstants.FileTyp
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{ApiValueV1, FileValueV1, StillImageFileValueV1, TextFileValueV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{InputValidation, PermissionUtilV1, ScalaPrettyPrinter}
 import spray.json._
@@ -79,22 +79,24 @@ class SipiResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 filename = filename
             ).toString())
+
             queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-            rows = queryResponse.results.bindings
+            rows: Seq[VariableResultsRow] = queryResponse.results.bindings
             // check if rows were found for the given filename
-            _ = if (rows.size == 0) throw BadRequestException(s"No file value was found for filename $filename")
-            valueProps = valueUtilV1.createValueProps(filename, rows)
-            valueV1: ApiValueV1 = valueUtilV1.makeValueV1(valueProps)
-            path = valueV1 match {
-                case imageValueV1: StillImageFileValueV1 => imageValueV1.internalFilename // return internal filename associated with the given file value Iri to Sipi
-                // TODO: prepend file value specific cases for each file value type (movie, audio etc.)
-                case otherFileValueV1: FileValueV1 => throw NotImplementedException(s"Handling of file value type ${otherFileValueV1.valueTypeIri} not implemented yet")
-                case otherValue => throw InconsistentTriplestoreDataException(s"Value $filename is not a FileValue, it is an instance of ${otherValue.valueTypeIri}")
+            _ = if (rows.isEmpty) throw BadRequestException(s"No file value was found for filename $filename")
+
+            // check that only one file value was found (by grouping by file value IRI)
+            groupedByResourceIri = rows.groupBy {
+                (row: VariableResultsRow) =>
+                    row.rowMap("fileValue")
             }
+            _ = if(groupedByResourceIri.size > 1) throw InconsistentTriplestoreDataException(s"filename $filename is referred to from more than one file value")
+
+            valueProps = valueUtilV1.createValueProps(filename, rows)
+
             permissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1WithValueProps(filename, valueProps, userProfile)
         } yield SipiFileInfoGetResponseV1(
-            permissionCode = permissionCode,
-            filepath = permissionCode.map(_ => path),
+            permissionCode = permissionCode.getOrElse(0), // Sipi expects a permission code from 0 to 8
             userdata = userProfile.userData
         )
     }

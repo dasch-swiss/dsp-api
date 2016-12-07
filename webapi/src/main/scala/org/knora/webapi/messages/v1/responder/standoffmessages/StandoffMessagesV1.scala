@@ -49,10 +49,10 @@ case class CreateMappingRequestV1(xml: String, projectIri: IRI, userProfile: Use
 /**
   * Provides the name of the file containing the mapping.
   *
-  * @param filename the file name of the mapping that has been created.
+  * @param resourceIri the Iri of the resource (knora-base:XMLToStandoffMapping) representing the mapping that has been created.
   * @param userdata information about the user that made the request.
   */
-case class CreateMappingResponseV1(filename: String, userdata: UserDataV1) extends KnoraResponseV1 {
+case class CreateMappingResponseV1(resourceIri: IRI, userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = RepresentationV1JsonProtocol.createMappingResponseV1Format.write(this)
 }
 

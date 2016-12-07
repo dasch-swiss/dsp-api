@@ -33,7 +33,7 @@ prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?objPred ?objObj
+SELECT ?fileValue ?objPred ?objObj
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -41,6 +41,9 @@ SELECT ?objPred ?objObj
 WHERE {
 
     ?fileValue knora-base:internalFilename "@filename" ;
+        knora-base:isDeleted false .
+
+    ?resource ?prop ?fileValue ;
         knora-base:isDeleted false .
 
 
@@ -53,8 +56,9 @@ WHERE {
         @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
 
         ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
-        ?resource ?prop ?fileValue .
-        ?resource knora-base:attachedToProject ?resourceProject .
+        ?resource ?prop ?fileValue ;
+            knora-base:isDeleted false ;
+            knora-base:attachedToProject ?resourceProject .
 
         OPTIONAL {
             ?fileValue knora-base:attachedToProject ?valueProject .
@@ -68,9 +72,10 @@ WHERE {
         @* Return the base path of whichever project was found. *@
 
         ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
-        ?resource ?prop ?fileValue .
-        ?resource knora-base:attachedToProject ?resourceProject .
-        ?resourceProject knora-base:projectBasepath ?resourceProjectBasepath .
+        ?resource ?prop ?fileValue ;
+            knora-base:isDeleted false ;
+            knora-base:attachedToProject ?resourceProject ;
+            knora-base:projectBasepath ?resourceProjectBasepath .
 
         OPTIONAL {
             ?fileValue knora-base:attachedToProject ?valueProject .

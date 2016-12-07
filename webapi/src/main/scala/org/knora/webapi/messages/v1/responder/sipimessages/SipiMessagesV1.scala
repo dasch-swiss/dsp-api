@@ -172,12 +172,12 @@ case class SipiImageConversionResponse(nx_full: Int,
 /**
   * Represents the response received from Sipi after a text file store request.
   *
-  * @param mimetype mime type of the text file.
-  * @param charset encoding of the text file.
-  * @param filename filename of the text file.
+  * @param mimetype          mime type of the text file.
+  * @param charset           encoding of the text file.
+  * @param filename          filename of the text file.
   * @param original_mimetype original mime type of the text file (equals `mimetype`).
   * @param original_filename original name of the text file.
-  * @param file_type type of file that has been stored (text).
+  * @param file_type         type of file that has been stored (text).
   */
 case class SipiTextResponse(mimetype: String,
                             charset: String,
@@ -257,10 +257,9 @@ case class SipiFileInfoGetRequestV1(filename: String, userProfile: UserProfileV1
   * Represents the Knora API v1 JSON response to a request for a information about a `FileValue`.
   *
   * @param permissionCode a code representing the user's maximum permission on the file.
-  * @param filepath       the path to the file.
+  * @param userdata information about the user that made the request.
   */
-case class SipiFileInfoGetResponseV1(permissionCode: Option[Int],
-                                     filepath: Option[String],
+case class SipiFileInfoGetResponseV1(permissionCode: Int,
                                      userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = RepresentationV1JsonProtocol.sipiFileInfoGetResponseV1Format.write(this)
 }
@@ -331,9 +330,7 @@ object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions
     }
 
 
-
-
-    implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat3(SipiFileInfoGetResponseV1)
+    implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat2(SipiFileInfoGetResponseV1)
     implicit val sipiErrorConversionResponseFormat = jsonFormat1(SipiErrorConversionResponse)
     implicit val sipiImageConversionResponseFormat = jsonFormat11(SipiImageConversionResponse)
     implicit val textStoreResponseFormat = jsonFormat6(SipiTextResponse)

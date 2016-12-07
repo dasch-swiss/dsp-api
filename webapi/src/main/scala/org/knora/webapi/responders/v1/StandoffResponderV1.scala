@@ -119,7 +119,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
 
         } yield {
-            CreateMappingResponseV1(filename = "", userdata = userProfile.userData)
+            CreateMappingResponseV1(resourceIri = createResourceResponse.res_id, userdata = userProfile.userData)
         }
 
         createMappingFuture.recoverWith {
