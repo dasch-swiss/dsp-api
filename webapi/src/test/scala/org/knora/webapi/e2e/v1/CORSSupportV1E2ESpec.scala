@@ -81,8 +81,7 @@ class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) with Tri
                 `Access-Control-Allow-Methods`(corsSettings.allowedMethods),
                 //`Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Authorization"),
                 `Access-Control-Max-Age`(1800),
-                `Access-Control-Allow-Credentials`(true),
-                Server("akka-http/2.4.11")
+                `Access-Control-Allow-Credentials`(true)
             )
         }
 
