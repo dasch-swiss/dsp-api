@@ -24,15 +24,12 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.{BadRequestException, SettingsImpl}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
-
-import scala.xml.NodeSeq
+import org.knora.webapi.{BadRequestException, SettingsImpl}
 
 
 /**
