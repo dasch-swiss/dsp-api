@@ -2,6 +2,6 @@
 
 set -e
 
-sysctl -w kern.ipc.somaxconn=12000
-sysctl -w net.inet.tcp.msl=1000
-sysctl -w net.inet.ip.portrange.first=32768
+sysctl kern.ipc.somaxconn=12000
+sysctl net.inet.tcp.msl=1000
+sysctl net.inet.ip.portrange.first=32768
