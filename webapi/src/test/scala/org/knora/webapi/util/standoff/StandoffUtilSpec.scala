@@ -22,7 +22,7 @@ package org.knora.webapi.util.standoff
 
 import java.util.UUID
 
-import org.knora.webapi.util.{KnoraIdUtil, ScalaPrettyPrinter}
+import org.knora.webapi.util.KnoraIdUtil
 import org.scalatest.{Matchers, WordSpec}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
