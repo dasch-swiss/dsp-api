@@ -110,11 +110,11 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         }
         "called, the 'authenticateCredentials' method " should {
             "succeed with the correct 'username' / correct 'password' " in {
-                Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordCorrect, false, system) should be("0")
+                Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordCorrect, false, system, executionContext) should be("0")
             }
             "fail with correct 'username' / wrong 'password' " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordWrong, false, system)
+                    Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordWrong, false, system, executionContext)
                 }
             }
         }

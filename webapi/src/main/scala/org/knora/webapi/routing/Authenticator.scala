@@ -34,7 +34,6 @@ import org.knora.webapi.util.CacheUtil
 import org.slf4j.LoggerFactory
 import spray.json.{JsNumber, JsObject, JsString}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.{Success, Try}
@@ -68,7 +67,7 @@ trait Authenticator {
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
       *         the generated session id.
       */
-    def doLogin(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
+    def doLogin(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
         val sId = extractCredentialsAndAuthenticate(requestContext, session = true)
 
@@ -140,7 +139,7 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[RequestContext]]
       */
-    def doAuthenticate(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
+    def doAuthenticate(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
         val sId = extractCredentialsAndAuthenticate(requestContext, session = false)
 
@@ -208,7 +207,7 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[UserProfileV1]]
       */
-    def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem): UserProfileV1 = {
+    def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
         val settings = Settings(system)
         if (settings.skipAuthentication) {
             UserProfileV1(UserDataV1(settings.fallbackLanguage)).getCleanUserProfileV1
@@ -246,7 +245,7 @@ trait Authenticator {
 
 /**
   * This companion object holds all private methods used in the trait. This division is needed so that we can test
-  * the private methods directly with scalatest as described in [[https://groups.google.com/forum/#!topic/scalatest-users/FeaO__f1dN4]]
+  * the private methods directly with scalatest as described in [[https://groups.google.com/forum/#!topic/scalatest-users/FeaO\_\_f1dN4]]
   * and [[http://doc.scalatest.org/2.2.6/index.html#org.scalatest.PrivateMethodTester]]
   */
 object Authenticator {
@@ -274,7 +273,7 @@ object Authenticator {
       *         extracted and authenticated. In the case where the credentials could not be extracted or could be
       *         extracted but not authenticated, a corresponding exception is thrown.
       */
-    private def extractCredentialsAndAuthenticate(requestContext: RequestContext, session: Boolean)(implicit system: ActorSystem): String = {
+    private def extractCredentialsAndAuthenticate(requestContext: RequestContext, session: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): String = {
         extractCredentials(requestContext) match {
             case Some((u, p)) => authenticateCredentials(u, p, session)
             case None => throw BadCredentialsException(BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE)
@@ -292,7 +291,7 @@ object Authenticator {
       * @param system   the current [[ActorSystem]]
       * @return a [[Try[String]] which is the session id under which the profile is stored if authentication was successful.
       */
-    private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem): String = {
+    private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): String = {
         val userProfileV1 = getUserProfileByUsername(username)
 
         if (userProfileV1.passwordMatch(password)) {
