@@ -15,7 +15,7 @@
 
 
 ### Default Object Access Permissions on knora-base:LinkObj resource class
-<http://data.knora.org/permissions/001-1>
+<http://data.knora.org/permissions/001-d1>
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
@@ -28,7 +28,7 @@
 
 
 ### Default Object Access Permissions on knora-base:Region resource class
-<http://data.knora.org/permissions/001-2>
+<http://data.knora.org/permissions/001-d2>
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
@@ -41,7 +41,7 @@
 
 
 ### Default Object Access Permissions on knora-base:hasStillImageFileValue property
-<http://data.knora.org/permissions/001-3>
+<http://data.knora.org/permissions/001-d3>
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
@@ -60,7 +60,7 @@
 ##########################################################
 
 ### Administrative Permissions on ProjectMember
-<http://data.knora.org/permissions/002-1>
+<http://data.knora.org/permissions/002-a1>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -72,7 +72,7 @@
 
 
 ### Administrative Permissions on ProjectAdmin
-<http://data.knora.org/permissions/002-2>
+<http://data.knora.org/permissions/002-a2>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -84,7 +84,7 @@
 
 
 ### Default Object Access Permissions on ProjectMember Group
-<http://data.knora.org/permissions/002-3>
+<http://data.knora.org/permissions/002-d1>
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
@@ -103,7 +103,7 @@
 ##########################################################
 
 ### Administrative Permissions on ProjectMember
-<http://data.knora.org/permissions/003-1>
+<http://data.knora.org/permissions/003-a1>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -115,7 +115,7 @@
 
 
 ### Administrative Permissions on ProjectAdmin
-<http://data.knora.org/permissions/003-2>
+<http://data.knora.org/permissions/003-a2>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -127,7 +127,7 @@
 
 
 ### Default Object Access Permissions on ProjectMember Group
-<http://data.knora.org/permissions/003-3>
+<http://data.knora.org/permissions/003-d1>
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
@@ -139,7 +139,7 @@
 
 
 ### Default Object Access Permissions on incunabula:Book resource class
-<http://data.knora.org/permissions/003-4>
+<http://data.knora.org/permissions/003-d2>
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
@@ -151,7 +151,7 @@
 
 
 ### Default Object Access Permissions on incunabula:Page resource class
-<http://data.knora.org/permissions/003-5>
+<http://data.knora.org/permissions/003-d3>
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
@@ -170,7 +170,7 @@
 ##########################################################
 
 ### Administrative Permissions on ProjectMember
-<http://data.knora.org/permissions/004-1>
+<http://data.knora.org/permissions/004-a1>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -182,7 +182,7 @@
 
 
 ### Administrative Permissions on ProjectAdmin
-<http://data.knora.org/permissions/004-2>
+<http://data.knora.org/permissions/004-a2>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -194,7 +194,7 @@
 
 
 ### Default Object Access Permissions on ProjectMember Group
-<http://data.knora.org/permissions/004-3>
+<http://data.knora.org/permissions/004-d1>
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
@@ -213,7 +213,7 @@
 ##########################################################
 
 ### Administrative Permissions on ProjectMember
-<http://data.knora.org/permissions/005-1>
+<http://data.knora.org/permissions/005-a1>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -225,7 +225,7 @@
 
 
 ### Administrative Permissions on ProjectAdmin
-<http://data.knora.org/permissions/005-2>
+<http://data.knora.org/permissions/005-a2>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -237,7 +237,7 @@
 
 
 ### Default Object Access Permissions on ProjectMember Group
-<http://data.knora.org/permissions/005-3>
+<http://data.knora.org/permissions/005-d1>
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 

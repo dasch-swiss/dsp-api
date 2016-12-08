@@ -24,7 +24,7 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
-import org.knora.webapi.messages.v1.responder.permissionmessages.DefaultObjectAccessPermissionsStringForPropertyTypeGetV1
+import org.knora.webapi.messages.v1.responder.permissionmessages.DefaultObjectAccessPermissionsStringForPropertyGetV1
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
@@ -178,9 +178,9 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // FIXME: Query the PermissionsResponder for Property DOAP
             defaultObjectAccessPermissions <- {
-                responderManager ? DefaultObjectAccessPermissionsStringForPropertyTypeGetV1(
+                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = createValueRequest.projectIri,
-                    propertyTypeIri = createValueRequest.propertyIri,
+                    propertyIri = createValueRequest.propertyIri,
                     userProfile = createValueRequest.userProfile
                 )
             }.mapTo[Option[String]]

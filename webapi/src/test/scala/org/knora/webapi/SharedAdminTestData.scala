@@ -285,6 +285,8 @@ object SharedAdminTestData {
     /*************************************/
 
     val INCUNABULA_PROJECT_IRI = "http://data.knora.org/projects/77275339"
+    val INCUNABULA_BOOK_RESOURCE_CLASS = "http://www.knora.org/ontology/incunabula#Book"
+    val INCUNABULA_PAGE_RESOURCE_CLASS = "http://www.knora.org/ontology/incunabula#Page"
 
     /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
     def incunabulaUser = UserProfileV1(

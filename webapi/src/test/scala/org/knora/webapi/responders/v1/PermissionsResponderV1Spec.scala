@@ -23,7 +23,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.SharedPermissionsTestData._
 import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.permissionmessages._
+import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringForResourceClassGetV1, _}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
@@ -103,7 +103,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     SharedAdminTestData.rootUser
                 )
                 expectMsg(AdministrativePermissionsForProjectGetResponseV1(
-                    Seq(perm002_1.p, perm002_2.p)
+                    Seq(perm002_a1.p, perm002_a2.p)
                 ))
             }
 
@@ -113,28 +113,90 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     groupIri = OntologyConstants.KnoraBase.ProjectMember,
                     SharedAdminTestData.rootUser
                 )
-                expectMsg(AdministrativePermissionForProjectGroupGetResponseV1(perm002_1.p))
+                expectMsg(AdministrativePermissionForProjectGroupGetResponseV1(perm002_a1.p))
             }
 
             "return AdministrativePermission for IRI " in {
                 actorUnderTest ! AdministrativePermissionForIriGetRequestV1(
-                    administrativePermissionIri = perm002_1.iri,
+                    administrativePermissionIri = perm002_a1.iri,
                     SharedAdminTestData.rootUser
                 )
-                expectMsg(AdministrativePermissionForIriGetResponseV1(perm002_1.p))
+                expectMsg(AdministrativePermissionForIriGetResponseV1(perm002_a1.p))
             }
 
         }
 
+        "asked to create an administrative permission" should {
+
+            "fail and return a 'BadRequestException' when project does not exist" ignore {}
+
+            "fail and return a  'BadRequestException' when group does not exist" ignore {}
+
+            "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" ignore {}
+
+            "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
+                val iri = knoraIdUtil.makeRandomPermissionIri
+                actorUnderTest ! AdministrativePermissionCreateRequestV1(
+                    newAdministrativePermissionV1 = NewAdministrativePermissionV1(
+                        iri = iri,
+                        forProject = IMAGES_PROJECT_IRI,
+                        forGroup = OntologyConstants.KnoraBase.ProjectMember,
+                        hasOldPermissions = Seq.empty[PermissionV1],
+                        hasNewPermissions = Seq(PermissionV1.ProjectResourceCreateAllPermission)
+                    ),
+                    userProfileV1 = rootUser
+                )
+                expectMsg(Failure(DuplicateValueException(s"Permission for project: '${IMAGES_PROJECT_IRI}' and group: '${OntologyConstants.KnoraBase.ProjectMember}' combination already exists.")))
+            }
+
+            "create and return an administrative permission " ignore {}
+        }
+
+        "queried about object access permissions " should {
+
+            "return object access permissions for a resource" in {
+                actorUnderTest ! ObjectAccessPermissionsForResourceGetV1(
+                    projectIri = IMAGES_PROJECT_IRI,
+                    resourceIri = "",
+                    userProfile = SharedAdminTestData.incunabulaUser
+                )
+                expectMsg(AdministrativePermissionsForProjectGetResponseV1(
+                    Seq(perm002_a1.p, perm002_a2.p)
+                ))
+            }
+
+            "return object access permissoins for a value" in {
+                actorUnderTest ! ObjectAccessPermissionsForValueGetV1(
+                    projectIri = IMAGES_PROJECT_IRI,
+                    valueIri = "",
+                    userProfile = SharedAdminTestData.incunabulaUser
+                )
+                expectMsg(AdministrativePermissionForProjectGroupGetResponseV1(perm002_a1.p))
+            }
+
+        }
+
+
+
         "queried about default object access permissions " should {
 
-            "return all DefaultObjectAccessPermissions for project " in {
+            "return all DefaultObjectAccessPermissions for project" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsForProjectGetRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
                     SharedAdminTestData.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionsForProjectGetResponseV1(
-                    defaultObjectAccessPermissions = Seq(perm002_3.p)
+                    defaultObjectAccessPermissions = Seq(perm002_d1.p)
+                ))
+            }
+
+            "return DefaultObjectAccessPermission for IRI" in {
+                actorUnderTest ! DefaultObjectAccessPermissionForIriGetRequestV1(
+                    defaultObjectAccessPermissionIri = perm002_d1.iri,
+                    SharedAdminTestData.rootUser
+                )
+                expectMsg(DefaultObjectAccessPermissionForIriGetResponseV1(
+                    defaultObjectAccessPermission = perm002_d1.p
                 ))
             }
 
@@ -147,92 +209,65 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     userProfile = SharedAdminTestData.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionGetResponseV1(
-                    defaultObjectAccessPermission = perm002_3.p
+                    defaultObjectAccessPermission = perm002_d1.p
                 ))
             }
 
-            "return DefaultObjectAccessPermission for IRI" in {
-                actorUnderTest ! DefaultObjectAccessPermissionForIriGetRequestV1(
-                    defaultObjectAccessPermissionIri = perm002_3.iri,
-                    SharedAdminTestData.rootUser
+            "return DefaultObjectAccessPermission for project and resource class ('incunabula:Page')" in {
+                actorUnderTest ! DefaultObjectAccessPermissionGetRequestV1(
+                    projectIRI = IMAGES_PROJECT_IRI,
+                    groupIRI = None,
+                    resourceClassIRI = Some(INCUNABULA_BOOK_RESOURCE_CLASS),
+                    propertyIRI = None,
+                    userProfile = SharedAdminTestData.rootUser
                 )
-                expectMsg(DefaultObjectAccessPermissionForIriGetResponseV1(
-                    defaultObjectAccessPermission = perm002_3.p
+                expectMsg(DefaultObjectAccessPermissionGetResponseV1(
+                    defaultObjectAccessPermission = perm002_d1.p
                 ))
             }
 
-        }
-
-        "asked to create an administrative permission" should {
-
-            "fail and return a 'BadRequestException' when project does not exist" ignore {
-                fail
-            }
-
-            "fail and return a  'BadRequestException' when group does not exist" ignore {
-                fail
-            }
-
-            "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" ignore {
-                fail
-            }
-
-            "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
-                val iri = knoraIdUtil.makeRandomPermissionIri
-                actorUnderTest ! AdministrativePermissionCreateRequestV1(
-                    newAdministrativePermissionV1 = NewAdministrativePermissionV1(
-                        iri = iri,
-                        forProject = IMAGES_PROJECT_IRI,
-                        forGroup = OntologyConstants.KnoraBase.ProjectMember,
-                        hasPermissions = Seq(PermissionV1.ProjectResourceCreateAllPermission)
-                    ),
-                    userProfileV1 = rootUser
+            "return DefaultObjectAccessPermission for project and property ('knora-base:hasStillImageFileValue')" in {
+                actorUnderTest ! DefaultObjectAccessPermissionGetRequestV1(
+                    projectIRI = SYSTEM_PROJECT_IRI,
+                    groupIRI = None,
+                    resourceClassIRI = None,
+                    propertyIRI = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
+                    userProfile = SharedAdminTestData.rootUser
                 )
-                expectMsg(Failure(DuplicateValueException(s"Permission for project: '${IMAGES_PROJECT_IRI}' and group: '${OntologyConstants.KnoraBase.ProjectMember}' combination already exists.")))
+                expectMsg(DefaultObjectAccessPermissionGetResponseV1(
+                    defaultObjectAccessPermission = perm002_d1.p
+                ))
             }
-
-            "create and return an administrative permission " ignore {
-                fail
-            }
-
         }
 
         "asked to create a default object access permission" should {
 
-            "fail and return a 'BadRequestException' when project does not exist" ignore {
-                fail
-            }
+            "create a DefaultObjectAccessPermission for project and group" ignore {}
 
-            "fail and return a  'BadRequestException' when resource class does not exist" ignore {
-                fail
-            }
+            "create a DefaultObjectAccessPermission for project and resource class" ignore {}
 
-            "fail and return a  'BadRequestException' when property does not exist" ignore {
-                fail
-            }
+            "create a DefaultObjectAccessPermission for project and property" ignore {}
+
+            "fail and return a 'BadRequestException' when project does not exist" ignore {}
+
+            "fail and return a  'BadRequestException' when resource class does not exist" ignore {}
+
+            "fail and return a  'BadRequestException' when property does not exist" ignore {}
 
             "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" ignore {
 
                 /* defining project level default object access permissions, so I need to be at least a member of the 'ProjectAdmin' group */
 
                 /* defining system level default object access permissions, so I need to be at least a member of the 'SystemAdmin' group */
-
-                fail
             }
 
-            "fail and return a 'DuplicateValueException' when permission for project / group / resource class / property  combination already exists" ignore {
-                fail
-            }
+            "fail and return a 'DuplicateValueException' when permission for project / group / resource class / property  combination already exists" ignore {}
         }
         "asked to delete a permission object " should {
 
-            "delete an administrative permission " ignore {
-                fail
-            }
+            "delete an administrative permission " ignore {}
 
-            "delete a default object access permission " ignore {
-                fail
-            }
+            "delete a default object access permission " ignore {}
         }
         /*
         "asked to create permissions from a template " should {
@@ -252,6 +287,46 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             }
         }
         */
+
+        "asked for default object access permissions 'string'" should {
+
+            "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class" ignore {
+                actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
+                    projectIri = SYSTEM_PROJECT_IRI,
+                    resourceClassIri = OntologyConstants.KnoraBase.LinkObj,
+                    userProfile = SharedAdminTestData.incunabulaUser
+                )
+                expectMsg(Some("default object access permissions string"))
+            }
+
+            "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property" ignore {
+                actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                    projectIri = SYSTEM_PROJECT_IRI,
+                    propertyIri = OntologyConstants.KnoraBase.HasStillImageFileValue,
+                    userProfile = SharedAdminTestData.incunabulaUser
+                )
+                expectMsg(Some("default object access permissions string"))
+            }
+
+            "return the default object access permissions 'string' for the 'incunabula:Book' resource class" ignore {
+                actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
+                    projectIri = INCUNABULA_PROJECT_IRI,
+                    resourceClassIri = INCUNABULA_BOOK_RESOURCE_CLASS,
+                    userProfile = SharedAdminTestData.incunabulaUser
+                )
+                expectMsg(Some("default object access permissions string"))
+            }
+
+            "return the default object access permissions 'string' for the 'incunabula:Page' resource class" ignore {
+                actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
+                    projectIri = INCUNABULA_PROJECT_IRI,
+                    resourceClassIri = INCUNABULA_PAGE_RESOURCE_CLASS,
+                    userProfile = SharedAdminTestData.incunabulaUser
+                )
+                expectMsg(Some("default object access permissions string"))
+            }
+
+        }
     }
 
     "The PermissensResponderV1 helper methods" when {
