@@ -96,6 +96,11 @@ DELETE {
                 @* Create a Standoff node for each StandoffPositionV1. *@
 
                 @for(createStandoff <- textValue.prepareForSparqlInsert(newValueIri)) {
+
+                    @if(textValue.mappingIri.isDefined) {
+                        ?newValue knora-base:valueHasMapping <@textValue.mappingIri.get> .
+                    }
+
                     ?newValue knora-base:valueHasStandoff <@createStandoff.standoffTagInstanceIri> .
 
                     <@createStandoff.standoffTagInstanceIri>

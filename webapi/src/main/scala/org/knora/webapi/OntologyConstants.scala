@@ -104,6 +104,7 @@ object OntologyConstants {
         val IsRegionOf = "http://www.knora.org/ontology/knora-base#isRegionOf"
 
         val ValueHasString = "http://www.knora.org/ontology/knora-base#valueHasString"
+        val ValueHasMapping = "http://www.knora.org/ontology/knora-base#valueHasMapping"
         val ValueHasInteger = "http://www.knora.org/ontology/knora-base#valueHasInteger"
         val ValueHasDecimal = "http://www.knora.org/ontology/knora-base#valueHasDecimal"
         val ValueHasStandoff = "http://www.knora.org/ontology/knora-base#valueHasStandoff"

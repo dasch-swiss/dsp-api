@@ -65,6 +65,11 @@
                 @* Create a Standoff node for each StandoffTagV1. *@
 
                 @for(createStandoff <- textValue.prepareForSparqlInsert(newValueIri)) {
+
+                    @if(textValue.mappingIri.isDefined) {
+                        ?newValue@valueIndex knora-base:valueHasMapping <@textValue.mappingIri.get> .
+                    }
+
                     ?newValue@valueIndex knora-base:valueHasStandoff <@createStandoff.standoffTagInstanceIri> .
 
                     <@createStandoff.standoffTagInstanceIri>

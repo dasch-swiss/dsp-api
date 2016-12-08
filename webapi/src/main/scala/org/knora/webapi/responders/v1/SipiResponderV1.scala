@@ -32,10 +32,10 @@ import org.knora.webapi.messages.v1.responder.sipimessages.RepresentationV1JsonP
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiConstants.FileType
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.valuemessages.{ApiValueV1, FileValueV1, StillImageFileValueV1, TextFileValueV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{InputValidation, PermissionUtilV1, ScalaPrettyPrinter}
+import org.knora.webapi.util.{InputValidation, PermissionUtilV1}
 import spray.json._
 
 import scala.concurrent.Future
@@ -153,7 +153,7 @@ class SipiResponderV1 extends ResponderV1 {
                             // the Sipi response message could not be parsed correctly
                             case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = e, log = log)
 
-                            case all: Throwable => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = all, log = log)
+                            case all: Exception => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = all, log = log)
                         }
                 ) // returns a Future(Map(...))
                 case 4 =>
@@ -166,7 +166,7 @@ class SipiResponderV1 extends ResponderV1 {
                                 // the Sipi error message could not be parsed correctly
                                 case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
 
-                                case all: Throwable => throw SipiException(message = "JSON error response returned by Sipi is not valid JSON", e = all, log = log)
+                                case all: Exception => throw SipiException(message = "JSON error response returned by Sipi is not valid JSON", e = all, log = log)
                             }
                     )
 
@@ -176,7 +176,7 @@ class SipiResponderV1 extends ResponderV1 {
                     // Internal Server Error: not the user's fault
                     val errString: Future[String] = conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
                     errString.map(errStr => throw SipiException(s"Sipi reported an internal server error $httpStatusCode - $errStr"))
-                case other => throw SipiException(s"Sipi returned $other!")
+                case _ => throw SipiException(s"Sipi returned $httpStatusCode!")
             }
 
             // get file type from Sipi response

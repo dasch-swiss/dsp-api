@@ -871,6 +871,15 @@
 
                   :subjectClassConstraint :TextValue .
 
+###  http://www.knora.org/ontology/knora-base#valueHasMapping
+
+:valueHasMapping rdf:type owl:ObjectProperty ;
+
+                  rdfs:subPropertyOf :valueHas ;
+
+                  :objectClassConstraint :XMLToStandoffMapping ;
+
+                  :subjectClassConstraint :TextValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasGivenName
@@ -2884,6 +2893,10 @@
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasStandoff ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :valueHasMapping ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
 

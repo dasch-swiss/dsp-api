@@ -55,7 +55,7 @@ object StandoffRouteV1 extends Authenticator {
 
                         // iris should contain the resource IRI, the property IRI, the project IRI, and the mapping IRI
                         if (iris.size != 4) {
-                            throw BadRequestException(s"Expected two segments after segment 'standoff/': resourceIri/propertyIri/projectIri")
+                            throw BadRequestException(s"Expected four segments after segment 'standoff/': resourceIri/propertyIri/projectIri/mappingIri")
                         }
 
                         val resourceIri = InputValidation.toIri(iris(0), () => throw BadRequestException(s"invalid IRI ${iris(0)}"))

@@ -596,11 +596,14 @@ case class CreateStandoffPositionV1InTriplestore(standoffNode: StandoffTagV1, st
   * @param utf8str            text in mere utf8 representation (including newlines and carriage returns).
   * @param textattr           attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffPositionV1]]).
   * @param resource_reference referred Knora resources.
+  * @param xml                the original XML if the text value was created from XML
+  * @param mappingIri         the IRI of the mapping resource if the text value was created from XML
   */
 case class TextValueV1(utf8str: String,
                        textattr: Seq[StandoffTagV1] = Seq.empty[StandoffTagV1],
                        resource_reference: Set[IRI] = Set.empty[IRI],
-                       xml: Option[String] = None) extends UpdateValueV1 with ApiValueV1 {
+                       xml: Option[String] = None,
+                       mappingIri: Option[IRI] = None) extends UpdateValueV1 with ApiValueV1 { // TODO: for the GUI case we should use a default mapping. As a consequence, each TextValue needs a mapping (make mappingIri a required member of TextValueV1)
 
     import ApiValueV1JsonProtocol._
 
@@ -685,7 +688,7 @@ case class TextValueV1(utf8str: String,
       */
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
-            case TextValueV1(otherUtf8Str, _, _, _) => utf8str == otherUtf8Str
+            case TextValueV1(otherUtf8Str, _, _, _, _) => utf8str == otherUtf8Str
             case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }

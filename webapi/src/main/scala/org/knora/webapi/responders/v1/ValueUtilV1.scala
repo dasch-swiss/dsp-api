@@ -529,10 +529,15 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         // the query results. Therefore, if knora-base:valueHasString is missing, we interpret it as an empty string.
         val valueHasString = valueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasString).map(_.literals.head).getOrElse("")
 
+        // the standoff may point to a mapping depending on how it was created (from XML or from standoff JSON format)
+        // TODO: for the GUI case we should use a default mapping. As a consequence, each TextValue needs a mapping (make mappingIri a required member of TextValueV1)
+        val mappingIriMaybe: Option[IRI] = valueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasMapping).map(_.literals.head)
+
         TextValueV1(
             utf8str = valueHasString,
             textattr = standoffTags,
-            resource_reference = resIds
+            resource_reference = resIds,
+            mappingIri = mappingIriMaybe
         )
     }
 

@@ -28,6 +28,9 @@ import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 
 import akka.actor.Status
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.HttpEntity.Strict
+import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
@@ -44,6 +47,7 @@ import org.knora.webapi.{BadRequestException, _}
 import org.xml.sax.SAXException
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.xml.{Node, NodeSeq, XML}
 
 /**
@@ -115,7 +119,8 @@ class StandoffResponderV1 extends ResponderV1 {
                 apiRequestID = UUID.randomUUID
             )).mapTo[ResourceCreateResponseV1]
 
-        // TODO: call getMapping (reads it back from Sipi) and cache it
+        // call getMapping (reads it back from Sipi) and cache it thereby
+        _ = getMapping(createResourceResponse.res_id, userProfile)
 
         } yield {
             CreateMappingResponseV1(resourceIri = createResourceResponse.res_id, userdata = userProfile.userData)
@@ -137,8 +142,6 @@ class StandoffResponderV1 extends ResponderV1 {
     // TODO: call this method when creating the mapping and cache it
     private def getMapping(mappingIri: IRI, userProfile: UserProfileV1): Future[MappingXMLtoStandoff] = {
 
-
-
         // TODO: create cache for mapping and check it before requesting the mapping from Sipi
 
         // get mapping from file value
@@ -157,90 +160,52 @@ class StandoffResponderV1 extends ResponderV1 {
 
             // get the URL to the mapping to retrieve it from Sipi
             mappingLocation: LocationV1 = if (locations.isEmpty || locations.get.size != 1) {
-                throw InconsistentTriplestoreDataException(s"for a mapping resource, exactly one text file value is expected")
+                throw InconsistentTriplestoreDataException(s"for a mapping resource, exactly one text file value is expected, but ${locations.getOrElse(Vector.empty[LocationV1]).size} given. This could also be a problem of missing permission on the mapping resource.")
             } else {
                 resinfo.locations.get.head
             }
 
-            pathToMapping = mappingLocation.path
+            urlToMapping = mappingLocation.path
 
             // ask Sipi to return the XML representing the mapping
-            _ = println(pathToMapping)
+            //request <- Marshal(FormData(conversionRequest.toFormData())).to[RequestEntity]
 
-            mappingString =
-            """<?xml version="1.0" encoding="UTF-8"?>
-              |<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="mapping.xsd">
-              |  <mappingElement>
-              |    <tag><name>text</name><namespace>noNamespace</namespace></tag>
-              |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/knora-base#StandoffRootTag</classIri>
-              |      <attributes>
-              |        <attribute><attributeName>documentType</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType</propertyIri></attribute>
-              |      </attributes>
-              |    </standoffClass>
-              |  </mappingElement>
-              |
-              |  <mappingElement>
-              |    <tag>
-              |      <name>p</name>
-              |      <namespace>noNamespace</namespace>
-              |    </tag>
-              |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/knora-base#StandoffParagraphTag</classIri>
-              |    </standoffClass>
-              |  </mappingElement>
-              |
-              |  <mappingElement>
-              |    <tag>
-              |      <name>i</name>
-              |      <namespace>noNamespace</namespace>
-              |    </tag>
-              |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/knora-base#StandoffItalicTag</classIri>
-              |    </standoffClass>
-              |  </mappingElement>
-              |
-              |  <mappingElement>
-              |    <tag>
-              |      <name>b</name>
-              |      <namespace>noNamespace</namespace>
-              |    </tag>
-              |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/knora-base#StandoffBoldTag</classIri>
-              |    </standoffClass>
-              |  </mappingElement>
-              |
-              |  <mappingElement>
-              |    <tag>
-              |      <name>interval</name>
-              |      <namespace>noNamespace</namespace>
-              |    </tag>
-              |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/knora-base#StandoffRangeTag</classIri>
-              |      <attributes>
-              |      <attribute><attributeName>unsure</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/knora-base#standoffTagIsUnsure</propertyIri></attribute>
-              |      </attributes>
-              |      <datatype>
-              |        <type>http://www.knora.org/ontology/knora-base#StandoffIntervalTag</type>
-              |        <attributeName>range</attributeName>
-              |      </datatype>
-              |    </standoffClass>
-              |  </mappingElement>
-              |
-              | <mappingElement>
-              |    <tag><name>birthday</name><namespace>noNamespace</namespace></tag>
-              |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/knora-base#StandoffBirthdayTag</classIri>
-              |      <datatype><type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
-              |        <attributeName>date</attributeName>
-              |      </datatype>
-              |    </standoffClass>
-              |  </mappingElement>
-              |
-              |
-              |
-              |
-              |</mapping>""".stripMargin
+            mappingResponseFuture: Future[HttpResponse] = Http().singleRequest(
+                HttpRequest(
+                    method = HttpMethods.GET,
+                    uri = urlToMapping
+                )
+            )
+
+            recoveredMappingResponseFuture = mappingResponseFuture.recoverWith {
+
+                case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
+                    // this problem is hardly the user's fault. Create a SipiException
+                    throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
+
+                case err: Exception =>
+                    // unknown error
+                    throw SipiException(message = s"Unknown error: ${err.toString}", e = err, log = log)
+
+            }
+
+            mappingResponse: HttpResponse <- recoveredMappingResponseFuture
+
+            httpStatusCode: StatusCode = mappingResponse.status
+            statusInt: Int = httpStatusCode.intValue / 100
+
+            mappingString: String <- statusInt match {
+                case 2 => mappingResponse.entity.toStrict(5.seconds).map {
+                    (strict: Strict) => strict.data.decodeString("UTF-8")
+                }
+
+                case 4 => throw SipiException(s"Sipi could not serve $urlToMapping: $httpStatusCode")
+
+                case 5 => throw SipiException(s"Sipi encountered an internal error $httpStatusCode when serving $urlToMapping")
+
+                case _ => throw SipiException(s"Sipi responded with HTTP status code $httpStatusCode when serving $urlToMapping")
+
+            }
 
             // the mapping conforms to the XML schema "src/main/resources/mappingXMLToStandoff.xsd"
             mappingXML = XML.loadString(mappingString)
@@ -302,7 +267,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                     // if "datatype" is given, get the the standoff class data type and the name of the XML data type attribute
                     val (dataTypeOption: Option[StandoffDataTypeClasses.Value], dataTypeAttributeOption: Option[String]) = if (datatypeMaybe.nonEmpty) {
-                        val dataType = StandoffDataTypeClasses.lookup((datatypeMaybe \ "type").headOption.getOrElse(throw BadRequestException(s"no '<type>' given for datatype")).text, () => throw BadRequestException("Invalid data type provided"))
+                        val dataType = StandoffDataTypeClasses.lookup((datatypeMaybe \ "type").headOption.getOrElse(throw BadRequestException(s"no '<type>' given for datatype")).text, () => throw BadRequestException(s"Invalid data type provided for $tagname"))
                         val dataTypeAttribute = (datatypeMaybe \ "attributeName").headOption.getOrElse(throw BadRequestException(s"no '<attributeName>' given for datatype")).text
 
                         (Some(dataType), Some(dataTypeAttribute))
@@ -381,7 +346,7 @@ class StandoffResponderV1 extends ResponderV1 {
                         case Some(namespace) => namespace
                     }
 
-                    val standoffTagPropIri = XMLtoStandoffMapping.attributesToProps.getOrElse(xmlNamespace, throw throw BadRequestException(s"namespace $xmlNamespace unknown for attribute ${attr.key}")).getOrElse(attr.key, throw BadRequestException(s"mapping for attr '${attr.key}' not provided"))
+                    val standoffTagPropIri = XMLtoStandoffMapping.attributesToProps.getOrElse(xmlNamespace, throw BadRequestException(s"namespace $xmlNamespace unknown for attribute ${attr.key}")).getOrElse(attr.key, throw BadRequestException(s"mapping for attr '${attr.key}' not provided"))
 
                     // check if a cardinality exists for the current attribute
                     if (classSpecificProps.get(standoffTagPropIri).isEmpty) {
@@ -476,7 +441,7 @@ class StandoffResponderV1 extends ResponderV1 {
         } catch {
             case e: org.xml.sax.SAXParseException => throw BadRequestException(s"there was a problem parsing the provided XML: ${e.getMessage}")
 
-            case other: Throwable => throw BadRequestException(s"there was a problem processing the provided XML: ${other.getMessage}")
+            case other: Exception => throw BadRequestException(s"there was a problem processing the provided XML: ${other.getMessage}")
         }
 
         for {
@@ -791,7 +756,8 @@ class StandoffResponderV1 extends ResponderV1 {
                     utf8str = textWithStandoff.text,
                     resource_reference = resourceReferences,
                     textattr = standoffNodesToCreate,
-                    xml = Some(xml)),
+                    xml = Some(xml),
+                    mappingIri = Some(mappingIri)),
                 userProfile = userProfile,
                 apiRequestID = apiRequestID)).mapTo[CreateValueResponseV1]
 
@@ -898,12 +864,6 @@ class StandoffResponderV1 extends ResponderV1 {
 
         for {
 
-        // TODO: get the mapping that was used when creating the standoff values
-            mappingXMLtoStandoff: MappingXMLtoStandoff <- getMapping("", userProfile)
-
-            // inverts the mapping and makes standoff class Iris keys (for tags)
-            mappingStandoffToXML: Map[IRI, XMLTagItem] = invertXMLToStandoffMapping(mappingXMLtoStandoff)
-
             // ask the ValuesResponder to query the text value.
             value: ValueGetResponseV1 <- (responderManager ? ValueGetRequestV1(valueIri = valueIri, userProfile = userProfile)).mapTo[ValueGetResponseV1]
 
@@ -917,6 +877,12 @@ class StandoffResponderV1 extends ResponderV1 {
                 case textValue: TextValueV1 => textValue
                 case _ => throw BadRequestException(s"value could not be interpreted as a TextValueV1")
             }
+
+            // get the mapping that was used when creating the standoff values
+            mappingXMLtoStandoff: MappingXMLtoStandoff <- getMapping(textValue.mappingIri.getOrElse(throw BadRequestException(s"the requested text value was created without a mapping")), userProfile)
+
+            // inverts the mapping and makes standoff class Iris keys (for tags)
+            mappingStandoffToXML: Map[IRI, XMLTagItem] = invertXMLToStandoffMapping(mappingXMLtoStandoff)
 
             standoffUtil = new StandoffUtil()
 

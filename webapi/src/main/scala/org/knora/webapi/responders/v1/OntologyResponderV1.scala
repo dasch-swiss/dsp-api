@@ -656,9 +656,9 @@ class OntologyResponderV1 extends ResponderV1 {
                 resourceAndValueSubClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSubClassOfRelations ++ allValueSubClassOfRelations, { key => s"Class not found: $key" }),
                 resourceSuperClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSuperClassOfRelations, { key => s"Class not found: $key" }),
                 propertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV1](propertyEntityInfos, { key => s"Property not found: $key" }),
-                standoffClassDefs = new ErrorHandlingMap[IRI, StandoffClassEntityInfoV1](standoffClassEntityInfos, { key => s"Standoff class not found $key" }),
-                standoffPropertyDefs = new ErrorHandlingMap[IRI, StandoffPropertyEntityInfoV1](standoffPropertyEntityInfos, { key => s"Standoff class not found $key" }),
-                standoffClassDefsWithDataType = new ErrorHandlingMap[IRI, StandoffClassEntityInfoV1](standoffClassEntityInfosWithDataType, { key => s"Standoff class not found $key" }))
+                standoffClassDefs = new ErrorHandlingMap[IRI, StandoffClassEntityInfoV1](standoffClassEntityInfos, { key => s"Standoff class def not found $key" }),
+                standoffPropertyDefs = new ErrorHandlingMap[IRI, StandoffPropertyEntityInfoV1](standoffPropertyEntityInfos, { key => s"Standoff property def not found $key" }),
+                standoffClassDefsWithDataType = new ErrorHandlingMap[IRI, StandoffClassEntityInfoV1](standoffClassEntityInfosWithDataType, { key => s"Standoff class def with datatype not found $key" }))
 
             _ = CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = ontologyCacheData)
 
