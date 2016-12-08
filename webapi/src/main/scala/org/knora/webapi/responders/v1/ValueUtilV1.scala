@@ -232,7 +232,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
         objRows.map(_ - "obj").filter(_.get("objObj").nonEmpty).groupBy(_ ("objPred")).foldLeft((Map.empty[String, ValueLiterals], Vector.empty[Map[IRI, String]])) {
             // grouped by value object predicate (e.g. hasString)
-            case (acc: (Map[String, ValueLiterals], Vector[Map[IRI, String]]), (objPredIri: IRI, values: Vector[Map[String, String]])) =>
+            case (acc: (Map[String, ValueLiterals], Vector[Map[IRI, String]]), (objPredIri: IRI, values: Seq[Map[String, String]])) =>
 
                 if (objPredIri == OntologyConstants.KnoraBase.ValueHasStandoff) {
                     // standoff information
@@ -576,7 +576,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         if (attributes.isEmpty) {
             None
         } else {
-            Some(attributes.mkString(";"))
+            Some(attributes.toVector.sorted.mkString(";"))
         }
     }
 

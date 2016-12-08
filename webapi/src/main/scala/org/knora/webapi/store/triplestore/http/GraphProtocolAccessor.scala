@@ -25,15 +25,15 @@ import java.io.File
 import akka.actor.ActorSystem
 import akka.http.javadsl.model.headers.Authorization
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.marshalling.Marshal
+import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{FileIO, Source}
 import org.knora.webapi.SettingsConstants._
-import org.knora.webapi.{Settings, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
+import org.knora.webapi.{BadRequestException, Settings, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
 
 /**
   * The GraphProtocolAccessor object is a basic implementation of the
@@ -79,28 +79,42 @@ object GraphProtocolAccessor {
 
     private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): String = {
         val file = new File(filepath)
-        require(file.exists())
+
+        if (!file.exists) {
+            throw BadRequestException(s"File ${file.getAbsolutePath} does not exist")
+        }
+
+        if (graphName.toLowerCase == "default") {
+            throw TriplestoreUnsupportedFeatureException("Requests to the default graph are not supported")
+        }
 
         val log = akka.event.Logging(_system, this.getClass)
         val settings = Settings(_system)
         implicit val executionContext = _system.dispatcher
-        val tsType = settings.triplestoreType
-        val triplestoreBaseUrl = s"${settings.triplestoreHost}:${settings.triplestorePort}"
-        val authorization = Authorization.basic(settings.triplestoreUsername, settings.triplestorePassword)
         val http = Http(_system)
+
+        // Use HTTP basic authentication.
+        val authorization = Authorization.basic(settings.triplestoreUsername, settings.triplestorePassword)
 
         log.debug("==>> GraphProtocolAccessor START")
 
-        /* HTTP paths for the SPARQL 1.1 Graph Store HTTP Protocol */
-        val requestPath = tsType match {
-            case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"$triplestoreBaseUrl/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
-            case HTTP_SESAME_TS_TYPE => s"$triplestoreBaseUrl/openrdf-sesame/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
-            case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"$triplestoreBaseUrl/${settings.triplestoreDatabaseName}/data"
-            case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"$triplestoreBaseUrl/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/data"
+        // HTTP paths for the SPARQL 1.1 Graph Store HTTP Protocol
+        val requestPath = settings.triplestoreType match {
+            case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
+            case HTTP_SESAME_TS_TYPE => s"/openrdf-sesame/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
+            case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/data"
+            case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/data"
             case ts_type => throw TriplestoreUnsupportedFeatureException(s"GraphProtocolAccessor does not support: $ts_type")
         }
 
-        /* set the right method */
+        // Construct a URI.
+        val uri = Uri(
+            scheme = "http",
+            authority = Uri.Authority(Uri.Host(settings.triplestoreHost), port = settings.triplestorePort),
+            path = Uri.Path(requestPath)
+        ).withQuery(Query("graph" -> graphName))
+
+        // Choose a request method.
         val requestMethod = if (method == HTTP_PUT_METHOD) {
             HttpMethods.PUT
         } else if (method == HTTP_POST_METHOD) {
@@ -109,39 +123,27 @@ object GraphProtocolAccessor {
             throw TriplestoreUnsupportedFeatureException("Only PUT or POST supported by the GraphProtocolAccessor")
         }
 
-        if (graphName.toLowerCase == "default") {
-            throw TriplestoreUnsupportedFeatureException("Requests to the default graph are not supported")
-        }
+        // Stream the file data into the HTTP request.
+        val fileEntity = HttpEntity.fromPath(ContentType(MediaType.text("turtle"), HttpCharsets.`UTF-8`), file.toPath, chunkSize = 100000)
 
-        val formData = Multipart.FormData(
-            Source.single(
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity(ContentType(MediaType.text("turtle"), HttpCharsets.`UTF-8`), file.length(), FileIO.fromPath(file.toPath, chunkSize = 100000)),
-                    Map("graph" -> graphName)
-                )
-            )
+        val request = HttpRequest(
+            method = requestMethod,
+            uri = uri,
+            entity = fileEntity,
+            headers = List(authorization)
         )
 
         val responseFuture = for {
-            requestEntity <- Marshal(formData).to[RequestEntity]
-
-            request = HttpRequest(
-                method = requestMethod,
-                uri = requestPath,
-                entity = requestEntity,
-                headers = List(authorization)
-            )
-
+            // Send the HTTP request.
             response <- http.singleRequest(request)
-            responseStatusCode: Int = response.status.intValue / 100
+
+            // Convert the HTTP response body to a string.
             responseString <- response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
 
-            responseCodeCategory = responseStatusCode / 100
-            _ = if (!(responseCodeCategory == 2 || responseCodeCategory == 3)) {
+            _ = if (!response.status.isSuccess) {
                 throw TriplestoreResponseException(s"Unable to load file $filepath; triplestore responded with HTTP code ${response.status}: $responseString")
             }
-            responseMessage = responseStatusCode.toString
+            responseMessage = response.status.intValue.toString
         } yield responseMessage
 
         responseFuture.recover {

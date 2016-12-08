@@ -50,33 +50,50 @@ import scala.util.{Failure, Success, Try}
   */
 class HttpTriplestoreConnector extends Actor with ActorLogging {
     // MIME type constants.
-    private val mimeTypeApplicationSparqlResultsJson = MediaType.applicationWithOpenCharset("application/sparql-results+json")
-    private val mimeTypeTextTurtle = MediaType.text("turtle")
+    private val mimeTypeApplicationSparqlResultsJson = MediaType.applicationWithOpenCharset("sparql-results+json") // JSON is always UTF-8
+    private val mimeTypeTextTurtle = MediaType.text("turtle") // Turtle is always UTF-8
 
     private implicit val system = context.system
     private implicit val executionContext = system.dispatcher
     private implicit val materializer = ActorMaterializer()
     private val settings = Settings(system)
     private val triplestoreType = settings.triplestoreType
-    private val triplestoreBaseUrl = s"${settings.triplestoreHost}:${settings.triplestorePort}"
-    private val authorization = Authorization.basic(settings.triplestoreUsername, settings.triplestorePassword)
+
+    // Provides client HTTP connections.
     private val http = Http(context.system)
 
-    // HTTP paths for SPARQL queries.
+    // Use HTTP basic authentication.
+    private val authorization = Authorization.basic(settings.triplestoreUsername, settings.triplestorePassword)
+
+    // The path for SPARQL queries.
     private val queryRequestPath = triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"$triplestoreBaseUrl/repositories/${settings.triplestoreDatabaseName}"
-        case HTTP_SESAME_TS_TYPE => s"$triplestoreBaseUrl/openrdf-sesame/repositories/${settings.triplestoreDatabaseName}"
-        case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"$triplestoreBaseUrl/${settings.triplestoreDatabaseName}/query"
-        case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"$triplestoreBaseUrl/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/query"
+        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}"
+        case HTTP_SESAME_TS_TYPE => s"/openrdf-sesame/repositories/${settings.triplestoreDatabaseName}"
+        case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/query"
+        case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/query"
     }
 
-    // HTTP paths for SPARQL Update operations.
+    // The URI for SPARQL queries.
+    private val queryUri = Uri(
+        scheme = "http",
+        authority = Uri.Authority(Uri.Host(settings.triplestoreHost), port = settings.triplestorePort),
+        path = Uri.Path(queryRequestPath)
+    )
+
+    // The path for SPARQL update operations.
     private val updateRequestPath = triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"$triplestoreBaseUrl/repositories/${settings.triplestoreDatabaseName}/statements"
-        case HTTP_SESAME_TS_TYPE => s"$triplestoreBaseUrl/openrdf-sesame/repositories/${settings.triplestoreDatabaseName}/statements"
-        case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"$triplestoreBaseUrl/${settings.triplestoreDatabaseName}/update"
-        case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"$triplestoreBaseUrl/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/update"
+        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/statements"
+        case HTTP_SESAME_TS_TYPE => s"/openrdf-sesame/repositories/${settings.triplestoreDatabaseName}/statements"
+        case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/update"
+        case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/update"
     }
+
+    // The URI for SPARQL update operations.
+    private val updateUri = Uri(
+        scheme = "http",
+        authority = Uri.Authority(Uri.Host(settings.triplestoreHost), port = settings.triplestorePort),
+        path = Uri.Path(updateRequestPath)
+    )
 
     private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
 
@@ -148,6 +165,58 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @return a [[SparqlConstructResponse]]
       */
     private def sparqlHttpConstruct(sparql: String): Future[SparqlConstructResponse] = {
+        /**
+          * Converts a graph in parsed Turtle to a [[SparqlConstructResponse]].
+          */
+        class ConstructResponseTurtleHandler extends RDFHandler {
+            /**
+              * A collection of all the statements in the input file, grouped and sorted by subject IRI.
+              */
+            private var statements = Map.empty[IRI, Seq[(IRI, String)]]
+
+            override def handleComment(comment: IRI): Unit = {}
+
+            /**
+              * Adds a statement to the collection `statements`.
+              *
+              * @param st the statement to be added.
+              */
+            override def handleStatement(st: Statement): Unit = {
+                val subjectIri = st.getSubject.stringValue
+                val predicateIri = st.getPredicate.stringValue
+                val objectIri = st.getObject.stringValue
+                val currentStatementsForSubject = statements.getOrElse(subjectIri, Vector.empty[(IRI, String)])
+                statements += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
+            }
+
+            override def endRDF(): Unit = {}
+
+            override def handleNamespace(prefix: IRI, uri: IRI): Unit = {}
+
+            override def startRDF(): Unit = {}
+
+            def getConstructResponse: SparqlConstructResponse = {
+                SparqlConstructResponse(statements)
+            }
+        }
+
+        def parseTurtleResponse(sparql: String, turtleStr: String): Future[SparqlConstructResponse] = {
+            val parseTry = Try {
+                val turtleParser = new TurtleParser()
+                val handler = new ConstructResponseTurtleHandler
+                turtleParser.setRDFHandler(handler)
+                turtleParser.parse(new StringReader(turtleStr), "query-result.ttl")
+                handler.getConstructResponse
+            }
+
+            parseTry match {
+                case Success(parsed) => Future.successful(parsed)
+                case Failure(e) =>
+                    log.error(e, s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql")
+                    Future.failed(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
+            }
+        }
+
         for {
             turtleStr <- getTriplestoreHttpResponse(sparql, isUpdate = false, isConstruct = true)
             response <- parseTurtleResponse(sparql, turtleStr)
@@ -268,8 +337,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         // §2.1.3 ("query via POST directly").
 
         val triplestoreResponseFuture = for {
+            // The name of the form parameter that contains the SPARQL.
             sparqlParam: String <- Future(if (isUpdate) "update" else "query")
 
+            // An optional boolean parameter to turn on inference, used only with GraphDB.
             maybeInfer = if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE || triplestoreType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
                 Some("infer" -> "true")
             } else {
@@ -280,11 +351,15 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 Map(sparqlParam -> sparql) ++ maybeInfer
             )
 
+            // Construct the Accept header if needed.
             maybeAcceptContentType = if (isConstruct) {
+                // CONSTRUCT queries should return Turtle.
                 Some(Accept(MediaRange(mimeTypeTextTurtle)))
             } else if (!isUpdate) {
+                // SELECT queries should return JSON.
                 Some(Accept(MediaRange(mimeTypeApplicationSparqlResultsJson)))
             } else {
+                // Update queries return no content.
                 None
             }
 
@@ -292,19 +367,20 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             request = HttpRequest(
                 method = HttpMethods.POST,
-                uri = if (isUpdate) updateRequestPath else queryRequestPath,
+                uri = if (isUpdate) updateUri else queryUri,
                 entity = formData.toEntity,
                 headers = headers
             )
 
+            // _ = println(request.toString())
+
+            // Send the HTTP request.
             response <- http.singleRequest(request)
+
+            // Convert the HTTP response body to a string.
             responseString <- response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
 
-            // Find out whether the triplestore's HTTP response code indicates success (2XX or 3XX) or failure (anything else).
-
-            responseCodeCategory: Int = response.status.intValue / 100
-
-            _ = if (!(responseCodeCategory == 2 || responseCodeCategory == 3)) {
+            _ = if (!response.status.isSuccess) {
                 throw TriplestoreResponseException(s"Triplestore responded with HTTP code ${response.status}: $responseString")
             }
         } yield responseString
@@ -314,58 +390,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         triplestoreResponseFuture.recover {
             case tre: TriplestoreResponseException => throw tre
             case e: Exception => throw TriplestoreConnectionException("Failed to connect to triplestore", e, log)
-        }
-    }
-
-    /**
-      * Converts a graph in parsed Turtle to a [[SparqlConstructResponse]].
-      */
-    private class ConstructResponseTurtleHandler extends RDFHandler {
-        /**
-          * A collection of all the statements in the input file, grouped and sorted by subject IRI.
-          */
-        private var statements = Map.empty[IRI, Seq[(IRI, String)]]
-
-        override def handleComment(comment: IRI): Unit = {}
-
-        /**
-          * Adds a statement to the collection `statements`.
-          *
-          * @param st the statement to be added.
-          */
-        override def handleStatement(st: Statement): Unit = {
-            val subjectIri = st.getSubject.stringValue
-            val predicateIri = st.getPredicate.stringValue
-            val objectIri = st.getObject.stringValue
-            val currentStatementsForSubject = statements.getOrElse(subjectIri, Vector.empty[(IRI, String)])
-            statements += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
-        }
-
-        override def endRDF(): Unit = {}
-
-        override def handleNamespace(prefix: IRI, uri: IRI): Unit = {}
-
-        override def startRDF(): Unit = {}
-
-        def getConstructResponse: SparqlConstructResponse = {
-            SparqlConstructResponse(statements)
-        }
-    }
-
-    private def parseTurtleResponse(sparql: String, turtleStr: String): Future[SparqlConstructResponse] = {
-        val parseTry = Try {
-            val turtleParser = new TurtleParser()
-            val handler = new ConstructResponseTurtleHandler
-            turtleParser.setRDFHandler(handler)
-            turtleParser.parse(new StringReader(turtleStr), "query-result.ttl")
-            handler.getConstructResponse
-        }
-
-        parseTry match {
-            case Success(parsed) => Future.successful(parsed)
-            case Failure(e) =>
-                log.error(e, s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql")
-                Future.failed(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
         }
     }
 }
