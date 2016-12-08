@@ -28,7 +28,7 @@ import com.typesafe.config.{Config, ConfigValue}
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.util.CacheUtil.KnoraCacheConfig
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 
 
@@ -54,7 +54,7 @@ class SettingsImpl(config: Config) extends Extension {
     val tmpDataDir: String = config.getString("app.tmp-datadir")
     val dataDir: String = config.getString("app.datadir")
 
-    val imageMimeTypes: Vector[String] = config.getList("app.sipi.image-mime-types").iterator.map {
+    val imageMimeTypes: Vector[String] = config.getList("app.sipi.image-mime-types").iterator.asScala.map {
         (mType: ConfigValue) => mType.unwrapped.toString
     }.toVector
 
@@ -66,9 +66,9 @@ class SettingsImpl(config: Config) extends Extension {
     val sipiPathConversionRoute: String = config.getString("app.sipi.path-conversion-route")
     val sipiFileConversionRoute: String = config.getString("app.sipi.file-conversion-route")
 
-    val caches: Vector[KnoraCacheConfig] = config.getList("app.caches").iterator.map {
+    val caches: Vector[KnoraCacheConfig] = config.getList("app.caches").iterator.asScala.map {
         (cacheConfigItem: ConfigValue) =>
-            val cacheConfigMap = cacheConfigItem.unwrapped.asInstanceOf[java.util.HashMap[String, Any]]
+            val cacheConfigMap = cacheConfigItem.unwrapped.asInstanceOf[java.util.HashMap[String, Any]].asScala
             KnoraCacheConfig(cacheConfigMap("cache-name").asInstanceOf[String],
                 cacheConfigMap("max-elements-in-memory").asInstanceOf[Int],
                 cacheConfigMap("overflow-to-disk").asInstanceOf[Boolean],
@@ -134,11 +134,11 @@ class SettingsImpl(config: Config) extends Extension {
     // Project specific named graphs stored in a map
     // http://deploymentzone.com/2013/07/25/typesafe-config-and-maps-in-scala/
     lazy val projectNamedGraphs: Map[IRI, ProjectNamedGraphs] = {
-        config.getConfigList("app.project-named-graphs").map(new ProjectNamedGraphs(_)).map(elem => (elem.project, elem)).toMap
+        config.getConfigList("app.project-named-graphs").asScala.map(new ProjectNamedGraphs(_)).map(elem => (elem.project, elem)).toMap
     }
 
     lazy val namedGraphs: Vector[ProjectNamedGraphs] = {
-        config.getConfigList("app.project-named-graphs").map(new ProjectNamedGraphs(_)).toVector
+        config.getConfigList("app.project-named-graphs").asScala.map(new ProjectNamedGraphs(_)).toVector
     }
 }
 

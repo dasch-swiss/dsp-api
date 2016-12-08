@@ -41,7 +41,7 @@ import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.CacheUtil
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -141,7 +141,7 @@ trait KnoraService {
         if (StartupFlags.loadDemoData.get) {
             println("Start loading of demo data ...")
             val configList = settings.tripleStoreConfig.getConfigList("rdf-data")
-            val rdfDataObjectList = configList.map {
+            val rdfDataObjectList = configList.asScala.map {
                 config => RdfDataObjectFactory(config)
             }
             val resultFuture = storeManager ? ResetTriplestoreContent(rdfDataObjectList)
