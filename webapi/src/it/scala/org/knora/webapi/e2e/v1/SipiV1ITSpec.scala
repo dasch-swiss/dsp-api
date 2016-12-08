@@ -17,6 +17,7 @@
 package org.knora.webapi.e2e.v1
 
 import java.io.File
+import java.net.URLEncoder
 import java.nio.file.{Files, Paths}
 
 import akka.http.scaladsl.model.headers._
@@ -25,10 +26,11 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.CreateRichtextV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.{FileWriteException, ITSpec}
+import org.knora.webapi.{FileWriteException, ITSpec, InvalidApiJsonException}
 import spray.json._
 
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 
 object SipiV1ITSpec {
@@ -58,10 +60,11 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
     private val password = "test"
 
     "Check if SIPI is running" in {
-        // Contact the SIPI '/info' route, to see if SIPI is running
-        val request = Get(baseSipiUrl + "/info")
+        // Contact the SIPI fileserver to see if Sipi is running
+        // Plase make sure that 1) fileserver.docroot is set in config file and 2) it contains a file test.html
+        val request = Get(baseSipiUrl + "/server/test.html")
         val response = singleAwaitingRequest(request, 1.second)
-        assert(response.status == StatusCodes.OK, s"SIPI is probably not running!")
+        assert(response.status == StatusCodes.OK, s"SIPI is probably not running! ${response.status}")
     }
 
     "Load test data" in {
@@ -144,11 +147,66 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             RequestParams.createTmpFileDir()
             val request = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
             val response = singleAwaitingRequest(request, 20.seconds)
+
             assert(response.status === StatusCodes.OK)
+
+            // get the new resource Iri
+            val resIdFuture: Future[String] = response.entity.toStrict(5.seconds).map {
+                responseBody =>
+                    val resBodyAsString = responseBody.data.decodeString("UTF-8")
+                    resBodyAsString.parseJson.asJsObject.fields.get("res_id") match {
+                        case Some(JsString(resourceId)) => resourceId
+                        case None => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
+                        case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but ${other}")
+                    }
+            }
+
+            // wait for the Future to complete
+            val newResourceIri: String = Await.result(resIdFuture, 5.seconds)
+
+            val requestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(newResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
+            val responseNewResource = singleAwaitingRequest(requestNewResource, 20.seconds)
+
+            assert(responseNewResource.status == StatusCodes.OK)
+
+            val IIIFPathFuture: Future[String] = responseNewResource.entity.toStrict(5.seconds).map {
+                newResponseBody =>
+                    val newResBodyAsString = newResponseBody.data.decodeString("UTF-8")
+
+                    newResBodyAsString.parseJson.asJsObject.fields.get("resinfo") match {
+
+                        case Some(resinfo: JsObject) =>
+                            resinfo.fields.get("locdata") match {
+                                case Some(locdata: JsObject) =>
+                                    locdata.fields.get("path") match {
+                                        case Some(JsString(path)) => path
+                                        case None => throw InvalidApiJsonException("no 'path' given")
+                                        case other => throw InvalidApiJsonException("'path' could not pe parsed correctly")
+                                    }
+                                case None => throw InvalidApiJsonException("no 'locdata' given")
+
+                                case other => throw InvalidApiJsonException("'locdata' could not pe parsed correctly")
+                            }
+
+                        case None => throw InvalidApiJsonException("no 'resinfo' given")
+
+                        case other => throw InvalidApiJsonException("'resinfo' could not pe parsed correctly")
+                    }
+
+            }
+
+            // wait for the Future to complete
+            val IIIFPath = Await.result(IIIFPathFuture, 5.seconds)
+
+            // TODO: now we could try to request the path from Sipi
+            // TODO: we should run Sipi in test mode so it does not do run the preflight request
+
+            println(IIIFPath)
+
         }
 
-        "create an 'incunabula:page' with parameters" in {
 
+        "create an 'incunabula:page' with parameters" in {
 
 
         }
