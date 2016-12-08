@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl._
-import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation, ScalaPrettyPrinter}
+import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
 
 import scala.concurrent.{ExecutionContext, Future}
 
