@@ -71,7 +71,7 @@ lazy val webapi = (project in file(".")).
         ).
         settings(
             libraryDependencies ++= webApiLibs,
-            scalacOptions ++= Seq("-feature", "-deprecation", "-Yresolve-term-conflict:package"),
+            scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
             logLevel := Level.Info,
             fork in run := true,
             javaOptions in run ++= javaRunOptions,

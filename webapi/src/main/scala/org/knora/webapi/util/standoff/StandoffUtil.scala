@@ -43,7 +43,7 @@ case class StandoffTagAttribute(key: String, xmlNamespace: Option[IRI], value: S
 /**
   * Represents markup on a range of characters in a text.
   */
-trait StandoffTag {
+sealed trait StandoffTag {
     /**
       * A [[UUID]] representing this tag and any other tags that point to semantically equivalent
       * content in other versions of the same text.
@@ -80,7 +80,7 @@ trait StandoffTag {
   * Represents a [[StandoffTag]] that has a single index indicating its position in a sequence of standoff tags,
   * and optionally the index of the tag that contains it.
   */
-trait IndexedStandoffTag extends StandoffTag {
+sealed trait IndexedStandoffTag extends StandoffTag {
     def index: Int
 
     def parentIndex: Option[Int]
@@ -374,7 +374,11 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
             case (acc, hierarchicalTag: HierarchicalStandoffTag) =>
                 acc :+ hierarchicalTag
 
-            case (_, other) => throw InvalidStandoffException(s"Unrecognised standoff object $other")
+            // It seems as if the following line should work, but it doesn't. See https://issues.scala-lang.org/browse/SI-10100
+            // case (_, clixTag: ClixMilestoneTag) => throw InvalidStandoffException(s"CLIX tag $clixTag cannot be in TextWithStandoff") // This should never happen
+
+            // Workaround:
+            case (_, other) => throw InvalidStandoffException(s"Tag $other cannot be in TextWithStandoff") // This should never happen
         }
 
         val groupedTags: Map[Option[Int], Seq[IndexedStandoffTag]] = tags.groupBy(_.parentIndex)
