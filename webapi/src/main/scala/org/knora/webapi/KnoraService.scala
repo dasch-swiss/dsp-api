@@ -41,7 +41,7 @@ import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.CacheUtil
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -82,7 +82,7 @@ trait KnoraService {
     /**
       * Provide logging
       */
-    protected val log = akka.event.Logging(system, this.getClass)
+    protected val log = akka.event.Logging(system, "KnoraService")
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
@@ -142,7 +142,7 @@ trait KnoraService {
         if (StartupFlags.loadDemoData.get) {
             println("Start loading of demo data ...")
             val configList = settings.tripleStoreConfig.getConfigList("rdf-data")
-            val rdfDataObjectList = configList.map {
+            val rdfDataObjectList = configList.asScala.map {
                 config => RdfDataObjectFactory(config)
             }
             val resultFuture = storeManager ? ResetTriplestoreContent(rdfDataObjectList)
