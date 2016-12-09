@@ -42,7 +42,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.standoff._
-import org.knora.webapi.util.{DateUtilV1, InputValidation}
+import org.knora.webapi.util.{CacheUtil, DateUtilV1, InputValidation}
 import org.knora.webapi.{BadRequestException, _}
 import org.xml.sax.SAXException
 
@@ -119,8 +119,8 @@ class StandoffResponderV1 extends ResponderV1 {
                 apiRequestID = UUID.randomUUID
             )).mapTo[ResourceCreateResponseV1]
 
-        // call getMapping (reads it back from Sipi) and cache it thereby
-        _ = getMapping(createResourceResponse.res_id, userProfile)
+            // call getMapping in order to add the mapping to the cache
+            _ = getMapping(createResourceResponse.res_id, userProfile)
 
         } yield {
             CreateMappingResponseV1(resourceIri = createResourceResponse.res_id, userdata = userProfile.userData)
@@ -139,10 +139,21 @@ class StandoffResponderV1 extends ResponderV1 {
     // string constant used to mark the absence of an XML namespace
     val noNamespace = "noNamespace"
 
-    // TODO: call this method when creating the mapping and cache it
+    /**
+      * The name of the mapping cache.
+      */
+    val MappingCacheName = "mappingCache"
+
     private def getMapping(mappingIri: IRI, userProfile: UserProfileV1): Future[MappingXMLtoStandoff] = {
 
-        // TODO: create cache for mapping and check it before requesting the mapping from Sipi
+        CacheUtil.get[MappingXMLtoStandoff](cacheName = MappingCacheName, key = mappingIri) match {
+            case Some(data: MappingXMLtoStandoff) => Future(data)
+            case None => getMappingFromSipi(mappingIri, userProfile)
+        }
+
+    }
+
+    private def getMappingFromSipi(mappingIri: IRI, userProfile: UserProfileV1): Future[MappingXMLtoStandoff] = {
 
         // get mapping from file value
         for {
@@ -168,8 +179,6 @@ class StandoffResponderV1 extends ResponderV1 {
             urlToMapping = mappingLocation.path
 
             // ask Sipi to return the XML representing the mapping
-            //request <- Marshal(FormData(conversionRequest.toFormData())).to[RequestEntity]
-
             mappingResponseFuture: Future[HttpResponse] = Http().singleRequest(
                 HttpRequest(
                     method = HttpMethods.GET,
@@ -290,6 +299,9 @@ class StandoffResponderV1 extends ResponderV1 {
             // invert mapping in order to run checks for duplicate use of
             // standoff class Iris and property Iris in the attributes for a standoff class
             _ = invertXMLToStandoffMapping(mappingXMLToStandoff)
+
+            // add the mapping to the cache
+            _ = CacheUtil.put(cacheName = MappingCacheName, key = mappingIri, value = mappingXMLToStandoff)
 
         } yield mappingXMLToStandoff
 
@@ -866,7 +878,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
         for {
 
-            // ask the ValuesResponder to query the text value.
+        // ask the ValuesResponder to query the text value.
             value: ValueGetResponseV1 <- (responderManager ? ValueGetRequestV1(valueIri = valueIri, userProfile = userProfile)).mapTo[ValueGetResponseV1]
 
             // make sure it is a text value

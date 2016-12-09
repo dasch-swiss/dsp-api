@@ -146,7 +146,7 @@ object CacheUtil {
                         None
                 }
             case None =>
-                throw ApplicationCacheException(s"Can't find application cache '$cacheName'")
+                throw ApplicationCacheException(s"Can't find application cache '$cacheName'. Please check configuration of 'app.caches' in 'application.conf'")
         }
 
     }
