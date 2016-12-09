@@ -26,8 +26,8 @@ import javax.xml.parsers.SAXParserFactory
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import org.apache.commons.lang3.StringEscapeUtils
-import org.knora.webapi.util.{ErrorHandlingMap, KnoraIdUtil}
-import org.knora.webapi.{IRI, InvalidStandoffException}
+import org.knora.webapi.util.{ErrorHandlingMap, InputValidation, KnoraIdUtil}
+import org.knora.webapi.{BadRequestException, IRI, InvalidStandoffException}
 
 import scala.xml._
 
@@ -336,8 +336,9 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
             throw InvalidStandoffException(s"One or more CLIX milestones were not closed: $missingEndTags")
         }
 
+        // TODO: How to unescape backslashes when the XML is recreated?
         TextWithStandoff(
-            text = nodes.text,
+            text = InputValidation.toSparqlEncodedString(nodes.text, () => throw BadRequestException("The submitted XML contains illegal characters")),
             standoff = finishedConversionState.standoffTags
         )
     }
