@@ -21,19 +21,15 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets the administrative permission object identified by project and either group / resource class / property.
+ * Gets the object access permissions attached to a resource or value.
  *
  * @param triplestore the name of the triplestore being used.
- * @param projectIri the project's IRI.
- * @param groupIri the group's IRI.
- * @param resourceClassIri the resource's class IRI.
- * @param propertyIri the property's IRI.
+ * @param resourceIri the resource's IRI.
+ * @param valueIri the value's IRI.
  *@
 @(triplestore: String,
-  projectIri: IRI,
-  groupIri: IRI,
-  resourceClassIri: IRI,
-  propertyIri: IRI
+  resourceIri: IRI,
+  valueIri: IRI
   )
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -47,20 +43,30 @@ SELECT ?s ?p ?o
 }
 
 WHERE {
-    ?s rdf:type knora-base:DefaultObjectAccessPermission .
-    ?s knora-base:forProject <@projectIri> .
 
-    @if(groupIri.nonEmpty) {
-        ?s knora-base:forGroup <@groupIri> .
+    @if(resourceIri.nonEmpty) {
+        BIND(IRI("@resourceIri") AS ?s)
+
+        ?s rdf:type ?resourceClass ;
+           knora-base:isDeleted false .
+
+        ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+
+        ?s knora-base:hasPermissions ?o .
+
+        ?s ?p ?o .
     }
 
-    @if(resourceClassIri.nonEmpty) {
-        ?s knora-base:forResourceClass <@resourceClassIri> .
-    }
+    @if(valueIri.nonEmpty) {
+        BIND(IRI("@valueIri") AS ?s)
 
-    @if(propertyIri.nonEmpty) {
-        ?s knora-base:forProperty <@propertyIri> .
-    }
+        ?s rdf:type ?valueClass ;
+           knora-base:isDeleted false .
 
-    ?s ?p ?o .
+        ?valueClass rdfs:subClassOf+ knora-base:Value .
+
+        ?s knora-base:hasPermissions ?o .
+
+        ?s ?p ?o .
+    }
 }

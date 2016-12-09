@@ -24,7 +24,7 @@ import org.knora.webapi.SharedPermissionsTestData._
 import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringForResourceClassGetV1, _}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.KnoraIdUtil
@@ -62,7 +62,12 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val rdfDataObjects = List()
+    val rdfDataObjects = List(
+        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+    )
 
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
@@ -103,7 +108,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     SharedAdminTestData.rootUser
                 )
                 expectMsg(AdministrativePermissionsForProjectGetResponseV1(
-                    Seq(perm002_a1.p, perm002_a2.p)
+                    Seq(perm002_a2.p, perm002_a1.p)
                 ))
             }
 
@@ -157,21 +162,19 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return object access permissions for a resource" in {
                 actorUnderTest ! ObjectAccessPermissionsForResourceGetV1(
                     projectIri = IMAGES_PROJECT_IRI,
-                    resourceIri = "",
+                    resourceIri = perm003_o1.iri,
                     userProfile = SharedAdminTestData.incunabulaUser
                 )
-                expectMsg(AdministrativePermissionsForProjectGetResponseV1(
-                    Seq(perm002_a1.p, perm002_a2.p)
-                ))
+                expectMsg(Some(perm003_o1.p))
             }
 
-            "return object access permissoins for a value" in {
+            "return object access permissions for a value" in {
                 actorUnderTest ! ObjectAccessPermissionsForValueGetV1(
                     projectIri = IMAGES_PROJECT_IRI,
-                    valueIri = "",
+                    valueIri = perm003_o2.iri,
                     userProfile = SharedAdminTestData.incunabulaUser
                 )
-                expectMsg(AdministrativePermissionForProjectGroupGetResponseV1(perm002_a1.p))
+                expectMsg(Some(perm003_o2.p))
             }
 
         }
@@ -202,40 +205,40 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return DefaultObjectAccessPermission for project and group" in {
                 actorUnderTest ! DefaultObjectAccessPermissionGetRequestV1(
-                    projectIRI = IMAGES_PROJECT_IRI,
+                    projectIRI = INCUNABULA_PROJECT_IRI,
                     groupIRI = Some(OntologyConstants.KnoraBase.ProjectMember),
                     resourceClassIRI = None,
                     propertyIRI = None,
                     userProfile = SharedAdminTestData.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionGetResponseV1(
-                    defaultObjectAccessPermission = perm002_d1.p
+                    defaultObjectAccessPermission = perm003_d1.p
                 ))
             }
 
             "return DefaultObjectAccessPermission for project and resource class ('incunabula:Page')" in {
                 actorUnderTest ! DefaultObjectAccessPermissionGetRequestV1(
-                    projectIRI = IMAGES_PROJECT_IRI,
+                    projectIRI = INCUNABULA_PROJECT_IRI,
                     groupIRI = None,
                     resourceClassIRI = Some(INCUNABULA_BOOK_RESOURCE_CLASS),
                     propertyIRI = None,
                     userProfile = SharedAdminTestData.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionGetResponseV1(
-                    defaultObjectAccessPermission = perm002_d1.p
+                    defaultObjectAccessPermission = perm003_d2.p
                 ))
             }
 
-            "return DefaultObjectAccessPermission for project and property ('knora-base:hasStillImageFileValue')" in {
+            "return DefaultObjectAccessPermission for project and property ('knora-base:hasStillImageFileValue') (system property)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionGetRequestV1(
-                    projectIRI = SYSTEM_PROJECT_IRI,
+                    projectIRI = INCUNABULA_PROJECT_IRI,
                     groupIRI = None,
                     resourceClassIRI = None,
                     propertyIRI = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
                     userProfile = SharedAdminTestData.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionGetResponseV1(
-                    defaultObjectAccessPermission = perm002_d1.p
+                    defaultObjectAccessPermission = perm001_d3.p
                 ))
             }
         }

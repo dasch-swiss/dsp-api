@@ -71,8 +71,8 @@ object SharedPermissionsTestData {
                 iri = "http://data.knora.org/permissions/001-d3",
                 forProject = OntologyConstants.KnoraBase.SystemProject,
                 forGroup = None,
-                forResourceClass = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
-                forProperty = None,
+                forResourceClass = None,
+                forProperty = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
                 hasPermissions = Seq(
                     PermissionV1.DefaultModifyPermission(Set(OntologyConstants.KnoraBase.Creator, OntologyConstants.KnoraBase.ProjectMember)),
                     PermissionV1.DefaultViewPermission(Set(OntologyConstants.KnoraBase.KnownUser, OntologyConstants.KnoraBase.UnknownUser))
@@ -114,7 +114,7 @@ object SharedPermissionsTestData {
         doap(
             iri = "http://data.knora.org/permissions/002-d1",
             p = DefaultObjectAccessPermissionV1(
-                iri = "http://data.knora.org/permissions/002-3",
+                iri = "http://data.knora.org/permissions/002-d1",
                 forProject = SharedAdminTestData.IMAGES_PROJECT_IRI,
                 forGroup = Some(OntologyConstants.KnoraBase.ProjectMember),
                 forResourceClass = None,
@@ -173,7 +173,7 @@ object SharedPermissionsTestData {
             )
         )
 
-    val perm0003_o2 =
+    val perm003_o2 =
         oap(
             iri = "http://data.knora.org/00014b43f902/values/1ad3999ad60b", // knora-base:TextValue
             p = ObjectAccessPermissionV1(
@@ -181,10 +181,8 @@ object SharedPermissionsTestData {
                 forValue = Some("http://data.knora.org/00014b43f902/values/1ad3999ad60b"),
                 hasPermissions = Seq(
                     PermissionV1.ViewPermission(Set(
+                        OntologyConstants.KnoraBase.UnknownUser,
                         OntologyConstants.KnoraBase.KnownUser,
-                        OntologyConstants.KnoraBase.UnknownUser
-                    )),
-                    PermissionV1.ModifyPermission(Set(
                         OntologyConstants.KnoraBase.ProjectMember,
                         OntologyConstants.KnoraBase.Owner
                     ))
