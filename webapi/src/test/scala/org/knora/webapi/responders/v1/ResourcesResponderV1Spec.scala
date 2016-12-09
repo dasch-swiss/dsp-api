@@ -287,6 +287,12 @@ object ResourcesResponderV1Spec {
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/anything/start",
+                source = "http://data.knora.org/A67ka6UQRHWf313tbhQBjw"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
                 target = "http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA",
                 source = "http://data.knora.org/5IEswyQFQp2bxXDrOyEfEA"
             ),
@@ -430,6 +436,12 @@ object ResourcesResponderV1Spec {
     private val graphForIncunabulaUser = GraphDataGetResponseV1(
         userdata = incunabulaUser.userData,
         edges = Vector(
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/anything/start",
+                source = "http://data.knora.org/A67ka6UQRHWf313tbhQBjw"
+            ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",

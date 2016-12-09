@@ -131,9 +131,10 @@ class ResourcesResponderV1 extends ResponderV1 {
           *                  to see this node.
           * @param outbound `true` to get outbound links, `false` to get inbound links.
           * @param depth the maximum depth of the query.
+          * @param traversedEdges edges that have already been traversed.
           * @return a [[GraphQueryResults]].
           */
-        def traverseGraph(startNode: QueryResultNode, outbound: Boolean, depth: Int): Future[GraphQueryResults] = {
+        def traverseGraph(startNode: QueryResultNode, outbound: Boolean, depth: Int, traversedEdges: Set[QueryResultEdge] = Set.empty[QueryResultEdge]): Future[GraphQueryResults] = {
             if (depth < 1) Future.failed(AssertionException("Depth must be at least 1"))
 
             for {
@@ -184,7 +185,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         val visibleNodeIris = otherNodes.map(_.nodeIri).toSet + startNode.nodeIri
 
                         // Get the edges from the query results.
-                        val edges: Seq[QueryResultEdge] = rows.map {
+                        val edges: Set[QueryResultEdge] = rows.map {
                             row =>
                                 val rowMap = row.rowMap
                                 val nodeIri = rowMap("node")
@@ -211,7 +212,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 // Filter out the edges that the user doesn't have permission to see. To see an edge,
                                 // the user must have some permission on the link value and on the source and target
                                 // nodes.
-                                visibleNodeIris.contains(edge.sourceNodeIri) && visibleNodeIris.contains(edge.targetNodeIri) &&
+                                val hasPermission = visibleNodeIris.contains(edge.sourceNodeIri) && visibleNodeIris.contains(edge.targetNodeIri) &&
                                     PermissionUtilV1.getUserPermissionOnLinkValueV1(
                                         linkValueIri = edge.linkValueIri,
                                         predicateIri = edge.linkProp,
@@ -220,16 +221,21 @@ class ResourcesResponderV1 extends ResponderV1 {
                                         linkValuePermissionLiteral = edge.linkValuePermissions,
                                         userProfile = graphDataGetRequest.userProfile
                                     ).nonEmpty
-                        }
 
-                        // Filter out the nodes that are reachable only via edges that the user doesn't have permission
-                        // to see.
-                        val visibleNodeIrisFromEdges = edges.map(_.sourceNodeIri).toSet ++ edges.map(_.targetNodeIri).toSet
+                                // Filter out edges we've already traversed.
+                                val isRedundant = traversedEdges.contains(edge)
+
+                                hasPermission && !isRedundant
+                        }.toSet
+
+                        // Include only nodes that are reachable via edges that we're going to traverse (i.e. the user
+                        // has permission to see those edges, and we haven't already traversed them).
+                        val visibleNodeIrisFromEdges = edges.map(_.sourceNodeIri) ++ edges.map(_.targetNodeIri)
                         val filteredOtherNodes = otherNodes.filter(node => visibleNodeIrisFromEdges.contains(node.nodeIri))
 
                         // Make a GraphQueryResults containing the resulting nodes and edges, including the start
                         // node.
-                        val results = GraphQueryResults(nodes = filteredOtherNodes.toSet + startNode, edges = edges.toSet)
+                        val results = GraphQueryResults(nodes = filteredOtherNodes.toSet + startNode, edges = edges)
 
                         // Have we reached the maximum depth?
                         if (depth == 1) {
@@ -242,7 +248,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 node => traverseGraph(
                                     startNode = node,
                                     outbound = outbound,
-                                    depth = depth - 1
+                                    depth = depth - 1,
+                                    traversedEdges = traversedEdges ++ edges
                                 )
                             }
 
