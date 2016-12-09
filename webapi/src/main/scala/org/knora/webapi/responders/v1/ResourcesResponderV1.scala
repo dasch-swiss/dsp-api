@@ -224,6 +224,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                                 // Filter out edges we've already traversed.
                                 val isRedundant = traversedEdges.contains(edge)
+                                // if (isRedundant) println(s"filtering out edge from ${edge.sourceNodeIri} to ${edge.targetNodeIri}")
 
                                 hasPermission && !isRedundant
                         }.toSet

@@ -413,6 +413,8 @@
 	knora-base:creationDate "2016-10-17T19:16:04.912+02:00"^^xsd:dateTime ;
 	anything:hasOtherThingValue <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg/values/nkMp5_JZTtWH55bkotxeDQ> ;
 	anything:hasOtherThing <http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ> ;
+	anything:hasOtherThingValue <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg/values/foxtrot-to-romeo> ;
+	anything:hasOtherThing <http://data.knora.org/anything/start> ;
 	rdfs:label "Foxtrot" ;
 	knora-base:isDeleted false .
 
@@ -425,6 +427,17 @@
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.913+02:00"^^xsd:dateTime ;
 	knora-base:valueHasString "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ" ;
+	knora-base:valueHasRefCount "1"^^xsd:int .
+
+<http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg/values/foxtrot-to-romeo> a knora-base:LinkValue ;
+	rdf:subject <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg> ;
+	rdf:predicate anything:hasOtherThing ;
+	rdf:object <http://data.knora.org/anything/start> ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+	knora-base:valueCreationDate "2016-10-17T19:16:04.913+02:00"^^xsd:dateTime ;
+	knora-base:valueHasString "http://data.knora.org/anything/start" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
 <http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ> a anything:Thing ;
@@ -700,21 +713,8 @@
 	knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.917+02:00"^^xsd:dateTime ;
-	anything:hasOtherThingValue <http://data.knora.org/A67ka6UQRHWf313tbhQBjw/values/victor-to-romeo> ;
-	anything:hasOtherThing <http://data.knora.org/anything/start> ;
 	rdfs:label "Victor" ;
 	knora-base:isDeleted false .
-
-<http://data.knora.org/A67ka6UQRHWf313tbhQBjw/values/victor-to-romeo> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/A67ka6UQRHWf313tbhQBjw> ;
-	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/anything/start> ;
-	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
-	knora-base:valueCreationDate "2016-10-17T19:16:04.913+02:00"^^xsd:dateTime ;
-	knora-base:valueHasString "http://data.knora.org/anything/start" ;
-	knora-base:valueHasRefCount "1"^^xsd:int .
 
 <http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ> a anything:Thing ;
 	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
