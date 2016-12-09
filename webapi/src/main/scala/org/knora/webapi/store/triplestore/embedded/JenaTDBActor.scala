@@ -38,7 +38,7 @@ import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.ErrorHandlingMap
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.Future
 
 
@@ -99,7 +99,7 @@ class JenaTDBActor extends Actor with ActorLogging {
         if (reloadDataOnStart) {
 
             val configList = settings.tripleStoreConfig.getConfigList("rdf-data")
-            val rdfDataObjectList = configList.map {
+            val rdfDataObjectList = configList.asScala.map {
                 config => RdfDataObjectFactory(config)
             }
 
@@ -159,9 +159,9 @@ class JenaTDBActor extends Actor with ActorLogging {
             val resultVars = resultSet.getResultVars
 
             // Convert the results to a list of VariableResultsRows.
-            val variableResultsRows = resultSet.foldLeft(Vector.empty[VariableResultsRow]) {
+            val variableResultsRows = resultSet.asScala.foldLeft(Vector.empty[VariableResultsRow]) {
                 (rowAcc, row) =>
-                    val mapToWrap = resultVars.foldLeft(Map.empty[String, String]) {
+                    val mapToWrap = resultVars.asScala.foldLeft(Map.empty[String, String]) {
                         case (varAcc, varName) =>
                             Option(row.get(varName)) match {
                                 case Some(literal: Literal) if literal.getLexicalForm.isEmpty => varAcc // Omit variables with empty values.
@@ -193,7 +193,7 @@ class JenaTDBActor extends Actor with ActorLogging {
 
             Future.successful(
                 SparqlSelectResponse(
-                    SparqlSelectResponseHeader(resultVars),
+                    SparqlSelectResponseHeader(resultVars.asScala),
                     SparqlSelectResponseBody(variableResultsRows)
                 )
             )
@@ -385,12 +385,12 @@ class JenaTDBActor extends Actor with ActorLogging {
             val entityDefinition = textIndex.getDocDef
 
             // get the indexed fields
-            val fields: List[String] = entityDefinition.fields().toList
+            val fields: List[String] = entityDefinition.fields().asScala.toList
 
             // go over all properties and find them in the dataset and add them to the index
             for (field: String <- fields) {
-                for (prop: Node <- entityDefinition.getPredicates(field)) {
-                    val quadIter: Iterator[Quad] = dgt.find(Node.ANY, Node.ANY, prop, Node.ANY)
+                for (prop: Node <- entityDefinition.getPredicates(field).asScala) {
+                    val quadIter: Iterator[Quad] = dgt.find(Node.ANY, Node.ANY, prop, Node.ANY).asScala
                     while (quadIter.hasNext) {
                         val quad: Quad = quadIter.next()
                         val entity: Entity = TextQueryFuncs.entityFromQuad(entityDefinition, quad)

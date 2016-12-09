@@ -32,7 +32,7 @@ import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.util.FakeTriplestore
 import org.knora.webapi.{ActorMaker, Settings, UnsuportedTriplestoreException}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.Await
 
 /**
@@ -89,7 +89,7 @@ class TriplestoreManager extends Actor with ActorLogging {
         if (reloadDataOnStart && httpBased) {
             log.debug("initiating data reload")
             val configList = settings.tripleStoreConfig.getConfigList("rdf-data")
-            val rdfDataObjectList = configList.map {
+            val rdfDataObjectList = configList.asScala.map {
                 config => RdfDataObjectFactory(config)
             }
             val resultFuture = storeActorRef ? ResetTriplestoreContent(rdfDataObjectList)
