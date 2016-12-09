@@ -42,7 +42,7 @@ object RouteUtilV1 {
     /**
       * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
       *
-      * @param requestMessage   a [[KnoraRequestV1]] message that should be sent to the responder manager.
+      * @param requestMessageF  a future containing a [[KnoraRequestV1]] message that should be sent to the responder manager.
       * @param requestContext   the akka-http [[RequestContext]].
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
@@ -50,20 +50,22 @@ object RouteUtilV1 {
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
       */
-    def runJsonRoute[RequestMessageT <: KnoraRequestV1](requestMessage: RequestMessageT,
+    def runJsonRoute[RequestMessageT <: KnoraRequestV1](requestMessageF: Future[RequestMessageT],
                                                         requestContext: RequestContext,
                                                         settings: SettingsImpl,
                                                         responderManager: ActorSelection,
                                                         log: LoggingAdapter)
                                                        (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
 
-        // Optionally log the request message. TODO: move this to the testing framework.
-        if (settings.dumpMessages) {
-            log.debug(MessageUtil.toSource(requestMessage))
-        }
-
         val httpResponse: Future[HttpResponse] = for {
-        // Make sure the responder sent a reply of type KnoraResponseV1.
+            requestMessage <- requestMessageF
+
+            // Optionally log the request message. TODO: move this to the testing framework.
+            _ = if (settings.dumpMessages) {
+                log.debug(MessageUtil.toSource(requestMessage))
+            }
+
+            // Make sure the responder sent a reply of type KnoraResponseV1.
             knoraResponse <- (responderManager ? requestMessage).map {
                 case replyMessage: KnoraResponseV1 => replyMessage
 

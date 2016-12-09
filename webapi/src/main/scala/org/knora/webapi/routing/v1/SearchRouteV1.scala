@@ -30,6 +30,7 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
+import scala.concurrent.Future
 import scala.language.postfixOps
 
 // slash after path without following segment
@@ -195,7 +196,7 @@ object SearchRouteV1 extends Authenticator {
                     val requestMessage = makeExtendedSearchRequestMessage(userProfile, params)
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessage,
+                        Future(requestMessage),
                         requestContext,
                         settings,
                         responderManager,
@@ -211,7 +212,7 @@ object SearchRouteV1 extends Authenticator {
                     val requestMessage = makeFulltextSearchRequestMessage(userProfile, searchval, params)
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessage,
+                        Future(requestMessage),
                         requestContext,
                         settings,
                         responderManager,

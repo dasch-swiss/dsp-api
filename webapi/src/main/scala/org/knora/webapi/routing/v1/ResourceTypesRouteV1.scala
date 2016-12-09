@@ -30,6 +30,8 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 
+import scala.concurrent.Future
+
 /**
   * Provides a spray-routing function for API routes that deal with resource types.
   */
@@ -57,7 +59,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     val requestMessage = makeResourceTypeRequestMessage(resourceTypeIri, userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessage,
+                        Future(requestMessage),
                         requestContext,
                         settings,
                         responderManager,
@@ -80,7 +82,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     val requestMessage = ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessage,
+                        Future(requestMessage),
                         requestContext,
                         settings,
                         responderManager,
@@ -117,7 +119,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessage,
+                        Future(requestMessage),
                         requestContext,
                         settings,
                         responderManager,
@@ -132,7 +134,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     val requestMessage = NamedGraphsGetRequestV1(userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessage,
+                        Future(requestMessage),
                         requestContext,
                         settings,
                         responderManager,
@@ -147,7 +149,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     val requestMessageTry = LoadOntologiesRequest(userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessageTry,
+                        Future(requestMessageTry),
                         requestContext,
                         settings,
                         responderManager,
@@ -166,7 +168,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                         val requestMessage = SubClassesGetRequestV1(resourceClassIri, userProfile)
 
                         RouteUtilV1.runJsonRoute(
-                            requestMessage,
+                            Future(requestMessage),
                             requestContext,
                             settings,
                             responderManager,

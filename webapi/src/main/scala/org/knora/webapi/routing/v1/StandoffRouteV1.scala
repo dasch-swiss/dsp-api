@@ -31,6 +31,8 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 
+import scala.concurrent.Future
+
 
 /**
   * A route used to convert XML to standoff.
@@ -72,7 +74,7 @@ object StandoffRouteV1 extends Authenticator {
                             apiRequestID = UUID.randomUUID)
 
                         RouteUtilV1.runJsonRoute(
-                            requestMessage,
+                            Future(requestMessage),
                             requestContext,
                             settings,
                             responderManager,
@@ -88,7 +90,7 @@ object StandoffRouteV1 extends Authenticator {
                     val requestMessage = StandoffGetRequestV1(valueIri = InputValidation.toIri(iri, () => throw BadRequestException("invalid Iri")), userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessage,
+                        Future(requestMessage),
                         requestContext,
                         settings,
                         responderManager,
@@ -108,7 +110,7 @@ object StandoffRouteV1 extends Authenticator {
                         val requestMessage = CreateMappingRequestV1(xml = xml, projectIri = projectIri, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRoute(
-                            requestMessage,
+                            Future(requestMessage),
                             requestContext,
                             settings,
                             responderManager,

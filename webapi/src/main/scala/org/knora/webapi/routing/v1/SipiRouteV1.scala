@@ -29,6 +29,8 @@ import org.knora.webapi.messages.v1.responder.sipimessages.SipiFileInfoGetReques
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 
+import scala.concurrent.Future
+
 /**
   * Provides a spray-routing function for the API routes that Sipi connects to.
   */
@@ -52,7 +54,7 @@ object SipiRouteV1 extends Authenticator {
                     val requestMessage = SipiFileInfoGetRequestV1(filename, userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessage,
+                        Future(requestMessage),
                         requestContext,
                         settings,
                         responderManager,

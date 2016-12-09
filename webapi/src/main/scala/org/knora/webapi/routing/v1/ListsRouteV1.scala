@@ -29,6 +29,8 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 
+import scala.concurrent.Future
+
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
@@ -53,7 +55,7 @@ object ListsRouteV1 extends Authenticator {
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        requestMessage,
+                        Future(requestMessage),
                         requestContext,
                         settings,
                         responderManager,
@@ -74,7 +76,7 @@ object ListsRouteV1 extends Authenticator {
                         }
 
                         RouteUtilV1.runJsonRoute(
-                            requestMessage,
+                            Future(requestMessage),
                             requestContext,
                             settings,
                             responderManager,
