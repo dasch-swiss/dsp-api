@@ -2595,28 +2595,6 @@
                         rdfs:comment "Represents a boolean in a TextValue"@en .
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffBirthdayTag
-
-:StandoffBirthdayTag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffDateTag ;
-
-                rdfs:comment "Represents a birthday in a TextValue"@en .
-
-
-###  http://www.knora.org/ontology/knora-base#StandoffRangeTag
-
-:StandoffRangeTag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffIntervalTag ,
-                                [ rdf:type owl:Restriction ;
-                                  owl:onProperty :standoffTagIsUnsure ;
-                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                                ] ;
-
-                rdfs:comment "Represents a range in a TextValue"@en .
-
-
 ###  http://www.knora.org/ontology/knora-base#StandoffParagraphTag
 
 :StandoffParagraphTag rdf:type owl:Class ;

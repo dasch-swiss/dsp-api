@@ -515,6 +515,8 @@ class StandoffResponderV1 extends ResponderV1 {
                                 endParentIndex = freeStandoffTag.endParentIndex,
                                 attributes = Seq.empty[StandoffTagAttributeV1]
                             )
+
+                        case _ => throw InvalidStandoffException("StandoffUtil did neither return a HierarchicalStandoff tag nor a FreeStandoffTag")
                     }
 
                     // check the data type of the given standoff class
