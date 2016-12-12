@@ -91,6 +91,11 @@ case class XMLTag(name: String, mapping: XMLTagToStandoffClass)
   */
 case class XMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, Map[String, IRI]] = Map.empty[String, Map[String, IRI]], dataType: Option[StandoffDataTypeClasses.Value] = None, dataTypeXMLAttribute: Option[String] = None)
 
+case class CreateStandoffApiRequestV1(resource_id: IRI, property_id: IRI, project_id: IRI, mapping_id: IRI) {
+
+    def toJsValue = RepresentationV1JsonProtocol.createStandoffApiRequestV1Format.write(this)
+
+}
 
 /**
   * Represents a request to add a text value containing standoff to a resource.
@@ -236,6 +241,7 @@ object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions
     import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val createStandoffResponseV1Format: RootJsonFormat[CreateStandoffResponseV1] = jsonFormat2(CreateStandoffResponseV1)
+    implicit val createStandoffApiRequestV1Format: RootJsonFormat[CreateStandoffApiRequestV1] = jsonFormat4(CreateStandoffApiRequestV1)
     implicit val standoffGetResponseV1Format: RootJsonFormat[StandoffGetResponseV1] = jsonFormat2(StandoffGetResponseV1)
     implicit val createMappingResponseV1Format: RootJsonFormat[CreateMappingResponseV1] = jsonFormat2(CreateMappingResponseV1)
 }
