@@ -25,9 +25,9 @@ import javax.xml.parsers.SAXParserFactory
 
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
-import org.apache.commons.lang3.StringEscapeUtils
+import org.apache.commons.lang3.{StringEscapeUtils, StringUtils}
 import org.knora.webapi.util.{ErrorHandlingMap, InputValidation, KnoraIdUtil}
-import org.knora.webapi.{BadRequestException, IRI, InvalidStandoffException}
+import org.knora.webapi.{BadRequestException, IRI, InconsistentTriplestoreDataException, InvalidStandoffException}
 
 import scala.xml._
 
@@ -395,7 +395,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
         groupedTags.get(None) match {
             case Some(children) if children.size == 1 =>
                 standoffTags2XmlString(
-                    text = textWithStandoff.text,
+                    text = InputValidation.toSparqlEncodedString(textWithStandoff.text, () => throw InconsistentTriplestoreDataException("string returned by triplestore could not be reverted correctly"), revert = true),
                     groupedTags = groupedTags,
                     posBeforeSiblings = 0,
                     siblings = children,

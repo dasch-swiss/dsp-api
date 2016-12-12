@@ -83,28 +83,51 @@ object InputValidation {
         }
     }
 
-    def toSparqlEncodedString(s: String, errorFun: () => Nothing): String = {
+    /**
+      *
+      * Makes a string safe to be entered in the triplestore by escaping special chars.
+      *
+      * If the param `revert` is set to `true`, this operation is reverted.
+      *
+      * @param s the string to be entered in the triplestore.
+      * @param errorFun the error
+      * @param revert if set to `true`, the escaping is reverted. This is useful when a string is read back from the triplestore.
+      * @return a [[String]].
+      */
+    def toSparqlEncodedString(s: String, errorFun: () => Nothing, revert: Boolean = false): String = {
         if (s.isEmpty || s.contains("\r")) errorFun()
 
         // http://www.morelab.deusto.es/code_injection/
 
-        StringUtils.replaceEach(
-            s,
-            Array(
-                "\\",
-                "\"",
-                "'",
-                "\t",
-                "\n"
-            ),
-            Array(
-                "\\\\",
-                "\\\"",
-                "\\'",
-                "\\t",
-                "\\n"
-            )
+        val input = Array(
+            "\\",
+            "\"",
+            "'",
+            "\t",
+            "\n"
         )
+
+        val output = Array(
+            "\\\\",
+            "\\\"",
+            "\\'",
+            "\\t",
+            "\\n"
+        )
+
+        if (!revert) {
+            StringUtils.replaceEach(
+                s,
+                input,
+                output
+            )
+        } else {
+            StringUtils.replaceEach(
+                s,
+                output,
+                input
+            )
+        }
     }
 
     def toGeometryString(s: String, errorFun: () => Nothing): String = {
