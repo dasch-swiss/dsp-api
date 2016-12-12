@@ -161,7 +161,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             StandoffTagV1(
                 standoffTagClassIri = OntologyConstants.KnoraBase.StandoffBoldTag,
                 startPosition = 21,
-                endPosition = 25
+                endPosition = 25,
+                uuid = UUID.randomUUID().toString
             )
         )
 
@@ -219,11 +220,13 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         StandoffTagV1(
             standoffTagClassIri = OntologyConstants.KnoraBase.StandoffBoldTag,
             startPosition = 0,
-            endPosition = 7),
+            endPosition = 7,
+            uuid = UUID.randomUUID().toString),
         StandoffTagV1(
             standoffTagClassIri = OntologyConstants.KnoraBase.StandoffParagraphTag,
             startPosition = 0,
-            endPosition = 10
+            endPosition = 10,
+            uuid = UUID.randomUUID().toString
         )
     )
 
@@ -703,7 +706,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                         startPosition = 31,
                         endPosition = 39,
-                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri))
+                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                        uuid = UUID.randomUUID().toString
                     )
                 ),
                 resource_reference = Set(zeitglöckleinIri)
@@ -777,14 +781,16 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                             standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                             startPosition = 39,
                             endPosition = 47,
-                            attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri))
+                            attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                            uuid = UUID.randomUUID().toString
                         ),
                         StandoffTagV1(
                             dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                             standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                             startPosition = 0,
                             endPosition = 4,
-                            attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri))
+                            attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                            uuid = UUID.randomUUID().toString
                         )
                 ),
                 resource_reference = Set(zeitglöckleinIri)
@@ -854,7 +860,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                         startPosition = 30,
                         endPosition = 38,
-                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri))
+                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                        uuid = UUID.randomUUID().toString
                     )
                 ),
                 resource_reference = Set(zeitglöckleinIri)
@@ -1050,7 +1057,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                         startPosition = 45,
                         endPosition = 53,
-                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri))
+                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                        uuid = UUID.randomUUID().toString
                     )
                 ),
                 resource_reference = Set(zeitglöckleinIri)

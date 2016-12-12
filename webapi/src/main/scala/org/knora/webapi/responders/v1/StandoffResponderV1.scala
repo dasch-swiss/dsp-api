@@ -508,7 +508,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 standoffTagClassIri = standoffClassIri,
                                 startPosition = hierarchicalStandoffTag.startPosition,
                                 endPosition = hierarchicalStandoffTag.endPosition,
-                                uuid = Some(hierarchicalStandoffTag.uuid.toString),
+                                uuid = hierarchicalStandoffTag.uuid.toString,
                                 startIndex = Some(hierarchicalStandoffTag.index),
                                 endIndex = None,
                                 startParentIndex = hierarchicalStandoffTag.parentIndex,
@@ -520,7 +520,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 standoffTagClassIri = standoffClassIri,
                                 startPosition = freeStandoffTag.startPosition,
                                 endPosition = freeStandoffTag.endPosition,
-                                uuid = Some(freeStandoffTag.uuid.toString),
+                                uuid = freeStandoffTag.uuid.toString,
                                 startIndex = Some(freeStandoffTag.startIndex),
                                 endIndex = Some(freeStandoffTag.endIndex),
                                 startParentIndex = freeStandoffTag.startParentIndex,
@@ -898,7 +898,7 @@ class StandoffResponderV1 extends ResponderV1 {
             // inverts the mapping and makes standoff class Iris keys (for tags)
             mappingStandoffToXML: Map[IRI, XMLTagItem] = invertXMLToStandoffMapping(mappingXMLtoStandoff)
 
-            standoffUtil = new StandoffUtil()
+            standoffUtil = new StandoffUtil(writeAllIDsToXml = false)
 
             standoffTags: Seq[StandoffTag] = textValue.textattr.map {
                 (standoffTagV1: StandoffTagV1) =>
@@ -1003,7 +1003,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 case `noNamespace` => None
                                 case namespace => Some(namespace)
                             },
-                            uuid = UUID.fromString(standoffTagV1.uuid.get), // TODO: this is an option in knora-base! UUID should also be an option in StandoffUtil
+                            uuid = UUID.fromString(standoffTagV1.uuid),
                             startPosition = standoffTagV1.startPosition,
                             endPosition = standoffTagV1.endPosition,
                             startIndex = standoffTagV1.startIndex.getOrElse(throw InconsistentTriplestoreDataException(s"start index is missing for a free standoff tag belonging to $valueIri")),
@@ -1020,7 +1020,7 @@ class StandoffResponderV1 extends ResponderV1 {
                                 case `noNamespace` => None
                                 case namespace => Some(namespace)
                             },
-                            uuid = UUID.fromString(standoffTagV1.uuid.get), // TODO: this is an option in  knora-base! UUID should also be an option in StandoffUtil
+                            uuid = UUID.fromString(standoffTagV1.uuid),
                             startPosition = standoffTagV1.startPosition,
                             endPosition = standoffTagV1.endPosition,
                             index = standoffTagV1.startIndex.getOrElse(throw InconsistentTriplestoreDataException(s"start index is missing for a hierarchical standoff tag belonging to $valueIri")),

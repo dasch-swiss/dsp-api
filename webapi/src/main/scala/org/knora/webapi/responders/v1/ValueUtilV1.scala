@@ -509,7 +509,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                         case Some(endIndex: String) => Some(endIndex.toInt)
                         case None => None
                     },
-                    uuid = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasUUID),
+                    uuid = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasUUID),
                     startParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex) match {
                         case Some(startParentIndex: String) => Some(startParentIndex.toInt)
                         case None => None

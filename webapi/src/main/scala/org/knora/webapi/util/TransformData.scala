@@ -17,6 +17,7 @@
 package org.knora.webapi.util
 
 import java.io._
+import java.util.UUID
 
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.eclipse.rdf4j.model.{Resource, Statement}
@@ -560,7 +561,7 @@ object TransformData extends App {
             }
 
             // Separate out the statements about standoff tags, and group them by subject IRI.
-            val standoffTagIris = standoffTagIriMap.values.toSet
+            val standoffTagIris = standoffTagIrisToTextValueIris.keySet
             val (standoffStatements: Vector[Statement], nonStandoffStatements: Vector[Statement]) = statementsWithNewIris.partition(statement => standoffTagIris.contains(statement.getSubject.stringValue()))
             val groupedStandoffStatements: Map[Resource, Vector[Statement]] = standoffStatements.groupBy(_.getSubject)
 
@@ -571,7 +572,7 @@ object TransformData extends App {
             val removedLinebreakTagIris = new mutable.HashSet[IRI]
 
             // Remove the linebreak tags.
-            val standoffWithoutLinebreakTags = groupedStandoffStatements.filter {
+            val standoffWithoutLinebreakTags: Map[Resource, Vector[Statement]] = groupedStandoffStatements.filter {
                 case (tag, tagStatements) =>
                     getObject(tagStatements, StandoffHasAttribute) match {
                         case Some("linebreak") =>
@@ -590,13 +591,13 @@ object TransformData extends App {
 
             // Transform the structure of each standoff tag.
             val transformedStandoff: Vector[Statement] = standoffWithoutLinebreakTags.flatMap {
-                case (tag, tagStatements) =>
+                case (tag: Resource, tagStatements: Seq[Statement]) =>
                     val oldTagClassIri = getObject(tagStatements, OntologyConstants.Rdf.Type).get
                     val textValueIri = standoffTagIrisToTextValueIris(tag.stringValue)
                     val linefeedsToInsertForTextValue = linefeedsToInsert.get(textValueIri)
                     val maybeTagName = getObject(tagStatements, StandoffHasAttribute)
 
-                    val newTagClassIri = maybeTagName match { // TODO: check if this still works with the new standoff design (structure of textattr)
+                    val newTagClassIri = maybeTagName match {
                         case Some(tagName) =>
                             if (tagName == "_link") {
                                 oldToNewClassIris(oldTagClassIri)
@@ -610,6 +611,18 @@ object TransformData extends App {
 
                     // Throw away the standoffHasAttribute statement.
                     val tagStatementsWithoutStandoffHasAttribute = tagStatements.filterNot(_.getPredicate.stringValue == StandoffHasAttribute)
+
+                    // If the tag doesn't have a UUID, create one.
+                    val maybeUuidStatement = getObject(tagStatements, OntologyConstants.KnoraBase.StandoffTagHasUUID) match {
+                        case Some(_) => None
+                        case None => Some(
+                            valueFactory.createStatement(
+                                tag,
+                                valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasUUID),
+                                valueFactory.createLiteral(UUID.randomUUID.toString)
+                            )
+                        )
+                    }
 
                     // Transform the remaining statements.
                     tagStatementsWithoutStandoffHasAttribute.map {
@@ -674,7 +687,7 @@ object TransformData extends App {
                                         statement.getObject
                                     )
                             }
-                    }
+                    } ++ maybeUuidStatement
             }.toVector
 
             // Fix the objects of valueHasString by replacing \r with INFORMATION SEPARATOR TWO and inserting

@@ -1019,7 +1019,8 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 
 <http://data.knora.org/e41ab5695c/values/d3398239089e04/standoff/mX6z2vBPQ3OuUjQkfYEZRg> a knora-base:StandoffBoldTag ;
 	knora-base:standoffTagHasStart "21"^^xsd:int ;
-	knora-base:standoffTagHasEnd "25"^^xsd:int .
+	knora-base:standoffTagHasEnd "25"^^xsd:int ;
+	knora-base:standoffTagHasUUID "4bc24696-5dde-4ced-9687-6f8e4519efe8" .
 
 <http://data.knora.org/e41ab5695c/values/fc4544c26a01> a knora-base:TextValue ;
 	knora-base:isDeleted false ;

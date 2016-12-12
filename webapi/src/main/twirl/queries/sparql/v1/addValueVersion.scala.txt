@@ -110,9 +110,6 @@ DELETE {
                         Check for optional standoff properties
 
                         *@
-                        @if(createStandoff.standoffNode.uuid.isDefined) {
-                            knora-base:standoffTagHasUUID """@createStandoff.standoffNode.uuid.get""" ;
-                        }
 
                         @if(createStandoff.standoffNode.startIndex.isDefined) {
                             knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex.get ;
@@ -141,6 +138,7 @@ DELETE {
 
                         }
 
+                        knora-base:standoffTagHasUUID """@createStandoff.standoffNode.uuid""" ;
                         knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
                         knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
                         rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .

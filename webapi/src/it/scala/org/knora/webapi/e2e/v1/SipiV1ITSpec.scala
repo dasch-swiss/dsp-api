@@ -23,15 +23,19 @@ import java.nio.file.{Files, Paths}
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.ConfigFactory
+import org.apache.commons.io.FileUtils
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.CreateRichtextV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{FileWriteException, IRI, ITSpec, InvalidApiJsonException}
+import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.diff.Diff
 import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-import scala.io.Source
+import scala.io.{Codec, Source}
 
 
 object SipiV1ITSpec {
@@ -327,8 +331,6 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
             val fileToSend = new File(RequestParams.pathToLetterXML)
 
-            val xmlString: String = Source.fromFile(fileToSend, "UTF-8").getLines.mkString
-
             val params: String =
                 s"""{
                     "resource_id": "http://data.knora.org/a-thing",
@@ -345,7 +347,8 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                 ),
                 Multipart.FormData.BodyPart(
                     "xml",
-                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, xmlString)
+                    HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
                 )
             )
 
@@ -366,9 +369,14 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
             val XMLString = ResponseUtils.getStringMemberFromResponse(standoffResponse, "xml")
 
-            //println(XMLString)
 
-            // TODO: compare XML response with XML that was originally sent
+
+            // Compare the original XML with the regenerated XML.
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(fileToSend)(Codec.UTF8).mkString)).withTest(Input.fromString(XMLString)).build()
+
+            xmlDiff.hasDifferences should be(false)
+
+
 
 
         }

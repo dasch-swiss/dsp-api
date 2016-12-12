@@ -254,7 +254,7 @@ object StandoffUtil {
   * - UUIDs are written in Base64 encoding if `writeBase64Ids` is `true` (the default), otherwise in canonical form.
   *
   * @param xmlNamespaces       A map of prefixes to XML namespaces, to be used when converting standoff to XML.
-  * @param writeAllIDs         If `true` (the default), adds the ID of every standoff tag as an attribute when writing
+  * @param writeAllIDsToXml         If `true` (the default), adds the ID of every standoff tag as an attribute when writing
   *                            XML. Otherwise, only the IDs of CLIX milestones are included.
   * @param writeBase64IDs      If `true`, writes UUIDs in Base64 encoding; otherwise, writes UUIDs in canonical form.
   * @param documentSpecificIDs An optional mapping between document-specific IDs and UUIDs. When reading XML,
@@ -264,7 +264,7 @@ object StandoffUtil {
   */
 class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
                    defaultXmlNamespace: Option[IRI] = None,
-                   writeAllIDs: Boolean = true,
+                   writeAllIDsToXml: Boolean = true,
                    writeBase64IDs: Boolean = true,
                    documentSpecificIDs: Map[String, UUID] = Map.empty[String, UUID]) {
 
@@ -777,7 +777,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
                 case None => knoraIdUtil.encodeUuid(tag.uuid, writeBase64IDs)
             }
 
-            val maybeIdAttr: Option[(String, String)] = if (writeAllIDs) {
+            val maybeIdAttr: Option[(String, String)] = if (writeAllIDsToXml) {
                 Some(XmlHierarchicalIdAttrName, id)
             } else {
                 tag match {
