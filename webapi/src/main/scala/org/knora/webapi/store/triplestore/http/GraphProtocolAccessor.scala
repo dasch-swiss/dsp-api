@@ -23,12 +23,17 @@ package org.knora.webapi.store.triplestore.http
 import java.io.File
 
 import akka.actor.ActorSystem
-import dispatch._
+import akka.http.javadsl.model.headers.Authorization
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.Uri.Query
+import akka.http.scaladsl.model._
+import akka.stream.ActorMaterializer
 import org.knora.webapi.SettingsConstants._
-import org.knora.webapi.{Settings, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
+import org.knora.webapi.{BadRequestException, Settings, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
 
 /**
   * The GraphProtocolAccessor object is a basic implementation of the
@@ -46,7 +51,7 @@ object GraphProtocolAccessor {
       * @param filepath  a path to the file containing turtle.
       * @return String
       */
-    def put(graphName: String, filepath: String)(implicit _system: ActorSystem): String = {
+    def put(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): String = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
@@ -57,7 +62,7 @@ object GraphProtocolAccessor {
       * @param filepath  path to the file containing turtle.
       * @return String
       */
-    def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem): String = {
+    def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): String = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
@@ -68,67 +73,77 @@ object GraphProtocolAccessor {
       * @param filepath  a path to the file containing turtle.
       * @return String
       */
-    def post(graphName: String, filepath: String)(implicit _system: ActorSystem): String = {
+    def post(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): String = {
         this.execute(HTTP_POST_METHOD, graphName, filepath)
     }
 
-    private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem): String = {
-        // url?name= + turtle payload as body
+    private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): String = {
+        val file = new File(filepath)
+
+        if (!file.exists) {
+            throw BadRequestException(s"File ${file.getAbsolutePath} does not exist")
+        }
+
+        if (graphName.toLowerCase == "default") {
+            throw TriplestoreUnsupportedFeatureException("Requests to the default graph are not supported")
+        }
 
         val log = akka.event.Logging(_system, this.getClass)
         val settings = Settings(_system)
         implicit val executionContext = _system.dispatcher
-        val tsType = settings.triplestoreType
+        val http = Http(_system)
+
+        // Use HTTP basic authentication.
+        val authorization = Authorization.basic(settings.triplestoreUsername, settings.triplestorePassword)
 
         log.debug("==>> GraphProtocolAccessor START")
 
-        /* A base HTTP request containing the triplestore's host and port, with a username and password for authentication. */
-        val triplestore = host(settings.triplestoreHost, settings.triplestorePort).as_!(settings.triplestoreUsername, settings.triplestorePassword)
-
-        /* HTTP paths for the SPARQL 1.1 Graph Store HTTP Protocol */
-        val requestPath = tsType match {
-            case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => triplestore / "repositories" / settings.triplestoreDatabaseName / "rdf-graphs" / "service"
-            case HTTP_SESAME_TS_TYPE => triplestore / "openrdf-sesame" / "repositories" / settings.triplestoreDatabaseName / "rdf-graphs" / "service"
-            case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => triplestore / settings.triplestoreDatabaseName / "data"
-            case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => triplestore / settings.fusekiTomcatContext / settings.triplestoreDatabaseName / "data"
+        // HTTP paths for the SPARQL 1.1 Graph Store HTTP Protocol
+        val requestPath = settings.triplestoreType match {
+            case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
+            case HTTP_SESAME_TS_TYPE => s"/openrdf-sesame/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
+            case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/data"
+            case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/data"
             case ts_type => throw TriplestoreUnsupportedFeatureException(s"GraphProtocolAccessor does not support: $ts_type")
         }
 
-        /* set the content type */
-        val myRequest = requestPath.setContentType("text/turtle", "UTF-8")
+        // Construct a URI.
+        val uri = Uri(
+            scheme = "http",
+            authority = Uri.Authority(Uri.Host(settings.triplestoreHost), port = settings.triplestorePort),
+            path = Uri.Path(requestPath)
+        ).withQuery(Query("graph" -> graphName))
 
-        /* set the right method */
-        val myRequestWithMethod = if (method == HTTP_PUT_METHOD) {
-            myRequest.PUT
+        // Choose a request method.
+        val requestMethod = if (method == HTTP_PUT_METHOD) {
+            HttpMethods.PUT
         } else if (method == HTTP_POST_METHOD) {
-            myRequest.POST
+            HttpMethods.POST
         } else {
             throw TriplestoreUnsupportedFeatureException("Only PUT or POST supported by the GraphProtocolAccessor")
         }
 
-        /* add the graph parameter to the end */
-        val myRequestWithMethodAndGraph = if (graphName.toLowerCase == "default") {
-            throw TriplestoreUnsupportedFeatureException("Only requests to the default graph are not supported")
-        } else {
-            myRequestWithMethod.addQueryParameter("graph", graphName)
-        }
+        // Stream the file data into the HTTP request.
+        val fileEntity = HttpEntity.fromPath(ContentType(MediaType.text("turtle"), HttpCharsets.`UTF-8`), file.toPath, chunkSize = 100000)
 
-        /* add the turtle file to the body */
-        val payload = new File(filepath)
-        val myRequestWithMethodAndGraphAndPayload = myRequestWithMethodAndGraph <<< payload
-
-        log.debug(s"==>> Request: ${myRequestWithMethodAndGraphAndPayload.toRequest.toString}")
+        val request = HttpRequest(
+            method = requestMethod,
+            uri = uri,
+            entity = fileEntity,
+            headers = List(authorization)
+        )
 
         val responseFuture = for {
-            response <- Http(myRequestWithMethodAndGraphAndPayload)
+            // Send the HTTP request.
+            response <- http.singleRequest(request)
 
-            responseBodyString = response.getResponseBody
-            responseStatusCode = response.getStatusCode
-            responseCodeCategory = responseStatusCode / 100
-            _ = if (!(responseCodeCategory == 2 || responseCodeCategory == 3)) {
-                throw TriplestoreResponseException(s"Unable to load file $filepath; triplestore responded with HTTP code ${response.getStatusCode}: $responseBodyString")
+            // Convert the HTTP response body to a string.
+            responseString <- response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+
+            _ = if (!response.status.isSuccess) {
+                throw TriplestoreResponseException(s"Unable to load file $filepath; triplestore responded with HTTP code ${response.status}: $responseString")
             }
-            responseMessage = responseStatusCode.toString
+            responseMessage = response.status.intValue.toString
         } yield responseMessage
 
         responseFuture.recover {
