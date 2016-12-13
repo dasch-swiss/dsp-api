@@ -47,18 +47,22 @@ class UsersResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Gets information about a Knora user, and returns it in a [[Option[UserProfileV1]].
+      * Gets information about a Knora user, and returns it in a [[UserProfileV1]].
       *
       * @param userIri the IRI of the user.
-      * @return a [[Option[UserProfileV1]] describing the user.
+      * @return a [[UserProfileV1]] describing the user.
       */
-    private def getUserProfileV1(userIri: IRI): Future[Option[UserProfileV1]] = {
+    private def getUserProfileV1(userIri: IRI): Future[UserProfileV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getUser(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
             ).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            _ = if (userDataQueryResponse.results.bindings.isEmpty) {
+                throw NotFoundException(s"User $userIri not found")
+            }
 
             groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -71,8 +75,8 @@ class UsersResponderV1 extends ResponderV1 {
                 },
                 user_id = Some(userIri),
                 username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
-                firstname = groupedUserData.get(OntologyConstants.Foaf.GivenName).map(_.head),
-                lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
+                firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
+                lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
                 email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
                 active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head)
@@ -88,26 +92,16 @@ class UsersResponderV1 extends ResponderV1 {
                 case None => Vector.empty[IRI]
             }
 
-            userProfileV1 = {
-                if (groupedUserData.isEmpty) {
-                    None
-                } else {
-                    Some(UserProfileV1(userDataV1, groupIris, projectIris))
-                }
-            }
-
-
-        } yield userProfileV1
+        } yield UserProfileV1(userDataV1, groupIris, projectIris)
     }
 
     /**
-      * Gets information about a Knora user, and returns it in a [[Option[UserProfileV1]].
+      * Gets information about a Knora user, and returns it in a [[UserProfileV1]].
       *
       * @param username the username of the user.
-      * @return a [[Option[UserProfileV1]] describing the user.
+      * @return a [[UserProfileV1]] describing the user.
       */
-    private def getUserProfileByUsernameV1(username: String): Future[Option[UserProfileV1]] = {
-        //TODO: Need to fix UsersResponderV1 to return None and not an exception when user not found (issue #297)
+    private def getUserProfileByUsernameV1(username: String): Future[UserProfileV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(
                 triplestore = settings.triplestoreType,
@@ -150,23 +144,14 @@ class UsersResponderV1 extends ResponderV1 {
                 },
                 user_id = Some(userIri),
                 username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
-                firstname = groupedUserData.get(OntologyConstants.Foaf.GivenName).map(_.head),
-                lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
+                firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
+                lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
                 email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
                 active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head),
                 projects = if (projectIris.nonEmpty) Some(projectIris) else None,
                 projects_info = projectInfos
             )
-
-            userProfileV1 = {
-                if (groupedUserData.isEmpty) {
-                    None
-                } else {
-                    Some(UserProfileV1(userDataV1, groupIris, projectIris))
-                }
-            }
-
-        } yield userProfileV1 // Some(UserProfileV1(userDataV1, groupIris, projectIris))
+        } yield UserProfileV1(userDataV1, groupIris, projectIris)
     }
 }

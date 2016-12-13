@@ -34,7 +34,6 @@ import org.knora.webapi.util.CacheUtil
 import org.slf4j.LoggerFactory
 import spray.json.{JsNumber, JsObject, JsString}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.{Success, Try}
@@ -68,9 +67,9 @@ trait Authenticator {
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
       *         the generated session id.
       */
-    def doLogin(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
+    def doLogin(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
-        val sId = extractCredentialsAndAuthenticate(requestContext, true)
+        val sId = extractCredentialsAndAuthenticate(requestContext, session = true)
 
         val userProfile = getUserProfileV1(requestContext)
 
@@ -140,9 +139,9 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[RequestContext]]
       */
-    def doAuthenticate(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
+    def doAuthenticate(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
-        val sId = extractCredentialsAndAuthenticate(requestContext, false)
+        val sId = extractCredentialsAndAuthenticate(requestContext, session = false)
 
         val userProfile = getUserProfileV1(requestContext)
 
@@ -208,12 +207,10 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[UserProfileV1]]
       */
-    def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem): UserProfileV1 = {
+    def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
         val settings = Settings(system)
-        val hardCodedUser: IRI = "http://data.knora.org/users/b83acc5f05" // testuser
         if (settings.skipAuthentication) {
-            // skip authentication and return hardCodedUser
-            getUserProfileByIri(hardCodedUser).getOrElse(UserProfileV1(UserDataV1(settings.fallbackLanguage))).getCleanUserProfileV1
+            UserProfileV1(UserDataV1(settings.fallbackLanguage)).getCleanUserProfileV1
         }
         else {
             // let us first try to get the user profile through the session id from the cookie
@@ -222,7 +219,8 @@ trait Authenticator {
                     log.debug(s"Got this UserProfileV1 through the session id: '${userProfile.toString}'")
                     /* we return the userProfileV1 without sensitive information */
                     userProfile.getCleanUserProfileV1
-                case None => {
+
+                case None =>
                     log.debug("No cookie or valid session id, so let's look for supplied credentials")
                     extractCredentials(requestContext) match {
                         case Some((u, p)) =>
@@ -240,7 +238,6 @@ trait Authenticator {
                             log.debug("No credentials found, returning default UserProfileV1!")
                             UserProfileV1(UserDataV1(settings.fallbackLanguage))
                     }
-                }
             }
         }
     }
@@ -248,11 +245,9 @@ trait Authenticator {
 
 /**
   * This companion object holds all private methods used in the trait. This division is needed so that we can test
-  * the private methods directly with scalatest as described in [1] and [3]
-  *
-  * [1] https://groups.google.com/forum/#!topic/scalatest-users/FeaO__f1dN4
-  * [2] http://doc.scalatest.org/2.2.6/index.html#org.scalatest.PrivateMethodTester
-  **/
+  * the private methods directly with scalatest as described in [[https://groups.google.com/forum/#!topic/scalatest-users/FeaO\_\_f1dN4]]
+  * and [[http://doc.scalatest.org/2.2.6/index.html#org.scalatest.PrivateMethodTester]]
+  */
 object Authenticator {
 
     val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
@@ -278,7 +273,7 @@ object Authenticator {
       *         extracted and authenticated. In the case where the credentials could not be extracted or could be
       *         extracted but not authenticated, a corresponding exception is thrown.
       */
-    private def extractCredentialsAndAuthenticate(requestContext: RequestContext, session: Boolean)(implicit system: ActorSystem): String = {
+    private def extractCredentialsAndAuthenticate(requestContext: RequestContext, session: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): String = {
         extractCredentials(requestContext) match {
             case Some((u, p)) => authenticateCredentials(u, p, session)
             case None => throw BadCredentialsException(BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE)
@@ -296,7 +291,7 @@ object Authenticator {
       * @param system   the current [[ActorSystem]]
       * @return a [[Try[String]] which is the session id under which the profile is stored if authentication was successful.
       */
-    private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem): String = {
+    private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): String = {
         val userProfileV1 = getUserProfileByUsername(username)
 
         if (userProfileV1.passwordMatch(password)) {
@@ -423,19 +418,15 @@ object Authenticator {
       * @param executionContext the current execution context
       * @return a [[Option(UserProfileV1)]]
       */
-    private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Option[UserProfileV1] = {
+    private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+        val userProfileV1Future = (responderManager ? UserProfileGetRequestV1(iri)).mapTo[UserProfileV1]
 
-        val userProfileV1Future = responderManager ? UserProfileGetRequestV1(iri)
-        Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
-            case Some(userProfileV1) => {
-                log.debug("This user was found: " + userProfileV1.toString)
-                Some(userProfileV1)
-            }
-            case None => log.debug("No user found by this IRI"); None
-
-
+        userProfileV1Future.recover {
+            case nfe: NotFoundException => throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
         }
+
+        Await.result(userProfileV1Future, Duration(3, SECONDS))
     }
 
     /**
@@ -448,7 +439,6 @@ object Authenticator {
       * @return a [[Success(UserProfileV1)]]
       */
     private def getUserProfileByUsername(username: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
-
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
         if (username.nonEmpty) {
@@ -459,24 +449,20 @@ object Authenticator {
                     userProfileV1
                 case None =>
                     // didn't found one, so I will try to get it from the triple store
-                    val userProfileV1Future = responderManager ? UserProfileByUsernameGetRequestV1(username)
-                    Await.result(userProfileV1Future, Duration(3, SECONDS)).asInstanceOf[Option[UserProfileV1]] match {
-                        case Some(userProfileV1) => {
-                            log.debug("This user was found: " + userProfileV1.toString)
-                            // before I return the found user profile, let's put it into the cache
-                            CacheUtil.put(cacheName, username, userProfileV1)
-                            userProfileV1
-                        }
-                        case None => {
-                            log.debug("No user found by this username")
-                            throw BadCredentialsException(BAD_CRED_USER_NOT_FOUND)
-                        }
+                    val userProfileV1Future = for {
+                        userProfileV1 <- (responderManager ? UserProfileByUsernameGetRequestV1(username)).mapTo[UserProfileV1]
+                        _ = CacheUtil.put(cacheName, username, userProfileV1)
+                    } yield userProfileV1
+
+                    userProfileV1Future.recover {
+                        case nfe: NotFoundException => throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
                     }
+
+                    Await.result(userProfileV1Future, Duration(3, SECONDS))
             }
         } else {
             throw BadCredentialsException(BAD_CRED_USERNAME_NOT_SUPPLIED)
         }
     }
 }
-
 

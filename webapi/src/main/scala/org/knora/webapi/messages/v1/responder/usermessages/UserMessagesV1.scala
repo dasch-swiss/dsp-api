@@ -125,6 +125,15 @@ case class UserDataV1(lang: String,
                       projects: Option[Seq[IRI]] = None, // TODO: we do not need an option here as the list could simply be empty.
                       projects_info: Seq[ProjectInfoV1] = Vector.empty[ProjectInfoV1]) {
 
+    def fullname: Option[String] = {
+        (firstname, lastname) match {
+            case (Some(firstnameStr), Some(lastnameStr)) => Some(firstnameStr + " " + lastnameStr)
+            case (Some(firstnameStr), None) => Some(firstnameStr)
+            case (None, Some(lastnameStr)) => Some(lastnameStr)
+            case (None, None) => None
+        }
+    }
+
     def toJsValue = UserDataV1JsonProtocol.userDataV1Format.write(this)
 
 }

@@ -31,7 +31,7 @@ Resource Description Framework (RDF)
 ------------------------------------
 
 Knora uses a hierarchy of ontologies based on the Resource Description
-Framework (RDF_), RDF Schema (RDFS_), and the Web Ontology Language (OWL_)
+Framework (RDF_), RDF Schema (RDFS_), and the Web Ontology Language (OWL_).
 Both RDFS and OWL are expressed in RDF. RDF expresses information as a set of
 statements (called *triples*). A triple consists of a subject, a predicate,
 and an object:
@@ -173,8 +173,8 @@ date (``ex:pubdate``), each of which has some metadata.
            titleStr [label = "‘King Lear’"]
            titleCreationDate [label = "2015-08-12 13:00"]
 
-           startJDC [label = "2364669"]
-           endJDC [label = "2364669"]
+           startJDN [label = "2364669"]
+           endJDN [label = "2364669"]
            pubdateCreationDate [label = "2015-08-12 13:03"]
        }
 
@@ -186,8 +186,8 @@ date (``ex:pubdate``), each of which has some metadata.
        title -> titleStr [label = "kb:valueHasString"]
        title -> titleCreationDate [label = "kb:valueCreationDate"]
 
-       pubdate -> startJDC [label = "kb:valueHasStartJDC"]
-       pubdate -> endJDC [label = "kb:valueHasEndJDC"]
+       pubdate -> startJDN [label = "kb:valueHasStartJDN"]
+       pubdate -> endJDN [label = "kb:valueHasEndJDN"]
        pubdate -> pubdateCreationDate [label = "kb:valueCreationDate"]
     }
 
@@ -268,6 +268,7 @@ because even though resources are not versioned, it is necessary to be able to
 find out when a resource was deleted. If desired, a new resource can be
 created by copying data from a deleted resource.
 
+
 Properties of Resource
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -312,7 +313,7 @@ stores such data outside the triplestore, in ordinary files. A resource
 can have one or more files attached to it. For each file, there is a
 ``kb:FileValue`` in the triplestore containing metadata about the file
 (see :ref:`knora-base-filevalue`). A resource that has file values
-must belong to of the subclasses of ``kb:Representation``. The base
+must belong to one of the subclasses of ``kb:Representation``. The base
 class ``Representation``, which is not intended to be used directly, has
 this property:
 
@@ -370,7 +371,8 @@ project:
 
 ``Annotation``
     Represents an annotation of a resource. The ``hasComment`` property
-    points to the text of the annotation.
+    points to the text of the annotation, represented as a
+    ``kb:TextValue``.
 
 ``LinkObj``
     Represents a link that connects two or more resources. A ``LinkObj``
@@ -495,14 +497,14 @@ regardless of the calendar in which they were entered. Properties:
     The name of the calendar in which the date should be displayed.
     Currently ``GREGORIAN`` and ``JULIAN`` are supported.
 
-``valueHasStartJDC`` (1)
+``valueHasStartJDN`` (1)
     The Julian Day Number of the start of the period (an
     ``xsd:integer``).
 
 ``valueHasStartPrecision`` (1)
     The precision of the start of the period.
 
-``valueHasEndJDC`` (1)
+``valueHasEndJDN`` (1)
     The Julian Day Number of the end of the period (an ``xsd:integer``).
 
 ``valueHasEndPrecision`` (1)
@@ -552,12 +554,12 @@ coordinates. Property:
 GeonameValue
 ~~~~~~~~~~~~
 
-Represents a geolocation, using the numerical codes found at
+Represents a geolocation, using the identifiers found at
 GeoNames_. Property:
 
 ``valueHasGeonameCode`` (1)
-    the numerical code of a geographical feature from
-    GeoNames_, represented as an ``xsd:integer``.
+    the identifier of a geographical feature from
+    GeoNames_, represented as an ``xsd:string``.
 
 IntervalValue
 ~~~~~~~~~~~~~
@@ -586,22 +588,25 @@ list or a tree.
 A ``ListValue`` has this property:
 
 ``valueHasListNode`` (1)
-    Points to the root ``ListNode`` of the list or tree.
+    Points to a ``ListNode``.
 
 Each ``ListNode`` can have the following properties:
-
-``hasSubListNode`` (0-n)
-    Points to the node’s child nodes, if any.
-
-``listNodePosition`` (1)
-    An integer indicating the node’s position in the list of its
-    siblings.
 
 ``isRootNode`` (0-1)
     Set to ``true`` if this is the root node.
 
-``listNodeName`` (0-n)
-    The node’s human-readable name.
+``hasSubListNode`` (0-n)
+    Points to the node’s child nodes, if any.
+
+``hasRootNode`` (0-1)
+    Points to the root node of the list (absent if ``isRootNode`` is ``true``).
+
+``listNodePosition`` (0-1)
+    An integer indicating the node’s position in the list of its
+    siblings (absent if ``isRootNode`` is ``true``).
+
+``listNodeName`` (0-1)
+    The node’s human-readable name (absent if ``isRootNode`` is ``true``).
 
 .. _knora-base-filevalue:
 
@@ -793,7 +798,7 @@ here in Turtle format, and simplified for the purposes of illustration):
 To link the paintings to the collection, we must add a “link property”
 to the ontology. In this case, the link property will point from a
 painting to the collection it belongs to. Every link property must be a
-subproperty of ``hasLinkTo``.
+subproperty of ``kb:hasLinkTo``.
 
 ::
 
@@ -803,15 +808,15 @@ subproperty of ``hasLinkTo``.
         kb:objectClassConstraint :Collection .
 
 We must then add a “link value property”, which will point from a
-painting to a ``LinkValue`` (described in
+painting to a ``kb:LinkValue`` (described in
 :ref:`knora-base-linkvalue`), which will contain metadata about the
 link between the property and the collection. In particular, the link
 value specifies the owner of the link, the date when it was created, and
 the permissions that determine who can view or modify it. The name of
 the link value property is constructed using a simple naming convention:
 the word ``Value`` is appended to the name of the link property. In this
-case, since our link property is called ``isInCollectionValue``, the
-link value property must be called ``ex:isOnPageValue``. Every link
+case, since our link property is called ``:isInCollection``, the
+link value property must be called ``:isInCollectionValue``. Every link
 value property must be a subproperty of ``kb:hasLinkToValue``.
 
 ::
@@ -858,7 +863,7 @@ We can then state that the painting is in the collection:
         rdf:object data:pompidou ;
         kb:valueHasRefCount 1 .
 
-This creates a link (``isInCollection``) between the painting and the
+This creates a link (``paintings:isInCollection``) between the painting and the
 collection, along with a reification containing metadata about the link.
 We can visualise the result as the following graph:
 
@@ -1045,7 +1050,7 @@ representing persons, a text could be marked up so that each time a
 person’s name is mentioned, a ``StandoffLinkTag`` connects the name to
 the Knora resource describing that person. Property:
 
-standoffTagHasLink (1)
+``standoffTagHasLink`` (1)
     The IRI of the resource that is referred to.
 
 One of the design goals of the Knora ontology is to make it easy and
@@ -1428,15 +1433,23 @@ following example from ``knora-base``:
               owl:onProperty :hasStillImageFileValue ;
               owl:minCardinality "1"^^xsd:nonNegativeInteger ] .
 
-A resource class inherits cardinalities from its superclasses. Also,
-cardinalities in the subclass can override cardinalities that would
-otherwise be inherited from the superclass. Specifically, if a
-superclass has a cardinality on a property P, and a subclass has a
-cardinality on a subproperty of P, the subclass’s cardinality overrides
-the superclass’s cardinality. In the example above,
-``hasStillImageFileValue`` is a subproperty of ``hasFileValue``.
-Therefore, the cardinality on ``hasStillImageFileValue`` overrides (i.e.
-replaces) the one on ``hasFileValue``.
+A resource class inherits cardinalities from its superclasses. This follows
+from the rules of RDFS_ inference. Also, in Knora, cardinalities in the
+subclass can override cardinalities that would otherwise be inherited from the
+superclass. Specifically, if a superclass has a cardinality on a property P,
+and a subclass has a cardinality on a subproperty of P, the subclass’s
+cardinality overrides the superclass’s cardinality. In the example above,
+``hasStillImageFileValue`` is a subproperty of ``hasFileValue``. Therefore,
+the cardinality on ``hasStillImageFileValue`` overrides (i.e. replaces) the
+one on ``hasFileValue``.
+
+Note that, unlike cardinalities, predicates of properties are not inherited.
+If ``:foo rdfs:subPropertyOf :bar``, this does not mean that ``:foo`` inherits
+anything from ``:bar``. Any predicates of ``:foo`` that are also needed by
+``:bar`` must be defined explicitly on ``:bar``. This design decision was made
+because property predicate inheritance is not provided by RDFS inference,
+and would make it more difficult to check the correctness of ontologies, while
+providing little practical benefit.
 
 For more information about OWL cardinalities, see the `OWL 2 Primer`_.
 
@@ -1459,7 +1472,7 @@ is done using the following Knora-specific properties:
     objects of the property must belong to. Every subproperty of
     ``kb:hasValue`` or a ``kb:hasLinkTo`` (i.e. every property of a
     resource that points to a ``kb:Value`` or to another resource) is
-    required have this constraint, because the Knora API server relies
+    required to have this constraint, because the Knora API server relies
     on it to know what type of object to expect for the property. Knora
     will attempt to enforce this constraint.
 

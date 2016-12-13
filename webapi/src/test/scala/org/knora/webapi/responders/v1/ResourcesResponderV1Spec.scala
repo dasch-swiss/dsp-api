@@ -194,15 +194,11 @@ object ResourcesResponderV1Spec {
         resinfo = ResourceInfoV1(
             regions = None,
             firstproperty = Some("A thing that only project members can see"),
-            value_of = 0,
-            lastmod = "0000-00-00 00:00:00",
-            resclass_has_location = false,
-            resclass_name = "object",
             locdata = None,
             locations = None,
             preview = None,
             restype_iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
-            restype_description = Some("Diese Resource-Klasse beschreibt ein Ding"),
+            restype_description = Some("'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"),
             restype_label = Some("Ding"),
             restype_name = Some("http://www.knora.org/ontology/anything#Thing"),
             restype_id = "http://www.knora.org/ontology/anything#Thing",
@@ -220,15 +216,11 @@ object ResourcesResponderV1Spec {
         resinfo = ResourceInfoV1(
             regions = None,
             firstproperty = Some("A thing that only project members can see"),
-            value_of = 0,
-            lastmod = "0000-00-00 00:00:00",
-            resclass_has_location = false,
-            resclass_name = "object",
             locdata = None,
             locations = None,
             preview = None,
             restype_iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
-            restype_description = Some("Diese Resource-Klasse beschreibt ein Ding"),
+            restype_description = Some("'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"),
             restype_label = Some("Ding"),
             restype_name = Some("http://www.knora.org/ontology/anything#Thing"),
             restype_id = "http://www.knora.org/ontology/anything#Thing",
@@ -259,11 +251,9 @@ object ResourcesResponderV1Spec {
         occurrence = Some("0-n"),
         attributes = "restypeid=http://www.knora.org/ontology/anything#Thing",
         label = Some("Ein anderes Ding"),
-        is_annotation = "0",
         guielement = Some("searchbox"),
         guiorder = Some(1),
         valuetype_id = Some("http://www.knora.org/ontology/knora-base#LinkValue"),
-        regular_property = 1,
         pid = "http://www.knora.org/ontology/anything#hasOtherThing"
     )
 
@@ -285,12 +275,301 @@ object ResourcesResponderV1Spec {
         occurrence = Some("0-n"),
         attributes = "restypeid=http://www.knora.org/ontology/knora-base#Resource",
         label = Some("hat Standoff Link zu"),
-        is_annotation = "0",
         guielement = None,
         guiorder = None,
         valuetype_id = Some("http://www.knora.org/ontology/knora-base#LinkValue"),
-        regular_property = 1,
         pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
+    )
+
+    private val graphForAnythingUser1 = GraphDataGetResponseV1(
+        userdata = anythingUser1.userData,
+        edges = Vector(
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA",
+                source = "http://data.knora.org/5IEswyQFQp2bxXDrOyEfEA"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/7uuGcnFcQJq08dMOralyCQ",
+                source = "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ",
+                source = "http://data.knora.org/anything/start"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/iqW_PBiHRdyTFzik8tuSog",
+                source = "http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ",
+                source = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w",
+                source = "http://data.knora.org/anything/start"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/A67ka6UQRHWf313tbhQBjw",
+                source = "http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/anything/start",
+                source = "http://data.knora.org/iqW_PBiHRdyTFzik8tuSog"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg",
+                source = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A",
+                source = "http://data.knora.org/anything/start"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA",
+                source = "http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA"
+            )
+        ),
+        nodes = Vector(
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Tango",
+                resourceIri = "http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Foxtrot",
+                resourceIri = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Echo",
+                resourceIri = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Golf",
+                resourceIri = "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Mike",
+                resourceIri = "http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Sierra",
+                resourceIri = "http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Romeo",
+                resourceIri = "http://data.knora.org/anything/start"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Quebec",
+                resourceIri = "http://data.knora.org/iqW_PBiHRdyTFzik8tuSog"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Hotel",
+                resourceIri = "http://data.knora.org/7uuGcnFcQJq08dMOralyCQ"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Papa",
+                resourceIri = "http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Victor",
+                resourceIri = "http://data.knora.org/A67ka6UQRHWf313tbhQBjw"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Delta",
+                resourceIri = "http://data.knora.org/5IEswyQFQp2bxXDrOyEfEA"
+            )
+        )
+    )
+
+    private val graphForIncunabulaUser = GraphDataGetResponseV1(
+        userdata = incunabulaUser.userData,
+        edges = Vector(
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ",
+                source = "http://data.knora.org/anything/start"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/iqW_PBiHRdyTFzik8tuSog",
+                source = "http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ",
+                source = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w",
+                source = "http://data.knora.org/anything/start"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/A67ka6UQRHWf313tbhQBjw",
+                source = "http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/anything/start",
+                source = "http://data.knora.org/iqW_PBiHRdyTFzik8tuSog"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg",
+                source = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A"
+            ),
+            GraphEdgeV1(
+                propertyLabel = "Ein anderes Ding",
+                propertyIri = "http://www.knora.org/ontology/anything#hasOtherThing",
+                target = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A",
+                source = "http://data.knora.org/anything/start"
+            )
+        ),
+        nodes = Vector(
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Tango",
+                resourceIri = "http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Foxtrot",
+                resourceIri = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Echo",
+                resourceIri = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Golf",
+                resourceIri = "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Sierra",
+                resourceIri = "http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Romeo",
+                resourceIri = "http://data.knora.org/anything/start"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Quebec",
+                resourceIri = "http://data.knora.org/iqW_PBiHRdyTFzik8tuSog"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Papa",
+                resourceIri = "http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Victor",
+                resourceIri = "http://data.knora.org/A67ka6UQRHWf313tbhQBjw"
+            )
+        )
+    )
+
+    private val graphWithStandoffLink = GraphDataGetResponseV1(
+        userdata = anythingUser1.userData,
+        edges = Vector(GraphEdgeV1(
+            propertyLabel = "hat Standoff Link zu",
+            propertyIri = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
+            target = "http://data.knora.org/a-thing",
+            source = "http://data.knora.org/a-thing-with-text-values"
+        )),
+        nodes = Vector(
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
+                resourceIri = "http://data.knora.org/a-thing-with-text-values"
+            ),
+            GraphNodeV1(
+                resourceClassLabel = "Ding",
+                resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                resourceLabel = "A thing",
+                resourceIri = "http://data.knora.org/a-thing"
+            )
+        )
+    )
+
+    private val graphWithOneNode = GraphDataGetResponseV1(
+        userdata = anythingUser1.userData,
+        edges = Nil,
+        nodes = Vector(GraphNodeV1(
+            resourceClassLabel = "Ding",
+            resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+            resourceLabel = "Another thing",
+            resourceIri = "http://data.knora.org/another-thing"
+        ))
     )
 }
 
@@ -618,7 +897,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return 27 resources containing 'Narrenschiff' in their label" in {
-            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=4&limit=100&restype_id=-1
+            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=4&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
 
             // This query is going to return also resources of knora-baseLinkObj with a knora-base:hasComment.
             // Because this resource is directly defined in knora-base, its property knora-base:hasComment
@@ -640,7 +919,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return 3 resources containing 'Narrenschiff' in their label of type incunabula:book" in {
-            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=3&limit=100&restype_id=-1
+            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
 
             actorUnderTest ! ResourceSearchGetRequestV1(
                 searchString = "Narrenschiff",
@@ -653,6 +932,40 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case response: ResourceSearchResponseV1 =>
                     assert(response.resources.size == 3, s"expected 3 resources")
+            }
+        }
+
+        "return 19 resources containing 'a1r' in their label of type incunabula:page" in {
+            //http://localhost:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page
+
+            actorUnderTest ! ResourceSearchGetRequestV1(
+                searchString = "a1r",
+                numberOfProps = 3,
+                limitOfResults = 100,
+                userProfile = incunabulaUser,
+                resourceTypeIri = Some("http://www.knora.org/ontology/incunabula#page")
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceSearchResponseV1 =>
+                    assert(response.resources.size == 19, s"expected 19 resources")
+            }
+        }
+
+        "return 19 resources containing 'a1r' in their label of type knora-base:Representation" in {
+            //http://localhost:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fknora-base%23Representation
+
+            actorUnderTest ! ResourceSearchGetRequestV1(
+                searchString = "a1r",
+                numberOfProps = 3,
+                limitOfResults = 100,
+                userProfile = incunabulaUser,
+                resourceTypeIri = Some("http://www.knora.org/ontology/knora-base#Representation")
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceSearchResponseV1 =>
+                    assert(response.resources.size == 19, s"expected 19 resources")
             }
         }
 
@@ -698,7 +1011,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             val valuesToBeCreated = Map(
                 "http://www.knora.org/ontology/incunabula#hasAuthor" -> author,
-                "http://www.knora.org/ontology/incunabula#pubdate" -> pubdate.map(date => CreateValueV1WithComment(DateUtilV1.dateValueV1ToJulianDayCountValueV1(date), None))
+                "http://www.knora.org/ontology/incunabula#pubdate" -> pubdate.map(date => CreateValueV1WithComment(DateUtilV1.dateValueV1ToJulianDayNumberValueV1(date), None))
             )
 
             val resourceCreateRequest = ResourceCreateRequestV1(
@@ -742,7 +1055,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             val publoc = TextValueV1("Entenhausen")
 
-            val pubdateRequest = DateUtilV1.createJDCValueV1FromDateString("GREGORIAN:2015-12-03")
+            val pubdateRequest = DateUtilV1.createJDNValueV1FromDateString("GREGORIAN:2015-12-03")
             val pubdateResponse = DateValueV1(dateval1 = "2015-12-03", dateval2 = "2015-12-03", calendar = KnoraCalendarV1.GREGORIAN)
 
             val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = Map(
@@ -1050,6 +1363,75 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     response.label should ===(myNewLabel)
             }
 
+        }
+
+        "not create an anything:Thing with property anything:hasBlueThing pointing to an anything:Thing" in {
+            val valuesToBeCreated = Map(
+                "http://www.knora.org/ontology/anything#hasBlueThing" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://data.knora.org/a-thing")))
+            )
+
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/anything#Thing",
+                label = "Test Thing",
+                projectIri = "http://data.knora.org/projects/anything",
+                values = valuesToBeCreated,
+                file = None,
+                userProfile = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+            }
+        }
+
+        "return a graph of resources reachable via links from/to a given resource" in {
+            actorUnderTest ! GraphDataGetRequestV1(
+                resourceIri = "http://data.knora.org/anything/start",
+                depth = 4,
+                userProfile = anythingUser1
+            )
+
+            expectMsgPF(timeout) {
+                case response: GraphDataGetResponseV1 => response should ===(graphForAnythingUser1)
+            }
+        }
+
+        "return a graph of resources reachable via links from/to a given resource, filtering the results according to the user's permissions" in {
+            actorUnderTest ! GraphDataGetRequestV1(
+                resourceIri = "http://data.knora.org/anything/start",
+                depth = 4,
+                userProfile = incunabulaUser
+            )
+
+            expectMsgPF(timeout) {
+                case response: GraphDataGetResponseV1 => response should ===(graphForIncunabulaUser)
+            }
+        }
+
+        "return a graph containing a standoff link" in {
+            actorUnderTest ! GraphDataGetRequestV1(
+                resourceIri = "http://data.knora.org/a-thing",
+                depth = 4,
+                userProfile = anythingUser1
+            )
+
+            expectMsgPF(timeout) {
+                case response: GraphDataGetResponseV1 => response should===(graphWithStandoffLink)
+            }
+        }
+
+        "return a graph containing just one node" in {
+            actorUnderTest ! GraphDataGetRequestV1(
+                resourceIri = "http://data.knora.org/another-thing",
+                depth = 4,
+                userProfile = anythingUser1
+            )
+
+            expectMsgPF(timeout) {
+                case response: GraphDataGetResponseV1 => response should===(graphWithOneNode)
+            }
         }
     }
 }

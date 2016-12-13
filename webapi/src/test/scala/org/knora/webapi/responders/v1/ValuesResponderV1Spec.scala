@@ -316,20 +316,17 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser
             )
 
-            expectMsg(
-                timeout,
-                ValueGetResponseV1(
-                    valuetype = OntologyConstants.KnoraBase.LinkValue,
-                    value = LinkValueV1(
+            expectMsgPF(timeout) {
+                case msg: ValueGetResponseV1 =>
+                    msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+                    msg.value should ===(LinkValueV1(
                         subjectIri = "http://data.knora.org/8a0b1e75",
                         predicateIri = "http://www.knora.org/ontology/incunabula#partOf",
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
-                    ),
-                    rights = 2,
-                    userdata = incunabulaUser.userData
-                )
-            )
+                    ))
+                    msg.rights should ===(2)
+            }
         }
 
         "add a new version of a text value without Standoff" in {
@@ -753,20 +750,17 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // Since this is the first Standoff resource reference between the source and target resources, we should
             // now have version 1 of a LinkValue, with a reference count of 1.
 
-            expectMsg(
-                timeout,
-                ValueGetResponseV1(
-                    valuetype = OntologyConstants.KnoraBase.LinkValue,
-                    value = LinkValueV1(
+            expectMsgPF(timeout) {
+                case msg: ValueGetResponseV1 =>
+                    msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+                    msg.value should ===(LinkValueV1(
                         subjectIri = "http://data.knora.org/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
-                    ),
-                    rights = 2,
-                    userdata = incunabulaUser.userData
-                )
-            )
+                    ))
+                    msg.rights should ===(2)
+            }
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
@@ -833,20 +827,17 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // Since the new version still refers to the same resource, the reference count of the LinkValue should not
             // change.
 
-            expectMsg(
-                timeout,
-                ValueGetResponseV1(
-                    valuetype = OntologyConstants.KnoraBase.LinkValue,
-                    value = LinkValueV1(
+            expectMsgPF(timeout) {
+                case msg: ValueGetResponseV1 =>
+                    msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+                    msg.value should ===(LinkValueV1(
                         subjectIri = "http://data.knora.org/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
-                    ),
-                    rights = 2,
-                    userdata = incunabulaUser.userData
-                )
-            )
+                    ))
+                    msg.rights should ===(2)
+            }
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
@@ -906,20 +897,17 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // Now that we've added a different TextValue that refers to the same resource, we should have version 2
             // of the LinkValue, with a reference count of 2.
 
-            expectMsg(
-                timeout,
-                ValueGetResponseV1(
-                    valuetype = OntologyConstants.KnoraBase.LinkValue,
-                    value = LinkValueV1(
+            expectMsgPF(timeout) {
+                case msg: ValueGetResponseV1 =>
+                    msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+                    msg.value should ===(LinkValueV1(
                         subjectIri = "http://data.knora.org/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                         objectIri = zeitglöckleinIri,
                         referenceCount = 2
-                    ),
-                    rights = 2,
-                    userdata = incunabulaUser.userData
-                )
-            )
+                    ))
+                    msg.rights should ===(2)
+            }
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
@@ -967,20 +955,17 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             // Version 3 of the LinkValue should have a reference count of 1.
 
-            expectMsg(
-                timeout,
-                ValueGetResponseV1(
-                    valuetype = OntologyConstants.KnoraBase.LinkValue,
-                    value = LinkValueV1(
+            expectMsgPF(timeout) {
+                case msg: ValueGetResponseV1 =>
+                    msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+                    msg.value should ===(LinkValueV1(
                         subjectIri = "http://data.knora.org/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
-                    ),
-                    rights = 2,
-                    userdata = incunabulaUser.userData
-                )
-            )
+                    ))
+                    msg.rights should ===(2)
+            }
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
@@ -1106,20 +1091,17 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // There should now be a new LinkValue with no previous versions and a reference count of 1, and
             // there should once again be a direct link.
 
-            expectMsg(
-                timeout,
-                ValueGetResponseV1(
-                    valuetype = OntologyConstants.KnoraBase.LinkValue,
-                    value = LinkValueV1(
+            expectMsgPF(timeout) {
+                case msg: ValueGetResponseV1 =>
+                    msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+                    msg.value should ===(LinkValueV1(
                         subjectIri = "http://data.knora.org/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
-                    ),
-                    rights = 2,
-                    userdata = incunabulaUser.userData
-                )
-            )
+                    ))
+                    msg.rights should ===(2)
+            }
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
@@ -1184,7 +1166,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/21abac2162",
                 propertyIri = "http://www.knora.org/ontology/incunabula#pubdate",
-                value = JulianDayCountValueV1(
+                value = JulianDayNumberValueV1(
                     dateval1 = 2451545,
                     dateval2 = 2457044,
                     dateprecision1 = KnoraPrecisionV1.YEAR,
@@ -1205,7 +1187,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         "change an existing date (pubdate of a book)" in {
 
             actorUnderTest ! ChangeValueRequestV1(
-                value = JulianDayCountValueV1(
+                value = JulianDayNumberValueV1(
                     dateval1 = 2265854,
                     dateval2 = 2265854,
                     dateprecision1 = KnoraPrecisionV1.DAY,
@@ -1743,20 +1725,17 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = anythingUser
             )
 
-            expectMsg(
-                timeout,
-                ValueGetResponseV1(
-                    valuetype = OntologyConstants.KnoraBase.LinkValue,
-                    value = LinkValueV1(
+            expectMsgPF(timeout) {
+                case msg: ValueGetResponseV1 =>
+                    msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+                    msg.value should ===(LinkValueV1(
                         subjectIri = thingWithTextValues,
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                         objectIri = aThingIri,
                         referenceCount = 2
-                    ),
-                    rights = 2,
-                    userdata = anythingUser.userData
-                )
-            )
+                    ))
+                    msg.rights should ===(2)
+            }
 
             val initialLinkValueSparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
@@ -1811,20 +1790,17 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = anythingUser
             )
 
-            expectMsg(
-                timeout,
-                ValueGetResponseV1(
-                    valuetype = OntologyConstants.KnoraBase.LinkValue,
-                    value = LinkValueV1(
+            expectMsgPF(timeout) {
+                case msg: ValueGetResponseV1 =>
+                    msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+                    msg.value should ===(LinkValueV1(
                         subjectIri = thingWithTextValues,
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                         objectIri = aThingIri,
                         referenceCount = 1
-                    ),
-                    rights = 2,
-                    userdata = anythingUser.userData
-                )
-            )
+                    ))
+                    msg.rights should ===(2)
+            }
 
             // It should have a previousValue, and the direct link should still exist.
 

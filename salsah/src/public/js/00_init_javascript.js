@@ -14,6 +14,21 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+function getUrlVars()
+{
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
+
+
 var API_URL = 'http://localhost:3333';
 var SIPI_URL = 'http://localhost:1024';
 var SIPI_LOGIN_ROUTE = '/Knora_login';
@@ -35,13 +50,11 @@ var SITE_URL;
 var RESVIEW = {
 	winclass: '.workwintab'
 };
-var SALSAH = {};
-SALSAH.userdata = {lang: 'en'};
 
-var strings = {};
-$.get('lang/' + SALSAH.userdata.lang + '.json', function(data) {
-	strings = data;
-}, 'json');
+var urlparams = getUrlVars();
+
+var SALSAH = {}; // Populated in index.html.
+var strings = {}; // Populated in index.html.
 
 var searchresult_window_title = "searchresult";
 var extendedsearch_window_title = "Erweiterte Suche";

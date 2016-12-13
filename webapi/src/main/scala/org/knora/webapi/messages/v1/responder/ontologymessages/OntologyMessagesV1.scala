@@ -182,8 +182,36 @@ case class PropertyTypesForResourceTypeResponseV1(properties: Vector[PropertyDef
     def toJsValue = ResourceTypeV1JsonProtocol.propertyTypesForResourceTypeResponseV1Format.write(this)
 }
 
+/**
+  * Requests information about the subclasses of a Knora resource class. A successful response will be
+  * a [[SubClassesGetResponseV1]].
+  *
+  * @param resourceClassIri the IRI of the Knora resource class.
+  * @param userProfile      the profile of the user making the request.
+  */
+case class SubClassesGetRequestV1(resourceClassIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
+/**
+  * Provides information about the subclasses of a Knora resource class.
+  *
+  * @param subClasses a list of [[SubClassInfoV1]] representing the subclasses of the specified class.
+  * @param userdata   information about the user that made the request.
+  */
+case class SubClassesGetResponseV1(subClasses: Seq[SubClassInfoV1], userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = ResourceTypeV1JsonProtocol.subClassesGetResponseV1Format.write(this)
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
+
+/**
+  * Represents information about a subclass of a resource class.
+  *
+  * @param id    the IRI of the subclass.
+  * @param label the `rdfs:label` of the subclass.
+  */
+case class SubClassInfoV1(id: IRI, label: String)
 
 /**
   * Represents a predicate that is asserted about a given ontology entity, and the objects of that predicate.
@@ -519,4 +547,6 @@ object ResourceTypeV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
     implicit val resourceTypesForNamedGraphResponseV1Format: RootJsonFormat[ResourceTypesForNamedGraphResponseV1] = jsonFormat2(ResourceTypesForNamedGraphResponseV1)
     implicit val propertyTypesForNamedGraphResponseV1Format: RootJsonFormat[PropertyTypesForNamedGraphResponseV1] = jsonFormat2(PropertyTypesForNamedGraphResponseV1)
     implicit val propertyTypesForResourceTypeResponseV1Format: RootJsonFormat[PropertyTypesForResourceTypeResponseV1] = jsonFormat2(PropertyTypesForResourceTypeResponseV1)
+    implicit val subClassInfoV1Format: JsonFormat[SubClassInfoV1] = jsonFormat2(SubClassInfoV1)
+    implicit val subClassesGetResponseV1Format: RootJsonFormat[SubClassesGetResponseV1] = jsonFormat2(SubClassesGetResponseV1)
 }

@@ -19,6 +19,8 @@
 Docker Cheat Sheet
 ===================
 
+.. contents:: :local:
+
 A complete cheat sheet can be found here_
 
 

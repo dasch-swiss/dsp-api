@@ -136,7 +136,7 @@ object ResourcesRouteV1 extends Authenticator {
                                     CreateValueV1WithComment(UriValueV1(InputValidation.toIri(uriValue, () => throw BadRequestException(s"Invalid URI: $uriValue"))), comment)
 
                                 case CreateResourceValueV1(_, _, _, _, _, _, Some(dateStr: String), _, _, _, _, _, comment) =>
-                                    CreateValueV1WithComment(DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)
+                                    CreateValueV1WithComment(DateUtilV1.createJDNValueV1FromDateString(dateStr), comment)
 
                                 case CreateResourceValueV1(_, _, _, _, _, _, _, Some(colorStr: String), _, _, _, _, comment) =>
                                     val colorValue = InputValidation.toColor(colorStr, () => throw BadRequestException(s"Invalid color value: $colorStr"))
@@ -443,6 +443,23 @@ object ResourcesRouteV1 extends Authenticator {
                         responderManager,
                         log
                     )
+                }
+            }
+        } ~ path("v1" / "graphdata" / Segment) { iri =>
+            get {
+                parameters("depth".as[Int].?) { depth =>
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
+                        val resourceIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                        val requestMessage = GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userProfile)
+
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
                 }
             }
         }

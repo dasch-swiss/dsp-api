@@ -79,9 +79,9 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         become {
             case UserProfileByUsernameGetRequestV1(submittedUsername) => {
                 if (submittedUsername == usernameCorrect) {
-                    sender !  Some(mockUserProfileV1)
+                    sender ! mockUserProfileV1
                 } else {
-                    sender ! None
+                    sender ! akka.actor.Status.Failure(BadCredentialsException("Bad credentials"))
                 }
             }
         }
@@ -110,11 +110,11 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         }
         "called, the 'authenticateCredentials' method " should {
             "succeed with the correct 'username' / correct 'password' " in {
-                Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordCorrect, false, system) should be("0")
+                Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordCorrect, false, system, executionContext) should be("0")
             }
             "fail with correct 'username' / wrong 'password' " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordWrong, false, system)
+                    Authenticator invokePrivate authenticateCredentials(usernameCorrect, passwordWrong, false, system, executionContext)
                 }
             }
         }

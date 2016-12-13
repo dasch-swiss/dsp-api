@@ -20,29 +20,41 @@
 
 package org.knora.webapi.http
 
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.headers.HttpOriginRange
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{Directives, RejectionHandler, Route}
 import ch.megard.akka.http.cors.CorsDirectives._
-import ch.megard.akka.http.cors.{CorsSettings, HttpHeaderRange}
+import ch.megard.akka.http.cors.{CorsDirectives, CorsSettings, HttpHeaderRange}
+import org.knora.webapi.{KnoraExceptionHandler, SettingsImpl}
 
-object CORSSupport {
+object CORSSupport extends Directives {
 
     val corsSettings = CorsSettings.defaultSettings.copy(
         allowGenericHttpRequests = true,
         allowCredentials = true,
         allowedOrigins = HttpOriginRange.*,
         allowedHeaders = HttpHeaderRange.*,
-        allowedMethods = List(GET, PUT, POST, HEAD, OPTIONS),
+        allowedMethods = List(GET, PUT, POST, DELETE, HEAD, OPTIONS),
         maxAge = Some(30 * 60)
     )
 
     /**
-      * Adds CORS support to a route. This is a convenience method.
+      * Adds CORS support to a route. Also, any exceptions thrown inside the route are handled by
+      * the [[KnoraExceptionHandler]]. Finally, all rejections are handled by the [[CorsDirectives.corsRejectionHandler]]
+      * so that all responses (correct and failures) have the correct CORS headers attached.
       * @param route the route for which CORS support is enabled
       * @return the enabled route.
       */
-    def CORS(route: Route): Route = cors(corsSettings) {
-        route
+    def CORS(route: Route, settings: SettingsImpl, log: LoggingAdapter): Route = {
+        handleRejections(CorsDirectives.corsRejectionHandler) {
+            cors(corsSettings) {
+                handleRejections(RejectionHandler.default) {
+                    handleExceptions(KnoraExceptionHandler(settings, log)) {
+                        route
+                    }
+                }
+            }
+        }
     }
 }

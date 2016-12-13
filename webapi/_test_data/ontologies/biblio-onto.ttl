@@ -384,7 +384,7 @@
 
                     salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                    rdfs:subPropertyOf knora-base:hasValue, foaf:name .
+                    rdfs:subPropertyOf knora-base:hasValue .
 
 
 

@@ -50,9 +50,11 @@ object ResourceTypesRouteV1 extends Authenticator {
             get {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
+
                     // TODO: Check that this is the IRI of a resource type and not just any IRI
-                    val resourceTypeIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid resource type IRI: $iri"))
-                    val requestMessage = makeResourceTypeRequestMessage(iri, userProfile)
+                    val resourceTypeIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid resource class IRI: $iri"))
+
+                    val requestMessage = makeResourceTypeRequestMessage(resourceTypeIri, userProfile)
 
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
@@ -152,6 +154,25 @@ object ResourceTypesRouteV1 extends Authenticator {
                         log
                     )
             }
+        } ~ path("v1" / "subclasses" / Segment) {
+            iri =>
+                get {
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        // TODO: Check that this is the IRI of a resource type and not just any IRI
+                        val resourceClassIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid resource class IRI: $iri"))
+
+                        val requestMessage = SubClassesGetRequestV1(resourceClassIri, userProfile)
+
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
         }
     }
 }

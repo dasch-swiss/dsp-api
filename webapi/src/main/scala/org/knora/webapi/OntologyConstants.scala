@@ -73,6 +73,7 @@ object OntologyConstants {
         val MovingImageRepresentation = "http://www.knora.org/ontology/knora-base#MovingImageRepresentation"
         val StillImageRepresentation = "http://www.knora.org/ontology/knora-base#StillImageRepresentation"
         val TextRepresentation = "http://www.knora.org/ontology/knora-base#TextRepresentation"
+        val Region = "http://www.knora.org/ontology/knora-base#Region"
 
         val AbstractResourceClasses = Set(
             Resource,
@@ -97,8 +98,8 @@ object OntologyConstants {
         val ValueHasDecimal = "http://www.knora.org/ontology/knora-base#valueHasDecimal"
         val ValueHasStandoff = "http://www.knora.org/ontology/knora-base#valueHasStandoff"
         val ValueHasResPtr = "http://www.knora.org/ontology/knora-base#valueHasResPtr"
-        val ValueHasStartJDC = "http://www.knora.org/ontology/knora-base#valueHasStartJDC"
-        val ValueHasEndJDC = "http://www.knora.org/ontology/knora-base#valueHasEndJDC"
+        val ValueHasStartJDN = "http://www.knora.org/ontology/knora-base#valueHasStartJDN"
+        val ValueHasEndJDN = "http://www.knora.org/ontology/knora-base#valueHasEndJDN"
         val ValueHasCalendar = "http://www.knora.org/ontology/knora-base#valueHasCalendar"
         val ValueHasStartPrecision = "http://www.knora.org/ontology/knora-base#valueHasStartPrecision"
         val ValueHasEndPrecision = "http://www.knora.org/ontology/knora-base#valueHasEndPrecision"
@@ -124,6 +125,7 @@ object OntologyConstants {
         val HasDDDFileValue = "http://www.knora.org/ontology/knora-base#hasDDDFileValue"
         val HasTextFileValue = "http://www.knora.org/ontology/knora-base#hasTextFileValue"
         val HasDocumentFileValue = "http://www.knora.org/ontology/knora-base#hasDocumentFileValue"
+        val HasComment = "http://www.knora.org/ontology/knora-base#hasComment"
 
         val IsPreview = "http://www.knora.org/ontology/knora-base#isPreview"
         val ResourceIcon = "http://www.knora.org/ontology/knora-base#resourceIcon"
@@ -131,6 +133,8 @@ object OntologyConstants {
         val Username = "http://www.knora.org/ontology/knora-base#userid"
         val Email = "http://www.knora.org/ontology/knora-base#email"
         val Password = "http://www.knora.org/ontology/knora-base#password"
+        val GivenName = "http://www.knora.org/ontology/knora-base#givenName"
+        val FamilyName = "http://www.knora.org/ontology/knora-base#familyName"
 
         val InternalMimeType = "http://www.knora.org/ontology/knora-base#internalMimeType"
         val InternalFilename = "http://www.knora.org/ontology/knora-base#internalFilename"
@@ -252,6 +256,8 @@ object OntologyConstants {
           */
         val SystemUser = "http://www.knora.org/ontology/knora-base#SystemUser"
 
+        val CreationDate = "http://www.knora.org/ontology/knora-base#creationDate"
+        val ValueCreationDate = "http://www.knora.org/ontology/knora-base#valueCreationDate"
     }
 
     object SalsahGui {
@@ -280,11 +286,6 @@ object OntologyConstants {
             val assignmentOperator = "="
         }
 
-    }
-
-    object Foaf {
-        val GivenName = "http://xmlns.com/foaf/0.1/givenName"
-        val FamilyName = "http://xmlns.com/foaf/0.1/familyName"
     }
 
 }

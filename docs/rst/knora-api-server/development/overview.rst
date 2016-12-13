@@ -18,7 +18,9 @@
 
 
 Overview
-=========
+========
+
+.. contents:: :local:
 
 Developing for the Knora API server requires a complete local installation of Knora. The different parts are:
 

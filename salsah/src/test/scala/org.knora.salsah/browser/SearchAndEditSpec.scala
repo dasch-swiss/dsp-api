@@ -72,7 +72,9 @@ class SearchAndEditSpec extends SalsahSpec {
                 {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"},
                 {"path": "_test_data/ontologies/beol-onto.ttl", "name": "http://www.knora.org/ontology/beol"},
                 {"path": "_test_data/ontologies/anything-onto.ttl", "name": "http://www.knora.org/ontology/anything"},
-                {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"}
+                {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"},
+                {"path": "_test_data/all_data/biblio-data.ttl", "name": "http://www.knora.org/data/biblio"},
+                {"path": "_test_data/ontologies/biblio-onto.ttl", "name": "http://www.knora.org/ontology/biblio"}
             ]
         """
 
@@ -674,7 +676,7 @@ class SearchAndEditSpec extends SalsahSpec {
             val seasons = page.getRadioButtons(seasonField)
 
             // summer is the first item
-            seasons(0).click()
+            seasons.head.click()
 
             page.clickSaveButton(seasonField)
 

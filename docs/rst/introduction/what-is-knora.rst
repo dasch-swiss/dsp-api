@@ -58,7 +58,7 @@ Knora API is best suited to interacting with RDF repositories based on the
 Knora ontologies, it can also be implemented as a gateway to other sorts of
 repositories, including non-RDF repositories.
 
-Knora includes a high-performance media server, called Sipi, for serving and
+Knora uses a high-performance media server, called Sipi, for serving and
 converting binary media files such as images and video. Sipi can efficiently
 convert between many different formats on demand, preserving embedded
 metadata, and implements the

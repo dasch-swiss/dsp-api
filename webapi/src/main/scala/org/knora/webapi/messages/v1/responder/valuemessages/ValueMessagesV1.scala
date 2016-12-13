@@ -183,12 +183,18 @@ case class LinkValueGetRequestV1(subjectIri: IRI, predicateIri: IRI, objectIri: 
   *
   * @param value     the single requested value.
   * @param valuetype the IRI of the value's type.
+  * @param valuecreator the username of the user who created the value.
+  * @param valuecreatorname the name of the user who created the value.
+  * @param valuecreationdate the date when the value was created.
   * @param comment   the comment on the value, if any.
   * @param rights    the user's permission on the value.
   * @param userdata  information about the user that made the request.
   */
 case class ValueGetResponseV1(valuetype: IRI,
                               value: ApiValueV1,
+                              valuecreator: String,
+                              valuecreatorname: String,
+                              valuecreationdate: String,
                               comment: Option[String] = None,
                               rights: Int,
                               userdata: UserDataV1) extends KnoraResponseV1 {
@@ -1081,25 +1087,25 @@ case class IntervalValueV1(timeval1: BigDecimal, timeval2: BigDecimal) extends U
 }
 
 /**
-  * Represents a date value as a period bounded by Julian Day Counts. Knora stores dates internally in this format.
+  * Represents a date value as a period bounded by Julian Day Numbers. Knora stores dates internally in this format.
   *
-  * @param dateval1       the beginning of the date (a Julian day count).
-  * @param dateval2       the end of the date (a Julian day count).
+  * @param dateval1       the beginning of the date (a Julian day number).
+  * @param dateval2       the end of the date (a Julian day number).
   * @param calendar       the preferred calendar for representing the date.
   * @param dateprecision1 the precision of the beginning of the date.
   * @param dateprecision2 the precision of the end of the date.
   */
-case class JulianDayCountValueV1(dateval1: Int,
-                                 dateval2: Int,
-                                 calendar: KnoraCalendarV1.Value,
-                                 dateprecision1: KnoraPrecisionV1.Value,
-                                 dateprecision2: KnoraPrecisionV1.Value) extends UpdateValueV1 {
+case class JulianDayNumberValueV1(dateval1: Int,
+                                  dateval2: Int,
+                                  calendar: KnoraCalendarV1.Value,
+                                  dateprecision1: KnoraPrecisionV1.Value,
+                                  dateprecision2: KnoraPrecisionV1.Value) extends UpdateValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DateValue
 
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
-            case dateValueV1: DateValueV1 => DateUtilV1.julianDayCountValueV1ToDateValueV1(this) == other
+            case dateValueV1: DateValueV1 => DateUtilV1.julianDayNumberValueV1ToDateValueV1(this) == other
             case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
@@ -1110,8 +1116,8 @@ case class JulianDayCountValueV1(dateval1: Int,
     override def toString = {
         // use only precision DAY: either the date is exact (a certain day)
         // or it is a period expressed as a range from one day to another.
-        val date1 = DateUtilV1.julianDay2DateString(dateval1, calendar, KnoraPrecisionV1.DAY)
-        val date2 = DateUtilV1.julianDay2DateString(dateval2, calendar, KnoraPrecisionV1.DAY)
+        val date1 = DateUtilV1.julianDayNumber2DateString(dateval1, calendar, KnoraPrecisionV1.DAY)
+        val date2 = DateUtilV1.julianDayNumber2DateString(dateval2, calendar, KnoraPrecisionV1.DAY)
 
         // if date1 and date2 are identical, it's not a period.
         if (date1 == date2) {
@@ -1501,7 +1507,7 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
 
     implicit val createFileQualityLevelFormat: RootJsonFormat[CreateFileQualityLevelV1] = jsonFormat4(CreateFileQualityLevelV1)
     implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat3(CreateFileV1)
-    implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat5(ValueGetResponseV1)
+    implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat8(ValueGetResponseV1)
     implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat3(DateValueV1)
     implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat9(StillImageFileValueV1)
     implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat4(MovingImageFileValueV1)

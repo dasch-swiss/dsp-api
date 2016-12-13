@@ -27,14 +27,19 @@
  * Performs an extended search. The number of rows returned per matching resource is the product of the number of
  * values that each search criterion matched in the resource.
  *
+ * If the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
+ * SPARQL. Specifically, we use inference to return search results matching subclasses and subproperties of the ones
+ * specified in the search criteria. Without inference, we have to do this using SPARQL property path syntax
+ * (rdfs:subClassOf* and rdfs:subPropertyOf*). Using inference requires us to use GraphDB's
+ * GRAPH <http://www.ontotext.com/explicit> whenever we need to get explicit (non-inferred) statements.
+ *
  * @param triplestore the name of the triplestore being used.
  * @param searchCriteria a list of maps containing search criteria, each of which contains:
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
- * @param projectIri if filtering by project is desired, the IRI of the project to search.
- * @param restypeIri if filtering by resource type is desired, the IRI of the resource type to search for.
- * @param ownerIri if filtering by owner is desired, the IRI of the resource owner to search for.
- * @param limit the maximum number of results to re
+ * @param projectIriOption if filtering by project is desired, the IRI of the project to search.
+ * @param restypeIriOption if given, returns only resources of this class and its subclasses.
+ * @param ownerIriOption if filtering by owner is desired, the IRI of the resource owner to search for.
  *@
 @(triplestore: String,
   searchCriteria: Seq[SearchCriterion],
@@ -70,10 +75,6 @@ SELECT DISTINCT
         ?targetResourcePermissions@index
         ?literal@index
     }
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
 WHERE {
     BIND(STR("@preferredLanguage") AS ?preferredLanguage)
     BIND(STR("@fallbackLanguage") AS ?fallbackLanguage)
@@ -92,8 +93,18 @@ WHERE {
         *@
 
         @if(searchCriterion.valueType != "http://www.knora.org/ontology/knora-base#Resource") {
-            ?p@index rdfs:subPropertyOf* <@{searchCriterion.propertyIri}> .
-            ?resource ?p@index ?valueObject@index .
+
+            @if(triplestore.startsWith("graphdb")) {
+
+                ?resource <@searchCriterion.propertyIri> ?valueObject@index .
+
+            } else {
+
+                ?p@index rdfs:subPropertyOf* <@searchCriterion.propertyIri> .
+                ?resource ?p@index ?valueObject@index .
+
+            }
+
         }
 
         @*
@@ -163,7 +174,25 @@ WHERE {
                 @searchCriterion.valueType match {
                     case "http://www.knora.org/ontology/knora-base#Resource" => {
 
-                        ?resource <@searchCriterion.propertyIri> ?targetResource@index .
+                        @if(triplestore.startsWith("graphdb")) {
+
+                            ?resource <@searchCriterion.propertyIri> ?targetResource@index .
+                            ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
+
+                            GRAPH <http://www.ontotext.com/explicit> {
+
+                                ?resource ?linkProperty@index ?targetResource@index .
+
+                            }
+
+                        } else {
+
+                            ?linkProperty@index rdfs:subPropertyOf* <@searchCriterion.propertyIri> .
+                            ?resource ?linkProperty@index ?targetResource@index .
+                            ?linkValueProperty@index rdfs:subPropertyOf* <@{searchCriterion.propertyIri}Value> .
+                            ?resource ?linkValueProperty@index ?valueObject@index .
+
+                        }
 
                         ?targetResource@index rdfs:label ?literal@index ;
                             knora-base:isDeleted false ;
@@ -174,11 +203,9 @@ WHERE {
                             ?targetResource@index knora-base:hasPermissions ?targetResourcePermissions@index .
                         }
 
-                        ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
-
                         ?valueObject@index rdf:type knora-base:LinkValue ;
                             rdf:subject ?resource ;
-                            rdf:predicate <@searchCriterion.propertyIri> ;
+                            rdf:predicate ?linkProperty@index ;
                             rdf:object ?targetResource@index .
                     }
 
@@ -220,8 +247,8 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObject@index knora-base:valueHasStartJDC ?dateStart@index .
-                        ?valueObject@index knora-base:valueHasEndJDC ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasStartJDN ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasEndJDN ?dateEnd@index .
                         ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (@searchCriterion.dateStart <= ?dateEnd@index && @searchCriterion.dateEnd >= ?dateStart@index)
@@ -232,8 +259,27 @@ WHERE {
                     case "http://www.knora.org/ontology/knora-base#Resource" => {
 
                         BIND(IRI("@searchCriterion.searchValue") AS ?targetResource@index)
-                        
-                        ?resource <@searchCriterion.propertyIri> <@searchCriterion.searchValue> .
+
+
+                        @if(triplestore.startsWith("graphdb")) {
+
+                            ?resource <@searchCriterion.propertyIri> <@searchCriterion.searchValue> .
+                            ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
+
+                            GRAPH <http://www.ontotext.com/explicit> {
+
+                                ?resource ?linkProperty@index <@searchCriterion.searchValue> .
+
+                            }
+
+                        } else {
+
+                            ?linkProperty@index rdfs:subPropertyOf* <@searchCriterion.propertyIri> .
+                            ?resource ?linkProperty@index <@searchCriterion.searchValue> .
+                            ?linkValueProperty@index rdfs:subPropertyOf* <@{searchCriterion.propertyIri}Value> .
+                            ?resource ?linkValueProperty@index ?valueObject@index .
+
+                        }
 
                         <@searchCriterion.searchValue> rdfs:label ?literal@index ;
                             knora-base:isDeleted false ;
@@ -244,11 +290,9 @@ WHERE {
                             <@searchCriterion.searchValue> knora-base:hasPermissions ?targetResourcePermissions@index .
                         }
 
-                        ?resource <@{searchCriterion.propertyIri}Value> ?valueObject@index .
-
                         ?valueObject@index rdf:type knora-base:LinkValue ;
                             rdf:subject ?resource ;
-                            rdf:predicate <@searchCriterion.propertyIri> ;
+                            rdf:predicate ?linkProperty@index ;
                             rdf:object <@searchCriterion.searchValue> .
                     }
 
@@ -304,8 +348,8 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObject@index knora-base:valueHasStartJDC ?dateStart@index .
-                        ?valueObject@index knora-base:valueHasEndJDC ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasStartJDN ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasEndJDN ?dateEnd@index .
                         ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (@searchCriterion.dateEnd < ?dateStart@index || @searchCriterion.dateStart > ?dateEnd@index )
@@ -341,7 +385,7 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObject@index knora-base:valueHasStartJDC ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasStartJDN ?dateStart@index .
                         ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (?dateStart@index > @searchCriterion.dateEnd)
@@ -377,7 +421,7 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObject@index knora-base:valueHasStartJDC ?dateStart@index .
+                        ?valueObject@index knora-base:valueHasStartJDN ?dateStart@index .
                         ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (?dateStart@index >= @searchCriterion.dateEnd)
@@ -413,7 +457,7 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObject@index knora-base:valueHasEndJDC ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasEndJDN ?dateEnd@index .
                         ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (?dateEnd@index < @searchCriterion.dateStart)
@@ -449,7 +493,7 @@ WHERE {
 
                     case "http://www.knora.org/ontology/knora-base#DateValue" => {
 
-                        ?valueObject@index knora-base:valueHasEndJDC ?dateEnd@index .
+                        ?valueObject@index knora-base:valueHasEndJDN ?dateEnd@index .
                         ?valueObject@index knora-base:valueHasString ?dateString@index .
 
                         FILTER (?dateEnd@index <= @searchCriterion.dateStart)
@@ -536,8 +580,6 @@ WHERE {
     }
 
     ?resource knora-base:isDeleted false .
-    ?resource rdfs:label ?resourceLabel .
-    ?resource a ?resourceClass .
 
     @projectIriOption match {
         case Some(projectIri) => {
@@ -550,23 +592,57 @@ WHERE {
         case None => {}
     }
 
-    @restypeIriOption match {
-        case Some(restypeIri) => {
+    @if(triplestore.startsWith("graphdb")) {
 
-            # filter by restypeIri
-            ?resClass rdfs:subClassOf* <@restypeIri> .
-            ?resource a ?resClass .
+        GRAPH <http://www.ontotext.com/explicit> {
+
+            ?resource a ?resourceClass .
+
         }
 
-        case None => {
+        @restypeIriOption match {
 
-            # Make sure we have a knora-base:Resource.
-            ?resClass rdfs:subClassOf+ knora-base:Resource .
-            ?resource a ?resClass .
+            case Some(restypeIri) => {
 
+                # Filter by resource class.
+
+                ?resource a <@restypeIri> .
+
+            }
+
+            case None => {
+
+                @* Ensure that each matching resource is a knora-base:Resource. *@
+
+                ?resource a knora-base:Resource .
+            }
+        }
+
+    } else {
+
+        ?resource a ?resourceClass .
+
+        @restypeIriOption match {
+
+            case Some(restypeIri) => {
+
+                # Filter by resource class.
+
+                ?resClass rdfs:subClassOf* <@restypeIri> .
+                ?resource a ?resClass .
+
+            }
+
+            case None => {
+
+                @* Ensure that each matching resource is a knora-base:Resource. *@
+
+                ?resClass rdfs:subClassOf+ knora-base:Resource .
+                ?resource a ?resClass .
+
+            }
         }
     }
-
 
     @ownerIriOption match {
         case Some(ownerIri) => {
@@ -577,6 +653,8 @@ WHERE {
 
         case None => {}
     }
+
+    ?resource rdfs:label ?resourceLabel .
 
     OPTIONAL {
         ?resource knora-base:hasStillImageFileValue ?fileValue .

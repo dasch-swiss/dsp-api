@@ -24,6 +24,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
         RdfDataObject(path = "_test_data/store.triplestore.GraphDBConsistencyCheckingSpec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
     )
 
@@ -89,6 +90,17 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
             }
         }
 
+        "not create a new resource with a link to a resource of the wrong class" ignore {
+            // Ignored because of a bug in GraphDB 7.1.
+
+            storeManager ! SparqlUpdateRequest(wrongLinkTargetClass)
+
+            expectMsgPF(timeout) {
+                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+                    msg.contains(s"$CONSISTENCY_CHECK_ERROR object_class_constraint") should ===(true)
+            }
+        }
+
         "not create a new resource with a property for which there is no cardinality" in {
             storeManager ! SparqlUpdateRequest(resourcePropWithNoCardinality)
 
@@ -104,6 +116,15 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
                     msg.contains(s"$CONSISTENCY_CHECK_ERROR value_prop_cardinality_any") should ===(true)
+            }
+        }
+
+        "not create a new resource with two labels" in {
+            storeManager ! SparqlUpdateRequest(twoLabels)
+
+            expectMsgPF(timeout) {
+                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+                    msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_greater_rdfs_label") should ===(true)
             }
         }
     } else {
@@ -1055,8 +1076,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
-          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                ?newValue1 knora-base:valueHasStartJDN 2457360 ;
+          |                                     knora-base:valueHasEndJDN 2457360 ;
           |                                     knora-base:valueHasStartPrecision "DAY" ;
           |                                     knora-base:valueHasEndPrecision "DAY" ;
           |                                     knora-base:valueHasCalendar "GREGORIAN" ;
@@ -1635,8 +1656,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
-          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                ?newValue1 knora-base:valueHasStartJDN 2457360 ;
+          |                                     knora-base:valueHasEndJDN 2457360 ;
           |                                     knora-base:valueHasStartPrecision "DAY" ;
           |                                     knora-base:valueHasEndPrecision "DAY" ;
           |                                     knora-base:valueHasCalendar "GREGORIAN" ;
@@ -1880,8 +1901,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
-          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                ?newValue1 knora-base:valueHasStartJDN 2457360 ;
+          |                                     knora-base:valueHasEndJDN 2457360 ;
           |                                     knora-base:valueHasStartPrecision "DAY" ;
           |                                     knora-base:valueHasEndPrecision "DAY" ;
           |                                     knora-base:valueHasCalendar "GREGORIAN" ;
@@ -2122,8 +2143,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
-          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                ?newValue1 knora-base:valueHasStartJDN 2457360 ;
+          |                                     knora-base:valueHasEndJDN 2457360 ;
           |                                     knora-base:valueHasStartPrecision "DAY" ;
           |                                     knora-base:valueHasEndPrecision "DAY" ;
           |                                     knora-base:valueHasCalendar "GREGORIAN" ;
@@ -2358,8 +2379,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
-          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                ?newValue1 knora-base:valueHasStartJDN 2457360 ;
+          |                                     knora-base:valueHasEndJDN 2457360 ;
           |                                     knora-base:valueHasStartPrecision "DAY" ;
           |                                     knora-base:valueHasEndPrecision "DAY" ;
           |                                     knora-base:valueHasCalendar "GREGORIAN" ;
@@ -2653,8 +2674,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |                ?newValue1 knora-base:valueHasStartJDC 2457360 ;
-          |                                     knora-base:valueHasEndJDC 2457360 ;
+          |                ?newValue1 knora-base:valueHasStartJDN 2457360 ;
+          |                                     knora-base:valueHasEndJDN 2457360 ;
           |                                     knora-base:valueHasStartPrecision "DAY" ;
           |                                     knora-base:valueHasEndPrecision "DAY" ;
           |                                     knora-base:valueHasCalendar "GREGORIAN" ;
@@ -2818,4 +2839,172 @@ object GraphDBConsistencyCheckingSpec {
           |}
         """.stripMargin
 
+    private val wrongLinkTargetClass =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |INSERT {
+          |    GRAPH ?dataNamedGraph {
+          |        ?resource rdf:type ?resourceClass ;
+          |            knora-base:isDeleted false ;
+          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToProject ?projectIri ;
+          |            rdfs:label ?label ;
+          |
+          |
+          |
+          |
+          |                    knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |
+          |
+          |
+          |            knora-base:creationDate ?currentTime .
+          |
+          |
+          |
+          |        # Value 0
+          |        # Property: http://www.knora.org/ontology/anything#hasBlueThing
+          |
+          |            # The property hasBlueThing has an objectClassConstraint of BlueThing, so using a Thing as a link target should fail.
+          |
+          |            ?resource ?linkProperty0 ?linkTarget0 .
+          |
+          |
+          |
+          |        ?newLinkValue0 rdf:type knora-base:LinkValue ;
+          |            rdf:subject ?resource ;
+          |            rdf:predicate ?linkProperty0 ;
+          |            rdf:object ?linkTarget0 ;
+          |            knora-base:valueHasString "http://data.knora.org/a-thing" ;
+          |            knora-base:valueHasRefCount 1 ;
+          |
+          |            knora-base:valueHasOrder ?nextOrder0 ;
+          |            knora-base:isDeleted false ;
+          |            knora-base:valueCreationDate ?currentTime .
+          |
+          |        ?newLinkValue0 knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> .
+          |
+          |
+          |
+          |                ?newLinkValue0 knora-base:attachedToProject <http://data.knora.org/projects/anything> .
+          |
+          |
+          |
+          |
+          |
+          |                ?newLinkValue0 knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |
+          |
+          |
+          |
+          |        ?resource ?linkValueProperty0 ?newLinkValue0 .
+          |
+          |
+          |
+          |
+          |    }
+          |}
+          |
+          |
+          |    USING <http://www.ontotext.com/explicit>
+          |
+          |WHERE {
+          |    BIND(IRI("http://www.knora.org/data/anything") AS ?dataNamedGraph)
+          |    BIND(IRI("http://data.knora.org/wrongTargetClass") AS ?resource)
+          |    BIND(IRI("http://www.knora.org/ontology/anything#Thing") AS ?resourceClass)
+          |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/projects/anything") AS ?projectIri)
+          |    BIND(str("Test Thing") AS ?label)
+          |    BIND(NOW() AS ?currentTime)
+          |
+          |
+          |
+          |    # Value 0
+          |    # Property: http://www.knora.org/ontology/anything#hasBlueThing
+          |
+          |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThing") AS ?linkProperty0)
+          |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThingValue") AS ?linkValueProperty0)
+          |    BIND(IRI("http://data.knora.org/wrongTargetClass/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
+          |    BIND(IRI("http://data.knora.org/a-thing") AS ?linkTarget0)
+          |
+          |
+          |
+          |    ?linkTarget0 rdf:type ?linkTargetClass0 ;
+          |        knora-base:isDeleted false .
+          |    ?linkTargetClass0 rdfs:subClassOf+ knora-base:Resource .
+          |
+          |
+          |
+          |    ?resourceClass rdfs:subClassOf* ?restriction0 .
+          |    ?restriction0 a owl:Restriction .
+          |    ?restriction0 owl:onProperty ?linkProperty0 .
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |
+          |            BIND(0 AS ?nextOrder0)
+          |
+          |
+          |
+          |}
+        """.stripMargin
+
+
+    private val twoLabels =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |INSERT {
+          |    GRAPH ?dataNamedGraph {
+          |        ?resource rdf:type ?resourceClass ;
+          |            knora-base:isDeleted false ;
+          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToProject ?projectIri ;
+          |            rdfs:label ?label;
+          |            rdfs:label "Second label not allowed" ;
+          |
+          |
+          |                    knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |
+          |
+          |            knora-base:creationDate ?currentTime .
+          |    }
+          |}
+          |
+          |
+          |    USING <http://www.ontotext.com/explicit>
+          |
+          |WHERE {
+          |    BIND(IRI("http://www.knora.org/data/anything") AS ?dataNamedGraph)
+          |    BIND(IRI("http://data.knora.org/wrongTargetClass") AS ?resource)
+          |    BIND(IRI("http://www.knora.org/ontology/anything#Thing") AS ?resourceClass)
+          |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/projects/anything") AS ?projectIri)
+          |    BIND(str("Test Thing") AS ?label)
+          |    BIND(NOW() AS ?currentTime)
+          |
+          |
+          |
+          |    # Value 0
+          |    # Property: http://www.knora.org/ontology/anything#hasBlueThing
+          |
+          |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThing") AS ?linkProperty0)
+          |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThingValue") AS ?linkValueProperty0)
+          |    BIND(IRI("http://data.knora.org/wrongTargetClass/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
+          |    BIND(IRI("http://data.knora.org/a-thing") AS ?linkTarget0)
+          |}
+        """.stripMargin
 }

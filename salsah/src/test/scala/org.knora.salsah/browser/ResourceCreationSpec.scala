@@ -22,17 +22,10 @@ package org.knora.salsah.browser
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
-import org.knora.salsah.SettingsImpl
 import org.openqa.selenium.{By, WebElement}
-import org.scalatest._
 import org.scalatest.concurrent.Eventually._
-import spray.client.pipelining._
-import spray.http.MediaTypes._
-import spray.http.{HttpRequest, HttpResponse, _}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 /**
   * Tests the SALSAH web interface using Selenium.
@@ -71,7 +64,9 @@ class ResourceCreationSpec extends SalsahSpec {
                 {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"},
                 {"path": "_test_data/ontologies/beol-onto.ttl", "name": "http://www.knora.org/ontology/beol"},
                 {"path": "_test_data/ontologies/anything-onto.ttl", "name": "http://www.knora.org/ontology/anything"},
-                {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"}
+                {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"},
+                {"path": "_test_data/all_data/biblio-data.ttl", "name": "http://www.knora.org/data/biblio"},
+                {"path": "_test_data/ontologies/biblio-onto.ttl", "name": "http://www.knora.org/ontology/biblio"}
             ]
         """
 
@@ -83,10 +78,9 @@ class ResourceCreationSpec extends SalsahSpec {
         }
 
 
-
         "have the correct title" in {
             page.load()
-            page.getPageTitle should be ("System for Annotation and Linkage of Sources in Arts and Humanities")
+            page.getPageTitle should be("System for Annotation and Linkage of Sources in Arts and Humanities")
 
         }
 

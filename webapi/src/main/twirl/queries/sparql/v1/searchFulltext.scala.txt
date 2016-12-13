@@ -25,12 +25,18 @@
  * Performs a simple full-text search. The number of rows returned per matching resource is equal to the number of
  * values that matched in the resource, plus one if the resource's label matched.
  *
+ * If the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
+ * SPARQL. Specifically, we use inference to return search results matching subclasses of the resource class
+ * specified by the user. Without inference, we have to do this using SPARQL property path syntax
+ * (rdfs:subClassOf*). Using inference requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit> whenever
+ * we need to get explicit (non-inferred) statements.
+ *
  * @param triplestore the name of the triplestore being used.
  * @param searchTerms search terms to be combined with AND in Lucene full-text search syntax.
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
  * @param projectIriOption if filtering by project is desired, the IRI of the project to search.
- * @param restypeIriOption if filtering by resource type is desired, the IRI of the resource type to search for.
+ * @param restypeIriOption if given, searches only for resources of this class and its subclasses.
  *@
 @(triplestore: String,
   searchTerms: Seq[String],
@@ -60,10 +66,6 @@ SELECT DISTINCT
     ?valueProject
     ?valuePermissions
     ?literal
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
 WHERE {
     BIND(STR("@preferredLanguage") AS ?preferredLanguage)
     BIND(STR("@fallbackLanguage") AS ?fallbackLanguage)
@@ -103,13 +105,30 @@ WHERE {
     # ?matchingSubject could be a resource (whose rdfs:label matched) or a value object
 
     OPTIONAL {
-        # if this clause is executed, it is a value object
+        # If this clause is executed, it is a value object. We set ?containingResource to the resource that contains the matching value object.
 
-        ?matchingSubject a ?valueObjectType .
-        ?valueObjectType rdfs:subClassOf+ knora-base:Value .
+        @if(triplestore.startsWith("graphdb")) {
+
+            ?matchingSubject a knora-base:Value .
+            ?containingResource knora-base:hasValue ?matchingSubject .
+
+            GRAPH <http://www.ontotext.com/explicit> {
+
+                ?matchingSubject a ?valueObjectType .
+                ?containingResource ?resourceProperty ?matchingSubject .
+
+            }
+
+        } else {
+
+            ?matchingSubject a ?valueObjectType .
+            ?valueObjectType rdfs:subClassOf+ knora-base:Value .
+            ?containingResource ?resourceProperty ?matchingSubject .
+            ?resourceProperty rdfs:subPropertyOf+ knora-base:hasValue .
+
+        }
+
         FILTER(?valueObjectType != knora-base:LinkValue)
-        ?containingResource ?resourceProperty ?matchingSubject . @* ?containingResource is the resource that contains the matching value object *@
-        ?resourceProperty rdfs:subPropertyOf+ knora-base:hasValue .
         ?containingResource knora-base:isDeleted false .
 
         BIND(?matchingSubject AS ?valueObject)
@@ -134,9 +153,6 @@ WHERE {
     # If the previous OPTIONAL clause executed, ?matchingSubject is a value, and ?containingResource will be set. Otherwise, ?matchingSubject is a resource.
     BIND(COALESCE(?containingResource, ?matchingSubject) AS ?resource)
 
-    ?resource a ?resourceClass .
-    ?resource rdfs:label ?resourceLabel .
-
     @projectIriOption match {
         case Some(projectIri) => {
 
@@ -148,22 +164,59 @@ WHERE {
         case None => {}
     }
 
-    @restypeIriOption match {
-        case Some(restypeIri) => {
+    @if(triplestore.startsWith("graphdb")) {
 
-            # filter by restypeIri
-            ?resClass rdfs:subClassOf* <@restypeIri> .
-            ?resource a ?resClass .
+        GRAPH <http://www.ontotext.com/explicit> {
+
+            ?resource a ?resourceClass .
+
         }
 
-        case None => {
+        @restypeIriOption match {
 
-            # Make sure we have a knora-base:Resource.
-            ?resClass rdfs:subClassOf+ knora-base:Resource .
-            ?resource a ?resClass .
+            case Some(restypeIri) => {
 
+                # Filter by resource class.
+
+                ?resource a <@restypeIri> .
+
+            }
+
+            case None => {
+
+                @* Ensure that each matching resource is a knora-base:Resource. *@
+
+                ?resource a knora-base:Resource .
+            }
+        }
+
+    } else {
+
+        ?resource a ?resourceClass .
+
+        @restypeIriOption match {
+
+            case Some(restypeIri) => {
+
+                # Filter by resource class.
+
+                ?resClass rdfs:subClassOf* <@restypeIri> .
+                ?resource a ?resClass .
+
+            }
+
+            case None => {
+
+                @* Ensure that each matching resource is a knora-base:Resource. *@
+
+                ?resClass rdfs:subClassOf+ knora-base:Resource .
+                ?resource a ?resClass .
+
+            }
         }
     }
+
+    ?resource rdfs:label ?resourceLabel .
 
     OPTIONAL {
        ?resource knora-base:hasStillImageFileValue ?fileValue .

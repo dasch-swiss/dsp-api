@@ -24,6 +24,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix foaf:<http://xmlns.com/foaf/0.1/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @base <http://www.knora.org/ontology/knora-base> .
 
 <http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology .
@@ -32,10 +33,10 @@
 
 #################################################################
 #
-#    Base property of properties whose objects can't be marked
-#    as deleted
+#    Properties
 #
 #################################################################
+
 
 
 ###  http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted
@@ -44,27 +45,43 @@
 
                 rdfs:comment "The base property of properties whose objects can't be marked as deleted"@en .
 
-rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
-
-
-#################################################################
-#
-#    Annotation properties
-#
-#################################################################
 
 
 ###  http://www.knora.org/ontology/knora-base#objectDatatypeConstraint
 
-:objectDatatypeConstraint rdf:type owl:AnnotationProperty ;
+:objectDatatypeConstraint rdf:type owl:DatatypeProperty ;
 
                           rdfs:comment "Specifies the type required as the object of a datatype property"@en .
 
 
 
+###  http://www.knora.org/ontology/knora-base#name
+
+:name rdf:type owl:DatatypeProperty ;
+
+      rdfs:subPropertyOf foaf:name, :objectCannotBeMarkedAsDeleted .
+
+
+
+###  http://www.knora.org/ontology/knora-base#givenName
+
+:givenName rdf:type owl:DatatypeProperty ;
+
+      rdfs:subPropertyOf foaf:givenName, :objectCannotBeMarkedAsDeleted .
+
+
+
+###  http://www.knora.org/ontology/knora-base#familyName
+
+:familyName rdf:type owl:DatatypeProperty ;
+
+      rdfs:subPropertyOf foaf:familyName, :objectCannotBeMarkedAsDeleted .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#hasDefaultChangeRightsPermission
 
-:hasDefaultChangeRightsPermission rdf:type owl:AnnotationProperty ;
+:hasDefaultChangeRightsPermission rdf:type owl:ObjectProperty ;
 
                                   :objectClassConstraint :UserGroup ;
 
@@ -74,7 +91,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 ###  http://www.knora.org/ontology/knora-base#hasDefaultDeletePermission
 
-:hasDefaultDeletePermission rdf:type owl:AnnotationProperty ;
+:hasDefaultDeletePermission rdf:type owl:ObjectProperty ;
 
                             :objectClassConstraint :UserGroup ;
 
@@ -84,7 +101,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 ###  http://www.knora.org/ontology/knora-base#hasDefaultModifyPermission
 
-:hasDefaultModifyPermission rdf:type owl:AnnotationProperty ;
+:hasDefaultModifyPermission rdf:type owl:ObjectProperty ;
 
                             :objectClassConstraint :UserGroup ;
 
@@ -94,13 +111,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 ###  http://www.knora.org/ontology/knora-base#hasDefaultPermission
 
-:hasDefaultPermission rdf:type owl:AnnotationProperty .
+:hasDefaultPermission rdf:type owl:ObjectProperty .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#hasDefaultRestrictedViewPermission
 
-:hasDefaultRestrictedViewPermission rdf:type owl:AnnotationProperty ;
+:hasDefaultRestrictedViewPermission rdf:type owl:ObjectProperty ;
 
                                     :objectClassConstraint :UserGroup ;
 
@@ -110,7 +127,9 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 ###  http://www.knora.org/ontology/knora-base#hasDefaultViewPermission
 
-:hasDefaultViewPermission rdf:type owl:AnnotationProperty ;
+:hasDefaultViewPermission rdf:type owl:ObjectProperty ;
+
+                          :objectClassConstraint :UserGroup ;
 
                           rdfs:subPropertyOf :hasDefaultRestrictedViewPermission .
 
@@ -118,38 +137,11 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 ###  http://www.knora.org/ontology/knora-base#resourceIcon
 
-:resourceIcon rdf:type owl:AnnotationProperty ;
+:resourceIcon rdf:type owl:DatatypeProperty ;
 
               :subjectClassConstraint owl:Class ;
 
               :objectDatatypeConstraint xsd:string .
-
-
-
-###  http://www.knora.org/ontology/salsah-gui#guiAttribute
-
-<http://www.knora.org/ontology/salsah-gui#guiAttribute> rdf:type owl:AnnotationProperty .
-
-
-
-###  http://www.knora.org/ontology/salsah-gui#guiElement
-
-<http://www.knora.org/ontology/salsah-gui#guiElement> rdf:type owl:AnnotationProperty .
-
-
-
-###  http://www.knora.org/vocabularies/dc#dctermsDescription
-
-<http://www.knora.org/vocabularies/dc#dctermsDescription> rdf:type owl:AnnotationProperty .
-
-
-
-
-#################################################################
-#
-#    Object Properties
-#
-#################################################################
 
 
 
@@ -217,20 +209,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
-###  http://www.knora.org/ontology/knora-base#currentproject
-
-:currentproject rdf:type owl:ObjectProperty ;
-
-                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-                rdfs:comment "This property indicates, which is the \"current project\" of a given user. A user can be part of any number of projects, but only one can be the active project."@en ;
-
-                :subjectClassConstraint :User ;
-
-                :objectClassConstraint :knoraProject .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#hasColor
 
 :hasColor rdf:type owl:ObjectProperty ;
@@ -240,9 +218,9 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                      "Couleur"@fr ,
                      "Colore"@it ;
 
-		  rdfs:comment """Represents a color."""@en ;
+          rdfs:comment """Represents a color."""@en ;
 
-          <http://www.knora.org/ontology/salsah-gui#guiAttribute> "ncolors=8"^^xsd:string ;
+          salsah-gui:guiAttribute "ncolors=8"^^xsd:string ;
 
           :objectClassConstraint :ColorValue ;
 
@@ -250,7 +228,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
           rdfs:subPropertyOf :hasValue ;
 
-          <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Colorpicker> .
+          salsah-gui:guiElement salsah-gui:Colorpicker .
 
 
 
@@ -263,11 +241,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                        "Commentaire"@fr ,
                        "Commento"@it ;
 
-			rdfs:comment """Represents a comment"""@de ;
+            rdfs:comment """Represents a comment on a resource as a knora-base:TextValue"""@de ;
+
+            :subjectClassConstraint :Resource ;
 
             :objectClassConstraint :TextValue ;
 
-			<http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Richtext> ;
+            salsah-gui:guiElement salsah-gui:Richtext ;
 
             rdfs:subPropertyOf :hasValue .
 
@@ -300,9 +280,9 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a fichier"@fr ,
                          "ha file"@it ;
               
-			  rdfs:comment "Connects a Representation to a file"@en ;	
+              rdfs:comment "Connects a Representation to a file"@en ;    
 
-			  <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Fileupload> ;
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
               :subjectClassConstraint :Representation ;
 
@@ -319,17 +299,19 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a fichier d'image"@fr ,
                          "ha file imagine"@it ;
 
-			  rdfs:comment "Connects a Representation to an image file"@en ;              
+              rdfs:comment "Connects a Representation to an image file"@en ;              
 
               :objectClassConstraint :StillImageFileValue ;
 
               :subjectClassConstraint :StillImageRepresentation ;
 
-			        :hasDefaultRestrictedViewPermission :UnknownUser ;
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
-        		  :hasDefaultViewPermission :KnownUser ;
+              :hasDefaultRestrictedViewPermission :UnknownUser ;
 
-      	  	  :hasDefaultModifyPermission :ProjectMember , :Owner ;
+              :hasDefaultViewPermission :KnownUser ;
+
+              :hasDefaultModifyPermission :ProjectMember , :Owner ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -344,11 +326,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a fichier de film"@fr ,
                          "ha file film"@it ;
               
-			  rdfs:comment "Connects a Representation to a movie file"@en ;
+              rdfs:comment "Connects a Representation to a movie file"@en ;
 
               :objectClassConstraint :MovingImageFileValue ;
 
               :subjectClassConstraint :MovingImageRepresentation ;
+
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -363,11 +347,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a fichier d'audio"@fr ,
                          "ha file audio"@it ;
 
-			  rdfs:comment "Connects a Representation to an audio file"@en ;
+              rdfs:comment "Connects a Representation to an audio file"@en ;
 
               :objectClassConstraint :AudioFileValue ;
 
               :subjectClassConstraint :AudioRepresentation ;
+
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -382,11 +368,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a ficher de 3D"@fr ,
                          "ha file 3D"@it ;
 
-			  rdfs:comment "Connects a Representation to a 3D-file"@en ;
+              rdfs:comment "Connects a Representation to a 3D-file"@en ;
               
               :objectClassConstraint :DDDFileValue ;
 
               :subjectClassConstraint :DDDRepresentation ;
+
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -401,11 +389,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a fichier de texte"@fr ,
                          "ha file testo"@it ;
               
-			  rdfs:comment "Connects a Representation to a text file"@en ;
+              rdfs:comment "Connects a Representation to a text file"@en ;
 
               :objectClassConstraint :TextFileValue ;
 
               :subjectClassConstraint :TextRepresentation ;
+
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -420,11 +410,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                          "a document"@fr ,
                          "ha documento"@it ;
 
-			  rdfs:comment "Connects a Representation to a document"@en ;
+              rdfs:comment "Connects a Representation to a document"@en ;
               
               :objectClassConstraint :DocumentFileValue ;
 
               :subjectClassConstraint :DocumentRepresentation ;
+
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -439,17 +431,17 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                         "Géometrie"@fr ,
                         "Geometria"@it ;
 
-			 rdfs:comment """Represents a geometrical shape."""@en ;	
-
-             <http://www.knora.org/ontology/salsah-gui#guiAttribute> "width=95%;rows=4;wrap=soft"^^xsd:string ;
-
-             :objectClassConstraint :GeomValue ;
-
-             :subjectClassConstraint :Region ;
+             rdfs:comment """Represents a geometrical shape."""@en ;    
 
              rdfs:subPropertyOf :hasValue ;
 
-             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Geometry> .
+             salsah-gui:guiElement salsah-gui:Geometry ;
+
+             salsah-gui:guiAttribute "width=95%;rows=4;wrap=soft"^^xsd:string ;
+
+             :objectClassConstraint :GeomValue ;
+
+             :subjectClassConstraint :Region .
 
 
 
@@ -483,25 +475,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                 :subjectClassConstraint :Resource ;
 
                 rdfs:subPropertyOf :hasValue .
-
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasProvider
-
-:hasProvider rdf:type owl:ObjectProperty ;
-
-             rdfs:label "hat Provider"@de ,
-                        "has Provider"@en ,
-                        "a Provider"@fr ,
-                        "ha Provider"@it ;
-             
-             :objectClassConstraint :ExternalResValue ;
-
-             :subjectClassConstraint :ExternalResource ;
-
-             rdfs:subPropertyOf :hasValue .
-
 
 
 
@@ -710,7 +683,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
-
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOf
 
 :isAnnotationOf rdf:type owl:ObjectProperty ;
@@ -725,6 +697,8 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                 :objectClassConstraint :Resource ;
 
                 rdfs:subPropertyOf :hasLinkTo .
+
+
 
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOfValue
 
@@ -747,9 +721,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
            :subjectClassConstraint :User ;
 
-           :objectClassConstraint :UserGroup ;
-
-           rdfs:subPropertyOf foaf:member .
+           :objectClassConstraint :UserGroup .
 
 
 
@@ -763,9 +735,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
              :subjectClassConstraint :User ;
 
-             :objectClassConstraint :knoraProject ;
-
-             rdfs:subPropertyOf foaf:member .
+             :objectClassConstraint :knoraProject .
 
 
 
@@ -835,6 +805,8 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 :previousValue rdf:type owl:ObjectProperty ;
 
+               rdfs:subPropertyOf :valueHas ;
+
                rdfs:comment "Points to the previous verson of a value"@en ;
 
                :subjectClassConstraint :Value ;
@@ -876,7 +848,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 :valueHasStandoff rdf:type owl:ObjectProperty ;
 
-                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+                  rdfs:subPropertyOf :valueHas ;
 
                   :objectClassConstraint :StandoffTag ;
 
@@ -888,97 +860,97 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 :hasGivenName rdf:type owl:ObjectProperty ;
 
-             rdfs:label "Vorname"@de ,
+              rdfs:label "Vorname"@de ,
                         "given name"@en ,
                         "prénom"@fr ,
                         "nome di battesimo"@it ;
 
-			 rdfs:comment """Represents a Given name."""@en ;
+              rdfs:comment """Represents a Given name."""@en ;
 
-             :objectClassConstraint :TextValue ;
+              :objectClassConstraint :TextValue ;
 
-             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#SimpleText> ;
+              salsah-gui:guiElement salsah-gui:SimpleText ;
 
-             :subjectClassConstraint :Person ;
+              :subjectClassConstraint :Person ;
 
-             rdfs:subPropertyOf :hasValue, foaf:givenName .
+              rdfs:subPropertyOf :hasValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasFamilyName
 
 :hasFamilyName rdf:type owl:ObjectProperty ;
 
-             rdfs:label "Nachname"@de ,
+               rdfs:label "Nachname"@de ,
                         "family name"@en ,
                         "nom de famille"@fr ,
                         "nome di famiglia"@it ;
 
-			 rdfs:comment """Represents a family name."""@en ;
+               rdfs:comment """Represents a family name."""@en ;
 
-             :objectClassConstraint :TextValue ;
+               :objectClassConstraint :TextValue ;
 
-             <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#SimpleText> ;
+               salsah-gui:guiElement salsah-gui:SimpleText ;
 
-             :subjectClassConstraint :Person ;
+               :subjectClassConstraint :Person ;
 
-             rdfs:subPropertyOf :hasValue, foaf:familyName .
+               rdfs:subPropertyOf :hasValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasIAFIdentifier
 
 :hasIAFIdentifier rdf:type owl:ObjectProperty ;
 
-                               rdfs:label "Gemeinsame Normdatei (GND)"@de ,
-                                          "Integrated Authority File"@en ;
+                  rdfs:label "Gemeinsame Normdatei (GND)"@de ,
+                             "Integrated Authority File"@en ;
 
-                  			   rdfs:comment """Repräsentiert eine GND-Nummer."""@de,
-                  			                """Represents a IAF identifier."""@en ;
+                  rdfs:comment """Repräsentiert eine GND-Nummer."""@de,
+                               """Represents an IAF identifier."""@en ;
 
-                               :objectClassConstraint :TextValue ;
+                  :objectClassConstraint :TextValue ;
 
-                               <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#SimpleText> ;
+                  salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                               :subjectClassConstraint :Person ;
+                  :subjectClassConstraint :Person ;
 
-                               rdfs:subPropertyOf :hasValue .
+                  rdfs:subPropertyOf :hasValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasBirthDate
 
 :hasBirthDate rdf:type owl:ObjectProperty ;
 
-                               rdfs:label "Geburtsdatum"@de ,
-                                          "date of birth"@en ;
+              rdfs:label "Geburtsdatum"@de ,
+                         "date of birth"@en ;
 
-                  			   rdfs:comment """Repräsentiert ein Geburtsdatum."""@de,
-                  			                """Represents a date of birth."""@en ;
+              rdfs:comment """Repräsentiert ein Geburtsdatum."""@de,
+                           """Represents a date of birth."""@en ;
 
-                               :objectClassConstraint :DateValue ;
+              :objectClassConstraint :DateValue ;
 
-                               <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Date> ;
+              salsah-gui:guiElement salsah-gui:Date ;
 
-                               :subjectClassConstraint :Person ;
+              :subjectClassConstraint :Person ;
 
-                               rdfs:subPropertyOf :hasValue, foaf:birthday .
+              rdfs:subPropertyOf :hasValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasDeathDate
 
 :hasDeathDate rdf:type owl:ObjectProperty ;
 
-                               rdfs:label "Sterbedatum"@de ,
-                                          "date of death"@en ;
+              rdfs:label "Sterbedatum"@de ,
+                         "date of death"@en ;
 
-                  			   rdfs:comment """Repräsentiert ein Sterbedatum."""@de,
-                  			                """Represents a date of death."""@en ;
+              rdfs:comment """Repräsentiert ein Sterbedatum."""@de,
+                           """Represents a date of death."""@en ;
 
-                               :objectClassConstraint :DateValue ;
+              :objectClassConstraint :DateValue ;
 
-                               <http://www.knora.org/ontology/salsah-gui#guiElement> <http://www.knora.org/ontology/salsah-gui#Date> ;
+              salsah-gui:guiElement salsah-gui:Date ;
 
-                               :subjectClassConstraint :Person ;
+              :subjectClassConstraint :Person ;
 
-                               rdfs:subPropertyOf :hasValue .
+              rdfs:subPropertyOf :hasValue .
 
 
 
@@ -1171,21 +1143,12 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
-###  http://www.knora.org/ontology/knora-base#filename
-
-:filename rdf:type owl:DatatypeProperty ;
-
-          rdfs:subPropertyOf :valueHas ;
-
-          :subjectClassConstraint :Representation ;
-
-          :objectDatatypeConstraint xsd:string .
-
-
 
 ###  http://www.knora.org/ontology/knora-base#fps
 
 :fps rdf:type owl:DatatypeProperty ;
+
+     rdfs:label "Frames per second"@en ;
 
      rdfs:subPropertyOf :valueHas ;
 
@@ -1378,18 +1341,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
-###  http://www.knora.org/ontology/knora-base#protocol
-
-:protocol rdf:type owl:DatatypeProperty ;
-
-          rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-          rdfs:comment "An Internet protocol (\"http\", \"https\", etc.)"@en ;
-
-          :objectDatatypeConstraint xsd:string .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#qualityLevel
 
 :qualityLevel rdf:type owl:DatatypeProperty ;
@@ -1452,10 +1403,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
-
-
-
-
 ###  http://www.knora.org/ontology/knora-base#userid
 
 :userid rdf:type owl:DatatypeProperty ;
@@ -1512,7 +1459,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 ###  http://www.knora.org/ontology/knora-base#valueHas
 
-:valueHas rdf:type owl:DatatypeProperty ;
+:valueHas rdf:type rdf:Property ;
 
           :subjectClassConstraint :ValueBase ;
 
@@ -1548,11 +1495,11 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
-###  http://www.knora.org/ontology/knora-base#valueHasEndJDC
+###  http://www.knora.org/ontology/knora-base#valueHasEndJDN
 
-:valueHasEndJDC rdf:type owl:DatatypeProperty ;
+:valueHasEndJDN rdf:type owl:DatatypeProperty ;
 
-                rdfs:comment "Contains the end of a date as \"Julian day count\" (JDC)"@en ;
+                rdfs:comment "Contains the end of a date as a Julian Day Number (JDN)"@en ;
 
                 rdfs:subPropertyOf :valueHas ;
 
@@ -1592,7 +1539,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 :valueHasGeometry rdf:type owl:DatatypeProperty ;
 
-                  rdfs:comment "JSON string describing a geometry (e.g. a region). Currently geometries are limited to 2D unions of primitive objects like circles, squartes and polygons."@en ;
+                  rdfs:comment "JSON string describing a geometry (e.g. a region). Currently geometries are limited to 2D unions of primitive objects like circles, squares and polygons."@en ;
 
                   rdfs:subPropertyOf :valueHas ;
 
@@ -1676,13 +1623,13 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 ###  http://www.knora.org/ontology/knora-base#valueHasListNode
 
-:valueHasListNode rdf:type owl:DatatypeProperty ;
+:valueHasListNode rdf:type owl:ObjectProperty ;
 
                   rdfs:subPropertyOf :valueHas ;
 
                   :subjectClassConstraint :ListValue ;
 
-                  :objectDatatypeConstraint :ListNode .
+                  :objectClassConstraint :ListNode .
 
 
 
@@ -1709,11 +1656,11 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 
 
-###  http://www.knora.org/ontology/knora-base#valueHasStartJDC
+###  http://www.knora.org/ontology/knora-base#valueHasStartJDN
 
-:valueHasStartJDC rdf:type owl:DatatypeProperty ;
+:valueHasStartJDN rdf:type owl:DatatypeProperty ;
 
-                  rdfs:comment "Contains the start of a date as \"Julian day count\" (JDC)"@en ;
+                  rdfs:comment "Contains the start of a date as a Julian Day Number (JDN)"@en ;
 
                   rdfs:subPropertyOf :valueHas ;
 
@@ -1805,10 +1752,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :duration ;
                                   owl:cardinality "1"^^xsd:nonNegativeInteger
-                                ] ,
-                                [ rdf:type owl:Restriction ;
-                                  owl:onProperty :hasComment ;
-                                  owl:minCardinality "0"^^xsd:nonNegativeInteger
                                 ] ;
 
                 rdfs:comment "Represents an audio file"@en .
@@ -1858,11 +1801,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 :DDDFileValue rdf:type owl:Class ;
 
-              rdfs:subClassOf :FileValue ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :hasComment ;
-                                owl:minCardinality "0"^^xsd:nonNegativeInteger
-                              ] ;
+              rdfs:subClassOf :FileValue ;
 
               rdfs:comment "This represents some 3D-object with mesh data, point cloud, etc."@en .
 
@@ -1900,7 +1839,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :valueHasEndJDC ;
+                            owl:onProperty :valueHasEndJDN ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
@@ -1908,7 +1847,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :valueHasStartJDC ;
+                            owl:onProperty :valueHasStartJDN ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] .
 
@@ -1942,7 +1881,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
                         rdfs:subClassOf :Representation ,
                                 [ rdf:type owl:Restriction ;
-                                  owl:onProperty :hasFileValue ;
+                                  owl:onProperty :hasDocumentFileValue ;
                                   owl:minCardinality "1"^^xsd:nonNegativeInteger
                                 ] .
 
@@ -2084,7 +2023,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                                owl:minCardinality "0"^^xsd:nonNegativeInteger
                              ] ,
                              [ rdf:type owl:Restriction ;
-                               owl:onProperty foaf:name ;
+                               owl:onProperty :name ;
                                owl:minCardinality "1"^^xsd:nonNegativeInteger
                              ] ,
                              [ rdf:type owl:Restriction ;
@@ -2304,11 +2243,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                                       ] ,
                                       [ rdf:type owl:Restriction ;
                                         owl:onProperty :qualityLevel ;
-                                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                                      ] ,
-                                      [ rdf:type owl:Restriction ;
-                                        owl:onProperty :hasComment ;
-                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                        owl:cardinality "1"^^xsd:nonNegativeInteger
                                       ] ,
                                       [ rdf:type owl:Restriction ;
                                         owl:onProperty :duration ;
@@ -2726,10 +2661,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
                      rdfs:subClassOf :FileValue ,
                                      [ rdf:type owl:Restriction ;
-                                       owl:onProperty :hasComment ;
-                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                     ] ,
-                                     [ rdf:type owl:Restriction ;
                                        owl:onProperty :dimY ;
                                        owl:cardinality "1"^^xsd:nonNegativeInteger
                                      ] ,
@@ -2769,11 +2700,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 :TextFileValue rdf:type owl:Class ;
 
-               rdfs:subClassOf :FileValue ,
-                               [ rdf:type owl:Restriction ;
-                                 owl:onProperty :hasComment ;
-                                 owl:minCardinality "0"^^xsd:nonNegativeInteger
-                               ] ;
+               rdfs:subClassOf :FileValue ;
 
                rdfs:comment "A text file such as plain Unicode text, LaTeX, TEI/XML, etc."@en .
 
@@ -2783,7 +2710,11 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 :TextRepresentation rdf:type owl:Class ;
 
-                    rdfs:subClassOf :Representation ;
+                    rdfs:subClassOf :Representation ,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :hasTextFileValue ;
+                                      owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                    ] ;
 
                     rdfs:label "Repräsentation (Text)"@de ,
                                                "Representation (Text)"@en ,
@@ -2843,9 +2774,9 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
 :User rdf:type owl:Class ;
 
-      rdfs:subClassOf foaf:Person ,
+      rdfs:subClassOf foaf:Agent ,
                       [ rdf:type owl:Restriction ;
-                        owl:onProperty foaf:familyName ;
+                        owl:onProperty :familyName ;
                         owl:cardinality "1"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
@@ -2857,7 +2788,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
-                        owl:onProperty foaf:givenName ;
+                        owl:onProperty :givenName ;
                         owl:cardinality "1"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
@@ -2883,7 +2814,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
            rdfs:subClassOf foaf:Group ,
                            [ rdf:type owl:Restriction ;
-                             owl:onProperty foaf:name ;
+                             owl:onProperty :name ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
@@ -3002,7 +2933,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 :KnownUser rdf:type :UserGroup ,
                     owl:NamedIndividual ;
 
-           foaf:name "known user" .
+           :name "known user" .
 
 
 
@@ -3011,7 +2942,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 :Owner rdf:type :UserGroup ,
                 owl:NamedIndividual ;
 
-                foaf:name "owner" .
+                :name "owner" .
 
 
 
@@ -3020,7 +2951,7 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 :ProjectMember rdf:type :UserGroup ,
                         owl:NamedIndividual ;
 
-              foaf:name "project member" .
+              :name "project member" .
 
 
 
@@ -3029,19 +2960,20 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 :UnknownUser rdf:type :UserGroup ,
                       owl:NamedIndividual ;
 
-             foaf:name "unknown user" .
+             :name "unknown user" .
 
 
 
 ###  http://www.knora.org/ontology/knora-base#SystemUser
 
-:SystemUser rdf:type :User ;
+:SystemUser rdf:type :User ,
+                     owl:NamedIndividual ;
 
                      :userid "system" ;
 
-                     foaf:givenName "Knora" ;
+                     :givenName "Knora" ;
 
-                     foaf:familyName "System" ;
+                     :familyName "System" ;
 
                      :password "-" ;
 
