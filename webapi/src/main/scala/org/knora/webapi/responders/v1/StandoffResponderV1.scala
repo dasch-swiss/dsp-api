@@ -68,6 +68,7 @@ class StandoffResponderV1 extends ResponderV1 {
       */
     def receive = {
         case CreateStandoffRequestV1(projIri, resIri, propIri, mappingIri, xml, userProfile, uuid) => future2Message(sender(), createStandoffV1(projIri, resIri, propIri, mappingIri, xml, userProfile, uuid), log)
+        case ChangeStandoffRequestV1(valIri, mappingIri, xml, userProfile, uuid) => future2Message(sender(), changeStandoffV1(valIri, mappingIri, xml, userProfile, uuid), log)
         case StandoffGetRequestV1(valueIri, userProfile) => future2Message(sender(), getStandoffV1(valueIri, userProfile), log)
         case CreateMappingRequestV1(xml, projectIri, userProfile) => future2Message(sender(), createMappingV1(xml, projectIri, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
@@ -815,9 +816,54 @@ class StandoffResponderV1 extends ResponderV1 {
 
     }
 
-    private def changeStandoffV1() = ???
+    private def changeStandoffV1(valueIri: IRI, mappingIri: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[ChangeStandoffResponseV1] = {
 
-    // ChangeValueRequestV1
+        log.debug("in change standoff")
+
+        val standoffUtil = new StandoffUtil()
+
+        // FIXME: if the XML is not well formed, the error is not handled correctly
+        // FIXME: this should be done in StandoffUtil but the error is swallowed (Future issue?)
+
+        val textWithStandoff: TextWithStandoff = try {
+            standoffUtil.xml2TextWithStandoff(xml)
+        } catch {
+            case e: org.xml.sax.SAXParseException => throw BadRequestException(s"there was a problem parsing the provided XML: ${e.getMessage}")
+
+            case other: Exception => throw BadRequestException(s"there was a problem processing the provided XML: ${other.getMessage}")
+        }
+
+        for {
+
+            mappingXMLtoStandoff: MappingXMLtoStandoff <- getMapping(mappingIri, userProfile)
+
+            standoffEntities: StandoffEntityInfoGetResponseV1 <- getStandoffEntitiesFromMapping(mappingXMLtoStandoff, userProfile)
+
+            // map over the standoff nodes returned by the StandoffUtil and map them to type safe case classes
+            standoffNodesToCreate: Seq[StandoffTagV1] = convertStandoffUtilStandoffTagToStandoffTagV1(
+                textWithStandoff = textWithStandoff,
+                mappingXMLtoStandoff = mappingXMLtoStandoff,
+                standoffEntities = standoffEntities
+            )
+
+            // collect the resource references from the linking standoff nodes
+            resourceReferences: Set[IRI] = InputValidation.getResourceIrisFromStandoffTags(standoffNodesToCreate)
+
+            changeValueResponse: ChangeValueResponseV1 <- (responderManager ? ChangeValueRequestV1(
+                valueIri = valueIri,
+                value = TextValueV1(
+                    utf8str = textWithStandoff.text,
+                    resource_reference = resourceReferences,
+                    textattr = standoffNodesToCreate,
+                    xml = Some(xml),
+                    mappingIri = Some(mappingIri)),
+                userProfile = userProfile,
+                apiRequestID = apiRequestID
+            )).mapTo[ChangeValueResponseV1]
+
+        } yield ChangeStandoffResponseV1(id = changeValueResponse.id, userdata = userProfile.userData)
+    }
+
 
     // maps a standoff class to an XML tag with attributes
     case class XMLTagItem(namespace: String, tagname: String, tagItem: XMLTag, attributes: Map[IRI, XMLAttrItem])
@@ -872,12 +918,12 @@ class StandoffResponderV1 extends ResponderV1 {
 
                                 attrMappings.map {
                                     case (attrName, propIri) =>
-                                        (propIri -> XMLAttrItem(attrNamespace, attrName))
+                                        propIri -> XMLAttrItem(attrNamespace, attrName)
                                 }
                         }
 
                         // standoff class Iri -> XMLTagItem(... attributes -> attrItems)
-                        (tagItem.mapping.standoffClassIri -> XMLTagItem(tagNamespace, tagname, tagItem, attributes = attrItems))
+                        tagItem.mapping.standoffClassIri -> XMLTagItem(tagNamespace, tagname, tagItem, attributes = attrItems)
 
                 }
         }

@@ -23,11 +23,7 @@ import java.nio.file.{Files, Paths}
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.ConfigFactory
-import org.apache.commons.io.FileUtils
-import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
-import org.knora.webapi.messages.v1.responder.valuemessages.CreateRichtextV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{FileWriteException, IRI, ITSpec, InvalidApiJsonException}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
@@ -105,37 +101,71 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
     object RequestParams {
 
-        val createResourceParams = CreateResourceApiRequestV1(
-            restype_id = "http://www.knora.org/ontology/incunabula#page",
-            properties = Map(
-                "http://www.knora.org/ontology/incunabula#pagenum" -> Seq(CreateResourceValueV1(
-                    richtext_value = Some(CreateRichtextV1(
-                        utf8str = "test_page",
-                        textattr = None,
-                        resource_reference = None
-                    ))
-                )),
-                "http://www.knora.org/ontology/incunabula#origname" -> Seq(CreateResourceValueV1(
-                    richtext_value = Some(CreateRichtextV1(
-                        utf8str = "test",
-                        textattr = None,
-                        resource_reference = None
-                    ))
-                )),
-                "http://www.knora.org/ontology/incunabula#partOf" -> Seq(CreateResourceValueV1(
-                    link_value = Some("http://data.knora.org/5e77e98d2603")
-                )),
-                "http://www.knora.org/ontology/incunabula#seqnum" -> Seq(CreateResourceValueV1(
-                    int_value = Some(999)
-                ))
-            ),
-            label = "test",
-            project_id = "http://data.knora.org/projects/77275339"
-        )
+
+        val paramsPageWithBinaries =
+            s"""
+           {
+                "restype_id": "http://www.knora.org/ontology/incunabula#page",
+                "label": "test",
+                "project_id": "http://data.knora.org/projects/77275339",
+                "properties": {
+                    "http://www.knora.org/ontology/incunabula#pagenum": [
+                        {
+                            "richtext_value": {
+                                "utf8str": "test_page"
+                            }
+                        }
+                    ],
+                    "http://www.knora.org/ontology/incunabula#origname": [
+                        {
+                            "richtext_value": {
+                                "utf8str": "test"
+                            }
+                        }
+                    ],
+                    "http://www.knora.org/ontology/incunabula#partOf": [
+                        {
+                            "link_value": "http://data.knora.org/5e77e98d2603"
+                        }
+                    ],
+                    "http://www.knora.org/ontology/incunabula#seqnum": [
+                        {
+                            "int_value": 999
+                        }
+                    ]
+                }
+           }
+         """
+
+        def paramsCreateLetterFromXML(mappingIri: IRI): String =
+            s"""
+                {
+                    "resource_id": "http://data.knora.org/a-thing",
+                    "property_id": "http://www.knora.org/ontology/anything#hasText",
+                    "project_id": "$anythingProjectIri",
+                    "mapping_id": "$mappingIri"
+                }
+            """
+
+        def paramsChangeLetterFromXML(value_id: IRI, mappingIri: IRI): String =
+            s"""
+                {
+                    "value_id": "$value_id",
+                    "mapping_id": "$mappingIri"
+                }
+            """
+
+        val anythingProjectIri = "http://data.knora.org/projects/anything"
 
         val pathToImageFile = "_test_data/test_route/images/Chlaus.jpg"
 
         val pathToLetterXML = "_test_data/test_route/texts/letter.xml"
+
+        val pathToLetter2XML = "_test_data/test_route/texts/letter2.xml"
+
+        var mappingIri: IRI = ""
+
+        var textValueIri: IRI = ""
 
         def createTmpFileDir() = {
             // check if tmp datadir exists and create it if not
@@ -246,7 +276,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             val formData = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
-                    HttpEntity(ContentTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint)
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsPageWithBinaries)
                 ),
                 Multipart.FormData.BodyPart(
                     "file",
@@ -267,7 +297,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             val requestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(newResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(rootUser, password))
             val responseNewResource = singleAwaitingRequest(requestNewResource, 20.seconds)
 
-            assert(responseNewResource.status == StatusCodes.OK)
+            assert(responseNewResource.status == StatusCodes.OK, responseNewResource.entity.toString)
 
             val IIIFPathFuture: Future[String] = responseNewResource.entity.toStrict(5.seconds).map {
                 newResponseBody =>
@@ -319,31 +349,20 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
         "create a mapping resource for standoff conversion and do a standoff conversion for a text value" in {
 
-            val anythingProjectIri = "http://data.knora.org/projects/anything"
-
             // send mapping xml to route
-            val mappingRequest = Post(baseApiUrl + "/v1/mapping/" + URLEncoder.encode(anythingProjectIri, "UTF-8"), HttpEntity(ContentTypes.`text/xml(UTF-8)`, RequestParams.mappingXML)) ~> addCredentials(BasicHttpCredentials(anythingUser, password))
+            val mappingRequest = Post(baseApiUrl + "/v1/mapping/" + URLEncoder.encode(RequestParams.anythingProjectIri, "UTF-8"), HttpEntity(ContentTypes.`text/xml(UTF-8)`, RequestParams.mappingXML)) ~> addCredentials(BasicHttpCredentials(anythingUser, password))
             val mappingResponse: HttpResponse = singleAwaitingRequest(mappingRequest, 20.seconds)
 
             assert(mappingResponse.status == StatusCodes.OK, "standoff mapping creation route returned a non successful HTTP status code")
 
-            val mappingIRI: IRI = ResponseUtils.getStringMemberFromResponse(mappingResponse, "resourceIri")
+            RequestParams.mappingIri = ResponseUtils.getStringMemberFromResponse(mappingResponse, "resourceIri")
 
             val fileToSend = new File(RequestParams.pathToLetterXML)
-
-            val params: String =
-                s"""{
-                    "resource_id": "http://data.knora.org/a-thing",
-                    "property_id": "http://www.knora.org/ontology/anything#hasText",
-                    "project_id": "$anythingProjectIri",
-                    "mapping_id": "$mappingIRI"
-                    }
-                """
 
             val formData = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
-                    HttpEntity(ContentTypes.`application/json`, params)
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateLetterFromXML(RequestParams.mappingIri))
                 ),
                 Multipart.FormData.BodyPart(
                     "xml",
@@ -359,25 +378,56 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
             assert(standoffCreationResponse.status == StatusCodes.OK, "standoff creation route returned a non successful HTTP status code: " + standoffCreationResponse.entity.toString)
 
-            val standoffTextValueIRI: IRI = ResponseUtils.getStringMemberFromResponse(standoffCreationResponse, "id")
+            RequestParams.textValueIri = ResponseUtils.getStringMemberFromResponse(standoffCreationResponse, "id")
 
             // read back the standoff text value
-            val standoffRequest = Get(baseApiUrl + "/v1/standoff/" + URLEncoder.encode(standoffTextValueIRI, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUser, password))
+            val standoffRequest = Get(baseApiUrl + "/v1/standoff/" + URLEncoder.encode(RequestParams.textValueIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUser, password))
             val standoffResponse: HttpResponse = singleAwaitingRequest(standoffRequest, 20.seconds)
 
             assert(standoffResponse.status == StatusCodes.OK, "reading back standoff failed")
 
             val XMLString = ResponseUtils.getStringMemberFromResponse(standoffResponse, "xml")
 
-
-
             // Compare the original XML with the regenerated XML.
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(fileToSend)(Codec.UTF8).mkString)).withTest(Input.fromString(XMLString)).build()
 
             xmlDiff.hasDifferences should be(false)
 
+        }
 
+        "change a text value with standoff" in {
 
+            val fileToSend = new File(RequestParams.pathToLetter2XML)
+
+            val formData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsChangeLetterFromXML(RequestParams.textValueIri, RequestParams.mappingIri))
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
+
+            // change standoff from XML
+            val standoffChangeRequest = Put(baseApiUrl + "/v1/standoff", formData) ~> addCredentials(BasicHttpCredentials(anythingUser, password))
+            val standoffChangeResponse: HttpResponse = singleAwaitingRequest(standoffChangeRequest, 20.seconds)
+
+            assert(standoffChangeResponse.status == StatusCodes.OK, "standoff creation route returned a non successful HTTP status code: " + standoffChangeResponse.entity.toString)
+
+            RequestParams.textValueIri = ResponseUtils.getStringMemberFromResponse(standoffChangeResponse, "id")
+
+            // read back the standoff text value
+            val standoffRequest = Get(baseApiUrl + "/v1/standoff/" + URLEncoder.encode(RequestParams.textValueIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUser, password))
+            val standoffResponse: HttpResponse = singleAwaitingRequest(standoffRequest, 20.seconds)
+
+            assert(standoffResponse.status == StatusCodes.OK, "reading back standoff failed")
+
+            val XMLString = ResponseUtils.getStringMemberFromResponse(standoffResponse, "xml")
+
+            //println(XMLString)
 
         }
     }

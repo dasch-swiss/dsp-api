@@ -91,9 +91,29 @@ case class XMLTag(name: String, mapping: XMLTagToStandoffClass)
   */
 case class XMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, Map[String, IRI]] = Map.empty[String, Map[String, IRI]], dataType: Option[StandoffDataTypeClasses.Value] = None, dataTypeXMLAttribute: Option[String] = None)
 
+/**
+  * Represents an API request to create a text value with standoff.
+  *
+  * @param resource_id the IRI of the resource to which the text value should be added.
+  * @param property_id the IRI of the property that should receive the text value.
+  * @param project_id the project in which the text value is to be added.
+  * @param mapping_id the IRI of the mapping resource that is used to turn the XML into standoff.
+  */
 case class CreateStandoffApiRequestV1(resource_id: IRI, property_id: IRI, project_id: IRI, mapping_id: IRI) {
 
     def toJsValue = RepresentationV1JsonProtocol.createStandoffApiRequestV1Format.write(this)
+
+}
+
+/**
+  * Represents an API request to change a text value witj standoff (create a new version).
+  *
+  * @param value_id the Iri of the new text value.
+  * @param mapping_id the IRI of the mapping resource that is used to turn the XML into standoff.
+  */
+case class ChangeStandoffApiRequestV1(value_id: IRI, mapping_id: IRI) {
+
+    def toJsValue = RepresentationV1JsonProtocol.changeStandoffApiRequestV1Format.write(this)
 
 }
 
@@ -113,11 +133,32 @@ case class CreateStandoffRequestV1(projectIri: IRI, resourceIri: IRI, propertyIr
 
 /**
   *
-  * @param id       the Iri of the new text value.compile
+  * @param id       the Iri of the new text value.
   * @param userdata information about the user that made the request.
   */
 case class CreateStandoffResponseV1(id: IRI, userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = RepresentationV1JsonProtocol.createStandoffResponseV1Format.write(this)
+}
+
+/**
+  * Represents a request to change a text value containing standoff (create a new version).
+  * A successful response will be an [[ChangeStandoffResponseV1]].
+  *
+  * @param valueIri  the IRI of the value to which the text value should be added.
+  * @param mappingIri   the IRI of the mapping resource that is used to turn the XML into standoff.
+  * @param xml          the xml representing the text with markup.
+  * @param userProfile  the profile of the user making the request.
+  * @param apiRequestID the ID of this API request.
+  */
+case class ChangeStandoffRequestV1(valueIri: IRI, mappingIri: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID) extends StandoffResponderRequestV1
+
+/**
+  *
+  * @param id       the Iri of the new version of the text value.
+  * @param userdata information about the user that made the request.
+  */
+case class ChangeStandoffResponseV1(id: IRI, userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = RepresentationV1JsonProtocol.changeStandoffResponseV1Format.write(this)
 }
 
 /**
@@ -241,7 +282,9 @@ object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions
     import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val createStandoffResponseV1Format: RootJsonFormat[CreateStandoffResponseV1] = jsonFormat2(CreateStandoffResponseV1)
+    implicit val changeStandoffResponseV1Format: RootJsonFormat[ChangeStandoffResponseV1] = jsonFormat2(ChangeStandoffResponseV1)
     implicit val createStandoffApiRequestV1Format: RootJsonFormat[CreateStandoffApiRequestV1] = jsonFormat4(CreateStandoffApiRequestV1)
+    implicit val changeStandoffApiRequestV1Format: RootJsonFormat[ChangeStandoffApiRequestV1] = jsonFormat2(ChangeStandoffApiRequestV1)
     implicit val standoffGetResponseV1Format: RootJsonFormat[StandoffGetResponseV1] = jsonFormat2(StandoffGetResponseV1)
     implicit val createMappingResponseV1Format: RootJsonFormat[CreateMappingResponseV1] = jsonFormat2(CreateMappingResponseV1)
 }
