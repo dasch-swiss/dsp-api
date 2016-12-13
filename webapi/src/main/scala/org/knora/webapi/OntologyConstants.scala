@@ -252,7 +252,6 @@ object OntologyConstants {
         val ChangeRightsPermission = "CR"
         val MaxPermission = ChangeRightsPermission
 
-
         val ObjectAccessPermissionAbbreviations = Seq(
             RestrictedViewPermission,
             ViewPermission,
@@ -277,20 +276,6 @@ object OntologyConstants {
             ProjectAdminGroupRestrictedPermission,
             ProjectAdminRightsAllPermission,
             ProjectAdminOntologyAllPermission
-        )
-
-        val DefaultRestrictedViewPermission = "DRV"
-        val DefaultViewPermission = "DV"
-        val DefaultModifyPermission = "DM"
-        val DefaultDeletePermission = "DD"
-        val DefaultChangeRightsPermission = "DCR"
-
-        val DefaultObjectAccessPermissionAbbreviations = Seq(
-            DefaultRestrictedViewPermission,
-            DefaultViewPermission,
-            DefaultModifyPermission,
-            DefaultDeletePermission,
-            DefaultChangeRightsPermission
         )
 
         val HasDefaultRestrictedViewPermission = "http://www.knora.org/ontology/knora-base#hasDefaultRestrictedViewPermission"

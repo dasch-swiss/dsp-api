@@ -16,7 +16,7 @@
 
 package org.knora.webapi
 
-import org.knora.webapi.messages.v1.responder.permissionmessages._
+import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionV1, _}
 
 /* Helper case classes */
 case class ap (iri: String, p: AdministrativePermissionV1)
@@ -42,8 +42,8 @@ object SharedPermissionsTestData {
                 forResourceClass = Some(OntologyConstants.KnoraBase.LinkObj),
                 forProperty = None,
                 hasPermissions = Seq(
-                    PermissionV1.DefaultModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
-                    PermissionV1.DefaultViewPermission(Set(OntologyConstants.KnoraBase.KnownUser, OntologyConstants.KnoraBase.UnknownUser))
+                    PermissionV1.ModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
+                    PermissionV1.ViewPermission(Set(OntologyConstants.KnoraBase.KnownUser, OntologyConstants.KnoraBase.UnknownUser))
                 )
             )
         )
@@ -58,8 +58,8 @@ object SharedPermissionsTestData {
                 forResourceClass = Some(OntologyConstants.KnoraBase.Region),
                 forProperty = None,
                 hasPermissions = Seq(
-                    PermissionV1.DefaultModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
-                    PermissionV1.DefaultViewPermission(Set(OntologyConstants.KnoraBase.KnownUser, OntologyConstants.KnoraBase.UnknownUser))
+                    PermissionV1.ModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
+                    PermissionV1.ViewPermission(Set(OntologyConstants.KnoraBase.KnownUser, OntologyConstants.KnoraBase.UnknownUser))
                 )
             )
         )
@@ -74,8 +74,9 @@ object SharedPermissionsTestData {
                 forResourceClass = None,
                 forProperty = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
                 hasPermissions = Seq(
-                    PermissionV1.DefaultModifyPermission(Set(OntologyConstants.KnoraBase.Creator, OntologyConstants.KnoraBase.ProjectMember)),
-                    PermissionV1.DefaultViewPermission(Set(OntologyConstants.KnoraBase.KnownUser, OntologyConstants.KnoraBase.UnknownUser))
+                    PermissionV1.ModifyPermission(Set(OntologyConstants.KnoraBase.Creator, OntologyConstants.KnoraBase.ProjectMember)),
+                    PermissionV1.ViewPermission(Set(OntologyConstants.KnoraBase.KnownUser)),
+                    PermissionV1.RestrictedViewPermission(Set(OntologyConstants.KnoraBase.UnknownUser))
                 )
             )
         )
@@ -120,9 +121,9 @@ object SharedPermissionsTestData {
                 forResourceClass = None,
                 forProperty = None,
                 hasPermissions = Seq(
-                    PermissionV1.DefaultChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
-                    PermissionV1.DefaultModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
-                    PermissionV1.DefaultViewPermission(Set(OntologyConstants.KnoraBase.KnownUser))
+                    PermissionV1.ChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
+                    PermissionV1.ModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
+                    PermissionV1.ViewPermission(Set(OntologyConstants.KnoraBase.KnownUser))
                 )
             )
         )
@@ -200,9 +201,10 @@ object SharedPermissionsTestData {
                 forResourceClass = None,
                 forProperty = None,
                 hasPermissions = Seq(
-                    PermissionV1.DefaultChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
-                    PermissionV1.DefaultModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
-                    PermissionV1.DefaultViewPermission(Set(OntologyConstants.KnoraBase.KnownUser))
+                    PermissionV1.ChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
+                    PermissionV1.ModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
+                    PermissionV1.ViewPermission(Set(OntologyConstants.KnoraBase.KnownUser)),
+                    PermissionV1.RestrictedViewPermission(Set(OntologyConstants.KnoraBase.UnknownUser))
                 )
             )
         )
@@ -217,9 +219,10 @@ object SharedPermissionsTestData {
                 forResourceClass = Some("http://www.knora.org/ontology/incunabula#Book"),
                 forProperty = None,
                 hasPermissions = Seq(
-                    PermissionV1.DefaultChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
-                    PermissionV1.DefaultModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
-                    PermissionV1.DefaultViewPermission(Set(OntologyConstants.KnoraBase.KnownUser))
+                    PermissionV1.ChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
+                    PermissionV1.ModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
+                    PermissionV1.ViewPermission(Set(OntologyConstants.KnoraBase.KnownUser)),
+                    PermissionV1.RestrictedViewPermission(Set(OntologyConstants.KnoraBase.UnknownUser))
                 )
             )
         )
@@ -234,9 +237,9 @@ object SharedPermissionsTestData {
                 forResourceClass = Some("http://www.knora.org/ontology/incunabula#Page"),
                 forProperty = None,
                 hasPermissions = Seq(
-                    PermissionV1.DefaultChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
-                    PermissionV1.DefaultModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
-                    PermissionV1.DefaultViewPermission(Set(OntologyConstants.KnoraBase.KnownUser))
+                    PermissionV1.ChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
+                    PermissionV1.ModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
+                    PermissionV1.ViewPermission(Set(OntologyConstants.KnoraBase.KnownUser))
                 )
             )
         )
@@ -284,9 +287,9 @@ object SharedPermissionsTestData {
                 forResourceClass = None,
                 forProperty = None,
                 hasPermissions = Seq(
-                    PermissionV1.DefaultChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
-                    PermissionV1.DefaultModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
-                    PermissionV1.DefaultViewPermission(Set(OntologyConstants.KnoraBase.KnownUser))
+                    PermissionV1.ChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
+                    PermissionV1.ModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
+                    PermissionV1.ViewPermission(Set(OntologyConstants.KnoraBase.KnownUser))
                 )
             )
         )
@@ -330,9 +333,9 @@ object SharedPermissionsTestData {
                 forResourceClass = None,
                 forProperty = None,
                 hasPermissions = Seq(
-                    PermissionV1.DefaultChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
-                    PermissionV1.DefaultModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
-                    PermissionV1.DefaultViewPermission(Set(OntologyConstants.KnoraBase.KnownUser))
+                    PermissionV1.ChangeRightsPermission(Set(OntologyConstants.KnoraBase.Creator)),
+                    PermissionV1.ModifyPermission(Set(OntologyConstants.KnoraBase.ProjectMember)),
+                    PermissionV1.ViewPermission(Set(OntologyConstants.KnoraBase.KnownUser))
                 )
             )
         )

@@ -293,7 +293,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
         "asked for default object access permissions 'string'" should {
 
-            "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class" ignore {
+            "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
                     projectIri = SYSTEM_PROJECT_IRI,
                     resourceClassIri = OntologyConstants.KnoraBase.LinkObj,
@@ -302,7 +302,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 expectMsg(Some("default object access permissions string"))
             }
 
-            "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property" ignore {
+            "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = SYSTEM_PROJECT_IRI,
                     propertyIri = OntologyConstants.KnoraBase.HasStillImageFileValue,
@@ -311,7 +311,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 expectMsg(Some("default object access permissions string"))
             }
 
-            "return the default object access permissions 'string' for the 'incunabula:Book' resource class" ignore {
+            "return the default object access permissions 'string' for the 'incunabula:Book' resource class" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
                     projectIri = INCUNABULA_PROJECT_IRI,
                     resourceClassIri = INCUNABULA_BOOK_RESOURCE_CLASS,
@@ -320,7 +320,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 expectMsg(Some("default object access permissions string"))
             }
 
-            "return the default object access permissions 'string' for the 'incunabula:Page' resource class" ignore {
+            "return the default object access permissions 'string' for the 'incunabula:Page' resource class" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
                     projectIri = INCUNABULA_PROJECT_IRI,
                     resourceClassIri = INCUNABULA_PAGE_RESOURCE_CLASS,

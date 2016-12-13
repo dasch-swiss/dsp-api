@@ -94,18 +94,6 @@ class PermissionsResponderV1 extends ResponderV1 {
             }
             //_ = log.debug(s"permissionsProfileGetV1 - extendedProjectIris: $extendedProjectIris")
 
-            /* FIXME: I don't think that we need this anymore, as nothing pertaining to permissions is stored here
-             * Retrieve short ProjectInfoV1s for each project the user is part of (now including the SystemProject
-             */
-            /*
-            projectInfoFutures: Seq[Future[ProjectInfoV1]] = extendedProjectIris.map {
-                projectIri => (responderManager ? ProjectInfoByIRIGetRequestV1(projectIri, ProjectInfoType.SHORT, None)).mapTo[ProjectInfoResponseV1] map (_.project_info)
-            }
-
-            projectInfos <- Future.sequence(projectInfoFutures)
-            //_ = log.debug(s"permissionsProfileGetV1 - projectInfos: ${MessageUtil.toSource(projectInfos)}")
-            */
-
             // find out to which project each group belongs to
             //_ = log.debug("getPermissionsProfileV1 - find out to which project each group belongs to")
             groups: List[(IRI, IRI)] = if (groupIris.nonEmpty) {
@@ -186,7 +174,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 administrativePermissionsPerProject = administrativePermissionsPerProject,
                 defaultObjectAccessPermissionsPerProject = defaultObjectAccessPermissionsPerProject
             )
-            _ = log.debug(s"permissionsDataGetV1 - resulting permissionData: $result")
+            //_ = log.debug(s"permissionsDataGetV1 - resulting permissionData: $result")
 
         } yield result
     }
@@ -246,9 +234,6 @@ class PermissionsResponderV1 extends ResponderV1 {
         //log.debug(s"getUserDefaultObjectAccessPermissionsRequestV1 - result: $result")
         Future(result)
     }
-
-
-
 
 
     /*************************************************************************/
@@ -592,7 +577,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 case (permissionIri: IRI, propsMap: Map[String, String]) =>
 
                     /* parse permissions */
-                    val hasPermissions: Seq[PermissionV1] = parsePermissions(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.DOAP)
+                    val hasPermissions: Seq[PermissionV1] = parsePermissions(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.OAP)
 
                     /* construct permission object */
                     DefaultObjectAccessPermissionV1(
@@ -640,7 +625,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             }
             //_ = log.debug(s"getDefaultObjectAccessPermissionV1 - groupedResult: ${MessageUtil.toSource(groupedPermissionsQueryResponse)}")
 
-            hasPermissions = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.DOAP)
+            hasPermissions = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
 
             defaultObjectAccessPermission = DefaultObjectAccessPermissionV1(
                 iri = permissionIri,
@@ -703,7 +688,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                 }
-                val hasPermissions: Seq[PermissionV1] = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.DOAP)
+                val hasPermissions: Seq[PermissionV1] = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
                 Some(
                     DefaultObjectAccessPermissionV1(
                         iri = permissionIri,
@@ -717,7 +702,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             } else {
                 None
             }
-            _ = log.debug(s"defaultObjectAccessPermissionGetV1 - p: $projectIRI, g: $groupIRI, r: $resourceClassIRI, p: $propertyIRI, permission: $permission")
+            //_ = log.debug(s"defaultObjectAccessPermissionGetV1 - p: $projectIRI, g: $groupIRI, r: $resourceClassIRI, p: $propertyIRI, permission: $permission")
         } yield permission
     }
 
@@ -778,26 +763,33 @@ class PermissionsResponderV1 extends ResponderV1 {
             _ = if (resourceClassIRI.isDefined && propertyIRI.isDefined) throw BadRequestException("Not allowed to supply both resourceClassIri and propertyTypeIri")
 
             /* Get the user's max default object access permissions from the user's permission data inside the user's profile */
-            doapsOnProjectGroups: Seq[PermissionV1] = userProfile.permissionData.defaultObjectAccessPermissionsPerProject.getOrElse(projectIRI, Seq.empty[PermissionV1]).toSeq
+            defaultPermissionsOnProjectGroups: Seq[PermissionV1] = userProfile.permissionData.defaultObjectAccessPermissionsPerProject.getOrElse(projectIRI, Seq.empty[PermissionV1]).toSeq
 
             /* Get the default object access permissions defined on the resource class for the current project */
-            doapsOnProjectEntityOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIRI = projectIRI, groupIRI = None, resourceClassIRI = resourceClassIRI, propertyIRI = propertyIRI, userProfile = userProfile)
+            defaultPermissionsOnProjectEntityOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIRI = projectIRI, groupIRI = None, resourceClassIRI = resourceClassIRI, propertyIRI = propertyIRI, userProfile = userProfile)
 
-            doapsOnProjectEntity: Seq[PermissionV1] = doapsOnProjectEntityOption match {
+            defaultPermissionsOnProjectEntity: Seq[PermissionV1] = defaultPermissionsOnProjectEntityOption match {
                 case None => Seq.empty[PermissionV1]
                 case Some(doap) => doap.hasPermissions
             }
 
-            /* Since we have default object access permissions defined in the SystemProject, we need to check there also */
+            // Since we also have default object access permissions defined in the SystemProject,
+            // we need to check there too, but only in the case that we didn't find anything
+            // on the project level
             systemProject = OntologyConstants.KnoraBase.SystemProject
-            doapsOnSystemEntityOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIRI = systemProject, groupIRI = None, resourceClassIRI = resourceClassIRI, propertyIRI = propertyIRI, userProfile = userProfile)
-
-            doapsOnSystemEntity: Seq[PermissionV1] = doapsOnSystemEntityOption match {
+            defaultPermissionsOnSystemEntityOptionF: Future[Option[DefaultObjectAccessPermissionV1]] = if (defaultPermissionsOnProjectEntity.isEmpty) defaultObjectAccessPermissionGetV1(projectIRI = systemProject, groupIRI = None, resourceClassIRI = resourceClassIRI, propertyIRI = propertyIRI, userProfile = userProfile)
+            defaultPermissionsOnSystemEntityOption <- defaultPermissionsOnSystemEntityOptionF
+            defaultPermissionsOnSystemEntity: Seq[PermissionV1] = defaultPermissionsOnSystemEntityOption match {
                 case None => Seq.empty[PermissionV1]
                 case Some(doap) => doap.hasPermissions
             }
 
             /* Mix all three together and return most permissive */
+            allDefaultPermissions = defaultPermissionsOnProjectGroups ++ defaultPermissionsOnProjectEntity ++ defaultPermissionsOnSystemEntity
+            squashedAllDefaultPermissions = squashPermissions(allDefaultPermissions)
+            
+
+
             // FIXME: Need to actually do something here
             result = ???
         } yield result
@@ -896,14 +888,6 @@ class PermissionsResponderV1 extends ResponderV1 {
                                 buildPermissionObject(abbreviation, Some(groups))
 
                             }
-                            case PermissionType.DOAP => {
-                                if (!OntologyConstants.KnoraBase.DefaultObjectAccessPermissionAbbreviations.contains(abbreviation)) {
-                                    throw InconsistentTriplestoreDataException(s"Unrecognized permission abbreviation '$abbreviation'")
-                                }
-                                val shortGroups = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter).toSet
-                                val groups = shortGroups.map(_.replace(OntologyConstants.KnoraBase.KnoraBasePrefix, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion))
-                                buildPermissionObject(abbreviation, Some(groups))
-                            }
                         }
                 }
             }
@@ -932,11 +916,6 @@ class PermissionsResponderV1 extends ResponderV1 {
             case OntologyConstants.KnoraBase.ModifyPermission => PermissionV1.ModifyPermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
             case OntologyConstants.KnoraBase.ViewPermission => PermissionV1.ViewPermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
             case OntologyConstants.KnoraBase.RestrictedViewPermission => PermissionV1.RestrictedViewPermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
-            case OntologyConstants.KnoraBase.DefaultChangeRightsPermission => PermissionV1.DefaultChangeRightsPermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
-            case OntologyConstants.KnoraBase.DefaultDeletePermission => PermissionV1.DefaultDeletePermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
-            case OntologyConstants.KnoraBase.DefaultModifyPermission => PermissionV1.DefaultModifyPermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
-            case OntologyConstants.KnoraBase.DefaultViewPermission => PermissionV1.DefaultViewPermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
-            case OntologyConstants.KnoraBase.DefaultRestrictedViewPermission => PermissionV1.DefaultRestrictedViewPermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
         }
 
     }

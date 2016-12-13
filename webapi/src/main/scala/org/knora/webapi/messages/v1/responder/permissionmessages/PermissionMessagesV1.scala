@@ -703,47 +703,6 @@ object PermissionV1 {
             restrictions = restriction
         )
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Default Object Access Permissions
-    ///////////////////////////////////////////////////////////////////////////
-
-    def DefaultChangeRightsPermission(restriction: Set[IRI]) = {
-        PermissionV1(
-            name = OntologyConstants.KnoraBase.DefaultChangeRightsPermission,
-            restrictions = restriction
-        )
-    }
-
-    def DefaultDeletePermission(restriction: Set[IRI]) = {
-        PermissionV1(
-            name = OntologyConstants.KnoraBase.DefaultDeletePermission,
-            restrictions = restriction
-        )
-    }
-
-    def DefaultModifyPermission(restriction: Set[IRI]) = {
-        PermissionV1(
-            name = OntologyConstants.KnoraBase.DefaultModifyPermission,
-            restrictions = restriction
-        )
-    }
-
-    def DefaultViewPermission(restriction: Set[IRI]) = {
-        PermissionV1(
-            name = OntologyConstants.KnoraBase.DefaultViewPermission,
-            restrictions = restriction
-        )
-    }
-
-    def DefaultRestrictedViewPermission(restriction: Set[IRI]) = {
-        PermissionV1(
-            name = OntologyConstants.KnoraBase.DefaultRestrictedViewPermission,
-            restrictions = restriction
-        )
-    }
-
 }
 
 /**
@@ -794,8 +753,6 @@ object PermissionType extends Enumeration {
 
     val OAP     = Value(0, "ObjectAccessPermission")
     val AP      = Value(1, "AdministrativePermission")
-    val DOAP    = Value(2, "DefaultObjectAccessPermission")
-
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

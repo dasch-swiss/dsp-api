@@ -23,7 +23,7 @@
 
                       knora-base:forResourceClass knora-base:LinkObj ;
 
-                      knora-base:hasPermissions "DM knora-base:ProjectMember|DV knora-base:KnownUser, knora-base:UnknownUser"^^xsd:string .
+                      knora-base:hasPermissions "M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
 
 
 
@@ -36,7 +36,7 @@
 
                       knora-base:forResourceClass knora-base:Region ;
 
-                      knora-base:hasPermissions "DM knora-base:ProjectMember|DV knora-base:KnownUser, knora-base:UnknownUser"^^xsd:string .
+                      knora-base:hasPermissions "M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
 
 
 
@@ -49,7 +49,7 @@
 
                       knora-base:forProperty knora-base:hasStillImageFileValue ;
 
-                      knora-base:hasPermissions "DM knora-base:Creator, knora-base:ProjectMember|DV knora-base:KnownUser|DRV knora-base:UnknownUser"^^xsd:string .
+                      knora-base:hasPermissions "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
 
 
 
@@ -92,7 +92,7 @@
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
-                      knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser"^^xsd:string .
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"^^xsd:string .
 
 
 
@@ -135,7 +135,7 @@
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
-                      knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser|DRV knora-base:UnknownUser"^^xsd:string .
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
 
 
 ### Default Object Access Permissions on incunabula:Book resource class
@@ -147,7 +147,7 @@
 
                       knora-base:forResourceClass incunabula:Book ;
 
-                      knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser|DRV knora-base:UnknownUser"^^xsd:string .
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
 
 
 ### Default Object Access Permissions on incunabula:Page resource class
@@ -159,7 +159,7 @@
 
                       knora-base:forProperty incunabula:Page ;
 
-                      knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser|DRV knora-base:UnknownUser"^^xsd:string .
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
 
 
 
@@ -202,7 +202,7 @@
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
-                      knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser"^^xsd:string .
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"^^xsd:string .
 
 
 
@@ -245,4 +245,4 @@
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
-                      knora-base:hasPermissions "DCR knora-base:Creator|DM knora-base:ProjectMember|DV knora-base:KnownUser"^^xsd:string .
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"^^xsd:string .
