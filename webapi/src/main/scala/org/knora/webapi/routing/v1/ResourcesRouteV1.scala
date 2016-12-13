@@ -463,6 +463,17 @@ object ResourcesRouteV1 extends Authenticator {
                         )
                 }
             }
+        } ~ path("v1" / "error") {
+            get {
+                requestContext =>
+                    RouteUtilV1.runJsonRoute(
+                        Future(UnexpectedMessageRequest()),
+                        requestContext,
+                        settings,
+                        responderManager,
+                        loggingAdapter
+                    )
+            }
         }
     }
 }

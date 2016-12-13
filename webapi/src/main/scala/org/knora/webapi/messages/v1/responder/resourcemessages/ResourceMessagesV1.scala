@@ -341,6 +341,10 @@ case class GraphDataGetResponseV1(nodes: Seq[GraphNodeV1], edges: Seq[GraphEdgeV
     def toJsValue = ResourceV1JsonProtocol.graphDataGetResponseV1Format.write(this)
 }
 
+/**
+  * Causes the resources responder to return an invalid response message.
+  */
+case class UnexpectedMessageRequest() extends ResourcesResponderRequestV1
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
