@@ -818,8 +818,6 @@ class StandoffResponderV1 extends ResponderV1 {
 
     private def changeStandoffV1(valueIri: IRI, mappingIri: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[ChangeStandoffResponseV1] = {
 
-        log.debug("in change standoff")
-
         val standoffUtil = new StandoffUtil()
 
         // FIXME: if the XML is not well formed, the error is not handled correctly

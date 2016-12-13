@@ -70,12 +70,11 @@ object StandoffRouteV1 extends Authenticator {
                         val JSON_PART = "json"
                         val XML_PART = "xml"
 
-                        //log.debug(s"$formdata")
 
                         // collect all parts of the multipart as it arrives into a map
                         val allPartsFuture: Future[Map[Name, String]] = formdata.parts.mapAsync[(Name, String)](1) {
                             case b: BodyPart if b.name == JSON_PART => {
-                                log.debug(s"inside allPartsFuture - processing $JSON_PART")
+                                //log.debug(s"inside allPartsFuture - processing $JSON_PART")
                                 b.toStrict(2.seconds).map { strict =>
                                     //log.debug(strict.entity.data.utf8String)
                                     (b.name, strict.entity.data.utf8String)

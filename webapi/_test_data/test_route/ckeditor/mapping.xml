@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="mapping.xsd">
+  <mappingElement>
+    <tag><name>text</name><namespace>noNamespace</namespace></tag>
+    <standoffClass>
+      <classIri>http://www.knora.org/ontology/knora-base#StandoffRootTag</classIri>
+      <attributes>
+        <attribute><attributeName>documentType</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType</propertyIri></attribute>
+      </attributes>
+    </standoffClass>
+  </mappingElement>
+
+  <mappingElement>
+    <tag>
+      <name>p</name>
+      <namespace>noNamespace</namespace>
+    </tag>
+    <standoffClass>
+      <classIri>http://www.knora.org/ontology/knora-base#StandoffParagraphTag</classIri>
+    </standoffClass>
+  </mappingElement>
+
+  <mappingElement>
+    <tag>
+      <name>em</name>
+      <namespace>noNamespace</namespace>
+    </tag>
+    <standoffClass>
+      <classIri>http://www.knora.org/ontology/knora-base#StandoffItalicTag</classIri>
+    </standoffClass>
+  </mappingElement>
+
+  <mappingElement>
+    <tag>
+      <name>strong</name>
+      <namespace>noNamespace</namespace>
+    </tag>
+    <standoffClass>
+      <classIri>http://www.knora.org/ontology/knora-base#StandoffBoldTag</classIri>
+    </standoffClass>
+  </mappingElement>
+
+  <mappingElement>
+    <tag>
+      <name>facsimile</name>
+      <namespace>noNamespace</namespace></tag>
+    <standoffClass>
+      <classIri>http://www.knora.org/ontology/beol#StandoffFacsimileTag</classIri>
+      <datatype><type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
+        <attributeName>src</attributeName>
+      </datatype>
+    </standoffClass>
+  </mappingElement>
+  
+  <mappingElement>
+    <tag>
+      <name>math</name>
+      <namespace>noNamespace</namespace>
+    </tag>
+    <standoffClass>
+      <classIri>http://www.knora.org/ontology/beol#StandoffMathTag</classIri>
+    </standoffClass>
+  </mappingElement>
+  
+  <mappingElement>
+    <tag>
+      <name>ref</name>
+      <namespace>noNamespace</namespace>
+    </tag>
+    <standoffClass>
+      <classIri>http://www.knora.org/ontology/beol#StandoffReferenceTag</classIri>
+    </standoffClass>
+  </mappingElement>
+
+</mapping>
