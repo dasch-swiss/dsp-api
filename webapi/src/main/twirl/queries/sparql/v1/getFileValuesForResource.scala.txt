@@ -42,6 +42,12 @@ SELECT ?p ?fileValueIri ?quality
 WHERE {
 	BIND(IRI("@resourceIri") as ?resIri)
 
+    ?resIri rdf:type ?resourceClass ;
+            knora-base:isDeleted false .
+
+    # only resources that are subclasses of knora-base:Representation can have file values.
+    ?resourceClass rdfs:subClassOf+ knora-base:Representation .
+
     ?resIri ?p ?fileValueIri .
     ?p rdfs:subPropertyOf+ knora-base:hasFileValue .
 
