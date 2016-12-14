@@ -342,6 +342,107 @@
                     salsah-gui:guiElement salsah-gui:Searchbox .
 
 
+    ### ###########################################
+    ### beol:hasGivenName
+
+    :hasGivenName rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Vorname"@de ,
+                            "given name"@en ,
+                            "prénom"@fr ,
+                            "nome di battesimo"@it ;
+
+                  rdfs:comment """Represents a Given name."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+
+                  salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                  knora-base:subjectClassConstraint :Person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasFamilyName
+
+    :hasFamilyName rdf:type owl:ObjectProperty ;
+
+                   rdfs:label "Nachname"@de ,
+                            "family name"@en ,
+                            "nom de famille"@fr ,
+                            "nome di famiglia"@it ;
+
+                   rdfs:comment """Represents a family name."""@en ;
+
+                   knora-base:objectClassConstraint knora-base:TextValue ;
+
+                   salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                   knora-base:subjectClassConstraint :Person ;
+
+                   rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasIAFIdentifier
+
+    :hasIAFIdentifier rdf:type owl:ObjectProperty ;
+
+                      rdfs:label "Gemeinsame Normdatei (GND)"@de ,
+                                 "Integrated Authority File"@en ;
+
+                      rdfs:comment """Repräsentiert eine GND-Nummer."""@de,
+                                   """Represents an IAF identifier."""@en ;
+
+                      knora-base:objectClassConstraint knora-base:TextValue ;
+
+                      salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                      knora-base:subjectClassConstraint :Person ;
+
+                      rdfs:subPropertyOf knora-base:hasValue .
+
+
+    ### ###########################################
+    ### beol:hasBirthDate
+
+    :hasBirthDate rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Geburtsdatum"@de ,
+                             "date of birth"@en ;
+
+                  rdfs:comment """Repräsentiert ein Geburtsdatum."""@de,
+                               """Represents a date of birth."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:DateValue ;
+
+                  salsah-gui:guiElement salsah-gui:Date ;
+
+                  knora-base:subjectClassConstraint :Person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+
+    ### ###########################################
+    ### beol:hasDeathDate
+
+    :hasDeathDate rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Sterbedatum"@de ,
+                             "date of death"@en ;
+
+                  rdfs:comment """Repräsentiert ein Sterbedatum."""@de,
+                               """Represents a date of death."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:DateValue ;
+
+                  salsah-gui:guiElement salsah-gui:Date ;
+
+                  knora-base:subjectClassConstraint :Person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+
+
     ##########################################################
     #
     # RESOURCES
@@ -443,27 +544,52 @@
 
     :Person rdf:type owl:Class ;
 
-    rdfs:subClassOf knora-base:Person ,
-                    [
-                        rdf:type owl:Restriction ;
-                        owl:onProperty :hasSonValue ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                    ],
-                    [
-                        rdf:type owl:Restriction ;
-                        owl:onProperty :hasSon ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                    ] ;
+        rdfs:subClassOf knora-base:Resource, foaf:Person,
+                                [ rdf:type owl:Restriction ;
+                                  owl:onProperty :hasFamilyName ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                ],
+                                [ rdf:type owl:Restriction ;
+                                  owl:onProperty :hasGivenName ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                ],
+                                [ rdf:type owl:Restriction ;
+                                  owl:onProperty :hasIAFIdentifier ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                ],
+                                [ rdf:type owl:Restriction ;
+                                  owl:onProperty :hasBirthDate ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                ],
+                                [ rdf:type owl:Restriction ;
+                                  owl:onProperty :hasDeathDate ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                ],
+                                [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty :hasSonValue ;
+                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                ],
+                                [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty :hasSon ;
+                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                ],
+                                [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty :comment ;
+                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                ];
 
-    rdfs:label "Person"@de ,
-               "Personne"@fr ,
-               "Person"@en ;
+        rdfs:label  "Person"@de ,
+                    "Personne"@fr ,
+                    "Person"@en ;
 
-    rdfs:comment "A resource representing a person"@en ;
+        rdfs:comment "A resource representing a person"@en ;
 
-    knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
+        knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
 
-    knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+        knora-base:hasDefaultViewPermission knora-base:KnownUser ;
 
-    knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
+        knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
                                           knora-base:Owner .

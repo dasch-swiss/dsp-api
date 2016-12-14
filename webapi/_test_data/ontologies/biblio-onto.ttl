@@ -9,6 +9,7 @@
 @prefix event: <http://purl.org/NET/c4dm/event.owl#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix beol: <http://www.knora.org/ontology/beol#> .
 @base <http://www.knora.org/ontology/biblio-onto> .
 
 @prefix : <http://www.knora.org/ontology/biblio-onto#> .
@@ -158,7 +159,7 @@
 
                     rdfs:comment """Represents the author of the publication."""@en ;
 
-                    knora-base:objectClassConstraint knora-base:Person ;
+                    knora-base:objectClassConstraint beol:Person ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -283,7 +284,7 @@
 
                     rdfs:comment """Represents the editor of the publication."""@en ;
 
-                    knora-base:objectClassConstraint knora-base:Person ;
+                    knora-base:objectClassConstraint beol:Person ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -390,9 +391,9 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#pageStart
+###  http://www.knora.org/ontology/biblio#startPage
 
-:pageStart rdf:type owl:ObjectProperty ;
+:startPage rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Erste Seite"@de ,
                             "Starting Page"@en ,
@@ -405,13 +406,13 @@
 
                     salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                    rdfs:subPropertyOf knora-base:hasValue, bibo:pageStart .
+                    rdfs:subPropertyOf knora-base:hasValue, bibo:startPage .
 
 
 
-###  http://www.knora.org/ontology/biblio#pageEnd
+###  http://www.knora.org/ontology/biblio#endPage
 
-:pageEnd rdf:type owl:ObjectProperty ;
+:endPage rdf:type owl:ObjectProperty ;
 
                     rdfs:label "letzte Seite"@de ,
                             "last Page"@en ,
@@ -424,7 +425,7 @@
 
                     salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                    rdfs:subPropertyOf knora-base:hasValue, bibo:pageEnd .
+                    rdfs:subPropertyOf knora-base:hasValue, bibo:endPage .
 
 
 
@@ -632,7 +633,7 @@
 
                     rdfs:comment """Represents the translator of a publication."""@en ;
 
-                    knora-base:objectClassConstraint knora-base:Person ;
+                    knora-base:objectClassConstraint beol:Person ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -712,11 +713,11 @@
                                     ],
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasPublisher ;
-                                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasPublisherValue ;
-                                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasEditor ;
@@ -757,7 +758,11 @@
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasDOI ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                    ];
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty beol:comment ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ] ;
 
                     rdfs:label "Publikation"@de ,
                                "Publication"@en ,
@@ -801,7 +806,11 @@
                                         [ rdf:type owl:Restriction ;
                                           owl:onProperty :hasName ;
                                           owl:minCardinality "1"^^xsd:nonNegativeInteger
-                                        ];
+                                        ],
+                                        [ rdf:type owl:Restriction ;
+                                           owl:onProperty beol:comment ;
+                                           owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                        ] ;
 
                     rdfs:label "Organisation"@de ,
                                "Organization"@en ,
@@ -929,7 +938,11 @@
                                     [ rdf:type owl:Restriction ;
                                        owl:onProperty :translationHasDate ;
                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                    ];
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                        owl:onProperty beol:comment ;
+                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ] ;
 
 
                     rdfs:label "Übersetzung"@de ,
@@ -958,7 +971,11 @@
                                      [ rdf:type owl:Restriction ;
                                          owl:onProperty :numVolumes ;
                                          owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                     ];
+                                     ],
+                                     [ rdf:type owl:Restriction ;
+                                         owl:onProperty beol:comment ;
+                                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                     ] ;
 
 
                     rdfs:label "Zeitschrift"@de ,
@@ -1001,9 +1018,11 @@
                                     [ rdf:type owl:Restriction ;
                                        owl:onProperty :isPartOfCollectionValue ;
                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                    ];
-;
-
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                        owl:onProperty beol:comment ;
+                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ] ;
 
                     rdfs:label "Buch"@de ,
                                 "Book"@en ,
@@ -1026,7 +1045,11 @@
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :collectionNumber;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                    ];
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                        owl:onProperty beol:comment ;
+                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ] ;
 
 
                     rdfs:label "Serie"@de ,
