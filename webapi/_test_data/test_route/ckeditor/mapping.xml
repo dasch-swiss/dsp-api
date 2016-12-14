@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="mapping.xsd">
+<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../src/main/resources/mappingXMLToStandoff.xsd">
   <mappingElement>
     <tag><name>text</name><namespace>noNamespace</namespace></tag>
     <standoffClass>
@@ -42,10 +42,10 @@
 
   <mappingElement>
     <tag>
-      <name>facsimile</name>
+      <name>u</name>
       <namespace>noNamespace</namespace></tag>
     <standoffClass>
-      <classIri>http://www.knora.org/ontology/beol#StandoffFacsimileTag</classIri>
+      <classIri>http://www.knora.org/ontology/knora-base#StandoffUnderlineTag</classIri>
       <datatype><type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
         <attributeName>src</attributeName>
       </datatype>
@@ -54,22 +54,35 @@
   
   <mappingElement>
     <tag>
-      <name>math</name>
+      <name>sub</name>
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
-      <classIri>http://www.knora.org/ontology/beol#StandoffMathTag</classIri>
+      <classIri>http://www.knora.org/ontology/knora-base#StandoffSubscriptTag</classIri>
     </standoffClass>
   </mappingElement>
   
   <mappingElement>
     <tag>
-      <name>ref</name>
+      <name>sup</name>
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
-      <classIri>http://www.knora.org/ontology/beol#StandoffReferenceTag</classIri>
+      <classIri>http://www.knora.org/ontology/knora-base#StandoffSuperscriptTag</classIri>
     </standoffClass>
   </mappingElement>
 
+  <mappingElement>
+    <tag>
+      <name>a</name>
+      <namespace>noNamespace</namespace>
+    </tag>
+    <standoffClass>
+      <classIri>http://www.knora.org/ontology/knora-base#StandoffUriTag</classIri>
+      <datatype>
+        <type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
+        <attributeName>href</attributeName>
+      </datatype>
+    </standoffClass>
+  </mappingElement>
 </mapping>

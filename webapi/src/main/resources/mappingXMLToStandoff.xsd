@@ -54,7 +54,7 @@
         </xs:complexType>
     </xs:element>
 
-    <!-- represents a standoff class optionally inlcuding attributes and a data type -->
+    <!-- represents a standoff class optionally including attributes and a data type -->
     <xs:element name="standoffClass">
         <xs:complexType>
             <xs:sequence>
