@@ -1432,11 +1432,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             }.mapTo[EntityInfoGetResponseV1]
 
             defaultObjectAccessPermissions <- {
-                responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(
-                    projectIri = projectIri,
-                    resourceClassIri = resourceClassIri,
-                    userProfile = userProfile
-                )
+                responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
             }.mapTo[Option[String]]
 
             // represents the permissions as a List of 2-tuples:

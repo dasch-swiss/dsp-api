@@ -146,8 +146,8 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                         iri = iri,
                         forProject = IMAGES_PROJECT_IRI,
                         forGroup = OntologyConstants.KnoraBase.ProjectMember,
-                        hasOldPermissions = Seq.empty[PermissionV1],
-                        hasNewPermissions = Seq(PermissionV1.ProjectResourceCreateAllPermission)
+                        hasOldPermissions = Set.empty[PermissionV1],
+                        hasNewPermissions = Set(PermissionV1.ProjectResourceCreateAllPermission)
                     ),
                     userProfileV1 = rootUser
                 )
@@ -160,20 +160,12 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
         "queried about object access permissions " should {
 
             "return object access permissions for a resource" in {
-                actorUnderTest ! ObjectAccessPermissionsForResourceGetV1(
-                    projectIri = IMAGES_PROJECT_IRI,
-                    resourceIri = perm003_o1.iri,
-                    userProfile = SharedAdminTestData.incunabulaUser
-                )
+                actorUnderTest ! ObjectAccessPermissionsForResourceGetV1(resourceIri = perm003_o1.iri, projectIri = IMAGES_PROJECT_IRI)
                 expectMsg(Some(perm003_o1.p))
             }
 
             "return object access permissions for a value" in {
-                actorUnderTest ! ObjectAccessPermissionsForValueGetV1(
-                    projectIri = IMAGES_PROJECT_IRI,
-                    valueIri = perm003_o2.iri,
-                    userProfile = SharedAdminTestData.incunabulaUser
-                )
+                actorUnderTest ! ObjectAccessPermissionsForValueGetV1(valueIri = perm003_o2.iri, projectIri = IMAGES_PROJECT_IRI)
                 expectMsg(Some(perm003_o2.p))
             }
 
@@ -293,39 +285,23 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
         "asked for default object access permissions 'string'" should {
 
-            "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class" in {
-                actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
-                    projectIri = SYSTEM_PROJECT_IRI,
-                    resourceClassIri = OntologyConstants.KnoraBase.LinkObj,
-                    userProfile = SharedAdminTestData.incunabulaUser
-                )
+            "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class (system resource class)" in {
+                actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = OntologyConstants.KnoraBase.LinkObj, incunabulaUser.permissionData)
                 expectMsg(Some("default object access permissions string"))
             }
 
-            "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property" in {
-                actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
-                    projectIri = SYSTEM_PROJECT_IRI,
-                    propertyIri = OntologyConstants.KnoraBase.HasStillImageFileValue,
-                    userProfile = SharedAdminTestData.incunabulaUser
-                )
+            "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property (system property)" in {
+                actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri = INCUNABULA_PROJECT_IRI, propertyIri = OntologyConstants.KnoraBase.HasStillImageFileValue, incunabulaUser.permissionData)
                 expectMsg(Some("default object access permissions string"))
             }
 
-            "return the default object access permissions 'string' for the 'incunabula:Book' resource class" in {
-                actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
-                    projectIri = INCUNABULA_PROJECT_IRI,
-                    resourceClassIri = INCUNABULA_BOOK_RESOURCE_CLASS,
-                    userProfile = SharedAdminTestData.incunabulaUser
-                )
+            "return the default object access permissions 'string' for the 'incunabula:Book' resource class (project resource class)" in {
+                actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = INCUNABULA_BOOK_RESOURCE_CLASS, incunabulaUser.permissionData)
                 expectMsg(Some("default object access permissions string"))
             }
 
-            "return the default object access permissions 'string' for the 'incunabula:Page' resource class" in {
-                actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
-                    projectIri = INCUNABULA_PROJECT_IRI,
-                    resourceClassIri = INCUNABULA_PAGE_RESOURCE_CLASS,
-                    userProfile = SharedAdminTestData.incunabulaUser
-                )
+            "return the default object access permissions 'string' for the 'incunabula:Page' resource class (project resource class)" in {
+                actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = INCUNABULA_PAGE_RESOURCE_CLASS, incunabulaUser.permissionData)
                 expectMsg(Some("default object access permissions string"))
             }
 
@@ -351,9 +327,13 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "build a permission object" in {
                 underlyingActorUnderTest.buildPermissionObject(
                     name = OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission,
-                    iris = Some(Set("1", "2", "3"))
+                    iris = Set("1", "2", "3")
                 ) should equal(
-                    PermissionV1.ProjectResourceCreateRestrictedPermission(Set("1", "2", "3"))
+                    Set(
+                        PermissionV1.ProjectResourceCreateRestrictedPermission("1"),
+                        PermissionV1.ProjectResourceCreateRestrictedPermission("2"),
+                        PermissionV1.ProjectResourceCreateRestrictedPermission("3")
+                    )
                 )
             }
 

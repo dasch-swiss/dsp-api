@@ -24,6 +24,8 @@ import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1, GroupP
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.rogach.scallop.ArgType.V
+import sun.lwawt.macosx.CImage.Creator
 
 /**
   * This object holds the same user which are loaded with '_test_data/all_data/admin-data.ttl'. Using this object
@@ -152,7 +154,24 @@ object SharedAdminTestData {
                     PermissionV1.ProjectAdminAllPermission
                 )
             ),
-            defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
+            defaultObjectAccessPermissionsPerProject =  Map(
+                INCUNABULA_PROJECT_IRI -> Set(
+                    PermissionV1.ViewPermission("http://www.knora.org/ontology/knora-base#KnownUser"),
+                    PermissionV1.ModifyPermission("http://www.knora.org/ontology/knora-base#ProjectMember"),
+                    PermissionV1.RestrictedViewPermission("http://www.knora.org/ontology/knora-base#UnknownUser"),
+                    PermissionV1.ChangeRightsPermission("http://www.knora.org/ontology/knora-base#Creator")
+                ),
+                IMAGES_PROJECT_IRI -> Set(
+                    PermissionV1.ViewPermission("http://www.knora.org/ontology/knora-base#KnownUser"),
+                    PermissionV1.ModifyPermission("http://www.knora.org/ontology/knora-base#ProjectMember"),
+                    PermissionV1.ChangeRightsPermission("http://www.knora.org/ontology/knora-base#Creator")
+                ),
+                TRIPLESIX_PROJECT_IRI -> Set(
+                    PermissionV1.ViewPermission("http://www.knora.org/ontology/knora-base#KnownUser"),
+                    PermissionV1.ModifyPermission("http://www.knora.org/ontology/knora-base#ProjectMember"),
+                    PermissionV1.ChangeRightsPermission("http://www.knora.org/ontology/knora-base#Creator")
+                )
+            )
         )
     )
 

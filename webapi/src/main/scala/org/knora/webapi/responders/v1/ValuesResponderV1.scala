@@ -178,11 +178,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // FIXME: Query the PermissionsResponder for Property DOAP
             defaultObjectAccessPermissions <- {
-                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
-                    projectIri = createValueRequest.projectIri,
-                    propertyIri = createValueRequest.propertyIri,
-                    userProfile = createValueRequest.userProfile
-                )
+                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri = createValueRequest.projectIri, propertyIri = createValueRequest.propertyIri, createValueRequest.userProfile.permissionData)
             }.mapTo[Option[String]]
 
             // Construct its permissions from the default permissions of the resource property.

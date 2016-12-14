@@ -18,7 +18,6 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
-import arq.iri
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1, GroupInfoType}
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType.PermissionType
@@ -49,18 +48,18 @@ class PermissionsResponderV1 extends ResponderV1 {
     def receive = {
         case PermissionDataGetV1(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup) => future2Message(sender(), permissionsDataGetV1(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup), log)
         case AdministrativePermissionsForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), administrativePermissionsForProjectGetRequestV1(projectIri, userProfileV1), log)
-        case AdministrativePermissionForIriGetRequestV1(administrativePermissionIri, userProfileV1) => future2Message(sender(), administrativePermissionForIriGetRequestV1(administrativePermissionIri, userProfileV1), log)
-        case AdministrativePermissionForProjectGroupGetV1(projectIri, groupIri, userProfileV1) => future2Message(sender(), administrativePermissionForProjectGroupGetV1(projectIri, groupIri), log)
-        case AdministrativePermissionForProjectGroupGetRequestV1(projectIri, groupIri, userProfileV1) => future2Message(sender(), administrativePermissionForProjectGroupGetRequestV1(projectIri, groupIri), log)
-        case AdministrativePermissionCreateRequestV1(newAdministrativePermissionV1, userProfileV1) => future2Message(sender(), createAdministrativePermissionV1(newAdministrativePermissionV1, userProfileV1), log)
+        case AdministrativePermissionForIriGetRequestV1(administrativePermissionIri, userProfile) => future2Message(sender(), administrativePermissionForIriGetRequestV1(administrativePermissionIri, userProfile), log)
+        case AdministrativePermissionForProjectGroupGetV1(projectIri, groupIri) => future2Message(sender(), administrativePermissionForProjectGroupGetV1(projectIri, groupIri), log)
+        case AdministrativePermissionForProjectGroupGetRequestV1(projectIri, groupIri, userProfile) => future2Message(sender(), administrativePermissionForProjectGroupGetRequestV1(projectIri, groupIri, userProfile), log)
+        case AdministrativePermissionCreateRequestV1(newAdministrativePermissionV1, userProfileV1) => future2Message(sender(), administrativePermissionCreateRequestV1(newAdministrativePermissionV1, userProfileV1), log)
         //case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, userProfileV1) => future2Message(sender(), deleteAdministrativePermissionV1(administrativePermissionIri, userProfileV1), log)
-        case ObjectAccessPermissionsForResourceGetV1(resourceIri, projectIri, userProfile) => future2Message(sender(), objectAccessPermissionsForResourceGetV1(resourceIri, projectIri, userProfile) , log)
-        case ObjectAccessPermissionsForValueGetV1(valueIri, projectIri, userProfile) => future2Message(sender(), objectAccessPermissionsForValueGetV1(valueIri, projectIri, userProfile), log)
+        case ObjectAccessPermissionsForResourceGetV1(resourceIri, projectIri) => future2Message(sender(), objectAccessPermissionsForResourceGetV1(resourceIri, projectIri) , log)
+        case ObjectAccessPermissionsForValueGetV1(valueIri, projectIri) => future2Message(sender(), objectAccessPermissionsForValueGetV1(valueIri, projectIri), log)
         case DefaultObjectAccessPermissionsForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), defaultObjectAccessPermissionsForProjectGetRequestV1(projectIri, userProfileV1), log)
         case DefaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), defaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         case DefaultObjectAccessPermissionGetRequestV1(projectIri, groupIri, resourceClassIri, propertyIri, userProfile) => future2Message(sender(), defaultObjectAccessPermissionGetRequestV1(projectIri, groupIri, resourceClassIri, propertyIri, userProfile), log)
-        case DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri, resourceClassIri, userProfile) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, Some(resourceClassIri), None, userProfile), log)
-        case DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri,propertyTypeIri, userProfile) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, None, Some(propertyTypeIri), userProfile) , log)
+        case DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri, resourceClassIri, permissionData) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, Some(resourceClassIri), None, permissionData), log)
+        case DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri,propertyTypeIri, permissionData) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, None, Some(propertyTypeIri), permissionData), log)
         //case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, userProfileV1), log)
         //case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         //case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1) => future2Message(sender(), templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1), log)
@@ -188,22 +187,21 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     def userAdministrativePermissionsGetV1(groupsPerProject: Map[IRI, List[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
 
-        //FIXME: loop through each project the user is part of and retrieve the administrative permissions attached to each group he is in, calculate max permissions, package everything in a neat little object, and return it back
-
-
-        val pp: Iterable[Future[(IRI, Seq[PermissionV1])]] = for {
+        /* Get all permissions per project, combining them from all groups */
+        val ppf: Iterable[Future[(IRI, Seq[PermissionV1])]] = for {
             (projectIri, groups) <- groupsPerProject
             groupIri <- groups
             //_ = log.debug(s"getUserAdministrativePermissionsRequestV1 - projectIri: $projectIri, groupIri: $groupIri")
             projectPermission: Future[(IRI, Seq[PermissionV1])] = administrativePermissionForProjectGroupGetV1(projectIri, groupIri).map {
-                case Some(ap: AdministrativePermissionV1) => (projectIri, ap.hasPermissions)
+                case Some(ap: AdministrativePermissionV1) => (projectIri, ap.hasPermissions.toSeq)
                 case None => (projectIri, Seq.empty[PermissionV1])
             }
 
         } yield projectPermission
 
-        val allPermissionsFuture: Future[Iterable[(IRI, Seq[PermissionV1])]] = Future.sequence(pp)
+        val allPermissionsFuture: Future[Iterable[(IRI, Seq[PermissionV1])]] = Future.sequence(ppf)
 
+        /* combines all permissions for each project and removes duplicate permissions inside a project  */
         val result: Future[Map[IRI, Set[PermissionV1]]] = for {
             allPermission <- allPermissionsFuture
             result = allPermission.groupBy(_._1).map { case (k, v) =>
@@ -212,11 +210,11 @@ class PermissionsResponderV1 extends ResponderV1 {
                 val combined = v.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
                     acc ++ seq._2
                 }
-                /* Squash the resulting permission sequence */
-                val squashed: Set[PermissionV1] = squashPermissions(combined)
+                /* Remove possible duplicate permissions */
+                val squashed: Set[PermissionV1] = removeDuplicatePermissions(combined)
                 (k, squashed)
             }
-        //_ = log.debug(s"getUserAdministrativePermissionsRequestV1 - result: $result")
+        //_ = log.debug(s"userAdministrativePermissionsGetV1 - result: $result")
         } yield result
         result
     }
@@ -229,10 +227,36 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     def userDefaultObjectAccessPermissionsGetV1(groupsPerProject: Map[IRI, List[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
 
-        //FIXME: loop through each project the user is part of and retrieve the default object access permissions attached to each group he is in, calculate max permissions, package everything in a neat little object, and return it back
-        val result = Map.empty[IRI, Set[PermissionV1]]
-        //log.debug(s"getUserDefaultObjectAccessPermissionsRequestV1 - result: $result")
-        Future(result)
+        /* Get all default object access permissions per project, combining them from all groups */
+        val ppf: Iterable[Future[(IRI, Seq[PermissionV1])]] = for {
+            (projectIri, groups) <- groupsPerProject
+            groupIri <- groups
+            //_ = log.debug(s"getUserAdministrativePermissionsRequestV1 - projectIri: $projectIri, groupIri: $groupIri")
+            projectPermission: Future[(IRI, Seq[PermissionV1])] = defaultObjectAccessPermissionGetV1(projectIRI = projectIri, groupIRI = Some(groupIri), resourceClassIRI = None, propertyIRI = None).map {
+                case Some(doap: DefaultObjectAccessPermissionV1) => (projectIri, doap.hasPermissions.toSeq)
+                case None => (projectIri, Seq.empty[PermissionV1])
+            }
+
+        } yield projectPermission
+
+        val allPermissionsFuture: Future[Iterable[(IRI, Seq[PermissionV1])]] = Future.sequence(ppf)
+
+        /* combines all permissions for each project and removes duplicate permissions inside a project  */
+        val result: Future[Map[IRI, Set[PermissionV1]]] = for {
+            allPermission <- allPermissionsFuture
+            result = allPermission.groupBy(_._1).map { case (k, v) =>
+
+                /* Combine permission sequences */
+                val combined = v.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
+                    acc ++ seq._2
+                }
+                /* Remove possible duplicate permissions */
+                val squashed: Set[PermissionV1] = removeDuplicatePermissions(combined)
+                (k, squashed)
+            }
+        //_ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - result: $result")
+        } yield result
+        result
     }
 
 
@@ -248,6 +272,9 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @return a list of IRIs of [[AdministrativePermissionV1]] objects.
       */
     private def administrativePermissionsForProjectGetRequestV1(projectIRI: IRI, userProfileV1: UserProfileV1): Future[AdministrativePermissionsForProjectGetResponseV1] = {
+
+        // FIXME: Check user's permission for operation
+
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getAdministrativePermissionsForProject(
                 triplestore = settings.triplestoreType,
@@ -272,15 +299,10 @@ class PermissionsResponderV1 extends ResponderV1 {
                 case (permissionIri: IRI, propsMap: Map[String, String]) =>
 
                     /* parse permissions */
-                    val hasPermissions: Seq[PermissionV1] = parsePermissions(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.AP)
+                    val hasPermissions: Set[PermissionV1] = parsePermissions(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.AP)
 
                     /* construct permission object */
-                    AdministrativePermissionV1(
-                        iri = permissionIri,
-                        forProject = propsMap.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no project attached.")),
-                        forGroup = propsMap.getOrElse(OntologyConstants.KnoraBase.ForGroup, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no group attached.")),
-                        hasPermissions = hasPermissions
-                    )
+                    AdministrativePermissionV1(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no project attached.")), forGroup = propsMap.getOrElse(OntologyConstants.KnoraBase.ForGroup, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no group attached.")), hasPermissions = hasPermissions)
             }.toSeq
 
             /* construct response object */
@@ -296,6 +318,8 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @return a single [[AdministrativePermissionV1]] object.
       */
     def administrativePermissionForIriGetRequestV1(administrativePermissionIRI: IRI, userProfileV1: UserProfileV1): Future[AdministrativePermissionForIriGetResponseV1] = {
+
+        // FIXME: Check user's permission for operation
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getAdministrativePermissionByIRI(
@@ -324,12 +348,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             //_ = log.debug(s"getAdministrativePermissionForIriV1 - hasPermissions: ${MessageUtil.toSource(hasPermissions)}")
 
             /* construct the permission object */
-            permission = AdministrativePermissionV1(
-                    iri = administrativePermissionIRI,
-                    forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIRI has no project attached")).head,
-                    forGroup = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForGroup, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIRI has no group attached")).head,
-                    hasPermissions = hasPermissions
-                )
+            permission = AdministrativePermissionV1(iri = administrativePermissionIRI, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIRI has no project attached")).head, forGroup = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForGroup, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIRI has no group attached")).head, hasPermissions = hasPermissions)
 
             /* construct the response object */
             response = AdministrativePermissionForIriGetResponseV1(permission)
@@ -378,12 +397,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 }
                 val hasPermissions = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.AP)
                 Some(
-                    AdministrativePermissionV1(
-                        iri = returnedPermissionIri,
-                        forProject = projectIRI,
-                        forGroup = groupIRI,
-                        hasPermissions = hasPermissions
-                    )
+                    AdministrativePermissionV1(iri = returnedPermissionIri, forProject = projectIRI, forGroup = groupIRI, hasPermissions = hasPermissions)
                 )
             } else {
                 None
@@ -399,7 +413,10 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @param groupIRI   the group.
       * @return an [[AdministrativePermissionForProjectGroupGetResponseV1]]
       */
-    private def administrativePermissionForProjectGroupGetRequestV1(projectIRI: IRI, groupIRI: IRI): Future[AdministrativePermissionForProjectGroupGetResponseV1] = {
+    private def administrativePermissionForProjectGroupGetRequestV1(projectIRI: IRI, groupIRI: IRI, userProfile: UserProfileV1): Future[AdministrativePermissionForProjectGroupGetResponseV1] = {
+
+        // FIXME: Check user's permission for operation
+
         for {
             ap <- administrativePermissionForProjectGroupGetV1(projectIRI, groupIRI)
             result = ap match {
@@ -415,8 +432,11 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @param userProfileV1
       * @return
       */
-    private def createAdministrativePermissionV1(newAdministrativePermissionV1: NewAdministrativePermissionV1, userProfileV1: UserProfileV1): Future[AdministrativePermissionCreateResponseV1] = {
-        //log.debug("createAdministrativePermissionV1")
+    private def administrativePermissionCreateRequestV1(newAdministrativePermissionV1: NewAdministrativePermissionV1, userProfileV1: UserProfileV1): Future[AdministrativePermissionCreateResponseV1] = {
+        //log.debug("administrativePermissionCreateRequestV1")
+
+        // FIXME: Check user's permission for operation
+
         for {
             a <- Future("")
 
@@ -432,7 +452,8 @@ class PermissionsResponderV1 extends ResponderV1 {
                 case None =>
             }
 
-            response = AdministrativePermissionCreateResponseV1(administrativePermission = AdministrativePermissionV1(iri = "mock-iri", forProject = "mock-project", forGroup = "mock-group", hasPermissions = Seq.empty[PermissionV1]))
+            // FIXME: Implement
+            response = AdministrativePermissionCreateResponseV1(administrativePermission = AdministrativePermissionV1(iri = "mock-iri", forProject = "mock-project", forGroup = "mock-group", hasPermissions = Set.empty[PermissionV1]))
 
         } yield response
 
@@ -452,10 +473,9 @@ class PermissionsResponderV1 extends ResponderV1 {
       *
       * @param resourceIRI the IRI of the resource.
       * @param projectIri the IRI of the project.
-      * @param userProfile the requesting user's profile.
       * @return a sequence of [[PermissionV1]]
       */
-    def objectAccessPermissionsForResourceGetV1(resourceIRI: IRI, projectIri: IRI, userProfile: UserProfileV1): Future[Option[ObjectAccessPermissionV1]] = {
+    def objectAccessPermissionsForResourceGetV1(resourceIRI: IRI, projectIri: IRI): Future[Option[ObjectAccessPermissionV1]] = {
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getObjectAccessPermission(
                 triplestore = settings.triplestoreType,
@@ -479,13 +499,9 @@ class PermissionsResponderV1 extends ResponderV1 {
                 val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                 }
-                val hasPermissions: Seq[PermissionV1] = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
+                val hasPermissions: Set[PermissionV1] = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
                 Some(
-                    ObjectAccessPermissionV1(
-                        forResource = Some(resourceIRI),
-                        forValue = None,
-                        hasPermissions = hasPermissions
-                    )
+                    ObjectAccessPermissionV1(forResource = Some(resourceIRI), forValue = None, hasPermissions = hasPermissions)
                 )
             } else {
                 None
@@ -498,10 +514,9 @@ class PermissionsResponderV1 extends ResponderV1 {
       *
       * @param valueIRI the IRI of the value.
       * @param projectIri the IRI of the project.
-      * @param userProfile the requesting user's profile.
       * @return a sequence of [[PermissionV1]]
       */
-    def objectAccessPermissionsForValueGetV1(valueIRI: IRI, projectIri: IRI, userProfile: UserProfileV1): Future[Option[ObjectAccessPermissionV1]] = {
+    def objectAccessPermissionsForValueGetV1(valueIRI: IRI, projectIri: IRI): Future[Option[ObjectAccessPermissionV1]] = {
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getObjectAccessPermission(
                 triplestore = settings.triplestoreType,
@@ -525,13 +540,9 @@ class PermissionsResponderV1 extends ResponderV1 {
                 val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                 }
-                val hasPermissions: Seq[PermissionV1] = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
+                val hasPermissions: Set[PermissionV1] = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
                 Some(
-                    ObjectAccessPermissionV1(
-                        forResource = None,
-                        forValue = Some(valueIRI),
-                        hasPermissions = hasPermissions
-                    )
+                    ObjectAccessPermissionV1(forResource = None, forValue = Some(valueIRI), hasPermissions = hasPermissions)
                 )
             } else {
                 None
@@ -552,6 +563,8 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @return a list of IRIs of [[DefaultObjectAccessPermissionV1]] objects.
       */
     private def defaultObjectAccessPermissionsForProjectGetRequestV1(projectIRI: IRI, userProfile: UserProfileV1): Future[DefaultObjectAccessPermissionsForProjectGetResponseV1] = {
+
+        // FIXME: Check user's permission for operation
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getDefaultObjectAccessPermissionsForProject(
@@ -577,17 +590,10 @@ class PermissionsResponderV1 extends ResponderV1 {
                 case (permissionIri: IRI, propsMap: Map[String, String]) =>
 
                     /* parse permissions */
-                    val hasPermissions: Seq[PermissionV1] = parsePermissions(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.OAP)
+                    val hasPermissions: Set[PermissionV1] = parsePermissions(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.OAP)
 
                     /* construct permission object */
-                    DefaultObjectAccessPermissionV1(
-                        iri = permissionIri,
-                        forProject = propsMap.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")),
-                        forGroup = propsMap.get(OntologyConstants.KnoraBase.ForGroup),
-                        forResourceClass = propsMap.get(OntologyConstants.KnoraBase.ForResourceClass),
-                        forProperty = propsMap.get(OntologyConstants.KnoraBase.ForProperty),
-                        hasPermissions = hasPermissions
-                    )
+                    DefaultObjectAccessPermissionV1(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")), forGroup = propsMap.get(OntologyConstants.KnoraBase.ForGroup), forResourceClass = propsMap.get(OntologyConstants.KnoraBase.ForResourceClass), forProperty = propsMap.get(OntologyConstants.KnoraBase.ForProperty), hasPermissions = hasPermissions)
             }.toSeq
 
             /* construct response object */
@@ -604,6 +610,9 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @return a single [[DefaultObjectAccessPermissionV1]] object.
       */
     private def defaultObjectAccessPermissionForIriGetRequestV1(permissionIri: IRI, userProfileV1: UserProfileV1): Future[DefaultObjectAccessPermissionForIriGetResponseV1] = {
+
+        // FIXME: Check user's permission for operation
+
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getDefaultObjectAccessPermissionByIRI(
                 triplestore = settings.triplestoreType,
@@ -627,14 +636,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             hasPermissions = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
 
-            defaultObjectAccessPermission = DefaultObjectAccessPermissionV1(
-                iri = permissionIri,
-                forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")).head,
-                forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).map(_.head),
-                forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForResourceClass).map(_.head),
-                forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProperty).map(_.head),
-                hasPermissions = hasPermissions
-            )
+            defaultObjectAccessPermission = DefaultObjectAccessPermissionV1(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProperty).map(_.head), hasPermissions = hasPermissions)
 
             result = DefaultObjectAccessPermissionForIriGetResponseV1(defaultObjectAccessPermission)
 
@@ -648,10 +650,9 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @param groupIRI the group's IRI.
       * @param resourceClassIRI the resource's class IRI
       * @param propertyIRI the property's IRI.
-      * @param userProfile the requesting user's profile.
       * @return an optional [[DefaultObjectAccessPermissionV1]]
       */
-    def defaultObjectAccessPermissionGetV1(projectIRI: IRI, groupIRI: Option[IRI], resourceClassIRI: Option[IRI], propertyIRI: Option[IRI], userProfile: UserProfileV1): Future[Option[DefaultObjectAccessPermissionV1]] = {
+    def defaultObjectAccessPermissionGetV1(projectIRI: IRI, groupIRI: Option[IRI], resourceClassIRI: Option[IRI], propertyIRI: Option[IRI]): Future[Option[DefaultObjectAccessPermissionV1]] = {
         for {
             a <- Future("")
 
@@ -688,16 +689,9 @@ class PermissionsResponderV1 extends ResponderV1 {
                 val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                 }
-                val hasPermissions: Seq[PermissionV1] = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
+                val hasPermissions: Set[PermissionV1] = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
                 Some(
-                    DefaultObjectAccessPermissionV1(
-                        iri = permissionIri,
-                        forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission has no project.")).head,
-                        forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).map(_.head),
-                        forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForResourceClass).map(_.head),
-                        forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProperty).map(_.head),
-                        hasPermissions = hasPermissions
-                    )
+                    DefaultObjectAccessPermissionV1(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProperty).map(_.head), hasPermissions = hasPermissions)
                 )
             } else {
                 None
@@ -721,7 +715,9 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     def defaultObjectAccessPermissionGetRequestV1(projectIRI: IRI, groupIRI: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI], userProfile: UserProfileV1): Future[DefaultObjectAccessPermissionGetResponseV1] = {
 
-        defaultObjectAccessPermissionGetV1(projectIRI, groupIRI, resourceClassIri, propertyIri, userProfile)
+        // FIXME: Check user's permission for operation
+
+        defaultObjectAccessPermissionGetV1(projectIRI, groupIRI, resourceClassIri, propertyIri)
                 .mapTo[Option[DefaultObjectAccessPermissionV1]]
                 .flatMap {
                     case Some(doap) => Future(DefaultObjectAccessPermissionGetResponseV1(doap))
@@ -729,7 +725,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                         /* if the query was for a property, then we need to additionally check if it is a system property */
                         if (propertyIri.isDefined) {
                             val systemProject = OntologyConstants.KnoraBase.SystemProject
-                            val doapF = defaultObjectAccessPermissionGetV1(systemProject, groupIRI, resourceClassIri, propertyIri, userProfile)
+                            val doapF = defaultObjectAccessPermissionGetV1(systemProject, groupIRI, resourceClassIri, propertyIri)
                             doapF.mapTo[Option[DefaultObjectAccessPermissionV1]].map {
                                 case Some(systemDoap) => DefaultObjectAccessPermissionGetResponseV1(systemDoap)
                                 case None => throw NotFoundException(s"No Default Object Access Permission found for project: $projectIRI, group: $groupIRI, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination")
@@ -749,10 +745,10 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @param projectIRI the IRI of the project.
       * @param resourceClassIRI the IRI of the resource class for which the default object access permissions are requested.
       * @param propertyIRI the IRI of the property for which the default object access permissions are requested.
-      * @param userProfile the user for which the default object access permissions are requested.
+      * @param permissionData the permission data of the user for which the default object access permissions are requested.
       * @return an optional string with object access permission statements
       */
-    def defaultObjectAccessPermissionsStringForEntityGetV1(projectIRI: IRI, resourceClassIRI: Option[IRI], propertyIRI: Option[IRI], userProfile: UserProfileV1): Future[Option[String]] = {
+    def defaultObjectAccessPermissionsStringForEntityGetV1(projectIRI: IRI, resourceClassIRI: Option[IRI], propertyIRI: Option[IRI], permissionData: PermissionDataV1): Future[Option[String]] = {
 
         for {
             a <- Future("")
@@ -763,31 +759,34 @@ class PermissionsResponderV1 extends ResponderV1 {
             _ = if (resourceClassIRI.isDefined && propertyIRI.isDefined) throw BadRequestException("Not allowed to supply both resourceClassIri and propertyTypeIri")
 
             /* Get the user's max default object access permissions from the user's permission data inside the user's profile */
-            defaultPermissionsOnProjectGroups: Seq[PermissionV1] = userProfile.permissionData.defaultObjectAccessPermissionsPerProject.getOrElse(projectIRI, Seq.empty[PermissionV1]).toSeq
+            defaultPermissionsOnProjectGroups: Set[PermissionV1] = permissionData.defaultObjectAccessPermissionsPerProject.getOrElse(projectIRI, Set.empty[PermissionV1])
 
             /* Get the default object access permissions defined on the resource class for the current project */
-            defaultPermissionsOnProjectEntityOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIRI = projectIRI, groupIRI = None, resourceClassIRI = resourceClassIRI, propertyIRI = propertyIRI, userProfile = userProfile)
+            defaultPermissionsOnProjectEntityOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIRI = projectIRI, groupIRI = None, resourceClassIRI = resourceClassIRI, propertyIRI = propertyIRI)
 
-            defaultPermissionsOnProjectEntity: Seq[PermissionV1] = defaultPermissionsOnProjectEntityOption match {
-                case None => Seq.empty[PermissionV1]
+            defaultPermissionsOnProjectEntity: Set[PermissionV1] = defaultPermissionsOnProjectEntityOption match {
                 case Some(doap) => doap.hasPermissions
+                case None => Set.empty[PermissionV1]
             }
 
             // Since we also have default object access permissions defined in the SystemProject,
             // we need to check there too, but only in the case that we didn't find anything
-            // on the project level
+            // on the project level, since the project level definition overrides the system level definition.
             systemProject = OntologyConstants.KnoraBase.SystemProject
-            defaultPermissionsOnSystemEntityOptionF: Future[Option[DefaultObjectAccessPermissionV1]] = if (defaultPermissionsOnProjectEntity.isEmpty) defaultObjectAccessPermissionGetV1(projectIRI = systemProject, groupIRI = None, resourceClassIRI = resourceClassIRI, propertyIRI = propertyIRI, userProfile = userProfile)
+            defaultPermissionsOnSystemEntityOptionF: Future[Option[DefaultObjectAccessPermissionV1]] = if (defaultPermissionsOnProjectEntity.isEmpty) {
+                defaultObjectAccessPermissionGetV1(projectIRI = systemProject, groupIRI = None, resourceClassIRI = resourceClassIRI, propertyIRI = propertyIRI)
+            } else {
+                Future(None)
+            }
             defaultPermissionsOnSystemEntityOption <- defaultPermissionsOnSystemEntityOptionF
-            defaultPermissionsOnSystemEntity: Seq[PermissionV1] = defaultPermissionsOnSystemEntityOption match {
-                case None => Seq.empty[PermissionV1]
+            defaultPermissionsOnSystemEntity: Set[PermissionV1] = defaultPermissionsOnSystemEntityOption match {
                 case Some(doap) => doap.hasPermissions
+                case None => Set.empty[PermissionV1]
             }
 
-            /* Mix all three together and return most permissive */
-            allDefaultPermissions = defaultPermissionsOnProjectGroups ++ defaultPermissionsOnProjectEntity ++ defaultPermissionsOnSystemEntity
-            squashedAllDefaultPermissions = squashPermissions(allDefaultPermissions)
-            
+            /* Combine all three together and return most permissive */
+            allDefaultPermissions: Seq[PermissionV1] = defaultPermissionsOnProjectGroups.toSeq ++ defaultPermissionsOnProjectEntity.toSeq ++ defaultPermissionsOnSystemEntity.toSeq
+            squashedAllDefaultPermissions = removeDuplicatePermissions(allDefaultPermissions)
 
 
             // FIXME: Need to actually do something here
@@ -856,12 +855,12 @@ class PermissionsResponderV1 extends ResponderV1 {
       *         [[OntologyConstants.KnoraBase.ObjectAccessPermissionAbbreviations]], and the values are sets of
       *         user group IRIs.
       */
-    def parsePermissions(maybePermissionListStr: Option[String], permissionType: PermissionType): Seq[PermissionV1] = {
+    def parsePermissions(maybePermissionListStr: Option[String], permissionType: PermissionType): Set[PermissionV1] = {
         maybePermissionListStr match {
             case Some(permissionListStr) => {
                 val permissions: Seq[String] = permissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
                 //log.debug(s"parsePermissions - split permissions: $permissions")
-                permissions.map {
+                permissions.flatMap {
                     permission =>
                         val splitPermission = permission.split(' ')
                         val abbreviation = splitPermission(0)
@@ -872,26 +871,25 @@ class PermissionsResponderV1 extends ResponderV1 {
                                     throw InconsistentTriplestoreDataException(s"Unrecognized permission abbreviation '$abbreviation'")
                                 }
                                 if (splitPermission.length > 1) {
-                                    val shortGroups = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter).toSet
-                                    val groups = shortGroups.map(_.replace(OntologyConstants.KnoraBase.KnoraBasePrefix, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion))
-                                    buildPermissionObject(abbreviation, Some(groups))
+                                    val shortGroups: Array[String] = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter)
+                                    val groups: Set[IRI] = shortGroups.map(_.replace(OntologyConstants.KnoraBase.KnoraBasePrefix, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion)).toSet
+                                    buildPermissionObject(abbreviation, groups)
                                 } else {
-                                    buildPermissionObject(abbreviation, None)
+                                    buildPermissionObject(abbreviation, Set.empty[IRI])
                                 }
                             }
                             case PermissionType.OAP => {
                                 if (!OntologyConstants.KnoraBase.ObjectAccessPermissionAbbreviations.contains(abbreviation)) {
                                     throw InconsistentTriplestoreDataException(s"Unrecognized permission abbreviation '$abbreviation'")
                                 }
-                                val shortGroups = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter).toSet
-                                val groups = shortGroups.map(_.replace(OntologyConstants.KnoraBase.KnoraBasePrefix, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion))
-                                buildPermissionObject(abbreviation, Some(groups))
-
+                                val shortGroups: Array[String] = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter)
+                                val groups: Set[IRI] = shortGroups.map(_.replace(OntologyConstants.KnoraBase.KnoraBasePrefix, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion)).toSet
+                                buildPermissionObject(abbreviation, groups)
                             }
                         }
                 }
-            }
-            case None => Seq.empty[PermissionV1]
+            }.toSet
+            case None => Set.empty[PermissionV1]
         }
     }
 
@@ -899,50 +897,80 @@ class PermissionsResponderV1 extends ResponderV1 {
       * Helper method used to convert the permission string stored inside the triplestore to a permission object.
       *
       * @param name the name of the permission.
-      * @param iris the optional additional information.
-      * @return a permission object.
+      * @param iris the optional set of additional information (e.g., group IRIs, resource class IRIs).
+      * @return a sequence of permission objects.
       */
-    def buildPermissionObject(name: String, iris: Option[Set[IRI]]): PermissionV1 = {
+    def buildPermissionObject(name: String, iris: Set[IRI]): Set[PermissionV1] = {
         name match {
-            case OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission => PermissionV1.ProjectResourceCreateAllPermission
-            case OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission => PermissionV1.ProjectResourceCreateRestrictedPermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
-            case OntologyConstants.KnoraBase.ProjectAdminAllPermission => PermissionV1.ProjectAdminAllPermission
-            case OntologyConstants.KnoraBase.ProjectAdminGroupAllPermission => PermissionV1.ProjectAdminGroupAllPermission
-            case OntologyConstants.KnoraBase.ProjectAdminGroupRestrictedPermission => PermissionV1.ProjectAdminGroupRestrictedPermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
-            case OntologyConstants.KnoraBase.ProjectAdminRightsAllPermission => PermissionV1.ProjectAdminRightsAllPermission
-            case OntologyConstants.KnoraBase.ProjectAdminOntologyAllPermission => PermissionV1.ProjectAdminOntologyAllPermission
-            case OntologyConstants.KnoraBase.ChangeRightsPermission => PermissionV1.ChangeRightsPermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
-            case OntologyConstants.KnoraBase.DeletePermission => PermissionV1.DeletePermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
-            case OntologyConstants.KnoraBase.ModifyPermission => PermissionV1.ModifyPermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
-            case OntologyConstants.KnoraBase.ViewPermission => PermissionV1.ViewPermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
-            case OntologyConstants.KnoraBase.RestrictedViewPermission => PermissionV1.RestrictedViewPermission(iris.getOrElse(throw InconsistentTriplestoreDataException(s"Missing additional permission information!")))
+            case OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission => Set(PermissionV1.ProjectResourceCreateAllPermission)
+            case OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission => {
+                if (iris.nonEmpty) {
+                    iris.map(iri => PermissionV1.ProjectResourceCreateRestrictedPermission(iri))
+                } else {
+                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
+                }
+
+            }
+            case OntologyConstants.KnoraBase.ProjectAdminAllPermission => Set(PermissionV1.ProjectAdminAllPermission)
+            case OntologyConstants.KnoraBase.ProjectAdminGroupAllPermission => Set(PermissionV1.ProjectAdminGroupAllPermission)
+            case OntologyConstants.KnoraBase.ProjectAdminGroupRestrictedPermission => {
+                if (iris.nonEmpty) {
+                    iris.map(iri => PermissionV1.ProjectAdminGroupRestrictedPermission(iri))
+                } else {
+                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
+                }
+            }
+            case OntologyConstants.KnoraBase.ProjectAdminRightsAllPermission => Set(PermissionV1.ProjectAdminRightsAllPermission)
+            case OntologyConstants.KnoraBase.ProjectAdminOntologyAllPermission => Set(PermissionV1.ProjectAdminOntologyAllPermission)
+            case OntologyConstants.KnoraBase.ChangeRightsPermission => {
+                if (iris.nonEmpty) {
+                    iris.map(iri => PermissionV1.ChangeRightsPermission(iri))
+                } else {
+                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
+                }
+            }
+            case OntologyConstants.KnoraBase.DeletePermission => {
+                if (iris.nonEmpty) {
+                    iris.map(iri => PermissionV1.DeletePermission(iri))
+                } else {
+                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
+                }
+            }
+            case OntologyConstants.KnoraBase.ModifyPermission => {
+                if (iris.nonEmpty) {
+                    iris.map(iri => PermissionV1.ModifyPermission(iri))
+                } else {
+                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
+                }
+            }
+            case OntologyConstants.KnoraBase.ViewPermission => {
+                if (iris.nonEmpty) {
+                    iris.map(iri => PermissionV1.ViewPermission(iri))
+                } else {
+                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
+                }
+            }
+            case OntologyConstants.KnoraBase.RestrictedViewPermission => {
+                if (iris.nonEmpty) {
+                    iris.map(iri => PermissionV1.RestrictedViewPermission(iri))
+                } else {
+                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
+                }
+            }
         }
 
     }
 
     /**
-      * Helper method used to squash a sequence of [[PermissionV1]] objects, by combining the duplicates where
-      * applicable, before they are removed.
+      * Helper method used to remove remove duplicate permissions.
       *
-      * @param permissions the sequence of permissions.
-      * @return a squashed sequence containing only unique permission.
+      * @param permissions the sequence of permissions with possible duplicates.
+      * @return a set containing only unique permission.
       */
-    def squashPermissions(permissions: Seq[PermissionV1]): Set[PermissionV1] = {
+    def removeDuplicatePermissions(permissions: Seq[PermissionV1]): Set[PermissionV1] = {
 
         val result = permissions.groupBy(_.name).map { case (k, v) =>
             k match {
-                case OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission => {
-                    val combinedRestrictions: Set[IRI] = v.foldLeft(Set.empty[IRI]) { (acc, perm) =>
-                        acc ++ perm.restrictions
-                    }
-                    PermissionV1.ProjectResourceCreateRestrictedPermission(combinedRestrictions)
-                }
-                case OntologyConstants.KnoraBase.ProjectAdminGroupRestrictedPermission => {
-                    val combinedRestrictions: Set[IRI] = v.foldLeft(Set.empty[IRI]) { (acc, perm) =>
-                        acc ++ perm.restrictions
-                    }
-                    PermissionV1.ProjectAdminGroupRestrictedPermission(combinedRestrictions)
-                }
                 case rest => v.head
             }
         }.toSet

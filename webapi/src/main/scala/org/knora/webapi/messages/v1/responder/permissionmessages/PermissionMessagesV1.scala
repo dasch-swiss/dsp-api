@@ -86,9 +86,8 @@ case class AdministrativePermissionForIriGetRequestV1(administrativePermissionIr
   *
   * @param projectIri       the project.
   * @param groupIri         the group.
-  * @param userProfileV1    the user initiation the request.
   */
-case class AdministrativePermissionForProjectGroupGetV1(projectIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
+case class AdministrativePermissionForProjectGroupGetV1(projectIri: IRI, groupIri: IRI) extends PermissionsResponderRequestV1
 
 /**
   * A message that requests an administrative permission object identified by project and group.
@@ -130,18 +129,16 @@ case class AdministrativePermissionUpdateRequestV1(userProfileV1: UserProfileV1)
   *
   * @param resourceIri
   * @param projectIri
-  * @param userProfile
   */
-case class ObjectAccessPermissionsForResourceGetV1(resourceIri: IRI, projectIri: IRI, userProfile: UserProfileV1) extends PermissionsResponderRequestV1
+case class ObjectAccessPermissionsForResourceGetV1(resourceIri: IRI, projectIri: IRI) extends PermissionsResponderRequestV1
 
 /**
   * A message that requests the object access permissions attached to a value via the 'knora-base:hasPermissions' property.
   *
   * @param valueIri
   * @param projectIri
-  * @param userProfile
   */
-case class ObjectAccessPermissionsForValueGetV1(valueIri: IRI, projectIri: IRI, userProfile: UserProfileV1) extends PermissionsResponderRequestV1
+case class ObjectAccessPermissionsForValueGetV1(valueIri: IRI, projectIri: IRI) extends PermissionsResponderRequestV1
 
 
 
@@ -165,9 +162,8 @@ case class DefaultObjectAccessPermissionsForProjectGetRequestV1(projectIri: IRI,
   * @param groupIRI the group.
   * @param resourceClassIRI the resource class.
   * @param propertyIRI the property.
-  * @param userProfile the user initiating this request.
   */
-case class DefaultObjectAccessPermissionGetV1(projectIRI: IRI, groupIRI: Option[IRI], resourceClassIRI: Option[IRI], propertyIRI: Option[IRI], userProfile: UserProfileV1) extends PermissionsResponderRequestV1
+case class DefaultObjectAccessPermissionGetV1(projectIRI: IRI, groupIRI: Option[IRI], resourceClassIRI: Option[IRI], propertyIRI: Option[IRI]) extends PermissionsResponderRequestV1
 
 /**
   * A message that requests an object access permission identified by project and either group / resource class / property.
@@ -196,18 +192,16 @@ case class DefaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPe
   *
   * @param projectIri the project for which the default object permissions need to be retrieved.
   * @param resourceClassIri the resource class which can also cary default object access permissions.
-  * @param userProfile the user initiating the request which group membership can also influence the resulting set of default object access permissions.
   */
-case class DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri: IRI, resourceClassIri: IRI, userProfile: UserProfileV1) extends PermissionsResponderRequestV1
+case class DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri: IRI, resourceClassIri: IRI, permissionData: PermissionDataV1) extends PermissionsResponderRequestV1
 
 /**
   * A message that requests default object access permissions for a resource class inside a specific project.
   *
   * @param projectIri the project for which the default object permissions need to be retrieved.
   * @param propertyIri the property type which can also cary default object access permissions.
-  * @param userProfile the user initiating the request which group membership can also influence the resulting set of default object access permissions.
   */
-case class DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri: IRI, propertyIri: IRI, userProfile: UserProfileV1) extends PermissionsResponderRequestV1
+case class DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri: IRI, propertyIri: IRI, permissionData: PermissionDataV1) extends PermissionsResponderRequestV1
 
 /**
   * Create a single [[DefaultObjectAccessPermissionV1]].
@@ -507,11 +501,7 @@ case class PermissionDataV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[Proj
   * @param forGroup the group this permission applies to.
   * @param hasPermissions the administrative permissions.
   */
-case class AdministrativePermissionV1(iri: IRI,
-                                      forProject: IRI,
-                                      forGroup: IRI,
-                                      hasPermissions: Seq[PermissionV1]
-                                     ) extends Jsonable with PermissionV1JsonProtocol {
+case class AdministrativePermissionV1(iri: IRI, forProject: IRI, forGroup: IRI, hasPermissions: Set[PermissionV1]) extends Jsonable with PermissionV1JsonProtocol {
 
     def toJsValue = administrativePermissionV1Format.write(this)
 }
@@ -528,8 +518,8 @@ case class AdministrativePermissionV1(iri: IRI,
 case class NewAdministrativePermissionV1(iri: IRI,
                                          forProject: IRI,
                                          forGroup: IRI,
-                                         hasOldPermissions: Seq[PermissionV1],
-                                         hasNewPermissions: Seq[PermissionV1]
+                                         hasOldPermissions: Set[PermissionV1],
+                                         hasNewPermissions: Set[PermissionV1]
                                         )
 
 /**
@@ -540,7 +530,7 @@ case class NewAdministrativePermissionV1(iri: IRI,
   * @param forValue the IRI of the value.
   * @param hasPermissions the permissions.
   */
-case class ObjectAccessPermissionV1(forResource: Option[IRI], forValue: Option[IRI], hasPermissions: Seq[PermissionV1]) extends Jsonable with PermissionV1JsonProtocol {
+case class ObjectAccessPermissionV1(forResource: Option[IRI], forValue: Option[IRI], hasPermissions: Set[PermissionV1]) extends Jsonable with PermissionV1JsonProtocol {
 
     def toJsValue = objectAccessPermissionV1Format.write(this)
 }
@@ -555,8 +545,8 @@ case class ObjectAccessPermissionV1(forResource: Option[IRI], forValue: Option[I
   */
 case class NewObjectAccessPermissionV1(forResource: Option[IRI],
                                        forValue: Option[IRI],
-                                       oldHasPermissions: Seq[PermissionV1],
-                                       newHasPermissions: Seq[PermissionV1]
+                                       oldHasPermissions: Set[PermissionV1],
+                                       newHasPermissions: Set[PermissionV1]
                                       )
 
 /**
@@ -569,13 +559,7 @@ case class NewObjectAccessPermissionV1(forResource: Option[IRI],
   * @param forProperty
   * @param hasPermissions
   */
-case class DefaultObjectAccessPermissionV1(iri: IRI,
-                                           forProject: IRI,
-                                           forGroup: Option[IRI],
-                                           forResourceClass: Option[IRI],
-                                           forProperty: Option[IRI],
-                                           hasPermissions: Seq[PermissionV1]
-                                          )
+case class DefaultObjectAccessPermissionV1(iri: IRI, forProject: IRI, forGroup: Option[IRI], forResourceClass: Option[IRI], forProperty: Option[IRI], hasPermissions: Set[PermissionV1])
 
 /**
   * Represents information needed during default object access permission creation.
@@ -592,16 +576,16 @@ case class NewDefaultObjectAccessPermissionV1(iri: IRI,
                                               forGroup: IRI,
                                               forResourceClass: IRI,
                                               forProperty: IRI,
-                                              hasPermissions: Seq[PermissionV1]
+                                              hasPermissions: Set[PermissionV1]
                                              )
 
 /**
   * Case class representing a permission.
   * @param name the name of the permission.
-  * @param restrictions the optional set of IRIs providing additional information.
+  * @param additionalInformation an optional IRI (e.g., group IRI, resource class IRI).
   */
 case class PermissionV1(name: String,
-                        restrictions: Set[IRI]
+                        additionalInformation: Option[IRI]
                        ) extends Jsonable with PermissionV1JsonProtocol {
 
     def toJsValue = permissionV1Format.write(this)
@@ -619,49 +603,49 @@ object PermissionV1 {
     def ProjectResourceCreateAllPermission = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
-            restrictions = Set.empty[IRI]
+            additionalInformation = None
         )
     }
 
-    def ProjectResourceCreateRestrictedPermission(restrictions: Set[IRI]) = {
+    def ProjectResourceCreateRestrictedPermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission,
-            restrictions = restrictions
+            additionalInformation = Some(restriction)
         )
     }
 
     def ProjectAdminAllPermission = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectAdminAllPermission,
-            restrictions = Set.empty[IRI]
+            additionalInformation = None
         )
     }
 
     def ProjectAdminGroupAllPermission = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectAdminGroupAllPermission,
-            restrictions = Set.empty[IRI]
+            additionalInformation = None
         )
     }
 
-    def ProjectAdminGroupRestrictedPermission(restrictions: Set[IRI]) = {
+    def ProjectAdminGroupRestrictedPermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectAdminGroupRestrictedPermission,
-            restrictions = restrictions
+            additionalInformation = Some(restriction)
         )
     }
 
     def ProjectAdminRightsAllPermission = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectAdminRightsAllPermission,
-            restrictions = Set.empty[IRI]
+            additionalInformation = None
         )
     }
 
     def ProjectAdminOntologyAllPermission = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectAdminOntologyAllPermission,
-            restrictions = Set.empty[IRI]
+            additionalInformation = None
         )
     }
 
@@ -669,38 +653,38 @@ object PermissionV1 {
     // Object Access Permissions
     ///////////////////////////////////////////////////////////////////////////
 
-    def ChangeRightsPermission(restriction: Set[IRI]) = {
+    def ChangeRightsPermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ChangeRightsPermission,
-            restrictions = restriction
+            additionalInformation = Some(restriction)
         )
     }
 
-    def DeletePermission(restriction: Set[IRI]) = {
+    def DeletePermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.DeletePermission,
-            restrictions = restriction
+            additionalInformation = Some(restriction)
         )
     }
 
-    def ModifyPermission(restriction: Set[IRI]) = {
+    def ModifyPermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ModifyPermission,
-            restrictions = restriction
+            additionalInformation = Some(restriction)
         )
     }
 
-    def ViewPermission(restriction: Set[IRI]) = {
+    def ViewPermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ViewPermission,
-            restrictions = restriction
+            additionalInformation = Some(restriction)
         )
     }
 
-    def RestrictedViewPermission(restriction: Set[IRI]) = {
+    def RestrictedViewPermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.RestrictedViewPermission,
-            restrictions = restriction
+            additionalInformation = Some(restriction)
         )
     }
 }
@@ -778,7 +762,7 @@ trait PermissionV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
         }
     }
 
-    implicit val permissionV1Format: JsonFormat[PermissionV1] = jsonFormat(PermissionV1.apply, "name", "restrictions") // apply needed because we have an companion object of a case class
+    implicit val permissionV1Format: JsonFormat[PermissionV1] = jsonFormat(PermissionV1.apply, "name", "additionalInformation") // apply needed because we have an companion object of a case class
     implicit val administrativePermissionV1Format: JsonFormat[AdministrativePermissionV1] = jsonFormat(AdministrativePermissionV1, "iri", "forProject", "forGroup", "hasPermissions")
     implicit val objectAccessPermissionV1Format: JsonFormat[ObjectAccessPermissionV1] = jsonFormat(ObjectAccessPermissionV1, "forResource", "forValue", "hasPermissions")
     implicit val defaultObjectAccessPermissionV1Format: JsonFormat[DefaultObjectAccessPermissionV1] = jsonFormat6(DefaultObjectAccessPermissionV1)
