@@ -4,14 +4,14 @@
 <head>
     <meta charset="utf-8">
     <title>A Simple Page with CKEditor to test standoff creation</title>
-    <script src="http://cdn.ckeditor.com/4.6.1/standard/ckeditor.js"></script>
+    <script src="http://cdn.ckeditor.com/4.6.1/full/ckeditor.js"></script>
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <script type="text/javascript">
         'use strict';
 
-        $(document).ready(function() {
+        $(document).ready(function () {
 
-            var createStandoff = function() {
+            var createStandoff = function () {
 
                 // create the default mapping in Knora
                 var fd = new FormData();
@@ -28,7 +28,7 @@
                 console.log(content);
 
                 fd.append('json', JSON.stringify(params));
-                fd.append('xml', '<?xml version="1.0" encoding="UTF-8"?>\n' + content);
+                fd.append('xml', '<?xml version="1.0" encoding="UTF-8"?><text documentType="ckeditor">\n' + content + "</text>");
 
                 function make_base_auth(user, password) {
                     var tok = "anything-user" + ':' + "test";
@@ -37,89 +37,93 @@
                 }
 
 
-                var readTextValue = function(id) {
+                var readTextValue = function (id) {
 
-                    $.get('http://localhost:3333/v1/standoff/' + encodeURIComponent(id), function(data) {
+                    $.get('http://localhost:3333/v1/standoff/' + encodeURIComponent(id), function (data) {
                         console.log("result: ");
                         console.log(data.xml);
                     }, 'json');
 
+                };
+
+                $.ajax({
+                    url: "http://localhost:3333/v1/standoff",
+                    data: fd,
+                    cache: false,
+                    processData: false,
+                    contentType: false,
+                    type: 'POST',
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('Authorization', make_base_auth('anything-user', 'test'));
+                    },
+                    success: function (data, status, req) {
+
+                        console.log(data);
+
+
+                        readTextValue(data.id);
+
+
+                    },
+                    error: function (req, status, error) {
+                        console.log(req.responseJSON);
+                    }
+                });
+
+
             };
 
-            $.ajax({
-                url: "http://localhost:3333/v1/standoff",
-                data: fd,
-                cache: false,
-                processData: false,
-                contentType: false,
-                type: 'POST',
-                beforeSend: function(xhr) {
-                    xhr.setRequestHeader('Authorization', make_base_auth('anything-user', 'test'));
+            // specify allowed elements, attributes, and classes
+            // this must conform to the mapping to be used
+            var filter = ' p em strong strike u sub sup; a[!href](salsah-link); span[!data-date](date)';
+
+            var config = {
+                //extraPlugins: 'footnotes',
+                language: 'en', // customize language
+                allowedContent: filter,
+                pasteFilter: filter,
+                on: {
+                    instanceReady: function (event) {
+
+                        event.editor.setData('<p>This is a very stupid test</p>');
+
+                    }
                 },
-                success: function(data, status, req) {
+                //mathJaxLib : '//cdn.mathjax.org/mathjax/2.6-latest/MathJax.js?config=TeX-AMS_HTML',
+                //toolbar: [[ 'Source' ], [ 'footnotes' ]]
+                /*toolbar: [
+                 ['Source', '-', 'NewPage', 'Preview', '-', 'Templates'],
+                 ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'],
+                 '/', ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat', 'Link', 'Unlink']
+                 ]*/
+                // configuration for toolbar buttons
+                toolbar: [
+                    ['Source', 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat', 'Link', 'Unlink']
+                ]
+            };
 
-                    console.log(data);
-
-
-                    readTextValue(data.id);
-
-
-                },
-                error: function(req, status, error) {
-                    console.log(req.responseJSON);
-                }
-            });
-
-            //$.get("")
-
-
-        };
-
-        var config = {
-            //extraPlugins: 'footnotes',
-            language: 'en', // customize language
-            on: {
-                instanceReady: function(event) {
-
-                    event.editor.setData("<i>default text</i>");
-
-                }
-            },
-            //mathJaxLib : '//cdn.mathjax.org/mathjax/2.6-latest/MathJax.js?config=TeX-AMS_HTML',
-            //toolbar: [[ 'Source' ], [ 'footnotes' ]]
-            /*toolbar: [
-                    ['Source', '-', 'NewPage', 'Preview', '-', 'Templates'],
-                    ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'],
-                    '/', ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat', 'Link', 'Unlink']
-                ]*/
-            // configuration for toolbar buttons
-            toolbar: [
-                ['Source', 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat', 'Link', 'Unlink']
-            ]
-        };
-
-        // Replace the <textarea id="editor1"> with a CKEditor
-        // instance, using default configuration.
-        CKEDITOR.replace('editor1', config);
+            // Replace the <textarea id="editor1"> with a CKEditor
+            // instance, using default configuration.
+            CKEDITOR.replace('editor1', config);
 
 
-        var button = $("<button>").text("Send").on("click", function() {
+            var button = $("<button>").text("Send").on("click", function () {
 
 
-            createStandoff();
+                createStandoff();
 
-        }).appendTo($("div"));
+            }).appendTo($("div"));
 
         });
     </script>
 </head>
 
 <body>
-    <div>
+<div>
         <textarea name="editor1" id="editor1" rows="10" cols="80">
                 This is my textarea to be replaced with CKEditor.
             </textarea>
-    </div>
+</div>
 </body>
 
 </html>
