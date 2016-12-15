@@ -62,11 +62,11 @@ case class CreateMappingResponseV1(resourceIri: IRI, userdata: UserDataV1) exten
   *
   * Example:
   *
-  * namespace = Map("myXMLNamespace" -> Map("myXMLTagName" -> XMLTag(...)))
+  * namespace = Map("myXMLNamespace" -> Map("myXMLTagName" Map("myClassname" -> XMLTag(...))))
   *
   * @param namespace a Map of XML namespaces and a Map of tag names and [[XMLTag]].
   */
-case class MappingXMLtoStandoff(namespace: Map[String, Map[String, XMLTag]])
+case class MappingXMLtoStandoff(namespace: Map[String, Map[String, Map[String, XMLTag]]])
 
 /**
   * Represents a mapping between an XML tag and standoff entities (classes and properties).

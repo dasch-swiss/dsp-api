@@ -11,6 +11,7 @@
         <xs:unique name="tagname">
             <xs:selector xpath="mappingElement/tag"/>
             <xs:field xpath="name"/>
+            <xs:field xpath="class"/>
             <xs:field xpath="namespace"/>
         </xs:unique>
         <xs:unique name="standoffClass">
@@ -36,6 +37,14 @@
             <xs:sequence>
                 <!-- name of the XML element -->
                 <xs:element name="name">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <!-- name of the class to be used in combination with the element -->
+                <xs:element name="class">
                     <xs:simpleType>
                         <xs:restriction base="xs:string">
                             <xs:minLength value="1"/>

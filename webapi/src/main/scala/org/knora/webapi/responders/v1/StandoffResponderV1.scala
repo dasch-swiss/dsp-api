@@ -137,9 +137,11 @@ class StandoffResponderV1 extends ResponderV1 {
 
     }
 
-    // string constant used to mark the absence of an XML namespace
+    // string constant used to mark the absence of an XML namespace in the mapping definitioon of an XML element
     val noNamespace = "noNamespace"
 
+    // string constant used to mark the absence of a classname in the mapping definition of an XML element
+    val noClass = "noClass"
     /**
       * The name of the mapping cache.
       */
@@ -222,7 +224,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
             mappingElements: NodeSeq = mappingXML \ "mappingElement"
 
-            mappingXMLToStandoff: MappingXMLtoStandoff = mappingElements.foldLeft(MappingXMLtoStandoff(namespace = Map.empty[String, Map[String, XMLTag]])) {
+            mappingXMLToStandoff: MappingXMLtoStandoff = mappingElements.foldLeft(MappingXMLtoStandoff(namespace = Map.empty[String, Map[String, Map[String, XMLTag]]])) {
                 case (acc: MappingXMLtoStandoff, curNode: Node) =>
 
                     // get the name of the XML tag
@@ -231,8 +233,11 @@ class StandoffResponderV1 extends ResponderV1 {
                     // get the namespace the tag is defined in
                     val namespace = (curNode \ "tag" \ "namespace").headOption.getOrElse(throw BadRequestException(s"no '<namespace>' given for node $curNode")).text
 
+                    // get the class the tag is combined with
+                    val classname = (curNode \ "tag" \ "class").headOption.getOrElse(throw BadRequestException(s"no '<classname>' given for node $curNode")).text
+
                     // get tags from this namespace if already existent, otherwise create an empty map
-                    val namespaceMap = acc.namespace.getOrElse(namespace, Map.empty[String, XMLTag])
+                    val namespaceMap: Map[String, Map[String, XMLTag]] = acc.namespace.getOrElse(namespace, Map.empty[String, Map[String, XMLTag]])
 
                     // get the standoff class Iri
                     val standoffClassIri = (curNode \ "standoffClass" \ "classIri").headOption.getOrElse(throw BadRequestException(s"no '<classIri>' given for node $curNode")).text
@@ -286,12 +291,26 @@ class StandoffResponderV1 extends ResponderV1 {
                     }
 
                     // add the current tag to the map
-                    val newNamespaceMap = namespaceMap.get(tagname) match {
-                        case Some(tag) => throw BadRequestException("Duplicate tag name in namespace")
-                        case None => namespaceMap + (tagname -> XMLTag(name = tagname, mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri, attributesToProps = attributes, dataType = dataTypeOption, dataTypeXMLAttribute = dataTypeAttributeOption)))
+                    val newNamespaceMap: Map[String, Map[String, XMLTag]] = namespaceMap.get(tagname) match {
+                        case Some(tagMap: Map[String, XMLTag]) =>
+                            tagMap.get(classname) match {
+                                case Some(existingClassname) => throw BadRequestException("Duplicate tag and classname combination in the same namespace")
+                                case None =>
+                                    // create the definition for the current element
+                                    val xmlElementDef = XMLTag(name = tagname, mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri, attributesToProps = attributes, dataType = dataTypeOption, dataTypeXMLAttribute = dataTypeAttributeOption))
+
+                                    // combine the definition for the this classname with the existing definitions beloning to the same element
+                                    val combinedClassDef: Map[String, XMLTag] = namespaceMap(tagname) + (classname -> xmlElementDef)
+
+                                    // combine all elements for this namespace
+                                    namespaceMap + (tagname -> combinedClassDef)
+
+                            }
+                        case None =>
+                            namespaceMap + (tagname -> Map(classname -> XMLTag(name = tagname, mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri, attributesToProps = attributes, dataType = dataTypeOption, dataTypeXMLAttribute = dataTypeAttributeOption))))
                     }
 
-                    // recreate the whole structure
+                    // recreate the whole structure for all namespaces
                     MappingXMLtoStandoff(
                         namespace = acc.namespace + (namespace -> newNamespaceMap)
                     )
@@ -303,6 +322,8 @@ class StandoffResponderV1 extends ResponderV1 {
 
             // add the mapping to the cache
             _ = CacheUtil.put(cacheName = MappingCacheName, key = mappingIri, value = mappingXMLToStandoff)
+
+            //_ = println(mappingXMLToStandoff)
 
         } yield mappingXMLToStandoff
 
@@ -440,9 +461,9 @@ class StandoffResponderV1 extends ResponderV1 {
       * Turns a sequence of [[StandoffTag]] returned by [[StandoffUtil.xml2TextWithStandoff]] into a sequence of [[StandoffTagV1]].
       * This method handles the creation of data type specific properties (e.g. for a date value) on the basis of the provided mapping.
       *
-      * @param textWithStandoff sequence of [[StandoffTag]] returned by [[StandoffUtil.xml2TextWithStandoff]].
+      * @param textWithStandoff     sequence of [[StandoffTag]] returned by [[StandoffUtil.xml2TextWithStandoff]].
       * @param mappingXMLtoStandoff the mapping to be used.
-      * @param standoffEntities the standoff entities (classes and properties) to be used.
+      * @param standoffEntities     the standoff entities (classes and properties) to be used.
       * @return a sequence of [[StandoffTagV1]].
       */
     private def convertStandoffUtilStandoffTagToStandoffTagV1(textWithStandoff: TextWithStandoff, mappingXMLtoStandoff: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1): Seq[StandoffTagV1] = {
@@ -455,10 +476,16 @@ class StandoffResponderV1 extends ResponderV1 {
                     case Some(namespace) => namespace
                 }
 
+                val classname: String = standoffNodeFromXML.attributes.find(_.key == "class") match {
+                    case None => noClass
+                    case Some(classAttribute: StandoffTagAttribute) => classAttribute.value
+                }
+
                 // get the mapping corresponding to the given namespace and tagname
                 val standoffDefFromMapping = mappingXMLtoStandoff.namespace
                     .getOrElse(xmlNamespace, throw BadRequestException(s"namespace ${xmlNamespace} not defined in mapping"))
-                    .getOrElse(standoffNodeFromXML.tagName, throw BadRequestException(s"the standoff class for the tag '${standoffNodeFromXML.tagName}' could not be found in the provided mapping")).mapping
+                    .getOrElse(standoffNodeFromXML.tagName, throw BadRequestException(s"the standoff class for the tag '${standoffNodeFromXML.tagName}' could not be found in the provided mapping"))
+                    .getOrElse(classname, throw BadRequestException(s"the standoff class for the classname $classname in combination with the tag '${standoffNodeFromXML.tagName}' could not be found in the provided mapping")).mapping
 
                 val standoffClassIri: IRI = standoffDefFromMapping.standoffClassIri
 
@@ -723,21 +750,24 @@ class StandoffResponderV1 extends ResponderV1 {
       * Gets the required standoff entities (classes and properties) from the mapping and requests information about these entities from the ontology responder.
       *
       * @param mappingXMLtoStandoff the mapping to be used.
-      * @param userProfile the client that made the request.
+      * @param userProfile          the client that made the request.
       * @return a [[StandoffEntityInfoGetResponseV1]] holding information about standoff classes and properties.
       */
     private def getStandoffEntitiesFromMapping(mappingXMLtoStandoff: MappingXMLtoStandoff, userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {
 
-        for {
-
         // collect standoff classes Iris from mapping
-            standoffTagIris: Set[IRI] <- Future(mappingXMLtoStandoff.namespace.flatMap {
-                case (namespace: String, mapping: Map[String, XMLTag]) =>
-                    mapping.map {
-                        case (tagname: String, tagItem: XMLTag) =>
-                            tagItem.mapping.standoffClassIri
-                    }
-            }.toSet)
+        val standoffTagIris: Set[IRI] = mappingXMLtoStandoff.namespace.flatMap {
+            case (namespace: String, elementMapping: Map[String, Map[String, XMLTag]]) =>
+                elementMapping.flatMap {
+                    case (elementName, classnameMapping) =>
+                        classnameMapping.map {
+                            case (classname: String, tagItem: XMLTag) =>
+                                tagItem.mapping.standoffClassIri
+                        }
+                }
+        }.toSet
+
+        for {
 
             // request information about standoff classes that should be created
             standoffClassEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffClassIris = standoffTagIris, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
@@ -864,7 +894,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
 
     // maps a standoff class to an XML tag with attributes
-    case class XMLTagItem(namespace: String, tagname: String, tagItem: XMLTag, attributes: Map[IRI, XMLAttrItem])
+    case class XMLTagItem(namespace: String, tagname: String, classname: String, tagItem: XMLTag, attributes: Map[IRI, XMLAttrItem])
 
     // maps a standoff property to XML attributes
     case class XMLAttrItem(namespace: String, attrname: String)
@@ -881,9 +911,9 @@ class StandoffResponderV1 extends ResponderV1 {
     private def invertXMLToStandoffMapping(mappingXMLtoStandoff: MappingXMLtoStandoff): Map[IRI, XMLTagItem] = {
 
         // check for duplicate standoff class Iris
-        val classIris: Iterable[IRI] = mappingXMLtoStandoff.namespace.values.flatten.map {
-            case (tagname, tagItem) =>
-                tagItem.mapping.standoffClassIri
+        val classIris: Iterable[IRI] = mappingXMLtoStandoff.namespace.values.flatten.flatMap {
+            case (tagname: String, tagItem: Map[String, XMLTag]) =>
+                tagItem.values.map(_.mapping.standoffClassIri)
         }
 
         // check for duplicate standoff class Iris
@@ -892,38 +922,43 @@ class StandoffResponderV1 extends ResponderV1 {
         }
 
         mappingXMLtoStandoff.namespace.flatMap {
-            case (tagNamespace: String, tagMappings: Map[String, XMLTag]) =>
+            case (tagNamespace: String, tagMapping: Map[String, Map[String, XMLTag]]) =>
 
-                tagMappings.map {
-                    case (tagname: String, tagItem: XMLTag) =>
+                tagMapping.flatMap {
+                    case (tagname: String, classnameMapping: Map[String, XMLTag]) =>
 
-                        // collect all the property Iris defined in the attributes for the current tag
-                        // over all namespaces
-                        val propIris: Iterable[IRI] = tagItem.mapping.attributesToProps.values.flatten.map {
-                            case (attrName, propIri) =>
-                                propIri
-                        }
+                        classnameMapping.map {
+                            case (classname: String, tagItem: XMLTag) =>
 
-                        // check for duplicate property Iris
-                        if (propIris.size != propIris.toSet.size) {
-                            throw BadRequestException(s"the same property Iri is used more than once for the attributes mapping for tag $tagname")
-                        }
-
-                        // inverts the mapping and makes standoff property Iris keys (for attributes)
-                        // this is makes it easier to map standoff properties back to XML attributes
-                        val attrItems: Map[IRI, XMLAttrItem] = tagItem.mapping.attributesToProps.flatMap {
-                            case (attrNamespace: String, attrMappings: Map[String, IRI]) =>
-
-                                attrMappings.map {
+                                // collect all the property Iris defined in the attributes for the current tag
+                                // over all namespaces
+                                val propIris: Iterable[IRI] = tagItem.mapping.attributesToProps.values.flatten.map {
                                     case (attrName, propIri) =>
-                                        propIri -> XMLAttrItem(attrNamespace, attrName)
+                                        propIri
                                 }
-                        }
 
-                        // standoff class Iri -> XMLTagItem(... attributes -> attrItems)
-                        tagItem.mapping.standoffClassIri -> XMLTagItem(tagNamespace, tagname, tagItem, attributes = attrItems)
+                                // check for duplicate property Iris
+                                if (propIris.size != propIris.toSet.size) {
+                                    throw BadRequestException(s"the same property Iri is used more than once for the attributes mapping for tag $tagname")
+                                }
+
+                                // inverts the mapping and makes standoff property Iris keys (for attributes)
+                                // this is makes it easier to map standoff properties back to XML attributes
+                                val attrItems: Map[IRI, XMLAttrItem] = tagItem.mapping.attributesToProps.flatMap {
+                                    case (attrNamespace: String, attrMappings: Map[String, IRI]) =>
+
+                                        attrMappings.map {
+                                            case (attrName, propIri) =>
+                                                propIri -> XMLAttrItem(attrNamespace, attrName)
+                                        }
+                                }
+
+                                // standoff class Iri -> XMLTagItem(... attributes -> attrItems)
+                                tagItem.mapping.standoffClassIri -> XMLTagItem(namespace = tagNamespace, tagname = tagname, classname = classname, tagItem = tagItem, attributes = attrItems)
+                        }
 
                 }
+
         }
 
 
@@ -938,6 +973,8 @@ class StandoffResponderV1 extends ResponderV1 {
       * @return a [[StandoffGetResponseV1]].
       */
     private def getStandoffV1(valueIri: IRI, userProfile: UserProfileV1): Future[StandoffGetResponseV1] = {
+
+        val enterMillis: Long = java.lang.System.currentTimeMillis()
 
         // converts a sequence of `StandoffTagAttributeV1` to a sequence of `StandoffTagAttribute`
         def convertStandoffAttributeTags(mapping: Map[IRI, XMLAttrItem], attributes: Seq[StandoffTagAttributeV1]): Seq[StandoffTagAttribute] = {
@@ -957,10 +994,16 @@ class StandoffResponderV1 extends ResponderV1 {
             }
         }
 
+        println("---------------")
+        println("ask ValuesResponder" + (java.lang.System.currentTimeMillis() - enterMillis))
         for {
+
 
         // ask the ValuesResponder to query the text value.
             value: ValueGetResponseV1 <- (responderManager ? ValueGetRequestV1(valueIri = valueIri, userProfile = userProfile)).mapTo[ValueGetResponseV1]
+
+
+            _ = println("got value from ValuesResponder" + (java.lang.System.currentTimeMillis() - enterMillis))
 
             // make sure it is a text value
             _ = if (value.valuetype != OntologyConstants.KnoraBase.TextValue) {
@@ -973,11 +1016,17 @@ class StandoffResponderV1 extends ResponderV1 {
                 case _ => throw BadRequestException(s"value could not be interpreted as a TextValueV1")
             }
 
+            _ = println("ask for mapping " + (java.lang.System.currentTimeMillis() - enterMillis))
+
             // get the mapping that was used when creating the standoff values
             mappingXMLtoStandoff: MappingXMLtoStandoff <- getMapping(textValue.mappingIri.getOrElse(throw BadRequestException(s"the requested text value was created without a mapping")), userProfile)
 
+            _ = println("got mapping " + (java.lang.System.currentTimeMillis() - enterMillis))
+
             // inverts the mapping and makes standoff class Iris keys (for tags)
             mappingStandoffToXML: Map[IRI, XMLTagItem] = invertXMLToStandoffMapping(mappingXMLtoStandoff)
+
+            _ = println("mapping inverted" + (java.lang.System.currentTimeMillis() - enterMillis))
 
             standoffUtil = new StandoffUtil(writeAllIDsToXml = false)
 
@@ -1076,6 +1125,20 @@ class StandoffResponderV1 extends ResponderV1 {
                     }
 
 
+                    // check in mapping if the XML element has an attribute class to be recreated
+                    val classAttributeFromMapping = xmlItemForStandoffClass.classname match {
+                        case `noClass` => Seq.empty[StandoffTagAttribute]
+                        case classname => Vector(
+                            StandoffTagAttribute(
+                                key = "class",
+                                value = classname,
+                                xmlNamespace = None
+                            )
+                        )
+                    }
+
+                    val attributesWithClass = attributes ++ classAttributeFromMapping
+
                     if (standoffTagV1.endIndex.isDefined) {
                         // it is a free standoff tag
                         FreeStandoffTag(
@@ -1091,7 +1154,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             endIndex = standoffTagV1.endIndex.getOrElse(throw InconsistentTriplestoreDataException(s"end index is missing for a free standoff tag belonging to $valueIri")),
                             startParentIndex = standoffTagV1.startParentIndex,
                             endParentIndex = standoffTagV1.endParentIndex,
-                            attributes = attributes.toSet
+                            attributes = attributesWithClass.toSet
                         )
                     } else {
                         // it is a hierarchical standoff tag
@@ -1106,15 +1169,20 @@ class StandoffResponderV1 extends ResponderV1 {
                             endPosition = standoffTagV1.endPosition,
                             index = standoffTagV1.startIndex.getOrElse(throw InconsistentTriplestoreDataException(s"start index is missing for a hierarchical standoff tag belonging to $valueIri")),
                             parentIndex = standoffTagV1.startParentIndex,
-                            attributes = attributes.toSet
+                            attributes = attributesWithClass.toSet
                         )
                     }
 
             }
 
+            _ = println("standoff converted " + (java.lang.System.currentTimeMillis() - enterMillis))
+
             textWithStandoff = TextWithStandoff(text = textValue.utf8str, standoff = standoffTags)
 
             xml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
+
+            _ = println("xml created " + (java.lang.System.currentTimeMillis() - enterMillis))
+            _ = println("++++++++++++")
 
         } yield StandoffGetResponseV1(xml = xml, userdata = userProfile.userData)
 

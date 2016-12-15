@@ -184,7 +184,11 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             """<?xml version="1.0" encoding="UTF-8"?>
               |<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="mapping.xsd">
               |  <mappingElement>
-              |    <tag><name>text</name><namespace>noNamespace</namespace></tag>
+              |    <tag>
+              |     <name>text</name>
+              |     <class>noClass</class>
+              |     <namespace>noNamespace</namespace>
+              |    </tag>
               |    <standoffClass>
               |      <classIri>http://www.knora.org/ontology/knora-base#StandoffRootTag</classIri>
               |      <attributes>
@@ -196,6 +200,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
               |  <mappingElement>
               |    <tag>
               |      <name>p</name>
+              |      <class>noClass</class>
               |      <namespace>noNamespace</namespace>
               |    </tag>
               |    <standoffClass>
@@ -206,6 +211,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
               |  <mappingElement>
               |    <tag>
               |      <name>i</name>
+              |      <class>noClass</class>
               |      <namespace>noNamespace</namespace>
               |    </tag>
               |    <standoffClass>
@@ -216,6 +222,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
               |  <mappingElement>
               |    <tag>
               |      <name>b</name>
+              |      <class>noClass</class>
               |      <namespace>noNamespace</namespace>
               |    </tag>
               |    <standoffClass>
@@ -226,7 +233,9 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
               |  <mappingElement>
               |    <tag>
               |      <name>facsimile</name>
-              |      <namespace>noNamespace</namespace></tag>
+              |      <class>noClass</class>
+              |      <namespace>noNamespace</namespace>
+              |      </tag>
               |    <standoffClass>
               |      <classIri>http://www.knora.org/ontology/beol#StandoffFacsimileTag</classIri>
               |      <datatype><type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
@@ -238,6 +247,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
               |  <mappingElement>
               |    <tag>
               |      <name>math</name>
+              |      <class>noClass</class>
               |      <namespace>noNamespace</namespace>
               |    </tag>
               |    <standoffClass>
@@ -248,6 +258,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
               |  <mappingElement>
               |    <tag>
               |      <name>ref</name>
+              |      <class>noClass</class>
               |      <namespace>noNamespace</namespace>
               |    </tag>
               |    <standoffClass>
@@ -353,7 +364,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             val mappingRequest = Post(baseApiUrl + "/v1/mapping/" + URLEncoder.encode(RequestParams.anythingProjectIri, "UTF-8"), HttpEntity(ContentTypes.`text/xml(UTF-8)`, RequestParams.mappingXML)) ~> addCredentials(BasicHttpCredentials(anythingUser, password))
             val mappingResponse: HttpResponse = singleAwaitingRequest(mappingRequest, 20.seconds)
 
-            assert(mappingResponse.status == StatusCodes.OK, "standoff mapping creation route returned a non successful HTTP status code")
+            assert(mappingResponse.status == StatusCodes.OK, "standoff mapping creation route returned a non successful HTTP status code: " + mappingResponse.entity.toString)
 
             RequestParams.mappingIri = ResponseUtils.getStringMemberFromResponse(mappingResponse, "resourceIri")
 

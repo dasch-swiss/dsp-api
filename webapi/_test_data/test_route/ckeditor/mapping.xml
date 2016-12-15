@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../src/main/resources/mappingXMLToStandoff.xsd">
   <mappingElement>
-    <tag><name>text</name><namespace>noNamespace</namespace></tag>
+    <tag><name>text</name><class>noClass</class><namespace>noNamespace</namespace></tag>
     <standoffClass>
       <classIri>http://www.knora.org/ontology/knora-base#StandoffRootTag</classIri>
       <attributes>
@@ -13,6 +13,7 @@
   <mappingElement>
     <tag>
       <name>p</name>
+      <class>noClass</class>
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
@@ -23,6 +24,7 @@
   <mappingElement>
     <tag>
       <name>em</name>
+      <class>noClass</class>
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
@@ -33,6 +35,7 @@
   <mappingElement>
     <tag>
       <name>strong</name>
+      <class>noClass</class>
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
@@ -43,18 +46,17 @@
   <mappingElement>
     <tag>
       <name>u</name>
+      <class>noClass</class>
       <namespace>noNamespace</namespace></tag>
     <standoffClass>
       <classIri>http://www.knora.org/ontology/knora-base#StandoffUnderlineTag</classIri>
-      <datatype><type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
-        <attributeName>src</attributeName>
-      </datatype>
     </standoffClass>
   </mappingElement>
   
   <mappingElement>
     <tag>
       <name>sub</name>
+      <class>noClass</class>
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
@@ -65,6 +67,7 @@
   <mappingElement>
     <tag>
       <name>sup</name>
+      <class>noClass</class>
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
@@ -74,7 +77,19 @@
 
   <mappingElement>
     <tag>
+      <name>strike</name>
+      <class>noClass</class>
+      <namespace>noNamespace</namespace>
+    </tag>
+    <standoffClass>
+      <classIri>http://www.knora.org/ontology/knora-base#StandoffStrikethroughTag</classIri>
+    </standoffClass>
+  </mappingElement>
+
+  <mappingElement>
+    <tag>
       <name>a</name>
+      <class>noClass</class>
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
@@ -85,4 +100,19 @@
       </datatype>
     </standoffClass>
   </mappingElement>
+
+<mappingElement>
+  <tag>
+    <name>a</name>
+    <class>salsah-link</class>
+    <namespace>noNamespace</namespace>
+  </tag>
+  <standoffClass>
+    <classIri>http://www.knora.org/ontology/knora-base#StandoffLinkTag</classIri>
+    <datatype>
+      <type>http://www.knora.org/ontology/knora-base#StandoffLinkTag</type>
+      <attributeName>href</attributeName>
+    </datatype>
+  </standoffClass>
+</mappingElement>
 </mapping>
