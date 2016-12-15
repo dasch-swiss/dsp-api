@@ -48,7 +48,7 @@ WHERE {
     ?resource ?property ?searchValue ;
         knora-base:isDeleted false ;
         rdf:type ?resourceClass .
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
-    ?property rdfs:subPropertyOf+ knora-base:hasValue .
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+    ?property rdfs:subPropertyOf* knora-base:hasValue .
     ?resource knora-base:attachedToProject ?project .
 }

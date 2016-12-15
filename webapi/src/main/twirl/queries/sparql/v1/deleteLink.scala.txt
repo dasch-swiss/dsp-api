@@ -138,7 +138,7 @@ WHERE {
 
     ?linkSource rdf:type ?linkSourceClass ;
         knora-base:isDeleted false .
-    ?linkSourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?linkSourceClass rdfs:subClassOf* knora-base:Resource .
 
     @* Make sure a direct link exists between the two resources. *@
 

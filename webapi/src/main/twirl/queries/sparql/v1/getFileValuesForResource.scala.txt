@@ -46,10 +46,10 @@ WHERE {
             knora-base:isDeleted false .
 
     # only resources that are subclasses of knora-base:Representation can have file values.
-    ?resourceClass rdfs:subClassOf+ knora-base:Representation .
+    ?resourceClass rdfs:subClassOf* knora-base:Representation .
 
     ?resIri ?p ?fileValueIri .
-    ?p rdfs:subPropertyOf+ knora-base:hasFileValue .
+    ?p rdfs:subPropertyOf* knora-base:hasFileValue .
 
     OPTIONAL {
         ?fileValueIri knora-base:qualityLevel ?quality .

@@ -43,12 +43,12 @@ WHERE {
     ?resource rdf:type ?resourceClass ;
         knora-base:isDeleted false .
 
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
 
     {
         @* Query statements about the resource's file values. *@
 
-        ?prop rdfs:subPropertyOf+ knora-base:hasFileValue .
+        ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
         BIND(true AS ?isFileValue)
 
         @* Get the file value's project if it has one, otherwise use the resource's project. *@
@@ -80,7 +80,7 @@ WHERE {
         ?resource ?prop ?obj .
 
         FILTER NOT EXISTS {
-            ?prop rdfs:subPropertyOf+ knora-base:resourceProperty .
+            ?prop rdfs:subPropertyOf* knora-base:resourceProperty .
         }
     }
 }

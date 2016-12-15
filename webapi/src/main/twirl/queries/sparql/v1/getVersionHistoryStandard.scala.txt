@@ -51,7 +51,7 @@ WHERE {
     ?currentValue knora-base:isDeleted false .
 
     ?resource ?prop ?currentValue .
-    ?prop rdfs:subPropertyOf+ knora-base:hasValue .
+    ?prop rdfs:subPropertyOf* knora-base:hasValue .
     ?resource knora-base:attachedToProject ?resourceProject .
 
     ?currentValue knora-base:previousValue* ?value .

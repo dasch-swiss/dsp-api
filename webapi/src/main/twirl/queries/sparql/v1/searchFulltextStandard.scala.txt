@@ -100,9 +100,9 @@ WHERE {
         # If this clause is executed, it is a value object. We set ?containingResource to the resource that contains the matching value object.
 
         ?matchingSubject a ?valueObjectType .
-        ?valueObjectType rdfs:subClassOf+ knora-base:Value .
+        ?valueObjectType rdfs:subClassOf* knora-base:Value .
         ?containingResource ?resourceProperty ?matchingSubject .
-        ?resourceProperty rdfs:subPropertyOf+ knora-base:hasValue .
+        ?resourceProperty rdfs:subPropertyOf* knora-base:hasValue .
 
         FILTER(?valueObjectType != knora-base:LinkValue)
         ?containingResource knora-base:isDeleted false .
@@ -157,7 +157,7 @@ WHERE {
 
             @* Ensure that each matching resource is a knora-base:Resource. *@
 
-            ?resClass rdfs:subClassOf+ knora-base:Resource .
+            ?resClass rdfs:subClassOf* knora-base:Resource .
             ?resource a ?resClass .
 
         }

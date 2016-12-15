@@ -49,7 +49,7 @@ WHERE {
         ?resourceClass rdfs:subClassOf ?restriction .
         ?restriction rdf:type owl:Restriction .
         ?restriction owl:onProperty ?cardinalityProp .
-        ?cardinalityProp rdfs:subPropertyOf+ knora-base:resourceProperty .
+        ?cardinalityProp rdfs:subPropertyOf* knora-base:resourceProperty .
         ?restriction ?cardinality ?cardinalityVal .
         FILTER(?cardinality = owl:cardinality || ?cardinality = owl:minCardinality || ?cardinality = owl:maxCardinality)
     }

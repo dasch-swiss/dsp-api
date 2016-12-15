@@ -550,7 +550,7 @@ WHERE {
 
             @* Ensure that each matching resource is a knora-base:Resource. *@
 
-            ?resClass rdfs:subClassOf+ knora-base:Resource .
+            ?resClass rdfs:subClassOf* knora-base:Resource .
             ?resource a ?resClass .
 
         }

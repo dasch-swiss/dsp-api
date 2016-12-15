@@ -76,7 +76,7 @@ WHERE {
 
     ?resource rdf:type ?resourceClass ;
         knora-base:isDeleted false .
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
 
     @* Get the link source's last modification date, if it has one, so we can update it. *@
 

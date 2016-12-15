@@ -39,7 +39,7 @@ SELECT ?objPred ?objObj ?predStandoff ?objStandoff
 WHERE {
     BIND(IRI("@valueIri") AS ?obj)
 
-    ?resourceProp rdfs:subPropertyOf+ knora-base:hasValue .
+    ?resourceProp rdfs:subPropertyOf* knora-base:hasValue .
 
     {
         ?resource ?resourceProp ?obj .

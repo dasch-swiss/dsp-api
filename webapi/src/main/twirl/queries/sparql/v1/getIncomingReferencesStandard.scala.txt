@@ -47,7 +47,7 @@ WHERE {
     ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
 
     FILTER NOT EXISTS {
-        ?linkProp rdfs:subPropertyOf+ knora-base:isPartOf .
+        ?linkProp rdfs:subPropertyOf* knora-base:isPartOf .
     }
 
     ?referringResource ?linkProp ?resource ;
@@ -59,7 +59,7 @@ WHERE {
         ?referringResource ?prop ?obj .
 
         FILTER NOT EXISTS {
-            ?prop rdfs:subPropertyOf+ knora-base:resourceProperty .
+            ?prop rdfs:subPropertyOf* knora-base:resourceProperty .
         }
     }
     UNION

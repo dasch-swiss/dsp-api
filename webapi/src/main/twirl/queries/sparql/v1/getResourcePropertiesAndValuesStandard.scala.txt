@@ -41,16 +41,16 @@ WHERE {
 
     ?resource rdf:type ?resourceClass ;
         knora-base:isDeleted false .
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
 
     {
         @* Get properties that point to Value objects. *@
 
-        ?prop rdfs:subPropertyOf+ knora-base:hasValue .
+        ?prop rdfs:subPropertyOf* knora-base:hasValue .
 
         @* Exclude FileValue objects, because if the resource is a representation, we get its file values with its resource info. *@
         FILTER NOT EXISTS {
-            ?prop rdfs:subPropertyOf+ knora-base:hasFileValue .
+            ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
         }
 
         @* Identify properties that point to LinkValue objects. *@

@@ -46,7 +46,8 @@ SELECT ?sourceObject
        ?linkValueOwner
        ?linkValueProject
        ?linkValuePermissions
-       ?firstprop ?fileValue
+       ?firstprop
+       ?fileValue
        ?isPreview
        ?internalFilename
        ?internalMimeType
@@ -63,17 +64,17 @@ WHERE {
     ?resource rdf:type ?resourceClass ;
          knora-base:isDeleted false .
 
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
 
     # Find something that relates to this resource via knora-base:isPartOf.
 
-    ?linkingProp rdfs:subPropertyOf+ knora-base:isPartOf .
+    ?linkingProp rdfs:subPropertyOf* knora-base:isPartOf .
 
     ?sourceObject ?linkingProp ?resource ;
       knora-base:isDeleted false .
 
     OPTIONAL {
-        ?seqProp rdfs:subPropertyOf+ knora-base:seqnum .
+        ?seqProp rdfs:subPropertyOf* knora-base:seqnum .
         ?sourceObject ?seqProp ?seqnumVal .
         ?seqnumVal knora-base:valueHasInteger ?seqnum .
     }
