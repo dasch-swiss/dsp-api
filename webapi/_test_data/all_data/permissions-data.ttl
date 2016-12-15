@@ -145,7 +145,7 @@
 
                       knora-base:forProject <http://data.knora.org/projects/77275339> ;
 
-                      knora-base:forResourceClass incunabula:Book ;
+                      knora-base:forResourceClass incunabula:book ;
 
                       knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
 
@@ -157,7 +157,7 @@
 
                       knora-base:forProject <http://data.knora.org/projects/77275339> ;
 
-                      knora-base:forProperty incunabula:Page ;
+                      knora-base:forResourceClass incunabula:page ;
 
                       knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
 

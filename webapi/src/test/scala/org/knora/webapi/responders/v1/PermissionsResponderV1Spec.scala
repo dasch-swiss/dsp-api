@@ -28,6 +28,8 @@ import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, Re
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.KnoraIdUtil
+import org.rogach.scallop.ArgType.V
+import sun.lwawt.macosx.CImage.Creator
 
 import scala.collection.Map
 import scala.concurrent.Await
@@ -287,22 +289,22 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class (system resource class)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = OntologyConstants.KnoraBase.LinkObj, incunabulaUser.permissionData)
-                expectMsg(Some("default object access permissions string"))
+                expectMsg(Some("V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember"))
             }
 
             "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property (system property)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri = INCUNABULA_PROJECT_IRI, propertyIri = OntologyConstants.KnoraBase.HasStillImageFileValue, incunabulaUser.permissionData)
-                expectMsg(Some("default object access permissions string"))
+                expectMsg(Some("V knora-base:KnownUser|M knora-base:ProjectMember,knora-base:Creator|RV knora-base:UnknownUser"))
             }
 
             "return the default object access permissions 'string' for the 'incunabula:Book' resource class (project resource class)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = INCUNABULA_BOOK_RESOURCE_CLASS, incunabulaUser.permissionData)
-                expectMsg(Some("default object access permissions string"))
+                expectMsg(Some("V knora-base:KnownUser|M knora-base:ProjectMember|RV knora-base:UnknownUser|CR knora-base:Creator"))
             }
 
             "return the default object access permissions 'string' for the 'incunabula:Page' resource class (project resource class)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = INCUNABULA_PAGE_RESOURCE_CLASS, incunabulaUser.permissionData)
-                expectMsg(Some("default object access permissions string"))
+                expectMsg(Some("V knora-base:KnownUser|M knora-base:ProjectMember|RV knora-base:UnknownUser|CR knora-base:Creator"))
             }
 
         }
@@ -322,7 +324,19 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 result should equal(multiuserUserProfileV1.permissionData.defaultObjectAccessPermissionsPerProject)
             }
 
-            "parse permissions" ignore {}
+            "parse permissions" in {
+                val hasPermissionsString = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser,http://data.knora.org/groups/customgroup|RV knora-base:UnknownUser"
+
+                val permissionsSet = Set(
+                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.ViewPermission("http://data.knora.org/groups/customgroup"),
+                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                )
+
+                underlyingActorUnderTest.parsePermissions(Some(hasPermissionsString), PermissionType.OAP) should equal(permissionsSet)
+            }
 
             "build a permission object" in {
                 underlyingActorUnderTest.buildPermissionObject(
@@ -337,7 +351,64 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 )
             }
 
-            "squash permissions" ignore {}
+            "remove duplicate permissions" in {
+
+                val duplicatedPermissions = Seq(
+                    PermissionV1.RestrictedViewPermission("1"),
+                    PermissionV1.RestrictedViewPermission("1"),
+                    PermissionV1.RestrictedViewPermission("2"),
+                    PermissionV1.ChangeRightsPermission("2"),
+                    PermissionV1.ChangeRightsPermission("3"),
+                    PermissionV1.ChangeRightsPermission("3")
+                )
+
+                val deduplicatedPermissions = Set(
+                    PermissionV1.RestrictedViewPermission("1"),
+                    PermissionV1.RestrictedViewPermission("2"),
+                    PermissionV1.ChangeRightsPermission("2"),
+                    PermissionV1.ChangeRightsPermission("3")
+                )
+
+                val result = underlyingActorUnderTest.removeDuplicatePermissions(duplicatedPermissions)
+                result.size should equal(deduplicatedPermissions.size)
+                result should contain allElementsOf deduplicatedPermissions
+
+            }
+
+            "remove lesser permissions" in {
+                val withLesserPermissions = Set(
+                    PermissionV1.RestrictedViewPermission("1"),
+                    PermissionV1.ViewPermission("1"),
+                    PermissionV1.ModifyPermission("2"),
+                    PermissionV1.ChangeRightsPermission("1"),
+                    PermissionV1.DeletePermission("2")
+                )
+
+                val withoutLesserPermissions = Set(
+                    PermissionV1.ChangeRightsPermission("1"),
+                    PermissionV1.DeletePermission("2")
+                )
+
+                val result = underlyingActorUnderTest.removeLesserPermissions(withLesserPermissions, PermissionType.OAP)
+                result.size should equal(withoutLesserPermissions.size)
+                result should contain allElementsOf withoutLesserPermissions
+            }
+
+            "create permissions string" in {
+                val permissions = Set(
+                    PermissionV1.ChangeRightsPermission("1"),
+                    PermissionV1.DeletePermission("2"),
+                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser)
+                )
+
+                val permissionsString = "M knora-base:ProjectMember|V knora-base:KnownUser|D 2|CR knora-base:Creator,1"
+
+                val result = underlyingActorUnderTest.createHasPermissionsString(permissions, PermissionType.OAP)
+                result should equal(Some(permissionsString))
+
+            }
 
         }
     }

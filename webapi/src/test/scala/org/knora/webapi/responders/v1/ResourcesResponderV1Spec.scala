@@ -24,8 +24,10 @@ import java.util.UUID
 
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{ObjectAccessPermissionV1, ObjectAccessPermissionsForResourceGetV1, PermissionV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -41,6 +43,12 @@ import scala.concurrent.duration._
   * Static data for testing [[ResourcesResponderV1]].
   */
 object ResourcesResponderV1Spec {
+
+    val config = ConfigFactory.parseString(
+        """
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
 
     val ReiseInsHeiligelandThreeValues = ResourceSearchResponseV1(
         resources = Vector(ResourceSearchResultRowV1(
@@ -266,7 +274,7 @@ object ResourcesResponderV1Spec {
 /**
   * Tests [[ResourcesResponderV1]].
   */
-class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
+class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config) with ImplicitSender {
     import ResourcesResponderV1Spec._
 
     // Construct the actors needed for this test.
@@ -494,6 +502,23 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         // check that there are 7 locations
         assert(received.resource_context.resinfo.get.locations.get.length == 7)
+
+    }
+
+    private def checkPermissionsOnResource(resourceIri: IRI): Unit = {
+
+        val expected = Set.empty[PermissionV1]
+
+        responderManager ! ObjectAccessPermissionsForResourceGetV1(resourceIri = newBookResourceIri.get, projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI)
+        expectMsgPF(timeout) {
+            case Some(permission) => {
+                val perms = permission.asInstanceOf[ObjectAccessPermissionV1].hasPermissions
+                perms should contain allElementsOf expected
+                perms.size should equal(expected.size)
+            }
+            case _ => fail("No ObjectAccessPermission returned!")
+        }
+
 
     }
 
@@ -733,7 +758,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! ResourceCreateRequestV1(
                 resourceTypeIri = "http://www.knora.org/ontology/incunabula#book",
                 label = "Test-Book",
-                projectIri = "http://data.knora.org/projects/77275339",
+                projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 values = valuesToBeCreated,
                 userProfile = SharedAdminTestData.incunabulaUser,
                 apiRequestID = UUID.randomUUID
@@ -741,7 +766,6 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: ResourceCreateResponseV1 =>
-                    println(response)
                     newBookResourceIri.set(response.res_id)
                     checkResourceCreation(received = response, expected = valuesExpected)
             }
@@ -749,10 +773,13 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // Check that the resource doesn't have more than one lastModificationDate.
             getLastModificationDate(newBookResourceIri.get)
 
+
+            /* Check the permissions on the resource */
+            checkPermissionsOnResource(newBookResourceIri.get)
+
+
             // See if we can query the resource.
-
             actorUnderTest ! ResourceFullGetRequestV1(iri = newBookResourceIri.get, userProfile = SharedAdminTestData.incunabulaUser)
-
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => () // If we got a ResourceFullResponseV1, the operation succeeded.
             }

@@ -59,7 +59,7 @@ class PermissionsResponderV1 extends ResponderV1 {
         case DefaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), defaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         case DefaultObjectAccessPermissionGetRequestV1(projectIri, groupIri, resourceClassIri, propertyIri, userProfile) => future2Message(sender(), defaultObjectAccessPermissionGetRequestV1(projectIri, groupIri, resourceClassIri, propertyIri, userProfile), log)
         case DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri, resourceClassIri, permissionData) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, Some(resourceClassIri), None, permissionData), log)
-        case DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri,propertyTypeIri, permissionData) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, None, Some(propertyTypeIri), permissionData), log)
+        case DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri, propertyTypeIri, permissionData) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, None, Some(propertyTypeIri), permissionData), log)
         //case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, userProfileV1), log)
         //case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         //case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1) => future2Message(sender(), templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1), log)
@@ -750,6 +750,7 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     def defaultObjectAccessPermissionsStringForEntityGetV1(projectIRI: IRI, resourceClassIRI: Option[IRI], propertyIRI: Option[IRI], permissionData: PermissionDataV1): Future[Option[String]] = {
 
+        log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - projectIRI: $projectIRI, resourceClassIRI: $resourceClassIRI, propertyIRI: $propertyIRI, permissionData:$permissionData")
         for {
             a <- Future("")
 
@@ -760,6 +761,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             /* Get the user's max default object access permissions from the user's permission data inside the user's profile */
             defaultPermissionsOnProjectGroups: Set[PermissionV1] = permissionData.defaultObjectAccessPermissionsPerProject.getOrElse(projectIRI, Set.empty[PermissionV1])
+            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectGroups: $defaultPermissionsOnProjectGroups")
 
             /* Get the default object access permissions defined on the resource class for the current project */
             defaultPermissionsOnProjectEntityOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIRI = projectIRI, groupIRI = None, resourceClassIRI = resourceClassIRI, propertyIRI = propertyIRI)
@@ -768,6 +770,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 case Some(doap) => doap.hasPermissions
                 case None => Set.empty[PermissionV1]
             }
+            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectEntity: $defaultPermissionsOnProjectEntity")
 
             // Since we also have default object access permissions defined in the SystemProject,
             // we need to check there too, but only in the case that we didn't find anything
@@ -783,14 +786,21 @@ class PermissionsResponderV1 extends ResponderV1 {
                 case Some(doap) => doap.hasPermissions
                 case None => Set.empty[PermissionV1]
             }
+            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemEntity: $defaultPermissionsOnSystemEntity")
 
             /* Combine all three together and return most permissive */
             allDefaultPermissions: Seq[PermissionV1] = defaultPermissionsOnProjectGroups.toSeq ++ defaultPermissionsOnProjectEntity.toSeq ++ defaultPermissionsOnSystemEntity.toSeq
-            squashedAllDefaultPermissions = removeDuplicatePermissions(allDefaultPermissions)
+            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - allDefaultPermissions: $allDefaultPermissions")
 
+            deduplicatedDefaultPermissions = removeDuplicatePermissions(allDefaultPermissions)
+            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - deduplicatedDefaultPermissions: $deduplicatedDefaultPermissions")
 
-            // FIXME: Need to actually do something here
-            result = ???
+            /* Remove lesser permissions contained in higher ones */
+            defaultPermissions = removeLesserPermissions(deduplicatedDefaultPermissions, PermissionType.OAP)
+            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissions: $defaultPermissions")
+
+            /* Create permissions string */
+            result = createHasPermissionsString(defaultPermissions, PermissionType.OAP)
         } yield result
     }
 
@@ -969,12 +979,73 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     def removeDuplicatePermissions(permissions: Seq[PermissionV1]): Set[PermissionV1] = {
 
-        val result = permissions.groupBy(_.name).map { case (k, v) =>
-            k match {
-                case rest => v.head
-            }
-        }.toSet
-        //log.debug(s"squashPermissions - result: $result")
+        val result = permissions.groupBy( perm => perm.name + perm.additionalInformation ).map { case (k, v) => v.head }.toSet
+        //log.debug(s"removeDuplicatePermissions - result: $result")
         result
+    }
+
+    /**
+      * Helper method used to remove lesser permissions, i.e. permissions which are already given by
+      * the highest permission.
+      * @param permissions a set of permissions possibly containing lesser permissions.
+      * @param permissionType the type of permissions.
+      * @return a set of permissions without possible lesser permissions.
+      */
+    def removeLesserPermissions(permissions: Set[PermissionV1], permissionType: PermissionType): Set[PermissionV1] = {
+        permissionType match {
+            case PermissionType.OAP => {
+                if (permissions.nonEmpty) {
+                    /* Handling object access permissions which always have 'additionalInformation' and 'v1Code' set */
+                    permissions.groupBy(_.additionalInformation).map { case (groupIri, perms) =>
+                        // sort in descending order and then take the first one (the highest permission)
+                        perms.toArray.sortWith(_.v1Code.get > _.v1Code.get).head
+                    }.toSet
+                } else {
+                    Set.empty[PermissionV1]
+                }
+            }
+            case PermissionType.AP => ???
+        }
+    }
+
+    /**
+      * Helper method used to transform a set of permissions into a permissions string ready to be written into the
+      * triplestore as the value for the 'knora-base:hasPermissions' property.
+      * @param permissions
+      * @param permissionType
+      * @return
+      */
+    def createHasPermissionsString(permissions: Set[PermissionV1], permissionType: PermissionType): Option[String] = {
+        permissionType match {
+            case PermissionType.OAP => {
+                if (permissions.nonEmpty) {
+
+                    /* a map with permission names and shortened groups. */
+                    val groupedPermissions: Map[String, String] = permissions.groupBy(_.name).map { case (name, perms) =>
+                        val shortGroupsString = perms.foldLeft("") { (acc, perm) =>
+                            if (acc.isEmpty) {
+                                acc + perm.additionalInformation.get.replace(OntologyConstants.KnoraBase.KnoraBasePrefixExpansion, OntologyConstants.KnoraBase.KnoraBasePrefix)
+                            } else {
+                                acc + OntologyConstants.KnoraBase.GroupListDelimiter + perm.additionalInformation.get.replace(OntologyConstants.KnoraBase.KnoraBasePrefixExpansion, OntologyConstants.KnoraBase.KnoraBasePrefix)
+                            }
+                        }
+                        (name, shortGroupsString)
+                    }
+
+                    /* create the permissions string */
+                    val permissionsString = groupedPermissions.foldLeft("") { (acc, perm) =>
+                        if (acc.isEmpty) {
+                            acc + perm._1 + " " + perm._2
+                        } else {
+                            acc + OntologyConstants.KnoraBase.PermissionListDelimiter + perm._1 + " " + perm._2
+                        }
+                    }
+
+                    Some(permissionsString)
+                } else {
+                    None
+                }
+            }
+        }
     }
 }

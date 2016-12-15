@@ -114,7 +114,7 @@ object SharedPermissionsTestData {
 
     val perm003_o1 =
         oap(
-            iri = "http://data.knora.org/00014b43f902", // incunabula:Page
+            iri = "http://data.knora.org/00014b43f902", // incunabula:page
             p = ObjectAccessPermissionV1(forResource = Some("http://data.knora.org/00014b43f902"), forValue = None, hasPermissions = Set(
                                 PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.Owner),
                                 PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
@@ -148,7 +148,7 @@ object SharedPermissionsTestData {
     val perm003_d2 =
         doap(
             iri = "http://data.knora.org/permissions/003-d2",
-            p = DefaultObjectAccessPermissionV1(iri = "http://data.knora.org/permissions/003-d2", forProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI, forGroup = None, forResourceClass = Some("http://www.knora.org/ontology/incunabula#Book"), forProperty = None, hasPermissions = Set(
+            p = DefaultObjectAccessPermissionV1(iri = "http://data.knora.org/permissions/003-d2", forProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI, forGroup = None, forResourceClass = Some("http://www.knora.org/ontology/incunabula#book"), forProperty = None, hasPermissions = Set(
                                 PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
                                 PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
                                 PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
@@ -159,7 +159,7 @@ object SharedPermissionsTestData {
     val perm003_d3 =
         doap(
             iri = "http://data.knora.org/permissions/003-d3",
-            p = DefaultObjectAccessPermissionV1(iri = "http://data.knora.org/permissions/003-d3", forProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI, forGroup = None, forResourceClass = Some("http://www.knora.org/ontology/incunabula#Page"), forProperty = None, hasPermissions = Set(
+            p = DefaultObjectAccessPermissionV1(iri = "http://data.knora.org/permissions/003-d3", forProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI, forGroup = None, forResourceClass = Some("http://www.knora.org/ontology/incunabula#page"), forProperty = None, hasPermissions = Set(
                                 PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
                                 PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
                                 PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser)

@@ -585,7 +585,8 @@ case class NewDefaultObjectAccessPermissionV1(iri: IRI,
   * @param additionalInformation an optional IRI (e.g., group IRI, resource class IRI).
   */
 case class PermissionV1(name: String,
-                        additionalInformation: Option[IRI]
+                        additionalInformation: Option[IRI],
+                        v1Code: Option[Int]
                        ) extends Jsonable with PermissionV1JsonProtocol {
 
     def toJsValue = permissionV1Format.write(this)
@@ -603,49 +604,56 @@ object PermissionV1 {
     def ProjectResourceCreateAllPermission = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
-            additionalInformation = None
+            additionalInformation = None,
+            v1Code = None
         )
     }
 
     def ProjectResourceCreateRestrictedPermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission,
-            additionalInformation = Some(restriction)
+            additionalInformation = Some(restriction),
+            v1Code = None
         )
     }
 
     def ProjectAdminAllPermission = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectAdminAllPermission,
-            additionalInformation = None
+            additionalInformation = None,
+            v1Code = None
         )
     }
 
     def ProjectAdminGroupAllPermission = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectAdminGroupAllPermission,
-            additionalInformation = None
+            additionalInformation = None,
+            v1Code = None
         )
     }
 
     def ProjectAdminGroupRestrictedPermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectAdminGroupRestrictedPermission,
-            additionalInformation = Some(restriction)
+            additionalInformation = Some(restriction),
+            v1Code = None
         )
     }
 
     def ProjectAdminRightsAllPermission = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectAdminRightsAllPermission,
-            additionalInformation = None
+            additionalInformation = None,
+            v1Code = None
         )
     }
 
     def ProjectAdminOntologyAllPermission = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ProjectAdminOntologyAllPermission,
-            additionalInformation = None
+            additionalInformation = None,
+            v1Code = None
         )
     }
 
@@ -656,35 +664,40 @@ object PermissionV1 {
     def ChangeRightsPermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ChangeRightsPermission,
-            additionalInformation = Some(restriction)
+            additionalInformation = Some(restriction),
+            v1Code = Some(8)
         )
     }
 
     def DeletePermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.DeletePermission,
-            additionalInformation = Some(restriction)
+            additionalInformation = Some(restriction),
+            v1Code = Some(7)
         )
     }
 
     def ModifyPermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ModifyPermission,
-            additionalInformation = Some(restriction)
+            additionalInformation = Some(restriction),
+            v1Code = Some(6)
         )
     }
 
     def ViewPermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.ViewPermission,
-            additionalInformation = Some(restriction)
+            additionalInformation = Some(restriction),
+            v1Code = Some(2)
         )
     }
 
     def RestrictedViewPermission(restriction: IRI) = {
         PermissionV1(
             name = OntologyConstants.KnoraBase.RestrictedViewPermission,
-            additionalInformation = Some(restriction)
+            additionalInformation = Some(restriction),
+            v1Code = Some(1)
         )
     }
 }
@@ -762,7 +775,7 @@ trait PermissionV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
         }
     }
 
-    implicit val permissionV1Format: JsonFormat[PermissionV1] = jsonFormat(PermissionV1.apply, "name", "additionalInformation") // apply needed because we have an companion object of a case class
+    implicit val permissionV1Format: JsonFormat[PermissionV1] = jsonFormat(PermissionV1.apply, "name", "additionalInformation", "v1Code") // apply needed because we have an companion object of a case class
     implicit val administrativePermissionV1Format: JsonFormat[AdministrativePermissionV1] = jsonFormat(AdministrativePermissionV1, "iri", "forProject", "forGroup", "hasPermissions")
     implicit val objectAccessPermissionV1Format: JsonFormat[ObjectAccessPermissionV1] = jsonFormat(ObjectAccessPermissionV1, "forResource", "forValue", "hasPermissions")
     implicit val defaultObjectAccessPermissionV1Format: JsonFormat[DefaultObjectAccessPermissionV1] = jsonFormat6(DefaultObjectAccessPermissionV1)

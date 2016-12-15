@@ -1424,6 +1424,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // FIXME: Query the PermissionsResponder for Resource Class DOAP
 
             // get default permissions for given resource type
+            /*
             entityInfoResponse <- {
                 responderManager ? EntityInfoGetRequestV1(
                     resourceClassIris = Set(resourceClassIri),
@@ -1431,13 +1432,13 @@ class ResourcesResponderV1 extends ResponderV1 {
                 )
             }.mapTo[EntityInfoGetResponseV1]
 
+            permissions: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(entityInfoResponse.resourceEntityInfoMap(resourceClassIri))
+            */
+
             defaultObjectAccessPermissions <- {
                 responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
             }.mapTo[Option[String]]
-
-            // represents the permissions as a List of 2-tuples:
-            // e.g. (http://www.knora.org/ontology/knora-base#hasViewPermission,http://www.knora.org/ontology/knora-base#KnownUser)
-            //permissions: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(entityInfoResponse.resourceEntityInfoMap(resourceClassIri))
+            _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
             result: ResourceCreateResponseV1 <- ResourceLocker.runWithResourceLock(
                 apiRequestID,
