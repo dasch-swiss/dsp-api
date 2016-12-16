@@ -56,6 +56,7 @@ WHERE {
         @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
 
         ?resource knora-base:hasFileValue ?fileValue ;
+            knora-base:isDeleted false ;
             knora-base:attachedToProject ?resourceProject .
 
         OPTIONAL {
@@ -70,6 +71,7 @@ WHERE {
         @* Return the base path of whichever project was found. *@
 
         ?resource knora-base:hasFileValue ?fileValue ;
+            knora-base:isDeleted false ;
             knora-base:attachedToProject ?resourceProject .
         ?resourceProject knora-base:projectBasepath ?resourceProjectBasepath .
 
