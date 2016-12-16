@@ -21,32 +21,36 @@
 Deleting Resources and Values
 =============================
 
-In order to delete a resource or a value, the HTTP method ``DELETE`` has to be used.
-Deleting resources or values requires authentication.
+Knora does not actually delete resources or values; it just marks them as deleted. To mark a resource or value
+as deleted, you must use the HTTP method ``DELETE`` has to be used. This requires authentication.
 
-*****************
-Delete a Resource
-*****************
+**************************
+Mark a Resource as Deleted
+**************************
 
 The delete request has to be sent to the Knora server using the ``resources`` path segment.
 
 ::
 
-    HTTP DELETE to http://host/resources/resourceIRI
+    HTTP DELETE to http://host/resources/resourceIRI?deleteComment=String
 
 
+The resource IRI must be URL-encoded. The ``deleteComment`` is an optional comment explaining why the resource
+is being marked as deleted.
 
-Please note that the resource IRI has to be URL encoded.
 
-**************
-Delete a Value
-**************
+***********************
+Mark a Value as Deleted
+***********************
 
 The delete request has to be sent to the Knora server using the ``values`` path segment, providing the valueIRI:
 
 ::
 
-    HTTP DELETE to http://host/values/valueIRI
+    HTTP DELETE to http://host/values/valueIRI?deleteComment=String
 
 
-Please note that the value IRI has to be URL encoded.
+The value IRI must be URL-encoded. The ``deleteComment`` is an optional comment explaining why the value is
+being marked as deleted.
+
+Once a value has been marked as deleted, no new versions of it can be made.
