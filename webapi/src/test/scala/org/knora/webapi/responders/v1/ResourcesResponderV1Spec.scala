@@ -1043,7 +1043,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 utf8str = "This citation refers to another resource",
                 textattr = Vector(
                     StandoffTagV1(
-                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffBoldTag,
+                        standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
                         startPosition = 5,
                         endPosition = 13,
                         uuid = UUID.randomUUID().toString

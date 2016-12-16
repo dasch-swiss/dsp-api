@@ -242,28 +242,6 @@ object OntologyConstants {
         val StandoffLinkTag = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
         val StandoffUriTag = "http://www.knora.org/ontology/knora-base#StandoffUriTag"
 
-        // TODO: move this constants to another namespace (satndoff instead of knora-base)
-        val StandoffRootTag = "http://www.knora.org/ontology/standoff#StandoffRootTag"
-        val StandoffParagraphTag = "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
-        val StandoffItalicTag = "http://www.knora.org/ontology/standoff#StandoffItalicTag"
-        val StandoffBoldTag = "http://www.knora.org/ontology/standoff#StandoffBoldTag"
-        val StandoffUnderlineTag = "http://www.knora.org/ontology/standoff#StandoffUnderlineTag"
-        val StandoffStrikethroughTag = "http://www.knora.org/ontology/standoff#StandoffStrikethroughTag"
-
-        val StandoffHeader1Tag = "http://www.knora.org/ontology/standoff#StandoffHeader1Tag"
-        val StandoffHeader2Tag = "http://www.knora.org/ontology/standoff#StandoffHeader2Tag"
-        val StandoffHeader3Tag = "http://www.knora.org/ontology/standoff#StandoffHeader3Tag"
-        val StandoffHeader4Tag = "http://www.knora.org/ontology/standoff#StandoffHeader4Tag"
-        val StandoffHeader5Tag = "http://www.knora.org/ontology/standoff#StandoffHeader5Tag"
-        val StandoffHeader6Tag = "http://www.knora.org/ontology/standoff#StandoffHeader6Tag"
-
-        val StandoffSuperscriptTag = "http://www.knora.org/ontology/standoff#StandoffSuperscriptTag"
-        val StandoffSubscriptTag = "http://www.knora.org/ontology/standoff#StandoffSubscriptTag"
-        val StandoffOrderedListTag = "http://www.knora.org/ontology/standoff#StandoffOrderedListTag"
-        val StandoffUnorderedListTag = "http://www.knora.org/ontology/standoff#StandoffUnorderedListTag"
-        val StandoffListElementTag = "http://www.knora.org/ontology/standoff#StandoffListElementTag"
-        val StandoffStyleElementTag = "http://www.knora.org/ontology/standoff#StandoffStyleTag"
-
         val AttachedToUser = "http://www.knora.org/ontology/knora-base#attachedToUser"
         val AttachedToProject = "http://www.knora.org/ontology/knora-base#attachedToProject"
 
@@ -284,6 +262,29 @@ object OntologyConstants {
 
         val CreationDate = "http://www.knora.org/ontology/knora-base#creationDate"
         val ValueCreationDate = "http://www.knora.org/ontology/knora-base#valueCreationDate"
+    }
+
+    object Standoff {
+        val StandoffRootTag = "http://www.knora.org/ontology/standoff#StandoffRootTag"
+        val StandoffParagraphTag = "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
+        val StandoffItalicTag = "http://www.knora.org/ontology/standoff#StandoffItalicTag"
+        val StandoffBoldTag = "http://www.knora.org/ontology/standoff#StandoffBoldTag"
+        val StandoffUnderlineTag = "http://www.knora.org/ontology/standoff#StandoffUnderlineTag"
+        val StandoffStrikethroughTag = "http://www.knora.org/ontology/standoff#StandoffStrikethroughTag"
+
+        val StandoffHeader1Tag = "http://www.knora.org/ontology/standoff#StandoffHeader1Tag"
+        val StandoffHeader2Tag = "http://www.knora.org/ontology/standoff#StandoffHeader2Tag"
+        val StandoffHeader3Tag = "http://www.knora.org/ontology/standoff#StandoffHeader3Tag"
+        val StandoffHeader4Tag = "http://www.knora.org/ontology/standoff#StandoffHeader4Tag"
+        val StandoffHeader5Tag = "http://www.knora.org/ontology/standoff#StandoffHeader5Tag"
+        val StandoffHeader6Tag = "http://www.knora.org/ontology/standoff#StandoffHeader6Tag"
+
+        val StandoffSuperscriptTag = "http://www.knora.org/ontology/standoff#StandoffSuperscriptTag"
+        val StandoffSubscriptTag = "http://www.knora.org/ontology/standoff#StandoffSubscriptTag"
+        val StandoffOrderedListTag = "http://www.knora.org/ontology/standoff#StandoffOrderedListTag"
+        val StandoffUnorderedListTag = "http://www.knora.org/ontology/standoff#StandoffUnorderedListTag"
+        val StandoffListElementTag = "http://www.knora.org/ontology/standoff#StandoffListElementTag"
+        val StandoffStyleElementTag = "http://www.knora.org/ontology/standoff#StandoffStyleTag"
     }
 
     object SalsahGui {

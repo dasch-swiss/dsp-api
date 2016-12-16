@@ -997,7 +997,7 @@ object ResourcesResponderV1SpecFullData {
                     resource_reference = Set("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"), // TODO: Why is this a Value onject IRI?
                     textattr =
                         Vector(StandoffTagV1(
-                            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffParagraphTag,
+                            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
                             endPosition = 94,
                             startPosition = 0,
                             uuid = UUID.randomUUID().toString

@@ -160,7 +160,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         // expected Standoff information for <http://data.knora.org/e41ab5695c/values/d3398239089e04> in incunabula-data.ttl
         val textattr = Vector(
             StandoffTagV1(
-                standoffTagClassIri = OntologyConstants.KnoraBase.StandoffBoldTag,
+                standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
                 startPosition = 21,
                 endPosition = 25,
                 uuid = UUID.randomUUID().toString
@@ -219,12 +219,12 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
     // a sample set of text attributes
     private val sampleTextattr: Vector[StandoffTagV1] = Vector(
         StandoffTagV1(
-            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffBoldTag,
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
             startPosition = 0,
             endPosition = 7,
             uuid = UUID.randomUUID().toString),
         StandoffTagV1(
-            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffParagraphTag,
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
             startPosition = 0,
             endPosition = 10,
             uuid = UUID.randomUUID().toString

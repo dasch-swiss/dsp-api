@@ -286,25 +286,25 @@ object InputValidation {
           * Maps standoff tag IRIs to this enumeration's values.
           */
         val IriToEnumValue: Map[IRI, TextattrV1.Value] = new ErrorHandlingMap(Map(
-            OntologyConstants.KnoraBase.StandoffParagraphTag -> paragraph,
-            OntologyConstants.KnoraBase.StandoffItalicTag -> italic,
-            OntologyConstants.KnoraBase.StandoffBoldTag -> bold,
-            OntologyConstants.KnoraBase.StandoffUnderlineTag -> underline,
-            OntologyConstants.KnoraBase.StandoffStrikethroughTag -> strikethrough,
+            OntologyConstants.Standoff.StandoffParagraphTag -> paragraph,
+            OntologyConstants.Standoff.StandoffItalicTag -> italic,
+            OntologyConstants.Standoff.StandoffBoldTag -> bold,
+            OntologyConstants.Standoff.StandoffUnderlineTag -> underline,
+            OntologyConstants.Standoff.StandoffStrikethroughTag -> strikethrough,
             OntologyConstants.KnoraBase.StandoffLinkTag -> link,
             OntologyConstants.KnoraBase.StandoffUriTag -> link,
-            OntologyConstants.KnoraBase.StandoffHeader1Tag -> header1,
-            OntologyConstants.KnoraBase.StandoffHeader2Tag -> header2,
-            OntologyConstants.KnoraBase.StandoffHeader3Tag -> header3,
-            OntologyConstants.KnoraBase.StandoffHeader4Tag -> header4,
-            OntologyConstants.KnoraBase.StandoffHeader5Tag -> header5,
-            OntologyConstants.KnoraBase.StandoffHeader6Tag -> header6,
-            OntologyConstants.KnoraBase.StandoffSuperscriptTag -> superscript,
-            OntologyConstants.KnoraBase.StandoffSubscriptTag -> subscript,
-            OntologyConstants.KnoraBase.StandoffOrderedListTag -> orderedList,
-            OntologyConstants.KnoraBase.StandoffUnorderedListTag -> unorderedList,
-            OntologyConstants.KnoraBase.StandoffListElementTag -> listElement,
-            OntologyConstants.KnoraBase.StandoffStyleElementTag -> styleElement
+            OntologyConstants.Standoff.StandoffHeader1Tag -> header1,
+            OntologyConstants.Standoff.StandoffHeader2Tag -> header2,
+            OntologyConstants.Standoff.StandoffHeader3Tag -> header3,
+            OntologyConstants.Standoff.StandoffHeader4Tag -> header4,
+            OntologyConstants.Standoff.StandoffHeader5Tag -> header5,
+            OntologyConstants.Standoff.StandoffHeader6Tag -> header6,
+            OntologyConstants.Standoff.StandoffSuperscriptTag -> superscript,
+            OntologyConstants.Standoff.StandoffSubscriptTag -> subscript,
+            OntologyConstants.Standoff.StandoffOrderedListTag -> orderedList,
+            OntologyConstants.Standoff.StandoffUnorderedListTag -> unorderedList,
+            OntologyConstants.Standoff.StandoffListElementTag -> listElement,
+            OntologyConstants.Standoff.StandoffStyleElementTag -> styleElement
         ), { key => throw InconsistentTriplestoreDataException(s"Invalid standoff tag IRI: $key") })
 
         /**
