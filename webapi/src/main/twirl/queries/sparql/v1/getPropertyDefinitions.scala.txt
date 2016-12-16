@@ -42,7 +42,7 @@ WHERE {
         ?prop rdf:type owl:ObjectProperty .
     }
 
-    ?prop rdfs:subPropertyOf+ knora-base:resourceProperty .
+    ?prop rdfs:subPropertyOf* knora-base:resourceProperty .
     ?prop ?propPred ?propObj .
     BIND(lang(?propObj) as ?propObjLang)
 }

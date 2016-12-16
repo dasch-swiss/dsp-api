@@ -21,24 +21,38 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets information about the incoming references to a resource, as well as about the referring resources.
+ * Given the IRI of a resource, gets the regions that point to this resource, using standard SPARQL, without
+ * inference.
  *
- * If the triplestore type is GraphDB, this template delegates to getIncomingReferencesGraphDB.sparql.txt, which is
- * optimised for GraphDB. Otherwise, it delegates to getIncomingReferencesStandard.sparql.txt.
+ * This template is used only by getRegions.scala.txt.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.
  *@
-@(triplestore: String,
-  resourceIri: IRI)
+ @(triplestore: String,
+   resourceIri: IRI)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        queries.sparql.v1.txt.getIncomingReferencesGraphDB(resourceIri = resourceIri)
-    }
-} else {
-    @{
-        queries.sparql.v1.txt.getIncomingReferencesStandard(triplestore = triplestore,
-                                                            resourceIri = resourceIri)
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?region ?resclass ?regionObjectPermissions ?owner ?project
+WHERE {
+    BIND(IRI("@resourceIri") as ?resource)
+    ?resource knora-base:isDeleted false .
+
+    ?linkingProp rdfs:subPropertyOf* knora-base:isRegionOf .
+    ?region ?linkingProp ?resource .
+
+    ?region knora-base:isDeleted false .
+
+    ?region a ?resclass .
+    ?resclass rdfs:subClassOf* knora-base:Region .
+
+    ?region knora-base:attachedToUser ?owner .
+    ?region knora-base:attachedToProject ?project .
+
+    OPTIONAL {
+        ?region knora-base:hasPermissions ?regionObjectPermissions .
     }
 }

@@ -1,0 +1,74 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Given the IRI of a resource, finds any other resource that contains the specified resource, using GraphDB.
+ *
+ * This template is used only by isPartOf.scala.txt.
+ *
+ * Since the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
+ * SPARQL. Specifically, we use inference to return search results matching subproperties of Knora base properties
+ * such as knora-base:isPartOf. This requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit>
+ * whenever we need to get explicit (non-inferred) statements.
+ *
+ * @param resourceIri the resource whose containing resource, if any, is to be returned.
+ *@
+@(resourceIri: IRI)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?containingResource ?containingResourceProject ?linkValue ?linkValueOwner ?linkValueProject ?linkValuePermissions
+WHERE {
+    BIND(IRI("@resourceIri") as ?resource)
+
+    ?resource a knora-base:Resource ;
+        knora-base:isDeleted false ;
+        knora-base:isPartOf ?containingResource .
+
+    ?containingResource a knora-base:Resource ;
+        knora-base:isDeleted false ;
+        knora-base:attachedToProject ?containingResourceProject .
+
+    GRAPH <http://www.ontotext.com/explicit> {
+        ?resource ?linkingProp ?containingResource .
+    }
+
+    ?resource knora-base:hasLinkToValue ?linkValue .
+
+    ?linkValue rdf:type knora-base:LinkValue ;
+        rdf:subject ?resource ;
+        rdf:predicate ?linkingProp ;
+        rdf:object ?containingResource ;
+        knora-base:isDeleted false ;
+        knora-base:attachedToUser ?linkValueOwner .
+
+    OPTIONAL {
+        ?linkValue knora-base:attachedToProject ?linkValueProject .
+    }
+
+    OPTIONAL {
+        ?linkValue knora-base:hasPermissions ?linkValuePermissions .
+    }
+}
+LIMIT 1

@@ -23,47 +23,22 @@
 @**
  * Given the IRI of a resource, finds any other resource that contains the specified resource.
  *
+ * If the triplestore type is GraphDB, this template delegates to isPartOfGraphDB.sparql.txt, which is optimised
+ * for GraphDB. Otherwise, it delegates to isPartOfStandard.sparql.txt.
+ *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource whose containing resource, if any, is to be returned.
  *@
 @(triplestore: String,
   resourceIri: IRI)
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
-
-SELECT ?containingResource ?containingResourceProject ?linkValue ?linkValueOwner ?linkValueProject ?linkValuePermissions
-@* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
-WHERE {
-    BIND(IRI("@resourceIri") as ?resource)
-
-    ?resource knora-base:isDeleted false .
-    ?linkingProp rdfs:subPropertyOf+ knora-base:isPartOf .
-    ?resource ?linkingProp ?containingResource .
-    ?containingResource knora-base:isDeleted false ;
-        knora-base:attachedToProject ?containingResourceProject .
-
-    BIND(IRI(CONCAT(STR(?linkingProp), "Value")) AS ?linkValueProp)
-
-    ?resource ?linkValueProp ?linkValue .
-
-    ?linkValue rdf:type knora-base:LinkValue ;
-        rdf:subject ?resource ;
-        rdf:predicate ?linkingProp ;
-        rdf:object ?containingResource ;
-        knora-base:isDeleted false ;
-        knora-base:attachedToUser ?linkValueOwner .
-
-    OPTIONAL {
-        ?linkValue knora-base:attachedToProject ?linkValueProject .
+    @{
+        queries.sparql.v1.txt.isPartOfGraphDB(resourceIri = resourceIri)
     }
-
-    OPTIONAL {
-        ?linkValue knora-base:hasPermissions ?linkValuePermissions .
+} else {
+    @{
+        queries.sparql.v1.txt.isPartOfStandard(triplestore = triplestore,
+                                               resourceIri = resourceIri)
     }
 }
-LIMIT 1

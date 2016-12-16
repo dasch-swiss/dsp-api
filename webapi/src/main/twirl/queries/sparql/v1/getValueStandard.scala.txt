@@ -21,10 +21,12 @@
 @import org.knora.webapi.IRI
 
 @**
- * Checks whether a knora-base:Value exists and is deleted.
+ * Queries a knora-base:Value using standard SPARQL, without inference.
+ *
+ * This template is used only by getValue.scala.txt.
  *
  * @param triplestore the name of the triplestore being used.
- * @param valueIri the IRI of the value.
+ * @param iri the IRI of the Value.
  *@
 @(triplestore: String,
   valueIri: IRI)
@@ -33,15 +35,37 @@ prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?isDeleted
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
+SELECT ?objPred ?objObj ?predStandoff ?objStandoff
 WHERE {
-    BIND(IRI("@valueIri") AS ?value)
+    BIND(IRI("@valueIri") AS ?obj)
 
-    ?value rdf:type ?valueClass .
-    ?valueClass rdfs:subClassOf* knora-base:Value .
-    ?value knora-base:isDeleted ?isDeleted .
+    ?resourceProp rdfs:subPropertyOf* knora-base:hasValue .
+
+    {
+        ?resource ?resourceProp ?obj .
+        ?obj knora-base:isDeleted false .
+        ?obj ?objPred ?objObj .
+
+        FILTER(?objPred != knora-base:attachedToProject)
+
+        OPTIONAL {
+            FILTER(?objPred = knora-base:valueHasStandoff)
+            ?objObj ?predStandoff ?objStandoff .
+        }
+    }
+    UNION
+    {
+        @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
+
+        ?resource ?resourceProp ?obj .
+        ?obj knora-base:isDeleted false .
+        ?resource knora-base:attachedToProject ?resourceProject .
+
+        OPTIONAL {
+            ?obj knora-base:attachedToProject ?valueProject .
+        }
+
+        BIND(knora-base:attachedToProject AS ?objPred)
+        BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+    }
 }
