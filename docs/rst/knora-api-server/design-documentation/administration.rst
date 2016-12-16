@@ -213,9 +213,10 @@ form literal would be:
 Default Object Access Permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Default Object Access Permissions, if defined, are used when new objects (resources and/or values) are created.
-They represent object access permissions with which the new object will be initially outfitted. As with administrative
-permissions, these default object access permissions can be defined for any number of groups.
+Default Object Access Permissions are used when new objects (resources and/or values) are created. They represent
+object access permissions with which the new object will be initially outfitted. As with administrative permissions,
+these default object access permissions can be defined for any number of groups. Additionally, they can be also defined
+for resource classes and properties.
 
 The following default object access permissions can be attached to groups, resource classes and/or properties via
 instances of *knora-base:DefaultObjectAccessPermission* (described further bellow). The default object access
@@ -251,9 +252,15 @@ permissions correspond to the earlier described object access permission:
           permission
         - value: ``CR`` followed by a comma-separated list of ``knora-base:UserGroup``
 
-Example default object access permission instance, setting default object access permissions to the project member group
-of a project, giving change right permission to the creator, modify permission to all project members, and view
-permission to known users. Further, this applies to all resource classes and all their properties inside the project.
+A single instance of ``knora-base:DefaultObjectAccessPermission`` must always reference a project, but can only
+reference **either** a group (``knora-base:forGroup`` property), a resource class (``knora-base:forResourceClass``), or
+a property (``knora-base:forProperty``).
+
+If the user creating a new object is a member of more than one group with such attached permissions, and additionally
+default object access permission are defined on resource classes and/or properties, then the final set of default object
+access permissions that will result is **additive** and **most permissive**.
+
+Example default object access permission instance:
 
 ::
 
@@ -261,29 +268,23 @@ permission to known users. Further, this applies to all resource classes and all
           rdf:type knora-base:DefaultObjectAccessPermission ;
           knora-base:forProject <http://data.knora.org/projects/images> ;
           knora-base:forGroup knora-base:ProjectMember ;
-          knora-base:forResourceClass knora-base:AllResourceClasses ;
-          knora-base:forProperty knora-base:AllProperties ;
           knora-base:hasPermissions "CR kb:Creator|M kb:ProjectMember|V kb:KnownUser"^^xsd:string .
 
+This instance is setting default object access permissions to the project member group of a project, giving change
+right permission to the creator, modify permission to all project members, and view permission to known users. Further,
+this **implicitly** applies to all resource classes and all their properties inside the project.
 
-If the user creating a new object is a member of more than one group with such attached permissions, and additionally
-default object access permission are defined on resource classes and/or properties, then the final set of default object
-access permissions that will result, will follow the following rule:
 
-      1. If default object access permissions are only defined on user groups, then the final set of permissions that
-         will result is additive and **most permissive**.
+Implicite Permissions
+----------------------
 
-      2. If default object access permissions are only defined on resource classes and/or properties, then the final set
-         of permissions that will result is additive and **least permissive**.
-
-      3. If default object access permissions are defined both on user groups (1) and on resource classes and/or
-         properties (2), then the final set of permissions that will result is additive from (1) and (2) and
-         **least permissive**.
-
-Further, at the time a resource / value is created, it is necessary to supply a set of object access permissions, with
-which the resource / value should be created. The actual set of object access permissions that will be attached to the
-newly created resource / value will be an additive and **least permissive** combination of these provided object access
-permissions and predefined default object access permissions.
+The ``knora-base:SystemAdmin`` group receives implicitly the following permissions:
+     
+     - receives implicitly *ProjectAllAdminPermission* for all projects.
+     - receives implicitly *ProjectResourceCreateAllPermission* for all projects.
+     - receives implicitly *CR* on all objects from all projects.
+     
+Theses permissions are backed into the system, and cannot be changed.
 
 
 Permission Templates
@@ -292,27 +293,22 @@ Permission Templates
 The permission capabilities of Knora are very large, as it needs to be able to satisfy a broad set of requirements.
 To simplify permission management for the users, we provide permission templates, which can be used during creation of
 new projects, or applied to existing projects. A permission template defines a set of administrative and default object
-access permission. Currently, three different templates are defined *OPEN*, *CLOSED*, *NONE*.
+access permission. Currently, two different templates will be defined *OPEN*, *CLOSED*.
 
 Template: OPEN
 ^^^^^^^^^^^^^^^
 
 The *OPEN* template, defines the following permissions:
 
-  - The ``knora-base:SystemAdmin`` group:
-     - receives implicitly *ProjectResourceCreateAllPermission* for all projects.
-     - receives implicitly *ChangeRightsPermission* on all objects from all projects.
-
   - The ``knora-base:ProjectAdmin`` group:
-     - receives explicitly *knora-base:ProjectResourceCreateAllPermission*.
-     - receives explicitly *knora-base:ProjectAllAdminPermission*.
-     - receives implicitly *knora-base:hasChangeRightsPermission* on all objects part of the project.
+     - receives explicitly *ProjectResourceCreateAllPermission*.
+     - receives explicitly *ProjectAllAdminPermission*.
 
   - The ``knora-base:ProjectMember`` group:
-     - receives explicitly *knora-base:ProjectResourceCreateAllPermission*.
-     - receives explicitly *knora-base:hasDefaultChangeRightsPermission* for the *knora-base:Creator* group.
-     - receives explicitly *knora-base:hasDefaultModifyPermission* for the *ProjectMember* group.
-     - receives explicitly *knora-base:hasDefaultViewPermission* for the *knora-base:KnownUser* group.
+     - receives explicitly *ProjectResourceCreateAllPermission*.
+     - receives explicitly *CR* for the *knora-base:Creator* and *knora-base:ProjectAdmin* group.
+     - receives explicitly *M* for the *ProjectMember* group.
+     - receives explicitly *V* for the *knora-base:KnownUser* group.
 
 
 Template: CLOSED
@@ -320,31 +316,15 @@ Template: CLOSED
 
 The *CLOSED* template, defined the following permissions:
 
-  - The ``knora-base:SystemAdmin`` group:
-     - receives implicitly *ProjectResourceCreateAllPermission* for all projects.
-     - receives implicitly *ChangeRightsPermission* on all objects from all projects.
-
   - The ``knora-base:ProjectAdmin`` group:
-     - receives explicitly *knora-base:ProjectResourceCreateAllPermission*.
-     - receives explicitly *knora-base:ProjectAllAdminPermission*.
-     - receives implicitly *knora-base:hasChangeRightsPermission* on all objects part of the project.
+     - receives explicitly *ProjectResourceCreateAllPermission*.
+     - receives explicitly *ProjectAllAdminPermission*.
 
   - The ``knora-base:ProjectMember`` group:
-     - receives explicitly *knora-base:ProjectResourceCreateAllPermission*.
-     - receives explicitly *knora-base:hasDefaultChangeRightsPermission* for the *knora-base:Creator* group.
-     - receives explicitly *knora-base:hasDefaultModifyPermission* for the *ProjectMember* group.
-     - receives explicitly *knora-base:hasDefaultViewPermission* for the *knora-base:KnownUser* group.
-
-
-
-Template: NONE
-^^^^^^^^^^^^^^^
-
-The *NONE* template, defined the following permissions:
-
-  - The ``knora-base:SystemAdmin`` group:
-     - receives implicitly *ProjectResourceCreateAllPermission* for all projects.
-     - receives implicitly *ChangeRightsPermission* on all objects from all projects.
+     - receives explicitly *ProjectResourceCreateAllPermission*.
+     - receives explicitly *CR* for the *knora-base:Creator* and *knora-base:ProjectAdmin* group.
+     - receives explicitly *M* for the *ProjectMember* group.
+     - receives explicitly *V* for the *knora-base:KnownUser* group.
 
 
 Default Permissions Matrix for new Projects
@@ -586,7 +566,7 @@ and the same as RDF:
 Querying Permission Instances
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The properties **forProject**, **forGroup**, **forResourceClass**, and **forProperty** form together a kind of a
+The properties **forProject** and either of **forGroup**, **forResourceClass**, and **forProperty** form together a
 *compound key*, allowing finding existing permission instances, that address the same set of Project / Group /
 ResourceClass / Property combination, thus making it possible to extend or change the attached permissions.
 
@@ -594,10 +574,10 @@ ResourceClass / Property combination, thus making it possible to extend or chang
 holding administrative permission information. Querying is strait forward by using the *knora-base:forProject* and
 *knora-base:forGroup* properties as the compound key.
 
-**Default Object Access Permission Instances**: For each group inside the project, there can be **zero** or **n**
-instances holding default object access permission informations. Querying is a bit more involved, and is done by using
-the *knora-base:forProject* and *knora-base:forGroup* properties, and additionally the *knora-base:forResourceClass*
-and *forProperty* properties as part of the compound key.
+**Default Object Access Permission Instances**: For each group, resource class, or property inside the project, there
+can be **zero** or **one** instances holding default object access permission informations. Querying is strait forward
+by using the *knora-base:forProject* and either *knora-base:forGroup*, *knora-base:forResourceClass*, or
+*knora-base:forProperty* properties as part of the compound key.
 
 
 Example Data stored in the permissions graph
@@ -646,8 +626,6 @@ Example Data stored in the permissions graph
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
        kb:forProject <http://data.knora.org/projects/images> ;
        kb:forGroup knora-base:ProjectMember ;
-       kb:forResourceClass knora-base:AllResourceClasses ;
-       kb:forProperty knora-base:AllProperties ;
        kb:hasPermissions "CR knora-base:Creator|
                            M <http://data.knora.org/permissions/[UUID]>|
                            V knora-base:KnownUser"^^xsd:string .
@@ -658,11 +636,9 @@ Example Data stored in the permissions graph
 
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
        kb:forProject <http://data.knora.org/projects/[UUID]> ;
-       kb:forGroup knora-base:NoGroup ;
        kb:forResourceClass <http://www.knora.org/ontology/images#person> ;
-       kb:forProperty knora-base:AllProperties ;
        kb:hasPermissions "CR knora-base:Creator,knora-base:ProjectMember|
-                           V kb:KnownUser,kb:UnknownUser"^^xsd:string .
+                           V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
 
 
 **Default object access permission on a resource property:**
@@ -670,8 +646,6 @@ Example Data stored in the permissions graph
 
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
        kb:forProject <http://data.knora.org/projects/[UUID]> ;
-       kb:forGroup knora-base:ProjectMember ;
-       kb:forResourceClass knora-base:AllResourceClasses ;
        kb:forProperty <http://www.knora.org/ontology/images#lastname> ;
        kb:hasPermissions "D knora-base:ProjectMember,knora-base:Creator|
                           V knora-base:KnownUser,knora-base:UnknownUser"^^ .
@@ -682,19 +656,17 @@ Example Data stored in the permissions graph
 ::
 
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-       kb:forProject knora-base:AllProjects ;
-       kb:forGroup knora-base:AllGroups ;
-       kb:forResourceClass knora-base:AllResourceClasses ;
+       kb:forProject knora-base:SystemProject ;
        kb:forProperty <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> ;
-       kb:hasPermissions "RV kb:UnknownUser|
-                           V kb:KnownUser|
-                           M kb:ProjectMember,kb:Creator"^^xsd:string .
+       kb:hasPermissions "RV knora-base:UnknownUser|
+                           V knora-base:KnownUser|
+                           M knora-base:ProjectMember,knora-base:Creator"^^xsd:string .
 
 
 A the time the user's ``UserProfile`` is queried, all permissions for all projects and groups the user is a member of
 are also queried. This information is then stored as an easy accessible object inside the ``UserProfile``, being readily
 available wherever needed. As this is a somewhat expensive operation, built-in caching mechanism at different levels 
-(e.g., UsersResponder, PermissionsResponder), will be speed it up.
+(e.g., UsersResponder, PermissionsResponder), will be applied.
 
 
 Use Cases
