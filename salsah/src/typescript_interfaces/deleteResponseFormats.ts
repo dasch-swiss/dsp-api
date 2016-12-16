@@ -24,7 +24,7 @@ export module deleteResponseFormats {
     /**
      * Represents the answer to a value delete request.
      *
-     * HTTP DELETE to http://host/v1/values/valueIRI
+     * HTTP DELETE to http://host/v1/values/valueIRI?deleteComment=String
      *
      */
     export interface deleteValueResponse extends basicMessageComponents.basicResponse {
@@ -39,7 +39,7 @@ export module deleteResponseFormats {
     /**
      * Represents the answer to a resource delete request.
      *
-     * HTTP DELETE to http://host/v1/resources/valueIRI
+     * HTTP DELETE to http://host/v1/resources/resourceIRI?deleteComment=String
      */
     export interface deleteResourceResponse extends basicMessageComponents.basicResponse {
 

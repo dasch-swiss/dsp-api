@@ -191,8 +191,21 @@
 	knora-base:creationDate "2016-10-17T19:16:04.912+02:00"^^xsd:dateTime ;
 	anything:hasOtherThingValue <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg/values/nkMp5_JZTtWH55bkotxeDQ> ;
 	anything:hasOtherThing <http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ> ;
+	anything:hasOtherThingValue <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg/values/foxtrot-to-romeo> ;
+	anything:hasOtherThing <http://data.knora.org/anything/start> ;
 	rdfs:label "Foxtrot" ;
 	knora-base:isDeleted false .
+
+<http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg/values/foxtrot-to-romeo> a knora-base:LinkValue ;
+	rdf:subject <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg> ;
+	rdf:predicate anything:hasOtherThing ;
+	rdf:object <http://data.knora.org/anything/start> ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+	knora-base:valueCreationDate "2016-10-17T19:16:04.913+02:00"^^xsd:dateTime ;
+	knora-base:valueHasString "http://data.knora.org/anything/start" ;
+	knora-base:valueHasRefCount "1"^^xsd:int .
 
 <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg/values/nkMp5_JZTtWH55bkotxeDQ> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg> ;
@@ -331,7 +344,7 @@
 	knora-base:standoffTagHasStart 14 ;
 	knora-base:standoffTagHasEnd 19 ;
 	knora-base:standoffTagHasLink <http://data.knora.org/a-thing> ;
-	knora-base:standoffTagHasUUID "3570716f-06be-4d05-a986-3e1018aaede1" .
+	knora-base:standoffTagHasUUID "37360f98-5e7d-4581-9e94-52f4f7a4f834" .
 
 <http://data.knora.org/a-thing-with-text-values/values/2> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -346,7 +359,7 @@
 	knora-base:standoffTagHasStart 11 ;
 	knora-base:standoffTagHasEnd 16 ;
 	knora-base:standoffTagHasLink <http://data.knora.org/a-thing> ;
-	knora-base:standoffTagHasUUID "15194230-6282-41ea-acd9-34651cb75416" .
+	knora-base:standoffTagHasUUID "b5dfe367-96bd-4c18-96e2-366a29cc1c60" .
 
 <http://data.knora.org/another-thing> a anything:Thing ;
 	knora-base:isDeleted false ;
@@ -635,7 +648,7 @@
 	knora-base:standoffTagHasStart 10 ;
 	knora-base:standoffTagHasEnd 23 ;
 	knora-base:standoffTagHasLink <http://data.knora.org/project-thing-2> ;
-	knora-base:standoffTagHasUUID "e8ff7945-109d-4843-905e-d88a54fcf43d" .
+	knora-base:standoffTagHasUUID "1b189bfd-eac9-47ae-89bd-17b387501008" .
 
 <http://data.knora.org/project-thing-2> a anything:Thing ;
 	knora-base:isDeleted false ;

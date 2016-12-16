@@ -1,0 +1,85 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Given a knora:base:internalFilename, retrieves the file value and information attached to it, using standard
+ * SPARQL, without inference.
+ *
+ * This template is used only by getFileValue.scala.txt.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param fileValueIri the IRI of the file value.
+ *@
+@(triplestore: String,
+  filename: String)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?fileValue ?objPred ?objObj
+WHERE {
+
+    ?fileValue knora-base:internalFilename "@filename" ;
+        knora-base:isDeleted false .
+
+
+    {
+        ?fileValue ?objPred ?objObj .
+        FILTER(?objPred != knora-base:attachedToProject)
+    }
+    UNION
+    {
+        @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
+
+        ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
+        ?resource ?prop ?fileValue ;
+            knora-base:isDeleted false ;
+            knora-base:attachedToProject ?resourceProject .
+
+        OPTIONAL {
+            ?fileValue knora-base:attachedToProject ?valueProject .
+        }
+
+        BIND(knora-base:attachedToProject AS ?objPred)
+        BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+    }
+    UNION
+    {
+        @* Return the base path of whichever project was found. *@
+
+        ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
+        ?resource ?prop ?fileValue ;
+            knora-base:isDeleted false ;
+            knora-base:attachedToProject ?resourceProject .
+        ?resourceProject knora-base:projectBasepath ?resourceProjectBasepath .
+
+        OPTIONAL {
+            ?fileValue knora-base:attachedToProject ?valueProject .
+	        ?valueProject knora-base:projectBasepath ?valueProjectBasePath .
+        }
+
+        BIND(COALESCE(?valueProjectBasePath, ?resourceProjectBasepath) AS ?projectBasepath)
+        BIND(knora-base:projectBasepath AS ?objPred)
+        BIND(?projectBasepath AS ?objObj)
+    }
+}

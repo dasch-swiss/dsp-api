@@ -1,0 +1,126 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi._
+
+@**
+ * Gets the outbound or inbound links from/to a resource, using GraphDB. This query is used recursively to get a graph
+ * of resources reachable from a given resource.
+ *
+ * This template is used only by getGraphData.scala.txt.
+ *
+ * Since the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
+ * SPARQL. Specifically, we use inference to find subproperties of knora-base:hasLinkTo and knora-base:isPartOf.
+ * This requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit> whenever we need to get explicit
+ * (non-inferred) statements.
+ *
+ * @param startNodeIri the IRI of the resource to use as the starting point of the query.
+ * @param startNodeOnly if true, returns information only about the start node.
+ * @param outbound true to get outbound links, false to get inbound links.
+ *@
+@(startNodeIri: IRI,
+  startNodeOnly: Boolean,
+  outbound: Boolean = true)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?node ?nodeClass ?nodeLabel ?nodeOwner ?nodeProject ?nodePermissions
+       ?linkValue ?linkProp ?linkValueOwner ?linkValueProject ?linkValuePermissions
+WHERE {
+    @if(startNodeOnly) {
+        BIND(IRI("@startNodeIri") AS ?node) .
+
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?node a ?nodeClass .
+        }
+
+        ?node rdfs:label ?nodeLabel ;
+            knora-base:attachedToUser ?nodeOwner ;
+            knora-base:attachedToProject ?nodeProject ;
+            knora-base:isDeleted false .
+
+        OPTIONAL {
+            ?node knora-base:hasPermissions ?nodePermissions .
+        }
+    } else {
+        BIND(IRI("@startNodeIri") AS ?startNode) .
+
+        @if(outbound) {
+            ?startNode knora-base:hasLinkTo ?node .
+
+            FILTER NOT EXISTS {
+                ?startNode knora-base:isPartOf ?node .
+            }
+
+            GRAPH <http://www.ontotext.com/explicit> {
+                ?startNode ?linkProp ?node .
+            }
+
+            ?node knora-base:isDeleted false .
+
+            ?linkValue a knora-base:LinkValue ;
+                rdf:subject ?startNode ;
+                rdf:predicate ?linkProp ;
+                rdf:object ?node .
+        } else {
+            ?node knora-base:hasLinkTo ?startNode .
+
+            FILTER NOT EXISTS {
+                ?node knora-base:isPartOf ?startNode .
+            }
+
+            GRAPH <http://www.ontotext.com/explicit> {
+                ?node ?linkProp ?startNode .
+            }
+
+            ?node knora-base:isDeleted false .
+
+            ?linkValue a knora-base:LinkValue ;
+                rdf:subject ?node ;
+                rdf:predicate ?linkProp ;
+                rdf:object ?startNode .
+        }
+
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?node a ?nodeClass .
+        }
+
+        ?node rdfs:label ?nodeLabel ;
+            knora-base:attachedToUser ?nodeOwner ;
+            knora-base:attachedToProject ?nodeProject .
+
+        OPTIONAL {
+            ?node knora-base:hasPermissions ?nodePermissions .
+        }
+
+        ?linkValue knora-base:attachedToUser ?linkValueOwner .
+
+        OPTIONAL {
+            ?linkValue knora-base:hasPermissions ?linkValuePermissions .
+        }
+
+        OPTIONAL {
+            ?linkValue knora-base:attachedToProject ?linkValueProject .
+        }
+    }
+}
+LIMIT 50

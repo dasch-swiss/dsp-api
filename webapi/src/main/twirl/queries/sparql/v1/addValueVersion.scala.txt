@@ -367,7 +367,7 @@ WHERE {
     *@
 
     ?resource rdf:type ?resourceClass .
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
 
     @* Do nothing if the resource is marked as deleted. *@
 
@@ -395,7 +395,7 @@ WHERE {
             <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex .
             <@linkUpdate.linkTargetIri> knora-base:isDeleted false .
 
-            ?linkTargetClass@linkValueIndex rdfs:subClassOf+ knora-base:Resource .
+            ?linkTargetClass@linkValueIndex rdfs:subClassOf* knora-base:Resource .
             <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
             ?linkTargetClass@linkValueIndex rdfs:subClassOf* ?expectedTargetClass@linkValueIndex .
         }

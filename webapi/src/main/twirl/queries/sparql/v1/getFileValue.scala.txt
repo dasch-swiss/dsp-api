@@ -21,69 +21,24 @@
 @import org.knora.webapi.IRI
 
 @**
- * Given a knora:base:internalFilename, retrieves the file value and information attached to it.
+ * Given a knora-base:internalFilename, retrieves the file value and information attached to it.
+ *
+ * If the triplestore type is GraphDB, this template delegates to getFileValueGraphDB.sparql.txt, which is optimised
+ * for GraphDB. Otherwise, it delegates to getFileValueStandard.sparql.txt.
  *
  * @param triplestore the name of the triplestore being used.
- * @param fileValueIri the IRI of the file value.
+ * @param filename the file value's knora-base:internalFilename.
  *@
 @(triplestore: String,
-  filename: IRI)
+  filename: String)
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
-
-SELECT ?fileValue ?objPred ?objObj
-@* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
-WHERE {
-
-    ?fileValue knora-base:internalFilename "@filename" ;
-        knora-base:isDeleted false .
-
-    ?resource ?prop ?fileValue ;
-        knora-base:isDeleted false .
-
-
-    {
-        ?fileValue ?objPred ?objObj .
-        FILTER(?objPred != knora-base:attachedToProject)
+    @{
+        queries.sparql.v1.txt.getFileValueGraphDB(filename = filename)
     }
-    UNION
-    {
-        @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
-
-        ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
-        ?resource ?prop ?fileValue ;
-            knora-base:isDeleted false ;
-            knora-base:attachedToProject ?resourceProject .
-
-        OPTIONAL {
-            ?fileValue knora-base:attachedToProject ?valueProject .
-        }
-
-        BIND(knora-base:attachedToProject AS ?objPred)
-        BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
-    }
-    UNION
-    {
-        @* Return the base path of whichever project was found. *@
-
-        ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
-        ?resource ?prop ?fileValue ;
-            knora-base:isDeleted false ;
-            knora-base:attachedToProject ?resourceProject ;
-            knora-base:projectBasepath ?resourceProjectBasepath .
-
-        OPTIONAL {
-            ?fileValue knora-base:attachedToProject ?valueProject .
-	        ?valueProject knora-base:projectBasepath ?valueProjectBasePath .
-        }
-
-        BIND(COALESCE(?valueProjectBasePath, ?resourceProjectBasepath) AS ?projectBasepath)
-        BIND(knora-base:projectBasepath AS ?objPred)
-        BIND(?projectBasepath AS ?objObj)
+} else {
+    @{
+        queries.sparql.v1.txt.getFileValueStandard(triplestore = triplestore,
+                                                   filename = filename)
     }
 }

@@ -586,6 +586,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 getFileValuesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(getFileValuesSparql)).mapTo[SparqlSelectResponse]
                 // _ <- Future(println(getFileValuesResponse))
 
+                // check that the resource to be updated exists and it is a subclass of knora-base:Representation
+                _ = if (getFileValuesResponse.results.bindings.isEmpty) throw NotFoundException(s"Value ${changeFileValueRequest.resourceIri} not found (it may have been deleted) or it is not a knora-base:Representation")
+
                 // get the property Iris, file value Iris and qualities attached to the resource
                 fileValues: Seq[CurrentFileValue] = getFileValuesResponse.results.bindings.map {
                     (row: VariableResultsRow) =>
@@ -598,13 +601,6 @@ class ValuesResponderV1 extends ResponderV1 {
                                 case None => None
                             }
                         )
-                }
-
-                sipiConversionMessage: SipiResponderConversionRequestV1 = changeFileValueRequest.file
-
-                // if resource has no existing file values, throw an exception
-                _ = if (fileValues.isEmpty) {
-                    BadRequestException(s"File values for $resourceIri should be updated, but resource has no existing file values")
                 }
 
                 // the message to be sent to Sipi responder
