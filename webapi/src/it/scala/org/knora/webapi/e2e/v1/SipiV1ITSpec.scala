@@ -49,6 +49,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
+        RdfDataObject(path = "_test_data/ontologies/standoff-onto.ttl", name = "http://www.knora.org/ontology/standoff"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
@@ -190,9 +191,9 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
               |     <namespace>noNamespace</namespace>
               |    </tag>
               |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/knora-base#StandoffRootTag</classIri>
+              |      <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
               |      <attributes>
-              |        <attribute><attributeName>documentType</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType</propertyIri></attribute>
+              |        <attribute><attributeName>documentType</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri></attribute>
               |      </attributes>
               |    </standoffClass>
               |  </mappingElement>
@@ -204,7 +205,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
               |      <namespace>noNamespace</namespace>
               |    </tag>
               |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/knora-base#StandoffParagraphTag</classIri>
+              |      <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
               |    </standoffClass>
               |  </mappingElement>
               |
@@ -215,7 +216,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
               |      <namespace>noNamespace</namespace>
               |    </tag>
               |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/knora-base#StandoffItalicTag</classIri>
+              |      <classIri>http://www.knora.org/ontology/standoff#StandoffItalicTag</classIri>
               |    </standoffClass>
               |  </mappingElement>
               |
@@ -226,7 +227,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
               |      <namespace>noNamespace</namespace>
               |    </tag>
               |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/knora-base#StandoffBoldTag</classIri>
+              |      <classIri>http://www.knora.org/ontology/standoff#StandoffBoldTag</classIri>
               |    </standoffClass>
               |  </mappingElement>
               |

@@ -3,9 +3,9 @@
   <mappingElement>
     <tag><name>text</name><class>noClass</class><namespace>noNamespace</namespace></tag>
     <standoffClass>
-      <classIri>http://www.knora.org/ontology/knora-base#StandoffRootTag</classIri>
+      <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
       <attributes>
-        <attribute><attributeName>documentType</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/knora-base#standoffRootTagHasDocumentType</propertyIri></attribute>
+        <attribute><attributeName>documentType</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri></attribute>
       </attributes>
     </standoffClass>
   </mappingElement>
@@ -17,7 +17,7 @@
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
-      <classIri>http://www.knora.org/ontology/knora-base#StandoffParagraphTag</classIri>
+      <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
     </standoffClass>
   </mappingElement>
 
@@ -28,7 +28,7 @@
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
-      <classIri>http://www.knora.org/ontology/knora-base#StandoffItalicTag</classIri>
+      <classIri>http://www.knora.org/ontology/standoff#StandoffItalicTag</classIri>
     </standoffClass>
   </mappingElement>
 
@@ -39,7 +39,7 @@
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
-      <classIri>http://www.knora.org/ontology/knora-base#StandoffBoldTag</classIri>
+      <classIri>http://www.knora.org/ontology/standoff#StandoffBoldTag</classIri>
     </standoffClass>
   </mappingElement>
 
@@ -49,7 +49,7 @@
       <class>noClass</class>
       <namespace>noNamespace</namespace></tag>
     <standoffClass>
-      <classIri>http://www.knora.org/ontology/knora-base#StandoffUnderlineTag</classIri>
+      <classIri>http://www.knora.org/ontology/standoff#StandoffUnderlineTag</classIri>
     </standoffClass>
   </mappingElement>
   
@@ -60,7 +60,7 @@
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
-      <classIri>http://www.knora.org/ontology/knora-base#StandoffSubscriptTag</classIri>
+      <classIri>http://www.knora.org/ontology/standoff#StandoffSubscriptTag</classIri>
     </standoffClass>
   </mappingElement>
   
@@ -71,7 +71,7 @@
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
-      <classIri>http://www.knora.org/ontology/knora-base#StandoffSuperscriptTag</classIri>
+      <classIri>http://www.knora.org/ontology/standoff#StandoffSuperscriptTag</classIri>
     </standoffClass>
   </mappingElement>
 
@@ -82,7 +82,7 @@
       <namespace>noNamespace</namespace>
     </tag>
     <standoffClass>
-      <classIri>http://www.knora.org/ontology/knora-base#StandoffStrikethroughTag</classIri>
+      <classIri>http://www.knora.org/ontology/standoff#StandoffStrikethroughTag</classIri>
     </standoffClass>
   </mappingElement>
 

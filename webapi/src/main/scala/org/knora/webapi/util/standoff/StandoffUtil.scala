@@ -317,11 +317,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
         val saxParser = saxParserFactory.newSAXParser()
         val nodes: Elem = XML.withSAXParser(saxParser).loadString(xmlStr)
 
-        // TODO: make strings SPARQL safe
-
         // TODO: ensure that text nodes are not concatenated to one another (e.g. <p> tags)
-
-        // TODO: add support for schema validation
 
         val finishedConversionState = xmlNodes2Standoff(
             nodes = nodes,

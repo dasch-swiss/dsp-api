@@ -316,6 +316,7 @@ object InputValidation {
 
             val standoffTagName: TextattrV1.Value = TextattrV1.lookup(tagname, () => throw BadRequestException(s"Standoff tag not supported: $tagname"))
 
+            // TODO: this code is going to be removed once the routes natively accept XML
             standoffTagName match {
                 // depending on whether it is a linking tag or not, process the arguments
                 case linkingTag: TextattrV1.Value if linkingTag == TextattrV1.link =>

@@ -1,5 +1,6 @@
 open knora-test .
 load ../../knora-ontologies/knora-base.ttl into http://www.knora.org/ontology/knora-base .
+load ../_test_data/ontologies/standoff-onto.ttl into http://www.knora.org/ontology/standoff .
 load ../../knora-ontologies/knora-dc.ttl into http://www.knora.org/ontology/dc .
 load ../../knora-ontologies/salsah-gui.ttl into http://www.knora.org/ontology/salsah-gui .
 load ../_test_data/ontologies/incunabula-onto.ttl into http://www.knora.org/ontology/incunabula .

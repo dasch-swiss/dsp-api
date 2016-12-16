@@ -25,10 +25,12 @@
 
                 var content = CKEDITOR.instances.editor1.getData();
 
-                console.log(content);
+                var xml = '<?xml version="1.0" encoding="UTF-8"?><text documentType="ckeditor">\n' + content + "</text>"
+
+                console.log(xml);
 
                 fd.append('json', JSON.stringify(params));
-                fd.append('xml', '<?xml version="1.0" encoding="UTF-8"?><text documentType="ckeditor">\n' + content + "</text>");
+                fd.append('xml', xml);
 
                 function make_base_auth(user, password) {
                     var tok = "anything-user" + ':' + "test";
