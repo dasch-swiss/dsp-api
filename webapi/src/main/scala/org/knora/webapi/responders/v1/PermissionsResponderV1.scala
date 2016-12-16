@@ -211,7 +211,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                     acc ++ seq._2
                 }
                 /* Remove possible duplicate permissions */
-                val squashed: Set[PermissionV1] = removeDuplicatePermissions(combined)
+                val squashed: Set[PermissionV1] = PermissionUtilV1.removeDuplicatePermissions(combined)
                 (k, squashed)
             }
         //_ = log.debug(s"userAdministrativePermissionsGetV1 - result: $result")
@@ -251,7 +251,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                     acc ++ seq._2
                 }
                 /* Remove possible duplicate permissions */
-                val squashed: Set[PermissionV1] = removeDuplicatePermissions(combined)
+                val squashed: Set[PermissionV1] = PermissionUtilV1.removeDuplicatePermissions(combined)
                 (k, squashed)
             }
         //_ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - result: $result")
@@ -299,7 +299,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 case (permissionIri: IRI, propsMap: Map[String, String]) =>
 
                     /* parse permissions */
-                    val hasPermissions: Set[PermissionV1] = parsePermissions(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.AP)
+                    val hasPermissions: Set[PermissionV1] = PermissionUtilV1.parsePermissions(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.AP)
 
                     /* construct permission object */
                     AdministrativePermissionV1(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no project attached.")), forGroup = propsMap.getOrElse(OntologyConstants.KnoraBase.ForGroup, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no group attached.")), hasPermissions = hasPermissions)
@@ -344,7 +344,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             _ = if (groupedPermissionsQueryResponse.isEmpty) throw NotFoundException(s"Administrative permission $administrativePermissionIRI could not be found.")
 
             /* extract the permission */
-            hasPermissions = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.AP)
+            hasPermissions = PermissionUtilV1.parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.AP)
             //_ = log.debug(s"getAdministrativePermissionForIriV1 - hasPermissions: ${MessageUtil.toSource(hasPermissions)}")
 
             /* construct the permission object */
@@ -395,7 +395,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                 }
-                val hasPermissions = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.AP)
+                val hasPermissions = PermissionUtilV1.parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.AP)
                 Some(
                     AdministrativePermissionV1(iri = returnedPermissionIri, forProject = projectIRI, forGroup = groupIRI, hasPermissions = hasPermissions)
                 )
@@ -499,7 +499,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                 }
-                val hasPermissions: Set[PermissionV1] = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
+                val hasPermissions: Set[PermissionV1] = PermissionUtilV1.parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
                 Some(
                     ObjectAccessPermissionV1(forResource = Some(resourceIri), forValue = None, hasPermissions = hasPermissions)
                 )
@@ -541,7 +541,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                 }
-                val hasPermissions: Set[PermissionV1] = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
+                val hasPermissions: Set[PermissionV1] = PermissionUtilV1.parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
                 Some(
                     ObjectAccessPermissionV1(forResource = None, forValue = Some(valueIri), hasPermissions = hasPermissions)
                 )
@@ -592,7 +592,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 case (permissionIri: IRI, propsMap: Map[String, String]) =>
 
                     /* parse permissions */
-                    val hasPermissions: Set[PermissionV1] = parsePermissions(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.OAP)
+                    val hasPermissions: Set[PermissionV1] = PermissionUtilV1.parsePermissions(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.OAP)
 
                     /* construct permission object */
                     DefaultObjectAccessPermissionV1(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")), forGroup = propsMap.get(OntologyConstants.KnoraBase.ForGroup), forResourceClass = propsMap.get(OntologyConstants.KnoraBase.ForResourceClass), forProperty = propsMap.get(OntologyConstants.KnoraBase.ForProperty), hasPermissions = hasPermissions)
@@ -636,7 +636,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             }
             //_ = log.debug(s"getDefaultObjectAccessPermissionV1 - groupedResult: ${MessageUtil.toSource(groupedPermissionsQueryResponse)}")
 
-            hasPermissions = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
+            hasPermissions = PermissionUtilV1.parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
 
             defaultObjectAccessPermission = DefaultObjectAccessPermissionV1(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProperty).map(_.head), hasPermissions = hasPermissions)
 
@@ -691,7 +691,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                 }
-                val hasPermissions: Set[PermissionV1] = parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
+                val hasPermissions: Set[PermissionV1] = PermissionUtilV1.parsePermissions(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
                 Some(
                     DefaultObjectAccessPermissionV1(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProperty).map(_.head), hasPermissions = hasPermissions)
                 )
@@ -794,15 +794,15 @@ class PermissionsResponderV1 extends ResponderV1 {
             allDefaultPermissions: Seq[PermissionV1] = defaultPermissionsOnProjectGroups.toSeq ++ defaultPermissionsOnProjectEntity.toSeq ++ defaultPermissionsOnSystemEntity.toSeq
             //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - allDefaultPermissions: $allDefaultPermissions")
 
-            deduplicatedDefaultPermissions = removeDuplicatePermissions(allDefaultPermissions)
+            deduplicatedDefaultPermissions = PermissionUtilV1.removeDuplicatePermissions(allDefaultPermissions)
             //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - deduplicatedDefaultPermissions: $deduplicatedDefaultPermissions")
 
             /* Remove lesser permissions contained in higher ones */
-            defaultPermissions = removeLesserPermissions(deduplicatedDefaultPermissions, PermissionType.OAP)
+            defaultPermissions = PermissionUtilV1.removeLesserPermissions(deduplicatedDefaultPermissions, PermissionType.OAP)
             //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissions: $defaultPermissions")
 
             /* Create permissions string */
-            result = createHasPermissionsString(defaultPermissions, PermissionType.OAP)
+            result = PermissionUtilV1.formatPermissions(defaultPermissions, PermissionType.OAP)
             //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - result: $result")
         } yield result
     }
@@ -850,210 +850,4 @@ class PermissionsResponderV1 extends ResponderV1 {
 
     }
     */
-
-
-
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Helper methods
-    ///////////////////////////////////////////////////////////////////////////
-
-    /**
-      * -> Need this for reading permission literals.
-      *
-      * Parses the literal object of the predicate `knora-base:hasPermissions`.
-      *
-      * @param maybePermissionListStr the literal to parse.
-      * @return a [[Map]] in which the keys are permission abbreviations in
-      *         [[OntologyConstants.KnoraBase.ObjectAccessPermissionAbbreviations]], and the values are sets of
-      *         user group IRIs.
-      */
-    def parsePermissions(maybePermissionListStr: Option[String], permissionType: PermissionType): Set[PermissionV1] = {
-        maybePermissionListStr match {
-            case Some(permissionListStr) => {
-                val permissions: Seq[String] = permissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
-                //log.debug(s"parsePermissions - split permissions: $permissions")
-                permissions.flatMap {
-                    permission =>
-                        val splitPermission = permission.split(' ')
-                        val abbreviation = splitPermission(0)
-
-                        permissionType match {
-                            case PermissionType.AP => {
-                                if (!OntologyConstants.KnoraBase.AdministrativePermissionAbbreviations.contains(abbreviation)) {
-                                    throw InconsistentTriplestoreDataException(s"Unrecognized permission abbreviation '$abbreviation'")
-                                }
-                                if (splitPermission.length > 1) {
-                                    val shortGroups: Array[String] = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter)
-                                    val groups: Set[IRI] = shortGroups.map(_.replace(OntologyConstants.KnoraBase.KnoraBasePrefix, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion)).toSet
-                                    buildPermissionObject(abbreviation, groups)
-                                } else {
-                                    buildPermissionObject(abbreviation, Set.empty[IRI])
-                                }
-                            }
-                            case PermissionType.OAP => {
-                                if (!OntologyConstants.KnoraBase.ObjectAccessPermissionAbbreviations.contains(abbreviation)) {
-                                    throw InconsistentTriplestoreDataException(s"Unrecognized permission abbreviation '$abbreviation'")
-                                }
-                                val shortGroups: Array[String] = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter)
-                                val groups: Set[IRI] = shortGroups.map(_.replace(OntologyConstants.KnoraBase.KnoraBasePrefix, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion)).toSet
-                                buildPermissionObject(abbreviation, groups)
-                            }
-                        }
-                }
-            }.toSet
-            case None => Set.empty[PermissionV1]
-        }
-    }
-
-    /**
-      * Helper method used to convert the permission string stored inside the triplestore to a permission object.
-      *
-      * @param name the name of the permission.
-      * @param iris the optional set of additional information (e.g., group IRIs, resource class IRIs).
-      * @return a sequence of permission objects.
-      */
-    def buildPermissionObject(name: String, iris: Set[IRI]): Set[PermissionV1] = {
-        name match {
-            case OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission => Set(PermissionV1.ProjectResourceCreateAllPermission)
-            case OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission => {
-                if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.ProjectResourceCreateRestrictedPermission(iri))
-                } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
-                }
-
-            }
-            case OntologyConstants.KnoraBase.ProjectAdminAllPermission => Set(PermissionV1.ProjectAdminAllPermission)
-            case OntologyConstants.KnoraBase.ProjectAdminGroupAllPermission => Set(PermissionV1.ProjectAdminGroupAllPermission)
-            case OntologyConstants.KnoraBase.ProjectAdminGroupRestrictedPermission => {
-                if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.ProjectAdminGroupRestrictedPermission(iri))
-                } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
-                }
-            }
-            case OntologyConstants.KnoraBase.ProjectAdminRightsAllPermission => Set(PermissionV1.ProjectAdminRightsAllPermission)
-            case OntologyConstants.KnoraBase.ProjectAdminOntologyAllPermission => Set(PermissionV1.ProjectAdminOntologyAllPermission)
-            case OntologyConstants.KnoraBase.ChangeRightsPermission => {
-                if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.ChangeRightsPermission(iri))
-                } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
-                }
-            }
-            case OntologyConstants.KnoraBase.DeletePermission => {
-                if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.DeletePermission(iri))
-                } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
-                }
-            }
-            case OntologyConstants.KnoraBase.ModifyPermission => {
-                if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.ModifyPermission(iri))
-                } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
-                }
-            }
-            case OntologyConstants.KnoraBase.ViewPermission => {
-                if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.ViewPermission(iri))
-                } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
-                }
-            }
-            case OntologyConstants.KnoraBase.RestrictedViewPermission => {
-                if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.RestrictedViewPermission(iri))
-                } else {
-                    throw InconsistentTriplestoreDataException(s"Missing additional permission information!")
-                }
-            }
-        }
-
-    }
-
-    /**
-      * Helper method used to remove remove duplicate permissions.
-      *
-      * @param permissions the sequence of permissions with possible duplicates.
-      * @return a set containing only unique permission.
-      */
-    def removeDuplicatePermissions(permissions: Seq[PermissionV1]): Set[PermissionV1] = {
-
-        val result = permissions.groupBy( perm => perm.name + perm.additionalInformation ).map { case (k, v) => v.head }.toSet
-        //log.debug(s"removeDuplicatePermissions - result: $result")
-        result
-    }
-
-    /**
-      * Helper method used to remove lesser permissions, i.e. permissions which are already given by
-      * the highest permission.
-      * @param permissions a set of permissions possibly containing lesser permissions.
-      * @param permissionType the type of permissions.
-      * @return a set of permissions without possible lesser permissions.
-      */
-    def removeLesserPermissions(permissions: Set[PermissionV1], permissionType: PermissionType): Set[PermissionV1] = {
-        permissionType match {
-            case PermissionType.OAP => {
-                if (permissions.nonEmpty) {
-                    /* Handling object access permissions which always have 'additionalInformation' and 'v1Code' set */
-                    permissions.groupBy(_.additionalInformation).map { case (groupIri, perms) =>
-                        // sort in descending order and then take the first one (the highest permission)
-                        perms.toArray.sortWith(_.v1Code.get > _.v1Code.get).head
-                    }.toSet
-                } else {
-                    Set.empty[PermissionV1]
-                }
-            }
-            case PermissionType.AP => ???
-        }
-    }
-
-    /**
-      * Helper method used to transform a set of permissions into a permissions string ready to be written into the
-      * triplestore as the value for the 'knora-base:hasPermissions' property.
-      * @param permissions
-      * @param permissionType
-      * @return
-      */
-    def createHasPermissionsString(permissions: Set[PermissionV1], permissionType: PermissionType): Option[String] = {
-        permissionType match {
-            case PermissionType.OAP => {
-                if (permissions.nonEmpty) {
-
-                    /* a map with permission names and shortened groups. */
-                    val groupedPermissions: Map[String, String] = permissions.groupBy(_.name).map { case (name, perms) =>
-                        val shortGroupsString = perms.foldLeft("") { (acc, perm) =>
-                            if (acc.isEmpty) {
-                                acc + perm.additionalInformation.get.replace(OntologyConstants.KnoraBase.KnoraBasePrefixExpansion, OntologyConstants.KnoraBase.KnoraBasePrefix)
-                            } else {
-                                acc + OntologyConstants.KnoraBase.GroupListDelimiter + perm.additionalInformation.get.replace(OntologyConstants.KnoraBase.KnoraBasePrefixExpansion, OntologyConstants.KnoraBase.KnoraBasePrefix)
-                            }
-                        }
-                        (name, shortGroupsString)
-                    }
-
-                    /* Sort permissions in descending order */
-                    val sortedPermissions = groupedPermissions.toArray.sortWith{
-                        (left, right) => PermissionUtilV1.permissionsToV1PermissionCodes(left._1) > PermissionUtilV1.permissionsToV1PermissionCodes(right._1)
-                    }
-
-                    /* create the permissions string */
-                    val permissionsString = sortedPermissions.foldLeft("") { (acc, perm) =>
-                        if (acc.isEmpty) {
-                            acc + perm._1 + " " + perm._2
-                        } else {
-                            acc + OntologyConstants.KnoraBase.PermissionListDelimiter + perm._1 + " " + perm._2
-                        }
-                    }
-
-                    Some(permissionsString)
-                } else {
-                    None
-                }
-            }
-        }
-    }
 }

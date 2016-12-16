@@ -1240,13 +1240,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         )
                     } else {
                         // It's not a LinkValue.
-                        PermissionUtilV1.getUserPermissionV1(
-                            subjectIri = valueIri,
-                            subjectOwner = valueOwner,
-                            subjectProject = project,
-                            subjectPermissionLiteral = valuePermissions,
-                            userProfile = versionHistoryRequest.userProfile
-                        )
+                        PermissionUtilV1.getUserPermissionV1(subjectIri = valueIri, subjectCreator = valueOwner, subjectProject = project, subjectPermissionLiteral = valuePermissions, userProfile = versionHistoryRequest.userProfile)
                     }
 
                     valuePermissionCode.nonEmpty

@@ -128,6 +128,16 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 )
                 expectMsg(SharedAdminTestData.anythingUser1.permissionData)
             }
+
+            "return user's administrative permissions (helper method used in queries before)" in {
+                val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.userAdministrativePermissionsGetV1(multiuserUserProfileV1.permissionData.groupsPerProject).mapTo[Map[IRI, Set[PermissionV1]]], 1.seconds)
+                result should equal(multiuserUserProfileV1.permissionData.administrativePermissionsPerProject)
+            }
+
+            "return user's default object access permissions (helper method used in queries before)" in {
+                val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.userDefaultObjectAccessPermissionsGetV1(multiuserUserProfileV1.permissionData.groupsPerProject), 1.seconds)
+                result should equal(multiuserUserProfileV1.permissionData.defaultObjectAccessPermissionsPerProject)
+            }
         }
 
         "queried about administrative permissions " should {
@@ -353,109 +363,6 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     projectIri = ANYTHING_PROJECT_IRI, propertyIri = "http://www.knora.org/ontology/anything#hasInterval", anythingUser1.permissionData
                 )
                 expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"))
-            }
-
-        }
-    }
-
-    "The PermissensResponderV1 helper methods" when {
-
-        "called" should {
-
-            "return user's administrative permissions " in {
-                val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.userAdministrativePermissionsGetV1(multiuserUserProfileV1.permissionData.groupsPerProject).mapTo[Map[IRI, Set[PermissionV1]]], 1.seconds)
-                result should equal(multiuserUserProfileV1.permissionData.administrativePermissionsPerProject)
-            }
-
-            "return user's default object access permissions " in {
-                val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.userDefaultObjectAccessPermissionsGetV1(multiuserUserProfileV1.permissionData.groupsPerProject), 1.seconds)
-                result should equal(multiuserUserProfileV1.permissionData.defaultObjectAccessPermissionsPerProject)
-            }
-
-            "parse permissions" in {
-                val hasPermissionsString = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser,http://data.knora.org/groups/customgroup|RV knora-base:UnknownUser"
-
-                val permissionsSet = Set(
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.ViewPermission("http://data.knora.org/groups/customgroup"),
-                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
-                )
-
-                underlyingActorUnderTest.parsePermissions(Some(hasPermissionsString), PermissionType.OAP) should equal(permissionsSet)
-            }
-
-            "build a permission object" in {
-                underlyingActorUnderTest.buildPermissionObject(
-                    name = OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission,
-                    iris = Set("1", "2", "3")
-                ) should equal(
-                    Set(
-                        PermissionV1.ProjectResourceCreateRestrictedPermission("1"),
-                        PermissionV1.ProjectResourceCreateRestrictedPermission("2"),
-                        PermissionV1.ProjectResourceCreateRestrictedPermission("3")
-                    )
-                )
-            }
-
-            "remove duplicate permissions" in {
-
-                val duplicatedPermissions = Seq(
-                    PermissionV1.RestrictedViewPermission("1"),
-                    PermissionV1.RestrictedViewPermission("1"),
-                    PermissionV1.RestrictedViewPermission("2"),
-                    PermissionV1.ChangeRightsPermission("2"),
-                    PermissionV1.ChangeRightsPermission("3"),
-                    PermissionV1.ChangeRightsPermission("3")
-                )
-
-                val deduplicatedPermissions = Set(
-                    PermissionV1.RestrictedViewPermission("1"),
-                    PermissionV1.RestrictedViewPermission("2"),
-                    PermissionV1.ChangeRightsPermission("2"),
-                    PermissionV1.ChangeRightsPermission("3")
-                )
-
-                val result = underlyingActorUnderTest.removeDuplicatePermissions(duplicatedPermissions)
-                result.size should equal(deduplicatedPermissions.size)
-                result should contain allElementsOf deduplicatedPermissions
-
-            }
-
-            "remove lesser permissions" in {
-                val withLesserPermissions = Set(
-                    PermissionV1.RestrictedViewPermission("1"),
-                    PermissionV1.ViewPermission("1"),
-                    PermissionV1.ModifyPermission("2"),
-                    PermissionV1.ChangeRightsPermission("1"),
-                    PermissionV1.DeletePermission("2")
-                )
-
-                val withoutLesserPermissions = Set(
-                    PermissionV1.ChangeRightsPermission("1"),
-                    PermissionV1.DeletePermission("2")
-                )
-
-                val result = underlyingActorUnderTest.removeLesserPermissions(withLesserPermissions, PermissionType.OAP)
-                result.size should equal(withoutLesserPermissions.size)
-                result should contain allElementsOf withoutLesserPermissions
-            }
-
-            "create permissions string" in {
-                val permissions = Set(
-                    PermissionV1.ChangeRightsPermission("1"),
-                    PermissionV1.DeletePermission("2"),
-                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser)
-                )
-
-                val permissionsString = "CR knora-base:Creator,1|D 2|M knora-base:ProjectMember|V knora-base:KnownUser"
-
-                val result = underlyingActorUnderTest.createHasPermissionsString(permissions, PermissionType.OAP)
-                result should equal(Some(permissionsString))
-
             }
 
         }

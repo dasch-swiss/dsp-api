@@ -712,13 +712,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // The row may or may not contain a file value IRI.
             row.rowMap.get("fileValue") match {
                 case Some(fileValueIri) =>
-                    val fileValuePermission = PermissionUtilV1.getUserPermissionV1(
-                        subjectIri = fileValueIri,
-                        subjectOwner = row.rowMap("fileValueAttachedToUser"),
-                        subjectProject = fileValueProject,
-                        subjectPermissionLiteral = row.rowMap.get("fileValuePermissions"),
-                        userProfile = userProfile
-                    )
+                    val fileValuePermission = PermissionUtilV1.getUserPermissionV1(subjectIri = fileValueIri, subjectCreator = row.rowMap("fileValueAttachedToUser"), subjectProject = fileValueProject, subjectPermissionLiteral = row.rowMap.get("fileValuePermissions"), userProfile = userProfile)
 
                     Some(StillImageFileValue(
                         id = fileValueIri,
@@ -750,13 +744,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             val sourceObjectProject = row.rowMap("sourceObjectAttachedToProject")
             val sourceObjectLiteral = row.rowMap.get("sourceObjectPermissions")
 
-            val sourceObjectPermissionCode = PermissionUtilV1.getUserPermissionV1(
-                subjectIri = sourceObjectIri,
-                subjectOwner = sourceObjectOwner,
-                subjectProject = sourceObjectProject,
-                subjectPermissionLiteral = sourceObjectLiteral,
-                userProfile = userProfile
-            )
+            val sourceObjectPermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = sourceObjectIri, subjectCreator = sourceObjectOwner, subjectProject = sourceObjectProject, subjectPermissionLiteral = sourceObjectLiteral, userProfile = userProfile)
 
             val linkValueIri = row.rowMap("linkValue")
             val linkValueOwner = row.rowMap("linkValueOwner")
@@ -766,13 +754,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // The link can't be a standoff link, because we know the link property is a subproperty of knora-base:isPartOf,
             // so we don't have to treat it as a special case here.
 
-            val linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(
-                subjectIri = linkValueIri,
-                subjectOwner = linkValueOwner,
-                subjectProject = linkValueProject,
-                subjectPermissionLiteral = linkValuePermissions,
-                userProfile = userProfile
-            )
+            val linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueOwner, subjectProject = linkValueProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
 
             // Allow the user to see the link only if they have permission to see both the source object and the link value.
             val permissionCode = Seq(sourceObjectPermissionCode, linkValuePermissionCode).min
@@ -827,13 +809,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         // The link can't be a standoff link, because we know the link property is a subproperty of knora-base:isPartOf,
                         // so we don't have to treat it as a special case here.
 
-                        linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(
-                            subjectIri = linkValueIri,
-                            subjectOwner = linkValueOwner,
-                            subjectProject = linkValueProject,
-                            subjectPermissionLiteral = linkValuePermissions,
-                            userProfile = userProfile
-                        )
+                        linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueOwner, subjectProject = linkValueProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
 
                         // Allow the user to see the link only if they have permission to see both the containing resource and the link value.
                         permissionCode = Seq(containingResourcePermissionCode, linkValuePermissionCode).min
@@ -934,13 +910,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                     regionPropertiesSequencedFutures: Seq[Future[PropsGetForRegionV1]] = regionRows.filter {
                         regionRow =>
-                            val permissionCodeForRegion = PermissionUtilV1.getUserPermissionV1(
-                                subjectIri = regionRow.rowMap("region"),
-                                subjectOwner = regionRow.rowMap("owner"),
-                                subjectProject = regionRow.rowMap("project"),
-                                subjectPermissionLiteral = regionRow.rowMap.get("regionObjectPermissions"),
-                                userProfile = userProfile
-                            )
+                            val permissionCodeForRegion = PermissionUtilV1.getUserPermissionV1(subjectIri = regionRow.rowMap("region"), subjectCreator = regionRow.rowMap("owner"), subjectProject = regionRow.rowMap("project"), subjectPermissionLiteral = regionRow.rowMap.get("regionObjectPermissions"), userProfile = userProfile)
 
                             // ignore regions the user has no permissions on
                             permissionCodeForRegion.nonEmpty
@@ -1109,13 +1079,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     val attachedToProject = row.rowMap("attachedToProject")
                     val resourcePermissions = row.rowMap.get("resourcePermissions")
 
-                    val permissionCode = PermissionUtilV1.getUserPermissionV1(
-                        subjectIri = resourceIri,
-                        subjectOwner = attachedToUser,
-                        subjectProject = attachedToProject,
-                        subjectPermissionLiteral = resourcePermissions,
-                        userProfile = userProfile
-                    )
+                    val permissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = attachedToUser, subjectProject = attachedToProject, subjectPermissionLiteral = resourcePermissions, userProfile = userProfile)
 
                     if (numberOfProps > 1) {
                         // The client requested more than one property per resource that was found.
@@ -1417,7 +1381,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             // Check user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to
             // create a new resource in the given project.
-            _ = if (!userProfile.permissionData.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)) {
+            _ = if (!userProfile.permissionData.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)) {
                 throw ForbiddenException(s"User $userIri does not have permissions to create a resource in project $projectIri")
             }
 

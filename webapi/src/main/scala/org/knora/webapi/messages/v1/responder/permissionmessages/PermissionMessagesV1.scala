@@ -403,7 +403,7 @@ case class PermissionDataV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[Proj
       * @param explain an optional parameter which defaults to false, when set to true, this method prints out an explanation for the result.
       * @return a boolean value.
       */
-    def hasPermissionFor(operation: OperationV1, insideProject: IRI, explain: Boolean = false): Boolean = {
+    def hasPermissionFor(operation: OperationV1, insideProject: IRI, objectAccessPermissions: Option[Set[PermissionV1]], explain: Boolean = false): Boolean = {
 
         //println(s"hasPermissionFor - administrativePermissionsPerProject: ${administrativePermissionsPerProject}, operation: $operation, insideProject: $insideProject")
 
