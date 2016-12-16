@@ -1421,8 +1421,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                 throw ForbiddenException(s"User $userIri does not have permissions to create a resource in project $projectIri")
             }
 
-            // FIXME: Query the PermissionsResponder for Resource Class DOAP
-
             // get default permissions for given resource type
             /*
             entityInfoResponse <- {

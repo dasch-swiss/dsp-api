@@ -24,6 +24,7 @@ import java.util.UUID
 
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
@@ -41,44 +42,25 @@ import scala.concurrent.duration._
   * Static data for testing [[ValuesResponderV1]].
   */
 object ValuesResponderV1Spec {
-    private val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
-    private val anythingProjectIri = "http://data.knora.org/projects/anything"
+
+    val config = ConfigFactory.parseString(
+        """
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+
+    private val incunabulaProjectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI
+    private val anythingProjectIri = SharedAdminTestData.ANYTHING_PROJECT_IRI
 
     private val zeitglöckleinIri = "http://data.knora.org/c5058f3a"
     private val miscResourceIri = "http://data.knora.org/miscResource"
     private val aThingIri = "http://data.knora.org/a-thing"
 
-    private val incunabulaUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
+    private val incunabulaUser = SharedAdminTestData.incunabulaUser
 
-    private val imagesUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/images"),
-        groups = Nil,
-        userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/91e19f1e01"),
-            lang = "de"
-        )
-    )
+    private val imagesUser = SharedAdminTestData.imagesUser01
 
-    private val anythingUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/anything"),
-        groups = Nil,
-        userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q"),
-            lang = "de"
-        )
-    )
+    private val anythingUser = SharedAdminTestData.anythingUser1
 
     private val versionHistoryWithHiddenVersion = ValueVersionHistoryGetResponseV1(
         userdata = incunabulaUser.userData,
@@ -100,7 +82,7 @@ object ValuesResponderV1Spec {
 /**
   * Tests [[ValuesResponderV1]].
   */
-class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
+class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with ImplicitSender {
 
     import ValuesResponderV1Spec._
 

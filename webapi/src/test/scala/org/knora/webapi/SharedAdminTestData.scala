@@ -24,8 +24,6 @@ import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1, GroupP
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.rogach.scallop.ArgType.V
-import sun.lwawt.macosx.CImage.Creator
 
 /**
   * This object holds the same user which are loaded with '_test_data/all_data/admin-data.ttl'. Using this object
@@ -215,7 +213,7 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectAdmin}", s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer")
+                "http://data.knora.org/projects/images" -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
             ),
             administrativePermissionsPerProject = Map(
                 "http://data.knora.org/projects/images" -> Set(
@@ -223,7 +221,13 @@ object SharedAdminTestData {
                     PermissionV1.ProjectAdminAllPermission
                 )
             ),
-            defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
+            defaultObjectAccessPermissionsPerProject =  Map(
+                IMAGES_PROJECT_IRI -> Set(
+                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember)
+                )
+            )
         )
     )
 
@@ -304,8 +308,8 @@ object SharedAdminTestData {
     /*************************************/
 
     val INCUNABULA_PROJECT_IRI = "http://data.knora.org/projects/77275339"
-    val INCUNABULA_BOOK_RESOURCE_CLASS = "http://www.knora.org/ontology/incunabula#Book"
-    val INCUNABULA_PAGE_RESOURCE_CLASS = "http://www.knora.org/ontology/incunabula#Page"
+    val INCUNABULA_BOOK_RESOURCE_CLASS = "http://www.knora.org/ontology/incunabula#book"
+    val INCUNABULA_PAGE_RESOURCE_CLASS = "http://www.knora.org/ontology/incunabula#page"
 
     /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
     def incunabulaUser = UserProfileV1(
@@ -333,7 +337,14 @@ object SharedAdminTestData {
                     PermissionV1.ProjectAdminAllPermission
                 )
             ),
-            defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
+            defaultObjectAccessPermissionsPerProject =  Map(
+                INCUNABULA_PROJECT_IRI -> Set(
+                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                )
+            )
         )
     )
 
@@ -423,8 +434,26 @@ object SharedAdminTestData {
             isActiveUser = Some(true),
             lang = "de"
         ),
-        groups = Vector.empty[IRI],
-        projects = Vector(ANYTHING_PROJECT_IRI)
+        groups = Seq.empty[IRI],
+        projects = Seq(ANYTHING_PROJECT_IRI),
+        sessionId = None,
+        permissionData = PermissionDataV1(
+            groupsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+            ),
+            administrativePermissionsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission
+                )
+            ),
+            defaultObjectAccessPermissionsPerProject =  Map(
+                ANYTHING_PROJECT_IRI -> Set(
+                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember)
+                )
+            )
+        )
 
     )
 

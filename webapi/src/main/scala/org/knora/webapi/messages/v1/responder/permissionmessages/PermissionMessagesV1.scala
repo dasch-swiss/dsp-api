@@ -123,24 +123,19 @@ case class AdministrativePermissionUpdateRequestV1(userProfileV1: UserProfileV1)
 
 // Object Access Permissions
 
-
 /**
   * A message that requests the object access permissions attached to a resource via the 'knora-base:hasPermissions' property.
   *
-  * @param resourceIri
-  * @param projectIri
+  * @param resourceIri the IRI of the resource.
   */
-case class ObjectAccessPermissionsForResourceGetV1(resourceIri: IRI, projectIri: IRI) extends PermissionsResponderRequestV1
+case class ObjectAccessPermissionsForResourceGetV1(resourceIri: IRI) extends PermissionsResponderRequestV1
 
 /**
   * A message that requests the object access permissions attached to a value via the 'knora-base:hasPermissions' property.
   *
-  * @param valueIri
-  * @param projectIri
+  * @param valueIri the IRI of the value.
   */
-case class ObjectAccessPermissionsForValueGetV1(valueIri: IRI, projectIri: IRI) extends PermissionsResponderRequestV1
-
-
+case class ObjectAccessPermissionsForValueGetV1(valueIri: IRI) extends PermissionsResponderRequestV1
 
 
 // Default Object Access Permissions

@@ -38,7 +38,8 @@ import org.knora.webapi.util._
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
 /**
   * Updates Knora values.
@@ -180,6 +181,7 @@ class ValuesResponderV1 extends ResponderV1 {
             defaultObjectAccessPermissions <- {
                 responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri = createValueRequest.projectIri, propertyIri = createValueRequest.propertyIri, createValueRequest.userProfile.permissionData)
             }.mapTo[Option[String]]
+            _ = log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
             // Construct its permissions from the default permissions of the resource property.
             //permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
@@ -379,7 +381,16 @@ class ValuesResponderV1 extends ResponderV1 {
                         val propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
 
                         // FIXME: Query the PermissionsResponder for Property DOAP
-                        val permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
+                        //val permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
+                        val defaultObjectAccessPermissionsF = {
+                            responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                                projectIri = createMultipleValuesRequest.projectIri,
+                                propertyIri = propertyIri,
+                                createMultipleValuesRequest.userProfile.permissionData)
+                        }.mapTo[Option[String]]
+
+                        val defaultObjectAccessPermissions = Await.result(defaultObjectAccessPermissionsF, 1.second)
+                        log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
                         // For each property, construct a SparqlGenerationResultForProperty containing WHERE clause statements, INSERT clause statements, and UnverifiedValueV1s.
                         val sparqlGenerationResultForProperty: SparqlGenerationResultForProperty = valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
@@ -406,7 +417,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             newReferenceCount = 1,
                                             newLinkValueOwner = userIri,
                                             newLinkValueProject = Some(createMultipleValuesRequest.projectIri),
-                                            newLinkValuePermissions = permissionsFromDefaults
+                                            newLinkValuePermissions = defaultObjectAccessPermissions
                                         )
 
                                         // Generate WHERE clause statements for the link.
@@ -450,7 +461,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
                                             valueOwner = userIri,
                                             valueProject = createMultipleValuesRequest.projectIri,
-                                            maybeValuePermissions = permissionsFromDefaults
+                                            maybeValuePermissions = defaultObjectAccessPermissions
                                         ).toString()
 
                                         //println(insertSparql)
@@ -821,6 +832,14 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 }
 
+                defaultObjectAccessPermissions <- {
+                    responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                        projectIri = findResourceWithValueResult.projectIri,
+                        propertyIri = findResourceWithValueResult.propertyIri,
+                        permissionData = changeValueRequest.userProfile.permissionData)
+                }.mapTo[Option[String]]
+                _ = log.debug(s"changeValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
+
                 // The rest of the preparation for the update depends on whether we're changing a link or an ordinary value.
                 apiResponse <- (changeValueRequest.value, currentValueQueryResult) match {
                     case (linkUpdateV1: LinkUpdateV1, currentLinkValueQueryResult: LinkValueQueryResult) =>
@@ -834,7 +853,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         // We'll need to create a new LinkValue. Use the property's default permissions to make permissions
                         // for it.
                         // FIXME: Query the PermissionsResponder for Property DOAP
-                        val permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
+                        //val permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
 
                         changeLinkValueV1AfterChecks(projectIri = currentValueQueryResult.projectIri,
                             resourceIri = findResourceWithValueResult.resourceIri,
@@ -844,7 +863,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             comment = changeValueRequest.comment,
                             valueOwner = userIri, // Make the requesting user the owner.
                             valueProject = resourceFullResponse.resinfo.get.project_id, // Give it the same project as the containing resource.
-                            valuePermissions = permissionsFromDefaults,
+                            valuePermissions = defaultObjectAccessPermissions,
                             userProfile = changeValueRequest.userProfile)
 
                     case _ =>
@@ -1209,7 +1228,6 @@ class ValuesResponderV1 extends ResponderV1 {
                     val valuePermissions = rowMap.get("valuePermissions")
 
                     // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
-                    // FIXME: This should be refactored to use the PermissionsResponder
                     val valuePermissionCode = if (InputValidation.optionStringToBoolean(rowMap.get("isLinkValue"))) {
                         // It's a LinkValue.
                         PermissionUtilV1.getUserPermissionOnLinkValueV1(

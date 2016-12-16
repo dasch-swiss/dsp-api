@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRe
 import org.knora.webapi.messages.v1.responder.permissionmessages.{ObjectAccessPermissionV1, ObjectAccessPermissionsForResourceGetV1, PermissionV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
@@ -507,9 +507,14 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
     private def checkPermissionsOnResource(resourceIri: IRI): Unit = {
 
-        val expected = Set.empty[PermissionV1]
+        val expected = Set(
+            PermissionV1.ChangeRightsPermission("http://www.knora.org/ontology/knora-base#Creator"),
+            PermissionV1.ModifyPermission("http://www.knora.org/ontology/knora-base#ProjectMember"),
+            PermissionV1.ViewPermission("http://www.knora.org/ontology/knora-base#KnownUser"),
+            PermissionV1.RestrictedViewPermission("http://www.knora.org/ontology/knora-base#UnknownUser")
+        )
 
-        responderManager ! ObjectAccessPermissionsForResourceGetV1(resourceIri = newBookResourceIri.get, projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI)
+        responderManager ! ObjectAccessPermissionsForResourceGetV1(resourceIri = newBookResourceIri.get)
         expectMsgPF(timeout) {
             case Some(permission) => {
                 val perms = permission.asInstanceOf[ObjectAccessPermissionV1].hasPermissions
@@ -756,7 +761,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
 
             actorUnderTest ! ResourceCreateRequestV1(
-                resourceTypeIri = "http://www.knora.org/ontology/incunabula#book",
+                resourceTypeIri = SharedAdminTestData.INCUNABULA_BOOK_RESOURCE_CLASS,
                 label = "Test-Book",
                 projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 values = valuesToBeCreated,
@@ -834,9 +839,9 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             )
 
             actorUnderTest ! ResourceCreateRequestV1(
-                resourceTypeIri = "http://www.knora.org/ontology/incunabula#page",
+                resourceTypeIri = SharedAdminTestData.INCUNABULA_PAGE_RESOURCE_CLASS,
                 label = "Test-Page",
-                projectIri = "http://data.knora.org/projects/77275339",
+                projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 values = valuesToBeCreated,
                 file = Some(SipiResponderConversionFileRequestV1(
                     originalFilename = "test.jpg",
@@ -853,6 +858,10 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                     newPageResourceIri.set(response.res_id)
                     checkResourceCreation(received = response, expected = expected)
             }
+
+            /* Check the permissions on the resource */
+            checkPermissionsOnResource(newPageResourceIri.get)
+
         }
 
         "get the context of a newly created incunabula:page and check its locations" in {
