@@ -81,7 +81,7 @@ class SipiResponderV1 extends ResponderV1 {
             queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = queryResponse.results.bindings
             // check if rows were found for the given filename
-            _ = if (rows.size == 0) throw BadRequestException(s"No file value was found for filename $filename")
+            _ = if (rows.isEmpty) throw BadRequestException(s"No file value was found for filename $filename")
             valueProps = valueUtilV1.createValueProps(filename, rows)
             valueV1: ApiValueV1 = valueUtilV1.makeValueV1(valueProps)
             path = valueV1 match {

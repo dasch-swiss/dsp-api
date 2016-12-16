@@ -23,51 +23,22 @@
 @**
  * Queries a knora-base:Value.
  *
+ * If the triplestore type is GraphDB, this template delegates to getValueGraphDB.sparql.txt, which is optimised
+ * for GraphDB. Otherwise, it delegates to getValueStandard.sparql.txt.
+ *
  * @param triplestore the name of the triplestore being used.
  * @param iri the IRI of the Value.
  *@
 @(triplestore: String,
   valueIri: IRI)
 
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
-
-SELECT ?objPred ?objObj ?predStandoff ?objStandoff
-@* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
-WHERE {
-    BIND(IRI("@valueIri") AS ?obj)
-
-    ?resourceProp rdfs:subPropertyOf+ knora-base:hasValue .
-
-    {
-        ?resource ?resourceProp ?obj .
-        ?obj knora-base:isDeleted false .
-        ?obj ?objPred ?objObj .
-
-        FILTER(?objPred != knora-base:attachedToProject)
-
-        OPTIONAL {
-            ?objPred rdfs:subPropertyOf* knora-base:valueHasStandoff .
-            ?objObj ?predStandoff ?objStandoff .
-        }
+    @{
+        queries.sparql.v1.txt.getValueGraphDB(valueIri = valueIri)
     }
-    UNION
-    {
-        @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
-
-        ?resource ?resourceProp ?obj .
-        ?obj knora-base:isDeleted false .
-        ?resource knora-base:attachedToProject ?resourceProject .
-
-        OPTIONAL {
-            ?obj knora-base:attachedToProject ?valueProject .
-        }
-
-        BIND(knora-base:attachedToProject AS ?objPred)
-        BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+} else {
+    @{
+        queries.sparql.v1.txt.getValueStandard(triplestore = triplestore,
+                                               valueIri = valueIri)
     }
 }

@@ -23,64 +23,22 @@
 @**
  * Gets information about the incoming references to a resource, as well as about the referring resources.
  *
+ * If the triplestore type is GraphDB, this template delegates to getIncomingReferencesGraphDB.sparql.txt, which is
+ * optimised for GraphDB. Otherwise, it delegates to getIncomingReferencesStandard.sparql.txt.
+ *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.
  *@
 @(triplestore: String,
   resourceIri: IRI)
 
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-
-SELECT ?referringResource ?linkProp ?prop ?obj ?isLinkValue ?objPred ?objObj
-@* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
-WHERE {
-    BIND(IRI("@resourceIri") as ?resource)
-
-    ?resource knora-base:isDeleted false .
-
-    ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
-
-    @* Here FILTER NOT EXISTS is more efficient than MINUS on Fuseki, but it returns different results on GraphDB. *@
-    @if(triplestore == "fuseki") {
-        FILTER NOT EXISTS
-    } else {
-        MINUS
+    @{
+        queries.sparql.v1.txt.getIncomingReferencesGraphDB(resourceIri = resourceIri)
     }
-        {
-            ?linkProp rdfs:subPropertyOf+ knora-base:isPartOf .
-        }
-
-    ?referringResource ?linkProp ?resource ;
-        knora-base:isDeleted false .
-
-    {
-        ?referringResource ?prop ?obj .
-
-        @* Here FILTER NOT EXISTS is more efficient than MINUS on Fuseki, but it returns different results on GraphDB. *@
-        @if(triplestore == "fuseki") {
-            FILTER NOT EXISTS
-        } else {
-            MINUS
-        }
-            {
-                ?prop rdfs:subPropertyOf+ knora-base:hasValue .
-            }
-    }
-    UNION
-    {
-        @* Get the LinkValue for each link from ?referringResource to ?resource, so its permissions can be checked. *@
-
-        ?prop rdfs:subPropertyOf* knora-base:hasLinkToValue .
-        ?referringResource ?prop ?obj .
-        ?obj rdf:predicate ?linkProp .
-        ?obj rdf:object ?resource .
-        ?obj knora-base:isDeleted false .
-        ?obj ?objPred ?objObj .
-        BIND(true as ?isLinkValue)
+} else {
+    @{
+        queries.sparql.v1.txt.getIncomingReferencesStandard(triplestore = triplestore,
+                                                            resourceIri = resourceIri)
     }
 }

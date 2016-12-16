@@ -58,7 +58,7 @@ WHERE {
         FILTER(?objPred != knora-base:attachedToProject)
 
         OPTIONAL {
-            ?objPred rdfs:subPropertyOf* knora-base:valueHasStandoff .
+            FILTER(?objPred = knora-base:valueHasStandoff) .
             ?objObj ?predStandoff ?objStandoff .
         }
     }

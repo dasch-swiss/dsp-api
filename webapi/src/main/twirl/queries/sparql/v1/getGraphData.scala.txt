@@ -24,11 +24,8 @@
  * Gets the outbound or inbound links from/to a resource. This query is used recursively to get a graph of
  * resources reachable from a given resource.
  *
- * If the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
- * SPARQL. Specifically, we use inference to find subproperties of knora-base:hasLinkTo and knora-base:isPartOf.
- * Without inference, we have to do this using SPARQL property path syntax (rdfs:subPropertyOf*). Using inference
- * requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit> whenever we need to get explicit
- * (non-inferred) statements.
+ * If the triplestore type is GraphDB, this template delegates to getGraphDataGraphDB.sparql.txt, which is optimised
+ * for GraphDB. Otherwise, it delegates to getGraphDataStandard.sparql.txt.
  *
  * @param triplestore the name of the triplestore being used.
  * @param startNodeIri the IRI of the resource to use as the starting point of the query.
@@ -40,118 +37,17 @@
   startNodeOnly: Boolean,
   outbound: Boolean = true)
 
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-
-SELECT ?node ?nodeClass ?nodeLabel ?nodeOwner ?nodeProject ?nodePermissions
-       ?linkValue ?linkProp ?linkValueOwner ?linkValueProject ?linkValuePermissions
-WHERE {
-    @if(startNodeOnly) {
-        BIND(IRI("@startNodeIri") AS ?node) .
-
-        @if(triplestore.startsWith("graphdb")) {
-            GRAPH <http://www.ontotext.com/explicit> {
-                ?node a ?nodeClass .
-            }
-        } else {
-            ?node a ?nodeClass .
-        }
-
-        ?node rdfs:label ?nodeLabel ;
-            knora-base:attachedToUser ?nodeOwner ;
-            knora-base:attachedToProject ?nodeProject ;
-            knora-base:isDeleted false .
-
-        OPTIONAL {
-            ?node knora-base:hasPermissions ?nodePermissions .
-        }
-    } else {
-        BIND(IRI("@startNodeIri") AS ?startNode) .
-
-        @if(triplestore.startsWith("graphdb")) {
-            @if(outbound) {
-                ?startNode knora-base:hasLinkTo ?node .
-
-                FILTER NOT EXISTS {
-                    ?startNode knora-base:isPartOf ?node .
-                }
-
-                GRAPH <http://www.ontotext.com/explicit> {
-                    ?startNode ?linkProp ?node .
-                }
-            } else {
-                ?node knora-base:hasLinkTo ?startNode .
-
-                FILTER NOT EXISTS {
-                    ?node knora-base:isPartOf ?startNode .
-                }
-
-                GRAPH <http://www.ontotext.com/explicit> {
-                    ?node ?linkProp ?startNode .
-                }
-            }
-        } else {
-            ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
-
-            @if(outbound) {
-                ?startNode ?linkProp ?node .
-
-                FILTER NOT EXISTS {
-                    ?isPartOfProp rdfs:subPropertyOf* knora-base:isPartOf .
-                    ?startNode ?isPartOfProp ?node .
-                }
-            } else {
-                ?node ?linkProp ?startNode .
-
-                FILTER NOT EXISTS {
-                    ?isPartOfProp rdfs:subPropertyOf* knora-base:isPartOf .
-                    ?node ?isPartOfProp ?startNode .
-                }
-            }
-        }
-
-        @if(outbound) {
-            ?node knora-base:isDeleted false .
-
-            ?linkValue a knora-base:LinkValue ;
-                rdf:subject ?startNode ;
-                rdf:predicate ?linkProp ;
-                rdf:object ?node .
-        } else {
-            ?node knora-base:isDeleted false .
-
-            ?linkValue a knora-base:LinkValue ;
-                rdf:subject ?node ;
-                rdf:predicate ?linkProp ;
-                rdf:object ?startNode .
-        }
-
-        @if(triplestore.startsWith("graphdb")) {
-            GRAPH <http://www.ontotext.com/explicit> {
-                ?node a ?nodeClass .
-            }
-        } else {
-            ?node a ?nodeClass .
-        }
-
-        ?node rdfs:label ?nodeLabel ;
-            knora-base:attachedToUser ?nodeOwner ;
-            knora-base:attachedToProject ?nodeProject .
-
-        OPTIONAL {
-            ?node knora-base:hasPermissions ?nodePermissions .
-        }
-
-        ?linkValue knora-base:attachedToUser ?linkValueOwner .
-
-        OPTIONAL {
-            ?linkValue knora-base:hasPermissions ?linkValuePermissions .
-        }
-
-        OPTIONAL {
-            ?linkValue knora-base:attachedToProject ?linkValueProject .
-        }
+@if(triplestore.startsWith("graphdb")) {
+    @{
+        queries.sparql.v1.txt.getGraphDataGraphDB(startNodeIri = startNodeIri,
+                                                  startNodeOnly = startNodeOnly,
+                                                  outbound = outbound)
+    }
+} else {
+    @{
+        queries.sparql.v1.txt.getGraphDataStandard(triplestore = triplestore,
+                                                   startNodeIri = startNodeIri,
+                                                   startNodeOnly = startNodeOnly,
+                                                   outbound = outbound)
     }
 }
-LIMIT 50
