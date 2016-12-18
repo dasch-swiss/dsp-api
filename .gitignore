@@ -27,3 +27,4 @@ target/
 *.toc
 .sbtrc
 webapi/_fuseki/run
+triplestores/graphdb-se-7
