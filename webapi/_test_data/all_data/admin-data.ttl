@@ -251,7 +251,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                          knora-base:isInProjectAdminGroup <http://data.knora.org/projects/77275339> .
 
 
-## Project Member
+## Project Creator and Member
 <http://data.knora.org/users/91e19f1e01> rdf:type knora-base:User ;
 
                                          knora-base:userid "root-alt"^^xsd:string ;
@@ -274,6 +274,29 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
+
+## Project Member
+<http://data.knora.org/users/incunabulaMemberUser> rdf:type knora-base:User ;
+
+                                         knora-base:userid "incunabula2"^^xsd:string ;
+
+                                         foaf:familyName "User2"^^xsd:string ;
+
+                                         foaf:givenName "Test"^^xsd:string ;
+
+                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+
+                                         knora-base:email "test.user2@test.ch"^^xsd:string ;
+
+                                         knora-base:phone "123456"^^xsd:string ;
+
+                                         knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                         knora-base:isActiveUser "true"^^xsd:boolean ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/77275339> ;
+
+                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 ###################################
@@ -401,6 +424,18 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
+<http://data.knora.org/users/PSGbemdjZi4kQ6GHJVkLGF> a knora-base:User ;
+	knora-base:userid "beol" ;
+	foaf:familyName "BEOL" ;
+	foaf:givenName "BEOL" ;
+	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
+	knora-base:email "t.schweizer@unibas.ch" ;
+	knora-base:preferredLanguage "de" ;
+	knora-base:isInProject <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+
+
 ###################################
 # BIBLIO                          #
 ###################################
@@ -414,3 +449,14 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
     knora-base:isActiveProject "true"^^xsd:boolean ;
     knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+<http://data.knora.org/users/Q-6Sssu8TBWrcCGuVJ0lVw> a knora-base:User ;
+	knora-base:userid "biblio" ;
+	foaf:familyName "biblio" ;
+	foaf:givenName "biblio" ;
+	knora-base:password "biblio" ;
+	knora-base:email "sepideh.alassi@unibas.ch" ;
+	knora-base:preferredLanguage "de" ;
+	knora-base:isInProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .

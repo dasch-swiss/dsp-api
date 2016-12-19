@@ -32,7 +32,7 @@
 	rdfs:label "1 Alpinismus" ;
 	knora-base:hasStillImageFileValue <http://data.knora.org/0cb8286054d5/reps/073ce085942f01> , <http://data.knora.org/0cb8286054d5/reps/c66133bf942f01> ;
 	knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/0cb8286054d5/reps/073ce085942f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_1_013540.tif" ;
@@ -47,7 +47,7 @@
 	knora-base:dimY 138 ;
 	knora-base:qualityLevel 10 ;
 	knora-base:isPreview true ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/0cb8286054d5/reps/c66133bf942f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_1_013540.tif" ;
@@ -61,7 +61,7 @@
 	knora-base:dimX 4740 ;
 	knora-base:dimY 3273 ;
 	knora-base:qualityLevel 100 ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/0cb8286054d5/values/0b80b43aee0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -69,7 +69,7 @@
 	knora-base:valueHasString "02.11.2012/df" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/0cb8286054d5/values/3008c836ec0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -82,7 +82,7 @@
 	knora-base:valueHasEndJDC 2455859 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/0cb8286054d5/values/3caf141ced0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -90,7 +90,7 @@
 	knora-base:valueHasString "Diavolezza-Hütte, Piz Palü" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/0cb8286054d5/values/48566101ee0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -98,7 +98,7 @@
 	knora-base:valueHasString "ca. 1930" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/0cb8286054d5/values/6dde74fdeb0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -106,7 +106,7 @@
 	knora-base:valueHasString "013540" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/0cb8286054d5/values/7d9e429c-4ef4-4708-bef1-e89c842f5f55> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/0cb8286054d5> ;
@@ -117,7 +117,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214083" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/0cb8286054d5/values/852c0ec8ed0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -130,7 +130,7 @@
 	knora-base:valueHasEndJDC 2429629 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/0cb8286054d5/values/aab421c4eb0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -138,7 +138,7 @@
 	knora-base:valueHasString "9SPO_8_1" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/0cb8286054d5/values/b65b6ea9ec0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -151,7 +151,7 @@
 	knora-base:valueHasEndJDC 2456234 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/0cb8286054d5/values/c3dcf335-51a3-4436-b107-a6ad2830d5bd> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/0cb8286054d5> ;
@@ -162,7 +162,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "238747" ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/0cb8286054d5/values/cea90774ee0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -171,7 +171,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/d4f8e79ce2> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/0cb8286054d5/values/e346ff38-6b03-4a27-a11b-b0818a2e5ee3> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/0cb8286054d5> ;
@@ -182,7 +182,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214079" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/0cb8286054d5/values/f3311b70ec0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -191,7 +191,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/eda2792605> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/0d036c5957d5> a images:bildformat ;
 	knora-base:isDeleted false ;
@@ -203,7 +203,7 @@
 	images:zugangsart <http://data.knora.org/0d036c5957d5/values/edbf09a7081004> ;
 	rdfs:label "foto_digital Fotografie digital" ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/0d036c5957d5/values/2a96b66d081004> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -212,7 +212,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/8fd86c7e06> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/0d036c5957d5/values/676c6334081004> a knora-base:IntValue ;
 	knora-base:isDeleted false ;
@@ -221,7 +221,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasInteger 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/0d036c5957d5/values/b0e95ce0081004> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -234,7 +234,7 @@
 	knora-base:valueHasEndJDC 2455562 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/0d036c5957d5/values/edbf09a7081004> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -243,7 +243,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/3f12a0130a> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/20cf644a55d5> a images:bild ;
 	knora-base:isDeleted false ;
@@ -268,7 +268,7 @@
 	rdfs:label "5 Spazieren" ;
 	knora-base:hasStillImageFileValue <http://data.knora.org/20cf644a55d5/reps/03d32c6b952f01> , <http://data.knora.org/20cf644a55d5/reps/c2f87fa4952f01> ;
 	knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/20cf644a55d5/reps/03d32c6b952f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_5_013542.tif" ;
@@ -283,7 +283,7 @@
 	knora-base:dimY 200 ;
 	knora-base:qualityLevel 10 ;
 	knora-base:isPreview true ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/20cf644a55d5/reps/c2f87fa4952f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_5_013542.tif" ;
@@ -297,7 +297,7 @@
 	knora-base:dimX 3399 ;
 	knora-base:dimY 4581 ;
 	knora-base:qualityLevel 100 ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/20cf644a55d5/values/223b20b9f40f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -310,7 +310,7 @@
 	knora-base:valueHasEndJDC 2455859 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/20cf644a55d5/values/2ee26c9ef50f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -318,7 +318,7 @@
 	knora-base:valueHasString "Spaziergang an der Seepromenade, Mode" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/20cf644a55d5/values/35e52652-459f-4d19-8913-4e57c5f9d805> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/20cf644a55d5> ;
@@ -329,7 +329,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214083" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/20cf644a55d5/values/3a89b983f60f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -337,7 +337,7 @@
 	knora-base:valueHasString "ca. 1910" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/20cf644a55d5/values/5f11cd7ff40f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -345,7 +345,7 @@
 	knora-base:valueHasString "013542" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/20cf644a55d5/values/775f664af60f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -358,7 +358,7 @@
 	knora-base:valueHasEndJDC 2422324 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/20cf644a55d5/values/9ce77946f40f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -366,7 +366,7 @@
 	knora-base:valueHasString "9SPO_8_5" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/20cf644a55d5/values/a88ec62bf50f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -379,7 +379,7 @@
 	knora-base:valueHasEndJDC 2456258 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/20cf644a55d5/values/c003835c-e449-4fc4-96db-759a33c5cd47> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/20cf644a55d5> ;
@@ -390,7 +390,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "238751" ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/20cf644a55d5/values/c0dc5ff6f60f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -399,7 +399,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/38c73482e3> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/20cf644a55d5/values/d3eaf98d-b6ad-4fcb-9d5d-a1bf2dd0b6ab> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/20cf644a55d5> ;
@@ -410,7 +410,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214079" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/20cf644a55d5/values/e56473f2f40f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -419,7 +419,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/526f26ed04> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/20cf644a55d5/values/fdb20cbdf60f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -427,7 +427,7 @@
 	knora-base:valueHasString "26.11.2012/df" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/34e6a03456d5> a images:bild ;
 	knora-base:isDeleted false ;
@@ -452,7 +452,7 @@
 	rdfs:label "1 Ballon" ;
 	knora-base:hasStillImageFileValue <http://data.knora.org/34e6a03456d5/reps/ff697950962f01> , <http://data.knora.org/34e6a03456d5/reps/be8fcc89962f01> ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/34e6a03456d5/reps/be8fcc89962f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_1_013544.tif" ;
@@ -466,7 +466,7 @@
 	knora-base:dimX 3719 ;
 	knora-base:dimY 3407 ;
 	knora-base:qualityLevel 100 ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/34e6a03456d5/reps/ff697950962f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_1_013544.tif" ;
@@ -481,7 +481,7 @@
 	knora-base:dimY 183 ;
 	knora-base:qualityLevel 10 ;
 	knora-base:isPreview true ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/34e6a03456d5/values/146e783bfd0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -494,7 +494,7 @@
 	knora-base:valueHasEndJDC 2455859 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/34e6a03456d5/values/2015c520fe0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -502,7 +502,7 @@
 	knora-base:valueHasString "Gunter Sachs und Norman Barcley vor dem Start zur Ballonfahrt von St. Moritz bis zur Po-Ebene" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/34e6a03456d5/values/2cbc1106ff0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -510,7 +510,7 @@
 	knora-base:valueHasString "1973" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/34e6a03456d5/values/51442502fd0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -518,7 +518,7 @@
 	knora-base:valueHasString "013544" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/34e6a03456d5/values/6992beccfe0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -531,7 +531,7 @@
 	knora-base:valueHasEndJDC 2444239 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/34e6a03456d5/values/84cf7dd9-feaa-44ef-ae12-42286f009071> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/34e6a03456d5> ;
@@ -542,7 +542,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214139" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/34e6a03456d5/values/8e1ad2c8fc0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -550,7 +550,7 @@
 	knora-base:valueHasString "9SPO_9_1" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/34e6a03456d5/values/8e3829bd-e340-4e3e-a3cd-b2fc1b3f4453> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/34e6a03456d5> ;
@@ -561,7 +561,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "238755" ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/34e6a03456d5/values/9ac11eaefd0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -574,7 +574,7 @@
 	knora-base:valueHasEndJDC 2456574 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/34e6a03456d5/values/b20fb878ff0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -583,7 +583,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/6a2edbf4e3> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/34e6a03456d5/values/d48adffa-cfd8-4104-8ec3-a53b1482e98f> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/34e6a03456d5> ;
@@ -594,7 +594,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214139" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/34e6a03456d5/values/d797cb74fd0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -603,7 +603,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/eda2792605> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/34e6a03456d5/values/efe5643fff0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -611,7 +611,7 @@
 	knora-base:valueHasString "Fi" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/47b2992554d5> a images:bildformat ;
 	knora-base:isDeleted false ;
@@ -628,7 +628,7 @@
 	images:comment <http://data.knora.org/47b2992554d5/values/e78ace8aeb0f04> ;
 	rdfs:label "postkarte_sw Postkarte s/w" ;
 	knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/47b2992554d5/values/18ba2e6cea0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -637,7 +637,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/09abf9a009> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/47b2992554d5/values/24617b51eb0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -650,7 +650,7 @@
 	knora-base:valueHasEndJDC 2455362 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/47b2992554d5/values/5590db32ea0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -659,7 +659,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/2a0cc0b706> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/47b2992554d5/values/61372818eb0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -667,7 +667,7 @@
 	knora-base:valueHasString "Fr. 6.42" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/47b2992554d5/values/87d9c791-706c-493c-9872-364eec6ed9c5> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/47b2992554d5> ;
@@ -678,7 +678,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "216524" ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/47b2992554d5/values/926688f9e90f04> a knora-base:IntValue ;
 	knora-base:isDeleted false ;
@@ -687,7 +687,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasInteger 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/47b2992554d5/values/9e0dd5deea0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -695,7 +695,7 @@
 	knora-base:valueHasString "10,5x14,5 cm" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/47b2992554d5/values/e78ace8aeb0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -703,7 +703,7 @@
 	knora-base:valueHasString "Postkartenserie Bernina-Bahn, in Postkartenordner Albert Steiner" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/48fddc1e57d5> a images:bild ;
 	knora-base:isDeleted false ;
@@ -728,7 +728,7 @@
 	rdfs:label "2 Delta" ;
 	knora-base:hasStillImageFileValue <http://data.knora.org/48fddc1e57d5/reps/fb00c635972f01> , <http://data.knora.org/48fddc1e57d5/reps/ba26196f972f01> ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/48fddc1e57d5/reps/ba26196f972f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_2_013546.tif" ;
@@ -742,7 +742,7 @@
 	knora-base:dimX 2711 ;
 	knora-base:dimY 1826 ;
 	knora-base:qualityLevel 100 ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/48fddc1e57d5/reps/fb00c635972f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_2_013546.tif" ;
@@ -757,7 +757,7 @@
 	knora-base:dimY 134 ;
 	knora-base:qualityLevel 10 ;
 	knora-base:isPreview true ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/48fddc1e57d5/values/06a1d0bd051004> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -770,7 +770,7 @@
 	knora-base:valueHasEndJDC 2455859 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/48fddc1e57d5/values/12481da3061004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -778,7 +778,7 @@
 	knora-base:valueHasString "Tandem-Deltaflug" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/48fddc1e57d5/values/1eef6988071004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -786,7 +786,7 @@
 	knora-base:valueHasString "ca. 2000" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/48fddc1e57d5/values/43777d84051004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -794,7 +794,7 @@
 	knora-base:valueHasString "013546" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/48fddc1e57d5/values/5bc5164f071004> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -807,7 +807,7 @@
 	knora-base:valueHasEndJDC 2455197 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/48fddc1e57d5/values/804d2a4b051004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -815,7 +815,7 @@
 	knora-base:valueHasString "9SPO_9_2" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/48fddc1e57d5/values/8cf47630061004> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -828,7 +828,7 @@
 	knora-base:valueHasEndJDC 2456182 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/48fddc1e57d5/values/a44210fb071004> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -837,7 +837,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/03622e2ee4> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/48fddc1e57d5/values/b8eafae2-78ca-4576-8d9c-6c5f915ac250> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/48fddc1e57d5> ;
@@ -848,7 +848,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214062" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/48fddc1e57d5/values/c53aad02-e45e-45b3-8f93-d3c50fde3f21> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/48fddc1e57d5> ;
@@ -859,7 +859,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214062" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/48fddc1e57d5/values/c9ca23f7051004> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -868,7 +868,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/eda2792605> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/48fddc1e57d5/values/da79da81-5566-48d4-a4a5-24e718e6c050> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/48fddc1e57d5> ;
@@ -879,7 +879,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "238759" ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/48fddc1e57d5/values/e118bdc1071004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -887,7 +887,7 @@
 	knora-base:valueHasString "11.09.2012/df" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/5bc9d50f55d5> a images:bildformat ;
 	knora-base:isDeleted false ;
@@ -902,7 +902,7 @@
 	images:zugangsart <http://data.knora.org/5bc9d50f55d5/values/90402d61f30f04> ;
 	rdfs:label "foto_sw Fotografie s/w" ;
 	knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/5bc9d50f55d5/values/0aed86eef20f04> a knora-base:IntValue ;
 	knora-base:isDeleted false ;
@@ -911,7 +911,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasInteger 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/5bc9d50f55d5/values/1694d3d3f30f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -919,7 +919,7 @@
 	knora-base:valueHasString "23x17 cm" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/5bc9d50f55d5/values/90402d61f30f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -928,7 +928,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/3f12a0130a> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/5bc9d50f55d5/values/c4768743-de61-46ad-98e5-0752ec7d13ae> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/5bc9d50f55d5> ;
@@ -939,7 +939,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214062" ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/5bc9d50f55d5/values/cd16da27f30f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -948,7 +948,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/230a209905> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/5bc9d50f55d5/values/d9bd260df40f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -961,7 +961,7 @@
 	knora-base:valueHasEndJDC 2447527 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/691e7e2244d5> a images:bild ;
 	knora-base:isDeleted false ;
@@ -986,7 +986,7 @@
 	rdfs:label "6 Skikjöring" ;
 	knora-base:hasStillImageFileValue <http://data.knora.org/691e7e2244d5/reps/47cc1631862f01> , <http://data.knora.org/691e7e2244d5/reps/06f2696a862f01> ;
 	knora-base:creationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|M knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/691e7e2244d5/reps/06f2696a862f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_6_6_013508.tif" ;
@@ -1000,7 +1000,7 @@
 	knora-base:dimX 4541 ;
 	knora-base:dimY 3367 ;
 	knora-base:qualityLevel 100 ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/691e7e2244d5/reps/47cc1631862f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_6_6_013508.tif" ;
@@ -1015,7 +1015,7 @@
 	knora-base:dimY 148 ;
 	knora-base:qualityLevel 10 ;
 	knora-base:isPreview true ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/691e7e2244d5/values/12ff9fa95a0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1023,7 +1023,7 @@
 	knora-base:valueHasString "9SPO_6_6" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/691e7e2244d5/values/1ea6ec8e5b0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1036,7 +1036,7 @@
 	knora-base:valueHasEndJDC 2456259 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/691e7e2244d5/values/34990a93-26fd-4b78-a650-92523d48e442> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/691e7e2244d5> ;
@@ -1047,7 +1047,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "238675" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/691e7e2244d5/values/36f485595d0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1056,7 +1056,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/76265b7adf> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/691e7e2244d5/values/5b7c99555b0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1065,7 +1065,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/eda2792605> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/691e7e2244d5/values/73ca32205d0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1073,7 +1073,7 @@
 	knora-base:valueHasString "27.11.2012/df" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/691e7e2244d5/values/9852461c5b0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1086,7 +1086,7 @@
 	knora-base:valueHasEndJDC 2455859 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/691e7e2244d5/values/a4f992015c0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1094,7 +1094,7 @@
 	knora-base:valueHasString "Skikjöring auf dem St. Moritzersee" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/691e7e2244d5/values/b0a0dfe65c0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1102,7 +1102,7 @@
 	knora-base:valueHasString "ca. 1960" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/691e7e2244d5/values/d528f3e25a0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1110,7 +1110,7 @@
 	knora-base:valueHasString "013508" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/691e7e2244d5/values/d61d5ab2-5a81-44b2-b29a-7717b877f76c> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/691e7e2244d5> ;
@@ -1121,7 +1121,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "238676" ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/691e7e2244d5/values/e476afe6-d30a-4881-9101-a433a1e55d26> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/691e7e2244d5> ;
@@ -1132,7 +1132,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "238675" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/691e7e2244d5/values/ed768cad5c0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1145,7 +1145,7 @@
 	knora-base:valueHasEndJDC 2440587 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/6fe011fa55d5> a images:bildformat ;
 	knora-base:isDeleted false ;
@@ -1160,7 +1160,7 @@
 	images:zugangsart <http://data.knora.org/6fe011fa55d5/values/827385e3fb0f04> ;
 	rdfs:label "foto_sw Fotografie s/w" ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/6fe011fa55d5/values/08c72b56fc0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1168,7 +1168,7 @@
 	knora-base:valueHasString "18,5x24 cm" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/6fe011fa55d5/values/827385e3fb0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1177,7 +1177,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/3f12a0130a> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/6fe011fa55d5/values/b2d5b488-4a7e-4703-af49-658da15e250b> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/6fe011fa55d5> ;
@@ -1188,7 +1188,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214062" ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/6fe011fa55d5/values/bf4932aafb0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1197,7 +1197,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/230a209905> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/6fe011fa55d5/values/cbf07e8ffc0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1210,7 +1210,7 @@
 	knora-base:valueHasEndJDC 2447162 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/6fe011fa55d5/values/fc1fdf70fb0f04> a knora-base:IntValue ;
 	knora-base:isDeleted false ;
@@ -1219,7 +1219,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasInteger 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/82ac0aeb53d5> a images:bild ;
 	knora-base:isDeleted false ;
@@ -1244,7 +1244,7 @@
 	rdfs:label "3 Trecking mit Tieren" ;
 	knora-base:hasStillImageFileValue <http://data.knora.org/82ac0aeb53d5/reps/89f03913942f01> , <http://data.knora.org/82ac0aeb53d5/reps/48168d4c942f01> ;
 	knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/82ac0aeb53d5/reps/48168d4c942f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_013539.tif" ;
@@ -1258,7 +1258,7 @@
 	knora-base:dimX 5017 ;
 	knora-base:dimY 3470 ;
 	knora-base:qualityLevel 100 ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/82ac0aeb53d5/reps/89f03913942f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_013539.tif" ;
@@ -1273,7 +1273,7 @@
 	knora-base:dimY 138 ;
 	knora-base:qualityLevel 10 ;
 	knora-base:isPreview true ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/82ac0aeb53d5/values/0c13e286e90f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1281,7 +1281,7 @@
 	knora-base:valueHasString "Fi" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/82ac0aeb53d5/values/319bf582e70f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1294,7 +1294,7 @@
 	knora-base:valueHasEndJDC 2455859 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/82ac0aeb53d5/values/3d424268e80f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1302,7 +1302,7 @@
 	knora-base:valueHasString "Maulesel-Transport für Gäste" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/82ac0aeb53d5/values/49e98e4de90f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1310,7 +1310,7 @@
 	knora-base:valueHasString "ca. 1930" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/82ac0aeb53d5/values/6e71a249e70f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1318,7 +1318,7 @@
 	knora-base:valueHasString "013539" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/82ac0aeb53d5/values/70f35e46-6835-404c-9a64-be1829f10f64> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/82ac0aeb53d5> ;
@@ -1329,7 +1329,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214075" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/82ac0aeb53d5/values/81ae120b-7487-4dee-9eda-f3740b166a8c> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/82ac0aeb53d5> ;
@@ -1340,7 +1340,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214075" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/82ac0aeb53d5/values/86bf3b14e90f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1353,7 +1353,7 @@
 	knora-base:valueHasEndJDC 2429629 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/82ac0aeb53d5/values/ab474f10e70f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1361,7 +1361,7 @@
 	knora-base:valueHasString "9SPO_8_3" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/82ac0aeb53d5/values/b7ee9bf5e70f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1374,7 +1374,7 @@
 	knora-base:valueHasEndJDC 2456561 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/82ac0aeb53d5/values/cf3c35c0e90f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1383,7 +1383,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/06608e0fe3> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/82ac0aeb53d5/values/d56f956d-bdd4-43d6-93f8-44ce716ecf30> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/82ac0aeb53d5> ;
@@ -1394,7 +1394,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "238745" ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/82ac0aeb53d5/values/f4c448bce70f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1403,7 +1403,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/526f26ed04> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/83f74de456d5> a images:bildformat ;
 	knora-base:isDeleted false ;
@@ -1418,7 +1418,7 @@
 	images:comment <http://data.knora.org/83f74de456d5/values/bd23d711051004> ;
 	rdfs:label "foto_digital Fotografie digital" ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/83f74de456d5/values/74a6dd65041004> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1427,7 +1427,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/3f12a0130a> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/83f74de456d5/values/9d9f8710-eac1-4d42-992a-f1051e040384> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/83f74de456d5> ;
@@ -1438,7 +1438,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214062" ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/83f74de456d5/values/b17c8a2c041004> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1447,7 +1447,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/8fd86c7e06> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/83f74de456d5/values/bd23d711051004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1455,7 +1455,7 @@
 	knora-base:valueHasString "ab St. Moritz DVD 2006/2007" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/83f74de456d5/values/ee5237f3031004> a knora-base:IntValue ;
 	knora-base:isDeleted false ;
@@ -1464,7 +1464,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasInteger 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/83f74de456d5/values/faf983d8041004> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1477,7 +1477,7 @@
 	knora-base:valueHasEndJDC 2454101 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/96c346d554d5> a images:bild ;
 	knora-base:isDeleted false ;
@@ -1502,7 +1502,7 @@
 	rdfs:label "1 Alpinismus" ;
 	knora-base:hasStillImageFileValue <http://data.knora.org/96c346d554d5/reps/858786f8942f01> , <http://data.knora.org/96c346d554d5/reps/44add931952f01> ;
 	knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/96c346d554d5/reps/44add931952f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_1_013541.tif" ;
@@ -1516,7 +1516,7 @@
 	knora-base:dimX 2940 ;
 	knora-base:dimY 2345 ;
 	knora-base:qualityLevel 100 ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/96c346d554d5/reps/858786f8942f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_1_013541.tif" ;
@@ -1531,7 +1531,7 @@
 	knora-base:dimY 159 ;
 	knora-base:qualityLevel 10 ;
 	knora-base:isPreview true ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/96c346d554d5/values/23ce4d05f00f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1539,7 +1539,7 @@
 	knora-base:valueHasString "9SPO_8_1" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/96c346d554d5/values/2f759aeaf00f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1552,7 +1552,7 @@
 	knora-base:valueHasEndJDC 2456181 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/96c346d554d5/values/2fae0256-9f92-4f08-bd21-a11743730237> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/96c346d554d5> ;
@@ -1563,7 +1563,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "238749" ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/96c346d554d5/values/47c333b5f20f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1572,7 +1572,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/d4f8e79ce2> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/96c346d554d5/values/6c4b47b1f00f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1581,7 +1581,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/526f26ed04> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/96c346d554d5/values/8499e07bf20f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1589,7 +1589,7 @@
 	knora-base:valueHasString "10..09.2012/df" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/96c346d554d5/values/88b8df0c-52d8-4e7c-a939-4d40b4e10ec9> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/96c346d554d5> ;
@@ -1600,7 +1600,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214062" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/96c346d554d5/values/a1e20605-d2de-4047-8a3e-091f7530e6dd> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/96c346d554d5> ;
@@ -1611,7 +1611,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214062" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/96c346d554d5/values/a921f477f00f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1624,7 +1624,7 @@
 	knora-base:valueHasEndJDC 2455859 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/96c346d554d5/values/b5c8405df10f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1632,7 +1632,7 @@
 	knora-base:valueHasString "Kletterin, im Hintergrund Bellavista und Morteratsch-Gletscher" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/96c346d554d5/values/c16f8d42f20f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1640,7 +1640,7 @@
 	knora-base:valueHasString "ca. 2000" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/96c346d554d5/values/e6f7a03ef00f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1648,7 +1648,7 @@
 	knora-base:valueHasString "013541" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/96c346d554d5/values/fe453a09f20f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1661,7 +1661,7 @@
 	knora-base:valueHasEndJDC 2455197 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/a418efe743d5> a images:bildformat ;
 	knora-base:isDeleted false ;
@@ -1676,7 +1676,7 @@
 	images:zugangsart <http://data.knora.org/a418efe743d5/values/065853c4590f04> ;
 	rdfs:label "foto_sw Fotografie s/w" ;
 	knora-base:creationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|CR knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/a418efe743d5/values/065853c4590f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1685,7 +1685,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/3f12a0130a> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/a418efe743d5/values/432e008b590f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1694,7 +1694,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/230a209905> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/a418efe743d5/values/4fd54c705a0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1707,7 +1707,7 @@
 	knora-base:valueHasEndJDC 2447527 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/a418efe743d5/values/77791329-63ad-458e-a6f0-ae2db249f8ee> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/a418efe743d5> ;
@@ -1718,7 +1718,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214028" ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/a418efe743d5/values/8004ad51590f04> a knora-base:IntValue ;
 	knora-base:isDeleted false ;
@@ -1727,7 +1727,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasInteger 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/a418efe743d5/values/8cabf9365a0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1735,7 +1735,7 @@
 	knora-base:valueHasString "17,5x23,5 cm" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/aada82bf55d5> a images:bild ;
 	knora-base:isDeleted false ;
@@ -1760,7 +1760,7 @@
 	rdfs:label "1 Ballon" ;
 	knora-base:hasStillImageFileValue <http://data.knora.org/aada82bf55d5/reps/811ed3dd952f01> , <http://data.knora.org/aada82bf55d5/reps/40442617962f01> ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/aada82bf55d5/reps/40442617962f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_1_013543.tif" ;
@@ -1774,7 +1774,7 @@
 	knora-base:dimX 3967 ;
 	knora-base:dimY 3387 ;
 	knora-base:qualityLevel 100 ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/aada82bf55d5/reps/811ed3dd952f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_1_013543.tif" ;
@@ -1789,7 +1789,7 @@
 	knora-base:dimY 170 ;
 	knora-base:qualityLevel 10 ;
 	knora-base:isPreview true ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/aada82bf55d5/values/1501a687f80f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1797,7 +1797,7 @@
 	knora-base:valueHasString "9SPO_9_1" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/aada82bf55d5/values/21a8f26cf90f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1810,7 +1810,7 @@
 	knora-base:valueHasEndJDC 2456574 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/aada82bf55d5/values/39f68b37fb0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1819,7 +1819,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/6a2edbf4e3> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/aada82bf55d5/values/4ef3f3b4-cc44-4b7e-8071-c93cffd3ae60> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/aada82bf55d5> ;
@@ -1830,7 +1830,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "238753" ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/aada82bf55d5/values/5e7e9f33f90f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1839,7 +1839,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/eda2792605> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/aada82bf55d5/values/76cc38fefa0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1847,7 +1847,7 @@
 	knora-base:valueHasString "Fi" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/aada82bf55d5/values/8983c204-2046-4675-89ca-3e2398233a10> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/aada82bf55d5> ;
@@ -1858,7 +1858,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214139" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/aada82bf55d5/values/92a8e7d3-2e8f-4442-8b0b-1a5f044989e1> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/aada82bf55d5> ;
@@ -1869,7 +1869,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214139" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/aada82bf55d5/values/9b544cfaf80f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1882,7 +1882,7 @@
 	knora-base:valueHasEndJDC 2455859 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/aada82bf55d5/values/a7fb98dff90f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1890,7 +1890,7 @@
 	knora-base:valueHasString "Chris Baldwin, Norman Barcley und Gunter Sachs vor dem Start zur Ballonfahrt von St. Moritz bis in die Po-Ebene" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/aada82bf55d5/values/b3a2e5c4fa0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1898,7 +1898,7 @@
 	knora-base:valueHasString "1973" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/aada82bf55d5/values/d82af9c0f80f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1906,7 +1906,7 @@
 	knora-base:valueHasString "013543" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/aada82bf55d5/values/f078928bfa0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -1919,7 +1919,7 @@
 	knora-base:valueHasEndJDC 2444239 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/bda67bb053d5> a images:bildformat ;
 	knora-base:isDeleted false ;
@@ -1932,7 +1932,7 @@
 	images:zugangsart <http://data.knora.org/bda67bb053d5/values/62ca5564e60f04> ;
 	rdfs:label "9x13cm" ;
 	knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/bda67bb053d5/values/62ca5564e60f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -1941,7 +1941,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/3f12a0130a> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/bda67bb053d5/values/9764be5b-8219-4b19-95fa-52fbb15786ff> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/bda67bb053d5> ;
@@ -1952,7 +1952,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214062" ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/bda67bb053d5/values/9fa0022be60f04> a knora-base:IntValue ;
 	knora-base:isDeleted false ;
@@ -1961,7 +1961,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasInteger 2 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/bda67bb053d5/values/e81dfcd6e60f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -1969,7 +1969,7 @@
 	knora-base:valueHasString "9x13cm" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/bef1bea956d5> a images:bild ;
 	knora-base:isDeleted false ;
@@ -1994,7 +1994,7 @@
 	rdfs:label "2 Delta" ;
 	knora-base:hasStillImageFileValue <http://data.knora.org/bef1bea956d5/reps/7db51fc3962f01> , <http://data.knora.org/bef1bea956d5/reps/3cdb72fc962f01> ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/bef1bea956d5/reps/3cdb72fc962f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_2_013545.tif" ;
@@ -2008,7 +2008,7 @@
 	knora-base:dimX 2729 ;
 	knora-base:dimY 1831 ;
 	knora-base:qualityLevel 100 ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/bef1bea956d5/reps/7db51fc3962f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_2_013545.tif" ;
@@ -2023,7 +2023,7 @@
 	knora-base:dimY 134 ;
 	knora-base:qualityLevel 10 ;
 	knora-base:isPreview true ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/bef1bea956d5/values/0734fe09011004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2031,7 +2031,7 @@
 	knora-base:valueHasString "9SPO_9_2" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/bef1bea956d5/values/13db4aef011004> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -2044,7 +2044,7 @@
 	knora-base:valueHasEndJDC 2456182 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/bef1bea956d5/values/2af7867e-9466-433e-8902-8231f23df5f4> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/bef1bea956d5> ;
@@ -2055,7 +2055,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214062" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/bef1bea956d5/values/2b29e4b9031004> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -2064,7 +2064,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/03622e2ee4> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/bef1bea956d5/values/50b1f7b5011004> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -2073,7 +2073,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/eda2792605> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/bef1bea956d5/values/68ff9080031004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2081,7 +2081,7 @@
 	knora-base:valueHasString "11.09.2012/df" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/bef1bea956d5/values/88c1b82a-4a42-49b1-9588-f55ff3d8394a> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/bef1bea956d5> ;
@@ -2092,7 +2092,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "238757" ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/bef1bea956d5/values/8d87a47c011004> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -2105,7 +2105,7 @@
 	knora-base:valueHasEndJDC 2455859 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/bef1bea956d5/values/992ef161021004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2113,7 +2113,7 @@
 	knora-base:valueHasString "Tandem-Deltaflug über St. Moritz-Dorf" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/bef1bea956d5/values/a5d53d47031004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2121,7 +2121,7 @@
 	knora-base:valueHasString "ca. 2000" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/bef1bea956d5/values/ca5d5143011004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2129,7 +2129,7 @@
 	knora-base:valueHasString "013545" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/bef1bea956d5/values/e2abea0d031004> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -2142,7 +2142,7 @@
 	knora-base:valueHasEndJDC 2455197 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/bef1bea956d5/values/fc705c60-ebf8-4832-b11a-38867c331fc8> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/bef1bea956d5> ;
@@ -2153,7 +2153,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214062" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/d1bdb79a54d5> a images:bildformat ;
 	knora-base:isDeleted false ;
@@ -2168,7 +2168,7 @@
 	images:comment <http://data.knora.org/d1bdb79a54d5/values/60a4facbef0f04> ;
 	rdfs:label "foto_digital Fotografie digital" ;
 	knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/d1bdb79a54d5/values/17270120ef0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -2177,7 +2177,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/3f12a0130a> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/d1bdb79a54d5/values/54fdade6ee0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -2186,7 +2186,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/8fd86c7e06> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/d1bdb79a54d5/values/60a4facbef0f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2194,7 +2194,7 @@
 	knora-base:valueHasString "ab St. Moritz DVD 2006/2007" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/d1bdb79a54d5/values/91d35aadee0f04> a knora-base:IntValue ;
 	knora-base:isDeleted false ;
@@ -2203,7 +2203,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasInteger 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/d1bdb79a54d5/values/9d7aa792ef0f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -2216,7 +2216,7 @@
 	knora-base:valueHasEndJDC 2454101 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/d1bdb79a54d5/values/cf33b940-05e5-4261-9ec5-8837c8ead03a> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/d1bdb79a54d5> ;
@@ -2227,7 +2227,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214062" ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/d208fb9357d5> a images:bild ;
 	knora-base:isDeleted false ;
@@ -2252,7 +2252,7 @@
 	rdfs:label "3 Flugzeuge" ;
 	knora-base:hasStillImageFileValue <http://data.knora.org/d208fb9357d5/reps/794c6ca8972f01> , <http://data.knora.org/d208fb9357d5/reps/3872bfe1972f01> ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/d208fb9357d5/reps/3872bfe1972f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_3_013547.tif" ;
@@ -2266,7 +2266,7 @@
 	knora-base:dimX 4534 ;
 	knora-base:dimY 3676 ;
 	knora-base:qualityLevel 100 ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/d208fb9357d5/reps/794c6ca8972f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_3_013547.tif" ;
@@ -2281,7 +2281,7 @@
 	knora-base:dimY 162 ;
 	knora-base:qualityLevel 10 ;
 	knora-base:isPreview true ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/d208fb9357d5/values/050ea3710a1004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2289,7 +2289,7 @@
 	knora-base:valueHasString "Flugboot Savoia der Ad Astra Aero auf dem St. Moritzersee (Design Gallery 10/11/13)" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/d208fb9357d5/values/0b57e340-6a0d-47a6-bd74-a0f57aafd0ac> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/d208fb9357d5> ;
@@ -2300,7 +2300,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214083" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/d208fb9357d5/values/11b5ef560b1004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2308,7 +2308,7 @@
 	knora-base:valueHasString "ca. 1920" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/d208fb9357d5/values/1f6b9161-9bb0-409f-9a3e-6e14645df2c3> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/d208fb9357d5> ;
@@ -2319,7 +2319,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214079" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/d208fb9357d5/values/363d0353091004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2327,7 +2327,7 @@
 	knora-base:valueHasString "013547" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/d208fb9357d5/values/4a0bbc36-9369-4a3e-a54e-4be9dbe2234f> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/d208fb9357d5> ;
@@ -2338,7 +2338,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "238761" ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/d208fb9357d5/values/4e8b9c1d0b1004> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -2351,7 +2351,7 @@
 	knora-base:valueHasEndJDC 2425977 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/d208fb9357d5/values/7313b019091004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2359,7 +2359,7 @@
 	knora-base:valueHasString "9SPO_9_3" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/d208fb9357d5/values/7fbafcfe091004> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -2372,7 +2372,7 @@
 	knora-base:valueHasEndJDC 2456185 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/d208fb9357d5/values/970896c90b1004> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -2381,7 +2381,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/9c958167e4> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/d208fb9357d5/values/bc90a9c5091004> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -2390,7 +2390,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/526f26ed04> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/d208fb9357d5/values/d4de42900b1004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2398,7 +2398,7 @@
 	knora-base:valueHasString "14.09.2012/df" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/d208fb9357d5/values/f966568c091004> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -2411,7 +2411,7 @@
 	knora-base:valueHasEndJDC 2455859 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|D knora-base:Owner,knora-base:ProjectMember" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser" .
 
 <http://data.knora.org/df1260ad43d5> a images:person ;
 	knora-base:isDeleted false ;
@@ -2423,7 +2423,7 @@
 	images:city <http://data.knora.org/df1260ad43d5/values/bdda5918590f04> ;
 	rdfs:label "Cornaz" ;
 	knora-base:creationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/df1260ad43d5/values/3787b3a5580f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2431,7 +2431,7 @@
 	knora-base:valueHasString "O." ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/df1260ad43d5/values/745d606c580f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2439,7 +2439,7 @@
 	knora-base:valueHasString "Cornaz" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/df1260ad43d5/values/bdda5918590f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2447,7 +2447,7 @@
 	knora-base:valueHasString "Lausanne" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/df1260ad43d5/values/fab006df580f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2455,7 +2455,7 @@
 	knora-base:valueHasString "5, Place St. François" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/e5d4f38455d5> a images:bildformat ;
 	knora-base:isDeleted false ;
@@ -2470,7 +2470,7 @@
 	images:zugangsart <http://data.knora.org/e5d4f38455d5/values/095a59a2f70f04> ;
 	rdfs:label "foto_sw Fotografie s/w" ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/e5d4f38455d5/values/095a59a2f70f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -2479,7 +2479,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/3f12a0130a> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/e5d4f38455d5/values/46300669f70f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -2488,7 +2488,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/230a209905> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/e5d4f38455d5/values/52d7524ef80f04> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -2501,7 +2501,7 @@
 	knora-base:valueHasEndJDC 2447162 ;
 	knora-base:valueHasEndPrecision "DAY" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/e5d4f38455d5/values/8306b32ff70f04> a knora-base:IntValue ;
 	knora-base:isDeleted false ;
@@ -2510,7 +2510,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasInteger 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/e5d4f38455d5/values/8fadff14f80f04> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2518,7 +2518,7 @@
 	knora-base:valueHasString "18,5x24 cm" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/e5d4f38455d5/values/ee1f1aa4-4d6b-44e0-9fd0-eaf2d5e89c62> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/e5d4f38455d5> ;
@@ -2529,7 +2529,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214062" ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/f9eb2f6f56d5> a images:bildformat ;
 	knora-base:isDeleted false ;
@@ -2544,7 +2544,7 @@
 	images:comment <http://data.knora.org/f9eb2f6f56d5/values/440aabd0001004> ;
 	rdfs:label "foto_digital Fotografie digital" ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|CR knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser,knora-base:UnknownUser" .
 
 <http://data.knora.org/f9eb2f6f56d5/values/38635eebff0f04> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -2553,7 +2553,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/8fd86c7e06> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
 
 <http://data.knora.org/f9eb2f6f56d5/values/440aabd0001004> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
@@ -2561,7 +2561,7 @@
 	knora-base:valueHasString "ab St. Moritz DVD 2006/2007" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/f9eb2f6f56d5/values/75390bb2ff0f04> a knora-base:IntValue ;
 	knora-base:isDeleted false ;
@@ -2570,7 +2570,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasInteger 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/f9eb2f6f56d5/values/81e05797001004> a knora-base:DateValue ;
 	knora-base:isDeleted false ;
@@ -2583,7 +2583,7 @@
 	knora-base:valueHasEndJDC 2454101 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/f9eb2f6f56d5/values/ead66655-90d6-4c75-bb16-51c8dec9d14f> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/f9eb2f6f56d5> ;
@@ -2594,7 +2594,7 @@
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
 	knora-base:valueHasString "214062" ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/f9eb2f6f56d5/values/fb8cb124001004> a knora-base:ListValue ;
 	knora-base:isDeleted false ;
@@ -2603,7 +2603,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasListNode <http://data.knora.org/lists/3f12a0130a> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" .
 
 <http://data.knora.org/lists/0064ce4ce5> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;

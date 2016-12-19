@@ -9,8 +9,226 @@
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix incunabula: <http://www.knora.org/ontology/incunabula#> .
 @prefix dokubib: <http://www.knora.org/ontology/dokubib#> .
-# ## ###########################################
-# ## <http://data.knora.org/projects/77275339>
+
+<http://data.knora.org/8a0b1e75> a incunabula:page ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	incunabula:pagenum <http://data.knora.org/8a0b1e75/values/61cb927602> ;
+	incunabula:partOf <http://data.knora.org/c5058f3a> ;
+	incunabula:partOfValue <http://data.knora.org/8a0b1e75/values/09caf895-37cb-4c21-8a40-814f88278fb6> ;
+	incunabula:seqnum <http://data.knora.org/8a0b1e75/values/e71e39e902> ;
+	incunabula:description <http://data.knora.org/8a0b1e75/values/3e3d4dc0e922> ;
+	incunabula:page_comment <http://data.knora.org/8a0b1e75/values/e80b2d895f23> ;
+	incunabula:origname <http://data.knora.org/8a0b1e75/values/aa488c2203> ;
+	rdfs:label "a1r, Titelblatt" ;
+	knora-base:hasStillImageFileValue <http://data.knora.org/8a0b1e75/reps/bf255339> , <http://data.knora.org/8a0b1e75/reps/7e4ba672> ;
+	knora-base:creationDate "0000-00-00T00:00:00"^^xsd:dateTimeStamp .
+
+<http://data.knora.org/8a0b1e75/reps/7e4ba672> a knora-base:StillImageFileValue ;
+	knora-base:valueHasString "ad+s167_druck1=0001.tif" ;
+	knora-base:originalFilename "ad+s167_druck1=0001.tif" ;
+	knora-base:originalMimeType "image/tiff" ;
+	knora-base:internalFilename "incunabula_0000000002.jp2" ;
+	knora-base:internalMimeType "image/jp2" ;
+	knora-base:valueCreationDate "2012-11-21T16:49:36"^^xsd:dateTimeStamp ;
+	knora-base:dimX 2613 ;
+	knora-base:dimY 3505 ;
+	knora-base:qualityLevel 100 ;
+	knora-base:valueHasQname "full" ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" .
+
+<http://data.knora.org/8a0b1e75/reps/bf255339> a knora-base:StillImageFileValue ;
+	knora-base:valueHasString "ad+s167_druck1=0001.tif" ;
+	knora-base:originalFilename "ad+s167_druck1=0001.tif" ;
+	knora-base:originalMimeType "image/tiff" ;
+	knora-base:internalFilename "incunabula_0000000002.jpg" ;
+	knora-base:internalMimeType "image/jpeg" ;
+	knora-base:valueCreationDate "2012-11-21T16:49:35"^^xsd:dateTimeStamp ;
+	knora-base:dimX 95 ;
+	knora-base:dimY 128 ;
+	knora-base:qualityLevel 10 ;
+	knora-base:valueHasQname "thumbnail" ;
+	knora-base:isPreview true ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/666> ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" .
+
+<http://data.knora.org/8a0b1e75/values/09caf895-37cb-4c21-8a40-814f88278fb6> a knora-base:LinkValue ;
+	rdf:subject <http://data.knora.org/8a0b1e75> ;
+	rdf:predicate incunabula:partOf ;
+	rdf:object <http://data.knora.org/c5058f3a> ;
+	knora-base:valueHasRefCount 1 ;
+	knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember" ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "1" .
+
+<http://data.knora.org/8a0b1e75/values/3e3d4dc0e922> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:valueHasString """Titel: \"Das andechtig zitglo(e)gglyn | des lebens vnd lide(n)s christi nach | den xxiiij stunden vßgeteilt.\"
+Holzschnitt: Schlaguhr mit Zifferblatt für 24 Stunden, auf deren oberem Rand zu beiden Seiten einer Glocke die Verkündigungsszene mit Maria (links) und dem Engel (rechts) zu sehen ist.
+Bordüre: Ranken mit Fabelwesen, Holzschnitt.
+Kolorierung: Rot, Blau, Grün, Gelb, Braun.
+Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2012-01-22T12:05:57"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
+
+<http://data.knora.org/8a0b1e75/values/61cb927602> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "a1r, Titelblatt" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
+
+<http://data.knora.org/8a0b1e75/values/aa488c2203> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "ad+s167_druck1=0001.tif" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember" .
+
+<http://data.knora.org/8a0b1e75/values/e71e39e902> a knora-base:IntValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "1" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueHasInteger 1 ;
+	knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember" .
+
+<http://data.knora.org/8a0b1e75/values/e80b2d895f23> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:valueHasString "Schramm, Bd. 21, Abb. 601." ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2012-01-24T18:07:40"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" .
+
+<http://data.knora.org/c5058f3a> a incunabula:book ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	incunabula:title <http://data.knora.org/c5058f3a/values/c3295339> ;
+	incunabula:hasAuthor <http://data.knora.org/c5058f3a/values/8653a672> ;
+	incunabula:publisher <http://data.knora.org/c5058f3a/values/497df9ab> ;
+	incunabula:publoc <http://data.knora.org/c5058f3a/values/0ca74ce5> ;
+	incunabula:pubdate <http://data.knora.org/c5058f3a/values/cfd09f1e01> ;
+	incunabula:location <http://data.knora.org/c5058f3a/values/92faf25701> ;
+	incunabula:url <http://data.knora.org/c5058f3a/values/10e00c7acc2704> ;
+	incunabula:physical_desc <http://data.knora.org/c5058f3a/values/5524469101> ;
+	incunabula:citation <http://data.knora.org/c5058f3a/values/184e99ca01> , <http://data.knora.org/c5058f3a/values/db77ec0302> , <http://data.knora.org/c5058f3a/values/9ea13f3d02> ;
+	rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" ;
+	knora-base:creationDate "2015-06-30T14:50:35"^^xsd:dateTimeStamp .
+
+<http://data.knora.org/c5058f3a/values/0ca74ce5> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "Basel" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember,knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://data.knora.org/c5058f3a/values/10e00c7acc2704> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2014-05-18T02:08:23"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://data.knora.org/c5058f3a/values/184e99ca01> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "Schramm Bd. XXI, S. 27" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://data.knora.org/c5058f3a/values/497df9ab> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "Johann Amerbach" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://data.knora.org/c5058f3a/values/5524469101> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "Dimension: 8°" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://data.knora.org/c5058f3a/values/8653a672> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "Berthold, der Bruder" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser" .
+
+<http://data.knora.org/c5058f3a/values/92faf25701> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://data.knora.org/c5058f3a/values/9ea13f3d02> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "ISTC ib00512000" ;
+	knora-base:valueHasOrder 2 ;
+	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://data.knora.org/c5058f3a/values/c3295339> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "Zeitglöcklein des Lebens und Leidens Christi" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://data.knora.org/c5058f3a/values/cfd09f1e01> a knora-base:DateValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "1492-01-01 - 1492-12-31" ;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueHasCalendar "JULIAN" ;
+	knora-base:valueHasStartJDC 2266011 ;
+	knora-base:valueHasStartPrecision "YEAR" ;
+	knora-base:valueHasEndJDC 2266376 ;
+	knora-base:valueHasEndPrecision "YEAR" ;
+	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://data.knora.org/c5058f3a/values/db77ec0302> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:valueHasString "GW 4168" ;
+	knora-base:valueHasOrder 1 ;
+	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://data.knora.org/projects/666> a knora-base:knoraProject ;
+	knora-base:projectBasepath "/imldata/testproject" ;
+	knora-base:projectLongname "Test Project" ;
+	knora-base:projectShortname "testproject" ;
+	knora-base:projectDescription "A test project" .
 
 <http://data.knora.org/projects/77275339> a knora-base:knoraProject ;
 	knora-base:projectBasepath "/path/Incunabula" ;
@@ -27,278 +245,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 </p>""" ;
 	knora-base:projectKeyword "Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images" ;
 	knora-base:projectLogo "incunabula_logo.png" .
-# ##################################
-#  TEST PROJECT                    #
-# ##################################
-
-<http://data.knora.org/projects/666> a knora-base:knoraProject ;
-	knora-base:projectBasepath "/imldata/testproject" ;
-	knora-base:projectLongname "Test Project" ;
-	knora-base:projectShortname "testproject" ;
-	knora-base:projectDescription "A test project" .
-# #########################################################
-# 
-#  RESOURCES
-# 
-# #########################################################
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a>
-
-<http://data.knora.org/c5058f3a> a incunabula:book ;
-	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|M knora-base:ProjectMember,knora-base:Owner" ;
-	incunabula:title <http://data.knora.org/c5058f3a/values/c3295339> ;
-	incunabula:hasAuthor <http://data.knora.org/c5058f3a/values/8653a672> ;
-	incunabula:publisher <http://data.knora.org/c5058f3a/values/497df9ab> ;
-	incunabula:publoc <http://data.knora.org/c5058f3a/values/0ca74ce5> ;
-	incunabula:pubdate <http://data.knora.org/c5058f3a/values/cfd09f1e01> ;
-	incunabula:location <http://data.knora.org/c5058f3a/values/92faf25701> ;
-	incunabula:url <http://data.knora.org/c5058f3a/values/10e00c7acc2704> ;
-	incunabula:physical_desc <http://data.knora.org/c5058f3a/values/5524469101> ;
-	incunabula:citation <http://data.knora.org/c5058f3a/values/184e99ca01> , <http://data.knora.org/c5058f3a/values/db77ec0302> , <http://data.knora.org/c5058f3a/values/9ea13f3d02> ;
-	rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" ;
-	knora-base:creationDate "2015-06-30T14:50:35"^^xsd:dateTimeStamp .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/c3295339>
-
-<http://data.knora.org/c5058f3a/values/c3295339> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "Zeitglöcklein des Lebens und Leidens Christi" ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/8653a672>
-
-<http://data.knora.org/c5058f3a/values/8653a672> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "Berthold, der Bruder" ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/497df9ab>
-
-<http://data.knora.org/c5058f3a/values/497df9ab> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "Johann Amerbach" ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/0ca74ce5>
-
-<http://data.knora.org/c5058f3a/values/0ca74ce5> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "Basel" ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:ProjectMember,knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/cfd09f1e01>
-
-<http://data.knora.org/c5058f3a/values/cfd09f1e01> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "1492-01-01 - 1492-12-31" ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:DateValue ;
-	knora-base:valueHasCalendar "JULIAN" ;
-	knora-base:valueHasStartJDC 2266011 ;
-	knora-base:valueHasStartPrecision "YEAR" ;
-	knora-base:valueHasEndJDC 2266376 ;
-	knora-base:valueHasEndPrecision "YEAR" ;
-	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/92faf25701>
-
-<http://data.knora.org/c5058f3a/values/92faf25701> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167" ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/10e00c7acc2704>
-
-<http://data.knora.org/c5058f3a/values/10e00c7acc2704> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1" ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2014-05-18T02:08:23"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|D knora-base:Owner,knora-base:ProjectMember" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/5524469101>
-
-<http://data.knora.org/c5058f3a/values/5524469101> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "Dimension: 8°" ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/184e99ca01>
-
-<http://data.knora.org/c5058f3a/values/184e99ca01> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "Schramm Bd. XXI, S. 27" ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/db77ec0302>
-
-<http://data.knora.org/c5058f3a/values/db77ec0302> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "GW 4168" ;
-	knora-base:valueHasOrder 1 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/c5058f3a/values/9ea13f3d02>
-
-<http://data.knora.org/c5058f3a/values/9ea13f3d02> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "ISTC ib00512000" ;
-	knora-base:valueHasOrder 2 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/8a0b1e75>
-
-<http://data.knora.org/8a0b1e75> a incunabula:page ;
-	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|M knora-base:ProjectMember,knora-base:Owner" ;
-	incunabula:pagenum <http://data.knora.org/8a0b1e75/values/61cb927602> ;
-	incunabula:partOf <http://data.knora.org/c5058f3a> ;
-	incunabula:partOfValue <http://data.knora.org/8a0b1e75/values/09caf895-37cb-4c21-8a40-814f88278fb6> ;
-	incunabula:seqnum <http://data.knora.org/8a0b1e75/values/e71e39e902> ;
-	incunabula:description <http://data.knora.org/8a0b1e75/values/3e3d4dc0e922> ;
-	incunabula:page_comment <http://data.knora.org/8a0b1e75/values/e80b2d895f23> ;
-	incunabula:origname <http://data.knora.org/8a0b1e75/values/aa488c2203> ;
-	rdfs:label "a1r, Titelblatt" ;
-	knora-base:hasStillImageFileValue <http://data.knora.org/8a0b1e75/reps/bf255339> , <http://data.knora.org/8a0b1e75/reps/7e4ba672> ;
-	knora-base:creationDate "0000-00-00T00:00:00"^^xsd:dateTimeStamp .
-# ## ###########################################
-# ## <http://data.knora.org/8a0b1e75/values/61cb927602>
-
-<http://data.knora.org/8a0b1e75/values/61cb927602> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "a1r, Titelblatt" ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/8a0b1e75/values/e71e39e902>
-
-<http://data.knora.org/8a0b1e75/values/e71e39e902> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "1" ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:IntValue ;
-	knora-base:valueHasInteger 1 ;
-	knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/8a0b1e75/values/3e3d4dc0e922>
-
-<http://data.knora.org/8a0b1e75/values/3e3d4dc0e922> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
-	knora-base:valueHasString """Titel: \"Das andechtig zitglo(e)gglyn | des lebens vnd lide(n)s christi nach | den xxiiij stunden vßgeteilt.\"
-Holzschnitt: Schlaguhr mit Zifferblatt für 24 Stunden, auf deren oberem Rand zu beiden Seiten einer Glocke die Verkündigungsszene mit Maria (links) und dem Engel (rechts) zu sehen ist.
-Bordüre: Ranken mit Fabelwesen, Holzschnitt.
-Kolorierung: Rot, Blau, Grün, Gelb, Braun.
-Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2012-01-22T12:05:57"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember|D knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/8a0b1e75/values/e80b2d895f23>
-
-<http://data.knora.org/8a0b1e75/values/e80b2d895f23> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
-	knora-base:valueHasString "Schramm, Bd. 21, Abb. 601." ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2012-01-24T18:07:40"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser|D knora-base:ProjectMember,knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/8a0b1e75/values/aa488c2203>
-
-<http://data.knora.org/8a0b1e75/values/aa488c2203> knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "ad+s167_druck1=0001.tif" ;
-	knora-base:valueHasOrder 0 ;
-	a knora-base:TextValue ;
-	knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember,knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/8a0b1e75/reps/bf255339>
-
-<http://data.knora.org/8a0b1e75/reps/bf255339> knora-base:valueHasString "ad+s167_druck1=0001.tif" ;
-	knora-base:originalFilename "ad+s167_druck1=0001.tif" ;
-	knora-base:originalMimeType "image/tiff" ;
-	knora-base:internalFilename "incunabula_0000000002.jpg" ;
-	knora-base:internalMimeType "image/jpeg" ;
-	knora-base:valueCreationDate "2012-11-21T16:49:35"^^xsd:dateTimeStamp ;
-	a knora-base:StillImageFileValue ;
-	knora-base:dimX 95 ;
-	knora-base:dimY 128 ;
-	knora-base:qualityLevel 10 ;
-	knora-base:valueHasQname "thumbnail" ;
-	knora-base:isPreview true ;
-	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/666> ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|M knora-base:ProjectMember,knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/8a0b1e75/reps/7e4ba672>
-
-<http://data.knora.org/8a0b1e75/reps/7e4ba672> knora-base:valueHasString "ad+s167_druck1=0001.tif" ;
-	knora-base:originalFilename "ad+s167_druck1=0001.tif" ;
-	knora-base:originalMimeType "image/tiff" ;
-	knora-base:internalFilename "incunabula_0000000002.jp2" ;
-	knora-base:internalMimeType "image/jp2" ;
-	knora-base:valueCreationDate "2012-11-21T16:49:36"^^xsd:dateTimeStamp ;
-	a knora-base:StillImageFileValue ;
-	knora-base:dimX 2613 ;
-	knora-base:dimY 3505 ;
-	knora-base:qualityLevel 100 ;
-	knora-base:valueHasQname "full" ;
-	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:hasPermissions "RV knora-base:UnknownUser|V knora-base:KnownUser|M knora-base:ProjectMember,knora-base:Owner" .
-# ## ###########################################
-# ## <http://data.knora.org/8a0b1e75/values/09caf895-37cb-4c21-8a40-814f88278fb6>
-
-<http://data.knora.org/8a0b1e75/values/09caf895-37cb-4c21-8a40-814f88278fb6> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/8a0b1e75> ;
-	rdf:predicate incunabula:partOf ;
-	rdf:object <http://data.knora.org/c5058f3a> ;
-	knora-base:valueHasRefCount 1 ;
-	knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|D knora-base:Owner" ;
-	knora-base:isDeleted false ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:valueHasString "1" .
-# ## ###########################################
-# ## <http://data.knora.org/users/91e19f1e01>
 
 <http://data.knora.org/users/91e19f1e01> a knora-base:User ;
 	knora-base:userid "root" ;
@@ -309,8 +255,6 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 	knora-base:phone "123456" ;
 	knora-base:preferredLanguage "de" ;
 	knora-base:isInProject <http://data.knora.org/projects/77275339> .
-# ## ###########################################
-# ## <http://data.knora.org/users/b83acc5f05>
 
 <http://data.knora.org/users/b83acc5f05> a knora-base:User ;
 	knora-base:userid "testuser" ;

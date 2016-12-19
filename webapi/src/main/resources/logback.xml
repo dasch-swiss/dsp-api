@@ -37,6 +37,7 @@
     <logger name="org.knora.webapi" level="INFO"/>
     <logger name="org.knora.webapi.util.cache" level="INFO"/>
     <logger name="org.knora.webapi.util.PermissionUtilV1" level="DEBUG"/>
+    <logger name="org.knora.webapi.util.TransformData" level="DEBUG"/>
     <logger name="org.knora.webapi.routing.Authenticator" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.AssetsRouteV1" level="INFO"/>
     <logger name="org.knora.webapi.store.StoreManager" level="INFO"/>

@@ -13,7 +13,7 @@
 	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 	rdfs:label "A thing" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
 <http://data.knora.org/a-thing-with-text-values> a anything:Thing ;
@@ -24,7 +24,7 @@
 	anything:hasText <http://data.knora.org/a-thing-with-text-values/values/1> , <http://data.knora.org/a-thing-with-text-values/values/2> ;
 	knora-base:hasStandoffLinkTo <http://data.knora.org/a-thing> ;
 	knora-base:hasStandoffLinkToValue <http://data.knora.org/a-thing-with-text-values/values/0> ;
-	knora-base:hasPermissions "V knora-base:ProjectMember" ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
 <http://data.knora.org/a-thing-with-text-values/values/0> a knora-base:LinkValue ;
@@ -44,7 +44,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasStandoff <http://data.knora.org/a-thing-with-text-values/values/1/standoff/HNhqZ6fdQP26Tgmt7MTeQg> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator" .
 
 <http://data.knora.org/a-thing-with-text-values/values/1/standoff/HNhqZ6fdQP26Tgmt7MTeQg> a knora-base:StandoffLinkTag ;
 	knora-base:standoffTagHasStart 14 ;
@@ -58,7 +58,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasStandoff <http://data.knora.org/a-thing-with-text-values/values/2/standoff/Ht76B6DqTDCWHo_WICC1Xg> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator" .
 
 <http://data.knora.org/a-thing-with-text-values/values/2/standoff/Ht76B6DqTDCWHo_WICC1Xg> a knora-base:StandoffLinkTag ;
 	knora-base:standoffTagHasStart 11 ;
@@ -70,7 +70,7 @@
 	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 	rdfs:label "Another thing" ;
-	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
 <http://data.knora.org/anything/treeList> a knora-base:ListNode ;
@@ -114,7 +114,7 @@
 	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 	rdfs:label "A contained thing that only project members can see" ;
-	knora-base:hasPermissions "V knora-base:ProjectMember" ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
 	anything:isPartOfOtherThing <http://data.knora.org/containing-thing> ;
 	anything:isPartOfOtherThingValue <http://data.knora.org/contained-thing-1/values/0> ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
@@ -127,7 +127,7 @@
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:isDeleted false ;
-	knora-base:hasPermissions "V knora-base:ProjectMember" ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
 	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> .
 
 <http://data.knora.org/contained-thing-2> a anything:Thing ;
@@ -135,7 +135,7 @@
 	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 	rdfs:label "Another contained thing that only project members can see" ;
-	knora-base:hasPermissions "V knora-base:ProjectMember" ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
 	anything:isPartOfOtherThing <http://data.knora.org/containing-thing> ;
 	anything:isPartOfOtherThingValue <http://data.knora.org/contained-thing-2/values/0> ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
@@ -148,7 +148,7 @@
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:isDeleted false ;
-	knora-base:hasPermissions "V knora-base:Owner" ;
+	knora-base:hasPermissions "CR knora-base:Creator" ;
 	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> .
 
 <http://data.knora.org/containing-thing> a anything:Thing ;
@@ -156,7 +156,7 @@
 	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 	rdfs:label "A containing thing" ;
-	knora-base:hasPermissions "V knora-base:KnownUser" ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:KnownUser" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
 <http://data.knora.org/project-thing-1> a anything:Thing ;
@@ -168,7 +168,7 @@
 	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 	rdfs:label "A thing that only project members can see" ;
-	knora-base:hasPermissions "V knora-base:ProjectMember" ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
 <http://data.knora.org/project-thing-1/values/0> a knora-base:LinkValue ;
@@ -179,7 +179,7 @@
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:isDeleted false ;
-	knora-base:hasPermissions "V knora-base:Owner" ;
+	knora-base:hasPermissions "CR knora-base:Creator" ;
 	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> .
 
 <http://data.knora.org/project-thing-1/values/1> a knora-base:LinkValue ;
@@ -199,7 +199,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasStandoff <http://data.knora.org/project-thing-1/values/2/standoff/NEDbEA85RgO1L1qkDXOVwg> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
-	knora-base:hasPermissions "V knora-base:Owner" .
+	knora-base:hasPermissions "CR knora-base:Creator" .
 
 <http://data.knora.org/project-thing-1/values/2/standoff/NEDbEA85RgO1L1qkDXOVwg> a knora-base:StandoffLinkTag ;
 	knora-base:standoffTagHasStart 10 ;
@@ -211,5 +211,5 @@
 	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 	rdfs:label "Another thing that only project members can see" ;
-	knora-base:hasPermissions "V knora-base:ProjectMember" ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .

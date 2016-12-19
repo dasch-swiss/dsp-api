@@ -18,13 +18,16 @@ package org.knora.webapi.util
 
 import java.io._
 
+import com.typesafe.scalalogging.Logger
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.rio.turtle._
 import org.eclipse.rdf4j.rio.{RDFHandler, RDFWriter}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionType, PermissionV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import org.rogach.scallop._
+import org.slf4j.LoggerFactory
 
 import scala.collection.immutable.TreeMap
 import scala.collection.{SortedSet, mutable}
@@ -33,6 +36,10 @@ import scala.collection.{SortedSet, mutable}
   * Updates the structure of Knora repository data to accommodate changes in Knora.
   */
 object TransformData extends App {
+
+    val log = Logger(LoggerFactory.getLogger(this.getClass))
+
+
     private val IsDeletedTransformationOption = "deleted"
     private val PermissionsTransformationOption = "permissions"
     private val MissingValueHasStringTransformationOption = "strings"
@@ -84,6 +91,10 @@ object TransformData extends App {
         OntologyConstants.KnoraBase.Institution,
         OntologyConstants.KnoraBase.ListNode
     )
+
+    /* Owner and Creator in their shortened format as found inside 'knora-base:hasPermissions' literal */
+    private val Owner = "knora-base:Owner"
+    private val Creator = "knora-base:Creator"
 
     val conf = new Conf(args)
     val transformationOption = conf.transform()
@@ -708,6 +719,45 @@ object TransformData extends App {
       */
     private class CreatorHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
         override def endRDF(): Unit = {
+
+            statements.foreach {
+                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+
+                    subjectStatements.foreach {
+                        statement =>
+                            // If this statement has the 'hasPermissions' predicate, then see if the literal contains
+                            // 'knora-base:Owner', and if so, replace with 'knora-base:Creator'.
+                            if (statement.getPredicate.stringValue == OntologyConstants.KnoraBase.HasPermissions) {
+
+                                //log.debug(s"CreatorHandler - ${ScalaPrettyPrinter.prettyPrint(statement)}")
+
+                                val permissionsLiteral: String = statement.getObject.stringValue()
+
+                                if (permissionsLiteral.contains(Owner)) {
+                                    /* literal contains 'Owner' so I need to change it */
+                                    val changedPermissionsLiteral = permissionsLiteral.replace(Owner, Creator)
+
+                                    /* create statement with new literal */
+                                    val newHasPermissionsStatement = valueFactory.createStatement(
+                                        statement.getSubject,
+                                        statement.getPredicate,
+                                        valueFactory.createLiteral(changedPermissionsLiteral)
+                                    )
+
+                                    /* write statement with changed literal */
+                                    turtleWriter.handleStatement(newHasPermissionsStatement)
+                                } else {
+                                    /* literal does not contain 'Owner' so I can write it as it is */
+                                    turtleWriter.handleStatement(statement)
+                                }
+                            } else {
+                                /* not an 'hasPermissions' statement */
+                                turtleWriter.handleStatement(statement)
+                            }
+                    }
+
+            }
+
             turtleWriter.endRDF()
         }
     }
@@ -719,6 +769,53 @@ object TransformData extends App {
       */
     private class OwnerBehaviourHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
         override def endRDF(): Unit = {
+
+            statements.foreach {
+                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+
+                    subjectStatements.foreach {
+                        statement =>
+                            // If this statement has the 'hasPermissions' predicate, remove any existing permissions
+                            // for 'knora-base:Creator' and in any case add 'CR knora-base:Creator'.
+                            if (statement.getPredicate.stringValue == OntologyConstants.KnoraBase.HasPermissions) {
+
+                                //log.debug(s"CreatorHandler - ${ScalaPrettyPrinter.prettyPrint(statement)}")
+
+                                /* get the permissions literal */
+                                val permissionsLiteral: String = statement.getObject.stringValue()
+
+                                /* parse literal */
+                                val parsedPermissions: Set[PermissionV1] = PermissionUtilV1.parsePermissions(Some(permissionsLiteral), PermissionType.OAP)
+
+                                /* remove ony permissions referencing the creator */
+                                val permissionsWithoutCreator = parsedPermissions.filter(perm => perm.additionalInformation.get != OntologyConstants.KnoraBase.Creator)
+
+                                /* add CR for Creator */
+                                val permissionsWithCreator = permissionsWithoutCreator ++ Set(PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator))
+
+                                /* transform back to literal */
+                                val changedPermissionsLiteral: String = PermissionUtilV1.formatPermissions(permissionsWithCreator, PermissionType.OAP) match {
+                                    case Some(literal) => literal
+                                    case None => throw InconsistentTriplestoreDataException(s"We really shouldn't be here. There seem to be no permissions that we can write!")
+                                }
+
+                                /* create statement with new literal */
+                                val newHasPermissionsStatement = valueFactory.createStatement(
+                                    statement.getSubject,
+                                    statement.getPredicate,
+                                    valueFactory.createLiteral(changedPermissionsLiteral)
+                                )
+
+                                /* write statement */
+                                turtleWriter.handleStatement(newHasPermissionsStatement)
+                            } else {
+                                /* not an 'hasPermissions' statement */
+                                turtleWriter.handleStatement(statement)
+                            }
+                    }
+
+            }
+
             turtleWriter.endRDF()
         }
     }
@@ -738,16 +835,8 @@ object TransformData extends App {
         val transform = opt[String](
             required = true,
             validate = t => Set(IsDeletedTransformationOption, PermissionsTransformationOption, MissingValueHasStringTransformationOption, StandoffTransformationOption, CreatorTransformationOption, OwnerBehaviourTransformationOption, AllTransformationsOption).contains(t),
-            descr = s"""
-                Selects a transformation. Available transformations:
-                    '$IsDeletedTransformationOption' (adds missing 'knora-base:isDeleted' statements),
-                    '$PermissionsTransformationOption' (combines old-style multiple permission statements into single permission statements),
-                    '$MissingValueHasStringTransformationOption' (adds missing valueHasString),
-                    '$StandoffTransformationOption' (transforms old-style standoff into new-style standoff),
-                    '$CreatorTransformationOption' (transforms existing 'knora-base:Owner' group inside permissions to 'knora-base:Creator'),
-                    '$OwnerBehaviourTransformationOption' (gives 'knora-base:Creator' CR permissions to correspond to the previous behaviour for owners - use with care as it will add permissions that where not there before),
-                    '$AllTransformationsOption' (all of the above minus '$OwnerBehaviourTransformationOption')
-            """
+            descr = s"Selects a transformation. Available transformations: '$IsDeletedTransformationOption' (adds missing 'knora-base:isDeleted' statements), '$PermissionsTransformationOption' (combines old-style multiple permission statements into single permission statements), '$MissingValueHasStringTransformationOption' (adds missing valueHasString), '$StandoffTransformationOption' (transforms old-style standoff into new-style standoff), '$CreatorTransformationOption' (transforms existing 'knora-base:Owner' group inside permissions to 'knora-base:Creator'), '$OwnerBehaviourTransformationOption' (gives 'knora-base:Creator' CR permissions to correspond to the previous behaviour for owners - use with care as it will add permissions that where not there before), '$AllTransformationsOption' (all of the above minus '$OwnerBehaviourTransformationOption')"
+
         )
 
         val input = trailArg[String](required = true, descr = "Input Turtle file")

@@ -43,13 +43,7 @@
           salsah-gui:guiElement salsah-gui:SimpleText ;
 
           salsah-gui:guiAttribute "size=32" ,
-                                  "maxlength=32" ;
-
-          knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                knora-base:Owner ;
-
-          knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                              knora-base:UnknownUser .
+                                  "maxlength=32" .
 
 
 ### ###########################################
@@ -75,13 +69,7 @@
            salsah-gui:guiElement salsah-gui:SimpleText ;
 
            salsah-gui:guiAttribute "size=32" ,
-                                   "maxlength=32" ;
-
-           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                               knora-base:UnknownUser ;
-
-           knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                 knora-base:Owner .
+                                   "maxlength=32" .
 
 
 ### ###########################################
@@ -105,13 +93,7 @@
              salsah-gui:guiElement salsah-gui:SimpleText ;
 
              salsah-gui:guiAttribute "size=64" ,
-                                     "maxlength=64" ;
-
-             knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                                 knora-base:UnknownUser ;
-
-             knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                   knora-base:Owner .
+                                     "maxlength=64" .
 
 
 ### ###########################################
@@ -135,10 +117,7 @@
          salsah-gui:guiElement salsah-gui:SimpleText ;
 
          salsah-gui:guiAttribute "size=64" ,
-                                 "maxlength=64" ;
-
-         knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                               knora-base:Owner .
+                                 "maxlength=64" .
 
 
 ### ###########################################
@@ -160,13 +139,7 @@
       salsah-gui:guiElement salsah-gui:SimpleText ;
 
       salsah-gui:guiAttribute "size=64" ,
-                              "maxlength=64" ;
-
-      knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                          knora-base:UnknownUser ;
-
-      knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                            knora-base:Owner .
+                              "maxlength=64" .
 
 
 ### ###########################################
@@ -190,13 +163,7 @@
          salsah-gui:guiElement salsah-gui:SimpleText ;
 
          salsah-gui:guiAttribute "size=16" ,
-                                 "maxlength=16" ;
-
-         knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                             knora-base:UnknownUser ;
-
-         knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                               knora-base:Owner .
+                                 "maxlength=16" .
 
 
 ### ###########################################
@@ -217,10 +184,7 @@
        salsah-gui:guiElement salsah-gui:SimpleText ;
 
        salsah-gui:guiAttribute "size=32" ,
-                               "maxlength=32" ;
-
-       knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                             knora-base:Owner .
+                               "maxlength=32" .
 
 
 ### ###########################################
@@ -243,10 +207,7 @@
      salsah-gui:guiElement salsah-gui:SimpleText ;
 
      salsah-gui:guiAttribute "size=32" ,
-                             "maxlength=32" ;
-
-     knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                           knora-base:Owner .
+                             "maxlength=32" .
 
 
 ### ###########################################
@@ -268,10 +229,7 @@
        salsah-gui:guiElement salsah-gui:SimpleText ;
 
        salsah-gui:guiAttribute "size=128" ,
-                               "maxlength=128" ;
-
-       knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                             knora-base:Owner .
+                               "maxlength=128" .
 
 
 ### ###########################################
@@ -294,13 +252,7 @@
 
          salsah-gui:guiElement salsah-gui:Pulldown ;
 
-         salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/6cce4ce5>" ;
-
-         knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                             knora-base:UnknownUser ;
-
-         knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                               knora-base:Owner .
+         salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/6cce4ce5>" .
 
 
 ### ###########################################
@@ -321,10 +273,7 @@
 
               salsah-gui:guiOrder "2"^^xsd:integer ;
 
-              salsah-gui:guiElement salsah-gui:Date ;
-
-              knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                    knora-base:Owner .
+              salsah-gui:guiElement salsah-gui:Date .
 
 
 ### ###########################################
@@ -348,13 +297,7 @@
         salsah-gui:guiElement salsah-gui:SimpleText ;
 
         salsah-gui:guiAttribute "size=32" ,
-                                "maxlength=32" ;
-
-        knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                            knora-base:UnknownUser ;
-
-        knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                              knora-base:Owner .
+                                "maxlength=32" .
 
 
 ### ###########################################
@@ -402,10 +345,7 @@
            salsah-gui:guiElement salsah-gui:Searchbox ;
 
            salsah-gui:guiAttribute "restypeid=32" ,
-                                   "numprops=2" ;
-
-           knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                 knora-base:Owner .
+                                   "numprops=2" .
 
 
 ### ###########################################
@@ -429,10 +369,7 @@
             salsah-gui:guiElement salsah-gui:Spinbox ;
 
             salsah-gui:guiAttribute "min=0" ,
-                                    "max=99" ;
-
-            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                  knora-base:Owner .
+                                    "max=99" .
 
 
 ### ###########################################
@@ -457,10 +394,7 @@
 
             salsah-gui:guiElement salsah-gui:Radio ;
 
-            salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/0702a01e01>" ;
-
-            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                  knora-base:Owner .
+            salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/0702a01e01>" .
 
 
 ### ###########################################
@@ -484,10 +418,7 @@
        salsah-gui:guiElement salsah-gui:SimpleText ;
 
        salsah-gui:guiAttribute "size=16" ,
-                               "maxlength=16" ;
-
-       knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                             knora-base:Owner .
+                               "maxlength=16" .
 
 
 ### ###########################################
@@ -508,13 +439,7 @@
 
                salsah-gui:guiOrder "8"^^xsd:integer ;
 
-               salsah-gui:guiElement salsah-gui:Date ;
-
-               knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
-                                                   knora-base:KnownUser ;
-
-               knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                     knora-base:Owner .
+               salsah-gui:guiElement salsah-gui:Date .
 
 
 ### ###########################################
@@ -541,10 +466,7 @@
 
          salsah-gui:guiAttribute "width=95%" ,
                                  "rows=7" ,
-                                 "wrap=soft" ;
-
-         knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                               knora-base:Owner .
+                                 "wrap=soft" .
 
 
 ### ###########################################
@@ -567,13 +489,7 @@
 
        salsah-gui:guiElement salsah-gui:List ;
 
-       salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/73d0ec0302>" ;
-
-       knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                           knora-base:UnknownUser ;
-
-       knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                             knora-base:Owner .
+       salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/73d0ec0302>" .
 
 
 ### ###########################################
@@ -599,12 +515,7 @@
           salsah-gui:guiElement salsah-gui:SimpleText ;
 
           salsah-gui:guiAttribute "size=16" ,
-                                  "maxlength=16" ;
-
-          knora-base:hasDefaultViewPermission knora-base:KnownUser ;
-
-          knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                knora-base:Owner .
+                                  "maxlength=16" .
 
 
 ### ###########################################
@@ -628,13 +539,7 @@
         salsah-gui:guiElement salsah-gui:SimpleText ;
 
         salsah-gui:guiAttribute "size=6" ,
-                                "maxlength=6" ;
-
-        knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                            knora-base:UnknownUser ;
-
-        knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                              knora-base:Owner .
+                                "maxlength=6" .
 
 
 ### ###########################################
@@ -659,13 +564,7 @@
 
              salsah-gui:guiAttribute "width=95%" ,
                                      "rows=10" ,
-                                     "wrap=soft" ;
-
-             knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                                 knora-base:UnknownUser ;
-
-             knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                   knora-base:Owner .
+                                     "wrap=soft" .
 
 
 ### ###########################################
@@ -688,13 +587,7 @@
 
             salsah-gui:guiElement salsah-gui:Radio ;
 
-            salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/d19af9ab>" ;
-
-            knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                                knora-base:UnknownUser ;
-
-            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                  knora-base:Owner .
+            salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/d19af9ab>" .
 
 
 ### ###########################################
@@ -715,12 +608,7 @@
 
            salsah-gui:guiOrder "6"^^xsd:integer ;
 
-           salsah-gui:guiElement salsah-gui:Date ;
-
-           knora-base:hasDefaultViewPermission knora-base:KnownUser ;
-
-           knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                 knora-base:Owner .
+           salsah-gui:guiElement salsah-gui:Date .
 
 
 ### ###########################################
@@ -744,13 +632,7 @@
             salsah-gui:guiElement salsah-gui:SimpleText ;
 
             salsah-gui:guiAttribute "size=8" ,
-                                    "maxlength=8" ;
-
-            knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                                knora-base:UnknownUser ;
-
-            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                  knora-base:Owner .
+                                    "maxlength=8" .
 
 
 ### ###########################################
@@ -802,12 +684,7 @@
             salsah-gui:guiElement salsah-gui:Searchbox ;
 
             salsah-gui:guiAttribute "restypeid=33" ,
-                                    "numprops=1" ;
-
-            knora-base:hasDefaultViewPermission knora-base:KnownUser ;
-
-            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                  knora-base:Owner .
+                                    "numprops=1" .
 
 
 ### ###########################################
@@ -828,12 +705,7 @@
 
                  salsah-gui:guiOrder "9"^^xsd:integer ;
 
-                 salsah-gui:guiElement salsah-gui:Date ;
-
-                 knora-base:hasDefaultViewPermission knora-base:KnownUser ;
-
-                 knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                       knora-base:Owner .
+                 salsah-gui:guiElement salsah-gui:Date .
 
 
 ### ###########################################
@@ -854,10 +726,7 @@
 
                 salsah-gui:guiOrder "10"^^xsd:integer ;
 
-                salsah-gui:guiElement salsah-gui:Date ;
-
-                knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                      knora-base:Owner .
+                salsah-gui:guiElement salsah-gui:Date .
 
 
 ### ###########################################
@@ -881,10 +750,7 @@
             salsah-gui:guiElement salsah-gui:SimpleText ;
 
             salsah-gui:guiAttribute "size=32" ,
-                                    "maxlength=32" ;
-
-            knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                  knora-base:Owner .
+                                    "maxlength=32" .
 
 
 ### ###########################################
@@ -908,12 +774,7 @@
                salsah-gui:guiElement salsah-gui:SimpleText ;
 
                salsah-gui:guiAttribute "size=32" ,
-                                       "maxlength=32" ;
-
-               knora-base:hasDefaultViewPermission knora-base:KnownUser ;
-
-               knora-base:hasDefaultDeletePermission knora-base:Owner ,
-                                                     knora-base:ProjectMember .
+                                       "maxlength=32" .
 
 
 ### ###########################################
@@ -965,13 +826,7 @@
          salsah-gui:guiElement salsah-gui:Searchbox ;
 
          salsah-gui:guiAttribute "restypeid=32" ,
-                                 "numprops=2" ;
-
-         knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                             knora-base:UnknownUser ;
-
-         knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                               knora-base:Owner .
+                                 "numprops=2" .
 
 
 ### ###########################################
@@ -1023,13 +878,7 @@
            salsah-gui:guiElement salsah-gui:Searchbox ;
 
            salsah-gui:guiAttribute "restypeid=32" ,
-                                   "numprops=2" ;
-
-           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                               knora-base:UnknownUser ;
-
-           knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                 knora-base:Owner .
+                                   "numprops=2" .
 
 ##########################################################
 #
@@ -1088,13 +937,7 @@
                    "Persona"@it ,
                    "Person"@en ;
 
-        rdfs:comment """Person"""@de ;
-
-        knora-base:hasDefaultChangeRightsPermission knora-base:Owner ,
-                                                    knora-base:ProjectMember ;
-
-        knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                            knora-base:UnknownUser .
+        rdfs:comment """Person"""@de .
 
 
 ### ###########################################
@@ -1149,13 +992,7 @@
             rdfs:label "Bildformat"@de ,
                        "Format d'image"@fr ,
                        "Formato d'immagine"@it ,
-                       "Image format"@en ;
-
-            knora-base:hasDefaultChangeRightsPermission knora-base:Owner ,
-                                                        knora-base:ProjectMember ;
-
-            knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                                knora-base:UnknownUser .
+                       "Image format"@en .
 
 
 ### ###########################################
@@ -1240,12 +1077,5 @@
                  "Immagine"@it ,
                  "Image"@en ;
 
-      rdfs:comment """An image of the demo image collection"""@de ;
-
-      knora-base:hasDefaultViewPermission knora-base:KnownUser ;
-
-      knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
-
-      knora-base:hasDefaultChangeRightsPermission knora-base:ProjectMember ,
-                                                  knora-base:Owner .
+      rdfs:comment """An image of the demo image collection"""@de .
 

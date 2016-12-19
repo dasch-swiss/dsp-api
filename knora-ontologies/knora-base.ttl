@@ -219,12 +219,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
               :subjectClassConstraint :StillImageRepresentation ;
 
-			        :hasDefaultRestrictedViewPermission :UnknownUser ;
-
-        		  :hasDefaultViewPermission :KnownUser ;
-
-      	  	  :hasDefaultModifyPermission :ProjectMember , :Owner ;
-
               rdfs:subPropertyOf :hasFileValue .
 
 
@@ -452,8 +446,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                               "a standoff lien vers"@fr ,
                               "ha standoff link verso"@it ;
 
-                   rdfs:comment "Represents a link in standoff markup from one resource to another."@en ;
-                   
                    rdfs:comment "Represents a link in standoff markup from one resource to another."@en ;
 
                    :objectClassConstraint :Resource ;
@@ -1881,10 +1873,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
 
          :resourceIcon "link.gif"^^xsd:string ;
 
-         :hasDefaultViewPermission :UnknownUser , :KnownUser ;
-
-         :hasDefaultModifyPermission :ProjectMember ;
-
          rdfs:comment "Verknüpfung mehrerer Resourcen"@de ,
                       "Represents a generic link object"@en .
 
@@ -2043,10 +2031,6 @@ rdfs:label rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
                         ] ;
 
         :resourceIcon "region.gif"^^xsd:string ;
-
-        :hasDefaultViewPermission :UnknownUser , :KnownUser ;
-
-        :hasDefaultModifyPermission :ProjectMember ;
 
         rdfs:comment "Represents a geometric region of a resource. The geometry is represented currently as JSON string."@en .
 

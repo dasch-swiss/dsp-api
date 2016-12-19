@@ -245,4 +245,89 @@
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
-                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"^^xsd:string .
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
+
+
+##########################################################
+#
+# BEOL Project Permissions
+#
+##########################################################
+
+### Administrative Permissions on ProjectMember
+<http://data.knora.org/permissions/006-a1>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
+
+
+### Administrative Permissions on ProjectAdmin
+<http://data.knora.org/permissions/006-a2>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+
+                      knora-base:forGroup knora-base:ProjectAdmin ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
+
+
+### Default Object Access Permissions on ProjectMember Group
+<http://data.knora.org/permissions/006-d1>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
+
+
+##########################################################
+#
+# Biblio Project Permissions
+#
+##########################################################
+
+
+### Administrative Permissions on ProjectMember
+<http://data.knora.org/permissions/007-a1>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
+
+
+### Administrative Permissions on ProjectAdmin
+<http://data.knora.org/permissions/007-a2>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;
+
+                      knora-base:forGroup knora-base:ProjectAdmin ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
+
+
+### Default Object Access Permissions on ProjectMember Group
+<http://data.knora.org/permissions/007-d1>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .

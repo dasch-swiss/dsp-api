@@ -28,70 +28,6 @@
 
 <http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology .
 
-
-
-#################################################################
-#
-#    Annotation properties
-#
-#################################################################
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasDefaultChangeRightsPermission
-
-:hasDefaultChangeRightsPermission rdf:type owl:AnnotationProperty ;
-
-                                  :objectClassConstraint :UserGroup ;
-
-                                  rdfs:subPropertyOf :hasDefaultDeletePermission .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasDefaultDeletePermission
-
-:hasDefaultDeletePermission rdf:type owl:AnnotationProperty ;
-
-                            :objectClassConstraint :UserGroup ;
-
-                            rdfs:subPropertyOf :hasDefaultModifyPermission .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasDefaultModifyPermission
-
-:hasDefaultModifyPermission rdf:type owl:AnnotationProperty ;
-
-                            :objectClassConstraint :UserGroup ;
-
-                            rdfs:subPropertyOf :hasDefaultViewPermission .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasDefaultPermission
-
-:hasDefaultPermission rdf:type owl:AnnotationProperty .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasDefaultRestrictedViewPermission
-
-:hasDefaultRestrictedViewPermission rdf:type owl:AnnotationProperty ;
-
-                                    :objectClassConstraint :UserGroup ;
-
-                                    rdfs:subPropertyOf :hasDefaultPermission .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasDefaultViewPermission
-
-:hasDefaultViewPermission rdf:type owl:AnnotationProperty ;
-
-                          rdfs:subPropertyOf :hasDefaultRestrictedViewPermission .
-
-
-
 #################################################################
 #
 #    Object Properties
@@ -705,12 +641,6 @@
 ###  http://www.knora.org/ontology/knora-base#KnownUser
 :KnownUser rdf:type :UserGroup ;
            :groupName "known user" .
-
-###  Was changed to :Creator
-###  http://www.knora.org/ontology/knora-base#Owner
-
-:Owner rdf:type :UserGroup ;
-       :groupName  "owner" .
 
 ###  http://www.knora.org/ontology/knora-base#Creator
 :Creator rdf:type :UserGroup ;
