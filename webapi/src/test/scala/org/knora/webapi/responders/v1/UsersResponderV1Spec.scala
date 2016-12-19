@@ -60,7 +60,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     val rootUserIri = rootUser.userData.user_id.get
     val rootUserName = rootUser.userData.username.get
 
-    val incunabulaUser = SharedAdminTestData.incunabulaUser
+    val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
     val incunabulaUserIri = incunabulaUser.userData.user_id.get
     val incunabulaUserName = incunabulaUser.userData.username.get
 

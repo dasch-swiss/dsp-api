@@ -163,7 +163,7 @@ object ResourcesResponderV1Spec {
                                 None),
                             "http://data.knora.org/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
                             None,
-                            None))))), userdata = SharedAdminTestData.incunabulaUser.userData)
+                            None))))), userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData)
 
     private val hasOtherThingIncomingLink = IncomingV1(
         value = Some("A thing that only project members can see"),
@@ -383,7 +383,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                             value = propValue,
                             rights = 6,
                             id = "http://www.knora.org/test/values/test",
-                            userdata = SharedAdminTestData.incunabulaUser.userData
+                            userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData
                         )
 
                         // convert CreateValueResponseV1 to a ResourceCreateValueResponseV1
@@ -531,14 +531,14 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedAdminTestData.incunabulaUser)
+        responderManager ! LoadOntologiesRequest(SharedAdminTestData.incunabulaProjectAdminUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
     "The resources responder" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/c5058f3a", userProfile = SharedAdminTestData.incunabulaUser)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/c5058f3a", userProfile = SharedAdminTestData.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse)
@@ -547,7 +547,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return a full description of the first page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F8a0b1e75
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/8a0b1e75", userProfile = SharedAdminTestData.incunabulaUser)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/8a0b1e75", userProfile = SharedAdminTestData.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse)
@@ -556,7 +556,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return a region with a comment containing standoff information (disabled because of issue 17)" ignore {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/047db418ae06", userProfile = SharedAdminTestData.incunabulaUser)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/047db418ae06", userProfile = SharedAdminTestData.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -566,7 +566,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return the context (describing 402 pages) of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?reqtype=context&resinfo=true
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/c5058f3a", resinfo = true, userProfile = SharedAdminTestData.incunabulaUser)
+            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/c5058f3a", resinfo = true, userProfile = SharedAdminTestData.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 => compareResourceCompoundContextResponses(received = response, expected = ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse)
@@ -575,7 +575,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return the context of a page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F8a0b1e75?reqtype=context&resinfo=true
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/8a0b1e75", resinfo = true, userProfile = SharedAdminTestData.incunabulaUser)
+            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/8a0b1e75", resinfo = true, userProfile = SharedAdminTestData.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 => compareResourcePartOfContextResponses(received = response, expected = ResourcesResponderV1SpecContextData.expectedPageResourceContextResponse)
@@ -589,7 +589,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 numberOfProps = 3,
                 limitOfResults = 11,
                 resourceTypeIri = None,
-                userProfile = SharedAdminTestData.incunabulaUser
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser
             )
 
             expectMsgPF(timeout) {
@@ -604,7 +604,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 numberOfProps = 1,
                 limitOfResults = 11,
                 resourceTypeIri = Some("http://www.knora.org/ontology/incunabula#book"),
-                userProfile = SharedAdminTestData.incunabulaUser
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser
             )
 
             expectMsgPF(timeout) {
@@ -624,7 +624,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 searchString = "Narrenschiff",
                 numberOfProps = 4,
                 limitOfResults = 100,
-                userProfile = SharedAdminTestData.incunabulaUser,
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
                 resourceTypeIri = None
             )
 
@@ -641,7 +641,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 searchString = "Narrenschiff",
                 numberOfProps = 3,
                 limitOfResults = 100,
-                userProfile = SharedAdminTestData.incunabulaUser,
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
                 resourceTypeIri = Some("http://www.knora.org/ontology/incunabula#book")
             )
 
@@ -665,7 +665,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 label = "Test-Misc",
                 projectIri = "http://data.knora.org/projects/77275339",
                 values = valuesToBeCreated,
-                userProfile = SharedAdminTestData.incunabulaUser,
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -701,7 +701,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 label = "Test-Book",
                 projectIri = "http://data.knora.org/projects/77275339",
                 values = valuesToBeCreated,
-                userProfile = SharedAdminTestData.incunabulaUser,
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -765,7 +765,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 label = "Test-Book",
                 projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 values = valuesToBeCreated,
-                userProfile = SharedAdminTestData.incunabulaUser,
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -784,7 +784,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
 
             // See if we can query the resource.
-            actorUnderTest ! ResourceFullGetRequestV1(iri = newBookResourceIri.get, userProfile = SharedAdminTestData.incunabulaUser)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = newBookResourceIri.get, userProfile = SharedAdminTestData.incunabulaProjectAdminUser)
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => () // If we got a ResourceFullResponseV1, the operation succeeded.
             }
@@ -847,9 +847,9 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                     originalFilename = "test.jpg",
                     originalMimeType = "image/jpeg",
                     filename = "./test_server/images/Chlaus.jpg",
-                    userProfile = SharedAdminTestData.incunabulaUser
+                    userProfile = SharedAdminTestData.incunabulaProjectAdminUser
                 )),
-                userProfile = SharedAdminTestData.incunabulaUser,
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -871,7 +871,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val pageGetContext = ResourceContextGetRequestV1(
                 iri = resIri,
                 resinfo = true,
-                userProfile = SharedAdminTestData.incunabulaUser
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser
             )
 
             actorUnderTest ! pageGetContext
@@ -888,16 +888,16 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val resourceDeleteRequest = ResourceDeleteRequestV1(
                 resourceIri = newPageResourceIri.get,
                 deleteComment = Some("This page was deleted as a test"),
-                userProfile = SharedAdminTestData.incunabulaUser,
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
 
             actorUnderTest ! resourceDeleteRequest
 
-            expectMsg(timeout, ResourceDeleteResponseV1(id = newPageResourceIri.get, userdata = SharedAdminTestData.incunabulaUser.userData))
+            expectMsg(timeout, ResourceDeleteResponseV1(id = newPageResourceIri.get, userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData))
 
             // Check that the resource is marked as deleted.
-            actorUnderTest ! ResourceInfoGetRequestV1(iri = newPageResourceIri.get, userProfile = SharedAdminTestData.incunabulaUser)
+            actorUnderTest ! ResourceInfoGetRequestV1(iri = newPageResourceIri.get, userProfile = SharedAdminTestData.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
@@ -912,7 +912,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             val propertiesGetRequest = PropertiesGetRequestV1(
                 "http://data.knora.org/021ec18f1735",
-                SharedAdminTestData.incunabulaUser
+                SharedAdminTestData.incunabulaProjectAdminUser
             )
 
             actorUnderTest ! propertiesGetRequest
@@ -924,7 +924,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "get the regions of a page pointed to by regions" in {
 
-            val resourceContextPage = ResourceContextGetRequestV1(iri = "http://data.knora.org/9d626dc76c03", resinfo = true, userProfile = SharedAdminTestData.incunabulaUser)
+            val resourceContextPage = ResourceContextGetRequestV1(iri = "http://data.knora.org/9d626dc76c03", resinfo = true, userProfile = SharedAdminTestData.incunabulaProjectAdminUser)
 
             actorUnderTest ! resourceContextPage
 
@@ -1013,7 +1013,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             // A user who's not in the project shouldn't see any contained resources.
 
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/containing-thing", resinfo = true, userProfile = SharedAdminTestData.incunabulaUser)
+            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/containing-thing", resinfo = true, userProfile = SharedAdminTestData.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 =>
@@ -1028,7 +1028,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 projectIri = "http://data.knora.org/projects/77275339",
                 values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
                 file = None,
-                userProfile = SharedAdminTestData.incunabulaUser,
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1043,7 +1043,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! ChangeResourceLabelRequestV1(
                 resourceIri = "http://data.knora.org/c5058f3a",
                 label = myNewLabel,
-                userProfile = SharedAdminTestData.incunabulaUser,
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
 

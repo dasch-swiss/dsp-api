@@ -57,43 +57,75 @@ object PermissionUtilV1Spec {
 }
 class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitSender with Authenticator {
 
-    val permissionLiteral = "RV knora-base:UnknownUser|V knora-base:KnownUser|M knora-base:ProjectMember,knora-base:Creator"
+    val permissionLiteral = "RV knora-base:UnknownUser|V knora-base:KnownUser|M knora-base:ProjectMember|CR knora-base:Creator"
 
     val parsedPermissionLiteral = Map(
         "RV" -> Set(OntologyConstants.KnoraBase.UnknownUser),
         "V" -> Set(OntologyConstants.KnoraBase.KnownUser),
-        "M" -> Set(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.Creator)
+        "M" -> Set(OntologyConstants.KnoraBase.ProjectMember),
+        "CR" -> Set(OntologyConstants.KnoraBase.Creator)
     )
 
     "PermissionUtil " should {
-        "return user's max permission for a specific resource (1)" in {
+
+        "return user's max permission for a specific resource (incunabula normal project member user)" in {
             PermissionUtilV1.getUserPermissionV1(
                 subjectIri = "http://data.knora.org/00014b43f902",
                 subjectCreator = "http://data.knora.org/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = Some(permissionLiteral),
-                userProfile = SharedAdminTestData.incunabulaUser
-            ) should equal(Some(6))
+                userProfile = SharedAdminTestData.incunabulaMemberUser
+            ) should equal(Some(6)) // modify permission
         }
 
-        "return user's max permission for a specific resource (2)" in {
+        "return user's max permission for a specific resource (incunabula project admin user)" in {
             PermissionUtilV1.getUserPermissionV1(
                 subjectIri = "http://data.knora.org/00014b43f902",
                 subjectCreator = "http://data.knora.org/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = Some(permissionLiteral),
-                userProfile = SharedAdminTestData.incunabulaRootAltUser
-            ) should equal(Some(6))
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser
+            ) should equal(Some(8)) // change rights permission
         }
 
-        "return user's max permission for a specific resource (3)" in {
+        "return user's max permission for a specific resource (incunabula creator user)" in {
+            PermissionUtilV1.getUserPermissionV1(
+                subjectIri = "http://data.knora.org/00014b43f902",
+                subjectCreator = "http://data.knora.org/users/91e19f1e01",
+                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectPermissionLiteral = Some(permissionLiteral),
+                userProfile = SharedAdminTestData.incunabulaCreatorUser
+            ) should equal(Some(8)) // change rights permission
+        }
+
+        "return user's max permission for a specific resource (root user)" in {
             PermissionUtilV1.getUserPermissionV1(
                 subjectIri = "http://data.knora.org/00014b43f902",
                 subjectCreator = "http://data.knora.org/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = Some(permissionLiteral),
                 userProfile = SharedAdminTestData.rootUser
-            ) should equal(Some(8))
+            ) should equal(Some(8)) // change rights permission
+        }
+
+        "return user's max permission for a specific resource (normal user)" in {
+            PermissionUtilV1.getUserPermissionV1(
+                subjectIri = "http://data.knora.org/00014b43f902",
+                subjectCreator = "http://data.knora.org/users/91e19f1e01",
+                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectPermissionLiteral = Some(permissionLiteral),
+                userProfile = SharedAdminTestData.normalUser
+            ) should equal(Some(2)) // restricted view permission
+        }
+
+        "return user's max permission for a specific resource (anonymous user)" in {
+            PermissionUtilV1.getUserPermissionV1(
+                subjectIri = "http://data.knora.org/00014b43f902",
+                subjectCreator = "http://data.knora.org/users/91e19f1e01",
+                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectPermissionLiteral = Some(permissionLiteral),
+                userProfile = SharedAdminTestData.anonymousUser
+            ) should equal(Some(1)) // restricted view permission
         }
 
         "return user's max permission from assertions for a specific resource" in {
@@ -105,8 +137,8 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             PermissionUtilV1.getUserPermissionV1FromAssertions(
                 subjectIri = "http://data.knora.org/00014b43f902",
                 assertions = assertions,
-                userProfile = SharedAdminTestData.incunabulaUser
-            ) should equal(Some(6))
+                userProfile = SharedAdminTestData.incunabulaMemberUser
+            ) should equal(Some(6)) // modify permissions
         }
 
         "return user's max permission on link value with value props (1)" ignore {

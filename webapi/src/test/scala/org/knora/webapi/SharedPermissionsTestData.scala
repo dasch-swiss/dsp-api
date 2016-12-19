@@ -116,7 +116,7 @@ object SharedPermissionsTestData {
         oap(
             iri = "http://data.knora.org/00014b43f902", // incunabula:page
             p = ObjectAccessPermissionV1(forResource = Some("http://data.knora.org/00014b43f902"), forValue = None, hasPermissions = Set(
-                                PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.Owner),
+                                PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
                                 PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
                                 PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
                                 PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
@@ -130,7 +130,7 @@ object SharedPermissionsTestData {
                                     PermissionV1.ViewPermission(OntologyConstants.KnoraBase.UnknownUser),
                                     PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
                                     PermissionV1.ViewPermission(OntologyConstants.KnoraBase.ProjectMember),
-                                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.Owner)
+                                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator)
                                 ))
         )
 

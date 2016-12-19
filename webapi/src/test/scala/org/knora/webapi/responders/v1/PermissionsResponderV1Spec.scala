@@ -79,7 +79,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
         "queried about the permission profile" should {
 
-            "return the permissions profile (1)" in {
+            "return the permissions profile (root user)" in {
                 actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.rootUser.projects,
                     groupIris = SharedAdminTestData.rootUser.groups,
@@ -89,7 +89,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 expectMsg(SharedAdminTestData.rootUser.permissionData)
             }
 
-            "return the permissions profile (2)" in {
+            "return the permissions profile ( multi group user)" in {
                 actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.multiuserUser.projects,
                     groupIris = SharedAdminTestData.multiuserUser.groups,
@@ -99,17 +99,37 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 expectMsg(SharedAdminTestData.multiuserUser.permissionData)
             }
 
-            "return the permissions profile (3)" in {
+            "return the permissions profile (incunabula project admin user)" in {
                 actorUnderTest ! PermissionDataGetV1(
-                    projectIris = SharedAdminTestData.incunabulaUser.projects,
-                    groupIris = SharedAdminTestData.incunabulaUser.groups,
+                    projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects,
+                    groupIris = SharedAdminTestData.incunabulaProjectAdminUser.groups,
                     isInProjectAdminGroups = Seq("http://data.knora.org/projects/77275339"),
                     isInSystemAdminGroup = false
                 )
-                expectMsg(SharedAdminTestData.incunabulaUser.permissionData)
+                expectMsg(SharedAdminTestData.incunabulaProjectAdminUser.permissionData)
             }
 
-            "return the permissions profile (4)" in {
+            "return the permissions profile (incunabula creator user)" in {
+                actorUnderTest ! PermissionDataGetV1(
+                    projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects,
+                    groupIris = SharedAdminTestData.incunabulaCreatorUser.groups,
+                    isInProjectAdminGroups = Seq.empty[IRI],
+                    isInSystemAdminGroup = false
+                )
+                expectMsg(SharedAdminTestData.incunabulaCreatorUser.permissionData)
+            }
+
+            "return the permissions profile (incunabula normal project member user)" in {
+                actorUnderTest ! PermissionDataGetV1(
+                    projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects,
+                    groupIris = SharedAdminTestData.incunabulaMemberUser.groups,
+                    isInProjectAdminGroups = Seq.empty[IRI],
+                    isInSystemAdminGroup = false
+                )
+                expectMsg(SharedAdminTestData.incunabulaMemberUser.permissionData)
+            }
+
+            "return the permissions profile (images user 01)" in {
                 actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.imagesUser01.projects,
                     groupIris = SharedAdminTestData.imagesUser01.groups,
@@ -119,7 +139,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 expectMsg(SharedAdminTestData.imagesUser01.permissionData)
             }
 
-            "return the permissions profile (5)" in {
+            "return the permissions profile (anything user 01)" in {
                 actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.anythingUser1.projects,
                     groupIris = SharedAdminTestData.anythingUser1.groups,
@@ -325,28 +345,28 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class (system resource class)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
-                    projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = OntologyConstants.KnoraBase.LinkObj, incunabulaUser.permissionData
+                    projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = OntologyConstants.KnoraBase.LinkObj, incunabulaProjectAdminUser.permissionData
                 )
                 expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser"))
             }
 
             "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property (system property)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
-                    projectIri = INCUNABULA_PROJECT_IRI, propertyIri = OntologyConstants.KnoraBase.HasStillImageFileValue, incunabulaUser.permissionData
+                    projectIri = INCUNABULA_PROJECT_IRI, propertyIri = OntologyConstants.KnoraBase.HasStillImageFileValue, incunabulaProjectAdminUser.permissionData
                 )
                 expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
             }
 
             "return the default object access permissions 'string' for the 'incunabula:book' resource class (project resource class)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
-                    projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = INCUNABULA_BOOK_RESOURCE_CLASS, incunabulaUser.permissionData
+                    projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = INCUNABULA_BOOK_RESOURCE_CLASS, incunabulaProjectAdminUser.permissionData
                 )
                 expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
             }
 
             "return the default object access permissions 'string' for the 'incunabula:page' resource class (project resource class)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
-                    projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = INCUNABULA_PAGE_RESOURCE_CLASS, incunabulaUser.permissionData
+                    projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = INCUNABULA_PAGE_RESOURCE_CLASS, incunabulaProjectAdminUser.permissionData
                 )
                 expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
             }
@@ -362,7 +382,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = ANYTHING_PROJECT_IRI, propertyIri = "http://www.knora.org/ontology/anything#hasInterval", anythingUser1.permissionData
                 )
-                expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"))
+                expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
             }
 
         }

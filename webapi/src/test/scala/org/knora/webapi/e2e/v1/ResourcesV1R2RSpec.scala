@@ -66,10 +66,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val imagesUser = SharedAdminTestData.imagesUser01
     private val imagesUsername = imagesUser.userData.username.get
 
-    private val incunabulaUser = SharedAdminTestData.incunabulaUser
+    private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
     private val incunabulaUsername = incunabulaUser.userData.username.get
 
-    private val incunabulaUser2 = SharedAdminTestData.incunabulaRootAltUser
+    private val incunabulaUser2 = SharedAdminTestData.incunabulaCreatorUser
     private val incunabulaUsername2 = incunabulaUser2.userData.username.get
 
     private val anythingUser = SharedAdminTestData.anythingUser1

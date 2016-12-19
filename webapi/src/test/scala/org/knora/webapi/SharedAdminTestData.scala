@@ -312,7 +312,7 @@ object SharedAdminTestData {
     val INCUNABULA_PAGE_RESOURCE_CLASS = "http://www.knora.org/ontology/incunabula#page"
 
     /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
-    def incunabulaUser = UserProfileV1(
+    def incunabulaProjectAdminUser = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/b83acc5f05"),
             username = Some("testuser"),
@@ -349,7 +349,7 @@ object SharedAdminTestData {
     )
 
     /* represents 'root-alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
-    def incunabulaRootAltUser = UserProfileV1(
+    def incunabulaCreatorUser = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/91e19f1e01"),
             username = Some("root-alt"),
@@ -370,11 +370,53 @@ object SharedAdminTestData {
             ),
             administrativePermissionsPerProject = Map(
                 INCUNABULA_PROJECT_IRI -> Set(
-                    PermissionV1.ProjectResourceCreateAllPermission,
-                    PermissionV1.ProjectAdminAllPermission
+                    PermissionV1.ProjectResourceCreateAllPermission
                 )
             ),
-            defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
+            defaultObjectAccessPermissionsPerProject =  Map(
+                INCUNABULA_PROJECT_IRI -> Set(
+                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                )
+            )
+        )
+    )
+
+    /* represents 'root-alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
+    def incunabulaMemberUser = UserProfileV1(
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/incunabulaMemberUser"),
+            username = Some("incunabula2"),
+            firstname = Some("User"),
+            lastname = Some("Test2"),
+            email = Some("user.test2t@test.ch"),
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            token = None,
+            isActiveUser = Some(true),
+            lang = "de"
+        ),
+        groups = Vector.empty[IRI],
+        projects = List("http://data.knora.org/projects/77275339"),
+        sessionId = None,
+        permissionData = PermissionDataV1(
+            groupsPerProject = Map(
+                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+            ),
+            administrativePermissionsPerProject = Map(
+                INCUNABULA_PROJECT_IRI -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission
+                )
+            ),
+            defaultObjectAccessPermissionsPerProject =  Map(
+                INCUNABULA_PROJECT_IRI -> Set(
+                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                )
+            )
         )
     )
 
@@ -448,6 +490,7 @@ object SharedAdminTestData {
             ),
             defaultObjectAccessPermissionsPerProject =  Map(
                 ANYTHING_PROJECT_IRI -> Set(
+                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
                     PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
                     PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
                     PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember)

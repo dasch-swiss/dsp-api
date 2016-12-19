@@ -231,7 +231,6 @@ object OntologyConstants {
         val UnknownUser = KnoraBasePrefixExpansion            + "UnknownUser"
         val KnownUser = KnoraBasePrefixExpansion              + "KnownUser"
         val ProjectMember = KnoraBasePrefixExpansion          + "ProjectMember"
-        val Owner = "http://www.knora.org/ontology/knora-base#Owner" // ToDo: remove as it is now called creator
         val Creator = KnoraBasePrefixExpansion                + "Creator"
         val SystemAdmin = KnoraBasePrefixExpansion            + "SystemAdmin"
         val ProjectAdmin = KnoraBasePrefixExpansion           + "ProjectAdmin"

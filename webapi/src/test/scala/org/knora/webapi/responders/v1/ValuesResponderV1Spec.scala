@@ -56,7 +56,7 @@ object ValuesResponderV1Spec {
     private val miscResourceIri = "http://data.knora.org/miscResource"
     private val aThingIri = "http://data.knora.org/a-thing"
 
-    private val incunabulaUser = SharedAdminTestData.incunabulaUser
+    private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
 
     private val imagesUser = SharedAdminTestData.imagesUser01
 

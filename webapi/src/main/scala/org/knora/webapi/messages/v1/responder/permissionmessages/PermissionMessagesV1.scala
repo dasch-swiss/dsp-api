@@ -17,6 +17,7 @@
 package org.knora.webapi.messages.v1.responder.permissionmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataType.PermissionProfileType
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
@@ -392,8 +393,19 @@ case class PermissionDataV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[Proj
 
     /* Is the user a member of the SystemAdmin group */
     def isSystemAdmin: Boolean = {
-        groupsPerProject.contains("http://www.knora.org/ontology/knora-base#SystemProject")
+        groupsPerProject.contains(OntologyConstants.KnoraBase.SystemProject)
     }
+
+    /* Does the user have the 'ProjectAllAdmin' permission for the project */
+    def hasProjectAdminAllPermissionFor(projectIri: IRI): Boolean = {
+        administrativePermissionsPerProject.get(projectIri) match {
+            case Some(permissions) => {
+                permissions(PermissionV1.ProjectAdminAllPermission)
+            }
+            case None => false
+        }
+    }
+
 
     /*  */
     /**
@@ -416,7 +428,7 @@ case class PermissionDataV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[Proj
                 case ResourceCreateOperation(resourceClassIri) => {
                     this.administrativePermissionsPerProject.get(insideProject) match {
                         case Some(set) => {
-                            set.contains(PermissionV1.ProjectResourceCreateAllPermission)
+                            set(PermissionV1.ProjectResourceCreateAllPermission)
                         }
                         case None => {
                             if (explain) println("FALSE: No administrative permissions defined for this project.")
@@ -437,8 +449,8 @@ case class PermissionDataV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[Proj
             case that: PermissionDataV1 => that.canEqual(this) &&  {
                 val piEqual = if (this.projectInfos.hashCode != that.projectInfos.hashCode) {
                     println("projectInfos not equal")
-                    println(s"this: ${this.projectInfos}")
-                    println(s"that: ${that.projectInfos}")
+                    println(s"this (expected): ${this.projectInfos}")
+                    println(s"that (found): ${that.projectInfos}")
                     false
                 } else {
                     true
@@ -446,8 +458,8 @@ case class PermissionDataV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[Proj
 
                 val gppEqual = if (this.groupsPerProject.hashCode != that.groupsPerProject.hashCode) {
                     println("groupsPerProject not equal")
-                    println(s"this: ${this.groupsPerProject}")
-                    println(s"that: ${that.groupsPerProject}")
+                    println(s"this (expected): ${this.groupsPerProject}")
+                    println(s"that (found): ${that.groupsPerProject}")
                     false
                 } else {
                     true
@@ -455,8 +467,8 @@ case class PermissionDataV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[Proj
 
                 val apppEqual = if (this.administrativePermissionsPerProject.hashCode != that.administrativePermissionsPerProject.hashCode) {
                     println("administrativePermissionsPerProject not equal")
-                    println(s"this: ${this.administrativePermissionsPerProject}")
-                    println(s"that: ${that.administrativePermissionsPerProject}")
+                    println(s"this (expected): ${this.administrativePermissionsPerProject}")
+                    println(s"that (found): ${that.administrativePermissionsPerProject}")
                     false
                 } else {
                     true
@@ -464,8 +476,8 @@ case class PermissionDataV1(projectInfos: Seq[ProjectInfoV1] = Vector.empty[Proj
 
                 val doapppEqual = if (this.defaultObjectAccessPermissionsPerProject.hashCode != that.defaultObjectAccessPermissionsPerProject.hashCode) {
                     println("defaultObjectAccessPermissionsPerProject not equal")
-                    println(s"this: ${this.defaultObjectAccessPermissionsPerProject}")
-                    println(s"that: ${that.defaultObjectAccessPermissionsPerProject}")
+                    println(s"this (expected): ${this.defaultObjectAccessPermissionsPerProject}")
+                    println(s"that (found): ${that.defaultObjectAccessPermissionsPerProject}")
                     false
                 } else {
                     true

@@ -203,6 +203,9 @@ object PermissionUtilV1 {
           *         on the subject.
           */
         def calculateHighestGrantedPermission(subjectPermissions: Map[String, Set[IRI]], userGroups: Seq[IRI]): Option[Int] = {
+
+            //log.debug(s"getUserPermissionV1 - calculateHighestGrantedPermission - subjectPermissions: ${ScalaPrettyPrinter.prettyPrint(subjectPermissions)}")
+
             // Make a list of the codes for all the permissions the user can obtain for this subject.
             val permissionCodes = subjectPermissions.flatMap {
                 case (permission, grantedToGroups) =>
@@ -259,11 +262,15 @@ object PermissionUtilV1 {
                 Vector(OntologyConstants.KnoraBase.UnknownUser)
         }
 
-        log.debug(s"User groups: ${ScalaPrettyPrinter.prettyPrint(userGroups)}")
+        //log.debug(s"getUserPermissionV1 - userGroups: ${ScalaPrettyPrinter.prettyPrint(userGroups)}")
 
-        // If the user is in the "SystemAdmin" group, don't bother calculating permissions, just give them the maximum
-        // permission.
         val permissionCodeOption = if (userProfile.permissionData.isSystemAdmin) {
+            // If the user is in the "SystemAdmin" group, just give them the maximum permission.
+            //log.debug("getUserPermissionV1 - is in SystemAdmin group - giving max permission")
+            Some(MaxPermissionCode)
+        } else if (userProfile.permissionData.hasProjectAdminAllPermissionFor(subjectProject)) {
+            // If the user has the 'ProjectAdminAllPermission', just give them the maximum permission.
+            //log.debug("getUserPermissionV1 - has 'ProjectAdminAllPermission' - giving max permission")
             Some(MaxPermissionCode)
         } else {
             // Find the highest permission that can be granted to the user.

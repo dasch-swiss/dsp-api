@@ -33,7 +33,7 @@ object ResourcesResponderV1SpecFullData {
 
     // The expected response to a "full" resource request for a book.
     val expectedBookResourceFullResponse = ResourceFullResponseV1(
-        userdata = SharedAdminTestData.incunabulaUser.userData,
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         access = "OK",
         incoming = Vector(
             IncomingV1(
@@ -415,7 +415,7 @@ object ResourcesResponderV1SpecFullData {
 
     // The expected response to a "full" resource request for a page.
     val expectedPageResourceFullResponse = ResourceFullResponseV1(
-        userdata = SharedAdminTestData.incunabulaUser.userData,
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         access = "OK",
         incoming = Nil,
         props = Some(PropsV1(properties = Vector(
@@ -849,7 +849,7 @@ object ResourcesResponderV1SpecFullData {
     )
 
     val expectedRegionFullResource = ResourceFullResponseV1(
-        userdata = SharedAdminTestData.incunabulaUser.userData,
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         access = "OK",
         incoming = Vector(
             IncomingV1(
