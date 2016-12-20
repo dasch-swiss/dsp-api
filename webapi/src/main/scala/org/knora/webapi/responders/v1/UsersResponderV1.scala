@@ -60,7 +60,7 @@ class UsersResponderV1 extends ResponderV1 {
     /**
       * Gets information about a Knora user, and returns it in a [[UserProfileV1]].
       *
-      * @param userIri the IRI of the user.
+      * @param userIRI the IRI of the user.
       * @return a [[UserProfileV1]] describing the user.
       */
     private def getUserProfileByIRIV1(userIRI: IRI, profileType: UserProfileType.Value): Future[UserProfileV1] = {
@@ -222,8 +222,8 @@ class UsersResponderV1 extends ResponderV1 {
         // get the current value
         currentValue = propertyIri match {
             case OntologyConstants.KnoraBase.Username => currentUserProfile.userData.username.getOrElse("")
-            case OntologyConstants.Foaf.GivenName => currentUserProfile.userData.firstname.getOrElse("")
-            case OntologyConstants.Foaf.FamilyName => currentUserProfile.userData.lastname.getOrElse("")
+            case OntologyConstants.KnoraBase.GivenName => currentUserProfile.userData.firstname.getOrElse("")
+            case OntologyConstants.KnoraBase.FamilyName => currentUserProfile.userData.lastname.getOrElse("")
             case OntologyConstants.KnoraBase.Email => currentUserProfile.userData.email.getOrElse("")
             case OntologyConstants.KnoraBase.Password => currentUserProfile.userData.password.getOrElse("")
             case OntologyConstants.KnoraBase.IsActiveUser => currentUserProfile.userData.isActiveUser.getOrElse(false)
@@ -275,12 +275,12 @@ class UsersResponderV1 extends ResponderV1 {
                     throw UpdateNotPerformedException("User's 'username' was not updated. Please report this as a possible bug.")
                 }
             }
-            case OntologyConstants.Foaf.GivenName => {
+            case OntologyConstants.KnoraBase.GivenName => {
                 if (!updatedUserProfile.userData.firstname.contains(newValue.asInstanceOf[String])) {
                     throw UpdateNotPerformedException("User's 'given name' was not updated. Please report this as a possible bug.")
                 }
             }
-            case OntologyConstants.Foaf.FamilyName => {
+            case OntologyConstants.KnoraBase.FamilyName => {
                 if (!updatedUserProfile.userData.lastname.contains(newValue.asInstanceOf[String])) {
                     throw UpdateNotPerformedException("User's 'family name' was not updated. Please report this as a possible bug.")
                 }
@@ -313,7 +313,7 @@ class UsersResponderV1 extends ResponderV1 {
 
             // update cache if session id is available
             userProfile.sessionId match {
-                case Some(sessionId) => CacheUtil.put[UserProfileV1](Authenticator.cacheName, sessionId, updatedUserProfile.setSessionId(sessionId))
+                case Some(sessionId) => CacheUtil.put[UserProfileV1](Authenticator.AUTHENTICATION_CACHE_NAME, sessionId, updatedUserProfile.setSessionId(sessionId))
                 case None => // user has not session id, so no cache to update
             }
 

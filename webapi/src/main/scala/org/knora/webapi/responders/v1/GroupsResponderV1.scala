@@ -265,7 +265,7 @@ class GroupsResponderV1 extends ResponderV1 {
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
                 groupIri = groupIRI,
-                groupClassIri = OntologyConstants.KnoraBase.Group,
+                groupClassIri = OntologyConstants.KnoraBase.UserGroup,
                 name = SparqlUtil.any2SparqlLiteral(newGroupInfo.name),
                 description = SparqlUtil.any2SparqlLiteral(newGroupInfo.description.getOrElse("")),
                 projectIri = newGroupInfo.belongsToProject,

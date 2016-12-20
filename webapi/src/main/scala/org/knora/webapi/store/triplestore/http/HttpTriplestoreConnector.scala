@@ -41,7 +41,7 @@ import org.knora.webapi.util.FakeTriplestore
 import org.knora.webapi.util.SparqlResultProtocol._
 import spray.json._
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success, Try}
@@ -289,7 +289,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             log.debug("==>> Loading Data Start")
 
             val defaultRdfDataList = settings.tripleStoreConfig.getConfigList("default-rdf-data")
-            val defaultRdfDataObjectList = defaultRdfDataList.map {
+            val defaultRdfDataObjectList = defaultRdfDataList.asScala.map {
                 config => RdfDataObjectFactory(config)
             }
 

@@ -39,19 +39,7 @@ import scala.concurrent.duration._
 object OntologyResponderV1Spec {
 
     // A test user that prefers responses in German.
-    private val userProfileWithGerman = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
+    private val userProfileWithGerman = SharedAdminTestData.incunabulaProjectAdminUser
 
     // A test user that prefers responses in French.
     private val userProfileWithFrench = userProfileWithGerman.copy(userData = userProfileWithGerman.userData.copy(lang = "fr"))
@@ -80,17 +68,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val timeout = 10.seconds
 
     private val page = ResourceTypeResponseV1(
-        userdata = UserDataV1(
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        ),
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         restype_info = ResTypeInfoV1(
             properties = Vector(
                 PropertyDefinitionV1(
@@ -234,17 +212,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val book = ResourceTypeResponseV1(
-        userdata = UserDataV1(
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        ),
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         restype_info = ResTypeInfoV1(
             properties = Vector(
                 PropertyDefinitionV1(
@@ -400,17 +368,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val region = ResourceTypeResponseV1(
-        userdata = UserDataV1(
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        ),
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         restype_info = ResTypeInfoV1(
             properties = Vector(
                 PropertyDefinitionV1(
@@ -470,17 +428,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val linkObject = ResourceTypeResponseV1(
-        userdata = UserDataV1(
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        ),
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         restype_info = ResTypeInfoV1(
             properties = Vector(
                 PropertyDefinitionV1(
@@ -529,17 +477,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     }
 
     private val resourceTypesForNamedGraphIncunabula = ResourceTypesForNamedGraphResponseV1(
-        userdata = UserDataV1(
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "en"
-        ),
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         resourcetypes = Vector(
             ResourceTypeV1(
                 properties = Vector(
@@ -683,17 +621,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val vocabulariesResponseV1 = NamedGraphsResponseV1(
-        userdata = UserDataV1(
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "en"
-        ),
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         vocabularies = Vector(
             NamedGraphV1( // SystemProject
                 active = true,
@@ -771,17 +699,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val propertyTypesForNamedGraphIncunabula = PropertyTypesForNamedGraphResponseV1(
-        userdata = UserDataV1(
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "en"
-        ),
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         properties = Vector(
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("text"),

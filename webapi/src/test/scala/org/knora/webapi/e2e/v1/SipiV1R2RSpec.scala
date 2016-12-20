@@ -41,7 +41,7 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.{FileWriteException, LiveActorMaker, R2RSpec}
+import org.knora.webapi.{FileWriteException, LiveActorMaker, R2RSpec, SharedAdminTestData}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -98,7 +98,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
     }
 
     object RequestParams {

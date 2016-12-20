@@ -73,7 +73,6 @@ object OntologyConstants {
         val MovingImageRepresentation = "http://www.knora.org/ontology/knora-base#MovingImageRepresentation"
         val StillImageRepresentation = "http://www.knora.org/ontology/knora-base#StillImageRepresentation"
         val TextRepresentation = "http://www.knora.org/ontology/knora-base#TextRepresentation"
-        val Region = "http://www.knora.org/ontology/knora-base#Region"
 
         val AbstractResourceClasses = Set(
             Resource,
@@ -225,7 +224,7 @@ object OntologyConstants {
         val HasProjectAdmin = KnoraBasePrefixExpansion        + "hasProjectAdmin"
 
         /* Group */
-        val Group = KnoraBasePrefixExpansion                  + "UserGroup"
+        val UserGroup = KnoraBasePrefixExpansion              + "UserGroup"
         val GroupName = KnoraBasePrefixExpansion              + "groupName"
         val GroupDescription = KnoraBasePrefixExpansion       + "groupDescription"
         val BelongsToProject = KnoraBasePrefixExpansion       + "belongsToProject"

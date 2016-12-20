@@ -240,7 +240,7 @@ object ResourcesResponderV1Spec {
     )
 
     private val graphForAnythingUser1 = GraphDataGetResponseV1(
-        userdata = anythingUser1.userData,
+        userdata = SharedAdminTestData.anythingUser1.userData,
         edges = Vector(
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
@@ -428,7 +428,7 @@ object ResourcesResponderV1Spec {
     )
 
     private val graphForIncunabulaUser = GraphDataGetResponseV1(
-        userdata = incunabulaUser.userData,
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         edges = Vector(
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
@@ -580,7 +580,7 @@ object ResourcesResponderV1Spec {
     )
 
     private val graphWithStandoffLink = GraphDataGetResponseV1(
-        userdata = anythingUser1.userData,
+        userdata = SharedAdminTestData.anythingUser1.userData,
         edges = Vector(GraphEdgeV1(
             propertyLabel = "hat Standoff Link zu",
             propertyIri = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
@@ -604,7 +604,7 @@ object ResourcesResponderV1Spec {
     )
 
     private val graphWithOneNode = GraphDataGetResponseV1(
-        userdata = anythingUser1.userData,
+        userdata = SharedAdminTestData.anythingUser1.userData,
         edges = Nil,
         nodes = Vector(GraphNodeV1(
             resourceClassLabel = "Ding",
@@ -876,7 +876,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedAdminTestData.incunabulaProjectAdminUser)
+        responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
@@ -1003,7 +1003,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 searchString = "a1r",
                 numberOfProps = 3,
                 limitOfResults = 100,
-                userProfile = incunabulaUser,
+                userProfile = SharedAdminTestData.incunabulaMemberUser,
                 resourceTypeIri = Some("http://www.knora.org/ontology/incunabula#page")
             )
 
@@ -1020,7 +1020,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 searchString = "a1r",
                 numberOfProps = 3,
                 limitOfResults = 100,
-                userProfile = incunabulaUser,
+                userProfile = SharedAdminTestData.incunabulaMemberUser,
                 resourceTypeIri = Some("http://www.knora.org/ontology/knora-base#Representation")
             )
 
@@ -1444,7 +1444,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 projectIri = "http://data.knora.org/projects/anything",
                 values = valuesToBeCreated,
                 file = None,
-                userProfile = anythingUser1,
+                userProfile = SharedAdminTestData.anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1458,7 +1458,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! GraphDataGetRequestV1(
                 resourceIri = "http://data.knora.org/anything/start",
                 depth = 6,
-                userProfile = anythingUser1
+                userProfile = SharedAdminTestData.anythingUser1
             )
 
             expectMsgPF(timeout) {
@@ -1470,7 +1470,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! GraphDataGetRequestV1(
                 resourceIri = "http://data.knora.org/anything/start",
                 depth = 6,
-                userProfile = incunabulaUser
+                userProfile = SharedAdminTestData.anythingUser1
             )
 
             expectMsgPF(timeout) {
@@ -1482,7 +1482,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! GraphDataGetRequestV1(
                 resourceIri = "http://data.knora.org/a-thing",
                 depth = 4,
-                userProfile = anythingUser1
+                userProfile = SharedAdminTestData.anythingUser1
             )
 
             expectMsgPF(timeout) {
@@ -1494,7 +1494,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! GraphDataGetRequestV1(
                 resourceIri = "http://data.knora.org/another-thing",
                 depth = 4,
-                userProfile = anythingUser1
+                userProfile = SharedAdminTestData.anythingUser1
             )
 
             expectMsgPF(timeout) {

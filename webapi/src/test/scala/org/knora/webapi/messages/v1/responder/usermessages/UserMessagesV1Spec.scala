@@ -78,7 +78,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
 
             assert(rootUserProfileV1.ofType(UserProfileType.SAFE) === rootUserProfileV1Safe)
         }
-        "allow checking the password " in {
+        "allow checking the password (1)" in {
             val hp = BCrypt.hashpw("123456", BCrypt.gensalt())
             val up = UserProfileV1(
                 UserDataV1(
@@ -91,6 +91,10 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
 
             // test UserProfileV1 BCrypt usage
             assert(up.passwordMatch("123456"))
+        }
+
+        "allow checking the password (2)" in {
+            SharedAdminTestData.rootUser.passwordMatch("test") should equal(true)
         }
     }
 }

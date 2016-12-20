@@ -28,6 +28,7 @@ import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
@@ -73,6 +74,9 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
+
+        responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
+        expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
     "The UsersResponder " when {
@@ -164,7 +168,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* User information is updated by the user */
                 actorUnderTest ! UserUpdateRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
+                    propertyIri = OntologyConstants.KnoraBase.GivenName,
                     newValue = "Donald",
                     userProfile = SharedAdminTestData.normalUser,
                     UUID.randomUUID
@@ -182,7 +186,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* User information is updated by a system admin */
                 actorUnderTest ! UserUpdateRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.FamilyName,
+                    propertyIri = OntologyConstants.KnoraBase.FamilyName,
                     newValue = "Duck",
                     userProfile = SharedAdminTestData.superUser,
                     UUID.randomUUID
@@ -204,7 +208,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* User information is updated by other normal user */
                 actorUnderTest ! UserUpdateRequestV1(
                     userIri = SharedAdminTestData.superUser.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
+                    propertyIri = OntologyConstants.KnoraBase.GivenName,
                     newValue = "Donald",
                     userProfile = SharedAdminTestData.normalUser,
                     UUID.randomUUID
@@ -214,7 +218,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* User information is updated by anonymous */
                 actorUnderTest ! UserUpdateRequestV1(
                     userIri = SharedAdminTestData.superUser.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
+                    propertyIri = OntologyConstants.KnoraBase.GivenName,
                     newValue = ("Donald"),
                     userProfile = SharedAdminTestData.anonymousUser,
                     UUID.randomUUID

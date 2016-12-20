@@ -178,7 +178,7 @@ trait Authenticator {
         cookies.find(_.name == "KnoraAuthentication") match {
             case Some(authCookie) =>
                 // maybe the value is in the cache or maybe it expired in the meantime.
-                CacheUtil.remove(cacheName, authCookie.value)
+                CacheUtil.remove(AUTHENTICATION_CACHE_NAME, authCookie.value)
             case None => // no cookie, so I can't do anything really
         }
         HttpResponse(
@@ -211,7 +211,7 @@ trait Authenticator {
     def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
         val settings = Settings(system)
         if (settings.skipAuthentication) {
-            UserProfileV1(UserDataV1(settings.fallbackLanguage)).getCleanUserProfileV1
+            UserProfileV1(UserDataV1(settings.fallbackLanguage)).ofType(UserProfileType.SAFE)
         }
         else {
             // let us first try to get the user profile through the session id from the cookie
@@ -238,6 +238,7 @@ trait Authenticator {
                             log.debug("No credentials found, returning default UserProfileV1!")
                             UserProfileV1(UserDataV1(settings.fallbackLanguage))
                     }
+                }
             }
         }
     }
@@ -257,12 +258,13 @@ object Authenticator {
     val BAD_CRED_USER_INACTIVE = "bad credentials: user inactive"
 
     val KNORA_AUTHENTICATION_COOKIE_NAME = "KnoraAuthentication"
+    val AUTHENTICATION_CACHE_NAME = "authenticationCache"
 
     val sessionStore: scala.collection.mutable.Map[String, UserProfileV1] = scala.collection.mutable.Map()
     implicit val timeout: Timeout = Duration(5, SECONDS)
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
-    private val cacheName = "authenticationCache"
+
 
     /**
       * Tries to extract and then authenticate the credentials.
@@ -300,7 +302,7 @@ object Authenticator {
             log.debug("authenticateCredentials - password matched")
             if (session) {
                 val sId = System.currentTimeMillis().toString
-                CacheUtil.put(cacheName, sId, userProfileV1)
+                CacheUtil.put(AUTHENTICATION_CACHE_NAME, sId, userProfileV1)
                 sId
             } else {
                 "0"
@@ -324,7 +326,7 @@ object Authenticator {
         val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
         cookies.find(_.name == "KnoraAuthentication") match {
             case Some(authCookie) =>
-                val value = CacheUtil.get[UserProfileV1](cacheName, authCookie.value)
+                val value = CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, authCookie.value)
                 log.debug(s"Found this session id: ${authCookie.value} leading to this content in the cache: $value")
                 value
             case None =>
@@ -424,7 +426,7 @@ object Authenticator {
       */
     private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val userProfileV1Future = (responderManager ? UserProfileGetRequestV1(iri)).mapTo[UserProfileV1]
+        val userProfileV1Future = (responderManager ? UserProfileByIRIGetRequestV1(iri)).mapTo[UserProfileV1]
 
         userProfileV1Future.recover {
             case nfe: NotFoundException => throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
@@ -447,7 +449,7 @@ object Authenticator {
 
         if (username.nonEmpty) {
             // try to get it from the cache
-            CacheUtil.get[UserProfileV1](cacheName, username) match {
+            CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, username) match {
                 case Some(userProfile) =>
                     // found a user profile in the cache
                     log.debug(s"getUserProfileByUsername - cache hit: $userProfile")
@@ -456,7 +458,7 @@ object Authenticator {
                     // didn't found one, so I will try to get it from the triple store
                     val userProfileV1Future = for {
                         userProfileV1 <- (responderManager ? UserProfileByUsernameGetRequestV1(username)).mapTo[UserProfileV1]
-                        _ = CacheUtil.put(cacheName, username, userProfileV1)
+                        _ = CacheUtil.put(AUTHENTICATION_CACHE_NAME, username, userProfileV1)
                     } yield userProfileV1
 
                     userProfileV1Future.recover {

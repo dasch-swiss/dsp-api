@@ -175,7 +175,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 // Filter out the nodes that the user doesn't have permission to see.
                                 PermissionUtilV1.getUserPermissionV1(
                                     subjectIri = node.nodeIri,
-                                    subjectOwner = node.nodeOwner,
+                                    subjectCreator = node.nodeOwner,
                                     subjectProject = node.nodeProject,
                                     subjectPermissionLiteral = node.nodePermissions,
                                     userProfile = graphDataGetRequest.userProfile
@@ -304,7 +304,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // Make sure the user has permission to see the start node.
             _ = if (PermissionUtilV1.getUserPermissionV1(
                 subjectIri = startNode.nodeIri,
-                subjectOwner = startNode.nodeOwner,
+                subjectCreator = startNode.nodeOwner,
                 subjectProject = startNode.nodeProject,
                 subjectPermissionLiteral = startNode.nodePermissions,
                 userProfile = graphDataGetRequest.userProfile
