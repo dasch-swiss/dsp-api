@@ -43,7 +43,7 @@ possible to preserve the semantics of data imported from relational databases,
 XML-based markup systems, and other types of storage, as well as to query,
 annotate, and link together heterogeneous data in a unified way. By offering
 a shared, standards-based, extensible infrastructure for diverse humanities
-projects, Knora also addresses deals with the issue of conversion and
+projects, Knora also deals with the issue of conversion and
 migration caused by the obsolescence of file and data formats in an efficient
 and feasible manner.
 
@@ -58,7 +58,7 @@ Knora API is best suited to interacting with RDF repositories based on the
 Knora ontologies, it can also be implemented as a gateway to other sorts of
 repositories, including non-RDF repositories.
 
-Knora includes a high-performance media server, called Sipi, for serving and
+Knora uses a high-performance media server, called Sipi, for serving and
 converting binary media files such as images and video. Sipi can efficiently
 convert between many different formats on demand, preserving embedded
 metadata, and implements the

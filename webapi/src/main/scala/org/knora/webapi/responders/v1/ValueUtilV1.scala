@@ -134,7 +134,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val ontologyName = resourceClassIri.substring(resourceClassIri.lastIndexOf('/') + 1, resourceClassIri.lastIndexOf('#'))
 
         // create URL: combine salsah-address and port, project icons base path, ontology name, icon name
-        settings.baseSALSAHUrl + settings.projectIconsBasePath + ontologyName + '/' + iconsSrc
+        settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + ontologyName + '/' + iconsSrc
     }
 
     /**
@@ -232,7 +232,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
         objRows.map(_ - "obj").filter(_.get("objObj").nonEmpty).groupBy(_ ("objPred")).foldLeft((Map.empty[String, ValueLiterals], Vector.empty[Map[IRI, String]])) {
             // grouped by value object predicate (e.g. hasString)
-            case (acc: (Map[String, ValueLiterals], Seq[Map[IRI, String]]), (objPredIri: IRI, values: Seq[Map[String, String]])) =>
+            case (acc: (Map[String, ValueLiterals], Vector[Map[IRI, String]]), (objPredIri: IRI, values: Seq[Map[String, String]])) =>
 
                 if (objPredIri == OntologyConstants.KnoraBase.ValueHasStandoff) {
                     // standoff information
@@ -243,12 +243,13 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                             values
                     }.map {
                         // here, we have a List with one element for each standoff node (groupBy)
-                        case values: Seq[Map[String, String]] => values.map {
-                            case value: Map[String, String] => Map(value("predStandoff") -> value("objStandoff"))
-                        }.foldLeft(Map.empty[String, String]) {
-                            // for each standoff node, we want to have just one Map
-                            case (node: Map[String, String], (value: Map[String, String])) => node ++ value
-                        }
+                        values: Seq[Map[String, String]] =>
+                            values.map {
+                                value: Map[String, String] => Map(value("predStandoff") -> value("objStandoff"))
+                            }.foldLeft(Map.empty[String, String]) {
+                                // for each standoff node, we want to have just one Map
+                                case (node: Map[String, String], (value: Map[String, String])) => node ++ value
+                            }
                     }.toVector
 
                     (acc._1, acc._2 ++ groupByNode) // the accumulator is a 2 tuple, add standoff to the second part
@@ -256,8 +257,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                     // non standoff value
 
                     val value: (String, ValueLiterals) = (objPredIri, ValueLiterals(values.map {
-                        case value: Map[String, String] =>
-                            value("objObj")
+                        value: Map[String, String] => value("objObj")
                     }))
 
                     (acc._1 + value, acc._2) // the accumulator is a 2 tuple, add ValueData to the first part
@@ -388,15 +388,15 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     private def makeDateValue(valueProps: ValueProps): ApiValueV1 = {
         val predicates = valueProps.literalData
 
-        val julianDayCountValueV1 = JulianDayCountValueV1(
-            dateval1 = predicates(OntologyConstants.KnoraBase.ValueHasStartJDC).literals.head.toInt,
-            dateval2 = predicates(OntologyConstants.KnoraBase.ValueHasEndJDC).literals.head.toInt,
+        val julianDayNumberValueV1 = JulianDayNumberValueV1(
+            dateval1 = predicates(OntologyConstants.KnoraBase.ValueHasStartJDN).literals.head.toInt,
+            dateval2 = predicates(OntologyConstants.KnoraBase.ValueHasEndJDN).literals.head.toInt,
             dateprecision1 = KnoraPrecisionV1.lookup(predicates(OntologyConstants.KnoraBase.ValueHasStartPrecision).literals.head),
             dateprecision2 = KnoraPrecisionV1.lookup(predicates(OntologyConstants.KnoraBase.ValueHasEndPrecision).literals.head),
             calendar = KnoraCalendarV1.lookup(predicates(OntologyConstants.KnoraBase.ValueHasCalendar).literals.head)
         )
 
-        DateUtilV1.julianDayCountValueV1ToDateValueV1(julianDayCountValueV1)
+        DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1)
     }
 
     /**
@@ -576,7 +576,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         if (attributes.isEmpty) {
             None
         } else {
-            Some(attributes.mkString(";"))
+            Some(attributes.toVector.sorted.mkString(";"))
         }
     }
 

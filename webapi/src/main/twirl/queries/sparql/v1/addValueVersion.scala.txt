@@ -152,13 +152,13 @@ DELETE {
 
             }
 
-            case jdcValue: JulianDayCountValueV1 => {
+            case jdnValue: JulianDayNumberValueV1 => {
 
-                ?newValue knora-base:valueHasStartJDC @jdcValue.dateval1 .
-                ?newValue knora-base:valueHasEndJDC @jdcValue.dateval2 .
-                ?newValue knora-base:valueHasStartPrecision "@jdcValue.dateprecision1" .
-                ?newValue knora-base:valueHasEndPrecision "@jdcValue.dateprecision2" .
-                ?newValue knora-base:valueHasCalendar "@jdcValue.calendar" .
+                ?newValue knora-base:valueHasStartJDN @jdnValue.dateval1 .
+                ?newValue knora-base:valueHasEndJDN @jdnValue.dateval2 .
+                ?newValue knora-base:valueHasStartPrecision "@jdnValue.dateprecision1" .
+                ?newValue knora-base:valueHasEndPrecision "@jdnValue.dateprecision2" .
+                ?newValue knora-base:valueHasCalendar "@jdnValue.calendar" .
 
             }
 
@@ -342,7 +342,7 @@ WHERE {
     *@
 
     ?resource rdf:type ?resourceClass .
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
 
     @* Do nothing if the resource is marked as deleted. *@
 
@@ -370,7 +370,7 @@ WHERE {
             <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex .
             <@linkUpdate.linkTargetIri> knora-base:isDeleted false .
 
-            ?linkTargetClass@linkValueIndex rdfs:subClassOf+ knora-base:Resource .
+            ?linkTargetClass@linkValueIndex rdfs:subClassOf* knora-base:Resource .
             <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
             ?linkTargetClass@linkValueIndex rdfs:subClassOf* ?expectedTargetClass@linkValueIndex .
         }

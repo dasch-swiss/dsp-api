@@ -308,6 +308,22 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#givenName
+
+:givenName rdf:type owl:DatatypeProperty ;
+
+      rdfs:subPropertyOf foaf:givenName, :objectCannotBeMarkedAsDeleted .
+
+
+
+###  http://www.knora.org/ontology/knora-base#familyName
+
+:familyName rdf:type owl:DatatypeProperty ;
+
+      rdfs:subPropertyOf foaf:familyName, :objectCannotBeMarkedAsDeleted .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#password
 
 :password rdf:type owl:DatatypeProperty ;
@@ -510,7 +526,7 @@
 
       rdfs:subClassOf foaf:Person ,
                       [ rdf:type owl:Restriction ;
-                        owl:onProperty foaf:familyName ;
+                        owl:onProperty :familyName ;
                         owl:cardinality "1"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
@@ -522,7 +538,7 @@
                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
-                        owl:onProperty foaf:givenName ;
+                        owl:onProperty :givenName ;
                         owl:cardinality "1"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
@@ -665,8 +681,8 @@
 :SystemUser rdf:type :User ;
             rdfs:comment "A built-in system user."@en ;
             :userid "system" ;
-            foaf:givenName "Knora" ;
-            foaf:familyName "System" ;
+            :givenName "Knora" ;
+            :familyName "System" ;
             :password "-" ;
             :email "-" ;
             :preferredLanguage "en" ;

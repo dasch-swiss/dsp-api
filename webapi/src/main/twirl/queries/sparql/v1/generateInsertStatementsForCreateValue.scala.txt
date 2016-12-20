@@ -120,13 +120,13 @@
 
             }
 
-            case jdcValue: JulianDayCountValueV1 => {
+            case jdnValue: JulianDayNumberValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasStartJDC @jdcValue.dateval1 ;
-                                     knora-base:valueHasEndJDC @jdcValue.dateval2 ;
-                                     knora-base:valueHasStartPrecision "@jdcValue.dateprecision1" ;
-                                     knora-base:valueHasEndPrecision "@jdcValue.dateprecision2" ;
-                                     knora-base:valueHasCalendar "@jdcValue.calendar" .
+                ?newValue@valueIndex knora-base:valueHasStartJDN @jdnValue.dateval1 ;
+                                     knora-base:valueHasEndJDN @jdnValue.dateval2 ;
+                                     knora-base:valueHasStartPrecision "@jdnValue.dateprecision1" ;
+                                     knora-base:valueHasEndPrecision "@jdnValue.dateprecision2" ;
+                                     knora-base:valueHasCalendar "@jdnValue.calendar" .
 
             }
 

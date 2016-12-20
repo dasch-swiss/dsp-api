@@ -92,7 +92,7 @@
             <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex ;
                 knora-base:isDeleted false .
 
-            ?linkTargetClass@linkValueIndex rdfs:subClassOf+ knora-base:Resource .
+            ?linkTargetClass@linkValueIndex rdfs:subClassOf* knora-base:Resource .
             <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
             ?linkTargetClass@linkValueIndex rdfs:subClassOf* ?expectedTargetClass@linkValueIndex .
         }

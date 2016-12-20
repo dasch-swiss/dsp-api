@@ -43,5 +43,5 @@ WHERE {
 
     ?resource knora-base:isDeleted ?isDeleted ;
         rdf:type ?resourceClass .
-    ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
 }

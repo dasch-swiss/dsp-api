@@ -126,6 +126,42 @@
 						);
 					};
 
+					var get_subclasses = function(preselected) {
+
+						$('body').ajaxError(function(e, xhr, settings, exception) {
+							if (exception != 'abort') // we don't catch abort-errors here! jquery.searchbox.js uses the abort function to kill ajax calls
+							{
+								alert('AJAX-Error: ' + exception + '\ntarget=' + settings.url + '\ndata=' + settings.data);
+							}
+						});
+
+						SALSAH.ApiGet(
+							'subclasses/' + encodeURIComponent(localdata.settings.rtinfo.name), function(data) {
+								var i;
+
+								var subclass_sel = $this.find('select[name=selsubclass]').empty();
+
+								if (data.status == ApiErrors.OK) {
+									for (i in data.subClasses) {
+										if ((preselected !== undefined) && (preselected == data.subClasses[i].id)) {
+											subclass_sel.append($('<option>', {
+												value: data.subClasses[i].id, selected: "selected"
+											}).text(data.subClasses[i].label));
+										}
+										else {
+											subclass_sel.append($('<option>', {
+												value: data.subClasses[i].id
+											}).text(data.subClasses[i].label));
+										}
+									}
+									//get_rtinfo_and_build_form(restypes_sel.val());
+								} else {
+									alert(data.errormsg)
+								}
+							}, 'json'
+						);
+					};
+
 					var vocabulary_changed = function(id) {
 						if (vocabulary_selected != id) {
 							vocabulary_selected = id;
@@ -133,11 +169,11 @@
 						}
 					};
 
-					var create_entry = function(propname, create_tag) {
+					var create_entry = function(propname, pinfo, create_tag) {
 						var add_symbol;
 
 						prop_status[propname].td.append($('<span>').addClass('entrySep').html('&nbsp'));
-						create_tag(prop_status[propname].td, attributes);
+						create_tag(prop_status[propname].td, attributes, pinfo);
 						prop_status[propname].count = 1;
 
 						if (prop_status[propname].occurrence != '1') {
@@ -147,7 +183,8 @@
 								'name': propname
 							}, function(event) {
 								//  $(this).before(create_tag(prop_status[event.data.name].td, prop_status[event.data.name].attributes));
-								create_tag(prop_status[event.data.name].td, prop_status[event.data.name].attributes);
+
+								create_tag(prop_status[event.data.name].td, prop_status[event.data.name].attributes, pinfo);
 								prop_status[event.data.name].count++;
 								if (((prop_status[event.data.name].count == 1) &&
 										((prop_status[event.data.name].occurrence == '0-n') || (prop_status[event.data.name].occurrence == '0-1'))) ||
@@ -213,7 +250,7 @@
 								prop_status[event.data.name].count--;
 								if (prop_status[event.data.name].count == 0) {
 									if (prop_status[event.data.name].occurrence == '0-1') {
-										tmp_add_symbol = add_symbol.clone(true);
+										var tmp_add_symbol = add_symbol.clone(true);
 										$(this).remove();
 										prop_status[propname].td.append(tmp_add_symbol);
 										add_symbol = tmp_add_symbol;
@@ -335,7 +372,7 @@
 								case 'text':
 									{
 										attributes.type = 'text';
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var tmpele = $('<input>', attr).css({
 												width: '85%'
 											}).dragndrop('makeDropable', function(event, dropdata) {
@@ -352,7 +389,7 @@
 									}
 								case 'textarea':
 									{
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var tmpele = $('<textarea>', attr).css({
 												width: '85%'
 											}).dragndrop('makeDropable', function(event, dropdata) {
@@ -366,7 +403,7 @@
 									}
 								case 'richtext':
 									{
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 
 											//console.log('resadd');
 											//console.log(attr);
@@ -415,7 +452,7 @@
 												selection_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var selbox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
 											selbox.selection('edit', {
 												selection_id: selection_id
@@ -435,7 +472,7 @@
 												selection_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var radiobox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
 											radiobox.selradio('edit', {
 												selection_id: selection_id
@@ -446,7 +483,7 @@
 									}
 								case 'checkbox':
 									{
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var checkbox = $('<input>', {
 											    type: "checkbox"
 											});
@@ -460,7 +497,7 @@
 									}
 								case 'spinbox':
 									{
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pfino) {
 											var spinbox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
 											spinbox.spinbox('edit');
 										});
@@ -470,7 +507,7 @@
 								case 'searchbox':
 									{
 										attributes.type = 'text';
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var tmpele = $('<input>', attr).addClass('__searchbox').insertBefore(ele.find('.entrySep'));
 
 											var restype_id = -1;
@@ -525,7 +562,7 @@
 									}
 								case 'date':
 									{
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var datebox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
 											datebox.dateobj('edit');
 											return datebox;
@@ -535,7 +572,7 @@
 									}
 								case 'time':
 									{
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var timebox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
 											timebox.timeobj('edit');
 											if ((localdata.settings.defaultvalues !== undefined) && (localdata.settings.defaultvalues[propname])) {
@@ -548,7 +585,7 @@
 									}
 								case 'interval':
 									{
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var timebox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
 											timebox.timeobj('edit', {
 												show_duration: true
@@ -573,7 +610,7 @@
 									}
 								case 'fileupload':
 									{
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var tmpele = $('<span>', attributes).insertBefore(ele.find('.entrySep'));
 											tmpele.location('edit');
 											return tmpele;
@@ -583,7 +620,7 @@
 									}
 								case 'colorpicker':
 									{
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var colbox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
 											if (rtinfo.name == 'http://www.knora.org/ontology/knora-base#Region') {
 												colbox.colorpicker('edit', {
@@ -618,7 +655,7 @@
 												hlist_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var hlistbox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
 											hlistbox.hlist('edit', {
 												hlist_id: hlist_id
@@ -631,7 +668,7 @@
 
 								case 'geoname':
 									{
-										create_entry(propname, function(ele, attr) {
+										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var geonamebox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
 											geonamebox.geonames('edit', {
 												new_entry_allowed: true
@@ -1101,6 +1138,12 @@
 							// TODO: handle GUI  element problem
 							//propvals["http://www.knora.org/ontology/knora-base#hasComment"] = undefined;
 							var tmplabel = propvals['__LABEL__'];
+
+							if (tmplabel === undefined || tmplabel.length == 0) {
+								alert(strings._label_required);
+								return;
+							}
+
 							var tmplabelFirstElem = tmplabel[0];
 							var labelStr = tmplabelFirstElem.richtext_value.utf8str;
 							propvals['__LABEL__'] = undefined;
@@ -1207,8 +1250,23 @@
 						}, 'json');
 
 					} else {
+						var selele;
+						$this.append(strings._resource_type + ' : ');
+						var selele = $('<select>', {
+							'class': 'extsearch',
+							name: 'selsubclass'
+						}).change(function(event) {
+							get_rtinfo_and_build_form($(event.target).val());
+						});
+						$this.append(selele);
+						get_subclasses(localdata.settings.rtinfo.name);
+						$this.append($('<hr>').css({
+							'height': '2px',
+							'background-color': '#888'
+						}));
 						$this.append(formcontainer);
-						create_form(localdata.settings.rtinfo, localdata.settings.options);
+						get_rtinfo_and_build_form(localdata.settings.rtinfo.name);
+						//create_form(localdata.settings.rtinfo, localdata.settings.options);
 					}
 				});
 			},

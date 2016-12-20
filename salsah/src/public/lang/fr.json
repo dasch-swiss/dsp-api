@@ -44,7 +44,8 @@
 	"_delete" : "Effacer",
 	"_new_entry" : "Nouvelle entrée",
 	"_remove" : "Supprimer",
-	"_label" : "Label",
+	"_label" : "Étiquette",
+	"_label_required" : "L'étiquette est obligatoire",
 	"_descr" : "Description",
 	"_name" : "Nom",
 	"_value" : "Valeur",
@@ -56,8 +57,8 @@
 	"_user" : "Utilisateur",
 	"_username": "Nom d'utilisateur",
 	"_password" : "Mot de passe",
-	"_login" : "se loguer",
-	"_logout" : "se déloguer",
+	"_login" : "ouvrir une session",
+	"_logout" : "fermer la session",
 	"_rights" : "Droits",
 	"_none" : "Aucun",
 	"_view" : "Visionner",
@@ -224,5 +225,7 @@
 	"_hlist_node_expl" : "Clickez sur %s en-dessous pour effacer le nœud, ou sur %s pour fermer la fenêtre sans effaces le nœud!",
 	"_salsah_help" : "SALSAH Aide",
 	"_limitsearch" : "Limiter la recherche sur",
-	"_langchangeq" : "Changer la langue de l'interface utilisateur ?"
+	"_langchangeq" : "Changer la langue de l'interface utilisateur (les modifications non enregistrées seront perdues)?",
+	"_valinfo" : "Information sur la valeur",
+	"_creation_date": "Date de création"
 }

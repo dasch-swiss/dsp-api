@@ -21,6 +21,8 @@
 Reading and Searching Resources
 ===============================
 
+.. contents:: :local:
+
 In order to get an existing resource, the HTTP method ``GET`` has to be used.
 The request has to be sent to the Knora server using the ``resources`` path segment (depending on the type of request, this segment has to be exchanged, see below).
 Reading resources may require authentication since some resources may have restricted viewing permissions.
@@ -171,9 +173,9 @@ This is a simplified way for searching for resources just by their label. It is 
     HTTP GET to http://host/v1/resources?searchstr=searchValue
 
 Additionally, the following parameters can be appended to the URL (search value is ``Zeitglöcklein``):
- - ``restype_id=resourceClassIRI``: This restricts the search to resources of the specified class. ``-1`` is the default value and means no restriction to a specific class. If a resource class IRI is specified, it has to be URL encoded (e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitgl%C3%B6cklein&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book``).
+ - ``restype_id=resourceClassIRI``: This restricts the search to resources of the specified class (subclasses of that class will also match). ``-1`` is the default value and means no restriction to a specific class. If a resource class IRI is specified, it has to be URL encoded (e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitgl%C3%B6cklein&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book``).
  - ``numprops=Integer``: Specifies the number of properties returned for each resource that was found (sorted by GUI order), e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitgl%C3%B6cklein&numprops=4``.
- - ``limit=Integer``: Lmits the amount of results returned (e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitgl%C3%B6cklein&limit=1``).
+ - ``limit=Integer``: Limits the amount of results returned (e.g. ``http://www.knora.org/v1/resources?searchstr=Zeitgl%C3%B6cklein&limit=1``).
 
 
 The response lists the resources that matched the search criteria (see TypeScript interface ``resourceLabelSearchResponse`` in module ``resourceResponseFormats``).
@@ -191,7 +193,7 @@ Please note that the search terms have to be URL encoded.
     [&filter_by_project=projectIRI][&show_nrows=Integer]{[&start_at=Integer]
 
 The parameter ``searchtype`` is required and has to be set to ``fulltext``. Additionally, these parameters can be set:
-  - ``filter_by_restype=resourceClassIRI``: restricts the search to resources of the specified resource class.
+  - ``filter_by_restype=resourceClassIRI``: restricts the search to resources of the specified resource class (subclasses of that class will also match).
   - ``filter_by_project=projectIRI``: restricts the search to resources of the specified project.
   - ``show_nrows=Integer``: Indicates how many reults should be presented on one page. If omitted, the default value ``25`` is used.
   - ``start_at=Integer``: Used to enable paging and go through all the results request by request.
@@ -213,7 +215,7 @@ Extended Search for Resources
     [&show_nrows=Integer][&start_at=Integer]
 
 The parameter ``searchtype`` is required and has to be set to ``extended``. An extended search requires at least one set of parameters consisting of:
-  - ``property_id=propertyTypeIRI``: the type of property the resource has to have
+  - ``property_id=propertyTypeIRI``: the property the resource has to have (subproperties of that property will also match).
   - ``compop=comparisonOperator``: the comparison operator to be used to match between the resource's property value and the search term.
   - ``searchval=searchTerm``: the search value to look for.
 
@@ -255,7 +257,7 @@ Explanation of the comparison operators:
   - ``MATCH_BOOLEAN``: checks if a resource's text value *matches* the provided list of positive (exist) and negative (do not exist) terms. The list takes this form: ``([+-]term\s)+``.
 
 Additionally, these parameters can be set:
-  - ``filter_by_restype=resourceClassIRI``: restricts the search to resources of the specified resource class.
+  - ``filter_by_restype=resourceClassIRI``: restricts the search to resources of the specified resource class (subclasses of that class will also match).
   - ``filter_by_project=projectIRI``: restricts the search to resources of the specified project.
   - ``filter_by_owner``: restricts the search to resources owned by the specified user.
   - ``show_nrows=Integer``: Indicates how many reults should be presented on one page. If omitted, the default value ``25`` is used.
@@ -269,11 +271,26 @@ Some sample searches:
 The response presents the retrieved resources (according to ``show_nrows`` and ``start_at``) and information about paging.
 If not all resources could be presented on one page (``nhits`` is greater than ``shown_nrows``), the next page can be requested (by increasing ``start_at`` by the number of ``show_nrows``).
 You can simply go through the elements of ``paging`` to request the single pages one by one.
-See TypeScript interface ``searchResponse`` in module ``searchResponseFormats``.
+See the TypeScript interface ``searchResponse`` in module ``searchResponseFormats``.
 
+************************
+Get a Graph of Resources
+************************
+
+The path segment ``graphdata`` returns a graph of resources that are reachable via links to or from an initial resource.
+
+::
+
+    HTTP GET to http://host/v1/search/graphdata/resourceIRI?depth=Integer
+
+The parameter ``depth`` specifies the maximum depth of the graph, and defaults to 4. If ``depth`` is 1, the operation will return only the initial resource and any resources that are directly linked to or from it.
+
+The graph includes any link that is a subproperty of ``knora-base:hasLinkTo``, except for links that are subproperties of ``knora-base:isPartOf``. Specifically, if resource ``R1`` has a link that is a subproperty of ``knora-base:isPartOf`` pointing to resource ``R2``, no link from ``R1`` to ``R2`` is included in the graph.
+
+The response represents the graph as a list of nodes (resources) and a list of edges (links). For details, see the TypeScript interface ``graphDataResponse`` in module ``graphDataResponseFormats``.
 
 **********************
-Get hierarchical Lists
+Get Hierarchical Lists
 **********************
 
 The knora-base ontology allows for the definition of hierarchical lists. These can be queried by providing the IRI of the root node.

@@ -18,13 +18,15 @@ package org.knora.webapi.e2e.v1
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpMethods._
-import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Methods`, _}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.http.CORSSupport
+import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import spray.json._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -40,13 +42,29 @@ object CORSSupportV1E2ESpec {
 /**
   * End-to-end test specification for testing [[CORSSupport]].
   */
-class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) {
+class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) with TriplestoreJsonProtocol {
 
     /* set the timeout for the route test */
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(180).second)
 
     val exampleOrigin = HttpOrigin("http://example.com")
     val corsSettings = CORSSupport.corsSettings
+
+    private val rdfDataObjects = List(
+        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
+        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
+        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
+        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
+    )
+
+    "Load test data" in {
+        // send POST to 'v1/store/ResetTriplestoreContent'
+        val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        singleAwaitingRequest(request, 300.seconds)
+    }
 
     "A Route with enabled CORS support " should {
 
@@ -63,8 +81,7 @@ class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) {
                 `Access-Control-Allow-Methods`(corsSettings.allowedMethods),
                 //`Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Authorization"),
                 `Access-Control-Max-Age`(1800),
-                `Access-Control-Allow-Credentials`(true),
-                Server("akka-http/2.4.12")
+                `Access-Control-Allow-Credentials`(true)
             )
         }
 
@@ -77,6 +94,36 @@ class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) {
 
             response.status should equal(StatusCodes.BadRequest)
             entity should equal("CORS: invalid method 'PATCH'")
+        }
+
+        "send `Access-Control-Allow-Origin` header when the Knora resource is found " in {
+            val request = Get(baseApiUrl + "/v1/resources/" + java.net.URLEncoder.encode("http://data.knora.org/0cb8286054d5", "utf-8")) ~> Origin(exampleOrigin)
+            val response = singleAwaitingRequest(request)
+
+            response.status should equal(StatusCodes.OK)
+            response.headers should contain allElementsOf Seq(
+                `Access-Control-Allow-Origin`(exampleOrigin)
+            )
+        }
+
+        "send `Access-Control-Allow-Origin` header when the Knora resource is NOT found " in {
+            val request = Get(baseApiUrl + "/v1/resources/" + java.net.URLEncoder.encode("http://data.knora.org/nonexistent", "utf-8")) ~> Origin(exampleOrigin)
+            val response = singleAwaitingRequest(request)
+
+            response.status should equal(StatusCodes.NotFound)
+            response.headers should contain allElementsOf Seq(
+                `Access-Control-Allow-Origin`(exampleOrigin)
+            )
+        }
+
+        "send `Access-Control-Allow-Origin` header when the api endpoint route is NOT found " in {
+            val request = Get(baseApiUrl + "/NotFound") ~> Origin(exampleOrigin)
+            val response = singleAwaitingRequest(request)
+
+            response.status should equal(StatusCodes.NotFound)
+            response.headers should contain allElementsOf Seq(
+                `Access-Control-Allow-Origin`(exampleOrigin)
+            )
         }
 
     }

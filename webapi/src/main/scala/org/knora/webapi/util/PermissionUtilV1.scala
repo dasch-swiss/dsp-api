@@ -262,7 +262,7 @@ object PermissionUtilV1 {
                 Vector(OntologyConstants.KnoraBase.UnknownUser)
         }
 
-        //log.debug(s"getUserPermissionV1 - userGroups: ${ScalaPrettyPrinter.prettyPrint(userGroups)}")
+        //log.debug(s"getUserPermissionV1 - userGroups: $userGroups")
 
         val permissionCodeOption = if (userProfile.permissionData.isSystemAdmin) {
             // If the user is in the "SystemAdmin" group, just give them the maximum permission.

@@ -18,9 +18,9 @@
 
                                    knora-base:userid "root"^^xsd:string ;
 
-                                   foaf:givenName "System"^^xsd:string ;
+                                   knora-base:givenName "System"^^xsd:string ;
 
-                                   foaf:familyName "Administrator"^^xsd:string ;
+                                   knora-base:familyName "Administrator"^^xsd:string ;
 
                                    knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
 
@@ -39,9 +39,9 @@
 
                                         knora-base:userid "superuser"^^xsd:string ;
 
-                                        foaf:givenName "Super"^^xsd:string ;
+                                        knora-base:givenName "Super"^^xsd:string ;
 
-                                        foaf:familyName "User"^^xsd:string ;
+                                        knora-base:familyName "User"^^xsd:string ;
 
                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
 
@@ -60,9 +60,9 @@
 
                                          knora-base:userid "normaluser"^^xsd:string ;
 
-                                         foaf:givenName "Normal"^^xsd:string ;
+                                         knora-base:givenName "Normal"^^xsd:string ;
 
-                                         foaf:familyName "User"^^xsd:string ;
+                                         knora-base:familyName "User"^^xsd:string ;
 
                                          knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
 
@@ -81,9 +81,9 @@
 
                                            knora-base:userid "inactiveuser"^^xsd:string ;
 
-                                           foaf:givenName "Inactive"^^xsd:string ;
+                                           knora-base:givenName "Inactive"^^xsd:string ;
 
-                                           foaf:familyName "User"^^xsd:string ;
+                                           knora-base:familyName "User"^^xsd:string ;
 
                                            knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
 
@@ -131,9 +131,9 @@
 
                                          knora-base:userid "images-user01"^^xsd:string ;
 
-                                         foaf:givenName "User01"^^xsd:string ;
+                                         knora-base:givenName "User01"^^xsd:string ;
 
-                                         foaf:familyName "User"^^xsd:string ;
+                                         knora-base:familyName "User"^^xsd:string ;
 
                                          knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
 
@@ -155,9 +155,9 @@
 
                                          knora-base:userid "images-user02"^^xsd:string ;
 
-                                         foaf:givenName "User02"^^xsd:string ;
+                                         knora-base:givenName "User02"^^xsd:string ;
 
-                                         foaf:familyName "User"^^xsd:string ;
+                                         knora-base:familyName "User"^^xsd:string ;
 
                                          knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
 
@@ -232,9 +232,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:userid "testuser"^^xsd:string ;
 
-                                         foaf:givenName "User"^^xsd:string ;
+                                         knora-base:givenName "User"^^xsd:string ;
 
-                                         foaf:familyName "Test"^^xsd:string ;
+                                         knora-base:familyName "Test"^^xsd:string ;
 
                                          knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
 
@@ -256,9 +256,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:userid "root-alt"^^xsd:string ;
 
-                                         foaf:familyName "Admin-alt"^^xsd:string ;
+                                         knora-base:familyName "Admin-alt"^^xsd:string ;
 
-                                         foaf:givenName "Administrator-alt"^^xsd:string ;
+                                         knora-base:givenName "Administrator-alt"^^xsd:string ;
 
                                          knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
 
@@ -280,9 +280,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:userid "incunabula2"^^xsd:string ;
 
-                                         foaf:familyName "User2"^^xsd:string ;
+                                         knora-base:familyName "User2"^^xsd:string ;
 
-                                         foaf:givenName "Test"^^xsd:string ;
+                                         knora-base:givenName "Test"^^xsd:string ;
 
                                          knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
 
@@ -329,9 +329,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                         knora-base:userid "multiuser"^^xsd:string ;
 
-                                        foaf:givenName "Multi"^^xsd:string ;
+                                        knora-base:givenName "Multi"^^xsd:string ;
 
-                                        foaf:familyName "User"^^xsd:string ;
+                                        knora-base:familyName "User"^^xsd:string ;
 
                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
 
@@ -374,8 +374,8 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> a knora-base:User ;
 	knora-base:userid "anything-user" ;
-	foaf:givenName "Anything" ;
-	foaf:familyName "User01" ;
+	knora-base:givenName "Anything" ;
+	knora-base:familyName "User01" ;
 	knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
 	knora-base:email "anything.user01@example.org" ;
 	knora-base:preferredLanguage "de" ;
@@ -385,8 +385,8 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ> a knora-base:User ;
 	knora-base:userid "anything-user-2" ;
-	foaf:givenName "Anything" ;
-	foaf:familyName "User02" ;
+	knora-base:givenName "Anything" ;
+	knora-base:familyName "User02" ;
 	knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
 	knora-base:email "anything.user02@example.org" ;
 	knora-base:preferredLanguage "de" ;
@@ -426,8 +426,8 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/users/PSGbemdjZi4kQ6GHJVkLGF> a knora-base:User ;
 	knora-base:userid "beol" ;
-	foaf:familyName "BEOL" ;
-	foaf:givenName "BEOL" ;
+	knora-base:familyName "BEOL" ;
+	knora-base:givenName "BEOL" ;
 	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
 	knora-base:email "t.schweizer@unibas.ch" ;
 	knora-base:preferredLanguage "de" ;
@@ -453,8 +453,8 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://data.knora.org/users/Q-6Sssu8TBWrcCGuVJ0lVw> a knora-base:User ;
 	knora-base:userid "biblio" ;
-	foaf:familyName "biblio" ;
-	foaf:givenName "biblio" ;
+	knora-base:familyName "biblio" ;
+	knora-base:givenName "biblio" ;
 	knora-base:password "biblio" ;
 	knora-base:email "sepideh.alassi@unibas.ch" ;
 	knora-base:preferredLanguage "de" ;

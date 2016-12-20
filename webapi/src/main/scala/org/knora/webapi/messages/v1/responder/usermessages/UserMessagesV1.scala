@@ -336,7 +336,17 @@ case class UserDataV1(lang: String,
                       isActiveUser: Option[Boolean] = None,
                       active_project: Option[IRI] = None ) {
 
+    def fullname: Option[String] = {
+        (firstname, lastname) match {
+            case (Some(firstnameStr), Some(lastnameStr)) => Some(firstnameStr + " " + lastnameStr)
+            case (Some(firstnameStr), None) => Some(firstnameStr)
+            case (None, Some(lastnameStr)) => Some(lastnameStr)
+            case (None, None) => None
+        }
+    }
+
     def toJsValue = UserV1JsonProtocol.userDataV1Format.write(this)
+
 }
 
 

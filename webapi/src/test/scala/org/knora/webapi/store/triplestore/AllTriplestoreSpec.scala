@@ -67,9 +67,19 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
     )
 
-    val countTriplesQuery =
+    val countTriplesQuery = if (tsType.startsWith("graphdb"))
         """
         SELECT (COUNT(*) AS ?no)
+        FROM <http://www.ontotext.com/explicit>
+        WHERE
+            {
+                ?s ?p ?o .
+            }
+        """
+    else
+        """
+        SELECT (COUNT(*) AS ?no)
+        WHERE
             {
                 ?s ?p ?o .
             }

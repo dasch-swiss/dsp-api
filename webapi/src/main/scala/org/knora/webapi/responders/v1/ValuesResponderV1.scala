@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v1.responder.permissionmessages.DefaultObjectAc
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoType, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileGetRequestV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.ResourceLocker
@@ -84,12 +84,17 @@ class ValuesResponderV1 extends ResponderV1 {
         for {
             maybeValueQueryResult <- findValue(valueIri, userProfile)
 
-            response = maybeValueQueryResult match {
+            response <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
-                    ValueGetResponseV1(
+                    for {
+                        valueOwnerProfile <- (responderManager ? UserProfileGetRequestV1(valueQueryResult.ownerIri)).mapTo[UserProfileV1]
+                    } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
+                        valuecreator = valueOwnerProfile.userData.username.get,
+                        valuecreatorname = valueOwnerProfile.userData.fullname.get,
+                        valuecreationdate = valueQueryResult.creationDate,
                         comment = valueQueryResult.comment,
                         userdata = userProfile.userData
                     )
@@ -209,10 +214,10 @@ class ValuesResponderV1 extends ResponderV1 {
         } yield apiResponse
 
         for {
-        // Don't allow anonymous users to update values.
+        // Don't allow anonymous users to create values.
             userIri <- createValueRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
-                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to update values"))
+                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to create values"))
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
@@ -600,6 +605,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 getFileValuesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(getFileValuesSparql)).mapTo[SparqlSelectResponse]
                 // _ <- Future(println(getFileValuesResponse))
 
+                // check that the resource to be updated exists and it is a subclass of knora-base:Representation
+                _ = if (getFileValuesResponse.results.bindings.isEmpty) throw NotFoundException(s"Value ${changeFileValueRequest.resourceIri} not found (it may have been deleted) or it is not a knora-base:Representation")
+
                 // get the property Iris, file value Iris and qualities attached to the resource
                 fileValues: Seq[CurrentFileValue] = getFileValuesResponse.results.bindings.map {
                     (row: VariableResultsRow) =>
@@ -612,13 +620,6 @@ class ValuesResponderV1 extends ResponderV1 {
                                 case None => None
                             }
                         )
-                }
-
-                sipiConversionMessage: SipiResponderConversionRequestV1 = changeFileValueRequest.file
-
-                // if resource has no existing file values, throw an exception
-                _ = if (fileValues.isEmpty) {
-                    BadRequestException(s"File values for $resourceIri should be updated, but resource has no existing file values")
                 }
 
                 // the message to be sent to Sipi responder
@@ -1288,12 +1289,17 @@ class ValuesResponderV1 extends ResponderV1 {
                 userProfile = userProfile
             )
 
-            linkValueResponse = maybeValueQueryResult match {
+            linkValueResponse <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
-                    ValueGetResponseV1(
+                    for {
+                        valueOwnerProfile <- (responderManager ? UserProfileGetRequestV1(valueQueryResult.ownerIri)).mapTo[UserProfileV1]
+                    } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
+                        valuecreator = valueOwnerProfile.userData.username.get,
+                        valuecreatorname = valueOwnerProfile.userData.fullname.get,
+                        valuecreationdate = valueQueryResult.creationDate,
                         comment = valueQueryResult.comment,
                         userdata = userProfile.userData
                     )
@@ -1311,26 +1317,49 @@ class ValuesResponderV1 extends ResponderV1 {
       * Represents the result of querying a value.
       */
     trait ValueQueryResult {
+        /**
+          * The value that was found.
+          */
         def value: ApiValueV1
 
+        /**
+          * The IRI Of the user that created the value.
+          */
+        def ownerIri: IRI
+
+        /**
+          * The date when the value was created, represented as a string.
+          */
+        def creationDate: String
+
+        /**
+          * The IRI of the project that the value belongs to.
+          */
         def projectIri: IRI
 
+        /**
+          * An optional comment describing the value.
+          */
         def comment: Option[String]
 
+        /**
+          * A list of the permission-relevant assertions declared on the value.
+          */
         def permissionRelevantAssertions: Seq[(IRI, IRI)]
 
+        /**
+          * An integer permission code representing the user's permissions on the value.
+          */
         def permissionCode: Int
     }
 
     /**
       * Represents basic information resulting from querying a value. This is sufficient if the value is an ordinary
       * value (not a link).
-      *
-      * @param value                        the value that was found.
-      * @param permissionRelevantAssertions a list of the permission-relevant assertions declared on the value.
-      * @param permissionCode               an integer permission code representing the user's permissions on the value.
       */
     case class BasicValueQueryResult(value: ApiValueV1,
+                                     ownerIri: IRI,
+                                     creationDate: String,
                                      projectIri: IRI,
                                      comment: Option[String],
                                      permissionRelevantAssertions: Seq[(IRI, IRI)],
@@ -1339,13 +1368,12 @@ class ValuesResponderV1 extends ResponderV1 {
     /**
       * Represents the result of querying a link.
       *
-      * @param value                        a [[LinkValueV1]] representing the `knora-base:LinkValue` that was found.
       * @param directLinkExists             `true` if a direct link exists between the two resources.
       * @param targetResourceClass          if a direct link exists, contains the OWL class of the target resource.
-      * @param permissionRelevantAssertions a list of the permission-relevant assertions declared on the value.
-      * @param permissionCode               an integer permission code representing the user's permissions on the value.
       */
     case class LinkValueQueryResult(value: LinkValueV1,
+                                    ownerIri: IRI,
+                                    creationDate: String,
                                     projectIri: IRI,
                                     comment: Option[String],
                                     directLinkExists: Boolean,
@@ -1441,11 +1469,17 @@ class ValuesResponderV1 extends ResponderV1 {
             val valueProps = valueUtilV1.createValueProps(valueIri, rows)
             val value = valueUtilV1.makeValueV1(valueProps)
 
+            // Get the IRI of the value's owner.
+            val ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no owner"))
+
             // Get the value's project IRI.
-            val projectIri = getValueProjectIri(valueIri, rows)
+            val projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no project"))
+
+            // Get the value's creation date.
+            val creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no valueCreationDate"))
 
             // Get the optional comment on the value.
-            val comment = getValueComment(rows)
+            val comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
 
             // Get the value's permission-relevant assertions.
             val assertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
@@ -1463,6 +1497,8 @@ class ValuesResponderV1 extends ResponderV1 {
             Some(
                 BasicValueQueryResult(
                     value = value,
+                    ownerIri = ownerIri,
+                    creationDate = creationDate,
                     comment = comment,
                     projectIri = projectIri,
                     permissionRelevantAssertions = assertions,
@@ -1493,11 +1529,17 @@ class ValuesResponderV1 extends ResponderV1 {
                 case other => throw InconsistentTriplestoreDataException(s"Expected value $linkValueIri to be of type ${OntologyConstants.KnoraBase.LinkValue}, but it was read with type ${other.valueTypeIri}")
             }
 
+            // Get the IRI of the value's owner.
+            val ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no owner"))
+
             // Get the value's project IRI.
-            val projectIri = getValueProjectIri(linkValueIri, rows)
+            val projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no project"))
+
+            // Get the value's creation date.
+            val creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no valueCreationDate"))
 
             // Get the optional comment on the value.
-            val comment = getValueComment(rows)
+            val comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
 
             // Get the value's permission-relevant assertions.
             val permissionRelevantAssertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
@@ -1519,6 +1561,8 @@ class ValuesResponderV1 extends ResponderV1 {
             Some(
                 LinkValueQueryResult(
                     value = linkValueV1,
+                    ownerIri = ownerIri,
+                    creationDate = creationDate,
                     comment = comment,
                     projectIri = projectIri,
                     directLinkExists = directLinkExists,
@@ -1658,24 +1702,14 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Finds the IRI of a value's project in SPARQL query results describing the value.
+      * Finds the object of the specified predicate in SPARQL query results describing a value.
       *
-      * @param valueIri the IRI of the value.
-      * @param rows     the SPARQL query results that describe the value.
-      * @return the IRI of the value's project.
-      */
-    private def getValueProjectIri(valueIri: IRI, rows: Seq[VariableResultsRow]): IRI = {
-        rows.find(_.rowMap("objPred") == OntologyConstants.KnoraBase.AttachedToProject).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no project")).rowMap("objObj")
-    }
-
-    /**
-      * Gets the optional comment on a value from the SPARQL query results describing the value.
-      *
+      * @param predicateIri the IRI of the predicate.
       * @param rows the SPARQL query results that describe the value.
-      * @return the optional comment on the value.
+      * @return the predicate's object.
       */
-    private def getValueComment(rows: Seq[VariableResultsRow]): Option[String] = {
-        rows.find(_.rowMap("objPred") == OntologyConstants.KnoraBase.ValueHasComment).map(_.rowMap("objObj"))
+    private def getValuePredicateObject(predicateIri: IRI, rows: Seq[VariableResultsRow]): Option[IRI] = {
+        rows.find(_.rowMap("objPred") == predicateIri).map(_.rowMap("objObj"))
     }
 
     /**

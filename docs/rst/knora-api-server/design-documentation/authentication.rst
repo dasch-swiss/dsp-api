@@ -21,6 +21,8 @@
 Authentication in the Knora API Server
 ======================================
 
+.. contents:: :local:
+
 Scope
 ------
 

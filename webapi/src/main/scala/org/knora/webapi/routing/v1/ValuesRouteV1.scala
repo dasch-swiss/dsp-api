@@ -110,7 +110,7 @@ object ValuesRouteV1 extends Authenticator {
             case CreateValueApiRequestV1(_, _, _, _, _, _, _, Some(uriValue: String), _, _, _, _, _, _, _, comment) => (UriValueV1(InputValidation.toIri(uriValue, () => throw BadRequestException(s"Invalid URI: $uriValue"))), comment)
 
             case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, Some(dateStr: String), _, _, _, _, _, _, comment) =>
-                (DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)
+                (DateUtilV1.createJDNValueV1FromDateString(dateStr), comment)
 
             case CreateValueApiRequestV1(_, _, _, _, _, _, _, _, _, Some(colorStr: String), _, _, _, _, _, comment) =>
                 val colorValue = InputValidation.toColor(colorStr, () => throw BadRequestException(s"Invalid color value: $colorStr"))
@@ -173,7 +173,7 @@ object ValuesRouteV1 extends Authenticator {
             case ChangeValueApiRequestV1(_, _, _, _, _, Some(uriValue: String), _, _, _, _, _, _, _, comment) => (UriValueV1(InputValidation.toIri(uriValue, () => throw BadRequestException(s"Invalid URI: $uriValue"))), comment)
 
             case ChangeValueApiRequestV1(_, _, _, _, _, _, Some(dateStr: String), _, _, _, _, _, _, comment) =>
-                (DateUtilV1.createJDCValueV1FromDateString(dateStr), comment)
+                (DateUtilV1.createJDNValueV1FromDateString(dateStr), comment)
 
             case ChangeValueApiRequestV1(_, _, _, _, _, _, _, Some(colorStr: String), _, _, _, _, _, comment) =>
                 val colorValue = InputValidation.toColor(colorStr, () => throw BadRequestException(s"Invalid color value: $colorStr"))

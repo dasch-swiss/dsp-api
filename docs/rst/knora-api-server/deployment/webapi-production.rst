@@ -18,7 +18,9 @@
 
 
 Running the Knora API Server on a Production System
-====================================================
+===================================================
+
+.. contents:: :local:
 
 This section describes possible ways of running the Knora API server in
 an production environment. The description should only be taken as a first
@@ -27,7 +29,7 @@ is advised.
 
 .. note::
     Our platform of choice is Linux CentOS 7 and is thus assumed in the
-    description. The generall idea should be usable on all platforms with
+    description. The general idea should be usable on all platforms with
     small changes.
 
 To run the Knora API server, we have two main components. First, the ``jar``
@@ -56,7 +58,7 @@ our java application easily as a service.
 -  https://serversforhackers.com/monitoring-processes-with-supervisord
 
 Configuration
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
 
 -  /etc/supervisord.d/knora-api.conf
 
@@ -84,16 +86,15 @@ Controlling Processes
 
 .. _tomcat-application-label:
 
-Tomcat Application Server (Fuseki 2 and GraphDB)
--------------------------------------------------
+Tomcat Application Server (Fuseki 2)
+------------------------------------
 
-The supported triplestores for the Knora API server are Fuseki 2 and GraphDB.
-Both come with a ``.war`` packaged distribution, which alows a deployment under
+Fuseki 2 provides a ``.war`` packaged distribution, which alows a deployment under
 an application server. We chose Tomcat, but there are other options available,
 e.g., Glassfish, Jetty, etc.
 
 Installation
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^
 
 We use yum to install Tomcat:
 
@@ -102,7 +103,7 @@ We use yum to install Tomcat:
 
 
 Configuration
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
 
 Fuseki 2 and GraphDB are deployed using tomcat.
 
@@ -112,12 +113,11 @@ The relevant directories are as follows:
      dropped in: ``/var/lib/tomcat/webapps``
  * Fuseki configuration folder: ``/etc/fuseki``
  * Data folder: ``/usr/share/tomcat``
-    - for GraphDB: ``/usr/share/tomcat/.aduna`` and ``/usr/share/tomcat/.graphdb-workbench``
     - for Fuseki: ``usr/share/tomcat/.fuseki``
 
 
 Administration
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
  * ``systemctl status tomcat``
  * ``systemctl start tomcat``

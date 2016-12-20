@@ -22,12 +22,12 @@ package org.knora.webapi.messages.v1.responder.resourcemessages
 
 import java.util.UUID
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
 import scala.collection.breakOut
@@ -300,10 +300,10 @@ case class PropertiesGetResponseV1(properties: PropsGetV1, userdata: UserDataV1)
 /**
   * Requests the label of a resource to be changed.
   *
-  * @param resourceIri the Iri of the resource whose label should be changed.
-  * @param label the new value of the label.
-  * @param userProfile information about the user that made the request.
-  * @param apiRequestID  the ID of the API request.
+  * @param resourceIri  the Iri of the resource whose label should be changed.
+  * @param label        the new value of the label.
+  * @param userProfile  the profile of the user making the request.
+  * @param apiRequestID the ID of the API request.
   *
   */
 case class ChangeResourceLabelRequestV1(resourceIri: IRI, label: String, userProfile: UserProfileV1, apiRequestID: UUID) extends ResourcesResponderRequestV1
@@ -311,13 +311,36 @@ case class ChangeResourceLabelRequestV1(resourceIri: IRI, label: String, userPro
 /**
   * Represents the answer to a [[ChangeResourceLabelRequestV1]].
   *
-  * @param res_id the IRI of the resource whose label was changed.
-  * @param label the resource's new label.
+  * @param res_id   the IRI of the resource whose label was changed.
+  * @param label    the resource's new label.
   * @param userdata information about the user that made the request.
   */
 case class ChangeResourceLabelResponseV1(res_id: IRI, label: String, userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceV1JsonProtocol.changeResourceLabelResponseV1Format.write(this)
 }
+
+/**
+  * Requests a graph of resources that are reachable via links to or from a given resource. A successful response
+  * will be a [[GraphDataGetResponseV1]].
+  *
+  * @param resourceIri the IRI of the initial resource.
+  * @param depth       the maximum depth of the graph, counting from the initial resource.
+  * @param userProfile the profile of the user making the request.
+  */
+case class GraphDataGetRequestV1(resourceIri: IRI, depth: Int, userProfile: UserProfileV1) extends ResourcesResponderRequestV1
+
+/**
+  * Provides a graph of resources that are reachable via links to or from a given resource, in response to a
+  * [[GraphDataGetRequestV1]].
+  *
+  * @param nodes    the nodes that are visible in the graph.
+  * @param edges    the edges that are visible in the graph.
+  * @param userdata information about the user that made the request.
+  */
+case class GraphDataGetResponseV1(nodes: Seq[GraphNodeV1], edges: Seq[GraphEdgeV1], userdata: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = ResourceV1JsonProtocol.graphDataGetResponseV1Format.write(this)
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -737,6 +760,27 @@ case class ResourceCreateValueObjectResponseV1(textval: Map[LiteralValueType.Val
     def toJsValue = ResourceV1JsonProtocol.resourceCreateValueObjectResponseV1Format.write(this)
 }
 
+/**
+  * Represents a node (i.e. a resource) in a [[GraphDataGetResponseV1]].
+  *
+  * @param resourceIri        the IRI of the resource.
+  * @param resourceLabel      the label of the resource.
+  * @param resourceClassIri   the IRI of the resource's OWL class.
+  * @param resourceClassLabel the label of the resource's OWL class.
+  */
+case class GraphNodeV1(resourceIri: IRI, resourceLabel: String, resourceClassIri: IRI, resourceClassLabel: String)
+
+/**
+  * Represents an edge (i.e. a link) in a [[GraphDataGetResponseV1]].
+  *
+  * @param source        the resource that is the source of the link.
+  * @param target        the resource that is the target of the link.
+  * @param propertyIri   the IRI of the link property.
+  * @param propertyLabel the label of the link property.
+  */
+case class GraphEdgeV1(source: IRI, target: IRI, propertyIri: IRI, propertyLabel: String)
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
@@ -1004,6 +1048,9 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val resourceCreateResponseV1Format: RootJsonFormat[ResourceCreateResponseV1] = jsonFormat3(ResourceCreateResponseV1)
     implicit val resourceDeleteResponseV1Format: RootJsonFormat[ResourceDeleteResponseV1] = jsonFormat2(ResourceDeleteResponseV1)
     implicit val changeResourceLabelResponseV1Format: RootJsonFormat[ChangeResourceLabelResponseV1] = jsonFormat3(ChangeResourceLabelResponseV1)
+    implicit val graphNodeV1Format: JsonFormat[GraphNodeV1] = jsonFormat4(GraphNodeV1)
+    implicit val graphEdgeV1Format: JsonFormat[GraphEdgeV1] = jsonFormat4(GraphEdgeV1)
+    implicit val graphDataGetResponseV1Format: RootJsonFormat[GraphDataGetResponseV1] = jsonFormat3(GraphDataGetResponseV1)
 }
 
 /**

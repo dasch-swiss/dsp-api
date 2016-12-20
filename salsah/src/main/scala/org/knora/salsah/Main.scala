@@ -29,7 +29,7 @@ object Main extends App {
     implicit val materializer = ActorMaterializer()
     implicit val ec = system.dispatcher
 
-    val log = akka.event.Logging(system, this.getClass())
+    val log = akka.event.Logging(system, this.getClass)
 
     val handler =
         get {
@@ -38,13 +38,13 @@ object Main extends App {
 
     val (host, port) = ("localhost", 3335)
 
-    log.info(s"Salsah online at http://${host}:${port}/index.html")
+    log.info(s"Salsah online at http://$host:$port/index.html")
 
     val bindingFuture: Future[ServerBinding] =
         Http().bindAndHandle(handler, host, port)
 
     bindingFuture onFailure {
         case ex: Exception =>
-            log.error(ex, "Failed to bind to {}:{}!", host, port)
+            log.error(ex, s"Failed to bind to $host:$port")
     }
 }

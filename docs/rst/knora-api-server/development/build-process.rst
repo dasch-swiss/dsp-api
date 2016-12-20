@@ -21,16 +21,18 @@
 Build Process
 =============
 
+.. contents:: :local:
+
 TODO: complete this file.
     - SBT
     - Using GraphDB for development and how to initializing the 'knora-test-unit' repository
     - Using Fuseki for development
 
 Building and Running
----------------------
+--------------------
 
 Using Fuseki
-^^^^^^^^^^^^^
+^^^^^^^^^^^^
 
 Start the provided Fuseki triplestore:
 
@@ -63,7 +65,7 @@ To shut down the Knora API server:
 
 
 Using GraphDB
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
 
 The archive with the newest supported version of the GraphDB-SE triplestore is provided under
 ```triplestores/graphdb-se-7```. Please keep in mind, that GraphDB-SE must be licensed separately by the user, and that
@@ -96,11 +98,11 @@ After the GraphDB inside the docker container has started, you can find the Grap
 
 
 
-Run the automated tests
-------------------------
+Running the automated tests
+---------------------------
 
-Using Fuseki
-^^^^^^^^^^^^^
+Running Tests with Fuseki
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Make sure you've started Fuseki as shown above. Then at the SBT prompt:
 
@@ -109,9 +111,28 @@ Make sure you've started Fuseki as shown above. Then at the SBT prompt:
     > fuseki:test
 
 
+Running Tests with GraphDB
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Make sure GraphDB is running. Then at the SBT prompt:
+
+::
+
+    > graphdb:test
+
+
+Load Testing on Mac OS X
+------------------------
+
+To test the Knora API server with many concurrent connections on Mac OS X, you
+will need to adjust some kernel parameters to allow more open connections, to
+recycle ephemeral ports more quickly, and to use a wider range of ephemeral
+port numbers. The script ``webapi/scripts/os-x-kernel-test-config.sh`` will do
+this.
+
 
 Continuous Integration
------------------------
+----------------------
 
 For continuous integration testing, we use Travis-CI. Every commit pushed to the git repository or every
 pull request, triggers the build. Additionaly, in Github there is a litle checkmark beside every commit, signaling the
@@ -135,7 +156,7 @@ It basically means:
  - send notification to our slack channel (lines 15-17)
  
 SBT Build Configuration
-------------------------
+-----------------------
  
 .. literalinclude:: ../../../../webapi/WebapiBuild.sbt
 
@@ -143,7 +164,7 @@ SBT Build Configuration
 .. _webapi-server-startup-flags:
 
 Webapi Server Startup-Flags
-----------------------------
+---------------------------
 
 The Webapi-Server can be started with a number of flags. These flags can be supplied either to the ``reStart`` or the
 ``run`` command in sbt, e.g.,:
@@ -162,7 +183,7 @@ or
 
 
 ``loadDemoData`` - Flag
-^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 
 When the webapi-server is started with the ``loadDemoData`` flag, then at startup, the data which is configured in
 ``application.conf`` under the ``app.triplestore.rdf-data`` key is loaded into the triplestore, and any data in the

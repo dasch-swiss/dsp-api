@@ -58,10 +58,10 @@ class UsersResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Gets information about a Knora user, and returns it in a [[Option[UserProfileV1]].
+      * Gets information about a Knora user, and returns it in a [[UserProfileV1]].
       *
-      * @param userIRI the IRI of the user.
-      * @return a [[Option[UserProfileV1]] describing the user.
+      * @param userIri the IRI of the user.
+      * @return a [[UserProfileV1]] describing the user.
       */
     private def getUserProfileByIRIV1(userIRI: IRI, profileType: UserProfileType.Value): Future[UserProfileV1] = {
         // TODO: add caching of user profiles that was removed from [[Authenticator]]
@@ -86,10 +86,10 @@ class UsersResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Gets information about a Knora user, and returns it in a [[Option[UserProfileV1]].
+      * Gets information about a Knora user, and returns it in a [[UserProfileV1]].
       *
       * @param username the username of the user.
-      * @return a [[Option[UserProfileV1]] describing the user.
+      * @return a [[UserProfileV1]] describing the user.
       */
     private def getUserProfileByUsernameV1(username: String, profileType: UserProfileType.Value): Future[UserProfileV1] = {
         // TODO: add caching of user profiles that was removed from [[Authenticator]]
@@ -357,8 +357,8 @@ class UsersResponderV1 extends ResponderV1 {
                 },
                 user_id = Some(returnedUserIri),
                 username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
-                firstname = groupedUserData.get(OntologyConstants.Foaf.GivenName).map(_.head),
-                lastname = groupedUserData.get(OntologyConstants.Foaf.FamilyName).map(_.head),
+                firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
+                lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
                 email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
                 isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.IsActiveUser).map(_.head.toBoolean),

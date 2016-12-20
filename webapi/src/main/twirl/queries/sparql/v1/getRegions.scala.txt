@@ -23,38 +23,22 @@
 @**
  * Given the IRI of a resource, gets the regions that point to this resource.
  *
+ * If the triplestore type is GraphDB, this template delegates to getRegionsGraphDB.sparql.txt, which is optimised
+ * for GraphDB. Otherwise, it delegates to getRegionsStandard.sparql.txt.
+ *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.
  *@
  @(triplestore: String,
    resourceIri: IRI)
 
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-SELECT ?region ?resclass ?regionObjectPermissions ?owner ?project
-@* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
-WHERE {
-
-    BIND(IRI("@resourceIri") as ?resource)
-    ?resource knora-base:isDeleted false .
-
-    ?linkingProp rdfs:subPropertyOf* knora-base:isRegionOf .
-    ?region ?linkingProp ?resource .
-
-    ?region knora-base:isDeleted false .
-
-    ?region a ?resclass .
-    ?resclass rdfs:subClassOf* knora-base:Region .
-
-    ?region knora-base:attachedToUser ?owner .
-    ?region knora-base:attachedToProject ?project .
-
-    OPTIONAL {
-        ?region knora-base:hasPermissions ?regionObjectPermissions .
+    @{
+        queries.sparql.v1.txt.getRegionsGraphDB(resourceIri = resourceIri)
+    }
+} else {
+    @{
+        queries.sparql.v1.txt.getRegionsStandard(triplestore = triplestore,
+                                                 resourceIri = resourceIri)
     }
 }
