@@ -56,7 +56,7 @@ object ValuesResponderV1Spec {
     private val miscResourceIri = "http://data.knora.org/miscResource"
     private val aThingIri = "http://data.knora.org/a-thing"
 
-    private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
+    private val incunabulaUser = SharedAdminTestData.incunabulaMemberUser
 
     private val imagesUser = SharedAdminTestData.imagesUser01
 
@@ -1393,23 +1393,12 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
 
         "change the partOf property of a page" in {
-            // A test UserDataV1.
-            val userData = UserDataV1(
-                email = Some("test@test.ch"),
-                lastname = Some("Test"),
-                firstname = Some("User"),
-                username = Some("testuser"),
-                token = None,
-                user_id = Some("http://data.knora.org/users/91e19f1e01"),
-                lang = "de"
-            )
 
             // A test UserProfileV1.
-            val userProfile = UserProfileV1(
-                projects = Vector("http://data.knora.org/projects/77275339"),
-                groups = Nil,
-                userData = userData
-            )
+            val userProfile = SharedAdminTestData.incunabulaCreatorUser
+
+            // A test UserDataV1.
+            val userData = userProfile.userData
 
             val linkTargetIri = "http://data.knora.org/e41ab5695c"
 

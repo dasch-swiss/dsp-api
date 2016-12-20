@@ -240,7 +240,8 @@ object SharedPermissionsTestData {
             p = DefaultObjectAccessPermissionV1(iri = "http://data.knora.org/permissions/005-d1", forProject = SharedAdminTestData.ANYTHING_PROJECT_IRI, forGroup = Some(OntologyConstants.KnoraBase.ProjectMember), forResourceClass = None, forProperty = None, hasPermissions = Set(
                                 PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
                                 PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                                PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser)
+                                PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
+                                PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
                             ))
         )
 

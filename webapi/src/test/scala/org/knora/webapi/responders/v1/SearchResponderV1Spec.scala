@@ -37,37 +37,11 @@ import scala.concurrent.duration._
   */
 object SearchResponderV1Spec {
 
-    private val incunabulaUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
+    private val incunabulaUser = SharedAdminTestData.incunabulaMemberUser
 
-    private val anythingUser1 = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/anything"),
-        groups = Nil,
-        userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q"),
-            lang = "de"
-        )
-    )
+    private val anythingUser1 = SharedAdminTestData.anythingUser1
 
-    private val anythingUser2 = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/anything"),
-        groups = Nil,
-        userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ"),
-            lang = "de"
-        )
-    )
+    private val anythingUser2 = SharedAdminTestData.anythingUser2
 
     private val fulltextThingResultsForUser1 = Vector(SearchResultRowV1(
         rights = Some(8),

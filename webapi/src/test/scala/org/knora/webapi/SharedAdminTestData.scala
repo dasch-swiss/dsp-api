@@ -513,7 +513,26 @@ object SharedAdminTestData {
             lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects = Vector(ANYTHING_PROJECT_IRI)
+        projects = Vector(ANYTHING_PROJECT_IRI),
+        sessionId = None,
+        permissionData = PermissionDataV1(
+            groupsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+            ),
+            administrativePermissionsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission
+                )
+            ),
+            defaultObjectAccessPermissionsPerProject =  Map(
+                ANYTHING_PROJECT_IRI -> Set(
+                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
+                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember)
+                )
+            )
+        )
     )
 
     def anythingProjectInfo = ProjectInfoV1(

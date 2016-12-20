@@ -35,23 +35,11 @@ import scala.concurrent.duration._
 
 object SipiResponderV1Spec {
 
-    // A test UserDataV1.
-    private val userData = UserDataV1(
-        email = Some("test@test.ch"),
-        lastname = Some("Test"),
-        firstname = Some("User"),
-        username = Some("testuser"),
-        token = None,
-        user_id = Some("http://data.knora.org/users/b83acc5f05"),
-        lang = "de"
-    )
-
     // A test UserProfileV1.
-    private val userProfile = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = userData
-    )
+    private val userProfile: UserProfileV1 = SharedAdminTestData.incunabulaMemberUser
+
+    // A test UserDataV1.
+    private val userData: UserDataV1 = userProfile.userData
 
     /*
         This file value has not project Iri attached, it has to be retrieved from the resource.

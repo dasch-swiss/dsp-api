@@ -33,7 +33,7 @@ object ResourcesResponderV1SpecFullData {
 
     // The expected response to a "full" resource request for a book.
     val expectedBookResourceFullResponse = ResourceFullResponseV1(
-        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
+        userdata = SharedAdminTestData.incunabulaMemberUser.userData,
         access = "OK",
         incoming = Vector(
             IncomingV1(
@@ -415,7 +415,7 @@ object ResourcesResponderV1SpecFullData {
 
     // The expected response to a "full" resource request for a page.
     val expectedPageResourceFullResponse = ResourceFullResponseV1(
-        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
+        userdata = SharedAdminTestData.incunabulaMemberUser.userData,
         access = "OK",
         incoming = Nil,
         props = Some(PropsV1(properties = Vector(
@@ -532,7 +532,7 @@ object ResourcesResponderV1SpecFullData {
             ),
             PropertyV1(
                 locations = Nil,
-                value_rights = Vector(Some(8)),
+                value_rights = Vector(Some(6)),
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
@@ -553,7 +553,7 @@ object ResourcesResponderV1SpecFullData {
             ),
             PropertyV1(
                 locations = Nil,
-                value_rights = Vector(Some(8)),
+                value_rights = Vector(Some(7)),
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
@@ -849,7 +849,7 @@ object ResourcesResponderV1SpecFullData {
     )
 
     val expectedRegionFullResource = ResourceFullResponseV1(
-        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
+        userdata = SharedAdminTestData.incunabulaMemberUser.userData,
         access = "OK",
         incoming = Vector(
             IncomingV1(
