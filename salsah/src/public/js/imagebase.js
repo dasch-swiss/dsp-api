@@ -3207,6 +3207,33 @@ $(function() {
 			previews = data.preview;
 			preview_labels = data.firstprop;
 
+			for (i in previews) {
+				if (previews[i] == null) {
+					previews[i] = {
+						duration: 0,
+						nx: 95,
+						nx: 128,
+						path: "http://localhost:1024/knora/incunabula_0000000002.jpg/full/full/0/default.jpg",
+						format_name: "JPEG",
+						origname: "NO IMAGE",
+						protocol: "file"
+					}
+				}
+			}
+			for (i in pics) {
+				if (pics[i] == null) {
+					pics[i] = {
+						duration: 0,
+						nx: 95,
+						nx: 128,
+						path: "http://localhost:1024/knora/incunabula_0000000002.jpg/full/full/0/default.jpg",
+						format_name: "JPEG",
+						origname: "NO IMAGE",
+						protocol: "file"
+					}
+				}
+			}
+
 			//
 			// set the window title
 			//
